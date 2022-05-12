@@ -1,0 +1,31 @@
+{
+  "hid": "1234567890abcdef1234567890abcdef",
+  "listOfMacs": [
+    {
+      "listofchannels": [
+        {
+          "assoc": 1,
+          "cid": "cid.ffffffffffff",
+          "reading": null,
+          "ts": 1632961265,
+          "tsDelta": 1,
+          "tsHuman": "Thu Sep 30 00:00:00 2021",
+          "type": {
+            "battery": 5,
+            "falseBattery": 0,
+            "id": null,
+            "name": "EFCT"
+          }
+        }
+      ],
+      "mac": "ffffffffffff",
+      "personality": "E1",
+      "status": "on",
+      "ts": 1632961265,
+      "tsDelta": 1,
+      "tsHuman": "Thu Sep 30 00:00:00 2021",
+      "type": "EEEHub",
+      "version": "2.3.7"
+    }
+  ]
+}

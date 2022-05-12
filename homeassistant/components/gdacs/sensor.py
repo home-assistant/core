@@ -1,10 +1,13 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
-from homeassistant.core import callback
+import logging
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from .const import DEFAULT_ICON, DOMAIN, FEED
@@ -25,7 +28,9 @@ DEFAULT_UNIT_OF_MEASUREMENT = "alerts"
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the GDACS Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
     sensor = GdacsSensor(entry.entry_id, entry.unique_id, entry.title, manager)
@@ -33,7 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Sensor setup done")
 
 
-class GdacsSensor(Entity):
+class GdacsSensor(SensorEntity):
     """This is a status sensor for the GDACS integration."""
 
     def __init__(self, config_entry_id, config_unique_id, config_title, manager):
@@ -104,17 +109,17 @@ class GdacsSensor(Entity):
         self._removed = status_info.removed
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._total
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID containing latitude/longitude."""
         return self._config_unique_id
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return f"GDACS ({self._config_title})"
 
@@ -124,12 +129,12 @@ class GdacsSensor(Entity):
         return DEFAULT_ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return DEFAULT_UNIT_OF_MEASUREMENT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

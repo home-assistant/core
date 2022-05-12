@@ -1,37 +1,42 @@
 """The Minecraft Server sensor platform."""
+from __future__ import annotations
 
-import logging
-from typing import Any, Dict
+from typing import Any
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MILLISECONDS
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MinecraftServer, MinecraftServerEntity
 from .const import (
     ATTR_PLAYERS_LIST,
     DOMAIN,
     ICON_LATENCY_TIME,
+    ICON_MOTD,
     ICON_PLAYERS_MAX,
     ICON_PLAYERS_ONLINE,
     ICON_PROTOCOL_VERSION,
     ICON_VERSION,
     NAME_LATENCY_TIME,
+    NAME_MOTD,
     NAME_PLAYERS_MAX,
     NAME_PLAYERS_ONLINE,
     NAME_PROTOCOL_VERSION,
     NAME_VERSION,
+    UNIT_MOTD,
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
     UNIT_PROTOCOL_VERSION,
     UNIT_VERSION,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
     server = hass.data[DOMAIN][config_entry.unique_id]
@@ -43,13 +48,14 @@ async def async_setup_entry(
         MinecraftServerLatencyTimeSensor(server),
         MinecraftServerPlayersOnlineSensor(server),
         MinecraftServerPlayersMaxSensor(server),
+        MinecraftServerMOTDSensor(server),
     ]
 
     # Add sensor entities.
     async_add_entities(entities, True)
 
 
-class MinecraftServerSensorEntity(MinecraftServerEntity):
+class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     """Representation of a Minecraft Server sensor base entity."""
 
     def __init__(
@@ -71,12 +77,12 @@ class MinecraftServerSensorEntity(MinecraftServerEntity):
         return self._server.online
 
     @property
-    def state(self) -> Any:
+    def native_value(self) -> Any:
         """Return sensor state."""
         return self._state
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return sensor measurement unit."""
         return self._unit
 
@@ -145,19 +151,18 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         """Update online players state and device state attributes."""
         self._state = self._server.players_online
 
-        device_state_attributes = None
+        extra_state_attributes = None
         players_list = self._server.players_list
 
-        if players_list is not None:
-            if len(players_list) != 0:
-                device_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
+        if players_list is not None and len(players_list) != 0:
+            extra_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
 
-        self._device_state_attributes = device_state_attributes
+        self._extra_state_attributes = extra_state_attributes
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return players list in device state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
 
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
@@ -175,3 +180,20 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
     async def async_update(self) -> None:
         """Update maximum number of players."""
         self._state = self._server.players_max
+
+
+class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
+    """Representation of a Minecraft Server MOTD sensor."""
+
+    def __init__(self, server: MinecraftServer) -> None:
+        """Initialize MOTD sensor."""
+        super().__init__(
+            server=server,
+            type_name=NAME_MOTD,
+            icon=ICON_MOTD,
+            unit=UNIT_MOTD,
+        )
+
+    async def async_update(self) -> None:
+        """Update MOTD."""
+        self._state = self._server.motd

@@ -1,20 +1,22 @@
 """Support for Aqualink pool feature switches."""
-import logging
+from __future__ import annotations
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .utils import await_or_reraise
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     devs = []
@@ -32,7 +34,7 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
         return self.dev.label
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return an icon based on the switch type."""
         if self.name == "Cleaner":
             return "mdi:robot-vacuum"
@@ -42,6 +44,7 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
             return "mdi:fan"
         if self.name.endswith("Heater"):
             return "mdi:radiator"
+        return None
 
     @property
     def is_on(self) -> bool:
@@ -51,9 +54,9 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
     @refresh_system
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on the switch."""
-        await self.dev.turn_on()
+        await await_or_reraise(self.dev.turn_on())
 
     @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the switch."""
-        await self.dev.turn_off()
+        await await_or_reraise(self.dev.turn_off())

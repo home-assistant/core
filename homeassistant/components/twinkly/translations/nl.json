@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Wilt u {name} - {model} ( {host} ) instellen?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

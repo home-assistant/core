@@ -1,0 +1,8 @@
+{
+  "domain": "color_extractor",
+  "name": "ColorExtractor",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/color_extractor",
+  "requirements": ["colorthief==0.2.1"],
+  "codeowners": ["@GenericStudent"]
+}

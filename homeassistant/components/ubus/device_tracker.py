@@ -1,19 +1,21 @@
 """Support for OpenWRT (ubus) routers."""
-import json
+from __future__ import annotations
+
 import logging
 import re
 
-import requests
+from openwrt.ubus import Ubus
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_OK
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
 DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -33,9 +35,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return an ubus scanner."""
     dhcp_sw = config[DOMAIN][CONF_DHCP_SOFTWARE]
+    scanner: DeviceScanner
     if dhcp_sw == "dnsmasq":
         scanner = DnsmasqUbusDeviceScanner(config[DOMAIN])
     elif dhcp_sw == "odhcpd":
@@ -58,7 +61,7 @@ def _refresh_on_access_denied(func):
                 "Invalid session detected."
                 " Trying to refresh session_id and re-run RPC"
             )
-            self.session_id = _get_session_id(self.url, self.username, self.password)
+            self.ubus.connect()
 
             return func(self, *args, **kwargs)
 
@@ -82,10 +85,10 @@ class UbusDeviceScanner(DeviceScanner):
         self.last_results = {}
         self.url = f"http://{host}/ubus"
 
-        self.session_id = _get_session_id(self.url, self.username, self.password)
+        self.ubus = Ubus(self.url, self.username, self.password)
         self.hostapd = []
         self.mac2name = None
-        self.success_init = self.session_id is not None
+        self.success_init = self.ubus.connect() is not None
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -119,18 +122,14 @@ class UbusDeviceScanner(DeviceScanner):
         _LOGGER.info("Checking hostapd")
 
         if not self.hostapd:
-            hostapd = _req_json_rpc(self.url, self.session_id, "list", "hostapd.*", "")
+            hostapd = self.ubus.get_hostapd()
             self.hostapd.extend(hostapd.keys())
 
         self.last_results = []
         results = 0
         # for each access point
         for hostapd in self.hostapd:
-            result = _req_json_rpc(
-                self.url, self.session_id, "call", hostapd, "get_clients"
-            )
-
-            if result:
+            if result := self.ubus.get_hostapd_clients(hostapd):
                 results = results + 1
                 # Check for each device is authorized (valid wpa key)
                 for key in result["clients"].keys():
@@ -151,31 +150,20 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
 
     def _generate_mac2name(self):
         if self.leasefile is None:
-            result = _req_json_rpc(
-                self.url,
-                self.session_id,
-                "call",
-                "uci",
-                "get",
-                config="dhcp",
-                type="dnsmasq",
-            )
-            if result:
+            if result := self.ubus.get_uci_config("dhcp", "dnsmasq"):
                 values = result["values"].values()
                 self.leasefile = next(iter(values))["leasefile"]
             else:
                 return
 
-        result = _req_json_rpc(
-            self.url, self.session_id, "call", "file", "read", path=self.leasefile
-        )
+        result = self.ubus.file_read(self.leasefile)
         if result:
             self.mac2name = {}
             for line in result["data"].splitlines():
                 hosts = line.split(" ")
                 self.mac2name[hosts[1].upper()] = hosts[3]
         else:
-            # Error, handled in the _req_json_rpc
+            # Error, handled in the ubus.file_read()
             return
 
 
@@ -183,8 +171,7 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
     """Implement the Ubus device scanning for the odhcp DHCP server."""
 
     def _generate_mac2name(self):
-        result = _req_json_rpc(self.url, self.session_id, "call", "dhcp", "ipv4leases")
-        if result:
+        if result := self.ubus.get_dhcp_method("ipv4leases"):
             self.mac2name = {}
             for device in result["device"].values():
                 for lease in device["leases"]:
@@ -193,55 +180,5 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
                     mac = ":".join(mac[i : i + 2] for i in range(0, len(mac), 2))
                     self.mac2name[mac.upper()] = lease["hostname"]
         else:
-            # Error, handled in the _req_json_rpc
+            # Error, handled in the ubus.get_dhcp_method()
             return
-
-
-def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
-    """Perform one JSON RPC operation."""
-    data = json.dumps(
-        {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": rpcmethod,
-            "params": [session_id, subsystem, method, params],
-        }
-    )
-
-    try:
-        res = requests.post(url, data=data, timeout=5)
-
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-        return
-
-    if res.status_code == HTTP_OK:
-        response = res.json()
-        if "error" in response:
-            if (
-                "message" in response["error"]
-                and response["error"]["message"] == "Access denied"
-            ):
-                raise PermissionError(response["error"]["message"])
-            raise HomeAssistantError(response["error"]["message"])
-
-        if rpcmethod == "call":
-            try:
-                return response["result"][1]
-            except IndexError:
-                return
-        else:
-            return response["result"]
-
-
-def _get_session_id(url, username, password):
-    """Get the authentication token for the given host+username+password."""
-    res = _req_json_rpc(
-        url,
-        "00000000000000000000000000000000",
-        "call",
-        "session",
-        "login",
-        username=username,
-        password=password,
-    )
-    return res["ubus_rpc_session"]

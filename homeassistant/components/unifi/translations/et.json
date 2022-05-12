@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UniFi Network on juba seadistatud",
+            "configuration_updated": "Seaded on v\u00e4rskendatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "faulty_credentials": "Tuvastamine nurjus",
+            "service_unavailable": "\u00dchendamine nurjus",
+            "unknown_client_mac": "Sellel MAC-aadressil pole \u00fchtegi klienti saadaval"
+        },
+        "flow_title": "{site} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "site": "",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "title": "Seadista UniFi Network"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "integration_not_setup": "UniFi sidumine pole seadistatud"
+        },
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "V\u00f5rgujuurdep\u00e4\u00e4suga kontrollitavad kliendid",
+                    "dpi_restrictions": "Luba DPI piirangugruppide juhtimine",
+                    "poe_clients": "Luba klientide POE kontroll"
+                },
+                "description": "Seadista kliendi juhtelemendid \n\n Loo seerianumbrite. mille v\u00f5rgule juurdep\u00e4\u00e4su soovite kontrollida, jaoks l\u00fclitid.",
+                "title": "UniFi Network valikud 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Aeg sekundites alates viimasest ilmnemisest kuni olekuni '\u00e4ra'",
+                    "ignore_wired_bug": "UniFi Network kaabel\u00fchenduse vealoogika keelamine",
+                    "ssid_filter": "Vali WiFi klientide j\u00e4lgimiseks SSID",
+                    "track_clients": "J\u00e4lgi v\u00f5rgu kliente",
+                    "track_devices": "V\u00f5rguseadmete j\u00e4lgimine (Ubiquiti seadmed)",
+                    "track_wired_clients": "Kaasa juhtmega v\u00f5rgukliendid"
+                },
+                "description": "Seadista seadme j\u00e4lgimine",
+                "title": "UniFi Network valikud 1/3"
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "V\u00f5rgujuurdep\u00e4\u00e4suga kontrollitavad kliendid",
+                    "track_clients": "J\u00e4lgi v\u00f5rgu kliente",
+                    "track_devices": "J\u00e4lgi v\u00f5rgu seadmeid (Ubiquiti seadmed)"
+                },
+                "description": "Seadista UniFi Network sidumine"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Ribalaiuse andurid v\u00f5rguklientidele",
+                    "allow_uptime_sensors": "V\u00f5rguklientide t\u00f6\u00f6soleku andurid"
+                },
+                "description": "Seadista statistikaandurid",
+                "title": "UniFi Network valikud 3/3"
+            }
+        }
+    }
+}

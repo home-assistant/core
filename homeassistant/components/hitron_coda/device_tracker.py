@@ -1,5 +1,8 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
+from __future__ import annotations
+
 from collections import namedtuple
+from http import HTTPStatus
 import logging
 
 import requests
@@ -7,23 +10,19 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "rogers"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(_hass, config):
+def get_scanner(_hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Hitron CODA-4582U scanner."""
     scanner = HitronCODADeviceScanner(config[DOMAIN])
 
@@ -74,14 +73,13 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the device with the given MAC address."""
-        name = next(
+        return next(
             (result.name for result in self.last_results if result.mac == device), None
         )
-        return name
 
     def _login(self):
         """Log in to the router. This is required for subsequent api calls."""
-        _LOGGER.info("Logging in to CODA...")
+        _LOGGER.info("Logging in to CODA")
 
         try:
             data = [("user", self._username), (self._type, self._password)]
@@ -89,7 +87,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
-        if res.status_code != HTTP_OK:
+        if res.status_code != HTTPStatus.OK:
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:
@@ -101,12 +99,11 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Get ARP from router."""
-        _LOGGER.info("Fetching...")
+        _LOGGER.info("Fetching")
 
-        if self._userid is None:
-            if not self._login():
-                _LOGGER.error("Could not obtain a user ID from the router")
-                return False
+        if self._userid is None and not self._login():
+            _LOGGER.error("Could not obtain a user ID from the router")
+            return False
         last_results = []
 
         # doing a request
@@ -115,7 +112,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
-        if res.status_code != HTTP_OK:
+        if res.status_code != HTTPStatus.OK:
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:

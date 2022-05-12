@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import yaml
 
-from .objects import NodeListClass
+from .objects import Input, NodeListClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -24,7 +24,7 @@ def save_yaml(path: str, data: dict) -> None:
 
 
 # From: https://gist.github.com/miracle2k/3184458
-def represent_odict(  # type: ignore
+def represent_odict(  # type: ignore[no-untyped-def]
     dumper, tag, mapping, flow_style=None
 ) -> yaml.MappingNode:
     """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
@@ -59,4 +59,9 @@ yaml.SafeDumper.add_representer(
 yaml.SafeDumper.add_representer(
     NodeListClass,
     lambda dumper, value: dumper.represent_sequence("tag:yaml.org,2002:seq", value),
+)
+
+yaml.SafeDumper.add_representer(
+    Input,
+    lambda dumper, value: dumper.represent_scalar("!input", value.name),
 )

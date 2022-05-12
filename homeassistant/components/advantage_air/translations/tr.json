@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresi",
+                    "port": "Port"
+                },
+                "description": "Advantage Air duvara monte tabletinizin API'sine ba\u011flan\u0131n.",
+                "title": "Ba\u011flan"
+            }
+        }
+    }
+}

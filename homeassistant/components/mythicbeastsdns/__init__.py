@@ -1,6 +1,5 @@
 """Support for Mythic Beasts Dynamic DNS service."""
 from datetime import timedelta
-import logging
 
 import mbddns
 import voluptuous as vol
@@ -11,11 +10,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "mythicbeastsdns"
 
@@ -38,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Mythic Beasts component."""
     domain = config[DOMAIN][CONF_DOMAIN]
     password = config[DOMAIN][CONF_PASSWORD]

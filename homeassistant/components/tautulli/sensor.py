@@ -1,11 +1,16 @@
 """A platform which allows you to get information from Tautulli."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-from pytautulli import Tautulli
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -16,24 +21,24 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-_LOGGER = logging.getLogger(__name__)
+from . import TautulliEntity
+from .const import (
+    CONF_MONITORED_USERS,
+    DEFAULT_NAME,
+    DEFAULT_PATH,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
+from .coordinator import TautulliDataUpdateCoordinator
 
-CONF_MONITORED_USERS = "monitored_users"
-
-DEFAULT_NAME = "Tautulli"
-DEFAULT_PORT = "8181"
-DEFAULT_PATH = ""
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-
-TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -48,110 +53,91 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        icon="mdi:plex",
+        key="watching_count",
+        name="Tautulli",
+        native_unit_of_measurement="Watching",
+    ),
+)
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the Tautulli sensor."""
-
-    name = config.get(CONF_NAME)
-    host = config[CONF_HOST]
-    port = config.get(CONF_PORT)
-    path = config.get(CONF_PATH)
-    api_key = config[CONF_API_KEY]
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
-    user = config.get(CONF_MONITORED_USERS)
-    use_ssl = config[CONF_SSL]
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-
-    session = async_get_clientsession(hass, verify_ssl)
-    tautulli = TautulliData(
-        Tautulli(host, port, api_key, hass.loop, session, use_ssl, path)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
 
-    if not await tautulli.test_connection():
-        raise PlatformNotReady
 
-    sensor = [TautulliSensor(tautulli, name, monitored_conditions, user)]
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Tautulli sensor."""
+    coordinator: TautulliDataUpdateCoordinator = hass.data[DOMAIN]
+    async_add_entities(
+        TautulliSensor(
+            coordinator,
+            description,
+        )
+        for description in SENSOR_TYPES
+    )
 
-    async_add_entities(sensor, True)
 
-
-class TautulliSensor(Entity):
+class TautulliSensor(TautulliEntity, SensorEntity):
     """Representation of a Tautulli sensor."""
 
-    def __init__(self, tautulli, name, monitored_conditions, users):
-        """Initialize the Tautulli sensor."""
-        self.tautulli = tautulli
-        self.monitored_conditions = monitored_conditions
-        self.usernames = users
-        self.sessions = {}
-        self.home = {}
-        self._attributes = {}
-        self._name = name
-        self._state = None
-
-    async def async_update(self):
-        """Get the latest data from the Tautulli API."""
-        await self.tautulli.async_update()
-        self.home = self.tautulli.api.home_data
-        self.sessions = self.tautulli.api.session_data
-        self._attributes["Top Movie"] = self.home.get("movie")
-        self._attributes["Top TV Show"] = self.home.get("tv")
-        self._attributes["Top User"] = self.home.get("user")
-        for key in self.sessions:
-            if "sessions" not in key:
-                self._attributes[key] = self.sessions[key]
-        for user in self.tautulli.api.users:
-            if self.usernames is None or user in self.usernames:
-                userdata = self.tautulli.api.user_data
-                self._attributes[user] = {}
-                self._attributes[user]["Activity"] = userdata[user]["Activity"]
-                if self.monitored_conditions:
-                    for key in self.monitored_conditions:
-                        try:
-                            self._attributes[user][key] = userdata[user][key]
-                        except (KeyError, TypeError):
-                            self._attributes[user][key] = ""
-
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.sessions.get("stream_count")
+        if not self.coordinator.activity:
+            return 0
+        return self.coordinator.activity.stream_count or 0
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:plex"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return "Watching"
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return attributes for the sensor."""
-        return self._attributes
+        if (
+            not self.coordinator.activity
+            or not self.coordinator.home_stats
+            or not self.coordinator.users
+        ):
+            return None
 
+        _attributes = {
+            "stream_count": self.coordinator.activity.stream_count,
+            "stream_count_direct_play": self.coordinator.activity.stream_count_direct_play,
+            "stream_count_direct_stream": self.coordinator.activity.stream_count_direct_stream,
+            "stream_count_transcode": self.coordinator.activity.stream_count_transcode,
+            "total_bandwidth": self.coordinator.activity.total_bandwidth,
+            "lan_bandwidth": self.coordinator.activity.lan_bandwidth,
+            "wan_bandwidth": self.coordinator.activity.wan_bandwidth,
+        }
 
-class TautulliData:
-    """Get the latest data and update the states."""
+        for stat in self.coordinator.home_stats:
+            if stat.stat_id == "top_movies":
+                _attributes["Top Movie"] = stat.rows[0].title if stat.rows else None
+            elif stat.stat_id == "top_tv":
+                _attributes["Top TV Show"] = stat.rows[0].title if stat.rows else None
+            elif stat.stat_id == "top_users":
+                _attributes["Top User"] = stat.rows[0].user if stat.rows else None
 
-    def __init__(self, api):
-        """Initialize the data object."""
-        self.api = api
+        for user in self.coordinator.users:
+            if user.username == "Local":
+                continue
+            _attributes.setdefault(user.username, {})["Activity"] = None
 
-    @Throttle(TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data from Tautulli."""
-        await self.api.get_data()
+        for session in self.coordinator.activity.sessions:
+            if not _attributes.get(session.username) or "null" in session.state:
+                continue
 
-    async def test_connection(self):
-        """Test connection to Tautulli."""
-        await self.api.test_connection()
-        connection_status = self.api.connection
-        return connection_status
+            _attributes[session.username]["Activity"] = session.state
+
+        return _attributes

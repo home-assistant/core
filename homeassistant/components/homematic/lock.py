@@ -1,15 +1,21 @@
 """Support for Homematic locks."""
-import logging
+from __future__ import annotations
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Homematic lock platform."""
     if discovery_info is None:
         return
@@ -23,6 +29,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class HMLock(HMDevice, LockEntity):
     """Representation of a Homematic lock aka KeyMatic."""
+
+    _attr_supported_features = LockEntityFeature.OPEN
 
     @property
     def is_locked(self):
@@ -45,8 +53,3 @@ class HMLock(HMDevice, LockEntity):
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"
         self._data.update({self._state: None})
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN

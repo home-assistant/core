@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "title": "Configura la integraci\u00f3 Syncthing",
+                    "token": "Token",
+                    "url": "URL",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
+            }
+        }
+    }
+}

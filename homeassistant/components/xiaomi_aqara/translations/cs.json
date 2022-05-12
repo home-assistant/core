@@ -1,7 +1,42 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "not_xiaomi_aqara": "Za\u0159\u00edzen\u00ed nen\u00ed br\u00e1na Xiaomi Aqara, objeven\u00e9 za\u0159\u00edzen\u00ed neodpov\u00edd\u00e1 zn\u00e1m\u00fdm bran\u00e1m"
+        },
+        "error": {
+            "discovery_error": "Nepoda\u0159ilo se naj\u00edt br\u00e1nu Xiaomi Aqara, zkuste jako rozhran\u00ed pou\u017e\u00edt IP adresu za\u0159\u00edzen\u00ed, na kter\u00e9m je spu\u0161t\u011bn HomeAssistant.",
+            "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa , viz https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Neplatn\u00e9 s\u00ed\u0165ov\u00e9 rozhran\u00ed",
+            "invalid_key": "Neplatn\u00fd kl\u00ed\u010d br\u00e1ny",
+            "invalid_mac": "Neplatn\u00e1 MAC adresa"
+        },
+        "flow_title": "Br\u00e1na Xiaomi Aqara: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP adresa"
+                },
+                "description": "Chcete-li p\u0159ipojit dal\u0161\u00ed br\u00e1ny, spus\u0165te znovu instalaci",
+                "title": "Vyberte br\u00e1nu Xiaomi Aqara, kterou chcete p\u0159ipojit"
+            },
+            "settings": {
+                "data": {
+                    "key": "Kl\u00ed\u010d va\u0161\u00ed br\u00e1ny",
+                    "name": "Jm\u00e9no br\u00e1ny"
+                },
+                "description": "Kl\u00ed\u010d (heslo) lze z\u00edskat pomoc\u00ed tohoto n\u00e1vodu: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Pokud kl\u00ed\u010d nen\u00ed k dispozici, budou p\u0159\u00edstupn\u00e9 pouze senzory",
+                "title": "Br\u00e1na Xiaomi Aqara, voliteln\u00e1 nastaven\u00ed"
+            },
+            "user": {
+                "data": {
+                    "host": "IP adresa (voliteln\u011b)",
+                    "mac": "MAC adresa (voliteln\u00e1)"
+                },
+                "description": "P\u0159ipojte se k va\u0161\u00ed br\u00e1n\u011b Xiaomi Aqara - pokud z\u016fstanou pr\u00e1zdn\u00e9 adresy IP a MAC, pou\u017eije se automatick\u00e9 zji\u0161\u0165ov\u00e1n\u00ed",
+                "title": "Br\u00e1na Xiaomi Aqara"
+            }
         }
     }
 }

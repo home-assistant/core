@@ -1,4 +1,7 @@
 """Test the Home Connect config flow."""
+from http import HTTPStatus
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.home_connect.const import (
     DOMAIN,
@@ -8,13 +11,13 @@ from homeassistant.components.home_connect.const import (
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
-
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_full_flow(
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
+):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -31,7 +34,13 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     result = await hass.config_entries.flow.async_init(
         "home_connect", context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -40,9 +49,9 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
         f"&state={state}"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(

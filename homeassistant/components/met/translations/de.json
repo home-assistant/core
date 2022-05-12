@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "In der Konfiguration von Home Assistant sind keine Home-Koordinaten eingestellt"
+        },
         "error": {
-            "name_exists": "Ort existiert bereits"
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "step": {
             "user": {

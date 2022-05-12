@@ -1,5 +1,5 @@
 """Config flow to configure Met component."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -8,7 +8,13 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, C
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
+from .const import (
+    CONF_TRACK_HOME,
+    DEFAULT_HOME_LATITUDE,
+    DEFAULT_HOME_LONGITUDE,
+    DOMAIN,
+    HOME_LOCATION_NAME,
+)
 
 
 @callback
@@ -29,7 +35,6 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Init MetFlowHandler."""
@@ -47,7 +52,7 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            self._errors[CONF_NAME] = "name_exists"
+            self._errors[CONF_NAME] = "already_configured"
 
         return await self._show_config_form(
             name=HOME_LOCATION_NAME,
@@ -73,14 +78,16 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(
-        self, user_input: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_onboarding(self, data=None):
         """Handle a flow initialized by onboarding."""
+        # Don't create entry if latitude or longitude isn't set.
+        # Also, filters out our onboarding default location.
+        if (not self.hass.config.latitude and not self.hass.config.longitude) or (
+            self.hass.config.latitude == DEFAULT_HOME_LATITUDE
+            and self.hass.config.longitude == DEFAULT_HOME_LONGITUDE
+        ):
+            return self.async_abort(reason="no_home")
+
         return self.async_create_entry(
             title=HOME_LOCATION_NAME, data={CONF_TRACK_HOME: True}
         )

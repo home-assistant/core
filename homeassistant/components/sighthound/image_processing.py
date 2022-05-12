@@ -1,4 +1,6 @@
 """Person detection using Sighthound cloud service."""
+from __future__ import annotations
+
 import io
 import logging
 from pathlib import Path
@@ -8,15 +10,20 @@ import simplehound.core as hound
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
-from homeassistant.core import split_entity_id
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_API_KEY,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+)
+from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.pil import draw_box
 
@@ -43,7 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform."""
     # Validate credentials by processing image.
     api_key = config[CONF_API_KEY]
@@ -55,8 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Sighthound error %s setup aborted", exc)
         return
 
-    save_file_folder = config.get(CONF_SAVE_FILE_FOLDER)
-    if save_file_folder:
+    if save_file_folder := config.get(CONF_SAVE_FILE_FOLDER):
         save_file_folder = Path(save_file_folder)
 
     entities = []
@@ -74,6 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
+
+    _attr_unit_of_measurement = ATTR_PEOPLE
 
     def __init__(
         self, api, camera_entity, name, save_file_folder, save_timestamped_file
@@ -165,14 +178,8 @@ class SighthoundEntity(ImageProcessingEntity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ATTR_PEOPLE
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes."""
-        attr = {}
-        if self._last_detection:
-            attr["last_person"] = self._last_detection
-        return attr
+        if not self._last_detection:
+            return {}
+        return {"last_person": self._last_detection}

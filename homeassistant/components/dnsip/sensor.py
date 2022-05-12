@@ -1,93 +1,94 @@
 """Get your own public IP address or that of any host."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import aiodns
 from aiodns.error import DNSError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import (
+    CONF_HOSTNAME,
+    CONF_IPV4,
+    CONF_IPV6,
+    CONF_RESOLVER,
+    CONF_RESOLVER_IPV6,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOSTNAME = "hostname"
-CONF_IPV6 = "ipv6"
-CONF_RESOLVER = "resolver"
-CONF_RESOLVER_IPV6 = "resolver_ipv6"
-
-DEFAULT_HOSTNAME = "myip.opendns.com"
-DEFAULT_IPV6 = False
-DEFAULT_NAME = "myip"
-DEFAULT_RESOLVER = "208.67.222.222"
-DEFAULT_RESOLVER_IPV6 = "2620:0:ccc::2"
-
 SCAN_INTERVAL = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
-        vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
-    }
-)
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the dnsip sensor entry."""
+
+    hostname = entry.data[CONF_HOSTNAME]
+    name = entry.data[CONF_NAME]
+
+    resolver_ipv4 = entry.options[CONF_RESOLVER]
+    resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
+    entities = []
+    if entry.data[CONF_IPV4]:
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
+    if entry.data[CONF_IPV6]:
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
+
+    async_add_entities(entities, update_before_add=True)
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the DNS IP sensor."""
-    hostname = config[CONF_HOSTNAME]
-    name = config.get(CONF_NAME)
-    if not name:
-        if hostname == DEFAULT_HOSTNAME:
-            name = DEFAULT_NAME
-        else:
-            name = hostname
-    ipv6 = config[CONF_IPV6]
-    if ipv6:
-        resolver = config[CONF_RESOLVER_IPV6]
-    else:
-        resolver = config[CONF_RESOLVER]
-
-    async_add_devices([WanIpSensor(hass, name, hostname, resolver, ipv6)], True)
-
-
-class WanIpSensor(Entity):
+class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    def __init__(self, hass, name, hostname, resolver, ipv6):
-        """Initialize the DNS IP sensor."""
+    _attr_icon = "mdi:web"
 
-        self.hass = hass
-        self._name = name
+    def __init__(
+        self,
+        name: str,
+        hostname: str,
+        resolver: str,
+        ipv6: bool,
+    ) -> None:
+        """Initialize the DNS IP sensor."""
+        self._attr_name = f"{name} IPv6" if ipv6 else name
+        self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
-        self._state = None
+        self._attr_extra_state_attributes = {
+            "Resolver": resolver,
+            "Querytype": self.querytype,
+        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{hostname}_{ipv6}")},
+            manufacturer="DNS",
+            model=aiodns.__version__,
+            name=hostname,
+        )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the current DNS IP address for hostname."""
-        return self._state
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
-
         try:
             response = await self.resolver.query(self.hostname, self.querytype)
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             response = None
+
         if response:
-            self._state = response[0].host
+            self._attr_native_value = response[0].host
+            self._attr_available = True
         else:
-            self._state = None
+            self._attr_available = False

@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Passwuert",
-                    "pin": "Pin Code",
+                    "pin": "PIN Code",
                     "username": "Benotzernumm"
                 }
             }
@@ -39,7 +39,9 @@
                     "A": "Grupp A",
                     "B": "Grupp B",
                     "C": "Grupp C",
-                    "D": "Grupp D"
+                    "D": "Grupp D",
+                    "arm": "Aktiv\u00e9iert (\u00cbNNERWEE)",
+                    "partial_arm": "Deelweis Aktiv\u00e9iert (DOHEEM)"
                 }
             }
         }

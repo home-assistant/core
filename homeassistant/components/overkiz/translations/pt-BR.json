@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "reauth_wrong_account": "Voc\u00ea s\u00f3 pode reautenticar esta entrada com a mesma conta e hub do Overkiz"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "server_in_maintenance": "O servidor est\u00e1 fora de servi\u00e7o para manuten\u00e7\u00e3o",
+            "too_many_attempts": "Muitas tentativas com um token inv\u00e1lido, banido temporariamente",
+            "too_many_requests": "Muitas solicita\u00e7\u00f5es, tente novamente mais tarde",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "Gateway: {gateway_id}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "hub": "Hub",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "A plataforma Overkiz \u00e9 utilizada por v\u00e1rios fornecedores como Somfy (Connexoon/TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) e Atlantic (Cozytouch). Insira suas credenciais de aplicativo e selecione seu hub."
+            }
+        }
+    }
+}

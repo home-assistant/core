@@ -1,11 +1,16 @@
 """Homematic base entity."""
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import timedelta
 import logging
 
+from pyhomematic import HMConnection
+from pyhomematic.devicetypes.generic import HMGeneric
+
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import (
     ATTR_ADDRESS,
@@ -27,7 +32,14 @@ SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
 class HMDevice(Entity):
     """The HomeMatic device base object."""
 
-    def __init__(self, config):
+    _homematic: HMConnection
+    _hmdevice: HMGeneric
+
+    def __init__(
+        self,
+        config: dict[str, str],
+        entity_description: EntityDescription | None = None,
+    ) -> None:
         """Initialize a generic HomeMatic device."""
         self._name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
@@ -35,12 +47,13 @@ class HMDevice(Entity):
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
-        self._data = {}
-        self._homematic = None
-        self._hmdevice = None
+        self._data: dict[str, str] = {}
         self._connected = False
         self._available = False
-        self._channel_map = set()
+        self._channel_map: dict[str, str] = {}
+
+        if entity_description is not None:
+            self.entity_description = entity_description
 
         # Set parameter to uppercase
         if self._state:
@@ -48,7 +61,7 @@ class HMDevice(Entity):
 
     async def async_added_to_hass(self):
         """Load data init callbacks."""
-        await self.hass.async_add_job(self._subscribe_homematic_events)
+        self._subscribe_homematic_events()
 
     @property
     def unique_id(self):
@@ -71,9 +84,13 @@ class HMDevice(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = {}
+        # Static attributes
+        attr = {
+            "id": self._hmdevice.ADDRESS,
+            "interface": self._interface,
+        }
 
         # Generate a dictionary with attributes
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
@@ -81,10 +98,6 @@ class HMDevice(Entity):
             if node in self._data:
                 value = data[1].get(self._data[node], self._data[node])
                 attr[data[0]] = value
-
-        # Static attributes
-        attr["id"] = self._hmdevice.ADDRESS
-        attr["interface"] = self._interface
 
         return attr
 
@@ -114,7 +127,7 @@ class HMDevice(Entity):
         has_changed = False
 
         # Is data needed for this instance?
-        if f"{attribute}:{device.partition(':')[2]}" in self._channel_map:
+        if device.partition(":")[2] == self._channel_map.get(attribute):
             self._data[attribute] = value
             has_changed = True
 
@@ -130,12 +143,12 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         for metadata in (
-            self._hmdevice.SENSORNODE,
-            self._hmdevice.BINARYNODE,
-            self._hmdevice.ATTRIBUTENODE,
-            self._hmdevice.WRITENODE,
-            self._hmdevice.EVENTNODE,
             self._hmdevice.ACTIONNODE,
+            self._hmdevice.EVENTNODE,
+            self._hmdevice.WRITENODE,
+            self._hmdevice.ATTRIBUTENODE,
+            self._hmdevice.BINARYNODE,
+            self._hmdevice.SENSORNODE,
         ):
             for node, channels in metadata.items():
                 # Data is needed for this instance
@@ -146,7 +159,9 @@ class HMDevice(Entity):
                     else:
                         channel = self._channel
                     # Remember the channel for this attribute to ignore invalid events later
-                    self._channel_map.add(f"{node}:{channel!s}")
+                    self._channel_map[node] = str(channel)
+
+        _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))
 
         # Set callbacks
         self._hmdevice.setEventCallback(callback=self._hm_event_callback, bequeath=True)
@@ -231,15 +246,14 @@ class HMHub(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attr = self._variables.copy()
-        return attr
+        return self._variables.copy()
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return "mdi:gradient"
+        return "mdi:gradient-vertical"
 
     def _update_hub(self, now):
         """Retrieve latest state."""

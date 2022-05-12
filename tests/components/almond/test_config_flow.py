@@ -1,13 +1,15 @@
 """Test the Almond config flow."""
 import asyncio
+from http import HTTPStatus
+from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.almond import config_flow
 from homeassistant.components.almond.const import DOMAIN
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENT_ID_VALUE = "1234"
@@ -49,8 +51,10 @@ async def test_hassio(hass):
     """Test that Hass.io can discover this integration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "hassio"},
-        data={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"},
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"}
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -80,18 +84,20 @@ async def test_abort_if_existing_entry(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
-    result = await flow.async_step_import()
+    result = await flow.async_step_import({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
-    result = await flow.async_step_hassio({})
+    result = await flow.async_step_hassio(HassioServiceInfo(config={}))
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_full_flow(
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
+):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -109,7 +115,13 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
@@ -119,9 +131,9 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
         f"&state={state}&scope=profile+user-read+user-read-results+user-exec-command"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(

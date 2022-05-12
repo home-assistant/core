@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_units": "Could not find any AirTouch 4 Groups."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Setup your AirTouch 4 connection details."
+            }
+        }
+    }
+}

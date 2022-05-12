@@ -1,2 +1,3 @@
 reload:
+  name: Reload
   description: Reload all history_stats entities.

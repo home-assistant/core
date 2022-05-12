@@ -1,5 +1,4 @@
 """Syslog notification service."""
-import logging
 import syslog
 
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_FACILITY = "facility"
 CONF_OPTION = "option"
@@ -86,7 +83,7 @@ class SyslogNotificationService(BaseNotificationService):
         self._priority = priority
 
     def send_message(self, message="", **kwargs):
-        """Send a message to a user."""
+        """Send a message to syslog."""
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

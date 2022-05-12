@@ -1,18 +1,20 @@
 """Support for Almond."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import ClientError, ClientSession
 import async_timeout
 from pyalmond import AbstractAlmondWebAuth, AlmondLocalAuth, WebAlmondAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import conversation
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -31,6 +33,7 @@ from homeassistant.helpers import (
     network,
     storage,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
@@ -64,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Almond component."""
     hass.data[DOMAIN] = {}
 
@@ -93,14 +96,14 @@ async def async_setup(hass, config):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": SOURCE_IMPORT},
                 data={"type": TYPE_LOCAL, "host": conf[CONF_HOST]},
             )
         )
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Almond config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -149,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
 
 
 async def _configure_almond_for_ha(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, api: WebAlmondAPI
+    hass: HomeAssistant, entry: ConfigEntry, api: WebAlmondAPI
 ):
     """Configure Almond to connect to HA."""
     try:
@@ -165,7 +168,7 @@ async def _configure_almond_for_ha(
 
     _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    data = await store.async_load()
+    data = cast(Optional[dict], await store.async_load())
 
     if data is None:
         data = {}
@@ -175,7 +178,9 @@ async def _configure_almond_for_ha(
         user = await hass.auth.async_get_user(data["almond_user"])
 
     if user is None:
-        user = await hass.auth.async_create_system_user("Almond", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user(
+            "Almond", group_ids=[GROUP_ID_ADMIN]
+        )
         data["almond_user"] = user.id
         await store.async_save(data)
 
@@ -190,7 +195,7 @@ async def _configure_almond_for_ha(
 
     # Store token in Almond
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             await api.async_create_device(
                 {
                     "kind": "io.home-assistant",
@@ -203,7 +208,7 @@ async def _configure_almond_for_ha(
             )
     except (asyncio.TimeoutError, ClientError) as err:
         if isinstance(err, asyncio.TimeoutError):
-            msg = "Request timeout"
+            msg: str | ClientError = "Request timeout"
         else:
             msg = err
         _LOGGER.warning("Unable to configure Almond: %s", msg)
@@ -216,7 +221,7 @@ async def _configure_almond_for_ha(
             await hass.auth.async_remove_refresh_token(token)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Almond."""
     conversation.async_set_agent(hass, None)
     return True
@@ -230,7 +235,7 @@ class AlmondOAuth(AbstractAlmondWebAuth):
         host: str,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize Almond auth."""
         super().__init__(host, websession)
         self._oauth_session = oauth_session
@@ -247,8 +252,8 @@ class AlmondAgent(conversation.AbstractConversationAgent):
     """Almond conversation agent."""
 
     def __init__(
-        self, hass: HomeAssistant, api: WebAlmondAPI, entry: config_entries.ConfigEntry
-    ):
+        self, hass: HomeAssistant, api: WebAlmondAPI, entry: ConfigEntry
+    ) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.api = api
@@ -281,7 +286,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return True
 
     async def async_process(
-        self, text: str, context: Context, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)

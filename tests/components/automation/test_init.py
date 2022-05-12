@@ -1,9 +1,11 @@
 """The tests for the automation component."""
 import asyncio
+from datetime import timedelta
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import logbook
 import homeassistant.components.automation as automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
@@ -23,14 +25,34 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, State, callback
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.script import (
+    SCRIPT_MODE_CHOICES,
+    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_QUEUED,
+    SCRIPT_MODE_RESTART,
+    SCRIPT_MODE_SINGLE,
+    _async_stop_scripts_at_shutdown,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
-from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_restore_cache,
+)
+from tests.components.logbook.common import MockRow, mock_humanify
 
 
 @pytest.fixture
@@ -39,9 +61,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_service_data_not_a_dict(hass, calls):
+async def test_service_data_not_a_dict(hass, caplog, calls):
     """Test service data not dict."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -52,6 +74,34 @@ async def test_service_data_not_a_dict(hass, calls):
                 }
             },
         )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert "Result is not a Dictionary" in caplog.text
+
+
+async def test_service_data_single_template(hass, calls):
+    """Test service data not dict."""
+    with assert_setup_component(1, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": "{{ { 'foo': 'bar' } }}",
+                    },
+                }
+            },
+        )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["foo"] == "bar"
 
 
 async def test_service_specify_data(hass, calls):
@@ -152,7 +202,7 @@ async def test_two_triggers(hass, calls):
     assert len(calls) == 2
 
 
-async def test_trigger_service_ignoring_condition(hass, calls):
+async def test_trigger_service_ignoring_condition(hass, caplog, calls):
     """Test triggers."""
     assert await async_setup_component(
         hass,
@@ -162,18 +212,24 @@ async def test_trigger_service_ignoring_condition(hass, calls):
                 "alias": "test",
                 "trigger": [{"platform": "event", "event_type": "test_event"}],
                 "condition": {
-                    "condition": "state",
+                    "condition": "numeric_state",
                     "entity_id": "non.existing",
-                    "state": "beer",
+                    "above": "1",
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
 
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
         "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
@@ -489,10 +545,7 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
-    test_reload_event = []
-    hass.bus.async_listen(
-        EVENT_AUTOMATION_RELOADED, lambda event: test_reload_event.append(event)
-    )
+    test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -947,6 +1000,7 @@ async def test_automation_with_error_in_script(hass, caplog):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert "Service not found" in caplog.text
+    assert "Traceback" not in caplog.text
 
 
 async def test_automation_with_error_in_script_2(hass, caplog):
@@ -1024,6 +1078,7 @@ async def test_automation_restore_last_triggered_with_initial_state(hass):
 
 async def test_extraction_functions(hass):
     """Test extraction functions."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1031,7 +1086,24 @@ async def test_extraction_functions(hass):
             DOMAIN: [
                 {
                     "alias": "test1",
-                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "trigger": [
+                        {"platform": "state", "entity_id": "sensor.trigger_state"},
+                        {
+                            "platform": "numeric_state",
+                            "entity_id": "sensor.trigger_numeric_state",
+                            "above": 10,
+                        },
+                        {
+                            "platform": "calendar",
+                            "entity_id": "calendar.trigger_calendar",
+                            "event": "start",
+                        },
+                        {
+                            "platform": "event",
+                            "event_type": "state_changed",
+                            "event_data": {"entity_id": "sensor.trigger_event"},
+                        },
+                    ],
                     "condition": {
                         "condition": "state",
                         "entity_id": "light.condition_state",
@@ -1056,13 +1128,30 @@ async def test_extraction_functions(hass):
                 },
                 {
                     "alias": "test2",
-                    "trigger": {
-                        "platform": "device",
-                        "domain": "light",
-                        "type": "turned_on",
-                        "entity_id": "light.trigger_2",
-                        "device_id": "trigger-device-2",
-                    },
+                    "trigger": [
+                        {
+                            "platform": "device",
+                            "domain": "light",
+                            "type": "turned_on",
+                            "entity_id": "light.trigger_2",
+                            "device_id": "trigger-device-2",
+                        },
+                        {
+                            "platform": "tag",
+                            "tag_id": "1234",
+                            "device_id": "device-trigger-tag1",
+                        },
+                        {
+                            "platform": "tag",
+                            "tag_id": "1234",
+                            "device_id": ["device-trigger-tag2", "device-trigger-tag3"],
+                        },
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"device_id": "device-trigger-event"},
+                        },
+                    ],
                     "condition": {
                         "condition": "device",
                         "device_id": "condition-device",
@@ -1104,7 +1193,10 @@ async def test_extraction_functions(hass):
         "automation.test2",
     }
     assert set(automation.entities_in_automation(hass, "automation.test1")) == {
-        "sensor.trigger_1",
+        "calendar.trigger_calendar",
+        "sensor.trigger_state",
+        "sensor.trigger_numeric_state",
+        "sensor.trigger_event",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
@@ -1118,6 +1210,10 @@ async def test_extraction_functions(hass):
         "condition-device",
         "device-in-both",
         "device-in-last",
+        "device-trigger-event",
+        "device-trigger-tag1",
+        "device-trigger-tag2",
+        "device-trigger-tag3",
     }
 
 
@@ -1126,28 +1222,23 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     hass.config.components.add("recorder")
     await async_setup_component(hass, automation.DOMAIN, {})
     await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_AUTOMATION_TRIGGERED,
-                    {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
-                ),
-                MockLazyEventPartialState(
-                    EVENT_AUTOMATION_TRIGGERED,
-                    {
-                        ATTR_ENTITY_ID: "automation.bye",
-                        ATTR_NAME: "Bye Automation",
-                        ATTR_SOURCE: "source of trigger",
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_AUTOMATION_TRIGGERED,
+                {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
+            ),
+            MockRow(
+                EVENT_AUTOMATION_TRIGGERED,
+                {
+                    ATTR_ENTITY_ID: "automation.bye",
+                    ATTR_NAME: "Bye Automation",
+                    ATTR_SOURCE: "source of trigger",
+                },
+            ),
+        ],
     )
 
     assert event1["name"] == "Hello Automation"
@@ -1174,6 +1265,7 @@ async def test_automation_variables(hass, caplog):
                     "variables": {
                         "test_var": "defined_in_config",
                         "event_type": "{{ trigger.event.event_type }}",
+                        "this_variables": "{{this.entity_id}}",
                     },
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
@@ -1181,6 +1273,8 @@ async def test_automation_variables(hass, caplog):
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
+                            "this_template": "{{this.entity_id}}",
+                            "this_variables": "{{this_variables}}",
                         },
                     },
                 },
@@ -1214,6 +1308,11 @@ async def test_automation_variables(hass, caplog):
     assert len(calls) == 1
     assert calls[0].data["value"] == "defined_in_config"
     assert calls[0].data["event_type"] == "test_event"
+    # Verify this available to all templates
+    assert calls[0].data.get("this_template") == "automation.automation_0"
+    # Verify this available during variables rendering
+    assert calls[0].data.get("this_variables") == "automation.automation_0"
+    assert "Error rendering variables" not in caplog.text
 
     hass.bus.async_fire("test_event_2")
     await hass.async_block_till_done()
@@ -1232,3 +1331,479 @@ async def test_automation_variables(hass, caplog):
     hass.bus.async_fire("test_event_3", {"break": 0})
     await hass.async_block_till_done()
     assert len(calls) == 3
+
+
+async def test_automation_trigger_variables(hass, caplog):
+    """Test automation trigger variables."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "variables": {
+                        "event_type": "{{ trigger.event.event_type }}",
+                    },
+                    "trigger_variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
+                    },
+                },
+                {
+                    "variables": {
+                        "event_type": "{{ trigger.event.event_type }}",
+                        "test_var": "overridden_in_config",
+                    },
+                    "trigger_variables": {
+                        "test_var": "defined_in_config",
+                        "this_trigger_variables": "{{this.entity_id}}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                            "this_template": "{{this.entity_id}}",
+                            "this_trigger_variables": "{{this_trigger_variables}}",
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["value"] == "defined_in_config"
+    assert calls[0].data["event_type"] == "test_event"
+
+    hass.bus.async_fire("test_event_2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["value"] == "overridden_in_config"
+    assert calls[1].data["event_type"] == "test_event_2"
+    # Verify this available to all templates
+    assert calls[1].data.get("this_template") == "automation.automation_1"
+    # Verify this available during trigger variables rendering
+    assert calls[1].data.get("this_trigger_variables") == "automation.automation_1"
+    assert "Error rendering variables" not in caplog.text
+
+
+async def test_automation_bad_trigger_variables(hass, caplog):
+    """Test automation trigger variables accessing hass is rejected."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger_variables": {
+                        "test_var": "{{ states('foo.bar') }}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    assert "Use of 'states' is not supported in limited templates" in caplog.text
+
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_automation_this_var_always(hass, caplog):
+    """Test automation always has reference to this, even with no variable or trigger variables configured."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "this_template": "{{this.entity_id}}",
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    # Verify this available to all templates
+    assert calls[0].data.get("this_template") == "automation.automation_0"
+    assert "Error rendering variables" not in caplog.text
+
+
+async def test_blueprint_automation(hass, calls):
+    """Test blueprint automation."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                        "a_number": 5,
+                    },
+                }
+            }
+        },
+    )
+    hass.bus.async_fire("blueprint_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert automation.entities_in_automation(hass, "automation.automation_0") == [
+        "light.kitchen"
+    ]
+
+
+async def test_blueprint_automation_bad_config(hass, caplog):
+    """Test blueprint automation with bad inputs."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": {"dict": "not allowed"},
+                        "a_number": 5,
+                    },
+                }
+            }
+        },
+    )
+    assert "generated invalid automation" in caplog.text
+
+
+async def test_trigger_service(hass, calls):
+    """Test the automation trigger service."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"trigger": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+    context = Context()
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.hello"},
+        blocking=True,
+        context=context,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data.get("trigger") == {"platform": None}
+    assert calls[0].context.parent_id is context.id
+
+
+async def test_trigger_condition_implicit_id(hass, calls):
+    """Test triggers."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1"},
+                    {"platform": "event", "event_type": "test_event2"},
+                    {"platform": "event", "event_type": "test_event3"},
+                ],
+                "action": {
+                    "choose": [
+                        {
+                            "conditions": {"condition": "trigger", "id": [0, "2"]},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "one"},
+                            },
+                        },
+                        {
+                            "conditions": {"condition": "trigger", "id": "1"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "two"},
+                            },
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1].data.get("param") == "one"
+
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[-1].data.get("param") == "two"
+
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[-1].data.get("param") == "one"
+
+
+async def test_trigger_condition_explicit_id(hass, calls):
+    """Test triggers."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1", "id": "one"},
+                    {"platform": "event", "event_type": "test_event2", "id": "two"},
+                ],
+                "action": {
+                    "choose": [
+                        {
+                            "conditions": {"condition": "trigger", "id": "one"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "one"},
+                            },
+                        },
+                        {
+                            "conditions": {"condition": "trigger", "id": "two"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "two"},
+                            },
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1].data.get("param") == "one"
+
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[-1].data.get("param") == "two"
+
+
+@pytest.mark.parametrize(
+    "automation_mode,automation_runs",
+    (
+        (SCRIPT_MODE_PARALLEL, 2),
+        (SCRIPT_MODE_QUEUED, 2),
+        (SCRIPT_MODE_RESTART, 2),
+        (SCRIPT_MODE_SINGLE, 1),
+    ),
+)
+@pytest.mark.parametrize(
+    "script_mode,script_warning_msg",
+    (
+        (SCRIPT_MODE_PARALLEL, "script1: Maximum number of runs exceeded"),
+        (SCRIPT_MODE_QUEUED, "script1: Disallowed recursion detected"),
+        (SCRIPT_MODE_RESTART, "script1: Disallowed recursion detected"),
+        (SCRIPT_MODE_SINGLE, "script1: Already running"),
+    ),
+)
+async def test_recursive_automation_starting_script(
+    hass: HomeAssistant,
+    automation_mode,
+    automation_runs,
+    script_mode,
+    script_warning_msg,
+    caplog,
+):
+    """Test starting automations does not interfere with script deadlock prevention."""
+
+    # Fail if additional script modes are added to
+    # make sure we cover all script modes in tests
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def mock_stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=mock_stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            "script",
+            {
+                "script": {
+                    "script1": {
+                        "mode": script_mode,
+                        "sequence": [
+                            {"event": "trigger_automation"},
+                            {
+                                "wait_template": f"{{{{ float(states('sensor.test'), 0) >= {automation_runs} }}}}"
+                            },
+                            {"service": "script.script1"},
+                            {"service": "test.script_done"},
+                        ],
+                    },
+                }
+            },
+        )
+
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": automation_mode,
+                    "trigger": [
+                        {"platform": "event", "event_type": "trigger_automation"},
+                    ],
+                    "action": [
+                        {"service": "test.automation_started"},
+                        {"service": "script.script1"},
+                    ],
+                }
+            },
+        )
+
+        script_done_event = asyncio.Event()
+        script_done = []
+        automation_started = []
+        automation_triggered = []
+
+        async def async_service_handler(service: ServiceCall):
+            if service.service == "automation_started":
+                automation_started.append(service)
+            elif service.service == "script_done":
+                script_done.append(service)
+                if len(script_done) == 1:
+                    script_done_event.set()
+
+        async def async_automation_triggered(event):
+            """Listen to automation_triggered event from the automation integration."""
+            automation_triggered.append(event)
+            hass.states.async_set("sensor.test", str(len(automation_triggered)))
+
+        hass.services.async_register("test", "script_done", async_service_handler)
+        hass.services.async_register(
+            "test", "automation_started", async_service_handler
+        )
+        hass.bus.async_listen("automation_triggered", async_automation_triggered)
+
+        hass.bus.async_fire("trigger_automation")
+        await asyncio.wait_for(script_done_event.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.state = CoreState.stopping
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+        await hass.async_block_till_done()
+
+        assert script_warning_msg in caplog.text
+
+
+@pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+async def test_recursive_automation(hass: HomeAssistant, automation_mode, caplog):
+    """Test automation triggering itself.
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    """
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": automation_mode,
+                    "trigger": [
+                        {"platform": "event", "event_type": "trigger_automation"},
+                    ],
+                    "action": [
+                        {"event": "trigger_automation"},
+                        {"service": "test.automation_done"},
+                    ],
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "automation_done":
+                service_called.set()
+
+        hass.services.async_register("test", "automation_done", async_service_handler)
+
+        hass.bus.async_fire("trigger_automation")
+        await asyncio.wait_for(service_called.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.state = CoreState.stopping
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text

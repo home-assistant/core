@@ -1,6 +1,4 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
-import logging
-
 from pyinsteon.groups import (
     CO_SENSOR,
     DOOR_SENSOR,
@@ -16,46 +14,43 @@ from pyinsteon.groups import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
-_LOGGER = logging.getLogger(__name__)
-
 SENSOR_TYPES = {
-    OPEN_CLOSE_SENSOR: DEVICE_CLASS_OPENING,
-    MOTION_SENSOR: DEVICE_CLASS_MOTION,
-    DOOR_SENSOR: DEVICE_CLASS_DOOR,
-    LEAK_SENSOR_WET: DEVICE_CLASS_MOISTURE,
-    LIGHT_SENSOR: DEVICE_CLASS_LIGHT,
-    LOW_BATTERY: DEVICE_CLASS_BATTERY,
-    CO_SENSOR: DEVICE_CLASS_GAS,
-    SMOKE_SENSOR: DEVICE_CLASS_SMOKE,
-    TEST_SENSOR: DEVICE_CLASS_SAFETY,
-    SENSOR_MALFUNCTION: DEVICE_CLASS_PROBLEM,
-    HEARTBEAT: DEVICE_CLASS_PROBLEM,
+    OPEN_CLOSE_SENSOR: BinarySensorDeviceClass.OPENING,
+    MOTION_SENSOR: BinarySensorDeviceClass.MOTION,
+    DOOR_SENSOR: BinarySensorDeviceClass.DOOR,
+    LEAK_SENSOR_WET: BinarySensorDeviceClass.MOISTURE,
+    LIGHT_SENSOR: BinarySensorDeviceClass.LIGHT,
+    LOW_BATTERY: BinarySensorDeviceClass.BATTERY,
+    CO_SENSOR: BinarySensorDeviceClass.GAS,
+    SMOKE_SENSOR: BinarySensorDeviceClass.SMOKE,
+    TEST_SENSOR: BinarySensorDeviceClass.SAFETY,
+    SENSOR_MALFUNCTION: BinarySensorDeviceClass.PROBLEM,
+    HEARTBEAT: BinarySensorDeviceClass.PROBLEM,
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Insteon binary sensors from a config entry."""
 
-    def add_entities(discovery_info=None):
+    @callback
+    def async_add_insteon_binary_sensor_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass,
@@ -66,8 +61,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{BINARY_SENSOR_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_binary_sensor_entities)
+    async_add_insteon_binary_sensor_entities()
 
 
 class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):

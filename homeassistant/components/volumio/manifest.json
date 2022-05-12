@@ -5,5 +5,7 @@
   "codeowners": ["@OnFreund"],
   "config_flow": true,
   "zeroconf": ["_Volumio._tcp.local."],
-  "requirements": ["pyvolumio==0.1.2"]
+  "requirements": ["pyvolumio==0.1.5"],
+  "iot_class": "local_polling",
+  "loggers": ["pyvolumio"]
 }

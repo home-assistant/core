@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "WLED: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Set up your WLED to integrate with Home Assistant.",
@@ -14,11 +14,21 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect to WLED device."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "This WLED device is already configured.",
-      "connection_error": "Failed to connect to WLED device."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cct_unsupported": "This WLED device uses CCT channels, which is not supported by this integration"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "keep_master_light": "Keep master light, even with 1 LED segment."
+        }
+      }
     }
   }
 }

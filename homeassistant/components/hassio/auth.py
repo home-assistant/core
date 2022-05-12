@@ -1,4 +1,5 @@
 """Implement the auth feature from Hass.io for Add-ons."""
+from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
@@ -12,10 +13,8 @@ from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_OK
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
@@ -23,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_auth_view(hass: HomeAssistantType, user: User):
+def async_setup_auth_view(hass: HomeAssistant, user: User):
     """Auth setup."""
     hassio_auth = HassIOAuth(hass, user)
     hassio_password_reset = HassIOPasswordReset(hass, user)
@@ -35,7 +34,7 @@ def async_setup_auth_view(hass: HomeAssistantType, user: User):
 class HassIOBaseAuth(HomeAssistantView):
     """Hass.io view to handle auth requests."""
 
-    def __init__(self, hass: HomeAssistantType, user: User):
+    def __init__(self, hass: HomeAssistant, user: User) -> None:
         """Initialize WebView."""
         self.hass = hass
         self.user = user
@@ -82,9 +81,9 @@ class HassIOAuth(HassIOBaseAuth):
                 data[ATTR_USERNAME], data[ATTR_PASSWORD]
             )
         except auth_ha.InvalidAuth:
-            raise HTTPUnauthorized() from None
+            raise HTTPNotFound() from None
 
-        return web.Response(status=HTTP_OK)
+        return web.Response(status=HTTPStatus.OK)
 
 
 class HassIOPasswordReset(HassIOBaseAuth):
@@ -114,4 +113,4 @@ class HassIOPasswordReset(HassIOBaseAuth):
         except auth_ha.InvalidUser as err:
             raise HTTPNotFound() from err
 
-        return web.Response(status=HTTP_OK)
+        return web.Response(status=HTTPStatus.OK)

@@ -1,5 +1,6 @@
 """The Control4 integration."""
-import asyncio
+from __future__ import annotations
+
 import json
 import logging
 
@@ -15,10 +16,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,20 +42,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light"]
+PLATFORMS = [Platform.LIGHT]
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Stub to allow setting up this component.
-
-    Configuration through YAML is not supported at this time.
-    """
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -92,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _, model, mac_address = controller_unique_id.split("_", 3)
     entry_data[CONF_DIRECTOR_MODEL] = model.upper()
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller_unique_id)},
@@ -115,30 +110,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update when config_entry options update."""
     _LOGGER.debug("Config entry was updated, rerunning setup")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER]()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -163,20 +149,19 @@ class Control4Entity(CoordinatorEntity):
     def __init__(
         self,
         entry_data: dict,
-        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
-        device_name: str,
-        device_manufacturer: str,
-        device_model: str,
+        device_name: str | None,
+        device_manufacturer: str | None,
+        device_model: str | None,
         device_id: int,
-    ):
+    ) -> None:
         """Initialize a Control4 entity."""
         super().__init__(coordinator)
-        self.entry = entry
         self.entry_data = entry_data
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = str(idx)
         self._idx = idx
         self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
         self._device_name = device_name
@@ -185,23 +170,12 @@ class Control4Entity(CoordinatorEntity):
         self._device_id = device_id
 
     @property
-    def name(self):
-        """Return name of entity."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._idx
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return info of parent Control4 device of entity."""
-        return {
-            "config_entry_id": self.entry.entry_id,
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "via_device": (DOMAIN, self._controller_unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_id))},
+            manufacturer=self._device_manufacturer,
+            model=self._device_model,
+            name=self._device_name,
+            via_device=(DOMAIN, self._controller_unique_id),
+        )

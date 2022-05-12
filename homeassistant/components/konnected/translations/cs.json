@@ -1,21 +1,92 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "not_konn_panel": "Nejedn\u00e1 se o rozpoznan\u00e9 Konnected.io za\u0159\u00edzen\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
         "step": {
+            "confirm": {
+                "description": "Model: {model}\nID: {id}\nHostitel: {host}\nPort: {port}\n\nChov\u00e1n\u00ed vstupu/v\u00fdstupu a panelu m\u016f\u017eete nastavit v ovl\u00e1dac\u00edm panelu alarmu Konnected.",
+                "title": "Za\u0159\u00edzen\u00ed Konnected je p\u0159ipraveno"
+            },
+            "import_confirm": {
+                "title": "Importovat za\u0159\u00edzen\u00ed Konnected"
+            },
             "user": {
                 "data": {
                     "host": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "description": "Zadejte pros\u00edm informace o hostiteli va\u0161eho panelu Konnected."
             }
         }
     },
     "options": {
+        "abort": {
+            "not_konn_panel": "Nejedn\u00e1 se o rozpoznan\u00e9 Konnected.io za\u0159\u00edzen\u00ed"
+        },
+        "error": {
+            "bad_host": "Neplatn\u00e1 p\u0159epsan\u00e1 URL adresa API hostitele"
+        },
         "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Prohodit stav otev\u0159en\u00ed/zav\u0159en\u00ed",
+                    "name": "Jm\u00e9no (voliteln\u00e9)",
+                    "type": "Typ bin\u00e1rn\u00edho senzoru"
+                },
+                "description": "Mo\u017enosti {zone}",
+                "title": "Nastavte bin\u00e1rn\u00ed senzor"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Jm\u00e9no (voliteln\u00e9)",
+                    "poll_interval": "Interval dotazov\u00e1n\u00ed (v sekund\u00e1ch) (voliteln\u00e9)",
+                    "type": "Typ senzoru"
+                },
+                "description": "Mo\u017enosti {zone}",
+                "title": "Nastavte digit\u00e1ln\u00ed senzor"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Z\u00f3na 1",
+                    "2": "Z\u00f3na 2",
+                    "3": "Z\u00f3na 3",
+                    "4": "Z\u00f3na 4",
+                    "5": "Z\u00f3na 5",
+                    "6": "Z\u00f3na 6",
+                    "7": "Z\u00f3na 7"
+                },
+                "title": "Nastaven\u00ed vstupu/v\u00fdstupu"
+            },
             "options_io_ext": {
                 "data": {
+                    "10": "Z\u00f3na 10",
+                    "11": "Z\u00f3na 11",
+                    "12": "Z\u00f3na 12",
+                    "8": "Z\u00f3na 8",
+                    "9": "Z\u00f3na 9",
                     "alarm1": "ALARM1",
                     "alarm2_out2": "OUT2/ALARM2"
                 }
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "P\u0159epsat URL adresu API hostitele (voliteln\u00e9)",
+                    "override_api_host": "P\u0159epsat v\u00fdchoz\u00ed URL adresu API hostitelsk\u00e9ho panelu Home Assistant"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "more_states": "Nastavte dal\u0161\u00ed stavy t\u00e9to z\u00f3ny",
+                    "name": "Jm\u00e9no (voliteln\u00e9)"
+                },
+                "description": "Mo\u017enosti {zone} : stav {state}"
             }
         }
     }

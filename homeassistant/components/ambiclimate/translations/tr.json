@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Eri\u015fim anahtar\u0131 olu\u015ftururken bilinmeyen hata.",
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "missing_configuration": "Bile\u015fen yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin."
+        },
+        "create_entry": {
+            "default": "Ba\u015far\u0131yla do\u011fruland\u0131"
+        },
+        "error": {
+            "follow_link": "L\u00fctfen ba\u011flant\u0131y\u0131 takip edin ve G\u00f6nder'e basmadan \u00f6nce kimlik do\u011frulamas\u0131 yap\u0131n",
+            "no_token": "Ambiclimate ile kimli\u011fi do\u011frulanmad\u0131"
+        },
+        "step": {
+            "auth": {
+                "description": "L\u00fctfen bu [ba\u011flant\u0131y\u0131]( {authorization_url} ) takip edin ve Ambiclimate hesab\u0131n\u0131za **izin verin**, ard\u0131ndan geri d\u00f6n\u00fcn ve a\u015fa\u011f\u0131daki **G\u00f6nder**'e bas\u0131n.\n (Belirtilen geri \u00e7a\u011f\u0131rma URL'sinin {cb_url} oldu\u011fundan emin olun)",
+                "title": "Ambiclimate kimlik do\u011frulamas\u0131"
+            }
+        }
+    }
+}

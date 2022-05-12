@@ -1,6 +1,7 @@
 """The tests for the Unifi direct device tracker platform."""
 from datetime import timedelta
 import os
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -22,7 +23,6 @@ from homeassistant.components.unifi_direct.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, load_fixture, mock_component
 
 scanner_path = "homeassistant.components.unifi_direct.device_tracker.UnifiDeviceScanner"
@@ -74,12 +74,12 @@ async def test_get_device_name(mock_ssh, hass):
             CONF_CONSIDER_HOME: timedelta(seconds=180),
         }
     }
-    mock_ssh.return_value.before = load_fixture("unifi_direct.txt")
+    mock_ssh.return_value.before = load_fixture("data.txt", "unifi_direct")
     scanner = get_scanner(hass, conf_dict)
     devices = scanner.scan_devices()
-    assert 23 == len(devices)
-    assert "iPhone" == scanner.get_device_name("98:00:c6:56:34:12")
-    assert "iPhone" == scanner.get_device_name("98:00:C6:56:34:12")
+    assert len(devices) == 23
+    assert scanner.get_device_name("98:00:c6:56:34:12") == "iPhone"
+    assert scanner.get_device_name("98:00:C6:56:34:12") == "iPhone"
 
 
 @patch("pexpect.pxssh.pxssh.logout")
@@ -132,7 +132,7 @@ async def test_to_get_update(mock_sendline, mock_prompt, mock_login, mock_logout
 
 def test_good_response_parses(hass):
     """Test that the response form the AP parses to JSON correctly."""
-    response = _response_to_json(load_fixture("unifi_direct.txt"))
+    response = _response_to_json(load_fixture("data.txt", "unifi_direct"))
     assert response != {}
 
 

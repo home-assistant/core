@@ -1,10 +1,12 @@
 """Module that groups code required to handle state restore for component."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Dict, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_AUX_HEAT,
@@ -26,11 +28,11 @@ from .const import (
 
 
 async def _async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     state: State,
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
 
@@ -39,8 +41,8 @@ async def _async_reproduce_states(
         data = data or {}
         data["entity_id"] = state.entity_id
         for key in keys:
-            if key in state.attributes:
-                data[key] = state.attributes[key]
+            if (value := state.attributes.get(key)) is not None:
+                data[key] = value
 
         await hass.services.async_call(
             DOMAIN, service, data, blocking=True, context=context
@@ -73,11 +75,11 @@ async def _async_reproduce_states(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
     await asyncio.gather(

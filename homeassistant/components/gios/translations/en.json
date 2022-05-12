@@ -1,22 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "GIO\u015a integration for this measuring station is already configured."
+            "already_configured": "Location is already configured"
         },
         "error": {
-            "cannot_connect": "Cannot connect to the GIO\u015a server.",
+            "cannot_connect": "Failed to connect",
             "invalid_sensors_data": "Invalid sensors' data for this measuring station.",
             "wrong_station_id": "ID of the measuring station is not correct."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "Name of the integration",
+                    "name": "Name",
                     "station_id": "ID of the measuring station"
                 },
                 "description": "Set up GIO\u015a (Polish Chief Inspectorate Of Environmental Protection) air quality integration. If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Reach GIO\u015a server"
         }
     }
 }

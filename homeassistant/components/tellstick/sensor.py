@@ -1,4 +1,6 @@
 """Support for Tellstick sensors."""
+from __future__ import annotations
+
 from collections import namedtuple
 import logging
 
@@ -6,25 +8,33 @@ from tellcore import telldus
 import tellcore.constants as tellcore_constants
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PROTOCOL,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple("DatatypeDescription", ["name", "unit"])
+DatatypeDescription = namedtuple(
+    "DatatypeDescription", ["name", "unit", "device_class"]
+)
 
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"
 CONF_TEMPERATURE_SCALE = "temperature_scale"
-CONF_MODEL = "model"
 
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
@@ -54,25 +64,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Tellstick sensors."""
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE: DatatypeDescription(
-            "temperature", config.get(CONF_TEMPERATURE_SCALE)
+            "temperature",
+            config.get(CONF_TEMPERATURE_SCALE),
+            SensorDeviceClass.TEMPERATURE,
         ),
         tellcore_constants.TELLSTICK_HUMIDITY: DatatypeDescription(
-            "humidity", PERCENTAGE
+            "humidity",
+            PERCENTAGE,
+            SensorDeviceClass.HUMIDITY,
         ),
-        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription("rain rate", ""),
-        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription("rain total", ""),
+        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription(
+            "rain rate", "", None
+        ),
+        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription(
+            "rain total", "", None
+        ),
         tellcore_constants.TELLSTICK_WINDDIRECTION: DatatypeDescription(
-            "wind direction", ""
+            "wind direction", "", None
         ),
         tellcore_constants.TELLSTICK_WINDAVERAGE: DatatypeDescription(
-            "wind average", ""
+            "wind average", "", None
         ),
-        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription("wind gust", ""),
+        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription(
+            "wind gust", "", None
+        ),
     }
 
     try:
@@ -116,9 +141,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             else:
                 continue
 
-        for datatype in sensor_value_descriptions:
+        for datatype, sensor_info in sensor_value_descriptions.items():
             if datatype & datatype_mask and tellcore_sensor.has_value(datatype):
-                sensor_info = sensor_value_descriptions[datatype]
                 sensors.append(
                     TellstickSensor(sensor_name, tellcore_sensor, datatype, sensor_info)
                 )
@@ -126,33 +150,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class TellstickSensor(Entity):
+class TellstickSensor(SensorEntity):
     """Representation of a Tellstick sensor."""
 
     def __init__(self, name, tellcore_sensor, datatype, sensor_info):
         """Initialize the sensor."""
         self._datatype = datatype
         self._tellcore_sensor = tellcore_sensor
-        self._unit_of_measurement = sensor_info.unit or None
-        self._value = None
-
-        self._name = f"{name} {sensor_info.name}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_native_unit_of_measurement = sensor_info.unit or None
+        self._attr_name = f"{name} {sensor_info.name}"
 
     def update(self):
         """Update tellstick sensor."""
-        self._value = self._tellcore_sensor.value(self._datatype).value
+        self._attr_native_value = self._tellcore_sensor.value(self._datatype).value

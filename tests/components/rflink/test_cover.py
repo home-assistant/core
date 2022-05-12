@@ -4,9 +4,6 @@ Test setup of RFLink covers component/platform. State tracking and
 control of RFLink cover devices.
 
 """
-
-import logging
-
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,8 +33,6 @@ CONFIG = {
         },
     },
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_default_setup(hass, monkeypatch):
@@ -94,20 +89,16 @@ async def test_default_setup(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
 
     # test changing state from HA propagates to RFLink
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_CLOSED
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_0"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "DOWN"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_OPEN
@@ -167,10 +158,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     # test if signal repetition is performed according to configuration
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
 
     # wait for commands and repetitions to finish
@@ -179,10 +168,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     assert protocol.send_command_ack.call_count == 2
 
     # test if default apply to configured devices
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
     )
 
     # wait for commands and repetitions to finish
@@ -207,15 +194,11 @@ async def test_signal_repetitions_alternation(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
     )
 
     await hass.async_block_till_done()
@@ -239,16 +222,12 @@ async def test_signal_repetitions_cancelling(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
 
     await hass.async_block_till_done()
@@ -611,12 +590,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the close command from HA should result
     # in an 'DOWN' command sent to a non-newkaku device
     # that has its type set to 'standard'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_standard"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_standard"},
     )
 
     await hass.async_block_till_done()
@@ -628,12 +605,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the open command from HA should result
     # in an 'UP' command sent to a non-newkaku device
     # that has its type set to 'standard'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_standard"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_standard"},
     )
 
     await hass.async_block_till_done()
@@ -645,10 +620,8 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the close command from HA should result
     # in an 'DOWN' command sent to a non-newkaku device
     # that has its type not specified.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_none"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_none"}
     )
 
     await hass.async_block_till_done()
@@ -660,10 +633,8 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the open command from HA should result
     # in an 'UP' command sent to a non-newkaku device
     # that has its type not specified.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_none"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_none"}
     )
 
     await hass.async_block_till_done()
@@ -675,12 +646,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the close command from HA should result
     # in an 'UP' command sent to a non-newkaku device
     # that has its type set to 'inverted'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_inverted"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_inverted"},
     )
 
     await hass.async_block_till_done()
@@ -692,12 +661,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the open command from HA should result
     # in an 'DOWN' command sent to a non-newkaku device
     # that has its type set to 'inverted'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_inverted"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.nonkaku_type_inverted"},
     )
 
     await hass.async_block_till_done()
@@ -709,12 +676,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the close command from HA should result
     # in an 'DOWN' command sent to a newkaku device
     # that has its type set to 'standard'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_standard"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_standard"},
     )
 
     await hass.async_block_till_done()
@@ -726,12 +691,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the open command from HA should result
     # in an 'UP' command sent to a newkaku device
     # that has its type set to 'standard'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_standard"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_standard"},
     )
 
     await hass.async_block_till_done()
@@ -743,10 +706,8 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the close command from HA should result
     # in an 'UP' command sent to a newkaku device
     # that has its type not specified.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_none"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_none"}
     )
 
     await hass.async_block_till_done()
@@ -758,10 +719,8 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the open command from HA should result
     # in an 'DOWN' command sent to a newkaku device
     # that has its type not specified.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_none"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_none"}
     )
 
     await hass.async_block_till_done()
@@ -773,12 +732,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the close command from HA should result
     # in an 'UP' command sent to a newkaku device
     # that has its type set to 'inverted'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_inverted"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_inverted"},
     )
 
     await hass.async_block_till_done()
@@ -790,12 +747,10 @@ async def test_inverted_cover(hass, monkeypatch):
     # Sending the open command from HA should result
     # in an 'DOWN' command sent to a newkaku device
     # that has its type set to 'inverted'.
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_inverted"},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_type_inverted"},
     )
 
     await hass.async_block_till_done()

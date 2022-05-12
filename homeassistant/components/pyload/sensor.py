@@ -1,4 +1,6 @@
 """Support for monitoring pyLoad."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,7 +8,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -18,8 +20,10 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     DATA_RATE_MEGABYTES_PER_SECOND,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,15 +51,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the pyLoad sensors."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     protocol = "https" if config[CONF_SSL] else "http"
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    monitored_types = config.get(CONF_MONITORED_VARIABLES)
+    monitored_types = config[CONF_MONITORED_VARIABLES]
     url = f"{protocol}://{host}:{port}/api/"
 
     try:
@@ -65,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         requests.exceptions.HTTPError,
     ) as conn_err:
         _LOGGER.error("Error setting up pyLoad API: %s", conn_err)
-        return False
+        return
 
     devices = []
     for ng_type in monitored_types:
@@ -77,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class PyLoadSensor(Entity):
+class PyLoadSensor(SensorEntity):
     """Representation of a pyLoad sensor."""
 
     def __init__(self, api, sensor_type, client_name):
@@ -94,12 +103,12 @@ class PyLoadSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -117,14 +126,13 @@ class PyLoadSensor(Entity):
             )
             return
 
-        value = self.api.status.get(self.type)
-        if value is None:
+        if (value := self.api.status.get(self.type)) is None:
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 
         if "speed" in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 2 ** 20, 2)
+            self._state = round(value / 2**20, 2)
         else:
             self._state = value
 

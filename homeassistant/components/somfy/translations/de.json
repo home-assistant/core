@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Es kann nur ein Somfy-Account konfiguriert werden.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
-            "missing_configuration": "Die Somfy-Komponente ist nicht konfiguriert. Folge bitte der Dokumentation."
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "create_entry": {
-            "default": "Erfolgreich mit Somfy authentifiziert."
+            "default": "Erfolgreich authentifiziert"
         },
         "step": {
             "pick_implementation": {

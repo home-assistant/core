@@ -1,10 +1,41 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "Smile: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "Typ p\u0159ipojen\u00ed"
+                },
+                "description": "Produkt:",
+                "title": "Typ Plugwise"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP adresa",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no Smile"
+                },
+                "description": "Pros\u00edm zadejte",
+                "title": "P\u0159ipojen\u00ed k Smile"
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
                     "scan_interval": "Interval sledov\u00e1n\u00ed (v sekund\u00e1ch)"
-                }
+                },
+                "description": "Upravte mo\u017enosti Plugwise"
             }
         }
     }

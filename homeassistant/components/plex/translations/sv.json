@@ -13,6 +13,11 @@
             "not_found": "Plex-server hittades inte"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "port": "Port"
+                }
+            },
             "select_server": {
                 "data": {
                     "server": "Server"

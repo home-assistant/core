@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_udn": "SSDP \u6240\u767c\u73fe\u7684\u8cc7\u8a0a\u4e0d\u542b UDN",
+            "not_keenetic_ndms2": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e Keenetic \u8def\u7531\u5668"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u8a2d\u5b9a Keenetic NDMS2 \u8def\u7531\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "\u5224\u5b9a\u5728\u5bb6\u9593\u9694",
+                    "include_arp": "\u4f7f\u7528 ARP \u8cc7\u6599\uff08\u5047\u5982\u5df2\u4f7f\u7528 hotspot \u8cc7\u6599\u5247\u5ffd\u7565\uff09",
+                    "include_associated": "\u4f7f\u7528 WiFi AP \u95dc\u806f\u8cc7\u6599\uff08\u5047\u5982\u5df2\u4f7f\u7528 hotspot \u8cc7\u6599\u5247\u5ffd\u7565\uff09",
+                    "interfaces": "\u9078\u64c7\u6383\u63cf\u4ecb\u9762",
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd",
+                    "try_hotspot": "\u4f7f\u7528 'ip hotspot' \u8cc7\u6599\uff08\u6700\u7cbe\u6e96\uff09"
+                }
+            }
+        }
+    }
+}

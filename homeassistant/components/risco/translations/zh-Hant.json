@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -32,8 +32,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "\u9700\u8981\u8f38\u5165 PIN \u4ee5\u8b66\u6212",
-                    "code_disarm_required": "\u9700\u8981\u8f38\u5165 PIN \u4ee5\u89e3\u9664\u8b66\u6212",
+                    "code_arm_required": "\u9700\u8981\u8f38\u5165   PIN \u78bc\u4ee5\u8b66\u6212",
+                    "code_disarm_required": "\u9700\u8981\u8f38\u5165 PIN \u78bc\u4ee5\u89e3\u9664\u8b66\u6212",
                     "scan_interval": "\u66f4\u65b0 Risco \u983b\u7387\uff08\u79d2\uff09"
                 },
                 "title": "\u8a2d\u5b9a\u9078\u9805"

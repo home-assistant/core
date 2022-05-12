@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "\u1c99\u10d0\u10d5\u10e8\u10d8\u10e0\u10d8\u10e1 \u10e2\u10d8\u10de\u10d8"
+                }
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP \u10db\u10d8\u10e1\u10d0\u10db\u10d0\u10e0\u10d7\u10d8",
+                    "password": "Smile ID",
+                    "port": "\u10de\u10dd\u10e0\u10e2\u10d8",
+                    "username": "\u10e6\u10d8\u10db\u10d8\u10da\u10d8\u10d0\u10dc\u10d8 \u10db\u10dd\u10db\u10ee\u10db\u10d0\u10e0\u10d4\u10d1\u10da\u10d8\u10e1 \u10e1\u10d0\u10ee\u10d4\u10da\u10d8"
+                },
+                "description": "\u10d2\u10d7\u10ee\u10dd\u10d5\u10d7 \u10e8\u10d4\u10d8\u10e7\u10d5\u10d0\u10dc\u10dd\u10d7",
+                "title": "\u10d3\u10d0\u10e3\u10d9\u10d0\u10d5\u10e8\u10d8\u10e0\u10d3\u10d8\u10d7 Smile-\u10e1"
+            }
+        }
+    }
+}

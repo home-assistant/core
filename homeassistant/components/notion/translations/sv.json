@@ -4,7 +4,6 @@
             "already_configured": "Det h\u00e4r anv\u00e4ndarnamnet anv\u00e4nds redan."
         },
         "error": {
-            "invalid_credentials": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord",
             "no_devices": "Inga enheter hittades p\u00e5 kontot"
         },
         "step": {

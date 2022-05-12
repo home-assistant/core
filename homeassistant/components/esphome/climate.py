@@ -1,12 +1,14 @@
 """Support for ESPHome climate devices."""
-import logging
-from typing import List, Optional
+from __future__ import annotations
+
+from typing import Any, cast
 
 from aioesphomeapi import (
     ClimateAction,
     ClimateFanMode,
     ClimateInfo,
     ClimateMode,
+    ClimatePreset,
     ClimateState,
     ClimateSwingMode,
 )
@@ -16,12 +18,6 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -31,24 +27,23 @@ from homeassistant.components.climate.const import (
     FAN_MIDDLE,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    PRESET_ACTIVITY,
     PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -56,18 +51,20 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     EsphomeEntity,
-    esphome_map_enum,
+    EsphomeEnumMapper,
     esphome_state_property,
     platform_async_setup_entry,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up ESPHome climate devices based on a config entry."""
     await platform_async_setup_entry(
         hass,
@@ -80,33 +77,29 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-@esphome_map_enum
-def _climate_modes():
-    return {
-        ClimateMode.OFF: HVAC_MODE_OFF,
-        ClimateMode.AUTO: HVAC_MODE_HEAT_COOL,
-        ClimateMode.COOL: HVAC_MODE_COOL,
-        ClimateMode.HEAT: HVAC_MODE_HEAT,
-        ClimateMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
-        ClimateMode.DRY: HVAC_MODE_DRY,
+_CLIMATE_MODES: EsphomeEnumMapper[ClimateMode, HVACMode] = EsphomeEnumMapper(
+    {
+        ClimateMode.OFF: HVACMode.OFF,
+        ClimateMode.HEAT_COOL: HVACMode.HEAT_COOL,
+        ClimateMode.COOL: HVACMode.COOL,
+        ClimateMode.HEAT: HVACMode.HEAT,
+        ClimateMode.FAN_ONLY: HVACMode.FAN_ONLY,
+        ClimateMode.DRY: HVACMode.DRY,
+        ClimateMode.AUTO: HVACMode.AUTO,
     }
-
-
-@esphome_map_enum
-def _climate_actions():
-    return {
-        ClimateAction.OFF: CURRENT_HVAC_OFF,
-        ClimateAction.COOLING: CURRENT_HVAC_COOL,
-        ClimateAction.HEATING: CURRENT_HVAC_HEAT,
-        ClimateAction.IDLE: CURRENT_HVAC_IDLE,
-        ClimateAction.DRYING: CURRENT_HVAC_DRY,
-        ClimateAction.FAN: CURRENT_HVAC_FAN,
+)
+_CLIMATE_ACTIONS: EsphomeEnumMapper[ClimateAction, HVACAction] = EsphomeEnumMapper(
+    {
+        ClimateAction.OFF: HVACAction.OFF,
+        ClimateAction.COOLING: HVACAction.COOLING,
+        ClimateAction.HEATING: HVACAction.HEATING,
+        ClimateAction.IDLE: HVACAction.IDLE,
+        ClimateAction.DRYING: HVACAction.DRYING,
+        ClimateAction.FAN: HVACAction.FAN,
     }
-
-
-@esphome_map_enum
-def _fan_modes():
-    return {
+)
+_FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
+    {
         ClimateFanMode.ON: FAN_ON,
         ClimateFanMode.OFF: FAN_OFF,
         ClimateFanMode.AUTO: FAN_AUTO,
@@ -117,28 +110,35 @@ def _fan_modes():
         ClimateFanMode.FOCUS: FAN_FOCUS,
         ClimateFanMode.DIFFUSE: FAN_DIFFUSE,
     }
-
-
-@esphome_map_enum
-def _swing_modes():
-    return {
+)
+_SWING_MODES: EsphomeEnumMapper[ClimateSwingMode, str] = EsphomeEnumMapper(
+    {
         ClimateSwingMode.OFF: SWING_OFF,
         ClimateSwingMode.BOTH: SWING_BOTH,
         ClimateSwingMode.VERTICAL: SWING_VERTICAL,
         ClimateSwingMode.HORIZONTAL: SWING_HORIZONTAL,
     }
+)
+_PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
+    {
+        ClimatePreset.NONE: PRESET_NONE,
+        ClimatePreset.HOME: PRESET_HOME,
+        ClimatePreset.AWAY: PRESET_AWAY,
+        ClimatePreset.BOOST: PRESET_BOOST,
+        ClimatePreset.COMFORT: PRESET_COMFORT,
+        ClimatePreset.ECO: PRESET_ECO,
+        ClimatePreset.SLEEP: PRESET_SLEEP,
+        ClimatePreset.ACTIVITY: PRESET_ACTIVITY,
+    }
+)
 
 
-class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
+# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+# pylint: disable=invalid-overridden-method
+
+
+class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):
     """A climate implementation for ESPHome."""
-
-    @property
-    def _static_info(self) -> ClimateInfo:
-        return super()._static_info
-
-    @property
-    def _state(self) -> Optional[ClimateState]:
-        return super()._state
 
     @property
     def precision(self) -> float:
@@ -156,31 +156,34 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available operation modes."""
         return [
-            _climate_modes.from_esphome(mode)
+            _CLIMATE_MODES.from_esphome(mode)
             for mode in self._static_info.supported_modes
         ]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return [
-            _fan_modes.from_esphome(mode)
+            _FAN_MODES.from_esphome(mode)
             for mode in self._static_info.supported_fan_modes
-        ]
+        ] + self._static_info.supported_custom_fan_modes
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return preset modes."""
-        return [PRESET_AWAY, PRESET_HOME] if self._static_info.supports_away else []
+        return [
+            _PRESETS.from_esphome(preset)
+            for preset in self._static_info.supported_presets_compat(self._api_version)
+        ] + self._static_info.supported_custom_presets
 
     @property
-    def swing_modes(self):
+    def swing_modes(self) -> list[str]:
         """Return the list of available swing modes."""
         return [
-            _swing_modes.from_esphome(mode)
+            _SWING_MODES.from_esphome(mode)
             for mode in self._static_info.supported_swing_modes
         ]
 
@@ -205,73 +208,76 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         """Return the list of supported features."""
         features = 0
         if self._static_info.supports_two_point_target_temperature:
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
-            features |= SUPPORT_TARGET_TEMPERATURE
-        if self._static_info.supports_away:
-            features |= SUPPORT_PRESET_MODE
-        if self._static_info.supported_fan_modes:
-            features |= SUPPORT_FAN_MODE
-        if self._static_info.supported_swing_modes:
-            features |= SUPPORT_SWING_MODE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if self.preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
+        if self.fan_modes:
+            features |= ClimateEntityFeature.FAN_MODE
+        if self.swing_modes:
+            features |= ClimateEntityFeature.SWING_MODE
         return features
 
-    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-    # pylint: disable=invalid-overridden-method
-
     @esphome_state_property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
-        return _climate_modes.from_esphome(self._state.mode)
+        return _CLIMATE_MODES.from_esphome(self._state.mode)
 
     @esphome_state_property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return current action."""
         # HA has no support feature field for hvac_action
         if not self._static_info.supports_action:
             return None
-        return _climate_actions.from_esphome(self._state.action)
+        return _CLIMATE_ACTIONS.from_esphome(self._state.action)
 
     @esphome_state_property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return current fan setting."""
-        return _fan_modes.from_esphome(self._state.fan_mode)
+        return self._state.custom_fan_mode or _FAN_MODES.from_esphome(
+            self._state.fan_mode
+        )
 
     @esphome_state_property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        return PRESET_AWAY if self._state.away else PRESET_HOME
+        return self._state.custom_preset or _PRESETS.from_esphome(
+            self._state.preset_compat(self._api_version)
+        )
 
     @esphome_state_property
-    def swing_mode(self):
+    def swing_mode(self) -> str | None:
         """Return current swing mode."""
-        return _swing_modes.from_esphome(self._state.swing_mode)
+        return _SWING_MODES.from_esphome(self._state.swing_mode)
 
     @esphome_state_property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
 
     @esphome_state_property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
     @esphome_state_property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @esphome_state_property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
-        data = {"key": self._static_info.key}
+        data: dict[str, Any] = {"key": self._static_info.key}
         if ATTR_HVAC_MODE in kwargs:
-            data["mode"] = _climate_modes.from_hass(kwargs[ATTR_HVAC_MODE])
+            data["mode"] = _CLIMATE_MODES.from_hass(
+                cast(HVACMode, kwargs[ATTR_HVAC_MODE])
+            )
         if ATTR_TEMPERATURE in kwargs:
             data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs:
@@ -280,25 +286,32 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
         await self._client.climate_command(**data)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self._client.climate_command(
-            key=self._static_info.key, mode=_climate_modes.from_hass(hvac_mode)
+            key=self._static_info.key, mode=_CLIMATE_MODES.from_hass(hvac_mode)
         )
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        away = preset_mode == PRESET_AWAY
-        await self._client.climate_command(key=self._static_info.key, away=away)
+        kwargs: dict[str, Any] = {"key": self._static_info.key}
+        if preset_mode in self._static_info.supported_custom_presets:
+            kwargs["custom_preset"] = preset_mode
+        else:
+            kwargs["preset"] = _PRESETS.from_hass(preset_mode)
+        await self._client.climate_command(**kwargs)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
-        await self._client.climate_command(
-            key=self._static_info.key, fan_mode=_fan_modes.from_hass(fan_mode)
-        )
+        kwargs: dict[str, Any] = {"key": self._static_info.key}
+        if fan_mode in self._static_info.supported_custom_fan_modes:
+            kwargs["custom_fan_mode"] = fan_mode
+        else:
+            kwargs["fan_mode"] = _FAN_MODES.from_hass(fan_mode)
+        await self._client.climate_command(**kwargs)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         await self._client.climate_command(
-            key=self._static_info.key, swing_mode=_swing_modes.from_hass(swing_mode)
+            key=self._static_info.key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )

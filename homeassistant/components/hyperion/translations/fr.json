@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "auth_new_token_not_granted_error": "Le jeton nouvellement cr\u00e9\u00e9 n'a pas \u00e9t\u00e9 approuv\u00e9 sur l'interface utilisateur Hyperion",
+            "auth_new_token_not_work_error": "\u00c9chec de l'authentification \u00e0 l'aide du jeton nouvellement cr\u00e9\u00e9",
+            "auth_required_error": "Impossible de d\u00e9terminer si une autorisation est requise",
+            "cannot_connect": "\u00c9chec de connexion",
+            "no_id": "L'instance Hyperion Ambilight n'a pas signal\u00e9 son identifiant",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_access_token": "Jeton d'acc\u00e8s non valide"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Cr\u00e9er automatiquement un nouveau jeton",
+                    "token": "Ou fournir un jeton pr\u00e9existant"
+                },
+                "description": "Configurez l'autorisation vers votre serveur Hyperion Ambilight"
+            },
+            "confirm": {
+                "description": "Voulez-vous ajouter cet Hyperion Ambilight \u00e0 Home Assistant\u00a0?\n\n**H\u00f4te\u00a0:** {host}\n**Port\u00a0:** {port}\n**ID\u00a0:** {id}",
+                "title": "Confirmer l'ajout du service Hyperion Ambilight"
+            },
+            "create_token": {
+                "description": "Choisissez ** Soumettre ** ci-dessous pour demander un nouveau jeton d'authentification. Vous serez redirig\u00e9 vers l'interface utilisateur Hyperion pour approuver la demande. Veuillez v\u00e9rifier que l'identifiant affich\u00e9 est \" {auth_id} \"",
+                "title": "Cr\u00e9er automatiquement un nouveau jeton d'authentification"
+            },
+            "create_token_external": {
+                "title": "Accepter un nouveau jeton dans l'interface utilisateur Hyperion"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Effets Hyperion \u00e0 montrer",
+                    "priority": "Priorit\u00e9 Hyperion \u00e0 utiliser pour les couleurs et les effets"
+                }
+            }
+        }
+    }
+}

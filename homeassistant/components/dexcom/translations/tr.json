@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "server": "Sunucu",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Dexcom Share kimlik bilgilerini girin",
+                "title": "Dexcom entegrasyonunu kurun"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "\u00d6l\u00e7\u00fc birimi"
+                }
+            }
+        }
+    }
+}

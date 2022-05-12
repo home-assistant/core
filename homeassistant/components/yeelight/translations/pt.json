@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "ip_address": "Endere\u00e7o IP"
+                    "host": "Servidor"
                 },
                 "description": "Se voc\u00ea deixar o modelo vazio, ele ser\u00e1 detectado automaticamente."
             }
@@ -34,6 +34,5 @@
                 "description": "Se voc\u00ea deixar o modelo vazio, ele ser\u00e1 detectado automaticamente."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

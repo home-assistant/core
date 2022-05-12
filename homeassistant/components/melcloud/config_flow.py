@@ -1,7 +1,8 @@
 """Config flow for the MELCloud platform."""
+from __future__ import annotations
+
 import asyncio
-import logging
-from typing import Optional
+from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
 from async_timeout import timeout
@@ -9,24 +10,16 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    HTTP_FORBIDDEN,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _create_entry(self, username: str, token: str):
         """Register new entry."""
@@ -40,8 +33,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         username: str,
         *,
-        password: Optional[str] = None,
-        token: Optional[str] = None,
+        password: str | None = None,
+        token: str | None = None,
     ):
         """Create client."""
         if password is None and token is None:
@@ -50,20 +43,19 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            with timeout(10):
-                acquired_token = token
-                if acquired_token is None:
+            async with timeout(10):
+                if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
                         username,
                         password,
-                        self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                        async_get_clientsession(self.hass),
                     )
                 await pymelcloud.get_devices(
                     acquired_token,
-                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    async_get_clientsession(self.hass),
                 )
         except ClientResponseError as err:
-            if err.status == HTTP_UNAUTHORIZED or err.status == HTTP_FORBIDDEN:
+            if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
         except (asyncio.TimeoutError, ClientError):

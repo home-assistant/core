@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "{entity_name} umschalten",
             "turn_off": "Schalte {entity_name} aus.",
             "turn_on": "Schalte {entity_name} ein."
         },
@@ -9,6 +10,8 @@
             "is_on": "{entity_name} ist eingeschaltet"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} ein- oder ausgeschaltet",
+            "toggled": "{entity_name} ein- oder ausgeschaltet",
             "turned_off": "{entity_name} ausgeschaltet",
             "turned_on": "{entity_name} eingeschaltet"
         }

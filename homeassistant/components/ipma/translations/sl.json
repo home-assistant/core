@@ -15,5 +15,10 @@
                 "title": "Lokacija"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API kon\u010dna to\u010dka je dosegljiva"
+        }
     }
 }

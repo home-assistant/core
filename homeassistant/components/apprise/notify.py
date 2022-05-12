@@ -11,12 +11,12 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE = "config"
-CONF_URL = "url"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -28,12 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the Apprise notification service."""
-
-    # Create our Apprise Asset Object
-    asset = apprise.AppriseAsset(async_mode=False)
-
     # Create our Apprise Instance (reference our asset)
-    a_obj = apprise.Apprise(asset=asset)
+    a_obj = apprise.Apprise()
 
     if config.get(CONF_FILE):
         # Sourced from a Configuration File
@@ -46,11 +42,10 @@ def get_service(hass, config, discovery_info=None):
             _LOGGER.error("Invalid Apprise config url provided")
             return None
 
-    if config.get(CONF_URL):
-        # Ordered list of URLs
-        if not a_obj.add(config[CONF_URL]):
-            _LOGGER.error("Invalid Apprise URL(s) supplied")
-            return None
+    # Ordered list of URLs
+    if config.get(CONF_URL) and not a_obj.add(config[CONF_URL]):
+        _LOGGER.error("Invalid Apprise URL(s) supplied")
+        return None
 
     return AppriseNotificationService(a_obj)
 

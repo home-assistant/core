@@ -1,0 +1,10 @@
+{
+  "domain": "flipr",
+  "name": "Flipr",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flipr",
+  "requirements": ["flipr-api==1.4.2"],
+  "codeowners": ["@cnico"],
+  "iot_class": "cloud_polling",
+  "loggers": ["flipr_api"]
+}

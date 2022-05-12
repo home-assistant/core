@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "title": "Konfiguracja integracji Syncthing",
+                    "token": "Token",
+                    "url": "URL",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                }
+            }
+        }
+    }
+}

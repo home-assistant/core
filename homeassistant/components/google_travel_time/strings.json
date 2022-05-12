@@ -1,0 +1,39 @@
+{
+  "title": "Google Maps Travel Time",
+  "config": {
+    "step": {
+      "user": {
+        "description": "When specifying the origin and destination, you can supply one or more locations separated by the pipe character, in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "Origin",
+          "destination": "Destination"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "You can optionally specify either a Departure Time or Arrival Time. If specifying a departure time, you can enter `now`, a Unix timestamp, or a 24 hour time string like `08:00:00`. If specifying an arrival time, you can use a Unix timestamp or a 24 hour time string like `08:00:00`",
+        "data": {
+          "mode": "Travel Mode",
+          "language": "Language",
+          "time_type": "Time Type",
+          "time": "Time",
+          "avoid": "Avoid",
+          "transit_mode": "Transit Mode",
+          "transit_routing_preference": "Transit Routing Preference",
+          "units": "Units"
+        }
+      }
+    }
+  }
+}

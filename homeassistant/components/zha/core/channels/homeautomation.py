@@ -1,18 +1,18 @@
 """Home automation channels module for Zigbee Home Automation."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
-import zigpy.zcl.clusters.homeautomation as homeautomation
+import enum
+
+from zigpy.zcl.clusters import homeautomation
 
 from .. import registries
 from ..const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -49,54 +49,116 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 
     CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
 
-    REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
+    class MeasurementType(enum.IntFlag):
+        """Measurement types."""
+
+        ACTIVE_MEASUREMENT = 1
+        REACTIVE_MEASUREMENT = 2
+        APPARENT_MEASUREMENT = 4
+        PHASE_A_MEASUREMENT = 8
+        PHASE_B_MEASUREMENT = 16
+        PHASE_C_MEASUREMENT = 32
+        DC_MEASUREMENT = 64
+        HARMONICS_MEASUREMENT = 128
+        POWER_QUALITY_MEASUREMENT = 256
+
+    REPORT_CONFIG = (
+        {"attr": "active_power", "config": REPORT_CONFIG_OP},
+        {"attr": "active_power_max", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "apparent_power", "config": REPORT_CONFIG_OP},
+        {"attr": "rms_current", "config": REPORT_CONFIG_OP},
+        {"attr": "rms_current_max", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "rms_voltage", "config": REPORT_CONFIG_OP},
+        {"attr": "rms_voltage_max", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "ac_frequency", "config": REPORT_CONFIG_OP},
+        {"attr": "ac_frequency_max", "config": REPORT_CONFIG_DEFAULT},
+    )
+    ZCL_INIT_ATTRS = {
+        "ac_current_divisor": True,
+        "ac_current_multiplier": True,
+        "ac_power_divisor": True,
+        "ac_power_multiplier": True,
+        "ac_voltage_divisor": True,
+        "ac_voltage_multiplier": True,
+        "ac_frequency_divisor": True,
+        "ac_frequency_multiplier": True,
+        "measurement_type": True,
+        "power_divisor": True,
+        "power_multiplier": True,
+    }
 
     async def async_update(self):
         """Retrieve latest state."""
         self.debug("async_update")
 
         # This is a polling channel. Don't allow cache.
-        result = await self.get_attribute_value("active_power", from_cache=False)
-        if result is not None:
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                0x050B,
-                "active_power",
-                result,
-            )
+        attrs = [
+            a["attr"]
+            for a in self.REPORT_CONFIG
+            if a["attr"] not in self.cluster.unsupported_attributes
+        ]
+        result = await self.get_attributes(attrs, from_cache=False, only_cache=False)
+        if result:
+            for attr, value in result.items():
+                self.async_send_signal(
+                    f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                    self.cluster.attridx.get(attr, attr),
+                    attr,
+                    value,
+                )
 
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
+    @property
+    def ac_current_divisor(self) -> int:
+        """Return ac current divisor."""
+        return self.cluster.get("ac_current_divisor") or 1
 
-    async def fetch_config(self, from_cache):
-        """Fetch config from device and updates format specifier."""
+    @property
+    def ac_current_multiplier(self) -> int:
+        """Return ac current multiplier."""
+        return self.cluster.get("ac_current_multiplier") or 1
 
-        # prime the cache
-        await self.get_attributes(
-            [
-                "ac_power_divisor",
-                "power_divisor",
-                "ac_power_multiplier",
-                "power_multiplier",
-            ],
-            from_cache=from_cache,
+    @property
+    def ac_voltage_divisor(self) -> int:
+        """Return ac voltage divisor."""
+        return self.cluster.get("ac_voltage_divisor") or 1
+
+    @property
+    def ac_voltage_multiplier(self) -> int:
+        """Return ac voltage multiplier."""
+        return self.cluster.get("ac_voltage_multiplier") or 1
+
+    @property
+    def ac_frequency_divisor(self) -> int:
+        """Return ac frequency divisor."""
+        return self.cluster.get("ac_frequency_divisor") or 1
+
+    @property
+    def ac_frequency_multiplier(self) -> int:
+        """Return ac frequency multiplier."""
+        return self.cluster.get("ac_frequency_multiplier") or 1
+
+    @property
+    def ac_power_divisor(self) -> int:
+        """Return active power divisor."""
+        return self.cluster.get(
+            "ac_power_divisor", self.cluster.get("power_divisor") or 1
         )
 
     @property
-    def divisor(self) -> Optional[int]:
+    def ac_power_multiplier(self) -> int:
         """Return active power divisor."""
         return self.cluster.get(
-            "ac_power_divisor", self.cluster.get("power_divisor", 1)
+            "ac_power_multiplier", self.cluster.get("power_multiplier") or 1
         )
 
     @property
-    def multiplier(self) -> Optional[int]:
-        """Return active power divisor."""
-        return self.cluster.get(
-            "ac_power_multiplier", self.cluster.get("power_multiplier", 1)
-        )
+    def measurement_type(self) -> str | None:
+        """Return Measurement type."""
+        if (meas_type := self.cluster.get("measurement_type")) is None:
+            return None
+
+        meas_type = self.MeasurementType(meas_type)
+        return ", ".join(m.name for m in self.MeasurementType if m in meas_type)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(

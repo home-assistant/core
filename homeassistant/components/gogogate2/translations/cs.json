@@ -10,9 +10,12 @@
         "step": {
             "user": {
                 "data": {
+                    "ip_address": "IP adresa",
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "description": "N\u00ed\u017ee zadejte po\u017eadovan\u00e9 informace.",
+                "title": "Nastaven\u00ed GogoGate2 nebo iSmartGate"
             }
         }
     }

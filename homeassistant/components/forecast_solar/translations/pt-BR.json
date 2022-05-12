@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azimute (360\u00b0, 0\u00b0 = Norte, 90\u00b0 = Leste, 180\u00b0 = Sul, 270\u00b0 = Oeste)",
+                    "declination": "Declina\u00e7\u00e3o (0\u00b0 = Horizontal, 90\u00b0 = Vertical)",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "modules power": "Pot\u00eancia de pico total em Watt de seus m\u00f3dulos solares",
+                    "name": "Nome"
+                },
+                "description": "Preencha os dados de seus pain\u00e9is solares. Consulte a documenta\u00e7\u00e3o se um campo n\u00e3o estiver claro."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Chave de API Forecast.Solar (opcional)",
+                    "azimuth": "Azimute (360\u00b0, 0\u00b0 = Norte, 90\u00b0 = Leste, 180\u00b0 = Sul, 270\u00b0 = Oeste)",
+                    "damping": "Fator de amortecimento: ajusta os resultados de manh\u00e3 e \u00e0 noite",
+                    "declination": "Declina\u00e7\u00e3o (0\u00b0 = Horizontal, 90\u00b0 = Vertical)",
+                    "inverter_size": "Pot\u00eancia do inversor (Watt)",
+                    "modules power": "Pot\u00eancia de pico total em Watt de seus m\u00f3dulos solares"
+                },
+                "description": "Preencha os dados de seus pain\u00e9is solares. Consulte a documenta\u00e7\u00e3o se um campo n\u00e3o estiver claro."
+            }
+        }
+    }
+}

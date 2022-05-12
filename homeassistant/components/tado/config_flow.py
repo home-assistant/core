@@ -6,16 +6,26 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_FALLBACK, UNIQUE_ID
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_DEFAULT,
+    CONST_OVERLAY_TADO_OPTIONS,
+    DOMAIN,
+    UNIQUE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
 )
 
 
@@ -53,7 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tado."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -82,27 +91,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, homekit_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle HomeKit discovery."""
-        if self._async_current_entries():
-            # We can see tado on the network to tell them to configure
-            # it, but since the device will not give up the account it is
-            # bound to and there can be multiple tado devices on a single
-            # account, we avoid showing the device as discovered once
-            # they already have one configured as they can always
-            # add a new one via "+"
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match()
         properties = {
-            key.lower(): value for (key, value) in homekit_info["properties"].items()
+            key.lower(): value for (key, value) in discovery_info.properties.items()
         }
-        await self.async_set_unique_id(properties["id"])
+        await self.async_set_unique_id(properties[zeroconf.ATTR_PROPERTIES_ID])
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        if self._username_already_configured(user_input):
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)
 
     def _username_already_configured(self, user_input):
         """See if we already have a username matching user input configured."""
@@ -121,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for tado."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -132,9 +131,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_FALLBACK, default=self.config_entry.options.get(CONF_FALLBACK)
-                ): bool,
+                vol.Optional(
+                    CONF_FALLBACK,
+                    default=self.config_entry.options.get(
+                        CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+                    ),
+                ): vol.In(CONST_OVERLAY_TADO_OPTIONS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

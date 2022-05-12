@@ -1,4 +1,6 @@
 """Support for Orvibo S20 Wifi Smart Switches."""
+from __future__ import annotations
+
 import logging
 
 from orvibo.s20 import S20, S20Exception, discover
@@ -12,7 +14,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SWITCHES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities_callback: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up S20 switches."""
 
     switch_data = {}
@@ -44,7 +54,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     switch_conf = config.get(CONF_SWITCHES, [config])
 
     if config.get(CONF_DISCOVERY):
-        _LOGGER.info("Discovering S20 switches ...")
+        _LOGGER.info("Discovering S20 switches")
         switch_data.update(discover())
 
     for switch in switch_conf:
@@ -72,11 +82,6 @@ class S20Switch(SwitchEntity):
         self._s20 = s20
         self._state = False
         self._exc = S20Exception
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):

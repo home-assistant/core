@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Starttijd huidige run",
+            "estimated_db_size": "Geschatte databasegrootte (MiB)",
+            "oldest_recorder_run": "Starttijd oudste run"
+        }
+    }
+}

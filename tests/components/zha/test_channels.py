@@ -1,8 +1,11 @@
 """Test ZHA Core channels."""
 import asyncio
+import math
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.types as t
 import zigpy.zcl.clusters
 
@@ -12,8 +15,9 @@ import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
 
 from .common import get_zha_gateway, make_zcl_header
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-import tests.async_mock
+from tests.common import async_capture_events
 
 
 @pytest.fixture
@@ -36,9 +40,26 @@ async def zha_gateway(hass, setup_zha):
 
 
 @pytest.fixture
-def channel_pool():
+def zigpy_coordinator_device(zigpy_device_mock):
+    """Coordinator device fixture."""
+
+    coordinator = zigpy_device_mock(
+        {1: {SIG_EP_INPUT: [0x1000], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+        "00:11:22:33:44:55:66:77",
+        "test manufacturer",
+        "test model",
+    )
+    with patch.object(coordinator, "add_to_group", AsyncMock(return_value=[0])):
+        yield coordinator
+
+
+@pytest.fixture
+def channel_pool(zigpy_coordinator_device):
     """Endpoint Channels fixture."""
     ch_pool_mock = mock.MagicMock(spec_set=zha_channels.ChannelPool)
+    ch_pool_mock.endpoint.device.application.get_device.return_value = (
+        zigpy_coordinator_device
+    )
     type(ch_pool_mock).skip_configuration = mock.PropertyMock(return_value=False)
     ch_pool_mock.id = 1
     return ch_pool_mock
@@ -49,7 +70,7 @@ def poll_control_ch(channel_pool, zigpy_device_mock):
     """Poll control channel fixture."""
     cluster_id = zigpy.zcl.clusters.general.PollControl.cluster_id
     zigpy_dev = zigpy_device_mock(
-        {1: {"in_clusters": [cluster_id], "out_clusters": [], "device_type": 0x1234}},
+        {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
         "test model",
@@ -65,7 +86,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
     """Poll control device fixture."""
     cluster_id = zigpy.zcl.clusters.general.PollControl.cluster_id
     zigpy_dev = zigpy_device_mock(
-        {1: {"in_clusters": [cluster_id], "out_clusters": [], "device_type": 0x1234}},
+        {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
         "test model",
@@ -78,10 +99,11 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
 @pytest.mark.parametrize(
     "cluster_id, bind_count, attrs",
     [
-        (0x0000, 1, {}),
+        (0x0000, 0, {}),
         (0x0001, 1, {"battery_voltage", "battery_percentage_remaining"}),
-        (0x0003, 1, {}),
-        (0x0004, 1, {}),
+        (0x0002, 1, {"current_temperature"}),
+        (0x0003, 0, {}),
+        (0x0004, 0, {}),
         (0x0005, 1, {}),
         (0x0006, 1, {"on_off"}),
         (0x0007, 1, {}),
@@ -98,12 +120,29 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (0x0014, 1, {"present_value"}),
         (0x0015, 1, {}),
         (0x0016, 1, {}),
-        (0x0019, 1, {}),
+        (0x0019, 0, {}),
         (0x001A, 1, {}),
         (0x001B, 1, {}),
         (0x0020, 1, {}),
-        (0x0021, 1, {}),
+        (0x0021, 0, {}),
         (0x0101, 1, {"lock_state"}),
+        (
+            0x0201,
+            1,
+            {
+                "local_temperature",
+                "occupied_cooling_setpoint",
+                "occupied_heating_setpoint",
+                "unoccupied_cooling_setpoint",
+                "unoccupied_heating_setpoint",
+                "running_mode",
+                "running_state",
+                "system_mode",
+                "occupancy",
+                "pi_cooling_demand",
+                "pi_heating_demand",
+            },
+        ),
         (0x0202, 1, {"fan_mode"}),
         (0x0300, 1, {"current_x", "current_y", "color_temperature"}),
         (0x0400, 1, {"measured_value"}),
@@ -114,8 +153,19 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (0x0405, 1, {"measured_value"}),
         (0x0406, 1, {"occupancy"}),
         (0x0702, 1, {"instantaneous_demand"}),
-        (0x0B04, 1, {"active_power"}),
-        (0x1000, 1, {}),
+        (
+            0x0B04,
+            1,
+            {
+                "active_power",
+                "active_power_max",
+                "apparent_power",
+                "rms_current",
+                "rms_current_max",
+                "rms_voltage",
+                "rms_voltage_max",
+            },
+        ),
     ],
 )
 async def test_in_channel_config(
@@ -123,7 +173,7 @@ async def test_in_channel_config(
 ):
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
-        {1: {"in_clusters": [cluster_id], "out_clusters": [], "device_type": 0x1234}},
+        {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
         "test model",
@@ -138,18 +188,25 @@ async def test_in_channel_config(
     await channel.async_configure()
 
     assert cluster.bind.call_count == bind_count
-    assert cluster.configure_reporting.call_count == len(attrs)
-    reported_attrs = {attr[0][0] for attr in cluster.configure_reporting.call_args_list}
+    assert cluster.configure_reporting.call_count == 0
+    assert cluster.configure_reporting_multiple.call_count == math.ceil(len(attrs) / 3)
+    reported_attrs = {
+        a
+        for a in attrs
+        for attr in cluster.configure_reporting_multiple.call_args_list
+        for attrs in attr[0][0]
+    }
     assert set(attrs) == reported_attrs
 
 
 @pytest.mark.parametrize(
     "cluster_id, bind_count",
     [
-        (0x0000, 1),
+        (0x0000, 0),
         (0x0001, 1),
-        (0x0003, 1),
-        (0x0004, 1),
+        (0x0002, 1),
+        (0x0003, 0),
+        (0x0004, 0),
         (0x0005, 1),
         (0x0006, 1),
         (0x0007, 1),
@@ -157,11 +214,11 @@ async def test_in_channel_config(
         (0x0009, 1),
         (0x0015, 1),
         (0x0016, 1),
-        (0x0019, 1),
+        (0x0019, 0),
         (0x001A, 1),
         (0x001B, 1),
         (0x0020, 1),
-        (0x0021, 1),
+        (0x0021, 0),
         (0x0101, 1),
         (0x0202, 1),
         (0x0300, 1),
@@ -172,7 +229,6 @@ async def test_in_channel_config(
         (0x0406, 1),
         (0x0702, 1),
         (0x0B04, 1),
-        (0x1000, 1),
     ],
 )
 async def test_out_channel_config(
@@ -180,7 +236,7 @@ async def test_out_channel_config(
 ):
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(
-        {1: {"out_clusters": [cluster_id], "in_clusters": [], "device_type": 0x1234}},
+        {1: {SIG_EP_OUTPUT: [cluster_id], SIG_EP_INPUT: [], SIG_EP_TYPE: 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
         "test model",
@@ -286,11 +342,15 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     """Test EndpointChannels adding all channels."""
     zha_device = zha_device_mock(
         {
-            1: {"in_clusters": [0, 1, 6, 8], "out_clusters": [], "device_type": 0x0000},
+            1: {
+                SIG_EP_INPUT: [0, 1, 6, 8],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            },
             2: {
-                "in_clusters": [0, 1, 6, 8, 768],
-                "out_clusters": [],
-                "device_type": 0x0000,
+                SIG_EP_INPUT: [0, 1, 6, 8, 768],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: 0x0000,
             },
         }
     )
@@ -334,11 +394,11 @@ def test_channel_power_config(m1, zha_device_mock):
     in_clusters = [0, 1, 6, 8]
     zha_device = zha_device_mock(
         {
-            1: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000},
+            1: {SIG_EP_INPUT: in_clusters, SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000},
             2: {
-                "in_clusters": [*in_clusters, 768],
-                "out_clusters": [],
-                "device_type": 0x0000,
+                SIG_EP_INPUT: [*in_clusters, 768],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: 0x0000,
             },
         }
     )
@@ -357,8 +417,8 @@ def test_channel_power_config(m1, zha_device_mock):
 
     zha_device = zha_device_mock(
         {
-            1: {"in_clusters": [], "out_clusters": [], "device_type": 0x0000},
-            2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000},
+            1: {SIG_EP_INPUT: [], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000},
+            2: {SIG_EP_INPUT: in_clusters, SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000},
         }
     )
     channels = zha_channels.Channels.new(zha_device)
@@ -367,7 +427,7 @@ def test_channel_power_config(m1, zha_device_mock):
     assert "2:0x0001" in pools[2].all_channels
 
     zha_device = zha_device_mock(
-        {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000}}
+        {2: {SIG_EP_INPUT: in_clusters, SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000}}
     )
     channels = zha_channels.Channels.new(zha_device)
     pools = {pool.id: pool for pool in channels.pools}
@@ -380,12 +440,12 @@ async def test_ep_channels_configure(channel):
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
-    ch_3.async_configure = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_3.async_initialize = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
     ch_4 = channel(zha_const.CHANNEL_ON_OFF, 6)
     ch_5 = channel(zha_const.CHANNEL_LEVEL, 8)
-    ch_5.async_configure = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_5.async_initialize = tests.async_mock.AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
 
     channels = mock.MagicMock(spec_set=zha_channels.Channels)
     type(channels).semaphore = mock.PropertyMock(return_value=asyncio.Semaphore(3))
@@ -394,10 +454,11 @@ async def test_ep_channels_configure(channel):
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_chans = {ch_4.id: ch_4, ch_5.id: ch_5}
 
-    with mock.patch.dict(ep_channels.claimed_channels, claimed, clear=True):
-        with mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
-            await ep_channels.async_configure()
-            await ep_channels.async_initialize(mock.sentinel.from_cache)
+    with mock.patch.dict(
+        ep_channels.claimed_channels, claimed, clear=True
+    ), mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
+        await ep_channels.async_configure()
+        await ep_channels.async_initialize(mock.sentinel.from_cache)
 
     for ch in [*claimed.values(), *client_chans.values()]:
         assert ch.async_initialize.call_count == 1
@@ -421,21 +482,24 @@ async def test_poll_control_configure(poll_control_ch):
 
 async def test_poll_control_checkin_response(poll_control_ch):
     """Test poll control channel checkin response."""
-    rsp_mock = tests.async_mock.AsyncMock()
-    set_interval_mock = tests.async_mock.AsyncMock()
+    rsp_mock = AsyncMock()
+    set_interval_mock = AsyncMock()
+    fast_poll_mock = AsyncMock()
     cluster = poll_control_ch.cluster
     patch_1 = mock.patch.object(cluster, "checkin_response", rsp_mock)
     patch_2 = mock.patch.object(cluster, "set_long_poll_interval", set_interval_mock)
+    patch_3 = mock.patch.object(cluster, "fast_poll_stop", fast_poll_mock)
 
-    with patch_1, patch_2:
+    with patch_1, patch_2, patch_3:
         await poll_control_ch.check_in_response(33)
 
     assert rsp_mock.call_count == 1
     assert set_interval_mock.call_count == 1
+    assert fast_poll_mock.call_count == 1
 
     await poll_control_ch.check_in_response(33)
-    assert cluster.endpoint.request.call_count == 2
-    assert cluster.endpoint.request.await_count == 2
+    assert cluster.endpoint.request.call_count == 3
+    assert cluster.endpoint.request.await_count == 3
     assert cluster.endpoint.request.call_args_list[0][0][1] == 33
     assert cluster.endpoint.request.call_args_list[0][0][0] == 0x0020
     assert cluster.endpoint.request.call_args_list[1][0][0] == 0x0020
@@ -443,13 +507,10 @@ async def test_poll_control_checkin_response(poll_control_ch):
 
 async def test_poll_control_cluster_command(hass, poll_control_device):
     """Test poll control channel response to cluster command."""
-    checkin_mock = tests.async_mock.AsyncMock()
+    checkin_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-
-    events = []
-    hass.bus.async_listen("zha_event", lambda x: events.append(x))
-    await hass.async_block_till_done()
+    events = async_capture_events(hass, "zha_event")
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -470,3 +531,129 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["args"][1] is mock.sentinel.args2
     assert data["args"][2] is mock.sentinel.args3
     assert data["unique_id"] == "00:11:22:33:44:55:66:77:1:0x0020"
+    assert data["device_id"] == poll_control_device.device_id
+
+
+async def test_poll_control_ignore_list(hass, poll_control_device):
+    """Test poll control channel ignore list."""
+    set_long_poll_mock = AsyncMock()
+    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    cluster = poll_control_ch.cluster
+
+    with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
+        await poll_control_ch.check_in_response(33)
+
+    assert set_long_poll_mock.call_count == 1
+
+    set_long_poll_mock.reset_mock()
+    poll_control_ch.skip_manufacturer_id(4151)
+    with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
+        await poll_control_ch.check_in_response(33)
+
+    assert set_long_poll_mock.call_count == 0
+
+
+async def test_poll_control_ikea(hass, poll_control_device):
+    """Test poll control channel ignore list for ikea."""
+    set_long_poll_mock = AsyncMock()
+    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    cluster = poll_control_ch.cluster
+
+    poll_control_device.device.node_desc.manufacturer_code = 4476
+    with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
+        await poll_control_ch.check_in_response(33)
+
+    assert set_long_poll_mock.call_count == 0
+
+
+@pytest.fixture
+def zigpy_zll_device(zigpy_device_mock):
+    """ZLL device fixture."""
+
+    return zigpy_device_mock(
+        {1: {SIG_EP_INPUT: [0x1000], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+        "00:11:22:33:44:55:66:77",
+        "test manufacturer",
+        "test model",
+    )
+
+
+async def test_zll_device_groups(
+    zigpy_zll_device, channel_pool, zigpy_coordinator_device
+):
+    """Test adding coordinator to ZLL groups."""
+
+    cluster = zigpy_zll_device.endpoints[1].lightlink
+    channel = zha_channels.lightlink.LightLink(cluster, channel_pool)
+
+    get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
+        "get_group_identifiers_rsp"
+    ].schema
+
+    with patch.object(
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=0, start_index=0, group_info_records=[]
+            )
+        ),
+    ) as cmd_mock:
+        await channel.async_configure()
+        assert cmd_mock.await_count == 1
+        assert (
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
+            == "get_group_identifiers"
+        )
+        assert cluster.bind.call_count == 0
+        assert zigpy_coordinator_device.add_to_group.await_count == 1
+        assert zigpy_coordinator_device.add_to_group.await_args[0][0] == 0x0000
+
+    zigpy_coordinator_device.add_to_group.reset_mock()
+    group_1 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xABCD, 0x00)
+    group_2 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xAABB, 0x00)
+    with patch.object(
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=2, start_index=0, group_info_records=[group_1, group_2]
+            )
+        ),
+    ) as cmd_mock:
+        await channel.async_configure()
+        assert cmd_mock.await_count == 1
+        assert (
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
+            == "get_group_identifiers"
+        )
+        assert cluster.bind.call_count == 0
+        assert zigpy_coordinator_device.add_to_group.await_count == 2
+        assert (
+            zigpy_coordinator_device.add_to_group.await_args_list[0][0][0]
+            == group_1.group_id
+        )
+        assert (
+            zigpy_coordinator_device.add_to_group.await_args_list[1][0][0]
+            == group_2.group_id
+        )
+
+
+@mock.patch(
+    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+)
+@mock.patch(
+    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
+    mock.MagicMock(),
+)
+async def test_cluster_no_ep_attribute(m1, zha_device_mock):
+    """Test channels for clusters without ep_attribute."""
+
+    zha_device = zha_device_mock(
+        {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+    )
+
+    channels = zha_channels.Channels.new(zha_device)
+    pools = {pool.id: pool for pool in channels.pools}
+    assert "1:0x042e" in pools[1].all_channels
+    assert pools[1].all_channels["1:0x042e"].name

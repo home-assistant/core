@@ -1,13 +1,14 @@
 """The denonavr component."""
 import logging
 
-import voluptuous as vol
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
-from homeassistant import config_entries, core
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
@@ -23,53 +24,28 @@ from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-SERVICE_GET_COMMAND = "get_command"
-ATTR_COMMAND = "command"
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
-CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
-GET_COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
-
-SERVICE_TO_METHOD = {
-    SERVICE_GET_COMMAND: {"method": "get_command", "schema": GET_COMMAND_SCHEMA}
-}
-
-
-def setup(hass: core.HomeAssistant, config: dict):
-    """Set up the denonavr platform."""
-
-    def service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
-        data = service.data.copy()
-        data["method"] = method["method"]
-        dispatcher_send(hass, DOMAIN, data)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.register(DOMAIN, service, service_handler, schema=schema)
-
-    return True
-
-
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the denonavr components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
-        hass,
         entry.data[CONF_HOST],
         DEFAULT_TIMEOUT,
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
+        lambda: get_async_client(hass),
     )
-    if not await connect_denonavr.async_connect_receiver():
-        raise ConfigEntryNotReady
+    try:
+        await connect_denonavr.async_connect_receiver()
+    except (AvrNetworkError, AvrTimoutError) as ex:
+        raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
 
     undo_listener = entry.add_update_listener(update_listener)
@@ -79,28 +55,25 @@ async def async_setup_entry(
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        config_entry, "media_player"
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     # Remove zone2 and zone3 entities if needed
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    zone2_id = f"{config_entry.unique_id}-Zone2"
-    zone3_id = f"{config_entry.unique_id}-Zone3"
+    unique_id = config_entry.unique_id or config_entry.entry_id
+    zone2_id = f"{unique_id}-Zone2"
+    zone3_id = f"{unique_id}-Zone3"
     for entry in entries:
         if entry.unique_id == zone2_id and not config_entry.options.get(CONF_ZONE2):
             entity_registry.async_remove(entry.entity_id)
@@ -115,8 +88,6 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def update_listener(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

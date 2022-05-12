@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Bestemming",
+                    "name": "Naam",
+                    "origin": "Vertrekpunt",
+                    "region": "Regio"
+                },
+                "description": "Voor Vertrekpunt en Bestemming voert u het adres of de GPS-co\u00f6rdinaten van de locatie in (GPS-co\u00f6rdinaten moeten worden gescheiden door een komma). U kunt ook een entiteits-id invoeren die deze informatie in zijn status geeft, een entiteits-id met lengte- en breedtegraadattributen, of een zone-vriendelijke naam."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Veerboten vermijden?",
+                    "avoid_subscription_roads": "Vermijd wegen die een vignet / abonnement nodig hebben?",
+                    "avoid_toll_roads": "Tolwegen vermijden?",
+                    "excl_filter": "Substring NIET in beschrijving van geselecteerde route",
+                    "incl_filter": "Substring in beschrijving van geselecteerde route",
+                    "realtime": "Realtime reistijd?",
+                    "units": "Eenheden",
+                    "vehicle_type": "Voertuigtype"
+                },
+                "description": "Met de 'substring'-invoer kunt u de integratie forceren om een bepaalde route te gebruiken of een bepaalde route te vermijden in de tijdreisberekening."
+            }
+        }
+    },
+    "title": "Waze reistijd"
+}

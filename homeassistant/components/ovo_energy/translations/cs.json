@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "flow_title": "OVO Energy: {username}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "description": "Ov\u011b\u0159en\u00ed pro OVO Energy se nezda\u0159ilo. Zadejte sv\u00e9 aktu\u00e1ln\u00ed p\u0159ihla\u0161ovac\u00ed \u00fadaje.",
+                "title": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed"
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "description": "Nastavte p\u0159\u00edstup instanci OVO Energy ke spot\u0159eb\u011b energie.",
+                "title": "P\u0159idejte \u00fa\u010det OVO Energy"
+            }
+        }
+    }
+}

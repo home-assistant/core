@@ -1,0 +1,17 @@
+{
+    "state": {
+        "tuya__curtain_mode": {
+            "morning": "\u0420\u0430\u043d\u043e\u043a",
+            "night": "\u041d\u0456\u0447"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u041d\u0430\u0437\u0430\u0434",
+            "forward": "\u0412\u043f\u0435\u0440\u0435\u0434"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        }
+    }
+}

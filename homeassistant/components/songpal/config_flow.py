@@ -1,6 +1,7 @@
 """Config flow to configure songpal component."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -9,9 +10,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_ENDPOINT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_ENDPOINT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +31,10 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Songpal configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the flow."""
-        self.conf: Optional[SongpalConfig] = None
+        self.conf: SongpalConfig | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -75,9 +75,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         # Check if already configured
-        if self._async_endpoint_already_configured():
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({CONF_ENDPOINT: self.conf.endpoint})
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
@@ -95,16 +93,16 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint},
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Songpal device."""
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Discovered: %s", discovery_info)
 
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
-        scalarweb_info = discovery_info["X_ScalarWebAPI_DeviceInfo"]
+        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        parsed_url = urlparse(discovery_info.ssdp_location)
+        scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
         endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
         service_types = scalarweb_info["X_ScalarWebAPI_ServiceList"][
             "X_ScalarWebAPI_ServiceType"
@@ -114,7 +112,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if "videoScreen" in service_types:
             return self.async_abort(reason="not_songpal_device")
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
@@ -145,11 +142,3 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(user_input)
-
-    @callback
-    def _async_endpoint_already_configured(self):
-        """See if we already have an endpoint matching user input configured."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_ENDPOINT) == self.conf.endpoint:
-                return True
-        return False

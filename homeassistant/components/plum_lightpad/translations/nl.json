@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                }
+            }
+        }
+    }
+}

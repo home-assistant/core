@@ -16,7 +16,8 @@
                     "host": "Direcci\u00f3n IP",
                     "port": "Puerto"
                 },
-                "description": "Configure su BleBox para integrarse con Home Assistant."
+                "description": "Configure su BleBox para integrarse con Home Assistant.",
+                "title": "Configure su dispositivo BleBox"
             }
         }
     }

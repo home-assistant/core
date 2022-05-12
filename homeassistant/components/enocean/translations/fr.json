@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "invalid_dongle_path": "Lien vers la cl\u00e9 USB invalide",
+            "invalid_dongle_path": "Chemin d'acc\u00e8s \u00e0 la cl\u00e9 non valide",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
             "invalid_dongle_path": "Aucune cl\u00e9 valide trouv\u00e9e pour ce lien"
         },
-        "flow_title": "Configuration d'ENOcean",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Entrez le lien vers votre cl\u00e9 ENOcean"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

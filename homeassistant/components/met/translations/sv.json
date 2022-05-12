@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "name_exists": "Plats finns redan"
-        },
         "step": {
             "user": {
                 "data": {

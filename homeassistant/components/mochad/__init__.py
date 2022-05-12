@@ -11,7 +11,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mochad component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
@@ -42,8 +44,8 @@ def setup(hass, config):
 
     try:
         mochad_controller = MochadCtrl(host, port)
-    except exceptions.ConfigurationError:
-        _LOGGER.exception()
+    except exceptions.ConfigurationError as err:
+        _LOGGER.exception(str(err))
         return False
 
     def stop_mochad(event):

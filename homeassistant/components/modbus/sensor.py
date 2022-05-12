@@ -1,272 +1,154 @@
 """Support for Modbus Register sensors."""
+from __future__ import annotations
+
+from datetime import datetime
 import logging
-import struct
-from typing import Any, Optional, Union
+from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
-import voluptuous as vol
-
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    CONF_OFFSET,
-    CONF_SLAVE,
-    CONF_STRUCTURE,
-    CONF_UNIT_OF_MEASUREMENT,
-)
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
+from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-
-from .const import (
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
-    CONF_COUNT,
-    CONF_DATA_TYPE,
-    CONF_HUB,
-    CONF_PRECISION,
-    CONF_REGISTER,
-    CONF_REGISTER_TYPE,
-    CONF_REGISTERS,
-    CONF_REVERSE_ORDER,
-    CONF_SCALE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
-    DEFAULT_HUB,
-    MODBUS_DOMAIN,
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
+
+from . import get_hub
+from .base_platform import BaseStructPlatform
+from .const import CONF_SLAVE_COUNT
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def number(value: Any) -> Union[int, float]:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-
-    if isinstance(value, str):
-        try:
-            value = int(value)
-            return value
-        except (TypeError, ValueError):
-            pass
-
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
+PARALLEL_UPDATES = 1
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_REGISTERS): [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_REGISTER): cv.positive_int,
-                vol.Optional(CONF_COUNT, default=1): cv.positive_int,
-                vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
-                    [
-                        DATA_TYPE_INT,
-                        DATA_TYPE_UINT,
-                        DATA_TYPE_FLOAT,
-                        DATA_TYPE_STRING,
-                        DATA_TYPE_CUSTOM,
-                    ]
-                ),
-                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                vol.Optional(CONF_OFFSET, default=0): number,
-                vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-                vol.Optional(
-                    CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-                ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-                vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
-                vol.Optional(CONF_SCALE, default=1): number,
-                vol.Optional(CONF_SLAVE): cv.positive_int,
-                vol.Optional(CONF_STRUCTURE): cv.string,
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            }
-        ]
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Modbus sensors."""
-    sensors = []
-    data_types = {
-        DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-        DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-        DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-    }
 
-    for register in config[CONF_REGISTERS]:
-        structure = ">i"
-        if register[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(register[CONF_COUNT] * 2) + "s"
-        elif register[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
-            try:
-                structure = (
-                    f">{data_types[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
-                )
-            except KeyError:
-                _LOGGER.error(
-                    "Unable to detect data type for %s sensor, try a custom type",
-                    register[CONF_NAME],
-                )
-                continue
-        else:
-            structure = register.get(CONF_STRUCTURE)
+    if discovery_info is None:
+        return
 
-        try:
-            size = struct.calcsize(structure)
-        except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", register[CONF_NAME], err)
-            continue
-
-        if register[CONF_COUNT] * 2 != size:
-            _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
-                size,
-                register[CONF_COUNT],
-            )
-            continue
-
-        hub_name = register[CONF_HUB]
-        hub = hass.data[MODBUS_DOMAIN][hub_name]
-        sensors.append(
-            ModbusRegisterSensor(
-                hub,
-                register[CONF_NAME],
-                register.get(CONF_SLAVE),
-                register[CONF_REGISTER],
-                register[CONF_REGISTER_TYPE],
-                register.get(CONF_UNIT_OF_MEASUREMENT),
-                register[CONF_COUNT],
-                register[CONF_REVERSE_ORDER],
-                register[CONF_SCALE],
-                register[CONF_OFFSET],
-                structure,
-                register[CONF_PRECISION],
-                register[CONF_DATA_TYPE],
-                register.get(CONF_DEVICE_CLASS),
-            )
-        )
-
-    if not sensors:
-        return False
-    add_entities(sensors)
+    sensors: list[ModbusRegisterSensor | SlaveSensor] = []
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    for entry in discovery_info[CONF_SENSORS]:
+        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
+        sensor = ModbusRegisterSensor(hub, entry)
+        if slave_count > 0:
+            sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
+        sensors.append(sensor)
+    async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(RestoreEntity):
+class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
         self,
-        hub,
-        name,
-        slave,
-        register,
-        register_type,
-        unit_of_measurement,
-        count,
-        reverse_order,
-        scale,
-        offset,
-        structure,
-        precision,
-        data_type,
-        device_class,
-    ):
+        hub: ModbusHub,
+        entry: dict[str, Any],
+    ) -> None:
         """Initialize the modbus register sensor."""
-        self._hub = hub
-        self._name = name
-        self._slave = int(slave) if slave else None
-        self._register = int(register)
-        self._register_type = register_type
-        self._unit_of_measurement = unit_of_measurement
-        self._count = int(count)
-        self._reverse_order = reverse_order
-        self._scale = scale
-        self._offset = offset
-        self._precision = precision
-        self._structure = structure
-        self._data_type = data_type
-        self._device_class = device_class
-        self._value = None
-        self._available = True
+        super().__init__(hub, entry)
+        self._coordinator: DataUpdateCoordinator[Any] | None = None
+        self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
-    async def async_added_to_hass(self):
+    async def async_setup_slaves(
+        self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
+    ) -> list[SlaveSensor]:
+        """Add slaves as needed (1 read for multiple sensors)."""
+
+        # Add a dataCoordinator for each sensor that have slaves
+        # this ensures that idx = bit position of value in result
+        # polling is done with the base class
+        name = self._attr_name if self._attr_name else "modbus_sensor"
+        self._coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=name,
+        )
+
+        slaves: list[SlaveSensor] = []
+        for idx in range(0, slave_count):
+            slaves.append(SlaveSensor(self._coordinator, idx, entry))
+        return slaves
+
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state
+        await self.async_base_added_to_hass()
+        if state := await self.async_get_last_state():
+            self._attr_native_value = state.state
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    def update(self):
+    async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
-            self._available = False
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        raw_result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, self._count, self._input_type
+        )
+        if raw_result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
+            self._attr_available = False
+            self._attr_native_value = None
+            if self._coordinator:
+                self._coordinator.async_set_updated_data(None)
+            self.async_write_ha_state()
             return
 
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
-
-        registers = result.registers
-        if self._reverse_order:
-            registers.reverse()
-
-        byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        if self._data_type != DATA_TYPE_STRING:
-            val = struct.unpack(self._structure, byte_string)[0]
-            val = self._scale * val + self._offset
-            if isinstance(val, int):
-                self._value = str(val)
-                if self._precision > 0:
-                    self._value += "." + "0" * self._precision
+        result = self.unpack_structure_result(raw_result.registers)
+        if self._coordinator:
+            if result:
+                result_array = result.split(",")
+                self._attr_native_value = result_array[0]
+                self._coordinator.async_set_updated_data(result_array)
             else:
-                self._value = f"{val:.{self._precision}f}"
+                self._attr_native_value = None
+                self._coordinator.async_set_updated_data(None)
         else:
-            self._value = byte_string.decode()
+            self._attr_native_value = result
+        if self._attr_native_value is None:
+            self._attr_available = False
+        else:
+            self._attr_available = True
+        self._lazy_errors = self._lazy_error_count
+        self.async_write_ha_state()
 
-        self._available = True
+
+class SlaveSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+    """Modbus slave binary sensor."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[Any], idx: int, entry: dict[str, Any]
+    ) -> None:
+        """Initialize the Modbus binary sensor."""
+        idx += 1
+        self._idx = idx
+        self._attr_name = f"{entry[CONF_NAME]} {idx}"
+        self._attr_available = False
+        super().__init__(coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        if state := await self.async_get_last_state():
+            self._attr_native_value = state.state
+        await super().async_added_to_hass()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        result = self.coordinator.data
+        if result:
+            self._attr_native_value = result[self._idx]
+        super()._handle_coordinator_update()

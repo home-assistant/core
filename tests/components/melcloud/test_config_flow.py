@@ -1,5 +1,7 @@
 """Test the MELCloud config flow."""
 import asyncio
+from http import HTTPStatus
+from unittest.mock import patch
 
 from aiohttp import ClientError, ClientResponseError
 import pymelcloud
@@ -7,9 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
-from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -61,6 +61,7 @@ async def test_form(hass, mock_login, mock_get_devices):
             result["flow_id"],
             {"username": "test-email@test-domain.com", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-email@test-domain.com"
@@ -68,7 +69,6 @@ async def test_form(hass, mock_login, mock_get_devices):
         "username": "test-email@test-domain.com",
         "token": "test-token",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -95,9 +95,9 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
 @pytest.mark.parametrize(
     "error,message",
     [
-        (401, "invalid_auth"),
-        (HTTP_FORBIDDEN, "invalid_auth"),
-        (HTTP_INTERNAL_SERVER_ERROR, "cannot_connect"),
+        (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (HTTPStatus.FORBIDDEN, "invalid_auth"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
     ],
 )
 async def test_form_response_errors(
@@ -128,6 +128,7 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
             context={"source": config_entries.SOURCE_IMPORT},
             data={"username": "test-email@test-domain.com", "token": "test-token"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-email@test-domain.com"
@@ -135,7 +136,6 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
         "username": "test-email@test-domain.com",
         "token": "test-token",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

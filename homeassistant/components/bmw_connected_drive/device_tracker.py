@@ -1,51 +1,85 @@
 """Device tracker for BMW Connected Drive vehicles."""
+from __future__ import annotations
+
 import logging
+from typing import Literal
 
-from homeassistant.util import slugify
+from bimmer_connected.vehicle import ConnectedDriveVehicle
 
-from . import DOMAIN as BMW_DOMAIN
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import BMWConnectedDriveBaseEntity
+from .const import ATTR_DIRECTION, DOMAIN
+from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
-    """Set up the BMW tracker."""
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            tracker = BMWDeviceTracker(see, vehicle)
-            account.add_update_listener(tracker.update)
-            tracker.update()
-    return True
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the BMW ConnectedDrive tracker from config entry."""
+    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[BMWDeviceTracker] = []
+
+    for vehicle in coordinator.account.vehicles:
+        entities.append(BMWDeviceTracker(coordinator, vehicle))
+        if not vehicle.is_vehicle_tracking_enabled:
+            _LOGGER.info(
+                "Tracking is (currently) disabled for vehicle %s (%s), defaulting to unknown",
+                vehicle.name,
+                vehicle.vin,
+            )
+    async_add_entities(entities)
 
 
-class BMWDeviceTracker:
+class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     """BMW Connected Drive device tracker."""
 
-    def __init__(self, see, vehicle):
+    _attr_force_update = False
+    _attr_icon = "mdi:car"
+
+    def __init__(
+        self,
+        coordinator: BMWDataUpdateCoordinator,
+        vehicle: ConnectedDriveVehicle,
+    ) -> None:
         """Initialize the Tracker."""
-        self._see = see
-        self.vehicle = vehicle
+        super().__init__(coordinator, vehicle)
 
-    def update(self) -> None:
-        """Update the device info.
+        self._attr_unique_id = vehicle.vin
+        self._attr_name = vehicle.name
 
-        Only update the state in Home Assistant if tracking in
-        the car is enabled.
-        """
-        dev_id = slugify(self.vehicle.name)
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return entity specific state attributes."""
+        return dict(self._attrs, **{ATTR_DIRECTION: self.vehicle.status.gps_heading})
 
-        if not self.vehicle.state.is_vehicle_tracking_enabled:
-            _LOGGER.debug("Tracking is disabled for vehicle %s", dev_id)
-            return
-
-        _LOGGER.debug("Updating %s", dev_id)
-        attrs = {"vin": self.vehicle.vin}
-        self._see(
-            dev_id=dev_id,
-            host_name=self.vehicle.name,
-            gps=self.vehicle.state.gps_position,
-            attributes=attrs,
-            icon="mdi:car",
+    @property
+    def latitude(self) -> float | None:
+        """Return latitude value of the device."""
+        return (
+            self.vehicle.status.gps_position[0]
+            if self.vehicle.is_vehicle_tracking_enabled
+            else None
         )
+
+    @property
+    def longitude(self) -> float | None:
+        """Return longitude value of the device."""
+        return (
+            self.vehicle.status.gps_position[1]
+            if self.vehicle.is_vehicle_tracking_enabled
+            else None
+        )
+
+    @property
+    def source_type(self) -> Literal["gps"]:
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_GPS

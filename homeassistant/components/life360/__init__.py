@@ -1,25 +1,24 @@
 """Life360 integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker import (
-    CONF_SCAN_INTERVAL,
-    DOMAIN as DEVICE_TRACKER,
-)
+from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
 from homeassistant.components.device_tracker.const import (
     SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_INCLUDE,
     CONF_PASSWORD,
     CONF_PREFIX,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AUTHORIZATION,
@@ -36,8 +35,6 @@ from .const import (
     SHOW_MOVING,
 )
 from .helpers import get_api
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PREFIX = DOMAIN
 
@@ -151,11 +148,11 @@ LIFE360_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: LIFE360_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up integration."""
     conf = config.get(DOMAIN, LIFE360_SCHEMA({}))
     hass.data[DOMAIN] = {"config": conf, "apis": {}}
-    discovery.load_platform(hass, DEVICE_TRACKER, DOMAIN, None, config)
+    discovery.load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, None, config)
 
     if CONF_ACCOUNTS not in conf:
         return True
@@ -197,7 +194,7 @@ def setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     hass.data[DOMAIN]["apis"][entry.data[CONF_USERNAME]] = get_api(
         entry.data[CONF_AUTHORIZATION]
@@ -205,7 +202,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
     try:
         hass.data[DOMAIN]["apis"].pop(entry.data[CONF_USERNAME])

@@ -1,4 +1,6 @@
 """Support for performing TensorFlow classification on images."""
+from __future__ import annotations
+
 import io
 import logging
 import os
@@ -12,16 +14,21 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import split_entity_id
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_START,
+)
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -43,7 +50,6 @@ CONF_GRAPH = "graph"
 CONF_LABELS = "labels"
 CONF_LABEL_OFFSET = "label_offset"
 CONF_LEFT = "left"
-CONF_MODEL = "model"
 CONF_MODEL_DIR = "model_dir"
 CONF_RIGHT = "right"
 CONF_TOP = "top"
@@ -96,7 +102,12 @@ def get_model_detection_function(model):
     return detect_fn
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the TensorFlow image processing platform."""
     model_config = config[CONF_MODEL]
     model_dir = model_config.get(CONF_MODEL_DIR) or hass.config.path("tensorflow")
@@ -218,7 +229,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"TensorFlow {split_entity_id(camera_entity)[1]}"
         self._category_index = category_index
         self._min_confidence = config.get(CONF_CONFIDENCE)
         self._file_out = config.get(CONF_FILE_OUT)
@@ -247,8 +258,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         # Handle global detection area
         self._area = [0, 0, 1, 1]
-        area_config = model_config.get(CONF_AREA)
-        if area_config:
+        if area_config := model_config.get(CONF_AREA):
             self._area = [
                 area_config.get(CONF_TOP),
                 area_config.get(CONF_LEFT),
@@ -279,7 +289,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -328,22 +338,19 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
-            if not os.path.exists(os.path.dirname(path)):
-                os.makedirs(os.path.dirname(path), exist_ok=True)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
     def process_image(self, image):
         """Process the image."""
-        model = self.hass.data[DOMAIN][CONF_MODEL]
-        if not model:
-            _LOGGER.debug("Model not yet ready.")
+        if not (model := self.hass.data[DOMAIN][CONF_MODEL]):
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
+            import cv2  # pylint: disable=import-outside-toplevel
 
-            # pylint: disable=no-member
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
@@ -407,7 +414,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 continue
 
             # If we got here, we should include it
-            if category not in matches.keys():
+            if category not in matches:
                 matches[category] = []
             matches[category].append({"score": float(score), "box": boxes})
             total_matches += 1

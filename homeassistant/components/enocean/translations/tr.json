@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Ge\u00e7ersiz dongle yolu",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "invalid_dongle_path": "Bu yol i\u00e7in ge\u00e7erli bir dongle bulunamad\u0131"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB dongle yolu"
+                },
+                "title": "ENOcean dongle yolunu se\u00e7in"
+            },
+            "manual": {
+                "data": {
+                    "path": "USB dongle yolu"
+                },
+                "title": "Enocean dongle yolunu girin"
+            }
+        }
+    }
+}

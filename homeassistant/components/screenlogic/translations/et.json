@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP aadress",
+                    "port": "Port"
+                },
+                "description": "Sisesta oma ScreenLogic Gateway teave.",
+                "title": ""
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "L\u00fc\u00fcs"
+                },
+                "description": "Avastati j\u00e4rgmised ScreenLogicu l\u00fc\u00fcsid. Vali seadistatav l\u00fc\u00fcs v\u00f5i seadista ScreenLogicu l\u00fc\u00fcs k\u00e4sitsi.",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute vahe sekundites"
+                },
+                "description": "M\u00e4\u00e4ra {gateway_name} s\u00e4tted",
+                "title": ""
+            }
+        }
+    }
+}

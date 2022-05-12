@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_url": "Nieprawid\u0142owy adres URL",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z motionEye przez dodatek {addon}?",
+                "title": "motionEye poprzez dodatek Home Assistant"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Has\u0142o administratora",
+                    "admin_username": "Nazwa u\u017cytkownika administratora",
+                    "surveillance_password": "Has\u0142o podgl\u0105du",
+                    "surveillance_username": "Nazwa u\u017cytkownika podgl\u0105du",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Szablon adresu URL strumienia",
+                    "webhook_set": "Skonfiguruj webhook motionEye, aby zg\u0142asza\u0107 zdarzenia do Home Assistanta",
+                    "webhook_set_overwrite": "Nadpisz nierozpoznane webhooki"
+                }
+            }
+        }
+    }
+}

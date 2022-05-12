@@ -1,26 +1,26 @@
 """Icon helper methods."""
-from typing import Optional
+from __future__ import annotations
 
 
 def icon_for_battery_level(
-    battery_level: Optional[int] = None, charging: bool = False
+    battery_level: int | None = None, charging: bool = False
 ) -> str:
     """Return a battery icon valid identifier."""
     icon = "mdi:battery"
     if battery_level is None:
         return f"{icon}-unknown"
     if charging and battery_level > 10:
-        icon += "-charging-{}".format(int(round(battery_level / 20 - 0.01)) * 20)
+        icon += f"-charging-{int(round(battery_level / 20 - 0.01)) * 20}"
     elif charging:
         icon += "-outline"
     elif battery_level <= 5:
         icon += "-alert"
     elif 5 < battery_level < 95:
-        icon += "-{}".format(int(round(battery_level / 10 - 0.01)) * 10)
+        icon += f"-{int(round(battery_level / 10 - 0.01)) * 10}"
     return icon
 
 
-def icon_for_signal_level(signal_level: Optional[int] = None) -> str:
+def icon_for_signal_level(signal_level: int | None = None) -> str:
     """Return a signal icon valid identifier."""
     if signal_level is None or signal_level == 0:
         return "mdi:signal-cellular-outline"

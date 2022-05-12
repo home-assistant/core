@@ -96,20 +96,16 @@ async def test_default_setup(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.protocol2_0_1").state == "on"
 
     # test changing state from HA propagates to RFLink
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_0"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "off"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
@@ -118,10 +114,8 @@ async def test_default_setup(hass, monkeypatch):
     # protocols supporting dimming and on/off should create hybrid light entity
     event_callback({"id": "newkaku_0_1", "command": "off"})
     await hass.async_block_till_done()
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1"}
     )
     await hass.async_block_till_done()
 
@@ -131,23 +125,19 @@ async def test_default_setup(hass, monkeypatch):
     # and send on command for fallback
     assert protocol.send_command_ack.call_args_list[3][0][1] == "on"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1", ATTR_BRIGHTNESS: 128},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1", ATTR_BRIGHTNESS: 128},
     )
     await hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_args_list[4][0][1] == "7"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.dim_test", ATTR_BRIGHTNESS: 128},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.dim_test", ATTR_BRIGHTNESS: 128},
     )
     await hass.async_block_till_done()
 
@@ -210,10 +200,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     )
 
     # test if signal repetition is performed according to configuration
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
 
     # wait for commands and repetitions to finish
@@ -222,10 +210,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     assert protocol.send_command_ack.call_count == 2
 
     # test if default apply to configured devices
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
     )
 
     # wait for commands and repetitions to finish
@@ -239,10 +225,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     # make sure entity is created before setting state
     await hass.async_block_till_done()
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.protocol_0_2"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.protocol_0_2"}
     )
 
     # wait for commands and repetitions to finish
@@ -340,24 +324,107 @@ async def test_type_toggle(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "off"
 
     # test async_turn_off, must set state = 'on' ('off' + toggle)
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
     )
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "on"
 
     # test async_turn_on, must set state = 'off' (yes, sounds crazy)
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
     )
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "off"
+
+
+async def test_set_level_command(hass, monkeypatch):
+    """Test 'set_level=XX' events."""
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "newkaku_12345678_0": {"name": "l1"},
+                "test_no_dimmable": {"name": "l2"},
+                "test_dimmable": {"name": "l3", "type": "dimmable"},
+                "test_hybrid": {"name": "l4", "type": "hybrid"},
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    # test sending command to a newkaku device
+    event_callback({"id": "newkaku_12345678_0", "command": "set_level=10"})
+    await hass.async_block_till_done()
+    # should affect state
+    state = hass.states.get(f"{DOMAIN}.l1")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 170
+    # turn off
+    event_callback({"id": "newkaku_12345678_0", "command": "off"})
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{DOMAIN}.l1")
+    assert state
+    assert state.state == STATE_OFF
+    # off light shouldn't have brightness
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
+    # turn on
+    event_callback({"id": "newkaku_12345678_0", "command": "on"})
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{DOMAIN}.l1")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 170
+
+    # test sending command to a no dimmable device
+    event_callback({"id": "test_no_dimmable", "command": "set_level=10"})
+    await hass.async_block_till_done()
+    # should NOT affect state
+    state = hass.states.get(f"{DOMAIN}.l2")
+    assert state
+    assert state.state == STATE_OFF
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
+
+    # test sending command to a dimmable device
+    event_callback({"id": "test_dimmable", "command": "set_level=5"})
+    await hass.async_block_till_done()
+    # should affect state
+    state = hass.states.get(f"{DOMAIN}.l3")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 85
+
+    # test sending command to a hybrid device
+    event_callback({"id": "test_hybrid", "command": "set_level=15"})
+    await hass.async_block_till_done()
+    # should affect state
+    state = hass.states.get(f"{DOMAIN}.l4")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+    event_callback({"id": "test_hybrid", "command": "off"})
+    await hass.async_block_till_done()
+    # should affect state
+    state = hass.states.get(f"{DOMAIN}.l4")
+    assert state
+    assert state.state == STATE_OFF
+    # off light shouldn't have brightness
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
+
+    event_callback({"id": "test_hybrid", "command": "set_level=0"})
+    await hass.async_block_till_done()
+    # should affect state
+    state = hass.states.get(f"{DOMAIN}.l4")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 0
 
 
 async def test_group_alias(hass, monkeypatch):
@@ -367,7 +434,12 @@ async def test_group_alias(hass, monkeypatch):
         DOMAIN: {
             "platform": "rflink",
             "devices": {
-                "protocol_0_0": {"name": "test", "group_aliases": ["test_group_0_0"]}
+                "protocol_0_0": {"name": "test", "group_aliases": ["test_group_0_0"]},
+                "protocol_0_1": {
+                    "name": "test2",
+                    "type": "dimmable",
+                    "group_aliases": ["test_group_0_0"],
+                },
             },
         },
     }
@@ -382,12 +454,14 @@ async def test_group_alias(hass, monkeypatch):
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
+    assert hass.states.get(f"{DOMAIN}.test2").state == "on"
 
     # test sending group command to group alias
     event_callback({"id": "test_group_0_0", "command": "off"})
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
+    assert hass.states.get(f"{DOMAIN}.test2").state == "on"
 
 
 async def test_nogroup_alias(hass, monkeypatch):
@@ -416,7 +490,7 @@ async def test_nogroup_alias(hass, monkeypatch):
     # should not affect state
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
-    # test sending group command to nogroup alias
+    # test sending group commands to nogroup alias
     event_callback({"id": "test_nogroup_0_0", "command": "on"})
     await hass.async_block_till_done()
     # should affect state
@@ -521,7 +595,8 @@ async def test_restore_state(hass, monkeypatch):
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    # off light shouldn't have brightness
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
     assert state.attributes["assumed_state"]
 
     # test coverage for dimmable light

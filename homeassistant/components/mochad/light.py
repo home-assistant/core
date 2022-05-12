@@ -1,22 +1,27 @@
 """Support for X10 dimmer over Mochad."""
+from __future__ import annotations
+
 import logging
 
 from pymochad import device
+from pymochad.exceptions import MochadException
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
 
 _LOGGER = logging.getLogger(__name__)
-
 CONF_BRIGHTNESS_LEVELS = "brightness_levels"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -36,16 +41,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up X10 dimmers over a mochad controller."""
     mochad_controller = hass.data[DOMAIN]
-    devs = config.get(CONF_DEVICES)
+    devs = config[CONF_DEVICES]
     add_entities([MochadLight(hass, mochad_controller.ctrl, dev) for dev in devs])
-    return True
 
 
 class MochadLight(LightEntity):
     """Representation of a X10 dimmer over Mochad."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Light Device."""
@@ -81,11 +93,6 @@ class MochadLight(LightEntity):
         return self._state
 
     @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_BRIGHTNESS
-
-    @property
     def assumed_state(self):
         """X10 devices are normally 1-way so we have to assume the state."""
         return True
@@ -107,30 +114,42 @@ class MochadLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Send the command to turn the light on."""
+        _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         with REQ_LOCK:
-            if self._brightness_levels > 32:
-                out_brightness = self._calculate_brightness_value(brightness)
-                self.light.send_cmd(f"xdim {out_brightness}")
-                self._controller.read_data()
-            else:
-                self.light.send_cmd("on")
-                self._controller.read_data()
-                # There is no persistence for X10 modules so a fresh on command
-                # will be full brightness
-                if self._brightness == 0:
-                    self._brightness = 255
-                self._adjust_brightness(brightness)
-        self._brightness = brightness
-        self._state = True
+            try:
+                # Recycle socket on new command to recover mochad connection
+                self._controller.reconnect()
+                if self._brightness_levels > 32:
+                    out_brightness = self._calculate_brightness_value(brightness)
+                    self.light.send_cmd(f"xdim {out_brightness}")
+                    self._controller.read_data()
+                else:
+                    self.light.send_cmd("on")
+                    self._controller.read_data()
+                    # There is no persistence for X10 modules so a fresh on command
+                    # will be full brightness
+                    if self._brightness == 0:
+                        self._brightness = 255
+                    self._adjust_brightness(brightness)
+                self._brightness = brightness
+                self._state = True
+            except (MochadException, OSError) as exc:
+                _LOGGER.error("Error with mochad communication: %s", exc)
 
     def turn_off(self, **kwargs):
         """Send the command to turn the light on."""
+        _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
         with REQ_LOCK:
-            self.light.send_cmd("off")
-            self._controller.read_data()
-            # There is no persistence for X10 modules so we need to prepare
-            # to track a fresh on command will full brightness
-            if self._brightness_levels == 31:
-                self._brightness = 0
-        self._state = False
+            try:
+                # Recycle socket on new command to recover mochad connection
+                self._controller.reconnect()
+                self.light.send_cmd("off")
+                self._controller.read_data()
+                # There is no persistence for X10 modules so we need to prepare
+                # to track a fresh on command will full brightness
+                if self._brightness_levels == 31:
+                    self._brightness = 0
+                self._state = False
+            except (MochadException, OSError) as exc:
+                _LOGGER.error("Error with mochad communication: %s", exc)

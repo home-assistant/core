@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ee Kontroller ass scho konfigur\u00e9iert",
             "cannot_connect": "Et konnt keng Verbindung mam Kontroller mat der URL {base_url} hiergestallt ginn"
         },
         "step": {
@@ -10,9 +9,7 @@
                     "exclude": "IDs vu Vera Apparater d\u00e9i vun Home Assistant ausgeschloss solle ginn.",
                     "lights": "IDs vun Apparater vu Vera Schalter d\u00e9i als Luuchten am Home Assistant trait\u00e9iert ginn.",
                     "vera_controller_url": "Kontroller URL"
-                },
-                "description": "Vera Kontroller URL uginn: D\u00e9i sollt sou ausgesinn:\nhttp://192.168.1.161:3480.",
-                "title": "Vera Kontroller ariichten"
+                }
             }
         }
     },

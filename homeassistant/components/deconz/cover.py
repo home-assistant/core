@@ -1,116 +1,128 @@
 """Support for deCONZ covers."""
+from __future__ import annotations
+
+from typing import Any, cast
+
+from pydeconz.models.event import EventType
+from pydeconz.models.light.cover import Cover
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_WINDOW,
+    ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
+
+DEVICE_CLASS = {
+    "Level controllable output": CoverDeviceClass.DAMPER,
+    "Window covering controller": CoverDeviceClass.SHADE,
+    "Window covering device": CoverDeviceClass.SHADE,
+}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up covers for deCONZ component.
-
-    Covers are based on the same device class as lights in deCONZ.
-    """
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up covers for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(lights):
+    def async_add_cover(_: EventType, cover_id: str) -> None:
         """Add cover from deCONZ."""
-        entities = []
+        cover = gateway.api.lights.covers[cover_id]
+        async_add_entities([DeconzCover(cover, gateway)])
 
-        for light in lights:
-            if (
-                light.type in COVER_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzCover(light, gateway))
-
-        async_add_entities(entities, True)
-
-    gateway.listeners.append(
-        async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_cover
+    config_entry.async_on_unload(
+        gateway.api.lights.covers.subscribe(
+            async_add_cover,
+            EventType.ADDED,
         )
     )
-
-    async_add_cover(gateway.api.lights.values())
+    for cover_id in gateway.api.lights.covers:
+        async_add_cover(EventType.ADDED, cover_id)
 
 
 class DeconzCover(DeconzDevice, CoverEntity):
     """Representation of a deCONZ cover."""
 
     TYPE = DOMAIN
+    _device: Cover
 
-    def __init__(self, device, gateway):
+    def __init__(self, device: Cover, gateway: DeconzGateway) -> None:
         """Set up cover device."""
         super().__init__(device, gateway)
 
-        self._features = SUPPORT_OPEN
-        self._features |= SUPPORT_CLOSE
-        self._features |= SUPPORT_STOP
-        self._features |= SUPPORT_SET_POSITION
+        self._attr_supported_features = CoverEntityFeature.OPEN
+        self._attr_supported_features |= CoverEntityFeature.CLOSE
+        self._attr_supported_features |= CoverEntityFeature.STOP
+        self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+
+        if self._device.tilt is not None:
+            self._attr_supported_features |= CoverEntityFeature.OPEN_TILT
+            self._attr_supported_features |= CoverEntityFeature.CLOSE_TILT
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        self._attr_device_class = DEVICE_CLASS.get(self._device.type)
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current position of the cover."""
-        return 100 - int(self._device.brightness / 254 * 100)
+        return 100 - self._device.lift
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self._device.state
+        return not self._device.is_open
 
-    @property
-    def device_class(self):
-        """Return the class of the cover."""
-        if self._device.type in DAMPERS:
-            return "damper"
-        if self._device.type in WINDOW_COVERS:
-            return DEVICE_CLASS_WINDOW
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
-
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
-        data = {"on": False}
+        position = 100 - cast(int, kwargs[ATTR_POSITION])
+        await self._device.set_position(lift=position)
 
-        if position < 100:
-            data["on"] = True
-            data["bri"] = 254 - int(position / 100 * 254)
-
-        await self._device.async_set_state(data)
-
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        data = {ATTR_POSITION: 100}
-        await self.async_set_cover_position(**data)
+        await self._device.open()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        data = {ATTR_POSITION: 0}
-        await self.async_set_cover_position(**data)
+        await self._device.close()
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        data = {"bri_inc": 0}
-        await self._device.async_set_state(data)
+        await self._device.stop()
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt position of the cover."""
+        if self._device.tilt is not None:
+            return 100 - self._device.tilt
+        return None
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Tilt the cover to a specific position."""
+        position = 100 - cast(int, kwargs[ATTR_TILT_POSITION])
+        await self._device.set_position(tilt=position)
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open cover tilt."""
+        await self._device.set_position(tilt=0)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close cover tilt."""
+        await self._device.set_position(tilt=100)
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop cover tilt."""
+        await self._device.stop()

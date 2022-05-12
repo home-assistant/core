@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan endast konfigurera ett Spotify-konto.",
             "authorize_url_timeout": "Skapandet av en auktoriseringsadress \u00f6verskred tidsgr\u00e4nsen.",
             "missing_configuration": "Spotify-integrationen \u00e4r inte konfigurerad. V\u00e4nligen f\u00f6lj dokumentationen."
         },

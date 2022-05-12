@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Voer de inloggegevens in die zijn gebruikt om in te loggen op mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "away_cool_temperature": "Afwezig koeltemperatuur",
+                    "away_heat_temperature": "Afwezig warmte temperatuur"
+                },
+                "description": "Extra Honeywell configuratie opties. Temperaturen zijn ingesteld in Fahrenheit."
+            }
+        }
+    }
+}

@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "bad_pin_format": "PIN should be 4 digits",
+            "bad_validation_code_format": "Validation code should be 6 digits",
+            "cannot_connect": "Failed to connect",
+            "incorrect_pin": "Incorrect PIN",
+            "incorrect_validation_code": "Incorrect validation code",
+            "invalid_auth": "Invalid authentication",
+            "two_factor_request_failed": "Request for 2FA code failed, please try again"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
+                "title": "Subaru Starlink Configuration"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Please select a contact method:"
+                },
+                "description": "Two factor authentication required",
+                "title": "Subaru Starlink Configuration"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Validation code"
+                },
+                "description": "Please enter validation code received",
+                "title": "Subaru Starlink Configuration"
+            },
+            "user": {
+                "data": {
+                    "country": "Select country",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
+                "title": "Subaru Starlink Configuration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Enable vehicle polling"
+                },
+                "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
+                "title": "Subaru Starlink Options"
+            }
+        }
+    }
+}

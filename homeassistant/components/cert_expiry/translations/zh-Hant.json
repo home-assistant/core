@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\u7d44\u5408\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "import_failed": "\u532f\u5165\u8a2d\u5b9a\u5931\u6557"
         },
         "error": {

@@ -1,5 +1,8 @@
 """Support for The Things Network's Data storage integration."""
+from __future__ import annotations
+
 import asyncio
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -7,22 +10,26 @@ from aiohttp.hdrs import ACCEPT, AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONTENT_TYPE_JSON,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE_ID = "device_id"
 ATTR_RAW = "raw"
-ATTR_TIME = "time"
 
 DEFAULT_TIMEOUT = 10
-CONF_DEVICE_ID = "device_id"
 CONF_VALUES = "values"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -33,11 +40,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up The Things Network Data storage sensors."""
-    ttn = hass.data.get(DATA_TTN)
-    device_id = config.get(CONF_DEVICE_ID)
-    values = config.get(CONF_VALUES)
+    ttn = hass.data[DATA_TTN]
+    device_id = config[CONF_DEVICE_ID]
+    values = config[CONF_VALUES]
     app_id = ttn.get(TTN_APP_ID)
     access_key = ttn.get(TTN_ACCESS_KEY)
 
@@ -55,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices, True)
 
 
-class TtnDataSensor(Entity):
+class TtnDataSensor(SensorEntity):
     """Representation of a The Things Network Data Storage sensor."""
 
     def __init__(self, ttn_data_storage, device_id, value, unit_of_measurement):
@@ -73,22 +85,22 @@ class TtnDataSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         if self._ttn_data_storage.data is not None:
             try:
-                return round(self._state[self._value], 1)
-            except (KeyError, TypeError):
+                return self._state[self._value]
+            except KeyError:
                 return None
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._ttn_data_storage.data is not None:
             return {
@@ -122,7 +134,7 @@ class TtnDataStorage:
         """Get the current state from The Things Network Data Storage."""
         try:
             session = async_get_clientsession(self._hass)
-            with async_timeout.timeout(DEFAULT_TIMEOUT):
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 response = await session.get(self._url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -131,15 +143,15 @@ class TtnDataStorage:
 
         status = response.status
 
-        if status == 204:
+        if status == HTTPStatus.NO_CONTENT:
             _LOGGER.error("The device is not available: %s", self._device_id)
             return None
 
-        if status == HTTP_UNAUTHORIZED:
+        if status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("Not authorized for Application ID: %s", self._app_id)
             return None
 
-        if status == HTTP_NOT_FOUND:
+        if status == HTTPStatus.NOT_FOUND:
             _LOGGER.error("Application ID is not available: %s", self._app_id)
             return None
 
@@ -147,7 +159,7 @@ class TtnDataStorage:
         self.data = data[-1]
 
         for value in self._values.items():
-            if value[0] not in self.data.keys():
+            if value[0] not in self.data:
                 _LOGGER.warning("Value not available: %s", value[0])
 
         return response

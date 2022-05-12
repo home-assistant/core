@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = ["zh"]
 DEFAULT_LANG = "zh"
-SUPPORTED_PERSON = [0, 1, 3, 4, 5, 103, 106, 110, 111]
+SUPPORTED_PERSON = [0, 1, 3, 4, 5, 103, 106, 110, 111, 5003, 5118]
 
 CONF_APP_ID = "app_id"
 CONF_SECRET_KEY = "secret_key"

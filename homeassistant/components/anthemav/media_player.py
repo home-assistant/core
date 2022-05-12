@@ -1,16 +1,15 @@
 """Support for Anthem Network Receivers and Processors."""
+from __future__ import annotations
+
 import logging
 
 import anthemav
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -20,26 +19,20 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "anthemav"
 
 DEFAULT_PORT = 14999
-
-SUPPORT_ANTHEMAV = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -50,7 +43,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up our socket to the AVR."""
 
     host = config[CONF_HOST]
@@ -82,11 +80,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AnthemAVR(MediaPlayerEntity):
     """Entity reading values from Anthem AVR protocol."""
 
+    _attr_should_poll = False
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, avr, name):
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
-        self._name = name
+        self._attr_name = name or self._lookup("model")
 
     def _lookup(self, propname, dval=None):
         return getattr(self.avr.protocol, propname, dval)
@@ -96,21 +103,6 @@ class AnthemAVR(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ANTHEMAV
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return name of device."""
-        return self._name or self._lookup("model")
 
     @property
     def state(self):

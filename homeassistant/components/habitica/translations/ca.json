@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "api_user": "ID d'usuari de l'API d'Habitica",
+                    "name": "Substitueix el nom d'usuari d'Habitica. S'utilitzar\u00e0 per a crides de servei",
+                    "url": "URL"
+                },
+                "description": "Connecta el perfil d'Habitica per permetre el seguiment del teu perfil i tasques d'usuari. Tingues en compte que l'api_id i l'api_key els has d'obtenir des de https://habitica.com/user/settings/api"
+            }
+        }
+    },
+    "title": "Habitica"
+}

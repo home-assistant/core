@@ -1,271 +1,292 @@
 """Support for Tuya Smart devices."""
-import asyncio
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-from tuyaha import TuyaApi
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
-import voluptuous as vol
+from typing import NamedTuple
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+import requests
+from tuya_iot import (
+    AuthType,
+    TuyaDevice,
+    TuyaDeviceListener,
+    TuyaDeviceManager,
+    TuyaHomeManager,
+    TuyaOpenAPI,
+    TuyaOpenMQ,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
-    CONF_COUNTRYCODE,
+    CONF_ACCESS_ID,
+    CONF_ACCESS_SECRET,
+    CONF_APP_TYPE,
+    CONF_AUTH_TYPE,
+    CONF_COUNTRY_CODE,
+    CONF_ENDPOINT,
+    CONF_PASSWORD,
+    CONF_PROJECT_TYPE,
+    CONF_USERNAME,
     DOMAIN,
-    TUYA_DATA,
+    LOGGER,
+    PLATFORMS,
     TUYA_DISCOVERY_NEW,
-    TUYA_PLATFORMS,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-ENTRY_IS_SETUP = "tuya_entry_is_setup"
-
-PARALLEL_UPDATES = 0
-
-SERVICE_FORCE_UPDATE = "force_update"
-SERVICE_PULL_DEVICES = "pull_devices"
-
-SIGNAL_DELETE_ENTITY = "tuya_delete"
-SIGNAL_UPDATE_ENTITY = "tuya_update"
-
-TUYA_TYPE_TO_HA = {
-    "climate": "climate",
-    "cover": "cover",
-    "fan": "fan",
-    "light": "light",
-    "scene": "scene",
-    "switch": "switch",
-}
-
-TUYA_TRACKER = "tuya_tracker"
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_COUNTRYCODE): cv.string,
-                    vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
+    TUYA_HA_SIGNAL_UPDATE_ENTITY,
+    DPCode,
 )
 
 
-async def async_setup(hass, config):
-    """Set up the Tuya integration."""
+class HomeAssistantTuyaData(NamedTuple):
+    """Tuya data stored in the Home Assistant data object."""
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
+    device_listener: TuyaDeviceListener
+    device_manager: TuyaDeviceManager
+    home_manager: TuyaHomeManager
 
 
-async def async_setup_entry(hass, entry):
-    """Set up Tuya platform."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Async setup hass config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
-    tuya = TuyaApi()
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    country_code = entry.data[CONF_COUNTRYCODE]
-    platform = entry.data[CONF_PLATFORM]
+    # Project type has been renamed to auth type in the upstream Tuya IoT SDK.
+    # This migrates existing config entries to reflect that name change.
+    if CONF_PROJECT_TYPE in entry.data:
+        data = {**entry.data, CONF_AUTH_TYPE: entry.data[CONF_PROJECT_TYPE]}
+        data.pop(CONF_PROJECT_TYPE)
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    auth_type = AuthType(entry.data[CONF_AUTH_TYPE])
+    api = TuyaOpenAPI(
+        endpoint=entry.data[CONF_ENDPOINT],
+        access_id=entry.data[CONF_ACCESS_ID],
+        access_secret=entry.data[CONF_ACCESS_SECRET],
+        auth_type=auth_type,
+    )
+
+    api.set_dev_channel("hass")
 
     try:
-        await hass.async_add_executor_job(
-            tuya.init, username, password, country_code, platform
-        )
-    except (TuyaNetException, TuyaServerException) as exc:
-        raise ConfigEntryNotReady() from exc
+        if auth_type == AuthType.CUSTOM:
+            response = await hass.async_add_executor_job(
+                api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            )
+        else:
+            response = await hass.async_add_executor_job(
+                api.connect,
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_PASSWORD],
+                entry.data[CONF_COUNTRY_CODE],
+                entry.data[CONF_APP_TYPE],
+            )
+    except requests.exceptions.RequestException as err:
+        raise ConfigEntryNotReady(err) from err
 
-    except TuyaAPIException as exc:
-        _LOGGER.error(
-            "Connection error during integration setup. Error: %s",
-            exc,
-        )
-        return False
+    if response.get("success", False) is False:
+        raise ConfigEntryNotReady(response)
 
-    hass.data[DOMAIN] = {
-        TUYA_DATA: tuya,
-        TUYA_TRACKER: None,
-        ENTRY_IS_SETUP: set(),
-        "entities": {},
-        "pending": {},
-    }
+    tuya_mq = TuyaOpenMQ(api)
+    tuya_mq.start()
 
-    async def async_load_devices(device_list):
-        """Load new devices by device_list."""
-        device_type_list = {}
-        for device in device_list:
-            dev_type = device.device_type()
-            if (
-                dev_type in TUYA_TYPE_TO_HA
-                and device.object_id() not in hass.data[DOMAIN]["entities"]
-            ):
-                ha_type = TUYA_TYPE_TO_HA[dev_type]
-                if ha_type not in device_type_list:
-                    device_type_list[ha_type] = []
-                device_type_list[ha_type].append(device.object_id())
-                hass.data[DOMAIN]["entities"][device.object_id()] = None
+    device_ids: set[str] = set()
+    device_manager = TuyaDeviceManager(api, tuya_mq)
+    home_manager = TuyaHomeManager(api, tuya_mq, device_manager)
+    listener = DeviceListener(hass, device_manager, device_ids)
+    device_manager.add_device_listener(listener)
 
-        for ha_type, dev_ids in device_type_list.items():
-            config_entries_key = f"{ha_type}.tuya"
-            if config_entries_key not in hass.data[DOMAIN][ENTRY_IS_SETUP]:
-                hass.data[DOMAIN]["pending"][ha_type] = dev_ids
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, ha_type)
-                )
-                hass.data[DOMAIN][ENTRY_IS_SETUP].add(config_entries_key)
-            else:
-                async_dispatcher_send(hass, TUYA_DISCOVERY_NEW.format(ha_type), dev_ids)
-
-    device_list = await hass.async_add_executor_job(tuya.get_all_devices)
-    await async_load_devices(device_list)
-
-    def _get_updated_devices():
-        tuya.poll_devices_update()
-        return tuya.get_all_devices()
-
-    async def async_poll_devices_update(event_time):
-        """Check if accesstoken is expired and pull device list from server."""
-        _LOGGER.debug("Pull devices from Tuya")
-        # Add new discover device.
-        device_list = await hass.async_add_executor_job(_get_updated_devices)
-        await async_load_devices(device_list)
-        # Delete not exist device.
-        newlist_ids = []
-        for device in device_list:
-            newlist_ids.append(device.object_id())
-        for dev_id in list(hass.data[DOMAIN]["entities"]):
-            if dev_id not in newlist_ids:
-                async_dispatcher_send(hass, SIGNAL_DELETE_ENTITY, dev_id)
-                hass.data[DOMAIN]["entities"].pop(dev_id)
-
-    hass.data[DOMAIN][TUYA_TRACKER] = async_track_time_interval(
-        hass, async_poll_devices_update, timedelta(minutes=5)
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
+        device_listener=listener,
+        device_manager=device_manager,
+        home_manager=home_manager,
     )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PULL_DEVICES, async_poll_devices_update
-    )
+    # Get devices & clean up device entities
+    await hass.async_add_executor_job(home_manager.update_device_cache)
+    await cleanup_device_registry(hass, device_manager)
 
-    async def async_force_update(call):
-        """Force all devices to pull data."""
-        async_dispatcher_send(hass, SIGNAL_UPDATE_ENTITY)
+    # Migrate old unique_ids to the new format
+    async_migrate_entities_unique_ids(hass, entry, device_manager)
 
-    hass.services.async_register(DOMAIN, SERVICE_FORCE_UPDATE, async_force_update)
+    # Register known device IDs
+    device_registry = dr.async_get(hass)
+    for device in device_manager.device_map.values():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, device.id)},
+            manufacturer="Tuya",
+            name=device.name,
+            model=f"{device.product_name} (unsupported)",
+        )
+        device_ids.add(device.id)
 
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
-    """Unloading the Tuya platforms."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(
-                    entry, component.split(".", 1)[0]
-                )
-                for component in hass.data[DOMAIN][ENTRY_IS_SETUP]
-            ]
-        )
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_manager: TuyaDeviceManager
+) -> None:
+    """Remove deleted device registry entry if there are no remaining entities."""
+    device_registry = dr.async_get(hass)
+    for dev_id, device_entry in list(device_registry.devices.items()):
+        for item in device_entry.identifiers:
+            if DOMAIN == item[0] and item[1] not in device_manager.device_map:
+                device_registry.async_remove_device(dev_id)
+                break
+
+
+@callback
+def async_migrate_entities_unique_ids(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_manager: TuyaDeviceManager
+) -> None:
+    """Migrate unique_ids in the entity registry to the new format."""
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
     )
-    if unload_ok:
-        hass.data[DOMAIN][ENTRY_IS_SETUP] = set()
-        hass.data[DOMAIN][TUYA_TRACKER]()
-        hass.data[DOMAIN][TUYA_TRACKER] = None
-        hass.data[DOMAIN][TUYA_DATA] = None
-        hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
-        hass.services.async_remove(DOMAIN, SERVICE_PULL_DEVICES)
-        hass.data.pop(DOMAIN)
+    light_entries = {
+        entry.unique_id: entry
+        for entry in registry_entries
+        if entry.domain == LIGHT_DOMAIN
+    }
+    switch_entries = {
+        entry.unique_id: entry
+        for entry in registry_entries
+        if entry.domain == SWITCH_DOMAIN
+    }
 
-    return unload_ok
-
-
-class TuyaDevice(Entity):
-    """Tuya base device."""
-
-    def __init__(self, tuya, platform):
-        """Init Tuya devices."""
-        self._tuya = tuya
-        self._tuya_platform = platform
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        dev_id = self._tuya.object_id()
-        self.hass.data[DOMAIN]["entities"][dev_id] = self.entity_id
-        async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
-
-    @property
-    def object_id(self):
-        """Return Tuya device id."""
-        return self._tuya.object_id()
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"tuya.{self._tuya.object_id()}"
-
-    @property
-    def name(self):
-        """Return Tuya device name."""
-        return self._tuya.name()
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self._tuya.available()
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        _device_info = {
-            "identifiers": {(DOMAIN, f"{self.unique_id}")},
-            "manufacturer": TUYA_PLATFORMS.get(
-                self._tuya_platform, self._tuya_platform
-            ),
-            "name": self.name,
-            "model": self._tuya.object_type(),
-        }
-        return _device_info
-
-    def update(self):
-        """Refresh Tuya device data."""
-        self._tuya.update()
-
-    async def _delete_callback(self, dev_id):
-        """Remove this entity."""
-        if dev_id == self.object_id:
-            entity_registry = (
-                await self.hass.helpers.entity_registry.async_get_registry()
+    for device in device_manager.device_map.values():
+        # Old lights where in `tuya.{device_id}` format, now the DPCode is added.
+        #
+        # If the device is a previously supported light category and still has
+        # the old format for the unique ID, migrate it to the new format.
+        #
+        # Previously only devices providing the SWITCH_LED DPCode were supported,
+        # thus this can be added to those existing IDs.
+        #
+        # `tuya.{device_id}` -> `tuya.{device_id}{SWITCH_LED}`
+        if (
+            device.category in ("dc", "dd", "dj", "fs", "fwl", "jsq", "xdd", "xxj")
+            and (entry := light_entries.get(f"tuya.{device.id}"))
+            and f"tuya.{device.id}{DPCode.SWITCH_LED}" not in light_entries
+        ):
+            entity_registry.async_update_entity(
+                entry.entity_id, new_unique_id=f"tuya.{device.id}{DPCode.SWITCH_LED}"
             )
-            if entity_registry.async_is_registered(self.entity_id):
-                entity_registry.async_remove(self.entity_id)
-            else:
-                await self.async_remove()
+
+        # Old switches has different formats for the unique ID, but is mappable.
+        #
+        # If the device is a previously supported switch category and still has
+        # the old format for the unique ID, migrate it to the new format.
+        #
+        # `tuya.{device_id}` -> `tuya.{device_id}{SWITCH}`
+        # `tuya.{device_id}_1` -> `tuya.{device_id}{SWITCH_1}`
+        # ...
+        # `tuya.{device_id}_6` -> `tuya.{device_id}{SWITCH_6}`
+        # `tuya.{device_id}_usb1` -> `tuya.{device_id}{SWITCH_USB1}`
+        # ...
+        # `tuya.{device_id}_usb6` -> `tuya.{device_id}{SWITCH_USB6}`
+        #
+        # In all other cases, the unique ID is not changed.
+        if device.category in ("bh", "cwysj", "cz", "dlq", "kg", "kj", "pc", "xxj"):
+            for postfix, dpcode in (
+                ("", DPCode.SWITCH),
+                ("_1", DPCode.SWITCH_1),
+                ("_2", DPCode.SWITCH_2),
+                ("_3", DPCode.SWITCH_3),
+                ("_4", DPCode.SWITCH_4),
+                ("_5", DPCode.SWITCH_5),
+                ("_6", DPCode.SWITCH_6),
+                ("_usb1", DPCode.SWITCH_USB1),
+                ("_usb2", DPCode.SWITCH_USB2),
+                ("_usb3", DPCode.SWITCH_USB3),
+                ("_usb4", DPCode.SWITCH_USB4),
+                ("_usb5", DPCode.SWITCH_USB5),
+                ("_usb6", DPCode.SWITCH_USB6),
+            ):
+                if (
+                    entry := switch_entries.get(f"tuya.{device.id}{postfix}")
+                ) and f"tuya.{device.id}{dpcode}" not in switch_entries:
+                    entity_registry.async_update_entity(
+                        entry.entity_id, new_unique_id=f"tuya.{device.id}{dpcode}"
+                    )
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unloading the Tuya platforms."""
+    unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload:
+        hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+        hass_data.device_manager.mq.stop()
+        hass_data.device_manager.remove_device_listener(hass_data.device_listener)
+
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+
+    return unload
+
+
+class DeviceListener(TuyaDeviceListener):
+    """Device Update Listener."""
+
+    # pylint: disable=arguments-differ
+    # Library incorrectly defines methods as 'classmethod'
+    # https://github.com/tuya/tuya-iot-python-sdk/pull/48
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_manager: TuyaDeviceManager,
+        device_ids: set[str],
+    ) -> None:
+        """Init DeviceListener."""
+        self.hass = hass
+        self.device_manager = device_manager
+        self.device_ids = device_ids
+
+    def update_device(self, device: TuyaDevice) -> None:
+        """Update device status."""
+        if device.id in self.device_ids:
+            LOGGER.debug(
+                "Received update for device %s: %s",
+                device.id,
+                self.device_manager.device_map[device.id].status,
+            )
+            dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
+
+    def add_device(self, device: TuyaDevice) -> None:
+        """Add device added listener."""
+        # Ensure the device isn't present stale
+        self.hass.add_job(self.async_remove_device, device.id)
+
+        self.device_ids.add(device.id)
+        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+
+        device_manager = self.device_manager
+        device_manager.mq.stop()
+        tuya_mq = TuyaOpenMQ(device_manager.api)
+        tuya_mq.start()
+
+        device_manager.mq = tuya_mq
+        tuya_mq.add_message_listener(device_manager.on_message)
+
+    def remove_device(self, device_id: str) -> None:
+        """Add device removed listener."""
+        self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
+    def async_remove_device(self, device_id: str) -> None:
+        """Remove device from Home Assistant."""
+        LOGGER.debug("Remove device: %s", device_id)
+        device_registry = dr.async_get(self.hass)
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        if device_entry is not None:
+            device_registry.async_remove_device(device_entry.id)
+            self.device_ids.discard(device_id)

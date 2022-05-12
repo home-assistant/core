@@ -1,25 +1,22 @@
 """Support for interfacing with an instance of getchannels.com."""
-import logging
+from __future__ import annotations
 
 from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
 )
 from homeassistant.const import (
+    ATTR_SECONDS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -27,26 +24,16 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
 DEFAULT_PORT = 57000
-
-FEATURE_SUPPORT = (
-    SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SELECT_SOURCE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,16 +44,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-# Service call validation schemas
-ATTR_SECONDS = "seconds"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Channels platform."""
     device = ChannelsPlayer(config[CONF_NAME], config[CONF_HOST], config[CONF_PORT])
     async_add_entities([device], True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SEEK_FORWARD,
@@ -87,6 +75,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
@@ -212,11 +211,6 @@ class ChannelsPlayer(MediaPlayerEntity):
 
         return None
 
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return FEATURE_SUPPORT
-
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) player."""
         if mute != self.muted:
@@ -262,7 +256,7 @@ class ChannelsPlayer(MediaPlayerEntity):
         if media_type == MEDIA_TYPE_CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in [MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW]:
+        elif media_type in (MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW):
             response = self.client.play_recording(media_id)
             self.update_state(response)
 

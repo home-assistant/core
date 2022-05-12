@@ -7,6 +7,11 @@
             "cannot_connect": "Failed to connect"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API Key"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API Key",
@@ -14,7 +19,8 @@
                     "location": "Location",
                     "name": "Name",
                     "port": "Port",
-                    "ssl": "Use SSL",
+                    "ssl": "Uses an SSL certificate",
+                    "statistics_only": "Statistics Only",
                     "verify_ssl": "Verify SSL certificate"
                 }
             }

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Ei leia selle komponendi jaoks vajalikku s\u00fcsteemiklassi. Veenduge, et teie kernel on v\u00e4rske ja riistvara on toetatud",
-            "single_instance_allowed": "Seadistused on juba tehtud. Korraga saab olla ainult \u00fcks konfiguratsioon."
+            "no_devices_found": "Ei leia selle komponendi jaoks vajalikku s\u00fcsteemiklassi. Veendu, et kernel on v\u00e4rske ja riistvara on toetatud",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "step": {
             "confirm": {
-                "description": "Kas alustame paigaldusega?"
+                "description": "Kas alustada paigaldusega?"
             }
         }
     },

@@ -1,9 +1,7 @@
 {
     "config": {
         "error": {
-            "communication_error": "Det g\u00e5r inte att kommunicera med Luftdaten API",
-            "invalid_sensor": "Sensor saknas eller \u00e4r ogiltig",
-            "sensor_exists": "Sensorn \u00e4r redan registrerad"
+            "invalid_sensor": "Sensor saknas eller \u00e4r ogiltig"
         },
         "step": {
             "user": {

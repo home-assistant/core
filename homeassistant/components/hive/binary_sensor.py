@@ -1,28 +1,42 @@
 """Support for the Hive binary sensors."""
+from datetime import timedelta
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_HIVE, DOMAIN, HiveEntity
+from . import HiveEntity
+from .const import ATTR_MODE, DOMAIN
 
-DEVICETYPE_DEVICE_CLASS = {
-    "motionsensor": DEVICE_CLASS_MOTION,
-    "contactsensor": DEVICE_CLASS_OPENING,
+DEVICETYPE = {
+    "contactsensor": BinarySensorDeviceClass.OPENING,
+    "motionsensor": BinarySensorDeviceClass.MOTION,
+    "Connectivity": BinarySensorDeviceClass.CONNECTIVITY,
+    "SMOKE_CO": BinarySensorDeviceClass.SMOKE,
+    "DOG_BARK": BinarySensorDeviceClass.SOUND,
+    "GLASS_BREAK": BinarySensorDeviceClass.SOUND,
 }
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive sensor devices."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Hive thermostat based on a config entry."""
 
-    session = hass.data.get(DATA_HIVE)
-    devs = []
-    for dev in discovery_info:
-        devs.append(HiveBinarySensorEntity(session, dev))
-    add_entities(devs)
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("binary_sensor")
+    entities = []
+    if devices:
+        for dev in devices:
+            entities.append(HiveBinarySensorEntity(hive, dev))
+    async_add_entities(entities, True)
 
 
 class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
@@ -34,31 +48,48 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            model=self.device["deviceData"]["model"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
 
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICETYPE_DEVICE_CLASS.get(self.node_device_type)
+        return DEVICETYPE.get(self.device["hiveType"])
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return self.node_name
+        return self.device["haName"]
 
     @property
-    def device_state_attributes(self):
+    def available(self):
+        """Return if the device is available."""
+        if self.device["hiveType"] != "Connectivity":
+            return self.device["deviceData"]["online"]
+        return True
+
+    @property
+    def extra_state_attributes(self):
         """Show Device Attributes."""
-        return self.attributes
+        return {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.session.sensor.get_state(self.node_id, self.node_device_type)
+        return self.device["status"]["state"]
 
-    def update(self):
+    async def async_update(self):
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.sensor.getSensor(self.device)
+        self.attributes = self.device.get("attributes", {})

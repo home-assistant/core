@@ -1,8 +1,12 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
+from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import async_from_config_dict
+from homeassistant.components import sensor
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -11,443 +15,300 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import Context, CoreState, State, callback
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
-from homeassistant.setup import ATTR_COMPONENT, async_setup_component, setup_component
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
+
+TEST_NAME = "sensor.test_template_sensor"
 
 
-class TestTemplateSensor:
-    """Test the Template sensor."""
-
-    hass = None
-    # pylint: disable=invalid-name
-
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_template(self):
-        """Test template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "It {{ states.sensor.test_state.state }}."
-                            }
-                        },
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "It {{ states.sensor.test_state.state }}."
                     }
                 },
-            )
+            },
+        },
+    ],
+)
+async def test_template_legacy(hass, start_ha):
+    """Test template."""
+    assert hass.states.get(TEST_NAME).state == "It ."
 
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).state == "It Works."
 
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == "It ."
 
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == "It Works."
-
-    def test_icon_template(self):
-        """Test icon template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}",
-                                "icon_template": "{% if states.sensor.test_state.state == "
-                                "'Works' %}"
-                                "mdi:check"
-                                "{% endif %}",
-                            }
-                        },
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "icon_template": "{% if states.sensor.test_state.state == "
+                        "'Works' %}"
+                        "mdi:check"
+                        "{% endif %}",
                     }
                 },
-            )
+            },
+        },
+    ],
+)
+async def test_icon_template(hass, start_ha):
+    """Test icon template."""
+    assert hass.states.get(TEST_NAME).attributes.get("icon") == ""
 
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).attributes["icon"] == "mdi:check"
 
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes.get("icon") == ""
 
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["icon"] == "mdi:check"
-
-    def test_entity_picture_template(self):
-        """Test entity_picture template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}",
-                                "entity_picture_template": "{% if states.sensor.test_state.state == "
-                                "'Works' %}"
-                                "/local/sensor.png"
-                                "{% endif %}",
-                            }
-                        },
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "entity_picture_template": "{% if states.sensor.test_state.state == "
+                        "'Works' %}"
+                        "/local/sensor.png"
+                        "{% endif %}",
                     }
                 },
-            )
+            },
+        },
+    ],
+)
+async def test_entity_picture_template(hass, start_ha):
+    """Test entity_picture template."""
+    assert hass.states.get(TEST_NAME).attributes.get("entity_picture") == ""
 
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(TEST_NAME).attributes["entity_picture"] == "/local/sensor.png"
+    )
 
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes.get("entity_picture") == ""
 
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["entity_picture"] == "/local/sensor.png"
-
-    def test_friendly_name_template(self):
-        """Test friendly_name template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}",
-                                "friendly_name_template": "It {{ states.sensor.test_state.state }}.",
-                            }
-                        },
-                    }
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "attribute,config,expected",
+    [
+        (
+            "friendly_name",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "It {{ states.sensor.test_state.state }}.",
+                        }
+                    },
                 },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes.get("friendly_name") == "It ."
-
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["friendly_name"] == "It Works."
-
-    def test_friendly_name_template_with_unknown_state(self):
-        """Test friendly_name template with an unknown value_template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.fourohfour.state }}",
-                                "friendly_name_template": "It {{ states.sensor.test_state.state }}.",
-                            }
-                        },
-                    }
+            },
+            ("It .", "It Works."),
+        ),
+        (
+            "friendly_name",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "{{ 'It ' + states.sensor.test_state.state + '.'}}",
+                        }
+                    },
                 },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["friendly_name"] == "It ."
-
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["friendly_name"] == "It Works."
-
-    def test_attribute_templates(self):
-        """Test attribute_templates template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}",
-                                "attribute_templates": {
-                                    "test_attribute": "It {{ states.sensor.test_state.state }}."
-                                },
-                            }
-                        },
-                    }
+            },
+            (None, "It Works."),
+        ),
+        (
+            "friendly_name",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.fourohfour.state }}",
+                            "friendly_name_template": "It {{ states.sensor.test_state.state }}.",
+                        }
+                    },
                 },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes.get("test_attribute") == "It ."
-
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["test_attribute"] == "It Works."
-
-    def test_template_syntax_error(self):
-        """Test templating syntax error."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{% if rubbish %}"
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-        assert self.hass.states.all() == []
-
-    def test_template_attribute_missing(self):
-        """Test missing attribute template."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "It {{ states.sensor.test_state"
-                                ".attributes.missing }}."
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == STATE_UNAVAILABLE
-
-    def test_invalid_name_does_not_create(self):
-        """Test invalid name."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test INVALID sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}"
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_invalid_sensor_does_not_create(self):
-        """Test invalid sensor."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {"test_template_sensor": "invalid"},
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-
-        assert self.hass.states.all() == []
-
-    def test_no_sensors_does_not_create(self):
-        """Test no sensors."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass, "sensor", {"sensor": {"platform": "template"}}
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_missing_template_does_not_create(self):
-        """Test missing template."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "not_value_template": "{{ states.sensor.test_state.state }}"
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_setup_invalid_device_class(self):
-        """Test setup with invalid device_class."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test": {
-                                "value_template": "{{ states.sensor.test_sensor.state }}",
-                                "device_class": "foobarnotreal",
-                            }
-                        },
-                    }
-                },
-            )
-
-    def test_setup_valid_device_class(self):
-        """Test setup with valid device_class."""
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test1": {
-                                "value_template": "{{ states.sensor.test_sensor.state }}",
-                                "device_class": "temperature",
+            },
+            ("It .", "It Works."),
+        ),
+        (
+            "test_attribute",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "attribute_templates": {
+                                "test_attribute": "It {{ states.sensor.test_state.state }}."
                             },
-                            "test2": {
-                                "value_template": "{{ states.sensor.test_sensor.state }}"
-                            },
-                        },
+                        }
+                    },
+                },
+            },
+            ("It .", "It Works."),
+        ),
+    ],
+)
+async def test_friendly_name_template(hass, attribute, expected, start_ha):
+    """Test friendly_name template with an unknown value_template."""
+    assert hass.states.get(TEST_NAME).attributes.get(attribute) == expected[0]
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).attributes[attribute] == expected[1]
+
+
+@pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {"value_template": "{% if rubbish %}"}
+                },
+            },
+        },
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test INVALID sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}"
                     }
                 },
-            )
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test1")
-        assert state.attributes["device_class"] == "temperature"
-        state = self.hass.states.get("sensor.test2")
-        assert "device_class" not in state.attributes
-
-    def test_available_template_with_entities(self):
-        """Test availability tempalates with values from other entities."""
-
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}",
-                                "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
-                            }
-                        },
+            },
+        },
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {"invalid"},
+                },
+            },
+        },
+        {
+            "sensor": {
+                "platform": "template",
+            },
+        },
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "not_value_template": "{{ states.sensor.test_state.state }}"
                     }
                 },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        # When template returns true..
-        self.hass.states.set("availability_boolean.state", STATE_ON)
-        self.hass.block_till_done()
-
-        # Device State should not be unavailable
-        assert (
-            self.hass.states.get("sensor.test_template_sensor").state
-            != STATE_UNAVAILABLE
-        )
-
-        # When Availability template returns false
-        self.hass.states.set("availability_boolean.state", STATE_OFF)
-        self.hass.block_till_done()
-
-        # device state should be unavailable
-        assert (
-            self.hass.states.get("sensor.test_template_sensor").state
-            == STATE_UNAVAILABLE
-        )
+            },
+        },
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "test": {
+                            "value_template": "{{ states.sensor.test_sensor.state }}",
+                            "device_class": "foobarnotreal",
+                        }
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_template_syntax_error(hass, start_ha):
+    """Test setup with invalid device_class."""
+    assert hass.states.async_all("sensor") == []
 
 
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "It {{ states.sensor.test_state"
+                        ".attributes.missing }}."
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_template_attribute_missing(hass, start_ha):
+    """Test missing attribute template."""
+    assert hass.states.get(TEST_NAME).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test1": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}",
+                        "device_class": "temperature",
+                    },
+                    "test2": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}"
+                    },
+                },
+            },
+        },
+    ],
+)
+async def test_setup_valid_device_class(hass, start_ha):
+    """Test setup with valid device_class."""
+    assert hass.states.get("sensor.test1").attributes["device_class"] == "temperature"
+    assert "device_class" not in hass.states.get("sensor.test2").attributes
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_creating_sensor_loads_group(hass):
     """Test setting up template sensor loads group component first."""
     order = []
@@ -488,52 +349,46 @@ async def test_creating_sensor_loads_group(hass):
     assert order == ["group", "sensor.template"]
 
 
-async def test_available_template_with_entities(hass):
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}",
+                        "availability_template": "{{ is_state('sensor.availability_sensor', 'on') }}",
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_available_template_with_entities(hass, start_ha):
     """Test availability tempalates with values from other entities."""
     hass.states.async_set("sensor.availability_sensor", STATE_OFF)
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "template",
-                    "sensors": {
-                        "test_template_sensor": {
-                            "value_template": "{{ states.sensor.test_sensor.state }}",
-                            "availability_template": "{{ is_state('sensor.availability_sensor', 'on') }}",
-                        }
-                    },
-                }
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
 
     # When template returns true..
     hass.states.async_set("sensor.availability_sensor", STATE_ON)
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    assert hass.states.get("sensor.test_template_sensor").state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_NAME).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
     hass.states.async_set("sensor.availability_sensor", STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    assert hass.states.get("sensor.test_template_sensor").state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_NAME).state == STATE_UNAVAILABLE
 
 
-async def test_invalid_attribute_template(hass, caplog):
-    """Test that errors are logged if rendering template fails."""
-    hass.states.async_set("sensor.test_sensor", "startup")
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -545,26 +400,27 @@ async def test_invalid_attribute_template(hass, caplog):
                         },
                     }
                 },
-            }
+            },
         },
-    )
+    ],
+)
+async def test_invalid_attribute_template(hass, caplog, start_ha, caplog_setup_text):
+    """Test that errors are logged if rendering template fails."""
+    hass.states.async_set("sensor.test_sensor", "startup")
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
-
-    assert "TemplateError" in caplog.text
+    await async_update_entity(hass, "sensor.invalid_template")
+    assert "TemplateError" in caplog_setup_text
     assert "test_attribute" in caplog.text
 
 
-async def test_invalid_availability_template_keeps_component_available(hass, caplog):
-    """Test that an invalid availability keeps the device available."""
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -574,16 +430,16 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
                         "availability_template": "{{ x - 12 }}",
                     }
                 },
-            }
+            },
         },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+async def test_invalid_availability_template_keeps_component_available(
+    hass, start_ha, caplog_setup_text
+):
+    """Test that an invalid availability keeps the device available."""
     assert hass.states.get("sensor.my_sensor").state != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog.text
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
 async def test_no_template_match_all(hass, caplog):
@@ -594,7 +450,7 @@ async def test_no_template_match_all(hass, caplog):
 
     await async_setup_component(
         hass,
-        "sensor",
+        sensor.DOMAIN,
         {
             "sensor": {
                 "platform": "template",
@@ -655,15 +511,11 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_entity_picture"
-    )
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_friendly_name"
-    )
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_attribute")
+    await async_update_entity(hass, "sensor.invalid_state")
+    await async_update_entity(hass, "sensor.invalid_icon")
+    await async_update_entity(hass, "sensor.invalid_entity_picture")
+    await async_update_entity(hass, "sensor.invalid_friendly_name")
+    await async_update_entity(hass, "sensor.invalid_attribute")
 
     assert hass.states.get("sensor.invalid_state").state == "2"
     assert hass.states.get("sensor.invalid_icon").state == "hello"
@@ -672,12 +524,15 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
 
-async def test_unique_id(hass):
-    """Test unique_id option only creates one sensor per id."""
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
+            "template": {
+                "unique_id": "group-id",
+                "sensor": {"name": "top-level", "unique_id": "sensor-id", "state": "5"},
+            },
             "sensor": {
                 "platform": "template",
                 "sensors": {
@@ -690,28 +545,30 @@ async def test_unique_id(hass):
                         "value_template": "{{ false }}",
                     },
                 },
-            }
+            },
         },
+    ],
+)
+async def test_unique_id(hass, start_ha):
+    """Test unique_id option only creates one sensor per id."""
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.async_get_entity_id("sensor", "template", "group-id-sensor-id")
+        is not None
+    )
+    assert (
+        ent_reg.async_get_entity_id("sensor", "template", "not-so-unique-anymore")
+        is not None
     )
 
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
-
-
-async def test_sun_renders_once_per_sensor(hass):
-    """Test sun change renders the template only once per sensor."""
-
-    now = dt_util.utcnow()
-    hass.states.async_set(
-        "sun.sun", "above_horizon", {"elevation": 45.3, "next_rising": now}
-    )
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -727,10 +584,15 @@ async def test_sun_renders_once_per_sensor(hass):
                 },
             }
         },
-    )
+    ],
+)
+async def test_sun_renders_once_per_sensor(hass, start_ha):
+    """Test sun change renders the template only once per sensor."""
 
-    await hass.async_block_till_done()
-    await hass.async_start()
+    now = dt_util.utcnow()
+    hass.states.async_set(
+        "sun.sun", "above_horizon", {"elevation": 45.3, "next_rising": now}
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 3
@@ -762,12 +624,153 @@ async def test_sun_renders_once_per_sensor(hass):
     }
 
 
-async def test_self_referencing_sensor_loop(hass, caplog):
-    """Test a self referencing sensor does not loop forever."""
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ this.attributes.test }}: {{ this.entity_id }}",
+                        "attribute_templates": {
+                            "test": "It {{ states.sensor.test_state.state }}"
+                        },
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable(hass, start_ha):
+    """Test template."""
+    assert hass.states.get(TEST_NAME).state == "It: " + TEST_NAME
 
-    await async_setup_component(
-        hass,
-        "sensor",
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).state == "It Works: " + TEST_NAME
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
+                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "attributes": {"test": "{{ this.entity_id }}"},
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable_early_hass_not_running(hass, config, count, domain):
+    """Test referencing 'this' variable before the entity is in the state machine.
+
+    Hass is not yet started when the entity is added.
+    Icon, name and picture templates are rendered once in the constructor.
+    """
+    entity_id = "sensor.none_false"
+
+    hass.state = CoreState.not_running
+
+    # Setup template
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Sensor state not rendered, icon, name and picture
+    # templates rendered in constructor with entity_id set to None
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+    assert state.attributes == {
+        "entity_picture": "None:False",
+        "friendly_name": "None:False",
+        "icon": "mdi:None:False",
+    }
+
+    # Signal hass started
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    # Re-render icon, name, pciture + other templates now rendered
+    state = hass.states.get(entity_id)
+    assert state.state == "sensor.none_false: sensor.none_false"
+    assert state.attributes == {
+        "entity_picture": "sensor.none_false:False",
+        "friendly_name": "sensor.none_false:False",
+        "icon": "mdi:sensor.none_false:False",
+        "test": "sensor.none_false",
+    }
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
+                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "attributes": {"test": "{{ this.entity_id }}"},
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable_early_hass_running(hass, config, count, domain):
+    """Test referencing 'this' variable before the entity is in the state machine.
+
+    Hass is already started when the entity is added.
+    Icon, name and picture templates are rendered in the constructor, and again
+    before the entity is added to hass.
+    """
+
+    # Start hass
+    assert hass.state == CoreState.running
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Setup template
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.none_false"
+    # All templated rendered
+    state = hass.states.get(entity_id)
+    assert state.state == "sensor.none_false: sensor.none_false"
+    assert state.attributes == {
+        "entity_picture": "sensor.none_false:False",
+        "friendly_name": "sensor.none_false:False",
+        "icon": "mdi:sensor.none_false:False",
+        "test": "sensor.none_false",
+    }
+
+
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -778,31 +781,23 @@ async def test_self_referencing_sensor_loop(hass, caplog):
                 },
             }
         },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+async def test_self_referencing_sensor_loop(hass, start_ha, caplog_setup_text):
+    """Test a self referencing sensor does not loop forever."""
     assert len(hass.states.async_all()) == 1
-
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-
-    assert "Template loop detected" in caplog.text
-
-    state = hass.states.get("sensor.test")
-    assert int(state.state) == 1
+    assert "Template loop detected" in caplog_setup_text
+    assert int(hass.states.get("sensor.test").state) == 2
     await hass.async_block_till_done()
-    assert int(state.state) == 1
+    assert int(hass.states.get("sensor.test").state) == 2
 
 
-async def test_self_referencing_sensor_with_icon_loop(hass, caplog):
-    """Test a self referencing sensor loops forever with a valid self referencing icon."""
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -814,33 +809,29 @@ async def test_self_referencing_sensor_with_icon_loop(hass, caplog):
                 },
             }
         },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+async def test_self_referencing_sensor_with_icon_loop(
+    hass, start_ha, caplog_setup_text
+):
+    """Test a self referencing sensor loops forever with a valid self referencing icon."""
     assert len(hass.states.async_all()) == 1
-
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-
-    assert "Template loop detected" in caplog.text
+    assert "Template loop detected" in caplog_setup_text
 
     state = hass.states.get("sensor.test")
-    assert int(state.state) == 2
+    assert int(state.state) == 3
     assert state.attributes[ATTR_ICON] == "mdi:greater"
-
     await hass.async_block_till_done()
-    assert int(state.state) == 2
+    state = hass.states.get("sensor.test")
+    assert int(state.state) == 3
 
 
-async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(hass, caplog):
-    """Test a self referencing sensor loop forevers with a valid self referencing icon."""
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -853,34 +844,30 @@ async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(hass, c
                 },
             }
         },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(
+    hass, start_ha, caplog_setup_text
+):
+    """Test a self referencing sensor loop forevers with a valid self referencing icon."""
     assert len(hass.states.async_all()) == 1
-
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-
-    assert "Template loop detected" in caplog.text
+    assert "Template loop detected" in caplog_setup_text
 
     state = hass.states.get("sensor.test")
-    assert int(state.state) == 3
+    assert int(state.state) == 4
     assert state.attributes[ATTR_ICON] == "mdi:less"
     assert state.attributes[ATTR_ENTITY_PICTURE] == "bigpic"
 
     await hass.async_block_till_done()
-    assert int(state.state) == 3
+    assert int(state.state) == 4
 
 
-async def test_self_referencing_entity_picture_loop(hass, caplog):
-    """Test a self referencing sensor does not loop forever with a looping self referencing entity picture."""
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": "template",
@@ -892,22 +879,24 @@ async def test_self_referencing_entity_picture_loop(hass, caplog):
                 },
             }
         },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
+    ],
+)
+async def test_self_referencing_entity_picture_loop(hass, start_ha, caplog_setup_text):
+    """Test a self referencing sensor does not loop forever with a looping self referencing entity picture."""
     assert len(hass.states.async_all()) == 1
+    next_time = dt_util.utcnow() + timedelta(seconds=1.2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    assert "Template loop detected" in caplog.text
+    assert "Template loop detected" in caplog_setup_text
 
     state = hass.states.get("sensor.test")
     assert int(state.state) == 1
-    assert state.attributes[ATTR_ENTITY_PICTURE] == "1"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == 2
 
     await hass.async_block_till_done()
     assert int(state.state) == 1
@@ -951,7 +940,7 @@ async def test_self_referencing_icon_with_no_loop(hass, caplog):
 
     await async_setup_component(
         hass,
-        "sensor",
+        sensor.DOMAIN,
         {
             "sensor": {
                 "platform": "template",
@@ -986,3 +975,523 @@ async def test_self_referencing_icon_with_no_loop(hass, caplog):
     assert state.state == "extreme"
     assert state.attributes[ATTR_ICON] == "mdi:hazard-lights"
     assert "Template loop detected" not in caplog.text
+
+
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "friendly_name_template": "{{ states.sensor.test_state.state }}",
+                    }
+                },
+            }
+        },
+    ],
+)
+async def test_duplicate_templates(hass, start_ha):
+    """Test template entity where the value and friendly name as the same template."""
+    hass.states.async_set("sensor.test_state", "Abc")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_NAME)
+    assert state.attributes["friendly_name"] == "Abc"
+    assert state.state == "Abc"
+
+    hass.states.async_set("sensor.test_state", "Def")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_NAME)
+    assert state.attributes["friendly_name"] == "Def"
+    assert state.state == "Def"
+
+
+@pytest.mark.parametrize("count,domain", [(2, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensors": {
+                        "hello": {
+                            "friendly_name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "value_template": "{{ trigger.event.data.beer }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "attribute_templates": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                    },
+                    "sensor": [
+                        {
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "availability": "{{ True }}",
+                            "state": "{{ trigger.event.data.beer + 1 }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                            "attributes": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                            "state_class": "measurement",
+                        }
+                    ],
+                },
+                {
+                    "trigger": [],
+                    "sensors": {
+                        "bare_minimum": {
+                            "value_template": "{{ trigger.event.data.beer }}"
+                        },
+                    },
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_entity(hass, start_ha):
+    """Test trigger entity works."""
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.bare_minimum")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == "2"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.context is context
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.entities["sensor.hello_name"].unique_id
+        == "listening-test-event-hello_name-id"
+    )
+    assert (
+        ent_reg.entities["sensor.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+
+    state = hass.states.get("sensor.via_list")
+    assert state.state == "3"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.attributes.get("state_class") == "measurement"
+    assert state.context is context
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensors": {
+                    "hello": {
+                        "unique_id": "no-base-id",
+                        "friendly_name": "Hello",
+                        "value_template": "{{ non_existing + 1 }}",
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_trigger_entity_render_error(hass, start_ha):
+    """Test trigger entity handles render error."""
+    state = hass.states.get("sensor.hello")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello")
+    assert state.state == STATE_UNAVAILABLE
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 1
+    assert ent_reg.entities["sensor.hello"].unique_id == "no-base-id"
+
+
+@pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "friendly_name_template": "{{ states.sensor.test_state.state }}",
+                    }
+                },
+            }
+        },
+    ],
+)
+async def test_trigger_not_allowed_platform_config(hass, start_ha, caplog_setup_text):
+    """Test we throw a helpful warning if a trigger is configured in platform config."""
+    state = hass.states.get(TEST_NAME)
+    assert state is None
+    assert (
+        "You can only add triggers to template entities if they are defined under `template:`."
+        in caplog_setup_text
+    )
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "name": "top-level",
+                    "device_class": "battery",
+                    "state_class": "measurement",
+                    "state": "5",
+                    "unit_of_measurement": "%",
+                },
+            },
+        },
+    ],
+)
+async def test_config_top_level(hass, start_ha):
+    """Test unique_id option only creates one sensor per id."""
+    assert len(hass.states.async_all()) == 1
+    state = hass.states.get("sensor.top_level")
+    assert state is not None
+    assert state.state == "5"
+    assert state.attributes["device_class"] == "battery"
+    assert state.attributes["state_class"] == "measurement"
+
+
+async def test_trigger_entity_available(hass):
+    """Test trigger entity availability works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Maybe Available",
+                            "availability": "{{ trigger and trigger.event.data.beer == 2 }}",
+                            "state": "{{ trigger.event.data.beer }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.maybe_available")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.maybe_available")
+    assert state.state == "2"
+
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.maybe_available")
+    assert state.state == "unavailable"
+
+
+async def test_trigger_entity_device_class_parsing_works(hass):
+    """Test trigger entity device class parsing works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "{{ now().date() }}",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "{{ now() }}",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_trigger_entity_device_class_errors_works(hass):
+    """Test trigger entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN
+
+
+async def test_entity_device_class_parsing_works(hass):
+    """Test entity device class parsing works."""
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "Date entity",
+                                "state": "{{ now().date() }}",
+                                "device_class": "date",
+                            },
+                            {
+                                "name": "Timestamp entity",
+                                "state": "{{ now() }}",
+                                "device_class": "timestamp",
+                            },
+                        ],
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_entity_device_class_errors_works(hass):
+    """Test entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensor": {
+                    "name": "test",
+                    "state": "{{ trigger.event.data.beer }}",
+                    "picture": "{{ '/local/dogs.png' }}",
+                    "icon": "{{ 'mdi:pirate' }}",
+                    "attributes": {
+                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "restored_state, restored_native_value, initial_state, initial_attributes",
+    [
+        # the native value should be used, not the state
+        ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, 10, STATE_UNKNOWN, []),
+    ],
+)
+async def test_trigger_entity_restore_state(
+    hass,
+    count,
+    domain,
+    config,
+    restored_state,
+    restored_native_value,
+    initial_state,
+    initial_attributes,
+):
+    """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/cats.png",
+        "icon": "mdi:ship",
+        "plus_one": 55,
+    }
+
+    fake_state = State(
+        "sensor.test",
+        restored_state,
+        restored_attributes,
+    )
+    fake_extra_data = {
+        "native_value": restored_native_value,
+        "native_unit_of_measurement": None,
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == initial_state
+    for attr in restored_attributes:
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "2"
+    assert state.attributes["icon"] == "mdi:pirate"
+    assert state.attributes["entity_picture"] == "/local/dogs.png"
+    assert state.attributes["plus_one"] == 3
+    assert state.attributes["another"] == 1

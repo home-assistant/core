@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "device_unsupported": "Perangkat tidak didukung.",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "reauth_unsuccessful": "Proses autentikasi ulang tidak berhasil. Hapus integrasi dan siapkan kembali."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Ingin menyiapkan Nettigo Air Monitor di {host}?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan nama pengguna dan kata sandi."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan nama pengguna dan kata sandi yang benar untuk: {host}."
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Siapkan integrasi Nettigo Air Monitor."
+            }
+        }
+    }
+}

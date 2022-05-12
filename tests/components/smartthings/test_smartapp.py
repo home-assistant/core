@@ -1,4 +1,5 @@
 """Tests for the smartapp module."""
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 from pysmartthings import CAPABILITIES, AppEntity, Capability
@@ -10,7 +11,6 @@ from homeassistant.components.smartthings.const import (
     DOMAIN,
 )
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

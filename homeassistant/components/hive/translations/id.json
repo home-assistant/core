@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "unknown_entry": "Tidak dapat menemukan entri yang sudah ada."
+        },
+        "error": {
+            "invalid_code": "Gagal masuk ke Hive. Kode autentikasi dua faktor Anda salah.",
+            "invalid_password": "Gagal masuk ke Hive. Sandinya sa\u00f6ah, coba kembali.",
+            "invalid_username": "Gagal masuk ke Hive. Alamat email Anda tidak dikenali.",
+            "no_internet_available": "Koneksi internet diperlukan untuk terhubung ke Hive.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Kode dua faktor"
+                },
+                "description": "Masukkan kode autentikasi Hive Anda. \n \nMasukkan kode 0000 untuk meminta kode lain.",
+                "title": "Autentikasi Dua Faktor Hive."
+            },
+            "reauth": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan kembali informasi masuk Hive Anda.",
+                "title": "Info Masuk Hive"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "scan_interval": "Interval Pindai (detik)",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan informasi masuk dan konfigurasi Hive Anda.",
+                "title": "Info Masuk Hive"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "Interval Pindai (detik)"
+                },
+                "description": "Perbarui interval pemindaian untuk meminta data lebih sering.",
+                "title": "Opsi untuk Hive"
+            }
+        }
+    }
+}

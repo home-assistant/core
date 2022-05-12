@@ -1,20 +1,21 @@
 """Support for information about the German train system."""
+from __future__ import annotations
+
 from datetime import timedelta
-import logging
 
 import schiene
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_OFFSET
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = "to"
 CONF_START = "from"
-CONF_OFFSET = "offset"
 DEFAULT_OFFSET = timedelta(minutes=0)
 CONF_ONLY_DIRECT = "only_direct"
 DEFAULT_ONLY_DIRECT = False
@@ -33,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config[CONF_DESTINATION]
@@ -43,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([DeutscheBahnSensor(start, destination, offset, only_direct)], True)
 
 
-class DeutscheBahnSensor(Entity):
+class DeutscheBahnSensor(SensorEntity):
     """Implementation of a Deutsche Bahn sensor."""
 
     def __init__(self, start, goal, offset, only_direct):
@@ -63,12 +69,12 @@ class DeutscheBahnSensor(Entity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the departure time of the next train."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         connections = self.data.connections[0]
         if len(self.data.connections) > 1:
@@ -90,7 +96,6 @@ class SchieneData:
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-
         self.start = start
         self.goal = goal
         self.offset = offset

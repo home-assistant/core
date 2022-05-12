@@ -1,5 +1,5 @@
 """Provides device automations for Device tracker."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -11,14 +11,13 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
     STATE_HOME,
-    STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 CONDITION_TYPES = {"is_home", "is_not_home"}
 
@@ -32,7 +31,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Device tracker devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
@@ -43,43 +42,31 @@ async def async_get_conditions(
             continue
 
         # Add conditions for each entity that belongs to this integration
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_home",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_not_home",
-            }
-        )
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        conditions += [{**base_condition, CONF_TYPE: cond} for cond in CONDITION_TYPES]
 
     return conditions
 
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-    if config[CONF_TYPE] == "is_home":
-        state = STATE_HOME
-    else:
-        state = STATE_NOT_HOME
+    reverse = config[CONF_TYPE] == "is_not_home"
 
     @callback
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
-        return condition.state(hass, config[ATTR_ENTITY_ID], state)
+        result = condition.state(hass, config[ATTR_ENTITY_ID], STATE_HOME)
+        if reverse:
+            result = not result
+        return result
 
     return test_is_state

@@ -3,5 +3,6 @@
   "name": "Microsoft Face",
   "documentation": "https://www.home-assistant.io/integrations/microsoft_face",
   "dependencies": ["camera"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

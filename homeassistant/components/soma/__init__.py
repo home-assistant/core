@@ -7,30 +7,35 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import API, DOMAIN, HOST, PORT
-
-DEVICES = "devices"
+from .utils import is_api_response_success
 
 _LOGGER = logging.getLogger(__name__)
 
+DEVICES = "devices"
+
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMA_COMPONENTS = ["cover"]
+PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Soma component."""
     if DOMAIN not in config:
         return True
@@ -46,24 +51,55 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
     devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices["shades"]
 
-    for component in SOMA_COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def soma_api_call(api_call):
+    """Soma api call decorator."""
+
+    async def inner(self) -> dict:
+        response = {}
+        try:
+            response_from_api = await api_call(self)
+        except RequestException:
+            if self.api_is_available:
+                _LOGGER.warning("Connection to SOMA Connect failed")
+                self.api_is_available = False
+        else:
+            if not self.api_is_available:
+                self.api_is_available = True
+                _LOGGER.info("Connection to SOMA Connect succeeded")
+
+            if not is_api_response_success(response_from_api):
+                if self.is_available:
+                    self.is_available = False
+                    _LOGGER.warning(
+                        "Device is unreachable (%s). Error while fetching the state: %s",
+                        self.name,
+                        response_from_api["msg"],
+                    )
+            else:
+                if not self.is_available:
+                    self.is_available = True
+                    _LOGGER.info("Device %s is now reachable", self.name)
+                response = response_from_api
+        return response
+
+    return inner
 
 
 class SomaEntity(Entity):
@@ -74,7 +110,9 @@ class SomaEntity(Entity):
         self.device = device
         self.api = api
         self.current_position = 50
+        self.battery_state = 0
         self.is_available = True
+        self.api_is_available = True
 
     @property
     def available(self):
@@ -92,32 +130,32 @@ class SomaEntity(Entity):
         return self.device["name"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
         Implemented by platform classes.
         """
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Wazombi Labs",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Wazombi Labs",
+            name=self.name,
+        )
 
-    async def async_update(self):
-        """Update the device with the latest data."""
-        try:
-            response = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device["mac"]
-            )
-        except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
-            self.is_available = False
-            return
-        if response["result"] != "success":
-            _LOGGER.error(
-                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
-            )
-            self.is_available = False
-            return
-        self.current_position = 100 - response["position"]
-        self.is_available = True
+    def set_position(self, position: int) -> None:
+        """Set the current device position."""
+        self.current_position = position
+        self.schedule_update_ha_state()
+
+    @soma_api_call
+    async def get_shade_state_from_api(self) -> dict:
+        """Return the shade state from the api."""
+        return await self.hass.async_add_executor_job(
+            self.api.get_shade_state, self.device["mac"]
+        )
+
+    @soma_api_call
+    async def get_battery_level_from_api(self) -> dict:
+        """Return the battery level from the api."""
+        return await self.hass.async_add_executor_job(
+            self.api.get_battery_level, self.device["mac"]
+        )

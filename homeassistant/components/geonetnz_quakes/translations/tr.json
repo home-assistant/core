@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Yar\u0131\u00e7ap"
+                },
+                "title": "Filtre ayr\u0131nt\u0131lar\u0131n\u0131z\u0131 doldurun."
+            }
+        }
+    }
+}

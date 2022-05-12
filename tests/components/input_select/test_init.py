@@ -1,4 +1,7 @@
 """The tests for the Input select component."""
+# pylint: disable=protected-access
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.input_select import (
@@ -6,10 +9,14 @@ from homeassistant.components.input_select import (
     ATTR_OPTIONS,
     CONF_INITIAL,
     DOMAIN,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
     SERVICE_SET_OPTIONS,
+    STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -20,13 +27,10 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, State
-from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry
-from homeassistant.loader import bind_hass
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=protected-access
-from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 
@@ -34,11 +38,12 @@ from tests.common import mock_restore_cache
 def storage_setup(hass, hass_storage):
     """Storage setup."""
 
-    async def _storage(items=None, config=None):
+    async def _storage(items=None, config=None, minor_version=STORAGE_VERSION_MINOR):
         if items is None:
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
-                "version": 1,
+                "version": STORAGE_VERSION,
+                "minor_version": minor_version,
                 "data": {
                     "items": [
                         {
@@ -53,6 +58,7 @@ def storage_setup(hass, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
+                "minor_version": minor_version,
                 "data": {"items": items},
             }
         if config is None:
@@ -62,54 +68,12 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-@bind_hass
-def select_option(hass, entity_id, option):
-    """Set value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
-        )
-    )
-
-
-@bind_hass
-def select_next(hass, entity_id):
-    """Set next value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SELECT_NEXT, {ATTR_ENTITY_ID: entity_id}
-        )
-    )
-
-
-@bind_hass
-def select_previous(hass, entity_id):
-    """Set previous value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SELECT_PREVIOUS, {ATTR_ENTITY_ID: entity_id}
-        )
-    )
-
-
 async def test_config(hass):
     """Test config."""
     invalid_configs = [
         None,
         {},
         {"name with space": None},
-        # {'bad_options': {'options': None}},
         {"bad_initial": {"options": [1, 2], "initial": 3}},
     ]
 
@@ -127,19 +91,25 @@ async def test_select_option(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "some option" == state.state
+    assert state.state == "some option"
 
-    select_option(hass, entity_id, "another option")
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "another option"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
-    assert "another option" == state.state
+    assert state.state == "another option"
 
-    select_option(hass, entity_id, "non existing option")
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
-    assert "another option" == state.state
+    assert state.state == "another option"
 
 
 async def test_select_next(hass):
@@ -159,19 +129,25 @@ async def test_select_next(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
-    select_next(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
-    assert "last option" == state.state
+    assert state.state == "last option"
 
-    select_next(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
-    assert "first option" == state.state
+    assert state.state == "first option"
 
 
 async def test_select_previous(hass):
@@ -191,19 +167,65 @@ async def test_select_previous(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
-    select_previous(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "first option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "last option"
+
+
+async def test_select_first_last(hass):
+    """Test select_first and _last methods."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "first option" == state.state
+    assert state.state == "middle option"
 
-    select_previous(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_FIRST,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
     state = hass.states.get(entity_id)
-    assert "last option" == state.state
+    assert state.state == "first option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_LAST,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.state == "last option"
 
 
 async def test_config_options(hass):
@@ -236,14 +258,14 @@ async def test_config_options(hass):
     assert state_1 is not None
     assert state_2 is not None
 
-    assert "1" == state_1.state
-    assert ["1", "2"] == state_1.attributes.get(ATTR_OPTIONS)
+    assert state_1.state == "1"
+    assert state_1.attributes.get(ATTR_OPTIONS) == ["1", "2"]
     assert ATTR_ICON not in state_1.attributes
 
-    assert "Better Option" == state_2.state
-    assert test_2_options == state_2.attributes.get(ATTR_OPTIONS)
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+    assert state_2.state == "Better Option"
+    assert state_2.attributes.get(ATTR_OPTIONS) == test_2_options
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
 async def test_set_options_service(hass):
@@ -263,24 +285,83 @@ async def test_set_options_service(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
-    data = {ATTR_OPTIONS: ["test1", "test2"], "entity_id": entity_id}
-    await hass.services.async_call(DOMAIN, SERVICE_SET_OPTIONS, data)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OPTIONS,
+        {ATTR_OPTIONS: ["first option", "middle option"], ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OPTIONS,
+        {ATTR_OPTIONS: ["test1", "test2"], ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "test1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "test1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "test2"},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "test2"
+
+
+async def test_set_options_service_duplicate(hass):
+    """Test set_options service with duplicates."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "test1" == state.state
+    assert state.state == "middle option"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "first option",
+        "middle option",
+        "last option",
+    ]
 
-    select_option(hass, entity_id, "first option")
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_OPTIONS,
+            {ATTR_OPTIONS: ["option1", "option1"], ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
-    assert "test1" == state.state
-
-    select_option(hass, entity_id, "test2")
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert "test2" == state.state
+    assert state.state == "middle option"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "first option",
+        "middle option",
+        "last option",
+    ]
 
 
 async def test_restore_state(hass):
@@ -364,7 +445,7 @@ async def test_input_select_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user, hass_read_only_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -392,8 +473,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert "middle option" == state_1.state
-    assert "an option" == state_2.state
+    assert state_1.state == "middle option"
+    assert state_2.state == "an option"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
@@ -427,7 +508,6 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -438,8 +518,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert "an option" == state_2.state
-    assert "newer option" == state_3.state
+    assert state_2.state == "an option"
+    assert state_3.state == "newer option"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
@@ -452,6 +532,34 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.state == "storage option 1"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "storage option 1",
+        "storage option 2",
+    ]
+
+
+async def test_load_from_storage_duplicate(hass, storage_setup, caplog):
+    """Test set up from old storage with duplicates."""
+    items = [
+        {
+            "id": "from_storage",
+            "name": "from storage",
+            "options": ["yaml update 1", "yaml update 2", "yaml update 2"],
+        }
+    ]
+    assert await storage_setup(items, minor_version=1)
+
+    assert (
+        "Input select 'from storage' with options "
+        "['yaml update 1', 'yaml update 2', 'yaml update 2'] "
+        "had duplicated options, the duplicates have been removed"
+    ) in caplog.text
+
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert state.state == "yaml update 1"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(ATTR_OPTIONS) == ["yaml update 1", "yaml update 2"]
 
 
 async def test_editable_state_attribute(hass, storage_setup):
@@ -498,7 +606,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -518,7 +626,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
 
 async def test_update(hass, hass_ws_client, storage_setup):
-    """Test updating min/max updates the state."""
+    """Test updating options updates the state."""
 
     items = [
         {
@@ -531,7 +639,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
@@ -554,6 +662,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["new option", "newer option"]
 
+    # Should fail because the initial state is now invalid
     await client.send_json(
         {
             "id": 7,
@@ -566,13 +675,53 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert not resp["success"]
 
 
+async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
+    """Test updating options updates the state."""
+
+    items = [
+        {
+            "id": "from_storage",
+            "name": "from storage",
+            "options": ["yaml update 1", "yaml update 2"],
+        }
+    ]
+    assert await storage_setup(items)
+
+    input_id = "from_storage"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = er.async_get(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": f"{input_id}",
+            "options": ["new option", "newer option", "newer option"],
+            CONF_INITIAL: "newer option",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["message"] == "Duplicate options are not allowed"
+
+    state = hass.states.get(input_entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
+
+
 async def test_ws_create(hass, hass_ws_client, storage_setup):
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
@@ -594,6 +743,38 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     state = hass.states.get(input_entity_id)
     assert state.state == "even newer option"
+    assert state.attributes[ATTR_OPTIONS] == ["new option", "even newer option"]
+
+
+async def test_ws_create_duplicates(hass, hass_ws_client, storage_setup, caplog):
+    """Test create WS with duplicates."""
+    assert await storage_setup(items=[])
+
+    input_id = "new_input"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = er.async_get(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/create",
+            "name": "New Input",
+            "options": ["new option", "even newer option", "even newer option"],
+            "initial": "even newer option",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unknown_error"
+    assert resp["error"]["message"] == "Duplicate options are not allowed"
+
+    assert not hass.states.get(input_entity_id)
 
 
 async def test_setup_no_config(hass, hass_admin_user):
@@ -610,6 +791,5 @@ async def test_setup_no_config(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())

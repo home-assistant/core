@@ -4,11 +4,17 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "duplicate_entry": "Cet h\u00f4te a d\u00e9j\u00e0 \u00e9t\u00e9 ajout\u00e9.",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                },
+                "description": "Impossible de trouver le serveur Roon, veuillez saisir le nom de l'h\u00f4te et le port."
+            },
             "link": {
                 "description": "Vous devez autoriser Home Assistant dans Roon. Apr\u00e8s avoir cliqu\u00e9 sur soumettre, acc\u00e9dez \u00e0 l'application Roon Core, ouvrez Param\u00e8tres et activez Home Assistant dans l'onglet Extensions.",
                 "title": "Autoriser Home Assistant dans Roon"
@@ -17,10 +23,8 @@
                 "data": {
                     "host": "H\u00f4te"
                 },
-                "description": "Veuillez entrer votre nom d\u2019h\u00f4te ou votre adresse IP sur votre serveur Roon.",
-                "title": "Configurer le serveur Roon"
+                "description": "Veuillez entrer votre nom d\u2019h\u00f4te ou votre adresse IP sur votre serveur Roon."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

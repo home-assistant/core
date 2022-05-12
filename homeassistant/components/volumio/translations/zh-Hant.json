@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3\u5df2\u63a2\u7d22\u5230\u7684 Volumio"
         },
         "error": {
@@ -11,7 +11,7 @@
         "step": {
             "discovery_confirm": {
                 "description": "\u662f\u5426\u8981\u65b0\u589e Volumio (`{name}`) \u81f3 Home Assistant\uff1f",
-                "title": "\u5df2\u641c\u7d22\u5230\u7684 Volumio"
+                "title": "\u5df2\u767c\u73fe\u7684 Volumio"
             },
             "user": {
                 "data": {

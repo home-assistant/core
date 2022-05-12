@@ -2,9 +2,11 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.lock import DOMAIN
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.lock import DOMAIN, LockEntityFeature
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -15,6 +17,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -29,13 +32,25 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions_support_open(hass, device_reg, entity_reg):
-    """Test we get the expected actions from a lock which supports open."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
+@pytest.mark.parametrize(
+    "set_state,features_reg,features_state,expected_action_types",
+    [
+        (False, 0, 0, []),
+        (False, LockEntityFeature.OPEN, 0, ["open"]),
+        (True, 0, 0, []),
+        (True, 0, LockEntityFeature.OPEN, ["open"]),
+    ],
+)
+async def test_get_actions(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    features_reg,
+    features_state,
+    expected_action_types,
+):
+    """Test we get the expected actions from a lock."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -45,41 +60,59 @@ async def test_get_actions_support_open(hass, device_reg, entity_reg):
     entity_reg.async_get_or_create(
         DOMAIN,
         "test",
-        platform.ENTITIES["support_open"].unique_id,
+        "5678",
         device_id=device_entry.id,
+        supported_features=features_reg,
     )
-
-    expected_actions = [
+    if set_state:
+        hass.states.async_set(
+            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+        )
+    expected_actions = []
+    basic_action_types = ["lock", "unlock"]
+    expected_actions += [
         {
             "domain": DOMAIN,
-            "type": "lock",
+            "type": action,
             "device_id": device_entry.id,
-            "entity_id": "lock.support_open_lock",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "unlock",
-            "device_id": device_entry.id,
-            "entity_id": "lock.support_open_lock",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "open",
-            "device_id": device_entry.id,
-            "entity_id": "lock.support_open_lock",
-        },
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
+        }
+        for action in basic_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
+        }
+        for action in expected_action_types
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
-    """Test we get the expected actions from a lock which doesn't support open."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected actions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -89,25 +122,26 @@ async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
     entity_reg.async_get_or_create(
         DOMAIN,
         "test",
-        platform.ENTITIES["no_support_open"].unique_id,
+        "5678",
         device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=0,
     )
-
-    expected_actions = [
+    expected_actions = []
+    expected_actions += [
         {
             "domain": DOMAIN,
-            "type": "lock",
+            "type": action,
             "device_id": device_entry.id,
-            "entity_id": "lock.no_support_open_lock",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "unlock",
-            "device_id": device_entry.id,
-            "entity_id": "lock.no_support_open_lock",
-        },
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for action in ["lock", "unlock"]
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

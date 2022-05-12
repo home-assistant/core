@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Pocz\u0105tek aktualnej sesji rejestratora",
+            "estimated_db_size": "Szacowany rozmiar bazy danych (MiB)",
+            "oldest_recorder_run": "Pocz\u0105tek najstarszej sesji rejestratora"
+        }
+    }
+}

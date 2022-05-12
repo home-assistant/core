@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "could_not_register": "GitHubiga sidumist ei saanud registreerida"
+        },
+        "progress": {
+            "wait_for_device": "1. Ava {url}\n2. Sidumise autoriseerimiseks kleebi j\u00e4rgmine v\u00f5ti:\n```\n{code}\n```"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Vali j\u00e4lgitavad hoidlad."
+                },
+                "title": "Hoidlate seadistamine"
+            }
+        }
+    }
+}

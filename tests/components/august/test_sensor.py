@@ -1,6 +1,6 @@
 """The sensor tests for the august platform."""
-
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.august.mocks import (
     _create_august_with_devices,
@@ -29,7 +29,7 @@ async def test_create_doorbell_offline(hass):
     """Test creation of a doorbell that is offline."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     sensor_tmt100_name_battery = hass.states.get("sensor.tmt100_name_battery")
     assert sensor_tmt100_name_battery.state == "81"
@@ -55,7 +55,7 @@ async def test_create_lock_with_linked_keypad(hass):
     """Test creation of a lock with a linked keypad that both have a battery."""
     lock_one = await _mock_lock_from_fixture(hass, "get_lock.doorsense_init.json")
     await _create_august_with_devices(hass, [lock_one])
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     sensor_a6697750d607098bae8d6baa11ef8063_name_battery = hass.states.get(
         "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
@@ -85,7 +85,7 @@ async def test_create_lock_with_low_battery_linked_keypad(hass):
     """Test creation of a lock with a linked keypad that both have a battery."""
     lock_one = await _mock_lock_from_fixture(hass, "get_lock.low_keypad_battery.json")
     await _create_august_with_devices(hass, [lock_one])
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     sensor_a6697750d607098bae8d6baa11ef8063_name_battery = hass.states.get(
         "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
@@ -120,7 +120,7 @@ async def test_create_lock_with_low_battery_linked_keypad(hass):
     )
     assert (
         hass.states.get("sensor.a6697750d607098bae8d6baa11ef8063_name_operator").state
-        == STATE_UNAVAILABLE
+        == STATE_UNKNOWN
     )
 
 
@@ -133,7 +133,7 @@ async def test_lock_operator_bluetooth(hass):
     )
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )
@@ -177,7 +177,7 @@ async def test_lock_operator_keypad(hass):
     )
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )
@@ -219,7 +219,7 @@ async def test_lock_operator_remote(hass):
     activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )
@@ -263,7 +263,7 @@ async def test_lock_operator_autorelock(hass):
     )
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )

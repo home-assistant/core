@@ -1,6 +1,9 @@
 """Support for media browsing."""
+import asyncio
+import contextlib
 import logging
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -58,117 +61,23 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-async def build_item_response(media_library, payload):
+async def build_item_response(media_library, payload, get_thumbnail_url=None):
     """Create response payload for the provided media query."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
 
-    thumbnail = None
-    title = None
-    media = None
-
-    query = {"properties": ["thumbnail"]}
-    # pylint: disable=protected-access
-    if search_type == MEDIA_TYPE_ALBUM:
-        if search_id:
-            query.update({"filter": {"albumid": int(search_id)}})
-            query["properties"].extend(
-                ["albumid", "artist", "duration", "album", "track"]
-            )
-            album = await media_library._server.AudioLibrary.GetAlbumDetails(
-                {"albumid": int(search_id), "properties": ["thumbnail"]}
-            )
-            thumbnail = media_library.thumbnail_url(
-                album["albumdetails"].get("thumbnail")
-            )
-            title = album["albumdetails"]["label"]
-            media = await media_library._server.AudioLibrary.GetSongs(query)
-            media = media.get("songs")
-        else:
-            media = await media_library._server.AudioLibrary.GetAlbums(query)
-            media = media.get("albums")
-            title = "Albums"
-    elif search_type == MEDIA_TYPE_ARTIST:
-        if search_id:
-            query.update({"filter": {"artistid": int(search_id)}})
-            media = await media_library._server.AudioLibrary.GetAlbums(query)
-            media = media.get("albums")
-            artist = await media_library._server.AudioLibrary.GetArtistDetails(
-                {"artistid": int(search_id), "properties": ["thumbnail"]}
-            )
-            thumbnail = media_library.thumbnail_url(
-                artist["artistdetails"].get("thumbnail")
-            )
-            title = artist["artistdetails"]["label"]
-        else:
-            media = await media_library._server.AudioLibrary.GetArtists(query)
-            media = media.get("artists")
-            title = "Artists"
-    elif search_type == "library_music":
-        library = {MEDIA_TYPE_ALBUM: "Albums", MEDIA_TYPE_ARTIST: "Artists"}
-        media = [{"label": name, "type": type_} for type_, name in library.items()]
-        title = "Music Library"
-    elif search_type == MEDIA_TYPE_MOVIE:
-        media = await media_library._server.VideoLibrary.GetMovies(query)
-        media = media.get("movies")
-        title = "Movies"
-    elif search_type == MEDIA_TYPE_TVSHOW:
-        if search_id:
-            media = await media_library._server.VideoLibrary.GetSeasons(
-                {
-                    "tvshowid": int(search_id),
-                    "properties": ["thumbnail", "season", "tvshowid"],
-                }
-            )
-            media = media.get("seasons")
-            tvshow = await media_library._server.VideoLibrary.GetTVShowDetails(
-                {"tvshowid": int(search_id), "properties": ["thumbnail"]}
-            )
-            thumbnail = media_library.thumbnail_url(
-                tvshow["tvshowdetails"].get("thumbnail")
-            )
-            title = tvshow["tvshowdetails"]["label"]
-        else:
-            media = await media_library._server.VideoLibrary.GetTVShows(query)
-            media = media.get("tvshows")
-            title = "TV Shows"
-    elif search_type == MEDIA_TYPE_SEASON:
-        tv_show_id, season_id = search_id.split("/", 1)
-        media = await media_library._server.VideoLibrary.GetEpisodes(
-            {
-                "tvshowid": int(tv_show_id),
-                "season": int(season_id),
-                "properties": ["thumbnail", "tvshowid", "seasonid"],
-            }
-        )
-        media = media.get("episodes")
-        if media:
-            season = await media_library._server.VideoLibrary.GetSeasonDetails(
-                {"seasonid": int(media[0]["seasonid"]), "properties": ["thumbnail"]}
-            )
-            thumbnail = media_library.thumbnail_url(
-                season["seasondetails"].get("thumbnail")
-            )
-            title = season["seasondetails"]["label"]
-    elif search_type == MEDIA_TYPE_CHANNEL:
-        media = await media_library._server.PVR.GetChannels(
-            {
-                "channelgroupid": "alltv",
-                "properties": ["thumbnail", "channeltype", "channel", "broadcastnow"],
-            }
-        )
-        media = media.get("channels")
-        title = "Channels"
+    _, title, media = await get_media_info(media_library, search_id, search_type)
+    thumbnail = await get_thumbnail_url(search_type, search_id)
 
     if media is None:
         return None
 
-    children = []
-    for item in media:
-        try:
-            children.append(item_payload(item, media_library))
-        except UnknownMediaType:
-            pass
+    children = await asyncio.gather(
+        *(item_payload(item, get_thumbnail_url) for item in media)
+    )
+
+    if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
+        children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
 
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
@@ -191,16 +100,13 @@ async def build_item_response(media_library, payload):
     return response
 
 
-def item_payload(item, media_library):
+async def item_payload(item, get_thumbnail_url=None):
     """
     Create response payload for a single media item.
 
     Used by async_browse_media.
     """
     title = item["label"]
-    thumbnail = item.get("thumbnail")
-    if thumbnail:
-        thumbnail = media_library.thumbnail_url(thumbnail)
 
     media_class = None
 
@@ -242,8 +148,7 @@ def item_payload(item, media_library):
     elif "channelid" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = f"{item['channelid']}"
-        broadcasting = item.get("broadcastnow")
-        if broadcasting:
+        if broadcasting := item.get("broadcastnow"):
             show = broadcasting.get("title")
             title = f"{title} - {show}"
         can_play = True
@@ -264,6 +169,12 @@ def item_payload(item, media_library):
             _LOGGER.debug("Unknown media type received: %s", media_content_type)
             raise UnknownMediaType from err
 
+    thumbnail = item.get("thumbnail")
+    if thumbnail is not None and get_thumbnail_url is not None:
+        thumbnail = await get_thumbnail_url(
+            media_content_type, media_content_id, thumbnail_url=thumbnail
+        )
+
     return BrowseMedia(
         title=title,
         media_class=media_class,
@@ -275,7 +186,16 @@ def item_payload(item, media_library):
     )
 
 
-def library_payload(media_library):
+def media_source_content_filter(item: BrowseMedia) -> bool:
+    """Content filter for media sources."""
+    # Filter out cameras using PNG over MJPEG. They don't work in Kodi.
+    return not (
+        item.media_content_id.startswith("media-source://camera/")
+        and item.media_content_type == "image/png"
+    )
+
+
+async def library_payload(hass):
     """
     Create response payload to describe contents of a specific library.
 
@@ -297,12 +217,150 @@ def library_payload(media_library):
         MEDIA_TYPE_TVSHOW: "TV shows",
         MEDIA_TYPE_CHANNEL: "Channels",
     }
-    for item in [{"label": name, "type": type_} for type_, name in library.items()]:
-        library_info.children.append(
+
+    library_info.children = await asyncio.gather(
+        *(
             item_payload(
-                {"label": item["label"], "type": item["type"], "uri": item["type"]},
-                media_library,
+                {
+                    "label": item["label"],
+                    "type": item["type"],
+                    "uri": item["type"],
+                },
             )
+            for item in [
+                {"label": name, "type": type_} for type_, name in library.items()
+            ]
         )
+    )
+
+    for child in library_info.children:
+        child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
+
+    with contextlib.suppress(media_source.BrowseError):
+        item = await media_source.async_browse_media(
+            hass, None, content_filter=media_source_content_filter
+        )
+        # If domain is None, it's overview of available sources
+        if item.domain is None:
+            library_info.children.extend(item.children)
+        else:
+            library_info.children.append(item)
 
     return library_info
+
+
+async def get_media_info(media_library, search_id, search_type):
+    """Fetch media/album."""
+    thumbnail = None
+    title = None
+    media = None
+
+    properties = ["thumbnail"]
+    if search_type == MEDIA_TYPE_ALBUM:
+        if search_id:
+            album = await media_library.get_album_details(
+                album_id=int(search_id), properties=properties
+            )
+            thumbnail = media_library.thumbnail_url(
+                album["albumdetails"].get("thumbnail")
+            )
+            title = album["albumdetails"]["label"]
+            media = await media_library.get_songs(
+                album_id=int(search_id),
+                properties=[
+                    "albumid",
+                    "artist",
+                    "duration",
+                    "album",
+                    "thumbnail",
+                    "track",
+                ],
+            )
+            media = media.get("songs")
+        else:
+            media = await media_library.get_albums(properties=properties)
+            media = media.get("albums")
+            title = "Albums"
+
+    elif search_type == MEDIA_TYPE_ARTIST:
+        if search_id:
+            media = await media_library.get_albums(
+                artist_id=int(search_id), properties=properties
+            )
+            media = media.get("albums")
+            artist = await media_library.get_artist_details(
+                artist_id=int(search_id), properties=properties
+            )
+            thumbnail = media_library.thumbnail_url(
+                artist["artistdetails"].get("thumbnail")
+            )
+            title = artist["artistdetails"]["label"]
+        else:
+            media = await media_library.get_artists(properties)
+            media = media.get("artists")
+            title = "Artists"
+
+    elif search_type == "library_music":
+        library = {MEDIA_TYPE_ALBUM: "Albums", MEDIA_TYPE_ARTIST: "Artists"}
+        media = [{"label": name, "type": type_} for type_, name in library.items()]
+        title = "Music Library"
+
+    elif search_type == MEDIA_TYPE_MOVIE:
+        if search_id:
+            movie = await media_library.get_movie_details(
+                movie_id=int(search_id), properties=properties
+            )
+            thumbnail = media_library.thumbnail_url(
+                movie["moviedetails"].get("thumbnail")
+            )
+            title = movie["moviedetails"]["label"]
+        else:
+            media = await media_library.get_movies(properties)
+            media = media.get("movies")
+            title = "Movies"
+
+    elif search_type == MEDIA_TYPE_TVSHOW:
+        if search_id:
+            media = await media_library.get_seasons(
+                tv_show_id=int(search_id),
+                properties=["thumbnail", "season", "tvshowid"],
+            )
+            media = media.get("seasons")
+            tvshow = await media_library.get_tv_show_details(
+                tv_show_id=int(search_id), properties=properties
+            )
+            thumbnail = media_library.thumbnail_url(
+                tvshow["tvshowdetails"].get("thumbnail")
+            )
+            title = tvshow["tvshowdetails"]["label"]
+        else:
+            media = await media_library.get_tv_shows(properties)
+            media = media.get("tvshows")
+            title = "TV Shows"
+
+    elif search_type == MEDIA_TYPE_SEASON:
+        tv_show_id, season_id = search_id.split("/", 1)
+        media = await media_library.get_episodes(
+            tv_show_id=int(tv_show_id),
+            season_id=int(season_id),
+            properties=["thumbnail", "tvshowid", "seasonid"],
+        )
+        media = media.get("episodes")
+        if media:
+            season = await media_library.get_season_details(
+                season_id=int(media[0]["seasonid"]), properties=properties
+            )
+            thumbnail = media_library.thumbnail_url(
+                season["seasondetails"].get("thumbnail")
+            )
+            title = season["seasondetails"]["label"]
+
+    elif search_type == MEDIA_TYPE_CHANNEL:
+        media = await media_library.get_channels(
+            channel_group_id="alltv",
+            properties=["thumbnail", "channeltype", "channel", "broadcastnow"],
+        )
+        media = media.get("channels")
+        title = "Channels"
+
+    return thumbnail, title, media

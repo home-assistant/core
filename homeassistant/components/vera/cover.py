@@ -1,37 +1,33 @@
 """Support for Vera cover - curtains, rollershutters etc."""
-import logging
-from typing import Any, Callable, List
+from __future__ import annotations
+
+from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    CoverEntity,
-)
+from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, CoverEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
     async_add_entities(
         [
             VeraCover(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+            for device in controller_data.devices[Platform.COVER]
+        ],
+        True,
     )
 
 
@@ -40,7 +36,7 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraCurtain, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)

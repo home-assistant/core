@@ -1,19 +1,23 @@
 """Module to coordinate user intentions."""
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable
 import logging
 import re
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, TypeVar
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
-from homeassistant.core import Context, State, T, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
+from . import config_validation as cv
+
 _LOGGER = logging.getLogger(__name__)
-_SlotsType = Dict[str, Any]
+_SlotsType = dict[str, Any]
+_T = TypeVar("_T")
 
 INTENT_TURN_OFF = "HassTurnOff"
 INTENT_TURN_ON = "HassTurnOn"
@@ -29,10 +33,9 @@ SPEECH_TYPE_SSML = "ssml"
 
 @callback
 @bind_hass
-def async_register(hass: HomeAssistantType, handler: "IntentHandler") -> None:
+def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
-    intents = hass.data.get(DATA_KEY)
-    if intents is None:
+    if (intents := hass.data.get(DATA_KEY)) is None:
         intents = hass.data[DATA_KEY] = {}
 
     assert handler.intent_type is not None, "intent_type cannot be None"
@@ -47,13 +50,13 @@ def async_register(hass: HomeAssistantType, handler: "IntentHandler") -> None:
 
 @bind_hass
 async def async_handle(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     platform: str,
     intent_type: str,
-    slots: Optional[_SlotsType] = None,
-    text_input: Optional[str] = None,
-    context: Optional[Context] = None,
-) -> "IntentResponse":
+    slots: _SlotsType | None = None,
+    text_input: str | None = None,
+    context: Context | None = None,
+) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
@@ -101,7 +104,7 @@ class IntentUnexpectedError(IntentError):
 @callback
 @bind_hass
 def async_match_state(
-    hass: HomeAssistantType, name: str, states: Optional[Iterable[State]] = None
+    hass: HomeAssistant, name: str, states: Iterable[State] | None = None
 ) -> State:
     """Find a state that matches the name."""
     if states is None:
@@ -117,7 +120,7 @@ def async_match_state(
 
 @callback
 def async_test_feature(state: State, feature: int, feature_name: str) -> None:
-    """Test is state supports a feature."""
+    """Test if state supports a feature."""
     if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
         raise IntentHandleError(f"Entity {state.name} does not support {feature_name}")
 
@@ -125,13 +128,13 @@ def async_test_feature(state: State, feature: int, feature_name: str) -> None:
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type: Optional[str] = None
-    slot_schema: Optional[vol.Schema] = None
-    _slot_schema: Optional[vol.Schema] = None
-    platforms: Optional[Iterable[str]] = []
+    intent_type: str | None = None
+    slot_schema: vol.Schema | None = None
+    _slot_schema: vol.Schema | None = None
+    platforms: Iterable[str] | None = []
 
     @callback
-    def async_can_handle(self, intent_obj: "Intent") -> bool:
+    def async_can_handle(self, intent_obj: Intent) -> bool:
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
 
@@ -150,9 +153,9 @@ class IntentHandler:
                 extra=vol.ALLOW_EXTRA,
             )
 
-        return self._slot_schema(slots)  # type: ignore
+        return self._slot_schema(slots)  # type: ignore[no-any-return]
 
-    async def async_handle(self, intent_obj: "Intent") -> "IntentResponse":
+    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -161,18 +164,20 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
-def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optional[T]:
+def _fuzzymatch(name: str, items: Iterable[_T], key: Callable[[_T], str]) -> _T | None:
     """Fuzzy matching function."""
     matches = []
     pattern = ".*?".join(name)
     regex = re.compile(pattern, re.IGNORECASE)
     for idx, item in enumerate(items):
-        match = regex.search(key(item))
-        if match:
-            # Add index so we pick first match in case same group and start
-            matches.append((len(match.group()), match.start(), idx, item))
+        if match := regex.search(key(item)):
+            # Add key length so we prefer shorter keys with the same group and start.
+            # Add index so we pick first match in case same group, start, and key length.
+            matches.append(
+                (len(match.group()), match.start(), len(key(item)), idx, item)
+            )
 
-    return sorted(matches)[0][3] if matches else None
+    return sorted(matches)[0][4] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):
@@ -192,7 +197,7 @@ class ServiceIntentHandler(IntentHandler):
         self.service = service
         self.speech = speech
 
-    async def async_handle(self, intent_obj: "Intent") -> "IntentResponse":
+    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -217,11 +222,11 @@ class Intent:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         platform: str,
         intent_type: str,
         slots: _SlotsType,
-        text_input: Optional[str],
+        text_input: str | None,
         context: Context,
     ) -> None:
         """Initialize an intent."""
@@ -233,7 +238,7 @@ class Intent:
         self.context = context
 
     @callback
-    def create_response(self) -> "IntentResponse":
+    def create_response(self) -> IntentResponse:
         """Create a response."""
         return IntentResponse(self)
 
@@ -241,27 +246,39 @@ class Intent:
 class IntentResponse:
     """Response to an intent."""
 
-    def __init__(self, intent: Optional[Intent] = None) -> None:
+    def __init__(self, intent: Intent | None = None) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
-        self.speech: Dict[str, Dict[str, Any]] = {}
-        self.card: Dict[str, Dict[str, str]] = {}
+        self.speech: dict[str, dict[str, Any]] = {}
+        self.reprompt: dict[str, dict[str, Any]] = {}
+        self.card: dict[str, dict[str, str]] = {}
 
     @callback
     def async_set_speech(
-        self, speech: str, speech_type: str = "plain", extra_data: Optional[Any] = None
+        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
     ) -> None:
         """Set speech response."""
         self.speech[speech_type] = {"speech": speech, "extra_data": extra_data}
 
     @callback
+    def async_set_reprompt(
+        self, speech: str, speech_type: str = "plain", extra_data: Any | None = None
+    ) -> None:
+        """Set reprompt response."""
+        self.reprompt[speech_type] = {"reprompt": speech, "extra_data": extra_data}
+
+    @callback
     def async_set_card(
         self, title: str, content: str, card_type: str = "simple"
     ) -> None:
-        """Set speech response."""
+        """Set card response."""
         self.card[card_type] = {"title": title, "content": content}
 
     @callback
-    def as_dict(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    def as_dict(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Return a dictionary representation of an intent response."""
-        return {"speech": self.speech, "card": self.card}
+        return (
+            {"speech": self.speech, "reprompt": self.reprompt, "card": self.card}
+            if self.reprompt
+            else {"speech": self.speech, "card": self.card}
+        )

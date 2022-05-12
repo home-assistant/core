@@ -1,11 +1,20 @@
 """Support for Speedtest.net internet speed testing sensor."""
-import logging
+from __future__ import annotations
 
+from typing import Any, cast
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SpeedTestDataCoordinator
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,
@@ -17,100 +26,81 @@ from .const import (
     DOMAIN,
     ICON,
     SENSOR_TYPES,
+    SpeedtestSensorEntityDescription,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Speedtestdotnet sensors."""
-
     speedtest_coordinator = hass.data[DOMAIN]
-
-    entities = []
-    for sensor_type in SENSOR_TYPES:
-        entities.append(SpeedtestSensor(speedtest_coordinator, sensor_type))
-
-    async_add_entities(entities)
+    async_add_entities(
+        SpeedtestSensor(speedtest_coordinator, description)
+        for description in SENSOR_TYPES
+    )
 
 
-class SpeedtestSensor(CoordinatorEntity, RestoreEntity):
+class SpeedtestSensor(
+    CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
+):
     """Implementation of a speedtest.net sensor."""
 
-    def __init__(self, coordinator, sensor_type):
+    entity_description: SpeedtestSensorEntityDescription
+    _attr_icon = ICON
+
+    def __init__(
+        self,
+        coordinator: SpeedTestDataCoordinator,
+        description: SpeedtestSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self.type = sensor_type
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._state = None
+        self.entity_description = description
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = description.key
+        self._state: StateType = None
+        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            name=DEFAULT_NAME,
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://www.speedtest.net/",
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{DEFAULT_NAME} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return sensor unique_id."""
-        return self.type
-
-    @property
-    def state(self):
-        """Return the state of the device."""
+    def native_value(self) -> StateType:
+        """Return native value for entity."""
+        if self.coordinator.data:
+            state = self.coordinator.data[self.entity_description.key]
+            self._state = cast(StateType, self.entity_description.value(state))
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if not self.coordinator.data:
-            return None
-        attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
-            ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
-            ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
-        }
-        if self.type == "download":
-            attributes[ATTR_BYTES_RECEIVED] = self.coordinator.data["bytes_received"]
+        if self.coordinator.data:
+            self._attrs.update(
+                {
+                    ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
+                    ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
+                    ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
+                }
+            )
 
-        if self.type == "upload":
-            attributes[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
+            if self.entity_description.key == "download":
+                self._attrs[ATTR_BYTES_RECEIVED] = self.coordinator.data[
+                    ATTR_BYTES_RECEIVED
+                ]
+            elif self.entity_description.key == "upload":
+                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data[ATTR_BYTES_SENT]
 
-        return attributes
+        return self._attrs
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._state = state.state
-
-        @callback
-        def update():
-            """Update state."""
-            self._update_state()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-        self._update_state()
-
-    def _update_state(self):
-        """Update sensors state."""
-        if self.coordinator.data:
-            if self.type == "ping":
-                self._state = self.coordinator.data["ping"]
-            elif self.type == "download":
-                self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
-            elif self.type == "upload":
-                self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)

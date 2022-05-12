@@ -1,6 +1,7 @@
 """Tests for StarLine config flow."""
 import requests_mock
 
+from homeassistant import config_entries
 from homeassistant.components.starline import config_flow
 
 TEST_APP_ID = "666"
@@ -42,7 +43,7 @@ async def test_flow_works(hass):
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": "user"}
+            config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == "form"
         assert result["step_id"] == "auth_app"
@@ -76,7 +77,7 @@ async def test_step_auth_app_code_falls(hass):
         )
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
-            context={"source": "user"},
+            context={"source": config_entries.SOURCE_USER},
             data={
                 config_flow.CONF_APP_ID: TEST_APP_ID,
                 config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
@@ -99,7 +100,7 @@ async def test_step_auth_app_token_falls(hass):
         )
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
-            context={"source": "user"},
+            context={"source": config_entries.SOURCE_USER},
             data={
                 config_flow.CONF_APP_ID: TEST_APP_ID,
                 config_flow.CONF_APP_SECRET: TEST_APP_SECRET,

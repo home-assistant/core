@@ -1,7 +1,6 @@
 """Support for Apache Kafka."""
 from datetime import datetime
 import json
-import logging
 
 from aiokafka import AIOKafkaProducer
 import voluptuous as vol
@@ -16,11 +15,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "apache_kafka"
 
@@ -48,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
     conf = config[DOMAIN]
 
@@ -63,7 +62,7 @@ async def async_setup(hass, config):
         conf.get(CONF_PASSWORD),
     )
 
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, kafka.shutdown())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, kafka.shutdown)
 
     await kafka.start()
 
@@ -133,7 +132,7 @@ class KafkaManager:
         self._hass.bus.async_listen(EVENT_STATE_CHANGED, self.write)
         await self._producer.start()
 
-    async def shutdown(self):
+    async def shutdown(self, _):
         """Shut the manager down."""
         await self._producer.stop()
 

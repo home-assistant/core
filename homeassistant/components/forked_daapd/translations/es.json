@@ -5,6 +5,7 @@
             "not_forked_daapd": "El dispositivo no es un servidor forked-daapd."
         },
         "error": {
+            "forbidden": "No se puede conectar. Compruebe los permisos de red de bifurcaci\u00f3n.",
             "unknown_error": "Error desconocido.",
             "websocket_not_enabled": "Websocket no activado en servidor forked-daapd.",
             "wrong_host_or_port": "No se ha podido conectar. Por favor comprueba host y puerto.",

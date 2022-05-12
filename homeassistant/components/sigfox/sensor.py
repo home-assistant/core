@@ -1,5 +1,8 @@
 """Sensor for SigFox devices."""
+from __future__ import annotations
+
 import datetime
+from http import HTTPStatus
 import json
 import logging
 from urllib.parse import urljoin
@@ -7,10 +10,12 @@ from urllib.parse import urljoin
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, HTTP_OK, HTTP_UNAUTHORIZED
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sigfox sensor."""
     api_login = config[CONF_API_LOGIN]
     api_password = config[CONF_API_PASSWORD]
@@ -37,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         sigfox = SigfoxAPI(api_login, api_password)
     except ValueError:
-        return False
+        return
     auth = sigfox.auth
     devices = sigfox.devices
 
@@ -66,8 +76,8 @@ class SigfoxAPI:
         """Check API credentials are valid."""
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
-        if response.status_code != HTTP_OK:
-            if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code != HTTPStatus.OK:
+            if response.status_code == HTTPStatus.UNAUTHORIZED:
                 _LOGGER.error("Invalid credentials for Sigfox API")
             else:
                 _LOGGER.error(
@@ -109,7 +119,7 @@ class SigfoxAPI:
         return self._devices
 
 
-class SigfoxDevice(Entity):
+class SigfoxDevice(SensorEntity):
     """Class for single sigfox device."""
 
     def __init__(self, device_id, auth, name):
@@ -150,11 +160,11 @@ class SigfoxDevice(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the payload of the last message."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the last message."""
         return self._message_data

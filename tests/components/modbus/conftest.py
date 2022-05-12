@@ -1,83 +1,182 @@
 """The tests for the Modbus sensor component."""
+import copy
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from unittest import mock
 
+from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import (
-    CALL_TYPE_REGISTER_INPUT,
-    CONF_REGISTER,
-    CONF_REGISTER_TYPE,
-    CONF_REGISTERS,
-    DEFAULT_HUB,
-    MODBUS_DOMAIN as DOMAIN,
-)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL
+from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SLAVE, CONF_TYPE
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockModule, async_fire_time_changed, mock_integration
+from tests.common import async_fire_time_changed, mock_restore_cache
 
-_LOGGER = logging.getLogger(__name__)
-
-
-@pytest.fixture()
-def mock_hub(hass):
-    """Mock hub."""
-    mock_integration(hass, MockModule(DOMAIN))
-    hub = mock.MagicMock()
-    hub.name = "hub"
-    hass.data[DOMAIN] = {DEFAULT_HUB: hub}
-    return hub
+TEST_MODBUS_NAME = "modbusTest"
+TEST_ENTITY_NAME = "test entity"
+TEST_MODBUS_HOST = "modbusHost"
+TEST_PORT_TCP = 5501
+TEST_PORT_SERIAL = "usb01"
 
 
+@dataclass
 class ReadResult:
     """Storage class for register read results."""
 
     def __init__(self, register_words):
         """Init."""
         self.registers = register_words
+        self.bits = register_words
 
 
-async def run_test(
-    hass, use_mock_hub, register_config, entity_domain, register_words, expected
+@pytest.fixture(name="mock_pymodbus")
+def mock_pymodbus_fixture():
+    """Mock pymodbus."""
+    mock_pb = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        return_value=mock_pb,
+        autospec=True,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_pb,
+        autospec=True,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient",
+        return_value=mock_pb,
+        autospec=True,
+    ):
+        yield mock_pb
+
+
+@pytest.fixture(name="check_config_loaded")
+def check_config_loaded_fixture():
+    """Set default for check_config_loaded."""
+    return True
+
+
+@pytest.fixture(name="register_words")
+def register_words_fixture():
+    """Set default for register_words."""
+    return [0x00, 0x00]
+
+
+@pytest.fixture(name="config_addon")
+def config_addon_fixture():
+    """Add entra configuration items."""
+    return None
+
+
+@pytest.fixture(name="do_exception")
+def do_exception_fixture():
+    """Remove side_effect to pymodbus calls."""
+    return False
+
+
+@pytest.fixture(name="mock_modbus")
+async def mock_modbus_fixture(
+    hass, caplog, register_words, check_config_loaded, config_addon, do_config
 ):
-    """Run test for given config and check that sensor outputs expected result."""
-
-    # Full sensor configuration
-    sensor_name = "modbus_test_sensor"
-    scan_interval = 5
+    """Load integration modbus using mocked pymodbus."""
+    conf = copy.deepcopy(do_config)
+    for key in conf.keys():
+        if config_addon:
+            conf[key][0].update(config_addon)
+        for entity in conf[key]:
+            if CONF_SLAVE not in entity:
+                entity[CONF_SLAVE] = 0
+    caplog.set_level(logging.WARNING)
     config = {
-        entity_domain: {
-            CONF_PLATFORM: "modbus",
-            CONF_SCAN_INTERVAL: scan_interval,
-            CONF_REGISTERS: [
-                dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **register_config)
-            ],
-        }
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                **conf,
+            }
+        ]
     }
-
-    # Setup inputs for the sensor
-    read_result = ReadResult(register_words)
-    if register_config.get(CONF_REGISTER_TYPE) == CALL_TYPE_REGISTER_INPUT:
-        use_mock_hub.read_input_registers.return_value = read_result
-    else:
-        use_mock_hub.read_holding_registers.return_value = read_result
-
-    # Initialize sensor
-    now = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        assert await async_setup_component(hass, entity_domain, config)
+    mock_pb = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        return_value=mock_pb,
+        autospec=True,
+    ):
+        now = dt_util.utcnow()
+        with mock.patch(
+            "homeassistant.helpers.event.dt_util.utcnow",
+            return_value=now,
+            autospec=True,
+        ):
+            result = await async_setup_component(hass, DOMAIN, config)
+            assert result or not check_config_loaded
         await hass.async_block_till_done()
+        yield mock_pb
 
-    # Trigger update call with time_changed event
-    now += timedelta(seconds=scan_interval + 1)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+
+@pytest.fixture(name="mock_pymodbus_exception")
+async def mock_pymodbus_exception_fixture(hass, do_exception, mock_modbus):
+    """Trigger update call with time_changed event."""
+    if do_exception:
+        exc = ModbusException("fail read_coils")
+        mock_modbus.read_coils.side_effect = exc
+        mock_modbus.read_discrete_inputs.side_effect = exc
+        mock_modbus.read_input_registers.side_effect = exc
+        mock_modbus.read_holding_registers.side_effect = exc
+
+
+@pytest.fixture(name="mock_pymodbus_return")
+async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
+    """Trigger update call with time_changed event."""
+    read_result = ReadResult(register_words)
+    mock_modbus.read_coils.return_value = read_result
+    mock_modbus.read_discrete_inputs.return_value = read_result
+    mock_modbus.read_input_registers.return_value = read_result
+    mock_modbus.read_holding_registers.return_value = read_result
+
+
+@pytest.fixture(name="mock_do_cycle")
+async def mock_do_cycle_fixture(hass, mock_pymodbus_exception, mock_pymodbus_return):
+    """Trigger update call with time_changed event."""
+    now = dt_util.utcnow() + timedelta(seconds=90)
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
+    ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
+        return now
 
-    # Check state
-    entity_id = f"{entity_domain}.{sensor_name}"
-    state = hass.states.get(entity_id).state
-    assert state == expected
+
+async def do_next_cycle(hass, now, cycle):
+    """Trigger update call with time_changed event."""
+    now += timedelta(seconds=cycle)
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        return now
+
+
+@pytest.fixture(name="mock_test_state")
+async def mock_test_state_fixture(hass, request):
+    """Mock restore cache."""
+    mock_restore_cache(hass, request.param)
+    return request.param
+
+
+@pytest.fixture(name="mock_ha")
+async def mock_ha_fixture(hass, mock_pymodbus_return):
+    """Load homeassistant to allow service calls."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+
+@pytest.fixture(name="caplog_setup_text")
+async def caplog_setup_text_fixture(caplog):
+    """Return setup log of integration."""
+    yield caplog.text

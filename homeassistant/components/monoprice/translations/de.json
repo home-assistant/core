@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -18,7 +18,7 @@
                     "source_5": "Name der Quelle #5",
                     "source_6": "Name der Quelle #6"
                 },
-                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+                "title": "Verbinden mit dem Ger\u00e4t"
             }
         }
     },

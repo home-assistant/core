@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "data": {
+                    "username": "\u7528\u6237\u540d"
+                }
+            },
+            "user": {
+                "data": {
+                    "username": "\u7528\u6237\u540d"
+                }
+            }
+        }
+    }
+}

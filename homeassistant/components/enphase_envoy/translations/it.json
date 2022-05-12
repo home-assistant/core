@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Per i modelli pi\u00f9 recenti, inserisci il nome utente \"envoy\" senza password. Per i modelli pi\u00f9 vecchi, inserisci il nome utente \"installer\" senza password. Per tutti gli altri modelli, inserisci un nome utente e una password validi."
+            }
+        }
+    }
+}

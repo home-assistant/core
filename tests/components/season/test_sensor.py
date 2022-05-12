@@ -1,25 +1,34 @@
-"""The tests for the Season sensor platform."""
-# pylint: disable=protected-access
+"""The tests for the Season integration."""
 from datetime import datetime
-import unittest
 
-import homeassistant.components.season.sensor as season
-from homeassistant.setup import setup_component
+from freezegun import freeze_time
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.components.season.const import TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL
+from homeassistant.components.season.sensor import (
+    STATE_AUTUMN,
+    STATE_SPRING,
+    STATE_SUMMER,
+    STATE_WINTER,
+)
+from homeassistant.const import CONF_TYPE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 HEMISPHERE_NORTHERN = {
-    "homeassistant": {"latitude": "48.864716", "longitude": "2.349014"},
+    "homeassistant": {"latitude": 48.864716, "longitude": 2.349014},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_SOUTHERN = {
-    "homeassistant": {"latitude": "-33.918861", "longitude": "18.423300"},
+    "homeassistant": {"latitude": -33.918861, "longitude": 18.423300},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
 HEMISPHERE_EQUATOR = {
-    "homeassistant": {"latitude": "0", "longitude": "-51.065100"},
+    "homeassistant": {"latitude": 0, "longitude": -51.065100},
     "sensor": {"platform": "season", "type": "astronomical"},
 }
 
@@ -28,217 +37,110 @@ HEMISPHERE_EMPTY = {
     "sensor": {"platform": "season", "type": "meteorological"},
 }
 
+NORTHERN_PARAMETERS = [
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_SPRING),
+]
 
-# pylint: disable=invalid-name
-class TestSeason(unittest.TestCase):
-    """Test the season platform."""
+SOUTHERN_PARAMETERS = [
+    (TYPE_ASTRONOMICAL, datetime(2017, 12, 25, 0, 0), STATE_SUMMER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 12, 3, 0, 0), STATE_SUMMER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 4, 1, 0, 0), STATE_AUTUMN),
+    (TYPE_METEOROLOGICAL, datetime(2017, 3, 3, 0, 0), STATE_AUTUMN),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 3, 0, 0), STATE_WINTER),
+    (TYPE_METEOROLOGICAL, datetime(2017, 8, 13, 0, 0), STATE_WINTER),
+    (TYPE_ASTRONOMICAL, datetime(2017, 9, 23, 0, 0), STATE_SPRING),
+    (TYPE_METEOROLOGICAL, datetime(2017, 9, 3, 0, 0), STATE_SPRING),
+]
 
-    DEVICE = None
-    CONFIG_ASTRONOMICAL = {"type": "astronomical"}
-    CONFIG_METEOROLOGICAL = {"type": "meteorological"}
 
-    def add_entities(self, devices):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICE = device
+def idfn(val):
+    """Provide IDs for pytest parametrize."""
+    if isinstance(val, (datetime)):
+        return val.strftime("%Y%m%d")
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
 
-    def test_season_should_be_summer_northern_astronomical(self):
-        """Test that season should be summer."""
-        # A known day in summer
-        summer_day = datetime(2017, 9, 3, 0, 0)
-        current_season = season.get_season(
-            summer_day, season.NORTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_SUMMER == current_season
+@pytest.mark.parametrize("type,day,expected", NORTHERN_PARAMETERS, ids=idfn)
+async def test_season_northern_hemisphere(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    type: str,
+    day: datetime,
+    expected: str,
+) -> None:
+    """Test that season should be summer."""
+    hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=type, data={CONF_TYPE: type}
+    )
 
-    def test_season_should_be_summer_northern_meteorological(self):
-        """Test that season should be summer."""
-        # A known day in summer
-        summer_day = datetime(2017, 8, 13, 0, 0)
-        current_season = season.get_season(
-            summer_day, season.NORTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_SUMMER == current_season
+    with freeze_time(day):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    def test_season_should_be_autumn_northern_astronomical(self):
-        """Test that season should be autumn."""
-        # A known day in autumn
-        autumn_day = datetime(2017, 9, 23, 0, 0)
-        current_season = season.get_season(
-            autumn_day, season.NORTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_AUTUMN == current_season
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state == expected
 
-    def test_season_should_be_autumn_northern_meteorological(self):
-        """Test that season should be autumn."""
-        # A known day in autumn
-        autumn_day = datetime(2017, 9, 3, 0, 0)
-        current_season = season.get_season(
-            autumn_day, season.NORTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_AUTUMN == current_season
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.season")
+    assert entry
+    assert entry.unique_id == mock_config_entry.entry_id
 
-    def test_season_should_be_winter_northern_astronomical(self):
-        """Test that season should be winter."""
-        # A known day in winter
-        winter_day = datetime(2017, 12, 25, 0, 0)
-        current_season = season.get_season(
-            winter_day, season.NORTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_WINTER == current_season
 
-    def test_season_should_be_winter_northern_meteorological(self):
-        """Test that season should be winter."""
-        # A known day in winter
-        winter_day = datetime(2017, 12, 3, 0, 0)
-        current_season = season.get_season(
-            winter_day, season.NORTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_WINTER == current_season
+@pytest.mark.parametrize("type,day,expected", SOUTHERN_PARAMETERS, ids=idfn)
+async def test_season_southern_hemisphere(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    type: str,
+    day: datetime,
+    expected: str,
+) -> None:
+    """Test that season should be summer."""
+    hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=type, data={CONF_TYPE: type}
+    )
 
-    def test_season_should_be_spring_northern_astronomical(self):
-        """Test that season should be spring."""
-        # A known day in spring
-        spring_day = datetime(2017, 4, 1, 0, 0)
-        current_season = season.get_season(
-            spring_day, season.NORTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_SPRING == current_season
+    with freeze_time(day):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    def test_season_should_be_spring_northern_meteorological(self):
-        """Test that season should be spring."""
-        # A known day in spring
-        spring_day = datetime(2017, 3, 3, 0, 0)
-        current_season = season.get_season(
-            spring_day, season.NORTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_SPRING == current_season
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state == expected
 
-    def test_season_should_be_winter_southern_astronomical(self):
-        """Test that season should be winter."""
-        # A known day in winter
-        winter_day = datetime(2017, 9, 3, 0, 0)
-        current_season = season.get_season(
-            winter_day, season.SOUTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_WINTER == current_season
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.season")
+    assert entry
+    assert entry.unique_id == mock_config_entry.entry_id
 
-    def test_season_should_be_winter_southern_meteorological(self):
-        """Test that season should be winter."""
-        # A known day in winter
-        winter_day = datetime(2017, 8, 13, 0, 0)
-        current_season = season.get_season(
-            winter_day, season.SOUTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_WINTER == current_season
 
-    def test_season_should_be_spring_southern_astronomical(self):
-        """Test that season should be spring."""
-        # A known day in spring
-        spring_day = datetime(2017, 9, 23, 0, 0)
-        current_season = season.get_season(
-            spring_day, season.SOUTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_SPRING == current_season
+async def test_season_equator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that season should be unknown for equator."""
+    hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
+    mock_config_entry.add_to_hass(hass)
 
-    def test_season_should_be_spring_southern_meteorological(self):
-        """Test that season should be spring."""
-        # A known day in spring
-        spring_day = datetime(2017, 9, 3, 0, 0)
-        current_season = season.get_season(
-            spring_day, season.SOUTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_SPRING == current_season
+    with freeze_time(datetime(2017, 9, 3, 0, 0)):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    def test_season_should_be_summer_southern_astronomical(self):
-        """Test that season should be summer."""
-        # A known day in summer
-        summer_day = datetime(2017, 12, 25, 0, 0)
-        current_season = season.get_season(
-            summer_day, season.SOUTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_SUMMER == current_season
+    state = hass.states.get("sensor.season")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
-    def test_season_should_be_summer_southern_meteorological(self):
-        """Test that season should be summer."""
-        # A known day in summer
-        summer_day = datetime(2017, 12, 3, 0, 0)
-        current_season = season.get_season(
-            summer_day, season.SOUTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_SUMMER == current_season
-
-    def test_season_should_be_autumn_southern_astronomical(self):
-        """Test that season should be spring."""
-        # A known day in spring
-        autumn_day = datetime(2017, 4, 1, 0, 0)
-        current_season = season.get_season(
-            autumn_day, season.SOUTHERN, season.TYPE_ASTRONOMICAL
-        )
-        assert season.STATE_AUTUMN == current_season
-
-    def test_season_should_be_autumn_southern_meteorological(self):
-        """Test that season should be autumn."""
-        # A known day in autumn
-        autumn_day = datetime(2017, 3, 3, 0, 0)
-        current_season = season.get_season(
-            autumn_day, season.SOUTHERN, season.TYPE_METEOROLOGICAL
-        )
-        assert season.STATE_AUTUMN == current_season
-
-    def test_on_equator_results_in_none(self):
-        """Test that season should be unknown."""
-        # A known day in summer if astronomical and northern
-        summer_day = datetime(2017, 9, 3, 0, 0)
-        current_season = season.get_season(
-            summer_day, season.EQUATOR, season.TYPE_ASTRONOMICAL
-        )
-        assert current_season is None
-
-    def test_setup_hemisphere_northern(self):
-        """Test platform setup of northern hemisphere."""
-        self.hass.config.latitude = HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
-        assert setup_component(self.hass, "sensor", HEMISPHERE_NORTHERN)
-        self.hass.block_till_done()
-        assert (
-            self.hass.config.as_dict()["latitude"]
-            == HEMISPHERE_NORTHERN["homeassistant"]["latitude"]
-        )
-        state = self.hass.states.get("sensor.season")
-        assert state.attributes.get("friendly_name") == "Season"
-
-    def test_setup_hemisphere_southern(self):
-        """Test platform setup of southern hemisphere."""
-        self.hass.config.latitude = HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
-        assert setup_component(self.hass, "sensor", HEMISPHERE_SOUTHERN)
-        self.hass.block_till_done()
-        assert (
-            self.hass.config.as_dict()["latitude"]
-            == HEMISPHERE_SOUTHERN["homeassistant"]["latitude"]
-        )
-        state = self.hass.states.get("sensor.season")
-        assert state.attributes.get("friendly_name") == "Season"
-
-    def test_setup_hemisphere_equator(self):
-        """Test platform setup of equator."""
-        self.hass.config.latitude = HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
-        assert setup_component(self.hass, "sensor", HEMISPHERE_EQUATOR)
-        self.hass.block_till_done()
-        assert (
-            self.hass.config.as_dict()["latitude"]
-            == HEMISPHERE_EQUATOR["homeassistant"]["latitude"]
-        )
-        state = self.hass.states.get("sensor.season")
-        assert state.attributes.get("friendly_name") == "Season"
-
-    def test_setup_hemisphere_empty(self):
-        """Test platform setup of missing latlong."""
-        self.hass.config.latitude = None
-        assert setup_component(self.hass, "sensor", HEMISPHERE_EMPTY)
-        self.hass.block_till_done()
-        assert self.hass.config.as_dict()["latitude"] is None
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.season")
+    assert entry
+    assert entry.unique_id == mock_config_entry.entry_id

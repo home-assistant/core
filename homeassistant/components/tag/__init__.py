@@ -1,16 +1,18 @@
 """The Tag integration."""
+from __future__ import annotations
+
 import logging
-import typing
 import uuid
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
@@ -40,9 +42,9 @@ UPDATE_FIELDS = {
 class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""
 
-    def __init__(self, item_id: str):
-        """Initialize tag id exists error."""
-        super().__init__(f"Tag with id: {item_id} already exists.")
+    def __init__(self, item_id: str) -> None:
+        """Initialize tag ID exists error."""
+        super().__init__(f"Tag with ID {item_id} already exists.")
         self.item_id = item_id
 
 
@@ -63,7 +65,7 @@ class TagStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
         if not data[TAG_ID]:
@@ -74,11 +76,11 @@ class TagStorageCollection(collection.StorageCollection):
         return data
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[TAG_ID]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make last_scanned JSON serializeable
@@ -87,7 +89,7 @@ class TagStorageCollection(collection.StorageCollection):
         return data
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tag component."""
     hass.data[DOMAIN] = {}
     id_manager = TagIDManager()
@@ -105,7 +107,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 @bind_hass
-async def async_scan_tag(hass, tag_id, device_id, context=None):
+async def async_scan_tag(
+    hass: HomeAssistant, tag_id: str, device_id: str, context: Context | None = None
+) -> None:
     """Handle when a tag is scanned."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("tag component has not been set up.")

@@ -1,35 +1,39 @@
 """Test util methods."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 import sqlite3
+from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy import text
+from sqlalchemy.sql.elements import TextClause
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.models import RecorderRuns
+from homeassistant.components.recorder.util import (
+    end_incomplete_runs,
+    is_second_sunday,
+    session_scope,
+)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import corrupt_db_file, run_information_with_session
 
-from tests.async_mock import MagicMock, patch
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import SetupRecorderInstanceT, async_test_home_assistant
 
 
-@pytest.fixture
-def hass_recorder():
-    """Home Assistant fixture with in-memory recorder."""
-    hass = get_test_home_assistant()
-
-    def setup_recorder(config=None):
-        """Set up with params."""
-        init_recorder_component(hass, config)
-        hass.start()
-        hass.block_till_done()
-        hass.data[DATA_INSTANCE].block_till_done()
-        return hass
-
-    yield setup_recorder
-    hass.stop()
+def test_session_scope_not_setup(hass_recorder):
+    """Try to create a session scope when not setup."""
+    hass = hass_recorder()
+    with patch.object(
+        hass.data[DATA_INSTANCE], "get_session", return_value=None
+    ), pytest.raises(RuntimeError):
+        with util.session_scope(hass=hass):
+            pass
 
 
 def test_recorder_bad_commit(hass_recorder):
@@ -38,10 +42,10 @@ def test_recorder_bad_commit(hass_recorder):
 
     def work(session):
         """Bad work."""
-        session.execute("select * from notthere")
+        session.execute(text("select * from notthere"))
 
     with patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
@@ -62,106 +66,431 @@ def test_recorder_bad_execute(hass_recorder):
     mck1.to_native = to_native
 
     with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock:
         util.execute((mck1,), to_native=True)
 
     assert e_mock.call_count == 2
 
 
-def test_validate_or_move_away_sqlite_database_with_integrity_check(
-    hass, tmpdir, caplog
-):
-    """Ensure a malformed sqlite database is moved away.
-
-    A quick_check is run here
-    """
-
-    db_integrity_check = True
+def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
+    """Ensure a malformed sqlite database is moved away."""
 
     test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
-    util.validate_sqlite_database(test_db_file, db_integrity_check) is True
-
+    assert util.validate_sqlite_database(test_db_file) is False
     assert os.path.exists(test_db_file) is True
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is False
 
-    _corrupt_db_file(test_db_file)
+    corrupt_db_file(test_db_file)
 
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
+    assert util.validate_sqlite_database(dburl) is False
 
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
+    assert util.validate_or_move_away_sqlite_database(dburl) is False
 
     assert "corrupt or malformed" in caplog.text
 
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
+    assert util.validate_sqlite_database(dburl) is False
 
-    assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
+    assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
-def test_validate_or_move_away_sqlite_database_without_integrity_check(
-    hass, tmpdir, caplog
+async def test_last_run_was_recently_clean(
+    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
 ):
-    """Ensure a malformed sqlite database is moved away.
-
-    The quick_check is skipped, but we can still find
-    corruption if the whole database is unreadable
-    """
-
-    db_integrity_check = False
-
-    test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
-    test_db_file = f"{test_dir}/broken.db"
-    dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
-
-    util.validate_sqlite_database(test_db_file, db_integrity_check) is True
-
-    assert os.path.exists(test_db_file) is True
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
-
-    _corrupt_db_file(test_db_file)
-
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
-
-    assert (
-        util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
-    )
-
-    assert "corrupt or malformed" in caplog.text
-
-    assert util.validate_sqlite_database(dburl, db_integrity_check) is False
-
-    assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
-
-
-def test_last_run_was_recently_clean(hass_recorder):
     """Test we can check if the last recorder run was recently clean."""
-    hass = hass_recorder()
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
+    hass = await async_test_home_assistant(None)
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    return_values = []
+    real_last_run_was_recently_clean = util.last_run_was_recently_clean
 
-    assert util.last_run_was_recently_clean(cursor) is False
+    def _last_run_was_recently_clean(cursor):
+        return_values.append(real_last_run_was_recently_clean(cursor))
+        return return_values[-1]
 
-    hass.data[DATA_INSTANCE]._close_run()
-    wait_recording_done(hass)
+    # Test last_run_was_recently_clean is not called on new DB
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        await async_setup_recorder_instance(hass, config)
+        await hass.async_block_till_done()
+        last_run_was_recently_clean_mock.assert_not_called()
 
-    assert util.last_run_was_recently_clean(cursor) is True
+    # Restart HA, last_run_was_recently_clean should return True
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_stop()
+
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        hass = await async_test_home_assistant(None)
+        await async_setup_recorder_instance(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is True
+
+    # Restart HA with a long downtime, last_run_was_recently_clean should return False
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock, patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        assert util.last_run_was_recently_clean(cursor) is False
+        hass = await async_test_home_assistant(None)
+        await async_setup_recorder_instance(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is False
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_stop()
+
+
+@pytest.mark.parametrize(
+    "mysql_version, db_supports_row_number",
+    [
+        ("10.2.0-MariaDB", True),
+        ("10.1.0-MariaDB", False),
+        ("5.8.0", True),
+        ("5.7.0", False),
+    ],
+)
+def test_setup_connection_for_dialect_mysql(mysql_version, db_supports_row_number):
+    """Test setting up the connection for a mysql dialect."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+
+    assert len(execute_args) == 2
+    assert execute_args[0] == "SET session wait_timeout=28800"
+    assert execute_args[1] == "SELECT VERSION()"
+
+    assert instance_mock._db_supports_row_number == db_supports_row_number
+
+
+@pytest.mark.parametrize(
+    "sqlite_version, db_supports_row_number",
+    [
+        ("3.25.0", True),
+        ("3.24.0", False),
+    ],
+)
+def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_number):
+    """Test setting up the connection for a sqlite dialect."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[sqlite_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+
+    assert len(execute_args) == 4
+    assert execute_args[0] == "PRAGMA journal_mode=WAL"
+    assert execute_args[1] == "SELECT sqlite_version()"
+    assert execute_args[2] == "PRAGMA cache_size = -8192"
+    assert execute_args[3] == "PRAGMA foreign_keys=ON"
+
+    execute_args = []
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+
+    assert len(execute_args) == 2
+    assert execute_args[0] == "PRAGMA cache_size = -8192"
+    assert execute_args[1] == "PRAGMA foreign_keys=ON"
+
+    assert instance_mock._db_supports_row_number == db_supports_row_number
+
+
+@pytest.mark.parametrize(
+    "mysql_version,message",
+    [
+        (
+            "10.2.0-MariaDB",
+            "Version 10.2.0 of MariaDB is not supported; minimum supported version is 10.3.0.",
+        ),
+        (
+            "5.7.26-0ubuntu0.18.04.1",
+            "Version 5.7.26 of MySQL is not supported; minimum supported version is 8.0.0.",
+        ),
+        (
+            "some_random_response",
+            "Version some_random_response of MySQL is not supported; minimum supported version is 8.0.0.",
+        ),
+    ],
+)
+def test_warn_outdated_mysql(caplog, mysql_version, message):
+    """Test setting up the connection for an outdated mysql version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+
+    assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "mysql_version",
+    [
+        ("10.3.0"),
+        ("8.0.0"),
+    ],
+)
+def test_supported_mysql(caplog, mysql_version):
+    """Test setting up the connection for a supported mysql version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+
+    assert "minimum supported version" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "pgsql_version,message",
+    [
+        (
+            "11.12 (Debian 11.12-1.pgdg100+1)",
+            "Version 11.12 of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+        (
+            "9.2.10",
+            "Version 9.2.10 of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+        (
+            "unexpected",
+            "Version unexpected of PostgreSQL is not supported; minimum supported version is 12.0.",
+        ),
+    ],
+)
+def test_warn_outdated_pgsql(caplog, pgsql_version, message):
+    """Test setting up the connection for an outdated PostgreSQL version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SHOW server_version":
+            return [[pgsql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(
+        instance_mock, "postgresql", dbapi_connection, True
+    )
+
+    assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "pgsql_version",
+    ["14.0 (Debian 14.0-1.pgdg110+1)"],
+)
+def test_supported_pgsql(caplog, pgsql_version):
+    """Test setting up the connection for a supported PostgreSQL version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SHOW server_version":
+            return [[pgsql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(
+        instance_mock, "postgresql", dbapi_connection, True
+    )
+
+    assert "minimum supported version" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "sqlite_version,message",
+    [
+        (
+            "3.30.0",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+        ),
+        (
+            "2.0.0",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+        ),
+        (
+            "dogs",
+            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
+        ),
+    ],
+)
+def test_warn_outdated_sqlite(caplog, sqlite_version, message):
+    """Test setting up the connection for an outdated sqlite version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[sqlite_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+
+    assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "sqlite_version",
+    [
+        ("3.31.0"),
+        ("3.33.0"),
+    ],
+)
+def test_supported_sqlite(caplog, sqlite_version):
+    """Test setting up the connection for a supported sqlite version."""
+    instance_mock = MagicMock(_db_supports_row_number=True)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[sqlite_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+
+    assert "minimum supported version" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "dialect,message",
+    [
+        ("mssql", "Database mssql is not supported"),
+        ("oracle", "Database oracle is not supported"),
+        ("some_db", "Database some_db is not supported"),
+    ],
+)
+def test_warn_unsupported_dialect(caplog, dialect, message):
+    """Test setting up the connection for an outdated sqlite version."""
+    instance_mock = MagicMock()
+    dbapi_connection = MagicMock()
+
+    util.setup_connection_for_dialect(instance_mock, dialect, dbapi_connection, True)
+
+    assert message in caplog.text
 
 
 def test_basic_sanity_check(hass_recorder):
@@ -178,40 +507,137 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder):
+def test_combined_checks(hass_recorder, caplog):
     """Run Checks on the open database."""
     hass = hass_recorder()
 
-    db_integrity_check = False
-
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
-    assert (
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check) is None
-    )
+    assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+    assert "could not validate that the sqlite3 database" in caplog.text
+
+    caplog.clear()
+
+    # We are patching recorder.util here in order
+    # to avoid creating the full database on disk
+    with patch(
+        "homeassistant.components.recorder.util.basic_sanity_check", return_value=False
+    ):
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+        assert "could not validate that the sqlite3 database" in caplog.text
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
     with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
-        assert (
-            util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
-            is None
-        )
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor) is None
+        assert "restarted cleanly and passed the basic sanity check" in caplog.text
 
+    caplog.clear()
     with patch(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor)
+
+    caplog.clear()
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        side_effect=sqlite3.DatabaseError,
+    ), pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor)
 
     cursor.execute("DROP TABLE events;")
 
+    caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor)
+
+    caplog.clear()
+    with pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor)
 
 
-def _corrupt_db_file(test_db_file):
-    """Corrupt an sqlite3 database file."""
-    f = open(test_db_file, "a")
-    f.write("I am a corrupt db")
-    f.close()
+def test_end_incomplete_runs(hass_recorder, caplog):
+    """Ensure we can end incomplete runs."""
+    hass = hass_recorder()
+
+    with session_scope(hass=hass) as session:
+        run_info = run_information_with_session(session)
+        assert isinstance(run_info, RecorderRuns)
+        assert run_info.closed_incorrect is False
+
+        now = dt_util.utcnow()
+        now_without_tz = now.replace(tzinfo=None)
+        end_incomplete_runs(session, now)
+        run_info = run_information_with_session(session)
+        assert run_info.closed_incorrect is True
+        assert run_info.end == now_without_tz
+        session.flush()
+
+        later = dt_util.utcnow()
+        end_incomplete_runs(session, later)
+        run_info = run_information_with_session(session)
+        assert run_info.end == now_without_tz
+
+    assert "Ended unfinished session" in caplog.text
+
+
+def test_periodic_db_cleanups(hass_recorder):
+    """Test periodic db cleanups."""
+    hass = hass_recorder()
+    with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
+        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
+
+    text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
+        1
+    ][0]
+    assert isinstance(text_obj, TextClause)
+    assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
+
+
+@patch("homeassistant.components.recorder.pool.check_loop")
+async def test_write_lock_db(
+    skip_check_loop,
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
+):
+    """Test database write lock."""
+    from sqlalchemy.exc import OperationalError
+
+    # Use file DB, in memory DB cannot do write locks.
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
+    await async_setup_recorder_instance(hass, config)
+    await hass.async_block_till_done()
+
+    instance = hass.data[DATA_INSTANCE]
+
+    def _drop_table():
+        with instance.engine.connect() as connection:
+            connection.execute(text("DROP TABLE events;"))
+
+    with util.write_lock_db_sqlite(instance):
+        # Database should be locked now, try writing SQL command
+        with pytest.raises(OperationalError):
+            # This needs to be called in another thread since
+            # the lock method is BEGIN IMMEDIATE and since we have
+            # a connection per thread with sqlite now, we cannot do it
+            # in the same thread as the one holding the lock since it
+            # would be allowed to proceed as the goal is to prevent
+            # all the other threads from accessing the database
+            await hass.async_add_executor_job(_drop_table)
+
+
+def test_is_second_sunday():
+    """Test we can find the second sunday of the month."""
+    assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 3, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 4, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+
+    assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False

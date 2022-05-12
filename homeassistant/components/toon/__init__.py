@@ -1,22 +1,15 @@
 """Support for Toon van Eneco devices."""
-import asyncio
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
+    Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -28,14 +21,12 @@ from .const import CONF_AGREEMENT_ID, CONF_MIGRATE, DEFAULT_SCAN_INTERVAL, DOMAI
 from .coordinator import ToonDataUpdateCoordinator
 from .oauth2 import register_oauth2_implementations
 
-ENTITY_COMPONENTS = {
-    BINARY_SENSOR_DOMAIN,
-    CLIMATE_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-}
-
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema(
@@ -101,16 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.toon.activate_agreement(
         agreement_id=entry.data[CONF_AGREEMENT_ID]
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Register device for the Meter Adapter, since it will have no entities.
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
@@ -122,10 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Spin up the platforms
-    for component in ENTITY_COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # If Home Assistant is already in a running state, register the webhook
     # immediately, else trigger it after Home Assistant has finished starting.
@@ -146,14 +131,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.data[DOMAIN][entry.entry_id].unregister_webhook()
 
     # Unload entities for this entry/device.
-    unload_ok = all(
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in ENTITY_COMPONENTS
-            )
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Cleanup
     if unload_ok:

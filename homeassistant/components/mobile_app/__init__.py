@@ -1,27 +1,28 @@
 """Integrates Native Apps to Home Assistant."""
-import asyncio
+from contextlib import suppress
 
 from homeassistant.components import cloud, notify as hass_notify
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, discovery
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
+from . import websocket_api
 from .const import (
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
-    DATA_BINARY_SENSOR,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
-    DATA_SENSOR,
+    DATA_PUSH_CHANNEL,
     DATA_STORE,
     DOMAIN,
     STORAGE_KEY,
@@ -31,48 +32,44 @@ from .helpers import savable_state
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 
-PLATFORMS = "sensor", "binary_sensor", "device_tracker"
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    app_config = await store.async_load()
-    if app_config is None:
+    if (app_config := await store.async_load()) is None:
         app_config = {
-            DATA_BINARY_SENSOR: {},
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
-            DATA_SENSOR: {},
         }
 
     hass.data[DOMAIN] = {
-        DATA_BINARY_SENSOR: app_config.get(DATA_BINARY_SENSOR, {}),
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
-        DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
+        DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
     }
 
     hass.http.register_view(RegistrationsView())
 
     for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
-        try:
+        with suppress(ValueError):
             webhook_register(
                 hass, DOMAIN, "Deleted Webhook", deleted_id, handle_webhook
             )
-        except ValueError:
-            pass
 
     hass.async_create_task(
-        discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
     )
+
+    websocket_api.async_setup_commands(hass)
 
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a mobile_app entry."""
     registration = entry.data
 
@@ -80,7 +77,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -96,26 +93,16 @@ async def async_setup_entry(hass, entry):
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
-    for domain in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a mobile app entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
 
@@ -123,19 +110,18 @@ async def async_unload_entry(hass, entry):
 
     webhook_unregister(hass, webhook_id)
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+    del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
     hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
     if CONF_CLOUDHOOK_URL in entry.data:
-        try:
+        with suppress(cloud.CloudNotAvailable):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
-        except cloud.CloudNotAvailable:
-            pass

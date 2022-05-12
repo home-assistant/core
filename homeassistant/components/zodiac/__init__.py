@@ -1,8 +1,10 @@
 """The zodiac component."""
 import voluptuous as vol
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -12,8 +14,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the zodiac component."""
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    )
 
     return True

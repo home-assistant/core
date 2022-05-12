@@ -1,5 +1,7 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from unittest.mock import AsyncMock, patch
+
 from arcam.fmj.client import ConnectionFailed
 import pytest
 
@@ -19,7 +21,6 @@ from .conftest import (
     MOCK_UUID,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 MOCK_UPNP_DEVICE = f"""
@@ -32,16 +33,20 @@ MOCK_UPNP_DEVICE = f"""
 
 MOCK_UPNP_LOCATION = f"http://{MOCK_HOST}:8080/dd.xml"
 
-MOCK_DISCOVER = {
-    ssdp.ATTR_UPNP_MANUFACTURER: "ARCAM",
-    ssdp.ATTR_UPNP_MODEL_NAME: " ",
-    ssdp.ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
-    ssdp.ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
-    ssdp.ATTR_UPNP_SERIAL: "12343",
-    ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOST}:8080/dd.xml",
-    ssdp.ATTR_UPNP_UDN: MOCK_UDN,
-    ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
-}
+MOCK_DISCOVER = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=f"http://{MOCK_HOST}:8080/dd.xml",
+    upnp={
+        ssdp.ATTR_UPNP_MANUFACTURER: "ARCAM",
+        ssdp.ATTR_UPNP_MODEL_NAME: " ",
+        ssdp.ATTR_UPNP_MODEL_NUMBER: "AVR450, AVR750",
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: f"Arcam media client {MOCK_UUID}",
+        ssdp.ATTR_UPNP_SERIAL: "12343",
+        ssdp.ATTR_UPNP_UDN: MOCK_UDN,
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
+    },
+)
 
 
 @pytest.fixture(name="dummy_client", autouse=True)
@@ -99,7 +104,7 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unable_to_connect"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_update(hass):

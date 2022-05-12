@@ -1,25 +1,27 @@
 """Support for Google Actions Smart Home Control."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 import logging
+from typing import Any
 from uuid import uuid4
 
 from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import Request, Response
 import jwt
 
-# Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+
+# Typing imports
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_API_KEY,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
@@ -52,10 +54,12 @@ def _get_homegraph_jwt(time, iss, key):
         "iat": now,
         "exp": now + 3600,
     }
-    return jwt.encode(jwt_raw, key, algorithm="RS256").decode("utf-8")
+    return jwt.encode(jwt_raw, key, algorithm="RS256")
 
 
-async def _get_homegraph_token(hass, jwt_signed):
+async def _get_homegraph_token(
+    hass: HomeAssistant, jwt_signed: str
+) -> dict[str, Any] | list[str, Any] | Any:
     headers = {
         "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -80,6 +84,12 @@ class GoogleConfig(AbstractConfig):
         self._config = config
         self._access_token = None
         self._access_token_renew = None
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        await super().async_initialize()
+
+        self.async_enable_local_sdk()
 
     @property
     def enabled(self):
@@ -113,16 +123,30 @@ class GoogleConfig(AbstractConfig):
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
+        entity_registry = er.async_get(self.hass)
+        registry_entry = entity_registry.async_get(state.entity_id)
+        if registry_entry:
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
+        else:
+            auxiliary_entity = False
+
         explicit_expose = self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = (
             expose_by_default and state.domain in exposed_domains
         )
 
-        # Expose an entity if the entity's domain is exposed by default and
+        # Expose an entity by default if the entity's domain is exposed by default
+        # and the entity is not a config or diagnostic entity
+        entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
+
+        # Expose an entity if the entity's is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
-        is_default_exposed = domain_exposed_by_default and explicit_expose is not False
+        is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
         return is_default_exposed or explicit_expose
 
@@ -135,16 +159,13 @@ class GoogleConfig(AbstractConfig):
         return True
 
     async def _async_request_sync_devices(self, agent_user_id: str):
-        if CONF_API_KEY in self._config:
-            await self.async_call_homegraph_api_key(
+        if CONF_SERVICE_ACCOUNT in self._config:
+            return await self.async_call_homegraph_api(
                 REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
             )
-        elif CONF_SERVICE_ACCOUNT in self._config:
-            await self.async_call_homegraph_api(
-                REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
-            )
-        else:
-            _LOGGER.error("No configuration for request_sync available")
+
+        _LOGGER.error("No configuration for request_sync available")
+        return HTTPStatus.INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
@@ -163,25 +184,6 @@ class GoogleConfig(AbstractConfig):
             )
             self._access_token = token["access_token"]
             self._access_token_renew = now + timedelta(seconds=token["expires_in"])
-
-    async def async_call_homegraph_api_key(self, url, data):
-        """Call a homegraph api with api key authentication."""
-        websession = async_get_clientsession(self.hass)
-        try:
-            res = await websession.post(
-                url, params={"key": self._config.get(CONF_API_KEY)}, json=data
-            )
-            _LOGGER.debug(
-                "Response on %s with data %s was %s", url, data, await res.text()
-            )
-            res.raise_for_status()
-            return res.status
-        except ClientResponseError as error:
-            _LOGGER.error("Request for %s failed: %d", url, error.status)
-            return error.status
-        except (asyncio.TimeoutError, ClientError):
-            _LOGGER.error("Could not contact %s", url)
-            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authentication."""
@@ -204,7 +206,7 @@ class GoogleConfig(AbstractConfig):
             try:
                 return await _call()
             except ClientResponseError as error:
-                if error.status == HTTP_UNAUTHORIZED:
+                if error.status == HTTPStatus.UNAUTHORIZED:
                     _LOGGER.warning(
                         "Request for %s unauthorized, renewing token and retrying", url
                     )
@@ -216,7 +218,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return HTTP_INTERNAL_SERVER_ERROR
+            return HTTPStatus.INTERNAL_SERVER_ERROR
 
     async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""

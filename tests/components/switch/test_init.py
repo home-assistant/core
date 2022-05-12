@@ -17,7 +17,7 @@ def entities(hass):
     yield platform.ENTITIES
 
 
-async def test_methods(hass, entities):
+async def test_methods(hass, entities, enable_custom_integrations):
     """Test is_on, turn_on, turn_off methods."""
     switch_1, switch_2, switch_3 = entities
     assert await async_setup_component(
@@ -49,7 +49,9 @@ async def test_methods(hass, entities):
     assert switch.is_on(hass, switch_3.entity_id)
 
 
-async def test_switch_context(hass, entities, hass_admin_user):
+async def test_switch_context(
+    hass, entities, hass_admin_user, enable_custom_integrations
+):
     """Test that switch context works."""
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
 
@@ -70,13 +72,3 @@ async def test_switch_context(hass, entities, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
-
-
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomSwitch(switch.SwitchDevice):
-        pass
-
-    CustomSwitch()
-    assert "SwitchDevice is deprecated, modify CustomSwitch" in caplog.text

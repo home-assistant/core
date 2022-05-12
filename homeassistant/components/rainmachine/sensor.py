@@ -1,188 +1,230 @@
 """This platform provides support for sensor data from RainMachine."""
-import logging
+from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from functools import partial
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from . import RainMachineEntity
 from .const import (
-    DATA_CLIENT,
+    DATA_CONTROLLER,
+    DATA_COORDINATOR,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
-    DOMAIN as RAINMACHINE_DOMAIN,
-    SENSOR_UPDATE_TOPIC,
+    DATA_ZONES,
+    DOMAIN,
+    RUN_STATE_MAP,
+    RunStates,
+)
+from .model import (
+    RainMachineDescriptionMixinApiCategory,
+    RainMachineDescriptionMixinUid,
 )
 
-_LOGGER = logging.getLogger(__name__)
+DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
 TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
 TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
 TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
 TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
 TYPE_FREEZE_TEMP = "freeze_protect_temp"
-
-SENSORS = {
-    TYPE_FLOW_SENSOR_CLICK_M3: (
-        "Flow Sensor Clicks",
-        "mdi:water-pump",
-        f"clicks/{VOLUME_CUBIC_METERS}",
-        None,
-        False,
-        DATA_PROVISION_SETTINGS,
-    ),
-    TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
-        "Flow Sensor Consumed Liters",
-        "mdi:water-pump",
-        "liter",
-        None,
-        False,
-        DATA_PROVISION_SETTINGS,
-    ),
-    TYPE_FLOW_SENSOR_START_INDEX: (
-        "Flow Sensor Start Index",
-        "mdi:water-pump",
-        "index",
-        None,
-        False,
-        DATA_PROVISION_SETTINGS,
-    ),
-    TYPE_FLOW_SENSOR_WATERING_CLICKS: (
-        "Flow Sensor Clicks",
-        "mdi:water-pump",
-        "clicks",
-        None,
-        False,
-        DATA_PROVISION_SETTINGS,
-    ),
-    TYPE_FREEZE_TEMP: (
-        "Freeze Protect Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        "temperature",
-        True,
-        DATA_RESTRICTIONS_UNIVERSAL,
-    ),
-}
+TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+@dataclass
+class RainMachineSensorDescriptionApiCategory(
+    SensorEntityDescription, RainMachineDescriptionMixinApiCategory
+):
+    """Describe a RainMachine sensor."""
+
+
+@dataclass
+class RainMachineSensorDescriptionUid(
+    SensorEntityDescription, RainMachineDescriptionMixinUid
+):
+    """Describe a RainMachine sensor."""
+
+
+SENSOR_DESCRIPTIONS = (
+    RainMachineSensorDescriptionApiCategory(
+        key=TYPE_FLOW_SENSOR_CLICK_M3,
+        name="Flow Sensor Clicks per Cubic Meter",
+        icon="mdi:water-pump",
+        native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_category=DATA_PROVISION_SETTINGS,
+    ),
+    RainMachineSensorDescriptionApiCategory(
+        key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
+        name="Flow Sensor Consumed Liters",
+        icon="mdi:water-pump",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="liter",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        api_category=DATA_PROVISION_SETTINGS,
+    ),
+    RainMachineSensorDescriptionApiCategory(
+        key=TYPE_FLOW_SENSOR_START_INDEX,
+        name="Flow Sensor Start Index",
+        icon="mdi:water-pump",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="index",
+        entity_registry_enabled_default=False,
+        api_category=DATA_PROVISION_SETTINGS,
+    ),
+    RainMachineSensorDescriptionApiCategory(
+        key=TYPE_FLOW_SENSOR_WATERING_CLICKS,
+        name="Flow Sensor Clicks",
+        icon="mdi:water-pump",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="clicks",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_category=DATA_PROVISION_SETTINGS,
+    ),
+    RainMachineSensorDescriptionApiCategory(
+        key=TYPE_FREEZE_TEMP,
+        name="Freeze Protect Temperature",
+        icon="mdi:thermometer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_category=DATA_RESTRICTIONS_UNIVERSAL,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up RainMachine sensors based on a config entry."""
-    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
-    async_add_entities(
-        [
-            RainMachineSensor(
-                rainmachine,
-                sensor_type,
-                name,
-                icon,
-                unit,
-                device_class,
-                enabled_by_default,
-                api_category,
-            )
-            for (
-                sensor_type,
-                (name, icon, unit, device_class, enabled_by_default, api_category),
-            ) in SENSORS.items()
-        ]
-    )
-
-
-class RainMachineSensor(RainMachineEntity):
-    """A sensor implementation for raincloud device."""
-
-    def __init__(
-        self,
-        rainmachine,
-        sensor_type,
-        name,
-        icon,
-        unit,
-        device_class,
-        enabled_by_default,
-        api_category,
-    ):
-        """Initialize."""
-        super().__init__(rainmachine)
-
-        self._api_category = api_category
-        self._device_class = device_class
-        self._enabled_by_default = enabled_by_default
-        self._icon = icon
-        self._name = name
-        self._sensor_type = sensor_type
-        self._state = None
-        self._unit = unit
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Determine whether an entity is enabled by default."""
-        return self._enabled_by_default
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def state(self) -> str:
-        """Return the name of the entity."""
-        return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "{}_{}".format(
-            self.rainmachine.device_mac.replace(":", ""), self._sensor_type
-        )
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
-        )
-        await self.rainmachine.async_register_sensor_api_interest(self._api_category)
-        self.update_from_latest_data()
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listeners and deregister API interest."""
-        super().async_will_remove_from_hass()
-        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)
+    controller = hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
+    coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     @callback
-    def update_from_latest_data(self):
-        """Update the sensor's state."""
-        if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
+    def async_get_sensor_by_api_category(api_category: str) -> partial:
+        """Generate the appropriate sensor object for an API category."""
+        if api_category == DATA_PROVISION_SETTINGS:
+            return partial(
+                ProvisionSettingsSensor,
+                entry,
+                coordinators[DATA_PROVISION_SETTINGS],
+            )
+
+        return partial(
+            UniversalRestrictionsSensor,
+            entry,
+            coordinators[DATA_RESTRICTIONS_UNIVERSAL],
+        )
+
+    sensors = [
+        async_get_sensor_by_api_category(description.api_category)(
+            controller, description
+        )
+        for description in SENSOR_DESCRIPTIONS
+    ]
+
+    zone_coordinator = coordinators[DATA_ZONES]
+    for uid, zone in zone_coordinator.data.items():
+        sensors.append(
+            ZoneTimeRemainingSensor(
+                entry,
+                zone_coordinator,
+                controller,
+                RainMachineSensorDescriptionUid(
+                    key=f"{TYPE_ZONE_RUN_COMPLETION_TIME}_{uid}",
+                    name=f"{zone['name']} Run Completion Time",
+                    device_class=SensorDeviceClass.TIMESTAMP,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    uid=uid,
+                ),
+            )
+        )
+
+    async_add_entities(sensors)
+
+
+class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
+    """Define a sensor that handles provisioning data."""
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the state."""
+        if self.entity_description.key == TYPE_FLOW_SENSOR_CLICK_M3:
+            self._attr_native_value = self.coordinator.data["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
-        elif self._sensor_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
-                "flowSensorWateringClicks"
+        elif self.entity_description.key == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
+            clicks = self.coordinator.data["system"].get("flowSensorWateringClicks")
+            clicks_per_m3 = self.coordinator.data["system"].get(
+                "flowSensorClicksPerCubicMeter"
             )
-            clicks_per_m3 = self.rainmachine.data[DATA_PROVISION_SETTINGS][
-                "system"
-            ].get("flowSensorClicksPerCubicMeter")
 
             if clicks and clicks_per_m3:
-                self._state = (clicks * 1000) / clicks_per_m3
+                self._attr_native_value = (clicks * 1000) / clicks_per_m3
             else:
-                self._state = None
-        elif self._sensor_type == TYPE_FLOW_SENSOR_START_INDEX:
-            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
+                self._attr_native_value = None
+        elif self.entity_description.key == TYPE_FLOW_SENSOR_START_INDEX:
+            self._attr_native_value = self.coordinator.data["system"].get(
                 "flowSensorStartIndex"
             )
-        elif self._sensor_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
+        elif self.entity_description.key == TYPE_FLOW_SENSOR_WATERING_CLICKS:
+            self._attr_native_value = self.coordinator.data["system"].get(
                 "flowSensorWateringClicks"
             )
-        elif self._sensor_type == TYPE_FREEZE_TEMP:
-            self._state = self.rainmachine.data[DATA_RESTRICTIONS_UNIVERSAL][
-                "freezeProtectTemp"
-            ]
+
+
+class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
+    """Define a sensor that handles universal restrictions data."""
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the state."""
+        if self.entity_description.key == TYPE_FREEZE_TEMP:
+            self._attr_native_value = self.coordinator.data["freezeProtectTemp"]
+
+
+class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
+    """Define a sensor that shows the amount of time remaining for a zone."""
+
+    entity_description: RainMachineSensorDescriptionUid
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the state."""
+        data = self.coordinator.data[self.entity_description.uid]
+        now = utcnow()
+
+        if RUN_STATE_MAP.get(data["state"]) != RunStates.RUNNING:
+            # If the zone isn't actively running, return immediately:
+            return
+
+        new_timestamp = now + timedelta(seconds=data["remaining"])
+
+        if self._attr_native_value:
+            assert isinstance(self._attr_native_value, datetime)
+            if (
+                new_timestamp - self._attr_native_value
+            ) < DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE:
+                # If the deviation between the previous and new timestamps is less than
+                # a "wobble tolerance," don't spam the state machine:
+                return
+
+        self._attr_native_value = new_timestamp

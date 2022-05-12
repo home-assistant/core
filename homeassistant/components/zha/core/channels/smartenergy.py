@@ -1,22 +1,14 @@
 """Smart energy channels module for Zigbee Home Automation."""
-import logging
+from __future__ import annotations
 
-import zigpy.zcl.clusters.smartenergy as smartenergy
+import enum
+from functools import partialmethod
 
-from homeassistant.const import (
-    POWER_WATT,
-    TIME_HOURS,
-    TIME_SECONDS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-)
-from homeassistant.core import callback
+from zigpy.zcl.clusters import smartenergy
 
 from .. import registries, typing as zha_typing
-from ..const import REPORT_CONFIG_DEFAULT
+from ..const import REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_OP
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
@@ -63,91 +55,149 @@ class Messaging(ZigbeeChannel):
 class Metering(ZigbeeChannel):
     """Metering channel."""
 
-    REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
-
-    unit_of_measure_map = {
-        0x00: POWER_WATT,
-        0x01: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
-        0x02: f"{VOLUME_CUBIC_FEET}/{TIME_HOURS}",
-        0x03: f"ccf/{TIME_HOURS}",
-        0x04: f"US gal/{TIME_HOURS}",
-        0x05: f"IMP gal/{TIME_HOURS}",
-        0x06: f"BTU/{TIME_HOURS}",
-        0x07: f"l/{TIME_HOURS}",
-        0x08: "kPa",
-        0x09: "kPa",
-        0x0A: f"mcf/{TIME_HOURS}",
-        0x0B: "unitless",
-        0x0C: f"MJ/{TIME_SECONDS}",
+    REPORT_CONFIG = (
+        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_OP},
+        {"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "status", "config": REPORT_CONFIG_ASAP},
+    )
+    ZCL_INIT_ATTRS = {
+        "demand_formatting": True,
+        "divisor": True,
+        "metering_device_type": True,
+        "multiplier": True,
+        "summation_formatting": True,
+        "unit_of_measure": True,
     }
+
+    metering_device_type = {
+        0: "Electric Metering",
+        1: "Gas Metering",
+        2: "Water Metering",
+        3: "Thermal Metering",
+        4: "Pressure Metering",
+        5: "Heat Metering",
+        6: "Cooling Metering",
+        128: "Mirrored Gas Metering",
+        129: "Mirrored Water Metering",
+        130: "Mirrored Thermal Metering",
+        131: "Mirrored Pressure Metering",
+        132: "Mirrored Heat Metering",
+        133: "Mirrored Cooling Metering",
+    }
+
+    class DeviceStatusElectric(enum.IntFlag):
+        """Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        POWER_FAILURE = 8
+        POWER_QUALITY = 16
+        LEAK_DETECT = 32  # Really?
+        SERVICE_DISCONNECT = 64
+        RESERVED = 128
+
+    class DeviceStatusDefault(enum.IntFlag):
+        """Metering Device Status."""
+
+        NO_ALARMS = 0
+
+    class FormatSelector(enum.IntEnum):
+        """Format specified selector."""
+
+        DEMAND = 0
+        SUMMATION = 1
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._divisor = 1
-        self._multiplier = 1
-        self._unit_enum = None
         self._format_spec = None
-
-    async def async_configure(self):
-        """Configure channel."""
-        await self.fetch_config(False)
-        await super().async_configure()
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute update from Metering cluster."""
-        if None in (self._multiplier, self._divisor, self._format_spec):
-            return
-        super().attribute_updated(attrid, value * self._multiplier / self._divisor)
+        self._summa_format = None
 
     @property
-    def unit_of_measurement(self):
+    def divisor(self) -> int:
+        """Return divisor for the value."""
+        return self.cluster.get("divisor") or 1
+
+    @property
+    def device_type(self) -> int | None:
+        """Return metering device type."""
+        dev_type = self.cluster.get("metering_device_type")
+        if dev_type is None:
+            return None
+        return self.metering_device_type.get(dev_type, dev_type)
+
+    @property
+    def multiplier(self) -> int:
+        """Return multiplier for the value."""
+        return self.cluster.get("multiplier") or 1
+
+    @property
+    def status(self) -> int | None:
+        """Return metering device status."""
+        if (status := self.cluster.get("status")) is None:
+            return None
+        if self.cluster.get("metering_device_type") == 0:
+            # Electric metering device type
+            return self.DeviceStatusElectric(status)
+        return self.DeviceStatusDefault(status)
+
+    @property
+    def unit_of_measurement(self) -> str:
         """Return unit of measurement."""
-        return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
+        return self.cluster.get("unit_of_measure")
 
-    async def fetch_config(self, from_cache):
+    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
-        results = await self.get_attributes(
-            ["divisor", "multiplier", "unit_of_measure", "demand_formatting"],
-            from_cache=from_cache,
-        )
 
-        self._divisor = results.get("divisor", self._divisor)
-        self._multiplier = results.get("multiplier", self._multiplier)
-        self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
-
-        fmting = results.get(
+        fmting = self.cluster.get(
             "demand_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
+        self._format_spec = self.get_formatting(fmting)
 
-        r_digits = int(fmting & 0x07)  # digits to the right of decimal point
-        l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
+        fmting = self.cluster.get(
+            "summation_formatting", 0xF9
+        )  # 1 digit to the right, 15 digits to the left
+        self._summa_format = self.get_formatting(fmting)
+
+    @staticmethod
+    def get_formatting(formatting: int) -> str:
+        """Return a formatting string, given the formatting value.
+
+        Bits 0 to 2: Number of Digits to the right of the Decimal Point.
+        Bits 3 to 6: Number of Digits to the left of the Decimal Point.
+        Bit 7: If set, suppress leading zeros.
+        """
+        r_digits = int(formatting & 0x07)  # digits to the right of decimal point
+        l_digits = (formatting >> 3) & 0x0F  # digits to the left of decimal point
         if l_digits == 0:
             l_digits = 15
         width = r_digits + l_digits + (1 if r_digits > 0 else 0)
 
-        if fmting & 0x80:
-            self._format_spec = "{:" + str(width) + "." + str(r_digits) + "f}"
-        else:
-            self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
+        if formatting & 0x80:
+            # suppress leading 0
+            return f"{{:{width}.{r_digits}f}}"
 
-    def formatter_function(self, value):
+        return f"{{:0{width}.{r_digits}f}}"
+
+    def _formatter_function(self, selector: FormatSelector, value: int) -> int | float:
         """Return formatted value for display."""
-        if self.unit_of_measurement == POWER_WATT:
+        value = value * self.multiplier / self.divisor
+        if self.unit_of_measurement == 0:
             # Zigbee spec power unit is kW, but we show the value in W
             value_watt = value * 1000
             if value_watt < 100:
                 return round(value_watt, 1)
             return round(value_watt)
+        if selector == self.FormatSelector.SUMMATION:
+            return self._summa_format.format(value).lstrip()
         return self._format_spec.format(value).lstrip()
+
+    demand_formatter = partialmethod(_formatter_function, FormatSelector.DEMAND)
+    summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Prepayment.cluster_id)

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Vennligst skriv inn legitimasjonen som brukes for \u00e5 logge deg p\u00e5 mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "away_cool_temperature": "Borte kj\u00f8lig temperatur",
+                    "away_heat_temperature": "Borte varmetemperatur"
+                },
+                "description": "Ytterligere Honeywell-konfigurasjonsalternativer. Temperaturene er satt i Fahrenheit."
+            }
+        }
+    }
+}

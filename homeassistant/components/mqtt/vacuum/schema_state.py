@@ -1,84 +1,70 @@
 """Support for a State MQTT vacuum."""
 import json
-import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-)
 from homeassistant.components.vacuum import (
+    ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_START,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
-    CONF_DEVICE,
     CONF_NAME,
-    CONF_UNIQUE_ID,
+    STATE_IDLE,
+    STATE_PAUSED,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from .. import subscription
+from ... import mqtt
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from ..debug_info import log_messages
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
-_LOGGER = logging.getLogger(__name__)
-
 SERVICE_TO_STRING = {
-    SUPPORT_START: "start",
-    SUPPORT_PAUSE: "pause",
-    SUPPORT_STOP: "stop",
-    SUPPORT_RETURN_HOME: "return_home",
-    SUPPORT_FAN_SPEED: "fan_speed",
-    SUPPORT_BATTERY: "battery",
-    SUPPORT_STATUS: "status",
-    SUPPORT_SEND_COMMAND: "send_command",
-    SUPPORT_LOCATE: "locate",
-    SUPPORT_CLEAN_SPOT: "clean_spot",
+    VacuumEntityFeature.START: "start",
+    VacuumEntityFeature.PAUSE: "pause",
+    VacuumEntityFeature.STOP: "stop",
+    VacuumEntityFeature.RETURN_HOME: "return_home",
+    VacuumEntityFeature.FAN_SPEED: "fan_speed",
+    VacuumEntityFeature.BATTERY: "battery",
+    VacuumEntityFeature.STATUS: "status",
+    VacuumEntityFeature.SEND_COMMAND: "send_command",
+    VacuumEntityFeature.LOCATE: "locate",
+    VacuumEntityFeature.CLEAN_SPOT: "clean_spot",
 }
 
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 
 DEFAULT_SERVICES = (
-    SUPPORT_START
-    | SUPPORT_STOP
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_STATUS
-    | SUPPORT_BATTERY
-    | SUPPORT_CLEAN_SPOT
+    VacuumEntityFeature.START
+    | VacuumEntityFeature.STOP
+    | VacuumEntityFeature.RETURN_HOME
+    | VacuumEntityFeature.STATUS
+    | VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.CLEAN_SPOT
 )
 ALL_SERVICES = (
     DEFAULT_SERVICES
-    | SUPPORT_PAUSE
-    | SUPPORT_LOCATE
-    | SUPPORT_FAN_SPEED
-    | SUPPORT_SEND_COMMAND
+    | VacuumEntityFeature.PAUSE
+    | VacuumEntityFeature.LOCATE
+    | VacuumEntityFeature.FAN_SPEED
+    | VacuumEntityFeature.SEND_COMMAND
 )
 
 BATTERY = "battery_level"
@@ -120,7 +106,6 @@ DEFAULT_PAYLOAD_PAUSE = "pause"
 PLATFORM_SCHEMA_STATE = (
     mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
@@ -143,54 +128,45 @@ PLATFORM_SCHEMA_STATE = (
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
             ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
 
+DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.REMOVE_EXTRA)
+
+
 async def async_setup_entity_state(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a State MQTT Vacuum."""
-    async_add_entities([MqttStateVacuum(config, config_entry, discovery_data)])
+    async_add_entities([MqttStateVacuum(hass, config, config_entry, discovery_data)])
 
 
-class MqttStateVacuum(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    StateVacuumEntity,
-):
+class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
-    def __init__(self, config, config_entry, discovery_info):
+    _entity_id_format = ENTITY_ID_FORMAT
+    _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
         self._state = None
         self._state_attrs = {}
         self._fan_speed_list = []
-        self._sub_state = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_info, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return DISCOVERY_SCHEMA_STATE
 
     def _setup_from_config(self, config):
-        self._config = config
-        self._name = config[CONF_NAME]
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
@@ -212,31 +188,7 @@ class MqttStateVacuum(
             )
         }
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA_STATE(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Subscribe MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -245,8 +197,12 @@ class MqttStateVacuum(
         def state_message_received(msg):
             """Handle state MQTT message."""
             payload = json.loads(msg.payload)
-            if STATE in payload and payload[STATE] in POSSIBLE_STATES:
-                self._state = POSSIBLE_STATES[payload[STATE]]
+            if STATE in payload and (
+                payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
+            ):
+                self._state = (
+                    POSSIBLE_STATES[payload[STATE]] if payload[STATE] else None
+                )
                 del payload[STATE]
             self._state_attrs.update(payload)
             self.async_write_ha_state()
@@ -256,25 +212,20 @@ class MqttStateVacuum(
                 "topic": self._config.get(CONF_STATE_TOPIC),
                 "msg_callback": state_message_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
 
-    @property
-    def name(self):
-        """Return the name of the vacuum."""
-        return self._name
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def state(self):
         """Return state of vacuum."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def fan_speed(self):
@@ -298,93 +249,93 @@ class MqttStateVacuum(
 
     async def async_start(self):
         """Start the vacuum."""
-        if self.supported_features & SUPPORT_START == 0:
+        if self.supported_features & VacuumEntityFeature.START == 0:
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_START],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_pause(self):
         """Pause the vacuum."""
-        if self.supported_features & SUPPORT_PAUSE == 0:
+        if self.supported_features & VacuumEntityFeature.PAUSE == 0:
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_PAUSE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
-        if self.supported_features & SUPPORT_STOP == 0:
+        if self.supported_features & VacuumEntityFeature.STOP == 0:
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_STOP],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if (self.supported_features & SUPPORT_FAN_SPEED == 0) or (
+        if (self.supported_features & VacuumEntityFeature.FAN_SPEED == 0) or (
             fan_speed not in self._fan_speed_list
         ):
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
-        if self.supported_features & SUPPORT_RETURN_HOME == 0:
+        if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_RETURN_TO_BASE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
-        if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
+        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_CLEAN_SPOT],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
-        if self.supported_features & SUPPORT_LOCATE == 0:
+        if self.supported_features & VacuumEntityFeature.LOCATE == 0:
             return None
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_LOCATE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
-        if self.supported_features & SUPPORT_SEND_COMMAND == 0:
+        if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
             return None
         if params:
             message = {"command": command}
@@ -392,10 +343,10 @@ class MqttStateVacuum(
             message = json.dumps(message)
         else:
             message = command
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._send_command_topic,
             message,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )

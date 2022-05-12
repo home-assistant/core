@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Ingen Hisense AEH-W4A1-enheter funnet p\u00e5 nettverket.",
-            "single_instance_allowed": "Bare en enkelt konfigurasjon av Hisense AEH-W4A1 er mulig."
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "step": {
             "confirm": {

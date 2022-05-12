@@ -1,10 +1,11 @@
 """Test the auth script to manage local users."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.scripts import auth as script_auth
 
-from tests.async_mock import Mock, patch
 from tests.common import register_auth_provider
 
 

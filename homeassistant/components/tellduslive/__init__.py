@@ -7,14 +7,15 @@ from tellduslive import DIM, TURNON, UP, Session
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
-from . import config_flow  # noqa: F401
 from .const import (
-    CONF_HOST,
     DOMAIN,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
@@ -51,9 +52,8 @@ NEW_CLIENT_TASK = "telldus_new_client_task"
 INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Create a tellduslive session."""
-
     conf = entry.data[KEY_SESSION]
 
     if CONF_HOST in conf:
@@ -98,7 +98,7 @@ async def async_new_client(hass, session, entry):
     await client.update()
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telldus Live component."""
     if DOMAIN not in config:
         return True
@@ -116,21 +116,19 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if not hass.data[NEW_CLIENT_TASK].done():
         hass.data[NEW_CLIENT_TASK].cancel()
     interval_tracker = hass.data.pop(INTERVAL_TRACKER)
     interval_tracker()
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
-        ]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, CONFIG_ENTRY_IS_SETUP
     )
     del hass.data[DOMAIN]
     del hass.data[DATA_CONFIG_ENTRY_LOCK]
-    return True
+    del hass.data[CONFIG_ENTRY_IS_SETUP]
+    return unload_ok
 
 
 class TelldusLiveClient:

@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikrotik is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Connection Unsuccessful",
-            "name_exists": "Name exists",
-            "wrong_credentials": "Wrong Credentials"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "name_exists": "Name exists"
         },
         "step": {
             "user": {

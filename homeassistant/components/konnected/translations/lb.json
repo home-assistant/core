@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "already_in_progress": "Konfiguratioun's Oflaf fir den Apparat ass schonn am gaangen.",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
             "not_konn_panel": "Keen erkannten Konnected.io Apparat",
-            "unknown": "Onbekannten Fehler opgetrueden"
+            "unknown": "Onerwaarte Feeler"
         },
         "error": {
-            "cannot_connect": "Kann sech net mam Konnected Panel um {host}:{port} verbannen"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "confirm": {
@@ -40,19 +40,19 @@
             "options_binary": {
                 "data": {
                     "inverse": "Op/Zou Zoustand vertauschen",
-                    "name": "Numm (optional)",
+                    "name": "Numm (optionell)",
                     "type": "Typ vun Bin\u00e4re Sensor"
                 },
-                "description": "Wiel d'Optioune fir den bin\u00e4ren Sensor dee mat {zone} verbonnen ass",
+                "description": "{zone} Optiounen",
                 "title": "Bin\u00e4re Sensor konfigur\u00e9ieren"
             },
             "options_digital": {
                 "data": {
-                    "name": "Numm (optional)",
+                    "name": "Numm (optionell)",
                     "poll_interval": "Intervall vun den Offroen (Minutten) (optional)",
                     "type": "Typ vum Sensor"
                 },
-                "description": "Wiel d'Optioune fir den digitale Sensor dee mat {zone} verbonnen ass",
+                "description": "{zone} Optiounen",
                 "title": "Digitale Sensor konfigur\u00e9ieren"
             },
             "options_io": {
@@ -98,11 +98,11 @@
                     "activation": "Ausgang wann un",
                     "momentary": "Pulsatiounsdauer (ms) (optional)",
                     "more_states": "Zous\u00e4tzlesch Zoust\u00e4nn fir d\u00ebs Zon konfigur\u00e9ieren",
-                    "name": "Numm (optional)",
+                    "name": "Numm (optionell)",
                     "pause": "Pausen zw\u00ebscht den Impulser (ms) (optional)",
                     "repeat": "Unzuel vu Widderhuelungen (-1= onendlech) (optional)"
                 },
-                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}: Status {state}",
+                "description": "{zone} Optioune: Status {state}",
                 "title": "\u00cbmschltbaren Ausgang konfigur\u00e9ieren"
             }
         }

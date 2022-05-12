@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} - {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

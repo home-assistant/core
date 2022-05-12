@@ -23,15 +23,15 @@ from pysmartthings import (
     SubscriptionEntity,
 )
 
-from homeassistant.components import webhook
+from homeassistant.components import cloud, webhook
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     APP_NAME_PREFIX,
@@ -60,7 +60,7 @@ def format_unique_id(app_id: str, location_id: str) -> str:
     return f"{app_id}_{location_id}"
 
 
-async def find_app(hass: HomeAssistantType, api):
+async def find_app(hass: HomeAssistant, api):
     """Find an existing SmartApp for this installation of hass."""
     apps = await api.apps()
     for app in [app for app in apps if app.app_name.startswith(APP_NAME_PREFIX)]:
@@ -92,28 +92,28 @@ async def validate_installed_app(api, installed_app_id: str):
     return installed_app
 
 
-def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
+def validate_webhook_requirements(hass: HomeAssistant) -> bool:
     """Ensure Home Assistant is setup properly to receive webhooks."""
-    if hass.components.cloud.async_active_subscription():
+    if cloud.async_active_subscription(hass):
         return True
     if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:
         return True
     return get_webhook_url(hass).lower().startswith("https://")
 
 
-def get_webhook_url(hass: HomeAssistantType) -> str:
+def get_webhook_url(hass: HomeAssistant) -> str:
     """
     Get the URL of the webhook.
 
     Return the cloudhook if available, otherwise local webhook.
     """
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
-    if hass.components.cloud.async_active_subscription() and cloudhook_url is not None:
+    if cloud.async_active_subscription(hass) and cloudhook_url is not None:
         return cloudhook_url
     return webhook.async_generate_url(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
 
 
-def _get_app_template(hass: HomeAssistantType):
+def _get_app_template(hass: HomeAssistant):
     try:
         endpoint = f"at {get_url(hass, allow_cloud=False, prefer_external=True)}"
     except NoURLAvailableError:
@@ -135,7 +135,7 @@ def _get_app_template(hass: HomeAssistantType):
     }
 
 
-async def create_app(hass: HomeAssistantType, api):
+async def create_app(hass: HomeAssistant, api):
     """Create a SmartApp for this instance of hass."""
     # Create app from template attributes
     template = _get_app_template(hass)
@@ -163,7 +163,7 @@ async def create_app(hass: HomeAssistantType, api):
     return app, client
 
 
-async def update_app(hass: HomeAssistantType, app):
+async def update_app(hass: HomeAssistant, app):
     """Ensure the SmartApp is up-to-date and update if necessary."""
     template = _get_app_template(hass)
     template.pop("app_name")  # don't update this
@@ -188,8 +188,7 @@ def setup_smartapp(hass, app):
     for each SmartThings account that is configured in hass.
     """
     manager = hass.data[DOMAIN][DATA_MANAGER]
-    smartapp = manager.smartapps.get(app.app_id)
-    if smartapp:
+    if smartapp := manager.smartapps.get(app.app_id):
         # already setup
         return smartapp
     smartapp = manager.register(app.app_id, app.webhook_public_key)
@@ -199,22 +198,20 @@ def setup_smartapp(hass, app):
     return smartapp
 
 
-async def setup_smartapp_endpoint(hass: HomeAssistantType):
+async def setup_smartapp_endpoint(hass: HomeAssistant):
     """
     Configure the SmartApp webhook in hass.
 
     SmartApps are an extension point within the SmartThings ecosystem and
     is used to receive push updates (i.e. device updates) from the cloud.
     """
-    data = hass.data.get(DOMAIN)
-    if data:
+    if hass.data.get(DOMAIN):
         # already setup
         return
 
     # Get/create config to store a unique id for this hass instance.
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    config = await store.async_load()
-    if not config:
+    if not (config := await store.async_load()):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
@@ -232,11 +229,11 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
     if (
         cloudhook_url is None
-        and hass.components.cloud.async_active_subscription()
+        and cloud.async_active_subscription(hass)
         and not hass.config_entries.async_entries(DOMAIN)
     ):
-        cloudhook_url = await hass.components.cloud.async_create_cloudhook(
-            config[CONF_WEBHOOK_ID]
+        cloudhook_url = await cloud.async_create_cloudhook(
+            hass, config[CONF_WEBHOOK_ID]
         )
         config[CONF_CLOUDHOOK_URL] = cloudhook_url
         await store.async_save(config)
@@ -276,16 +273,14 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     )
 
 
-async def unload_smartapp_endpoint(hass: HomeAssistantType):
+async def unload_smartapp_endpoint(hass: HomeAssistant):
     """Tear down the component configuration."""
     if DOMAIN not in hass.data:
         return
     # Remove the cloudhook if it was created
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
-    if cloudhook_url and hass.components.cloud.async_is_logged_in():
-        await hass.components.cloud.async_delete_cloudhook(
-            hass.data[DOMAIN][CONF_WEBHOOK_ID]
-        )
+    if cloudhook_url and cloud.async_is_logged_in(hass):
+        await cloud.async_delete_cloudhook(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
         # Remove cloudhook from storage
         store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(
@@ -308,7 +303,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistantType):
 
 
 async def smartapp_sync_subscriptions(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     auth_token: str,
     location_id: str,
     installed_app_id: str,
@@ -397,7 +392,7 @@ async def smartapp_sync_subscriptions(
 
 
 async def _continue_flow(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     app_id: str,
     location_id: str,
     installed_app_id: str,
@@ -408,8 +403,8 @@ async def _continue_flow(
     flow = next(
         (
             flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN and flow["context"]["unique_id"] == unique_id
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            if flow["context"]["unique_id"] == unique_id
         ),
         None,
     )
@@ -429,7 +424,7 @@ async def _continue_flow(
         )
 
 
-async def smartapp_install(hass: HomeAssistantType, req, resp, app):
+async def smartapp_install(hass: HomeAssistant, req, resp, app):
     """Handle a SmartApp installation and continue the config flow."""
     await _continue_flow(
         hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
@@ -441,7 +436,7 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     )
 
 
-async def smartapp_update(hass: HomeAssistantType, req, resp, app):
+async def smartapp_update(hass: HomeAssistant, req, resp, app):
     """Handle a SmartApp update and either update the entry or continue the flow."""
     entry = next(
         (
@@ -470,7 +465,7 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     )
 
 
-async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
+async def smartapp_uninstall(hass: HomeAssistant, req, resp, app):
     """
     Handle when a SmartApp is removed from a location by the user.
 
@@ -496,7 +491,7 @@ async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
     )
 
 
-async def smartapp_webhook(hass: HomeAssistantType, webhook_id: str, request):
+async def smartapp_webhook(hass: HomeAssistant, webhook_id: str, request):
     """
     Handle a smartapp lifecycle event callback from SmartThings.
 

@@ -1,57 +1,104 @@
 """Sensor support for Wireless Sensor Tags platform."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TEMPERATURE = "temperature"
+SENSOR_AMBIENT_TEMPERATURE = "ambient_temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_MOISTURE = "moisture"
 SENSOR_LIGHT = "light"
 
-SENSOR_TYPES = [SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_MOISTURE, SENSOR_LIGHT]
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    SENSOR_TEMPERATURE: SensorEntityDescription(
+        key=SENSOR_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SENSOR_AMBIENT_TEMPERATURE: SensorEntityDescription(
+        key=SENSOR_AMBIENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SENSOR_HUMIDITY: SensorEntityDescription(
+        key=SENSOR_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SENSOR_MOISTURE: SensorEntityDescription(
+        key=SENSOR_MOISTURE,
+        device_class=SENSOR_MOISTURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SENSOR_LIGHT: SensorEntityDescription(
+        key=SENSOR_LIGHT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+}
+
+SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
-    platform = hass.data.get(WIRELESSTAG_DOMAIN)
+    platform = hass.data[WIRELESSTAG_DOMAIN]
     sensors = []
     tags = platform.tags
     for tag in tags.values():
-        for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            if sensor_type in tag.allowed_sensor_types:
-                sensors.append(
-                    WirelessTagSensor(platform, tag, sensor_type, hass.config)
-                )
+        for key in config[CONF_MONITORED_CONDITIONS]:
+            if key not in tag.allowed_sensor_types:
+                continue
+            description = SENSOR_TYPES[key]
+            sensors.append(WirelessTagSensor(platform, tag, description))
 
     add_entities(sensors, True)
 
 
-class WirelessTagSensor(WirelessTagBaseSensor):
+class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, tag, sensor_type, config):
+    entity_description: SensorEntityDescription
+
+    def __init__(self, api, tag, description):
         """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
-        self._sensor_type = sensor_type
+        self._sensor_type = description.key
+        self.entity_description = description
         self._name = self._tag.name
 
         # I want to see entity_id as:
@@ -83,17 +130,12 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self.name.lower().replace(" ", "_")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return self._sensor_type
-
-    @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
 
@@ -108,9 +150,9 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self._tag.sensor[self._sensor_type]
 
     @callback
-    def _update_tag_info_callback(self, event):
+    def _update_tag_info_callback(self, new_tag):
         """Handle push notification sent by tag manager."""
-        _LOGGER.debug("Entity to update state: %s event data: %s", self, event.data)
-        new_value = self._sensor.value_from_update_event(event.data)
-        self._state = self.decorate_value(new_value)
+        _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
+        self._tag = new_tag
+        self._state = self.updated_state_value()
         self.async_write_ha_state()

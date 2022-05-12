@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_host": "Entri host tidak dalam format URL lengkap, misalnya, http://192.168.10.100:80",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Kredensial untuk {host} tidak lagi valid.",
+                "title": "Autentikasi ulang ISY Anda"
+            },
+            "user": {
+                "data": {
+                    "host": "URL",
+                    "password": "Kata Sandi",
+                    "tls": "Versi TLS dari pengontrol ISY.",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Entri host harus dalam format URL lengkap, misalnya, http://192.168.10.100:80",
+                "title": "Hubungkan ke ISY Anda"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Abaikan String",
+                    "restore_light_state": "Pulihkan Kecerahan Cahaya",
+                    "sensor_string": "String Sensor Node",
+                    "variable_sensor_string": "String Sensor Variabel"
+                },
+                "description": "Mengatur opsi untuk Integrasi ISY: \n \u2022 String Sensor Node: Setiap perangkat atau folder yang berisi 'String Sensor Node' dalam nama akan diperlakukan sebagai sensor atau sensor biner. \n \u2022 Abaikan String: Setiap perangkat dengan 'Abaikan String' dalam nama akan diabaikan. \n \u2022 String Sensor Variabel: Variabel apa pun yang berisi 'String Sensor Variabel' akan ditambahkan sebagai sensor. \n \u2022 Pulihkan Kecerahan Cahaya: Jika diaktifkan, kecerahan sebelumnya akan dipulihkan saat menyalakan lampu alih-alih bawaan perangkat On-Level.",
+                "title": "Opsi ISY"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "Terhubung ke ISY",
+            "host_reachable": "Host dapat dijangkau",
+            "last_heartbeat": "Waktu Detak Terakhir",
+            "websocket_status": "Status Soket Peristiwa"
+        }
+    }
+}

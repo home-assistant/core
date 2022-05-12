@@ -1,4 +1,6 @@
 """Email sensor support."""
+from __future__ import annotations
+
 from collections import deque
 import datetime
 import email
@@ -7,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DATE,
     CONF_NAME,
@@ -17,8 +19,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_TEXT_PLAIN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Email sensor platform."""
     reader = EmailReader(
         config.get(CONF_USERNAME),
@@ -56,8 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_FOLDER),
     )
 
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
     sensor = EmailContentSensor(
         hass,
@@ -69,8 +77,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if sensor.connected:
         add_entities([sensor], True)
-    else:
-        return False
 
 
 class EmailReader:
@@ -145,7 +151,7 @@ class EmailReader:
         return None
 
 
-class EmailContentSensor(Entity):
+class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
 
     def __init__(self, hass, email_reader, name, allowed_senders, value_template):
@@ -166,12 +172,12 @@ class EmailContentSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current email state."""
         return self._message
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other state attributes for the message."""
         return self._state_attributes
 
@@ -183,7 +189,7 @@ class EmailContentSensor(Entity):
             ATTR_DATE: email_message["Date"],
             ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
         }
-        return self._value_template.render(variables)
+        return self._value_template.render(variables, parse_result=False)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""
@@ -221,9 +227,11 @@ class EmailContentSensor(Entity):
             elif part.get_content_type() == "text/html":
                 if message_html is None:
                     message_html = part.get_payload()
-            elif part.get_content_type().startswith("text"):
-                if message_untyped_text is None:
-                    message_untyped_text = part.get_payload()
+            elif (
+                part.get_content_type().startswith("text")
+                and message_untyped_text is None
+            ):
+                message_untyped_text = part.get_payload()
 
         if message_text is not None:
             return message_text

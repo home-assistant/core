@@ -23,7 +23,7 @@ def server_context_modern() -> ssl.SSLContext:
     https://wiki.mozilla.org/Security/Server_Side_TLS
     Modern guidelines are followed.
     """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS)  # pylint: disable=no-member
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
 
     context.options |= (
         ssl.OP_NO_SSLv2
@@ -53,7 +53,7 @@ def server_context_intermediate() -> ssl.SSLContext:
     https://wiki.mozilla.org/Security/Server_Side_TLS
     Intermediate guidelines are followed.
     """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS)  # pylint: disable=no-member
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
 
     context.options |= (
         ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE

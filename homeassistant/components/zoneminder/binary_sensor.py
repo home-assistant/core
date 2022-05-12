@@ -1,43 +1,38 @@
 """Support for ZoneMinder binary sensors."""
-from typing import Callable, List, Optional
-
-from zoneminder.zm import ZoneMinder
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .common import get_client_from_data
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
 
-async def async_setup_entry(
+async def async_setup_platform(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the sensor config entry."""
-    zm_client = get_client_from_data(hass, config_entry.unique_id)
-    async_add_entities([ZMAvailabilitySensor(zm_client, config_entry)])
+    """Set up the ZoneMinder binary sensor platform."""
+    sensors = []
+    for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():
+        sensors.append(ZMAvailabilitySensor(host_name, zm_client))
+    add_entities(sensors)
 
 
 class ZMAvailabilitySensor(BinarySensorEntity):
     """Representation of the availability of ZoneMinder as a binary sensor."""
 
-    def __init__(self, client: ZoneMinder, config_entry: ConfigEntry):
+    def __init__(self, host_name, client):
         """Initialize availability sensor."""
         self._state = None
-        self._name = config_entry.unique_id
+        self._name = host_name
         self._client = client
-        self._config_entry = config_entry
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return f"{self._config_entry.unique_id}_availability"
 
     @property
     def name(self):
@@ -52,7 +47,7 @@ class ZMAvailabilitySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     def update(self):
         """Update the state of this sensor (availability of ZoneMinder)."""

@@ -1,13 +1,16 @@
 """Helper to check the configuration file."""
-from collections import OrderedDict
-import os
-from typing import List, NamedTuple, Optional
+from __future__ import annotations
 
-import attr
+from collections import OrderedDict
+import logging
+import os
+from pathlib import Path
+from typing import NamedTuple
+
 import voluptuous as vol
 
 from homeassistant import loader
-from homeassistant.config import (
+from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_CORE,
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
@@ -20,34 +23,38 @@ from homeassistant.config import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.requirements import (
     RequirementsNotFound,
+    async_clear_install_history,
     async_get_integration_with_requirements,
 )
 import homeassistant.util.yaml.loader as yaml_loader
+
+from .typing import ConfigType
 
 
 class CheckConfigError(NamedTuple):
     """Configuration check error."""
 
     message: str
-    domain: Optional[str]
-    config: Optional[ConfigType]
+    domain: str | None
+    config: ConfigType | None
 
 
-@attr.s
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors: List[CheckConfigError] = attr.ib(factory=list)
+    def __init__(self) -> None:
+        """Initialize HA config."""
+        super().__init__()
+        self.errors: list[CheckConfigError] = []
 
     def add_error(
         self,
         message: str,
-        domain: Optional[str] = None,
-        config: Optional[ConfigType] = None,
-    ) -> "HomeAssistantConfig":
+        domain: str | None = None,
+        config: ConfigType | None = None,
+    ) -> HomeAssistantConfig:
         """Add a single error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self
@@ -58,12 +65,15 @@ class HomeAssistantConfig(OrderedDict):
         return "\n".join([err.message for err in self.errors])
 
 
-async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig:
+async def async_check_ha_config_file(  # noqa: C901
+    hass: HomeAssistant,
+) -> HomeAssistantConfig:
     """Load and check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
     """
     result = HomeAssistantConfig()
+    async_clear_install_history(hass)
 
     def _pack_error(
         package: str, component: str, config: ConfigType, message: str
@@ -76,20 +86,25 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
 
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
-        result.add_error(_format_config_error(ex, domain, config), domain, config)
+        result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
     try:
         if not await hass.async_add_executor_job(os.path.isfile, config_path):
             return result.add_error("File configuration.yaml not found.")
-        config = await hass.async_add_executor_job(load_yaml_config_file, config_path)
+
+        assert hass.config.config_dir is not None
+
+        config = await hass.async_add_executor_job(
+            load_yaml_config_file,
+            config_path,
+            yaml_loader.Secrets(Path(hass.config.config_dir)),
+        )
     except FileNotFoundError:
         return result.add_error(f"File not found: {config_path}")
     except HomeAssistantError as err:
         return result.add_error(f"Error loading {config_path}: {err}")
-    finally:
-        yaml_loader.clear_secret_cache()
 
     # Extract and validate core [homeassistant] config
     try:
@@ -113,8 +128,12 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     for domain in components:
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
-        except (RequirementsNotFound, loader.IntegrationNotFound) as ex:
-            result.add_error(f"Component error: {domain} - {ex}")
+        except loader.IntegrationNotFound as ex:
+            if not hass.config.safe_mode:
+                result.add_error(f"Integration error: {domain} - {ex}")
+            continue
+        except RequirementsNotFound as ex:
+            result.add_error(f"Integration error: {domain} - {ex}")
             continue
 
         try:
@@ -122,6 +141,40 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         except ImportError as ex:
             result.add_error(f"Component error: {domain} - {ex}")
             continue
+
+        # Check if the integration has a custom config validator
+        config_validator = None
+        try:
+            config_validator = integration.get_platform("config")
+        except ImportError as err:
+            # Filter out import error of the config platform.
+            # If the config platform contains bad imports, make sure
+            # that still fails.
+            if err.name != f"{integration.pkg_path}.config":
+                result.add_error(f"Error importing config platform {domain}: {err}")
+                continue
+
+        if config_validator is not None and hasattr(
+            config_validator, "async_validate_config"
+        ):
+            try:
+                result[domain] = (
+                    await config_validator.async_validate_config(hass, config)
+                )[domain]
+                continue
+            except (vol.Invalid, HomeAssistantError) as ex:
+                _comp_error(ex, domain, config)
+                continue
+            except Exception as err:  # pylint: disable=broad-except
+                logging.getLogger(__name__).exception(
+                    "Unexpected error validating config"
+                )
+                result.add_error(
+                    f"Unexpected error calling config validator: {err}",
+                    domain,
+                    config.get(domain),
+                )
+                continue
 
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:
@@ -162,8 +215,11 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
                     hass, p_name
                 )
                 platform = p_integration.get_platform(domain)
+            except loader.IntegrationNotFound as ex:
+                if not hass.config.safe_mode:
+                    result.add_error(f"Platform error {domain}.{p_name} - {ex}")
+                continue
             except (
-                loader.IntegrationNotFound,
                 RequirementsNotFound,
                 ImportError,
             ) as ex:

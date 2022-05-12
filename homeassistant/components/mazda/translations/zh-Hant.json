@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "account_locked": "\u5e33\u865f\u5df2\u9396\u5b9a\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "\u96fb\u5b50\u90f5\u4ef6",
+                    "password": "\u5bc6\u78bc",
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u8acb\u8f38\u5165\u767b\u5165MyMazda \u884c\u52d5 App \u4e4b Email \u5730\u5740\u8207\u5bc6\u78bc\u3002"
+            }
+        }
+    }
+}

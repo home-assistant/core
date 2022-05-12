@@ -6,111 +6,67 @@ import logging
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
-from . import config_flow  # noqa: F401
-from .const import CONF_KEY, CONF_UUID, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "daikin"
 
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-COMPONENT_TYPES = ["climate", "sensor", "switch"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Optional(CONF_HOSTS, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    )
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup(hass, config):
-    """Establish connection with Daikin."""
-    if DOMAIN not in config:
-        return True
-
-    hosts = config[DOMAIN][CONF_HOSTS]
-    if not hosts:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}
-            )
-        )
-    for host in hosts:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
-            )
-        )
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID
-    if entry.unique_id is None:
+    if entry.unique_id is None or ".local" in entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
-    elif ".local" in entry.unique_id:
-        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
+
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
-        conf.get(CONF_KEY),
+        conf.get(CONF_API_KEY),
         conf.get(CONF_UUID),
         conf.get(CONF_PASSWORD),
     )
     if not daikin_api:
         return False
+
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    for component in COMPONENT_TYPES:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in COMPONENT_TYPES
-        ]
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 async def daikin_api_setup(hass, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
     try:
-        with timeout(TIMEOUT):
+        async with timeout(TIMEOUT):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
@@ -132,7 +88,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device: Appliance):
+    def __init__(self, device: Appliance) -> None:
         """Initialize the Daikin Handle."""
         self.device = device
         self.name = device.values.get("name", "Daikin AC")
@@ -155,13 +111,13 @@ class DaikinApi:
         return self._available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         info = self.device.values
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": "Daikin",
-            "model": info.get("model"),
-            "name": info.get("name"),
-            "sw_version": info.get("ver", "").replace("_", "."),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer="Daikin",
+            model=info.get("model"),
+            name=info.get("name"),
+            sw_version=info.get("ver", "").replace("_", "."),
+        )

@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
-from smart_meter_texas import Account, Client
+from smart_meter_texas import Account, Client, ClientSSLContext
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -14,7 +14,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +28,11 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
+    client_ssl_context = ClientSSLContext()
+    ssl_context = await client_ssl_context.get_ssl_context()
     client_session = aiohttp_client.async_get_clientsession(hass)
     account = Account(data["username"], data["password"])
-    client = Client(client_session, account)
+    client = Client(client_session, account, ssl_context)
 
     try:
         await client.authenticate()
@@ -48,7 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Smart Meter Texas."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

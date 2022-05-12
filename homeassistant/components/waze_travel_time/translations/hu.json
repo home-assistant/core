@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "\u00c9rkez\u00e9s helye",
+                    "name": "Elnevez\u00e9s",
+                    "origin": "Indul\u00e1s helye",
+                    "region": "R\u00e9gi\u00f3"
+                },
+                "description": "Az Origin and Destination mez\u0151be \u00edrja be a hely c\u00edm\u00e9t vagy GPS koordin\u00e1t\u00e1it (a GPS koordin\u00e1t\u00e1kat vessz\u0151vel kell elv\u00e1lasztani). Megadhat egy entit\u00e1sazonos\u00edt\u00f3t is, amely ezeket az inform\u00e1ci\u00f3kat \u00e1llapot\u00e1ban megadja, egy entit\u00e1sazonos\u00edt\u00f3t sz\u00e9less\u00e9gi \u00e9s hossz\u00fas\u00e1gi attrib\u00fatumokkal vagy z\u00f3nabar\u00e1t nevet."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Ker\u00fclje kompokat?",
+                    "avoid_subscription_roads": "Ker\u00fclje el az utakat, amelyekre matrica / el\u0151fizet\u00e9s sz\u00fcks\u00e9ges?",
+                    "avoid_toll_roads": "Ker\u00fclje a fizet\u0151s utakat?",
+                    "excl_filter": "A kiv\u00e1lasztott \u00fatvonal le\u00edr\u00e1s\u00e1ban NEM szerepl\u0151 r\u00e9szl\u00e1nc",
+                    "incl_filter": "R\u00e9szl\u00e1nc a kiv\u00e1lasztott \u00fatvonal le\u00edr\u00e1s\u00e1ban",
+                    "realtime": "Val\u00f3s idej\u0171 utaz\u00e1si id\u0151?",
+                    "units": "Egys\u00e9gek",
+                    "vehicle_type": "J\u00e1rm\u0171 t\u00edpus"
+                },
+                "description": "Az \"alfej\" bemenetek lehet\u0151v\u00e9 teszik az integr\u00e1ci\u00f3 k\u00e9nyszer\u00edt\u00e9s\u00e9t egy adott \u00fatvonal haszn\u00e1lat\u00e1ra, vagy az adott \u00fatvonal elker\u00fcl\u00e9s\u00e9re az id\u0151utaz\u00e1s kisz\u00e1m\u00edt\u00e1sakor."
+            }
+        }
+    },
+    "title": "Waze Travel Time"
+}

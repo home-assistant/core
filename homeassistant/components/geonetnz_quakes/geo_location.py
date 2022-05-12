@@ -1,8 +1,10 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TIME,
@@ -10,8 +12,9 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -33,13 +36,15 @@ PARALLEL_UPDATES = 0
 SOURCE = "geonetnz_quakes"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
     def async_add_geolocation(feed_manager, integration_id, external_id):
-        """Add gelocation entity from feed."""
+        """Add geolocation entity from feed."""
         new_entity = GeonetnzQuakesEvent(feed_manager, integration_id, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
@@ -102,7 +107,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     @callback
     def _delete_callback(self):
         """Remove this entity."""
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):
@@ -142,7 +147,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._time = feed_entry.time
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID containing latitude/longitude and external id."""
         return f"{self._integration_id}_{self._external_id}"
 
@@ -157,22 +162,22 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._title
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
@@ -184,7 +189,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         return LENGTH_KILOMETERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

@@ -1,21 +1,17 @@
 """The Raspberry Pi Power Supply Checker integration."""
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Raspberry Pi Power Supply Checker component."""
-    return True
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Raspberry Pi Power Supply Checker from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, "binary_sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

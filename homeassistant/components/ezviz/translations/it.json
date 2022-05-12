@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
+            "ezviz_cloud_account_missing": "Ezviz cloud account mancante. Riconfigura l'account Ezviz cloud",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_host": "Nome host o indirizzo IP non valido"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le credenziali RTSP per la videocamera Ezviz {serial} con IP {ip_address}",
+                "title": "Rilevata videocamera Ezviz"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Nome utente"
+                },
+                "title": "Connettiti a Ezviz Cloud"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Nome utente"
+                },
+                "description": "Specifica manualmente l'URL dell'area geografica",
+                "title": "Connettiti all'URL personalizzato di Ezviz"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argomenti passati a ffmpeg per le fotocamere",
+                    "timeout": "Richiesta Timeout (secondi)"
+                }
+            }
+        }
+    }
+}

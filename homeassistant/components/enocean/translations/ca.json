@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "No s'ha trobat cap dongle v\u00e0lid en aquesta ruta"
         },
-        "flow_title": "Configuraci\u00f3 d'ENOcean",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Introdueix la ruta del dongle ENOcean"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

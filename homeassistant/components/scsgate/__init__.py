@@ -8,9 +8,10 @@ from scsgate.reactor import Reactor
 from scsgate.tasks import GetStatusTask
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME
-from homeassistant.core import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ SCSGATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
     scsgate = None
@@ -131,7 +132,7 @@ class SCSGate:
 
         with self._devices_to_register_lock:
             while self._devices_to_register:
-                _, device = self._devices_to_register.popitem()
+                device = self._devices_to_register.popitem()[1]
                 self._devices[device.scs_id] = device
                 self._device_being_registered = device.scs_id
                 self._reactor.append_task(GetStatusTask(target=device.scs_id))
@@ -139,7 +140,7 @@ class SCSGate:
     def is_device_registered(self, device_id):
         """Check whether a device is already registered or not."""
         with self._devices_to_register_lock:
-            if device_id in self._devices_to_register.keys():
+            if device_id in self._devices_to_register:
                 return False
 
         with self._device_being_registered_lock:

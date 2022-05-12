@@ -1,10 +1,10 @@
 """Validate integration translation files."""
+from __future__ import annotations
+
 from functools import partial
 from itertools import chain
 import json
-import logging
 import re
-from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -15,13 +15,27 @@ from script.translations import upload
 
 from .model import Config, Integration
 
-_LOGGER = logging.getLogger(__name__)
-
 UNDEFINED = 0
 REQUIRED = 1
 REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
+
+# Only allow translatino of integration names if they contain non-brand names
+ALLOW_NAME_TRANSLATION = {
+    "cert_expiry",
+    "cpuspeed",
+    "emulated_roku",
+    "faa_delays",
+    "garages_amsterdam",
+    "google_travel_time",
+    "homekit_controller",
+    "islamic_prayer_times",
+    "local_ip",
+    "nmap_tracker",
+    "rpi_power",
+    "waze_travel_time",
+}
 
 REMOVED_TITLE_MSG = (
     "config.title key has been moved out of config and into the root of strings.json. "
@@ -35,6 +49,16 @@ MOVED_TRANSLATIONS_DIRECTORY_MSG = (
     "starting with Home Assistant 0.112 your translations will no longer "
     "load if you do not move/rename this "
 )
+
+
+def allow_name_translation(integration: Integration):
+    """Validate that the translation name is not the same as the integration name."""
+    # Only enforce for core because custom integrations can't be
+    # added to allow list.
+    return integration.core and (
+        integration.domain in ALLOW_NAME_TRANSLATION
+        or integration.quality_scale == "internal"
+    )
 
 
 def check_translations_directory_name(integration: Integration) -> None:
@@ -87,6 +111,7 @@ def gen_data_entry_schema(
     integration: Integration,
     flow_title: int,
     require_step_title: bool,
+    mandatory_description: str | None = None,
 ):
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
@@ -97,10 +122,13 @@ def gen_data_entry_schema(
                 step_title_class("title"): cv.string_with_no_html,
                 vol.Optional("description"): cv.string_with_no_html,
                 vol.Optional("data"): {str: cv.string_with_no_html},
+                vol.Optional("data_description"): {str: cv.string_with_no_html},
+                vol.Optional("menu_options"): {str: cv.string_with_no_html},
             }
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
         vol.Optional("abort"): {str: cv.string_with_no_html},
+        vol.Optional("progress"): {str: cv.string_with_no_html},
         vol.Optional("create_entry"): {str: cv.string_with_no_html},
     }
     if flow_title == REQUIRED:
@@ -110,7 +138,51 @@ def gen_data_entry_schema(
             removed_title_validator, config, integration
         )
 
-    return schema
+    def data_description_validator(value):
+        """Validate data description."""
+        for step_info in value["step"].values():
+            if "data_description" not in step_info:
+                continue
+
+            for key in step_info["data_description"]:
+                if key not in step_info["data"]:
+                    raise vol.Invalid(f"data_description key {key} is not in data")
+
+        return value
+
+    validators = [vol.Schema(schema), data_description_validator]
+
+    if mandatory_description is not None:
+
+        def validate_description_set(value):
+            """Validate description is set."""
+            steps = value["step"]
+            if mandatory_description not in steps:
+                raise vol.Invalid(f"{mandatory_description} needs to be defined")
+
+            if "description" not in steps[mandatory_description]:
+                raise vol.Invalid(f"Step {mandatory_description} needs a description")
+
+            return value
+
+        validators.append(validate_description_set)
+
+    if not allow_name_translation(integration):
+
+        def name_validator(value):
+            """Validate name."""
+            for step_id, info in value["step"].items():
+                if info.get("title") == integration.name:
+                    raise vol.Invalid(
+                        f"Do not set title of step {step_id} if it's a brand name "
+                        "or add exception to ALLOW_NAME_TRANSLATION"
+                    )
+
+            return value
+
+        validators.append(name_validator)
+
+    return vol.All(*validators)
 
 
 def gen_strings_schema(config: Config, integration: Integration):
@@ -123,6 +195,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 integration=integration,
                 flow_title=REMOVED,
                 require_step_title=False,
+                mandatory_description=(
+                    "user" if integration.integration_type == "helper" else None
+                ),
             ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
@@ -138,6 +213,15 @@ def gen_strings_schema(config: Config, integration: Integration):
             },
             vol.Optional("state"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
+                slug_validator=vol.Any("_", cv.slug),
+            ),
+            vol.Optional("system_health"): {
+                vol.Optional("info"): {str: cv.string_with_no_html}
+            },
+            vol.Optional("config_panel"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=lowercase_validator
+                ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
         }
@@ -174,7 +258,7 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
     """
 
     def device_class_validator(value):
-        """Key validator for platorm states.
+        """Key validator for platform states.
 
         Platform states are only allowed to provide states for device classes they prefix.
         """
@@ -224,6 +308,14 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
         strings_schema = gen_auth_schema(config, integration)
     elif integration.domain == "onboarding":
         strings_schema = ONBOARDING_SCHEMA
+    elif integration.domain == "binary_sensor":
+        strings_schema = gen_strings_schema(config, integration).extend(
+            {
+                vol.Optional("device_class"): cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=vol.Any("_", cv.slug)
+                )
+            }
+        )
     else:
         strings_schema = gen_strings_schema(config, integration)
 
@@ -248,6 +340,15 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
         else:
             if strings_file.name == "strings.json":
                 find_references(strings, name, references)
+
+                if strings.get(
+                    "title"
+                ) == integration.name and not allow_name_translation(integration):
+                    integration.add_error(
+                        "translations",
+                        "Don't specify title in translation strings if it's a brand name "
+                        "or add exception to ALLOW_NAME_TRANSLATION",
+                    )
 
     platform_string_schema = gen_platform_strings_schema(config, integration)
     platform_strings = [integration.path.glob("strings.*.json")]
@@ -294,7 +395,7 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             )
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Handle JSON files inside integrations."""
     if config.specific_integrations:
         all_strings = None

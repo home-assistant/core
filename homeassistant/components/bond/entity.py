@@ -1,77 +1,178 @@
 """An abstract class common to all Bond entities."""
+from __future__ import annotations
+
 from abc import abstractmethod
-from asyncio import TimeoutError as AsyncIOTimeoutError
+from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
+from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiohttp import ClientError
+from bond_api import BPUPSubscriptions
 
-from homeassistant.const import ATTR_NAME
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
+_FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
+
 
 class BondEntity(Entity):
     """Generic Bond entity encapsulating common features of any Bond controlled device."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hub: BondHub,
+        device: BondDevice,
+        bpup_subs: BPUPSubscriptions,
+        sub_device: str | None = None,
+        sub_device_id: str | None = None,
+    ) -> None:
         """Initialize entity with API and device info."""
         self._hub = hub
         self._device = device
-        self._available = True
+        self._device_id = device.device_id
+        self._sub_device = sub_device
+        self._attr_available = True
+        self._bpup_subs = bpup_subs
+        self._update_lock: Lock | None = None
+        self._initialized = False
+        if sub_device_id:
+            sub_device_id = f"_{sub_device_id}"
+        elif sub_device:
+            sub_device_id = f"_{sub_device}"
+        else:
+            sub_device_id = ""
+        self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
+        if sub_device:
+            sub_device_name = sub_device.replace("_", " ").title()
+            self._attr_name = f"{device.name} {sub_device_name}"
+        else:
+            self._attr_name = device.name
 
     @property
-    def unique_id(self) -> Optional[str]:
-        """Get unique ID for the entity."""
-        hub_id = self._hub.bond_id
-        device_id = self._device.device_id
-        return f"{hub_id}_{device_id}"
-
-    @property
-    def name(self) -> Optional[str]:
-        """Get entity name."""
-        return self._device.name
-
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
-        return {
-            ATTR_NAME: self.name,
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "via_device": (DOMAIN, self._hub.bond_id),
-        }
+        device_info = DeviceInfo(
+            manufacturer=self._hub.make,
+            # type ignore: tuple items should not be Optional
+            identifiers={(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            configuration_url=f"http://{self._hub.host}",
+        )
+        if self.name is not None:
+            device_info[ATTR_NAME] = self._device.name
+        if self._hub.bond_id is not None:
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
+        if self._device.location is not None:
+            device_info[ATTR_SUGGESTED_AREA] = self._device.location
+        if not self._hub.is_bridge:
+            if self._hub.model is not None:
+                device_info[ATTR_MODEL] = self._hub.model
+            if self._hub.fw_ver is not None:
+                device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
+        else:
+            model_data = []
+            if self._device.branding_profile:
+                model_data.append(self._device.branding_profile)
+            if self._device.template:
+                model_data.append(self._device.template)
+            if model_data:
+                device_info[ATTR_MODEL] = " ".join(model_data)
 
-    @property
-    def assumed_state(self) -> bool:
-        """Let HA know this entity relies on an assumed state tracked by Bond."""
-        return self._hub.is_bridge and not self._device.trust_state
+        return device_info
 
-    @property
-    def available(self) -> bool:
-        """Report availability of this entity based on last API call results."""
-        return self._available
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch assumed state of the cover from the hub using API."""
+        await self._async_update_from_api()
+
+    async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
+        """Fetch via the API if BPUP is not alive."""
+        if (
+            self.hass.is_stopping
+            or self._bpup_subs.alive
+            and self._initialized
+            and self.available
+        ):
+            return
+
+        assert self._update_lock is not None
+        if self._update_lock.locked():
+            _LOGGER.warning(
+                "Updating %s took longer than the scheduled update interval %s",
+                self.entity_id,
+                _FALLBACK_SCAN_INTERVAL,
+            )
+            return
+
+        async with self._update_lock:
+            await self._async_update_from_api()
+            self.async_write_ha_state()
+
+    async def _async_update_from_api(self) -> None:
+        """Fetch via the API."""
         try:
-            state: dict = await self._hub.bond.device_state(self._device.device_id)
+            state: dict = await self._hub.bond.device_state(self._device_id)
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
-            if self._available:
+            if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error
                 )
-            self._available = False
+            self._attr_available = False
         else:
-            _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
-            if not self._available:
-                _LOGGER.info("Entity %s has come back", self.entity_id)
-            self._available = True
-            self._apply_state(state)
+            self._async_state_callback(state)
+        self._attr_assumed_state = self._hub.is_bridge and not self._device.trust_state
 
     @abstractmethod
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         raise NotImplementedError
+
+    @callback
+    def _async_state_callback(self, state: dict) -> None:
+        """Process a state change."""
+        self._initialized = True
+        if not self.available:
+            _LOGGER.info("Entity %s has come back", self.entity_id)
+        self._attr_available = True
+        _LOGGER.debug(
+            "Device state for %s (%s) is:\n%s", self.name, self.entity_id, state
+        )
+        self._apply_state(state)
+
+    @callback
+    def _async_bpup_callback(self, state: dict) -> None:
+        """Process a state change from BPUP."""
+        self._async_state_callback(state)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to BPUP and start polling."""
+        await super().async_added_to_hass()
+        self._update_lock = Lock()
+        self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
+            )
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from BPUP data on remove."""
+        await super().async_will_remove_from_hass()
+        self._bpup_subs.unsubscribe(self._device_id, self._async_bpup_callback)

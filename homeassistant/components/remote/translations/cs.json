@@ -10,15 +10,16 @@
             "is_on": "{entity_name} je zapnuto"
         },
         "trigger_type": {
+            "toggled": "{entity_name} zapnuto nebo vypnuto",
             "turned_off": "{entity_name} vypnuto",
             "turned_on": "{entity_name} zapnuto"
         }
     },
     "state": {
         "_": {
-            "off": "Neaktivn\u00ed",
-            "on": "Aktivn\u00ed"
+            "off": "Vypnuto",
+            "on": "Zapnuto"
         }
     },
-    "title": "D\u00e1lkov\u00e9"
+    "title": "D\u00e1lkov\u00e9 ovl\u00e1d\u00e1n\u00ed"
 }

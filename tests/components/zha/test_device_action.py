@@ -2,19 +2,22 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import (
-    _async_get_device_automations as async_get_device_automations,
-)
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.const import Platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, mock_coro
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+from tests.common import async_get_device_automations, async_mock_service, mock_coro
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -29,9 +32,9 @@ async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [c.cluster_id for c in clusters],
-                "out_clusters": [general.OnOff.cluster_id],
-                "device_type": 0,
+                SIG_EP_INPUT: [c.cluster_id for c in clusters],
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         },
     )
@@ -47,14 +50,49 @@ async def test_get_actions(hass, device_ias):
 
     ieee_address = str(device_ias[0].ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
 
-    actions = await async_get_device_automations(hass, "action", reg_device.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, reg_device.id
+    )
 
     expected_actions = [
-        {"domain": DOMAIN, "type": "squawk", "device_id": reg_device.id},
-        {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id},
+        {
+            "domain": DOMAIN,
+            "type": "squawk",
+            "device_id": reg_device.id,
+            "metadata": {},
+        },
+        {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id, "metadata": {}},
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode",
+            "metadata": {"secondary": True},
+        },
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_sirenlevel",
+            "metadata": {"secondary": True},
+        },
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobelevel",
+            "metadata": {"secondary": True},
+        },
+        {
+            "domain": Platform.SELECT,
+            "type": "select_option",
+            "device_id": reg_device.id,
+            "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobe",
+            "metadata": {"secondary": True},
+        },
     ]
 
     assert actions == expected_actions
@@ -70,8 +108,8 @@ async def test_action(hass, device_ias):
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
 
     with patch(
         "zigpy.zcl.Cluster.request",
@@ -111,3 +149,13 @@ async def test_action(hass, device_ias):
         assert calls[0].domain == DOMAIN
         assert calls[0].service == "warning_device_warn"
         assert calls[0].data["ieee"] == ieee_address
+
+
+async def test_invalid_zha_event_type(hass, device_ias):
+    """Test that unexpected types are not passed to `zha_send_event`."""
+    zigpy_device, zha_device = device_ias
+    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
+
+    # `zha_send_event` accepts only zigpy responses, lists, and dicts
+    with pytest.raises(TypeError):
+        channel.zha_send_event(COMMAND_SINGLE, 123)

@@ -3,17 +3,23 @@ import json
 
 import voluptuous as vol
 
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.const import (
     ATTR_SERVICE_DATA,
     EVENT_CALL_SERVICE,
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import EventOrigin, State, callback
+from homeassistant.core import EventOrigin, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "mqtt_eventstream"
 CONF_PUBLISH_TOPIC = "publish_topic"
@@ -37,40 +43,44 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+BLOCKED_EVENTS = [
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+]
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT eventstream component."""
-    mqtt = hass.components.mqtt
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
     ignore_event = conf.get(CONF_IGNORE_EVENT)
 
-    @callback
-    def _event_publisher(event):
+    async def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
         if event.origin != EventOrigin.local:
             return
-        if event.event_type == EVENT_TIME_CHANGED:
-            return
 
-        # User-defined events to ignore
+        # Events to ignore
         if event.event_type in ignore_event:
             return
 
         # Filter out the events that were triggered by publishing
         # to the MQTT topic, or you will end up in an infinite loop.
-        if event.event_type == EVENT_CALL_SERVICE:
-            if (
-                event.data.get("domain") == mqtt.DOMAIN
-                and event.data.get("service") == mqtt.SERVICE_PUBLISH
-                and event.data[ATTR_SERVICE_DATA].get("topic") == pub_topic
-            ):
-                return
+        if (
+            event.event_type == EVENT_CALL_SERVICE
+            and event.data.get("domain") == mqtt.DOMAIN
+            and event.data.get("service") == mqtt.SERVICE_PUBLISH
+            and event.data[ATTR_SERVICE_DATA].get("topic") == pub_topic
+        ):
+            return
 
         event_info = {"event_type": event.event_type, "event_data": event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        mqtt.async_publish(pub_topic, msg)
+        await mqtt.async_publish(hass, pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:
@@ -83,6 +93,10 @@ async def async_setup(hass, config):
         event = json.loads(msg.payload)
         event_type = event.get("event_type")
         event_data = event.get("event_data")
+
+        # Don't fire HOMEASSISTANT_* events on this instance
+        if event_type in BLOCKED_EVENTS:
+            return
 
         # Special case handling for event STATE_CHANGED
         # We will try to convert state dicts back to State objects
@@ -101,6 +115,6 @@ async def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        await mqtt.async_subscribe(sub_topic, _event_receiver)
+        await mqtt.async_subscribe(hass, sub_topic, _event_receiver)
 
     return True

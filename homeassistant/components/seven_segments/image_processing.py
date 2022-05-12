@@ -1,4 +1,6 @@
 """Optical character recognition processing of seven segments displays."""
+from __future__ import annotations
+
 import io
 import logging
 import os
@@ -8,14 +10,14 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
+from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Seven segments OCR platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -69,7 +76,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "SevenSegment OCR {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
         self._state = None
 
         self.filepath = os.path.join(
@@ -124,14 +131,14 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         img = Image.open(stream)
         img.save(self.filepath, "png")
 
-        ocr = subprocess.Popen(
+        with subprocess.Popen(
             self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        out = ocr.communicate()
-        if out[0] != b"":
-            self._state = out[0].strip().decode("utf-8")
-        else:
-            self._state = None
-            _LOGGER.warning(
-                "Unable to detect value: %s", out[1].strip().decode("utf-8")
-            )
+        ) as ocr:
+            out = ocr.communicate()
+            if out[0] != b"":
+                self._state = out[0].strip().decode("utf-8")
+            else:
+                self._state = None
+                _LOGGER.warning(
+                    "Unable to detect value: %s", out[1].strip().decode("utf-8")
+                )

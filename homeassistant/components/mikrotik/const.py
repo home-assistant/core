@@ -1,4 +1,5 @@
 """Constants used in the Mikrotik components."""
+from homeassistant.const import Platform
 
 DOMAIN = "mikrotik"
 DEFAULT_NAME = "Mikrotik"
@@ -36,6 +37,8 @@ MIKROTIK_SERVICES = {
     IS_WIRELESS: "/interface/wireless/print",
     IS_CAPSMAN: "/caps-man/interface/print",
 }
+
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_TRACKER = [
     "comment",

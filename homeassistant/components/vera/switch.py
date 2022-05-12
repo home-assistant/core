@@ -1,37 +1,33 @@
 """Support for Vera switches."""
-import logging
-from typing import Any, Callable, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.switch import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    SwitchEntity,
-)
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import convert
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
     async_add_entities(
         [
             VeraSwitch(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+            for device in controller_data.devices[Platform.SWITCH]
+        ],
+        True,
     )
 
 
@@ -40,7 +36,7 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the Vera device."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller_data)
@@ -59,17 +55,11 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self.schedule_update_ha_state()
 
     @property
-    def current_power_w(self) -> Optional[float]:
-        """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
-            return convert(power, float, 0.0)
-
-    @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()

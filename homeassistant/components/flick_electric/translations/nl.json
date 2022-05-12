@@ -1,10 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "user": {
                 "data": {
-                    "password": "Wachtwoord"
-                }
+                    "client_id": "Client-ID (optioneel)",
+                    "client_secret": "Clientgeheim (optioneel)",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Flick inloggegevens"
             }
         }
     }

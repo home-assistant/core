@@ -1,20 +1,28 @@
 """Support for Risco alarm zones."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
-from .entity import RiscoEntity
+from .entity import RiscoEntity, binary_sensor_unique_id
 
 SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Risco alarm control panel."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_BYPASS_ZONE, {}, "async_bypass_zone")
     platform.async_register_entity_service(
         SERVICE_UNBYPASS_ZONE, {}, "async_unbypass_zone"
@@ -25,7 +33,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         RiscoBinarySensor(coordinator, zone_id, zone)
         for zone_id, zone in coordinator.data.zones.items()
     ]
-
     async_add_entities(entities, False)
 
 
@@ -42,13 +49,13 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
         self._zone = self.coordinator.data.zones[self._zone_id]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Risco",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Risco",
+            name=self.name,
+        )
 
     @property
     def name(self):
@@ -58,12 +65,12 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
     @property
     def unique_id(self):
         """Return a unique id for this zone."""
-        return f"{self._risco.site_uuid}_zone_{self._zone_id}"
+        return binary_sensor_unique_id(self._risco, self._zone_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        return {"bypassed": self._zone.bypassed}
+        return {"zone_id": self._zone_id, "bypassed": self._zone.bypassed}
 
     @property
     def is_on(self):
@@ -72,8 +79,8 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_MOTION
+        """Return the class of this sensor, from BinarySensorDeviceClass."""
+        return BinarySensorDeviceClass.MOTION
 
     async def _bypass(self, bypass):
         alarm = await self._risco.bypass_zone(self._zone_id, bypass)

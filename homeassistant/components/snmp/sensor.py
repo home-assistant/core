@@ -1,4 +1,6 @@
 """Support for displaying collected data over SNMP."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -15,7 +17,7 @@ from pysnmp.hlapi.asyncio import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,8 +27,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ACCEPT_ERRORS,
@@ -44,6 +48,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
@@ -79,7 +84,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SNMP sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -87,12 +97,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     community = config.get(CONF_COMMUNITY)
     baseoid = config.get(CONF_BASEOID)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    version = config.get(CONF_VERSION)
+    version = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
-    authproto = config.get(CONF_AUTH_PROTOCOL)
+    authproto = config[CONF_AUTH_PROTOCOL]
     privkey = config.get(CONF_PRIV_KEY)
-    privproto = config.get(CONF_PRIV_PROTOCOL)
+    privproto = config[CONF_PRIV_PROTOCOL]
     accept_errors = config.get(CONF_ACCEPT_ERRORS)
     default_value = config.get(CONF_DEFAULT_VALUE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -116,14 +126,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
                 privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
             ),
-            UdpTransportTarget((host, port)),
+            UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
             ContextData(),
         ]
     else:
         request_args = [
             SnmpEngine(),
             CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-            UdpTransportTarget((host, port)),
+            UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
             ContextData(),
         ]
 
@@ -139,7 +149,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SnmpSensor(data, name, unit, value_template)], True)
 
 
-class SnmpSensor(Entity):
+class SnmpSensor(SensorEntity):
     """Representation of a SNMP sensor."""
 
     def __init__(self, data, name, unit_of_measurement, value_template):
@@ -156,21 +166,20 @@ class SnmpSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data and updates the states."""
         await self.data.async_update()
-        value = self.data.value
 
-        if value is None:
+        if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(
@@ -210,4 +219,4 @@ class SnmpData:
             self.value = self._default_value
         else:
             for resrow in restable:
-                self.value = str(resrow[-1])
+                self.value = resrow[-1].prettyPrint()

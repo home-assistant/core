@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Selle aadressiga ElkM1 on juba seadistatud",
+            "already_configured": "Selle eesliitega ElkM1 on juba seadistatud",
+            "already_in_progress": "Seadistamine juba k\u00e4ib",
+            "cannot_connect": "\u00dchendumine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "{mac_address} ({host})",
+        "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "protocol": "Protokoll",
+                    "temperature_unit": "Temperatuuri\u00fchik mida ElkM1 kasutab.",
+                    "username": "Kasutajanimi"
+                },
+                "description": "\u00dchendu avastatud s\u00fcsteemiga: {mac_address} ( {host} )",
+                "title": "\u00dchendu Elk-M1 Controliga"
+            },
+            "manual_connection": {
+                "data": {
+                    "address": "IP-aadress v\u00f5i domeen v\u00f5i jadaport kui \u00fchendus toimub jadapordi kaudu.",
+                    "password": "Salas\u00f5na",
+                    "prefix": "Unikaalne eesliide (j\u00e4ta t\u00fchjaks kui sul on ainult \u00fcks ElkM1).",
+                    "protocol": "Protokoll",
+                    "temperature_unit": "Temperatuuri\u00fchik mida ElkM1 kasutab.",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Turvalise ja mitteturvalise aadressi puhul peab aadressi string olema kujul 'address[:port]'. N\u00e4ide: '192.168.1.1'. Port on valikuline ja vaikimisi on see 2101 \"mitteturvalise\" ja 2601 \"turvalise\" puhul. Seeriaprotokolli puhul peab aadress olema kujul 'tty[:baud]'. N\u00e4ide: '/dev/ttyS1'. Baud on valikuline ja vaikimisi 115200.",
+                "title": "\u00dchendu Elk-M1 Controliga"
+            },
+            "user": {
+                "data": {
+                    "device": "Seade"
+                },
+                "description": "Vali avastatud s\u00fcsteem v\u00f5i \"K\u00e4sitsi sisestamine\" kui \u00fchtegi seadet ei ole avastatud.",
+                "title": "\u00dchendu Elk-M1 Control"
+            }
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
+from __future__ import annotations
+
 import logging
 import threading
 from uuid import UUID
@@ -8,7 +10,11 @@ from pygatt.backends import Characteristic, GATTToolBackend
 from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
@@ -17,8 +23,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +51,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Skybeacon sensor."""
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
-    _LOGGER.debug("Setting up...")
+    _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
     add_entities([SkybeaconTemp(name, mon)])
@@ -62,8 +75,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mon.start()
 
 
-class SkybeaconHumid(Entity):
+class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, name, mon):
         """Initialize a sensor."""
@@ -76,23 +91,21 @@ class SkybeaconHumid(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.mon.data["humid"]
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return PERCENTAGE
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class SkybeaconTemp(Entity):
+class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, name, mon):
         """Initialize a sensor."""
@@ -105,22 +118,17 @@ class SkybeaconTemp(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.mon.data["temp"]
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class Monitor(threading.Thread):
+class Monitor(threading.Thread, SensorEntity):
     """Connection handling."""
 
     def __init__(self, hass, mac, name):

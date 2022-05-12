@@ -1,0 +1,111 @@
+alarm_sound:
+  name: Set warning sound level.
+  description: Set movement warning sound level.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    level:
+      name: Sound level
+      description: Sound level (2 is disabled, 1 intensive, 0 soft).
+      required: true
+      example: 0
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          step: 1
+          mode: box
+ptz:
+  name: PTZ
+  description: Moves the camera to the direction, with defined speed
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    direction:
+      name: Direction
+      description: Direction to move camera (up, down, left, right).
+      required: true
+      example: "up"
+      default: "up"
+      selector:
+        select:
+          options:
+            - "up"
+            - "down"
+            - "left"
+            - "right"
+    speed:
+      name: Speed
+      description: Speed of movement (from 1 to 9).
+      required: true
+      example: 5
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 9
+          step: 1
+          mode: box
+set_alarm_detection_sensibility:
+  name: Detection sensitivity
+  description: Sets the detection sensibility level.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    level:
+      name: Sensitivity Level
+      description: "Sensibility level (1-6) for type 0 (Normal camera)
+        or (1-100) for type 3 (PIR sensor camera)."
+      required: true
+      example: 3
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          mode: box
+    type_value:
+      name: Detection type
+      description: "Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera"
+      required: true
+      example: "0"
+      default: "0"
+      selector:
+        select:
+          options:
+            - "0"
+            - "3"
+sound_alarm:
+  name: Sound Alarm
+  description: Sounds the alarm on your camera.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    enable:
+      description: Enter 1 or 2 (1=disable, 2=enable).
+      required: true
+      example: 1
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+          mode: box
+wake_device:
+  name: Wake Camera
+  description: This can be used to wake the camera/device from hibernation.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera

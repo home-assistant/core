@@ -1,19 +1,21 @@
 """Constants for the HomematicIP Cloud component."""
 import logging
 
+from homeassistant.const import Platform
+
 _LOGGER = logging.getLogger(".")
 
 DOMAIN = "homematicip_cloud"
 
-COMPONENTS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "climate",
-    "cover",
-    "light",
-    "sensor",
-    "switch",
-    "weather",
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WEATHER,
 ]
 
 CONF_ACCESSPOINT = "accesspoint"

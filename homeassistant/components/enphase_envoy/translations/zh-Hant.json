@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u5c0d\u65bc\u8f03\u65b0\u7684\u578b\u865f\u3001\u8f38\u5165\u4f7f\u7528\u8005\u540d\u7a31 `envoy` \u4f46\u4e0d\u9700\u8f38\u5165\u5bc6\u78bc\u3002\u8f03\u820a\u7684\u578b\u865f\uff0c\u5247\u8f38\u5165\u4f7f\u7528\u8005\u540d\u7a31 `envoy` \u4e0d\u542b\u5bc6\u78bc\u3002\u5176\u4ed6\u6240\u6709\u578b\u865f\uff0c\u8acb\u8f38\u5165\u6709\u6548\u7684\u4f7f\u7528\u8005\u540d\u7a31\u8207\u5bc6\u78bc\u3002"
+            }
+        }
+    }
+}

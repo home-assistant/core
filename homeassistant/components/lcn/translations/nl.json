@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "fingerprint": "vingerafdruk code ontvangen",
+            "send_keys": "stuur sleutels ontvangen",
+            "transmitter": "zendercode ontvangen",
+            "transponder": "transpondercode ontvangen"
+        }
+    }
+}

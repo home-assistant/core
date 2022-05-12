@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_url": "\u7db2\u5740\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 motionEye\u3002\u9644\u52a0\u5143\u4ef6\u70ba\uff1a{addon} \uff1f",
+                "title": "\u4f7f\u7528 Home Assistant \u9644\u52a0\u5143\u4ef6 motionEye"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Admin \u5bc6\u78bc",
+                    "admin_username": "Admin \u4f7f\u7528\u8005\u540d\u7a31",
+                    "surveillance_password": "Surveillance \u5bc6\u78bc",
+                    "surveillance_username": "Surveillance \u4f7f\u7528\u8005\u540d\u7a31",
+                    "url": "\u7db2\u5740"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "\u4e32\u6d41 URL \u6a21\u677f",
+                    "webhook_set": "\u8a2d\u5b9a motionEye webhooks \u4ee5\u56de\u5831\u4e8b\u4ef6\u81f3 Home Assistant",
+                    "webhook_set_overwrite": "\u8986\u84cb\u7121\u6cd5\u8fa8\u8b58\u7684 Webhooks"
+                }
+            }
+        }
+    }
+}

@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya ha sido configurada",
-            "no_devices": "No se encontraron dispositivos en la red",
-            "reauth_successful": "Token de acceso actualizado correctamente "
+            "no_devices_found": "No se encontraron dispositivos en la red",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
-            "auth": "Token de acceso no v\u00e1lido",
-            "unknown": "Error desconocido en API Awair"
+            "invalid_access_token": "Token de acceso no v\u00e1lido",
+            "unknown": "Error inesperado"
         },
         "step": {
             "reauth": {

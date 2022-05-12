@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Polom\u011br"
+                },
+                "title": "Vypl\u0148te \u00fadaje filtru."
+            }
+        }
+    }
+}

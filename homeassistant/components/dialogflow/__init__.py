@@ -4,7 +4,10 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_flow, intent, template
 
@@ -22,11 +25,6 @@ V2 = 2
 
 class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
-
-
-async def async_setup(hass, config):
-    """Set up the Dialogflow component."""
-    return True
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -66,17 +64,17 @@ async def handle_webhook(hass, webhook_id, request):
         )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "DialogFlow", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, "DialogFlow", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return True
 
 
@@ -111,8 +109,7 @@ async def async_handle_message(hass, message):
             "Dialogflow V1 API will be removed on October 23, 2019. Please change your DialogFlow settings to use the V2 api"
         )
         req = message.get("result")
-        action_incomplete = req.get("actionIncomplete", True)
-        if action_incomplete:
+        if req.get("actionIncomplete", True):
             return
 
     elif _api_version is V2:
@@ -161,7 +158,7 @@ class DialogflowResponse:
         assert self.speech is None
 
         if isinstance(text, template.Template):
-            text = text.async_render(self.parameters)
+            text = text.async_render(self.parameters, parse_result=False)
 
         self.speech = text
 

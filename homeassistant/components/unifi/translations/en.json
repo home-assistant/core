@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is already configured"
+            "already_configured": "UniFi Network site is already configured",
+            "configuration_updated": "Configuration updated",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "faulty_credentials": "Invalid authentication",
             "service_unavailable": "Failed to connect",
             "unknown_client_mac": "No client available on that MAC address"
         },
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -16,33 +19,37 @@
                     "port": "Port",
                     "site": "Site ID",
                     "username": "Username",
-                    "verify_ssl": "Controller using proper certificate"
+                    "verify_ssl": "Verify SSL certificate"
                 },
-                "title": "Set up UniFi Controller"
+                "title": "Set up UniFi Network"
             }
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "UniFi integration is not setup"
+        },
         "step": {
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
+                    "dpi_restrictions": "Allow control of DPI restriction groups",
                     "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
-                "title": "UniFi options 2/3"
+                "title": "UniFi Network options 2/3"
             },
             "device_tracker": {
                 "data": {
                     "detection_time": "Time in seconds from last seen until considered away",
-                    "ignore_wired_bug": "Disable UniFi wired bug logic",
+                    "ignore_wired_bug": "Disable UniFi Network wired bug logic",
                     "ssid_filter": "Select SSIDs to track wireless clients on",
                     "track_clients": "Track network clients",
                     "track_devices": "Track network devices (Ubiquiti devices)",
                     "track_wired_clients": "Include wired network clients"
                 },
                 "description": "Configure device tracking",
-                "title": "UniFi options 1/3"
+                "title": "UniFi Network options 1/3"
             },
             "simple_options": {
                 "data": {
@@ -50,7 +57,7 @@
                     "track_clients": "Track network clients",
                     "track_devices": "Track network devices (Ubiquiti devices)"
                 },
-                "description": "Configure UniFi integration"
+                "description": "Configure UniFi Network integration"
             },
             "statistics_sensors": {
                 "data": {
@@ -58,7 +65,7 @@
                     "allow_uptime_sensors": "Uptime sensors for network clients"
                 },
                 "description": "Configure statistics sensors",
-                "title": "UniFi options 3/3"
+                "title": "UniFi Network options 3/3"
             }
         }
     }

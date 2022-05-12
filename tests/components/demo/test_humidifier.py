@@ -7,7 +7,6 @@ from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     MODE_AWAY,
     MODE_ECO,
@@ -16,6 +15,7 @@ from homeassistant.components.humidifier.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,

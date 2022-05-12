@@ -1,11 +1,11 @@
 """Tests for common vera code."""
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 from homeassistant.components.vera import SubscriptionRegistry
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import MagicMock
 from tests.common import async_fire_time_changed
 
 

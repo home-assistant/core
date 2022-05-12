@@ -1,21 +1,20 @@
 """Blebox sensors tests."""
-
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_TEMPERATURE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 
 @pytest.fixture(name="tempsensor")
@@ -46,11 +45,11 @@ async def test_init(tempsensor, hass, config):
     state = hass.states.get(entity_id)
     assert state.name == "tempSensor-0.temperature"
 
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.state == STATE_UNKNOWN
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My temperature sensor"

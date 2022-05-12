@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Un contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9.",
             "cannot_connect": "Impossible de se connecter au contr\u00f4leur avec l'url {base_url}"
         },
         "step": {
@@ -11,8 +10,9 @@
                     "lights": "Identifiants des interrupteurs vera \u00e0 traiter comme des lumi\u00e8res dans Home Assistant",
                     "vera_controller_url": "URL du contr\u00f4leur"
                 },
-                "description": "Fournissez une URL de contr\u00f4leur Vera ci-dessous. Cela devrait ressembler \u00e0 ceci : http://192.168.1.161:3480.",
-                "title": "Configurer le contr\u00f4leur Vera"
+                "data_description": {
+                    "vera_controller_url": "Cela devrait ressembler \u00e0 ceci\u00a0: http://192.168.1.161:3480"
+                }
             }
         }
     },

@@ -1,120 +1,51 @@
 """Support for ASUSWRT devices."""
-import logging
 
-from aioasuswrt.asuswrt import AsusWrt
-import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODE,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_PROTOCOL,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_call_later
+from .const import DATA_ASUSWRT, DOMAIN
+from .router import AsusWrtRouter
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_DNSMASQ = "dnsmasq"
-CONF_INTERFACE = "interface"
-CONF_PUB_KEY = "pub_key"
-CONF_REQUIRE_IP = "require_ip"
-CONF_SENSORS = "sensors"
-CONF_SSH_KEY = "ssh_key"
-
-DOMAIN = "asuswrt"
-DATA_ASUSWRT = DOMAIN
-
-DEFAULT_SSH_PORT = 22
-DEFAULT_INTERFACE = "eth0"
-DEFAULT_DNSMASQ = "/var/lib/misc"
-
-FIRST_RETRY_TIME = 60
-MAX_RETRY_TIME = 900
-
-SECRET_GROUP = "Password or SSH Key"
-SENSOR_TYPES = ["devices", "upload_speed", "download_speed", "download", "upload"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PROTOCOL, default="ssh"): vol.In(["ssh", "telnet"]),
-                vol.Optional(CONF_MODE, default="router"): vol.In(["router", "ap"]),
-                vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-                vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
-                vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
-                vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
-                vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile,
-                vol.Optional(CONF_SENSORS): vol.All(
-                    cv.ensure_list, [vol.In(SENSOR_TYPES)]
-                ),
-                vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
-                vol.Optional(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 
-async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
-    """Set up the asuswrt component."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up AsusWrt platform."""
 
-    conf = config[DOMAIN]
+    router = AsusWrtRouter(hass, entry)
+    await router.setup()
 
-    api = AsusWrt(
-        conf[CONF_HOST],
-        conf[CONF_PORT],
-        conf[CONF_PROTOCOL] == "telnet",
-        conf[CONF_USERNAME],
-        conf.get(CONF_PASSWORD, ""),
-        conf.get("ssh_key", conf.get("pub_key", "")),
-        conf[CONF_MODE],
-        conf[CONF_REQUIRE_IP],
-        interface=conf[CONF_INTERFACE],
-        dnsmasq=conf[CONF_DNSMASQ],
+    router.async_on_close(entry.add_update_listener(update_listener))
+
+    async def async_close_connection(event: Event) -> None:
+        """Close AsusWrt connection on HA Stop."""
+        await router.close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
     )
 
-    try:
-        await api.connection.async_connect()
-    except OSError as ex:
-        _LOGGER.warning(
-            "Error [%s] connecting %s to %s. Will retry in %s seconds...",
-            str(ex),
-            DOMAIN,
-            conf[CONF_HOST],
-            retry_delay,
-        )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_ASUSWRT: router}
 
-        async def retry_setup(now):
-            """Retry setup if a error happens on asuswrt API."""
-            await async_setup(
-                hass, config, retry_delay=min(2 * retry_delay, MAX_RETRY_TIME)
-            )
-
-        async_call_later(hass, retry_delay, retry_setup)
-
-        return True
-
-    if not api.is_connected:
-        _LOGGER.error("Error connecting %s to %s", DOMAIN, conf[CONF_HOST])
-        return False
-
-    hass.data[DATA_ASUSWRT] = api
-
-    hass.async_create_task(
-        async_load_platform(
-            hass, "sensor", DOMAIN, config[DOMAIN].get(CONF_SENSORS), config
-        )
-    )
-    hass.async_create_task(
-        async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+        await router.close()
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update when config_entry options update."""
+    router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+
+    if router.update_options(entry.options):
+        await hass.config_entries.async_reload(entry.entry_id)

@@ -1,0 +1,9 @@
+{
+    "state": {
+        "demo__speed": {
+            "light_speed": "Kecepatan Cahaya",
+            "ludicrous_speed": "Kecepatan Menggelikan",
+            "ridiculous_speed": "Kecepatan Konyol"
+        }
+    }
+}

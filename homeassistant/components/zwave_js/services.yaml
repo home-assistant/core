@@ -1,0 +1,290 @@
+# Describes the format for available Z-Wave services
+
+clear_lock_usercode:
+  name: Clear a usercode from a lock
+  description: Clear a usercode from a lock
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to clear code from
+      required: true
+      example: 1
+      selector:
+        text:
+
+set_lock_usercode:
+  name: Set a usercode on a lock
+  description: Set a usercode on a lock
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to set the code.
+      required: true
+      example: 1
+      selector:
+        text:
+    usercode:
+      name: Code
+      description: Code to set.
+      required: true
+      example: 1234
+      selector:
+        text:
+
+set_config_parameter:
+  name: Set a Z-Wave device configuration parameter
+  description: Allow for changing configuration parameters of your Z-Wave devices.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    parameter:
+      name: Parameter
+      description: The (name or id of the) configuration parameter you want to configure.
+      example: Minimum brightness level
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value to set for this configuration parameter.
+      example: 5
+      required: true
+      selector:
+        text:
+    bitmask:
+      name: Bitmask
+      description: Target a specific bitmask (see the documentation for more information).
+      advanced: true
+      selector:
+        text:
+
+bulk_set_partial_config_parameters:
+  name: Bulk set partial configuration parameters for a Z-Wave device (Advanced).
+  description: Allow for bulk setting partial parameters. Useful when multiple partial parameters have to be set at the same time.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    parameter:
+      name: Parameter
+      description: The id of the configuration parameter you want to configure.
+      example: 9
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value(s) to set for this configuration parameter. Can either be a raw integer value to represent the bulk change or a mapping where the key is the bitmask (either in hex or integer form) and the value is the new value you want to set for that partial parameter.
+      example:
+        "0x1": 1
+        "0x10": 1
+        "0x20": 1
+        "0x40": 1
+      required: true
+      selector:
+        object:
+
+refresh_value:
+  name: Refresh value(s) of a Z-Wave entity
+  description: Force update value(s) for a Z-Wave entity
+  fields:
+    entity_id:
+      name: Entity
+      description: Entity whose value(s) should be refreshed
+      required: true
+      example: sensor.family_room_motion
+      selector:
+        entity:
+          integration: zwave_js
+    refresh_all_values:
+      name: Refresh all values?
+      description: Whether to refresh all values (true) or just the primary value (false)
+      default: false
+      selector:
+        boolean:
+
+set_value:
+  name: Set a value on a Z-Wave device (Advanced)
+  description: Allow for changing any value that Z-Wave JS recognizes on a Z-Wave device. This service has minimal validation so only use this service if you know what you are doing.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    command_class:
+      name: Command Class
+      description: The ID of the command class for the value.
+      example: 117
+      required: true
+      selector:
+        text:
+    endpoint:
+      name: Endpoint
+      description: The endpoint for the value.
+      example: 1
+      required: false
+      selector:
+        text:
+    property:
+      name: Property
+      description: The ID of the property for the value.
+      example: currentValue
+      required: true
+      selector:
+        text:
+    property_key:
+      name: Property Key
+      description: The ID of the property key for the value
+      example: 1
+      required: false
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value to set.
+      example: "ffbb99"
+      required: true
+      selector:
+        object:
+    options:
+      name: Options
+      description: Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.
+      required: false
+      selector:
+        object:
+    wait_for_result:
+      name: Wait for result?
+      description: Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device.
+      required: false
+      selector:
+        boolean:
+
+multicast_set_value:
+  name: Set a value on multiple Z-Wave devices via multicast (Advanced)
+  description: Allow for changing any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This service has minimal validation so only use this service if you know what you are doing.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    broadcast:
+      name: Broadcast?
+      description: Whether command should be broadcast to all devices on the network.
+      example: true
+      required: false
+      selector:
+        boolean:
+    command_class:
+      name: Command Class
+      description: The ID of the command class for the value.
+      example: 117
+      required: true
+      selector:
+        text:
+    endpoint:
+      name: Endpoint
+      description: The endpoint for the value.
+      example: 1
+      required: false
+      selector:
+        text:
+    property:
+      name: Property
+      description: The ID of the property for the value.
+      example: currentValue
+      required: true
+      selector:
+        text:
+    property_key:
+      name: Property Key
+      description: The ID of the property key for the value
+      example: 1
+      required: false
+      selector:
+        text:
+    options:
+      name: Options
+      description: Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.
+      required: false
+      selector:
+        object:
+    value:
+      name: Value
+      description: The new value to set.
+      example: "ffbb99"
+      required: true
+      selector:
+        object:
+
+ping:
+  name: Ping a node
+  description: Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.
+  target:
+    entity:
+      integration: zwave_js
+
+reset_meter:
+  name: Reset meter(s) on a node
+  description: Resets the meter(s) on a node.
+  target:
+    entity:
+      domain: sensor
+      integration: zwave_js
+  fields:
+    meter_type:
+      name: Meter Type
+      description: The type of meter to reset. Not all meters support the ability to pick a meter type to reset.
+      example: 1
+      required: false
+      selector:
+        text:
+    value:
+      name: Target Value
+      description: The value that meter(s) should be reset to. Not all meters support the ability to be reset to a specific value.
+      example: 5
+      required: false
+      selector:
+        text:
+
+invoke_cc_api:
+  name: Invoke a Command Class API on a node (Advanced)
+  description: Allows for calling a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` service and require direct calls to the Command Class API.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    command_class:
+      name: Command Class
+      description: The ID of the command class that you want to issue a command to.
+      example: 132
+      required: true
+      selector:
+        text:
+    endpoint:
+      name: Endpoint
+      description: The endpoint to call the API on. If an endpoint is specified, that endpoint will be targeted for all nodes associated with the target areas, devices, and/or entities. If an endpoint is not specified, the root endpoint (0) will be targeted for nodes associated with target areas and devices, and the endpoint for the primary value of each entity will be targeted.
+      example: 1
+      required: false
+      selector:
+        text:
+    method_name:
+      name: Method Name
+      description: The name of the API method to call. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.
+      example: setInterval
+      required: true
+      selector:
+        text:
+    parameters:
+      name: Parameters
+      description: A list of parameters to pass to the API method. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.
+      example: [1, 1]
+      required: true
+      selector:
+        object:

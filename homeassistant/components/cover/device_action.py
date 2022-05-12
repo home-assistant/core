@@ -1,11 +1,10 @@
 """Provides device automations for Cover."""
-from typing import List, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -21,6 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import get_supported_features
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     ATTR_POSITION,
@@ -49,14 +50,18 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(POSITION_ACTION_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
-        vol.Required("position"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+        vol.Optional("position", default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=100)
+        ),
     }
 )
 
 ACTION_SCHEMA = vol.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -66,84 +71,39 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-        if not state or ATTR_SUPPORTED_FEATURES not in state.attributes:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add actions for each entity that belongs to this integration
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         if supported_features & SUPPORT_SET_POSITION:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "set_position",
-                }
-            )
+            actions.append({**base_action, CONF_TYPE: "set_position"})
         else:
             if supported_features & SUPPORT_OPEN:
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: "open",
-                    }
-                )
+                actions.append({**base_action, CONF_TYPE: "open"})
             if supported_features & SUPPORT_CLOSE:
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: "close",
-                    }
-                )
+                actions.append({**base_action, CONF_TYPE: "close"})
             if supported_features & SUPPORT_STOP:
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: "stop",
-                    }
-                )
+                actions.append({**base_action, CONF_TYPE: "stop"})
 
         if supported_features & SUPPORT_SET_TILT_POSITION:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "set_tilt_position",
-                }
-            )
+            actions.append({**base_action, CONF_TYPE: "set_tilt_position"})
         else:
             if supported_features & SUPPORT_OPEN_TILT:
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: "open_tilt",
-                    }
-                )
+                actions.append({**base_action, CONF_TYPE: "open_tilt"})
             if supported_features & SUPPORT_CLOSE_TILT:
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: "close_tilt",
-                    }
-                )
+                actions.append({**base_action, CONF_TYPE: "close_tilt"})
 
     return actions
 
 
-async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] not in POSITION_ACTION_TYPES:
         return {}
@@ -151,7 +111,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional("position", default=0): vol.All(
+                vol.Optional(ATTR_POSITION, default=0): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 )
             }
@@ -160,11 +120,9 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "open":

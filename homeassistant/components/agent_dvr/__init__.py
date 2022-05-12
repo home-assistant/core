@@ -1,10 +1,10 @@
 """Support for Agent."""
-import asyncio
-import logging
-
 from agent import AgentError
 from agent.a import Agent
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -14,17 +14,10 @@ from .const import CONNECTION, DOMAIN as AGENT_DOMAIN, SERVER_URL
 ATTRIBUTION = "ispyconnect.com"
 DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 
-_LOGGER = logging.getLogger(__name__)
-
-FORWARDS = ["alarm_control_panel", "camera"]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 
-async def async_setup(hass, config):
-    """Old way to set up integrations."""
-    return True
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Agent component."""
     hass.data.setdefault(AGENT_DOMAIN, {})
 
@@ -44,7 +37,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[AGENT_DOMAIN][config_entry.entry_id] = {CONNECTION: agent_client}
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -55,23 +48,15 @@ async def async_setup_entry(hass, config_entry):
         sw_version=agent_client.version,
     )
 
-    for forward in FORWARDS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, forward)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, forward)
-                for forward in FORWARDS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     await hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION].close()

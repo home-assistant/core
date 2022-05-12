@@ -1,7 +1,9 @@
 """Support for a Genius Hub system."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import aiohttp
 from geniushubclient import GeniusHub
@@ -16,8 +18,9 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -28,7 +31,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,8 +96,16 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
+PLATFORMS = (
+    Platform.CLIMATE,
+    Platform.WATER_HEATER,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+)
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a Genius Hub system."""
     hass.data[DOMAIN] = {}
 
@@ -118,7 +129,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    for platform in ["climate", "water_heater", "sensor", "binary_sensor", "switch"]:
+    for platform in PLATFORMS:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     setup_service_functions(hass, broker)
@@ -127,11 +138,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 @callback
-def setup_service_functions(hass: HomeAssistantType, broker):
+def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service functions."""
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_zone_mode(call) -> None:
+    async def set_zone_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
@@ -173,7 +184,6 @@ class GeniusBroker:
     @property
     def hub_uid(self) -> int:
         """Return the Hub UID (MAC address)."""
-        # pylint: disable=no-member
         return self._hub_uid if self._hub_uid is not None else self.client.uid
 
     async def async_update(self, now, **kwargs) -> None:
@@ -213,25 +223,20 @@ class GeniusEntity(Entity):
 
     def __init__(self) -> None:
         """Initialize the entity."""
-        self._unique_id = self._name = None
+        self._unique_id: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
 
-    async def _refresh(self, payload: Optional[dict] = None) -> None:
+    async def _refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the geniushub entity."""
-        return self._name
 
     @property
     def should_poll(self) -> bool:
@@ -248,10 +253,11 @@ class GeniusDevice(GeniusEntity):
 
         self._device = device
         self._unique_id = f"{broker.hub_uid}_device_{device.id}"
-        self._last_comms = self._state_attr = None
+        self._last_comms: datetime | None = None
+        self._state_attr = None
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
@@ -286,7 +292,7 @@ class GeniusZone(GeniusEntity):
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
-    async def _refresh(self, payload: Optional[dict] = None) -> None:
+    async def _refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
@@ -318,7 +324,7 @@ class GeniusZone(GeniusEntity):
         return self._zone.name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
         return {"status": status}
@@ -327,14 +333,11 @@ class GeniusZone(GeniusEntity):
 class GeniusHeatingZone(GeniusZone):
     """Base for Genius Heating Zones."""
 
-    def __init__(self, broker, zone) -> None:
-        """Initialize the Zone."""
-        super().__init__(broker, zone)
-
-        self._max_temp = self._min_temp = self._supported_features = None
+    _max_temp: float
+    _min_temp: float
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.data.get("temperature")
 
@@ -357,11 +360,6 @@ class GeniusHeatingZone(GeniusZone):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the bitmask of supported features."""
-        return self._supported_features
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""

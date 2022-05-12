@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Numele exista deja"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Longitudine",
+                    "name": "Nume",
+                    "radius": "Raza"
+                },
+                "title": "Definire parametrii zona"
+            }
+        },
+        "title": "Zona"
+    }
+}

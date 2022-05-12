@@ -1,76 +1,91 @@
 """Platform for sensor integration."""
-import logging
+from __future__ import annotations
+
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 DEVICE_CLASS_MAPPING = {
-    "temperature": DEVICE_CLASS_TEMPERATURE,
-    "light": DEVICE_CLASS_ILLUMINANCE,
-    "humidity": DEVICE_CLASS_HUMIDITY,
-    "current": DEVICE_CLASS_POWER,
-    "total": DEVICE_CLASS_POWER,
+    "battery": SensorDeviceClass.BATTERY,
+    "temperature": SensorDeviceClass.TEMPERATURE,
+    "light": SensorDeviceClass.ILLUMINANCE,
+    "humidity": SensorDeviceClass.HUMIDITY,
+    "current": SensorDeviceClass.POWER,
+    "total": SensorDeviceClass.ENERGY,
+    "voltage": SensorDeviceClass.VOLTAGE,
+}
+
+STATE_CLASS_MAPPING = {
+    "battery": SensorStateClass.MEASUREMENT,
+    "temperature": SensorStateClass.MEASUREMENT,
+    "light": SensorStateClass.MEASUREMENT,
+    "humidity": SensorStateClass.MEASUREMENT,
+    "current": SensorStateClass.MEASUREMENT,
+    "total": SensorStateClass.TOTAL_INCREASING,
+    "voltage": SensorStateClass.MEASUREMENT,
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all sensor devices and setup them via config entry."""
-    entities = []
+    entities: list[SensorEntity] = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_sensor_devices:
-        for multi_level_sensor in device.multi_level_sensor_property:
-            entities.append(
-                DevoloGenericMultiLevelDeviceEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
-                    device_instance=device,
-                    element_uid=multi_level_sensor,
-                )
-            )
-    for device in hass.data[DOMAIN]["homecontrol"].devices.values():
-        if hasattr(device, "consumption_property"):
-            for consumption in device.consumption_property:
-                for consumption_type in ["current", "total"]:
-                    entities.append(
-                        DevoloConsumptionEntity(
-                            homecontrol=hass.data[DOMAIN]["homecontrol"],
-                            device_instance=device,
-                            element_uid=consumption,
-                            consumption=consumption_type,
-                        )
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.multi_level_sensor_devices:
+            for multi_level_sensor in device.multi_level_sensor_property:
+                entities.append(
+                    DevoloGenericMultiLevelDeviceEntity(
+                        homecontrol=gateway,
+                        device_instance=device,
+                        element_uid=multi_level_sensor,
                     )
-    async_add_entities(entities, False)
+                )
+        for device in gateway.devices.values():
+            if hasattr(device, "consumption_property"):
+                for consumption in device.consumption_property:
+                    for consumption_type in ("current", "total"):
+                        entities.append(
+                            DevoloConsumptionEntity(
+                                homecontrol=gateway,
+                                device_instance=device,
+                                element_uid=consumption,
+                                consumption=consumption_type,
+                            )
+                        )
+            if hasattr(device, "battery_level"):
+                entities.append(
+                    DevoloBatteryEntity(
+                        homecontrol=gateway,
+                        device_instance=device,
+                        element_uid=f"devolo.BatterySensor:{device.uid}",
+                    )
+                )
+
+    async_add_entities(entities)
 
 
-class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
+class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return self._device_class
-
-    @property
-    def state(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._unit
 
 
 class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
@@ -78,10 +93,10 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 
     def __init__(
         self,
-        homecontrol,
-        device_instance,
-        element_uid,
-    ):
+        homecontrol: HomeControl,
+        device_instance: Zwave,
+        element_uid: str,
+    ) -> None:
         """Initialize a devolo multi level sensor."""
         self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
             element_uid
@@ -93,21 +108,55 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
             element_uid=element_uid,
         )
 
-        self._device_class = DEVICE_CLASS_MAPPING.get(
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
+        self._attr_state_class = STATE_CLASS_MAPPING.get(
+            self._multi_level_sensor_property.sensor_type
+        )
+        self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
 
         self._value = self._multi_level_sensor_property.value
-        self._unit = self._multi_level_sensor_property.unit
 
-        if self._device_class is None:
-            self._name += f" {self._multi_level_sensor_property.sensor_type}"
+        if self._attr_device_class is None:
+            self._attr_name += f" {self._multi_level_sensor_property.sensor_type}"
+
+        if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
+            self._attr_entity_registry_enabled_default = False
+
+
+class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
+    """Representation of a battery entity within devolo Home Control."""
+
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
+        """Initialize a battery sensor."""
+
+        super().__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+        )
+
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
+        self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_native_unit_of_measurement = PERCENTAGE
+
+        self._value = device_instance.battery_level
 
 
 class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a consumption entity within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid, consumption):
+    def __init__(
+        self,
+        homecontrol: HomeControl,
+        device_instance: Zwave,
+        element_uid: str,
+        consumption: str,
+    ) -> None:
         """Initialize a devolo consumption sensor."""
 
         super().__init__(
@@ -117,31 +166,33 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._sensor_type = consumption
-        self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(consumption)
+        self._attr_state_class = STATE_CLASS_MAPPING.get(consumption)
+        self._attr_native_unit_of_measurement = getattr(
+            device_instance.consumption_property[element_uid], f"{consumption}_unit"
+        )
+
+        if consumption == "total":
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )
-        self._unit = getattr(
-            device_instance.consumption_property[element_uid], f"{consumption}_unit"
-        )
 
-        self._name += f" {consumption}"
+        self._attr_name += f" {consumption}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the entity."""
-        return f"{self._unique_id}_{self._sensor_type}"
+        return f"{self._attr_unique_id}_{self._sensor_type}"
 
-    def _sync(self, message):
+    def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
-        if message[0] == self._unique_id:
+        if message[0] == self._attr_unique_id:
             self._value = getattr(
-                self._device_instance.consumption_property[self._unique_id],
+                self._device_instance.consumption_property[self._attr_unique_id],
                 self._sensor_type,
             )
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received: %s", message)
+            self._generic_message(message)
         self.schedule_update_ha_state()

@@ -1,7 +1,16 @@
 """Provides device automations for deconz events."""
+
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -14,9 +23,13 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
+from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
+from .gateway import DeconzGateway
 
 CONF_SUBTYPE = "subtype"
 
@@ -29,6 +42,7 @@ CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
+CONF_ROTATED_FAST = "remote_button_rotated_fast"
 CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_AWAKE = "remote_awakened"
 CONF_MOVE = "remote_moved"
@@ -63,6 +77,10 @@ CONF_BUTTON_1 = "button_1"
 CONF_BUTTON_2 = "button_2"
 CONF_BUTTON_3 = "button_3"
 CONF_BUTTON_4 = "button_4"
+CONF_BUTTON_5 = "button_5"
+CONF_BUTTON_6 = "button_6"
+CONF_BUTTON_7 = "button_7"
+CONF_BUTTON_8 = "button_8"
 CONF_SIDE_1 = "side_1"
 CONF_SIDE_2 = "side_2"
 CONF_SIDE_3 = "side_3"
@@ -73,6 +91,7 @@ CONF_SIDE_6 = "side_6"
 
 HUE_DIMMER_REMOTE_MODEL_GEN1 = "RWL020"
 HUE_DIMMER_REMOTE_MODEL_GEN2 = "RWL021"
+HUE_DIMMER_REMOTE_MODEL_GEN3 = "RWL022"
 HUE_DIMMER_REMOTE = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1000},
     (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
@@ -136,6 +155,22 @@ FRIENDS_OF_HUE_SWITCH = {
     (CONF_LONG_RELEASE, CONF_BOTTOM_BUTTONS): {CONF_EVENT: 6003},
 }
 
+STYRBAR_REMOTE_MODEL = "Remote Control N2"
+STYRBAR_REMOTE = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3002},
+    (CONF_LONG_PRESS, CONF_DIM_DOWN): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4002},
+    (CONF_LONG_PRESS, CONF_TURN_OFF): {CONF_EVENT: 4001},
+    (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4003},
+}
+
 SYMFONISK_SOUND_CONTROLLER_MODEL = "SYMFONISK Sound Controller"
 SYMFONISK_SOUND_CONTROLLER = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
@@ -183,10 +218,19 @@ TRADFRI_REMOTE = {
     (CONF_LONG_RELEASE, CONF_RIGHT): {CONF_EVENT: 5003},
 }
 
+TRADFRI_SHORTCUT_REMOTE_MODEL = "TRADFRI SHORTCUT Button"
+TRADFRI_SHORTCUT_REMOTE = {
+    (CONF_SHORT_PRESS, ""): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, ""): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, ""): {CONF_EVENT: 1003},
+}
+
 TRADFRI_WIRELESS_DIMMER_MODEL = "TRADFRI wireless dimmer"
 TRADFRI_WIRELESS_DIMMER = {
+    (CONF_ROTATED_FAST, CONF_LEFT): {CONF_EVENT: 4002},
     (CONF_ROTATED, CONF_LEFT): {CONF_EVENT: 3002},
     (CONF_ROTATED, CONF_RIGHT): {CONF_EVENT: 2002},
+    (CONF_ROTATED_FAST, CONF_RIGHT): {CONF_EVENT: 1002},
 }
 
 AQARA_CUBE_MODEL = "lumi.sensor_cube"
@@ -266,8 +310,24 @@ AQARA_DOUBLE_WALL_SWITCH_WXKG02LM = {
     (CONF_SHORT_PRESS, CONF_BOTH_BUTTONS): {CONF_EVENT: 3002},
 }
 
+AQARA_DOUBLE_WALL_SWITCH_QBKG12LM_MODEL = "lumi.ctrl_ln2.aq1"
+AQARA_DOUBLE_WALL_SWITCH_QBKG12LM = {
+    (CONF_SHORT_PRESS, CONF_LEFT): {CONF_EVENT: 1002},
+    (CONF_DOUBLE_PRESS, CONF_LEFT): {CONF_EVENT: 1004},
+    (CONF_SHORT_PRESS, CONF_RIGHT): {CONF_EVENT: 2002},
+    (CONF_DOUBLE_PRESS, CONF_RIGHT): {CONF_EVENT: 2004},
+    (CONF_SHORT_PRESS, CONF_BOTH_BUTTONS): {CONF_EVENT: 3002},
+}
+
+AQARA_SINGLE_WALL_SWITCH_QBKG11LM_MODEL = "lumi.ctrl_ln1.aq1"
+AQARA_SINGLE_WALL_SWITCH_QBKG11LM = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
+}
+
 AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL = "lumi.remote.b186acn01"
-AQARA_SINGLE_WALL_SWITCH_WXKG03LM = {
+AQARA_SINGLE_WALL_SWITCH_WXKG06LM_MODEL = "lumi.remote.b186acn02"
+AQARA_SINGLE_WALL_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
@@ -280,6 +340,7 @@ AQARA_MINI_SWITCH = {
     (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
     (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
 }
+
 
 AQARA_ROUND_SWITCH_MODEL = "lumi.sensor_switch"
 AQARA_ROUND_SWITCH = {
@@ -342,7 +403,7 @@ AQARA_OPPLE_4_BUTTONS = {
 AQARA_OPPLE_6_BUTTONS_MODEL = "lumi.remote.b686opcn01"
 AQARA_OPPLE_6_BUTTONS = {
     **AQARA_OPPLE_4_BUTTONS,
-    (CONF_LONG_PRESS, CONF_DIM_DOWN): {CONF_EVENT: 5001},
+    (CONF_LONG_PRESS, CONF_LEFT): {CONF_EVENT: 5001},
     (CONF_SHORT_RELEASE, CONF_LEFT): {CONF_EVENT: 5002},
     (CONF_LONG_RELEASE, CONF_LEFT): {CONF_EVENT: 5003},
     (CONF_DOUBLE_PRESS, CONF_LEFT): {CONF_EVENT: 5004},
@@ -354,23 +415,183 @@ AQARA_OPPLE_6_BUTTONS = {
     (CONF_TRIPLE_PRESS, CONF_RIGHT): {CONF_EVENT: 6005},
 }
 
+DRESDEN_ELEKTRONIK_LIGHTING_SWITCH_MODEL = "Lighting Switch"
+DRESDEN_ELEKTRONIK_LIGHTING_SWITCH = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3002},
+    (CONF_LONG_PRESS, CONF_DIM_DOWN): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4002},
+    (CONF_LONG_PRESS, CONF_TURN_OFF): {CONF_EVENT: 4001},
+    (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4003},
+}
+
+DRESDEN_ELEKTRONIK_SCENE_SWITCH_MODEL = "Scene Switch"
+DRESDEN_ELEKTRONIK_SCENE_SWITCH = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 3002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 4002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 5002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 6002},
+}
+
+GIRA_JUNG_SWITCH_MODEL = "HS_4f_GJ_1"
+GIRA_SWITCH_MODEL = "WS_4f_J_1"
+JUNG_SWITCH_MODEL = "WS_3f_G_1"
+GIRA_JUNG_SWITCH = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 3002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 4002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_5): {CONF_EVENT: 5002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_6): {CONF_EVENT: 6002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_7): {CONF_EVENT: 7002},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_8): {CONF_EVENT: 8002},
+}
+
+LEGRAND_ZGP_TOGGLE_SWITCH_MODEL = "LEGRANDZGPTOGGLESWITCH"
+LEGRAND_ZGP_TOGGLE_SWITCH = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
+}
+
+LEGRAND_ZGP_SCENE_SWITCH_MODEL = "LEGRANDZGPSCENESWITCH"
+LEGRAND_ZGP_SCENE_SWITCH = {
+    (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_SHORT_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2002},
+    (CONF_SHORT_PRESS, CONF_BUTTON_3): {CONF_EVENT: 3002},
+    (CONF_SHORT_PRESS, CONF_BUTTON_4): {CONF_EVENT: 4002},
+}
+
+LIDL_SILVERCREST_DOORBELL_MODEL = "HG06668"
+LIDL_SILVERCREST_DOORBELL = {
+    (CONF_SHORT_PRESS, ""): {CONF_EVENT: 1002},
+}
+
+LIGHTIFIY_FOUR_BUTTON_REMOTE_MODEL = "Switch-LIGHTIFY"
+LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_MODEL = "Switch 4x-LIGHTIFY"
+LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_EU_MODEL = "Switch 4x EU-LIGHTIFY"
+LIGHTIFIY_FOUR_BUTTON_REMOTE = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3002},
+    (CONF_LONG_PRESS, CONF_DIM_DOWN): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4002},
+    (CONF_LONG_PRESS, CONF_TURN_OFF): {CONF_EVENT: 4001},
+    (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4003},
+}
+
+BUSCH_JAEGER_REMOTE_1_MODEL = "RB01"
+BUSCH_JAEGER_REMOTE_2_MODEL = "RM01"
+BUSCH_JAEGER_REMOTE = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 3002},
+    (CONF_LONG_PRESS, CONF_BUTTON_3): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 4002},
+    (CONF_LONG_PRESS, CONF_BUTTON_4): {CONF_EVENT: 4001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 4003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_5): {CONF_EVENT: 5002},
+    (CONF_LONG_PRESS, CONF_BUTTON_5): {CONF_EVENT: 5001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_5): {CONF_EVENT: 5003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_6): {CONF_EVENT: 6002},
+    (CONF_LONG_PRESS, CONF_BUTTON_6): {CONF_EVENT: 6001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_6): {CONF_EVENT: 6003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_7): {CONF_EVENT: 7002},
+    (CONF_LONG_PRESS, CONF_BUTTON_7): {CONF_EVENT: 7001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_7): {CONF_EVENT: 7003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_8): {CONF_EVENT: 8002},
+    (CONF_LONG_PRESS, CONF_BUTTON_8): {CONF_EVENT: 8001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_8): {CONF_EVENT: 8003},
+}
+
+SONOFF_SNZB_01_1_MODEL = "WB01"
+SONOFF_SNZB_01_2_MODEL = "WB-01"
+SONOFF_SNZB_01_SWITCH = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_DOUBLE_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1004},
+}
+
+TRUST_ZYCT_202_MODEL = "ZYCT-202"
+TRUST_ZYCT_202_ZLL_MODEL = "ZLL-NonColorController"
+TRUST_ZYCT_202 = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2003},
+    (CONF_LONG_PRESS, CONF_BUTTON_3): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 4002},
+}
+
+UBISYS_POWER_SWITCH_S2_MODEL = "S2"
+UBISYS_POWER_SWITCH_S2 = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2003},
+}
+
+UBISYS_CONTROL_UNIT_C4_MODEL = "C4"
+UBISYS_CONTROL_UNIT_C4 = {
+    **UBISYS_POWER_SWITCH_S2,
+    (CONF_SHORT_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 3002},
+    (CONF_LONG_PRESS, CONF_BUTTON_3): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_3): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 4002},
+    (CONF_LONG_PRESS, CONF_BUTTON_4): {CONF_EVENT: 4001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_4): {CONF_EVENT: 4003},
+}
+
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL_GEN1: HUE_DIMMER_REMOTE,
     HUE_DIMMER_REMOTE_MODEL_GEN2: HUE_DIMMER_REMOTE,
+    HUE_DIMMER_REMOTE_MODEL_GEN3: HUE_DIMMER_REMOTE,
     HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
+    STYRBAR_REMOTE_MODEL: STYRBAR_REMOTE,
     SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
     TRADFRI_ON_OFF_SWITCH_MODEL: TRADFRI_ON_OFF_SWITCH,
     TRADFRI_OPEN_CLOSE_REMOTE_MODEL: TRADFRI_OPEN_CLOSE_REMOTE,
     TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
+    TRADFRI_SHORTCUT_REMOTE_MODEL: TRADFRI_SHORTCUT_REMOTE,
     TRADFRI_WIRELESS_DIMMER_MODEL: TRADFRI_WIRELESS_DIMMER,
     AQARA_CUBE_MODEL: AQARA_CUBE,
     AQARA_CUBE_MODEL_ALT1: AQARA_CUBE,
     AQARA_DOUBLE_WALL_SWITCH_MODEL: AQARA_DOUBLE_WALL_SWITCH,
     AQARA_DOUBLE_WALL_SWITCH_MODEL_2020: AQARA_DOUBLE_WALL_SWITCH,
     AQARA_DOUBLE_WALL_SWITCH_WXKG02LM_MODEL: AQARA_DOUBLE_WALL_SWITCH_WXKG02LM,
-    AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL: AQARA_SINGLE_WALL_SWITCH_WXKG03LM,
+    AQARA_DOUBLE_WALL_SWITCH_QBKG12LM_MODEL: AQARA_DOUBLE_WALL_SWITCH_QBKG12LM,
+    AQARA_SINGLE_WALL_SWITCH_QBKG11LM_MODEL: AQARA_SINGLE_WALL_SWITCH_QBKG11LM,
+    AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
+    AQARA_SINGLE_WALL_SWITCH_WXKG06LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
     AQARA_MINI_SWITCH_MODEL: AQARA_MINI_SWITCH,
     AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH,
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
@@ -378,83 +599,122 @@ REMOTES = {
     AQARA_OPPLE_2_BUTTONS_MODEL: AQARA_OPPLE_2_BUTTONS,
     AQARA_OPPLE_4_BUTTONS_MODEL: AQARA_OPPLE_4_BUTTONS,
     AQARA_OPPLE_6_BUTTONS_MODEL: AQARA_OPPLE_6_BUTTONS,
+    DRESDEN_ELEKTRONIK_LIGHTING_SWITCH_MODEL: DRESDEN_ELEKTRONIK_LIGHTING_SWITCH,
+    DRESDEN_ELEKTRONIK_SCENE_SWITCH_MODEL: DRESDEN_ELEKTRONIK_SCENE_SWITCH,
+    GIRA_JUNG_SWITCH_MODEL: GIRA_JUNG_SWITCH,
+    GIRA_SWITCH_MODEL: GIRA_JUNG_SWITCH,
+    JUNG_SWITCH_MODEL: GIRA_JUNG_SWITCH,
+    LEGRAND_ZGP_TOGGLE_SWITCH_MODEL: LEGRAND_ZGP_TOGGLE_SWITCH,
+    LEGRAND_ZGP_SCENE_SWITCH_MODEL: LEGRAND_ZGP_SCENE_SWITCH,
+    LIDL_SILVERCREST_DOORBELL_MODEL: LIDL_SILVERCREST_DOORBELL,
+    LIGHTIFIY_FOUR_BUTTON_REMOTE_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
+    LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
+    LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_EU_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
+    BUSCH_JAEGER_REMOTE_1_MODEL: BUSCH_JAEGER_REMOTE,
+    BUSCH_JAEGER_REMOTE_2_MODEL: BUSCH_JAEGER_REMOTE,
+    TRUST_ZYCT_202_MODEL: TRUST_ZYCT_202,
+    TRUST_ZYCT_202_ZLL_MODEL: TRUST_ZYCT_202,
+    UBISYS_POWER_SWITCH_S2_MODEL: UBISYS_POWER_SWITCH_S2,
+    UBISYS_CONTROL_UNIT_C4_MODEL: UBISYS_CONTROL_UNIT_C4,
+    SONOFF_SNZB_01_1_MODEL: SONOFF_SNZB_01_SWITCH,
+    SONOFF_SNZB_01_2_MODEL: SONOFF_SNZB_01_SWITCH,
 }
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
 
-def _get_deconz_event_from_device_id(hass, device_id):
-    """Resolve deconz event from device id."""
-    for gateway in hass.data.get(DOMAIN, {}).values():
-
+def _get_deconz_event_from_device(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+) -> DeconzAlarmEvent | DeconzEvent:
+    """Resolve deconz event from device."""
+    gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
+    for gateway in gateways.values():
         for deconz_event in gateway.events:
-
-            if device_id == deconz_event.device_id:
+            if device.id == deconz_event.device_id:
                 return deconz_event
 
-    return None
+    raise InvalidDeviceAutomationConfig(
+        f'No deconz_event tied to device "{device.name}" found'
+    )
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+) -> vol.Schema:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if (
-        not device
-        or device.model not in REMOTES
-        or trigger not in REMOTES[device.model]
-    ):
-        raise InvalidDeviceAutomationConfig
+    if not device:
+        raise InvalidDeviceAutomationConfig(
+            f"deCONZ trigger {trigger} device with ID "
+            f"{config[CONF_DEVICE_ID]} not found"
+        )
+
+    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
+        raise InvalidDeviceAutomationConfig(
+            f"deCONZ trigger {trigger} is not valid for device "
+            f"{device} ({config[CONF_DEVICE_ID]})"
+        )
 
     return config
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    event_data: dict[str, int | str] = {}
 
-    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+    device_registry = dr.async_get(hass)
+    device = device_registry.devices[config[CONF_DEVICE_ID]]
 
-    trigger = REMOTES[device.model][trigger]
+    deconz_event = _get_deconz_event_from_device(hass, device)
+    if event_id := deconz_event.serial:
+        event_data[CONF_UNIQUE_ID] = event_id
 
-    deconz_event = _get_deconz_event_from_device_id(hass, device.id)
-    if deconz_event is None:
-        raise InvalidDeviceAutomationConfig
+    if device_model := device.model:
+        config_trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+        event_data |= REMOTES[device_model][config_trigger]
 
-    event_id = deconz_event.serial
-
-    event_config = {
+    raw_event_config = {
         event_trigger.CONF_PLATFORM: "event",
         event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
+        event_trigger.CONF_EVENT_DATA: event_data,
     }
 
-    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    event_config = event_trigger.TRIGGER_SCHEMA(raw_event_config)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant,
+    device_id: str,
+) -> list | None:
     """List device triggers.
 
     Make sure device is a supported remote model.
     Retrieve the deconz event object matching device entry.
     Generate device trigger list.
     """
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(device_id)
+    device_registry = dr.async_get(hass)
+    device = device_registry.devices[device_id]
 
     if device.model not in REMOTES:
-        return
+        return None
 
     triggers = []
     for trigger, subtype in REMOTES[device.model].keys():

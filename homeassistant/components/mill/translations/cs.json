@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u00da\u010det je ji\u017e nakonfigurov\u00e1n"
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "error": {
-            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "user": {

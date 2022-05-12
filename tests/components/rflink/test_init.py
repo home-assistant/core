@@ -1,21 +1,30 @@
 """Common functions for RFLink component tests and generic platform tests."""
 
+from unittest.mock import Mock
+
 import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
+    CONF_KEEPALIVE_IDLE,
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
+    DEFAULT_TCP_KEEPALIVE_IDLE_TIMER,
+    DOMAIN as RFLINK_DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
     SERVICE_SEND_COMMAND,
     TMP_ENTITY,
     RflinkCommand,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_STOP_COVER, SERVICE_TURN_OFF
-
-from tests.async_mock import Mock
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    SERVICE_STOP_COVER,
+    SERVICE_TURN_OFF,
+)
 
 
 async def mock_rflink(
@@ -107,10 +116,8 @@ async def test_send_no_wait(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
-        )
+    await hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
     )
     await hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == "protocol_0_0"
@@ -133,10 +140,8 @@ async def test_cover_send_no_wait(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
-        )
+    await hass.services.async_call(
+        domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
     )
     await hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == "RTS_0100F2_0"
@@ -151,12 +156,10 @@ async def test_send_command(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain,
-            SERVICE_SEND_COMMAND,
-            {"device_id": "newkaku_0000c6c2_1", "command": "on"},
-        )
+    await hass.services.async_call(
+        domain,
+        SERVICE_SEND_COMMAND,
+        {"device_id": "newkaku_0000c6c2_1", "command": "on"},
     )
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[0][0][0] == "newkaku_0000c6c2_1"
@@ -194,6 +197,48 @@ async def test_send_command_invalid_arguments(hass, monkeypatch):
         {"device_id": "newkaku_0000c6c2_1", "command": "no_command"},
     )
     assert not success, "send command should not succeed for unknown command"
+
+
+async def test_send_command_event_propagation(hass, monkeypatch):
+    """Test event propagation for send_command service."""
+    domain = "light"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        domain: {
+            "platform": "rflink",
+            "devices": {
+                "protocol_0_1": {"name": "test1"},
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    # default value = 'off'
+    assert hass.states.get(f"{domain}.test1").state == "off"
+
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "on"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_1"
+    assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
+    assert hass.states.get(f"{domain}.test1").state == "on"
+
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "alloff"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list[1][0][0] == "protocol_0_1"
+    assert protocol.send_command_ack.call_args_list[1][0][1] == "alloff"
+    assert hass.states.get(f"{domain}.test1").state == "off"
 
 
 async def test_reconnecting_after_disconnect(hass, monkeypatch):
@@ -344,3 +389,90 @@ async def test_not_connected(hass, monkeypatch):
     RflinkCommand.set_rflink_protocol(None)
     with pytest.raises(HomeAssistantError):
         await test_device._async_handle_command("turn_on")
+
+
+async def test_keepalive(hass, monkeypatch, caplog):
+    """Validate negative keepalive values."""
+    keepalive_value = -3
+    domain = RFLINK_DOMAIN
+    config = {
+        RFLINK_DOMAIN: {
+            CONF_HOST: "10.10.0.1",
+            CONF_PORT: 1234,
+            CONF_KEEPALIVE_IDLE: keepalive_value,
+        }
+    }
+
+    # setup mocking rflink module
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"] is None
+    )  # negative keepalive is not allowed
+    assert (
+        f"A bogus TCP Keepalive IDLE timer was provided ({keepalive_value} secs)"
+        in caplog.text
+    )
+
+
+async def test2_keepalive(hass, monkeypatch, caplog):
+    """Validate very short keepalive values."""
+    keepalive_value = 30
+    domain = RFLINK_DOMAIN
+    config = {
+        RFLINK_DOMAIN: {
+            CONF_HOST: "10.10.0.1",
+            CONF_PORT: 1234,
+            CONF_KEEPALIVE_IDLE: keepalive_value,
+        }
+    }
+
+    # setup mocking rflink module
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"] == keepalive_value
+    )  # very short keepalive is allowed but warned
+    assert (
+        f"A very short TCP Keepalive IDLE timer was provided ({keepalive_value} secs)"
+        in caplog.text
+    )
+
+
+async def test3_keepalive(hass, monkeypatch, caplog):
+    """Validate keepalive=0 value."""
+    domain = RFLINK_DOMAIN
+    config = {
+        RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234, CONF_KEEPALIVE_IDLE: 0}
+    }
+
+    # setup mocking rflink module
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"] is None
+    )  # keepalive=0 will disable it
+    assert "TCP Keepalive IDLE timer was provided" not in caplog.text
+
+
+async def test_default_keepalive(hass, monkeypatch, caplog):
+    """Validate keepalive=0 value."""
+    domain = RFLINK_DOMAIN
+    config = {RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
+
+    # setup mocking rflink module
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"]
+        == DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
+    )  # no keepalive config will default it
+    assert "TCP Keepalive IDLE timer was provided" not in caplog.text

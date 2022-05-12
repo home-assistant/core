@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Relais 1",
+                    "relay_10": "Relais 10",
+                    "relay_11": "Relais 11",
+                    "relay_12": "Relais 12",
+                    "relay_13": "Relais 13",
+                    "relay_14": "Relais 14",
+                    "relay_15": "Relais 15",
+                    "relay_16": "Relais 16",
+                    "relay_2": "Relais 2",
+                    "relay_3": "Relais 3",
+                    "relay_4": "Relais 4",
+                    "relay_5": "Relais 5",
+                    "relay_6": "Relais 6",
+                    "relay_7": "Relais 7",
+                    "relay_8": "Relais 8",
+                    "relay_9": "Relais 9"
+                },
+                "title": "Relais einrichten"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Board einrichten"
+            }
+        }
+    }
+}

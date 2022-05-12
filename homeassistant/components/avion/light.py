@@ -1,6 +1,7 @@
 """Support for Avion dimmers."""
+from __future__ import annotations
+
 import importlib
-import logging
 import time
 
 import voluptuous as vol
@@ -8,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import (
@@ -19,11 +20,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -42,9 +42,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an Avion switch."""
-    # pylint: disable=no-member
     avion = importlib.import_module("avion")
 
     lights = []
@@ -69,52 +73,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AvionLight(LightEntity):
     """Representation of an Avion light."""
 
+    _attr_support_color_mode = ColorMode.BRIGHTNESS
+    _attr_support_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_should_poll = False
+    _attr_assumed_state = True
+    _attr_is_on = True
+
     def __init__(self, device):
         """Initialize the light."""
-        self._name = device.name
-        self._address = device.mac
-        self._brightness = 255
-        self._state = False
+        self._attr_name = device.name
+        self._attr_unique_id = device.mac
+        self._attr_brightness = 255
         self._switch = device
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_AVION_LED
-
-    @property
-    def should_poll(self):
-        """Don't poll."""
-        return False
-
-    @property
-    def assumed_state(self):
-        """We can't read the actual state, so assume it matches."""
-        return True
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        # pylint: disable=no-member
         avion = importlib.import_module("avion")
 
         # Bluetooth LE is unreliable, and the connection may drop at any
@@ -132,15 +105,13 @@ class AvionLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        if brightness is not None:
-            self._brightness = brightness
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
+            self._attr_brightness = brightness
 
         self.set_state(self.brightness)
-        self._state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self.set_state(0)
-        self._state = False
+        self._attr_is_on = False

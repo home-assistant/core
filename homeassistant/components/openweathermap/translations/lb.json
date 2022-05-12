@@ -1,18 +1,23 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
+        },
         "error": {
-            "auth": "Api Schl\u00ebssel ass net korrekt."
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenWeatherMap API Schl\u00ebssel",
+                    "api_key": "API Schl\u00ebssel",
                     "language": "Sproch",
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad",
                     "mode": "Modus",
                     "name": "Numm vun der Integratioun"
                 },
+                "description": "OpenWeatherMap Integratioun ariichten. Fir een API Schl\u00ebssel z'erstelle g\u00e9i op https://openweathermap.org/appid",
                 "title": "OpenWeatherMap API Schl\u00ebssel"
             }
         }

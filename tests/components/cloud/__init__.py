@@ -1,10 +1,10 @@
 """Tests for the cloud component."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, patch
 
 
 async def mock_cloud(hass, config=None):
@@ -12,7 +12,7 @@ async def mock_cloud(hass, config=None):
     assert await async_setup_component(hass, cloud.DOMAIN, {"cloud": config or {}})
     cloud_inst = hass.data["cloud"]
     with patch("hass_nabucasa.Cloud.run_executor", AsyncMock(return_value=None)):
-        await cloud_inst.start()
+        await cloud_inst.initialize()
 
 
 def mock_cloud_prefs(hass, prefs={}):

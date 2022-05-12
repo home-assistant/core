@@ -1,13 +1,6 @@
 """Consts used by TelldusLive."""
 from datetime import timedelta
 
-from homeassistant.const import (  # noqa: F401 pylint: disable=unused-import
-    ATTR_BATTERY_LEVEL,
-    CONF_HOST,
-    CONF_TOKEN,
-    DEVICE_DEFAULT_NAME,
-)
-
 APPLICATION_NAME = "Home Assistant"
 
 DOMAIN = "tellduslive"

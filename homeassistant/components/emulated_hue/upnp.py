@@ -63,7 +63,6 @@ def create_upnp_datagram_endpoint(
     advertise_port,
 ):
     """Create the UPNP socket and protocol."""
-
     # Listen for UDP port 1900 packets sent to SSDP multicast address
     ssdp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     ssdp_socket.setblocking(False)
@@ -128,7 +127,7 @@ class UPNPResponderProtocol:
         _LOGGER.debug("UPNP Responder responding with: %s", response)
         self.transport.sendto(response, addr)
 
-    def error_received(self, exc):  # pylint: disable=no-self-use
+    def error_received(self, exc):
         """Log UPNP errors."""
         _LOGGER.error("UPNP Error received: %s", exc)
 

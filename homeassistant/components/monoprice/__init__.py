@@ -1,12 +1,11 @@
 """The Monoprice 6-Zone Amplifier integration."""
-import asyncio
 import logging
 
 from pymonoprice import get_monoprice
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -18,17 +17,12 @@ from .const import (
     UNDO_UPDATE_LISTENER,
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Monoprice 6-Zone Amplifier component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Monoprice 6-Zone Amplifier from a config entry."""
     port = entry.data[CONF_PORT]
 
@@ -54,25 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         FIRST_RUN: first_run,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -80,6 +63,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

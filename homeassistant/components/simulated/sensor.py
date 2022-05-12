@@ -1,18 +1,19 @@
 """Adds a simulated sensor."""
+from __future__ import annotations
+
 from datetime import datetime
-import logging
 import math
 from random import Random
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_AMP = "amplitude"
 CONF_FWHM = "spread"
@@ -52,7 +53,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the simulated sensor."""
     name = config.get(CONF_NAME)
     unit = config.get(CONF_UNIT)
@@ -70,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor], True)
 
 
-class SimulatedSensor(Entity):
+class SimulatedSensor(SensorEntity):
     """Class for simulated sensor."""
 
     def __init__(
@@ -125,7 +131,7 @@ class SimulatedSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -135,14 +141,14 @@ class SimulatedSensor(Entity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
-        attr = {
+        return {
             "amplitude": self._amp,
             "mean": self._mean,
             "period": self._period,
@@ -151,4 +157,3 @@ class SimulatedSensor(Entity):
             "seed": self._seed,
             "relative_to_epoch": self._relative_to_epoch,
         }
-        return attr

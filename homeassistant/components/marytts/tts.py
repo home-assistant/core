@@ -1,5 +1,5 @@
 """Support for the MaryTTS service."""
-import logging
+from __future__ import annotations
 
 from speak2mary import MaryTTS
 import voluptuous as vol
@@ -7,8 +7,6 @@ import voluptuous as vol
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
@@ -23,7 +21,9 @@ DEFAULT_PORT = 59125
 DEFAULT_LANG = "en_US"
 DEFAULT_VOICE = "cmu-slt-hsmm"
 DEFAULT_CODEC = "WAVE_FILE"
-DEFAULT_EFFECTS = {}
+DEFAULT_EFFECTS: dict[str, str] = {}
+
+MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -85,5 +85,6 @@ class MaryTTSProvider(Provider):
         effects = options[CONF_EFFECT]
 
         data = self._mary.speak(message, effects)
+        audiotype = MAP_MARYTTS_CODEC[self._mary.codec]
 
-        return self._mary.codec, data
+        return audiotype, data

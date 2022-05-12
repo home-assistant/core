@@ -1,4 +1,5 @@
 """RESTful platform for notify component."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -17,20 +18,16 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_BAD_REQUEST,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
-
-from . import DOMAIN, PLATFORMS
+from homeassistant.helpers.template import Template
 
 CONF_DATA = "data"
 CONF_DATA_TEMPLATE = "data_template"
@@ -51,11 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             ["POST", "GET", "POST_JSON"]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
         vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_DATA): dict,
-        vol.Optional(CONF_DATA_TEMPLATE): {cv.match_all: cv.template_complex},
+        vol.Optional(CONF_DATA): vol.All(dict, cv.template_complex),
+        vol.Optional(CONF_DATA_TEMPLATE): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -70,11 +68,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     message_param_name = config.get(CONF_MESSAGE_PARAMETER_NAME)
     title_param_name = config.get(CONF_TITLE_PARAMETER_NAME)
     target_param_name = config.get(CONF_TARGET_PARAMETER_NAME)
@@ -97,6 +94,7 @@ def get_service(hass, config, discovery_info=None):
         resource,
         method,
         headers,
+        params,
         message_param_name,
         title_param_name,
         target_param_name,
@@ -116,6 +114,7 @@ class RestNotificationService(BaseNotificationService):
         resource,
         method,
         headers,
+        params,
         message_param_name,
         title_param_name,
         target_param_name,
@@ -129,6 +128,7 @@ class RestNotificationService(BaseNotificationService):
         self._hass = hass
         self._method = method.upper()
         self._headers = headers
+        self._params = params
         self._message_param_name = message_param_name
         self._title_param_name = title_param_name
         self._target_param_name = target_param_name
@@ -149,9 +149,7 @@ class RestNotificationService(BaseNotificationService):
             # integrations, so just return the first target in the list.
             data[self._target_param_name] = kwargs[ATTR_TARGET][0]
 
-        if self._data:
-            data.update(self._data)
-        elif self._data_template:
+        if self._data_template or self._data:
             kwargs[ATTR_MESSAGE] = message
 
             def _data_template_creator(value):
@@ -162,15 +160,21 @@ class RestNotificationService(BaseNotificationService):
                     return {
                         key: _data_template_creator(item) for key, item in value.items()
                     }
+                if not isinstance(value, Template):
+                    return value
                 value.hass = self._hass
-                return value.async_render(kwargs)
+                return value.async_render(kwargs, parse_result=False)
 
-            data.update(_data_template_creator(self._data_template))
+            if self._data:
+                data.update(_data_template_creator(self._data))
+            if self._data_template:
+                data.update(_data_template_creator(self._data_template))
 
         if self._method == "POST":
             response = requests.post(
                 self._resource,
                 headers=self._headers,
+                params=self._params,
                 data=data,
                 timeout=10,
                 auth=self._auth,
@@ -180,6 +184,7 @@ class RestNotificationService(BaseNotificationService):
             response = requests.post(
                 self._resource,
                 headers=self._headers,
+                params=self._params,
                 json=data,
                 timeout=10,
                 auth=self._auth,
@@ -189,27 +194,30 @@ class RestNotificationService(BaseNotificationService):
             response = requests.get(
                 self._resource,
                 headers=self._headers,
-                params=data,
+                params={**self._params, **data} if self._params else data,
                 timeout=10,
                 auth=self._auth,
                 verify=self._verify_ssl,
             )
 
         if (
-            response.status_code >= HTTP_INTERNAL_SERVER_ERROR
+            response.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
             and response.status_code < 600
         ):
             _LOGGER.exception(
                 "Server error. Response %d: %s:", response.status_code, response.reason
             )
         elif (
-            response.status_code >= HTTP_BAD_REQUEST
-            and response.status_code < HTTP_INTERNAL_SERVER_ERROR
+            response.status_code >= HTTPStatus.BAD_REQUEST
+            and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.exception(
                 "Client error. Response %d: %s:", response.status_code, response.reason
             )
-        elif response.status_code >= HTTP_OK and response.status_code < 300:
+        elif (
+            response.status_code >= HTTPStatus.OK
+            and response.status_code < HTTPStatus.MULTIPLE_CHOICES
+        ):
             _LOGGER.debug(
                 "Success. Response %d: %s:", response.status_code, response.reason
             )

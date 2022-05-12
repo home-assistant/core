@@ -1,21 +1,29 @@
 """Linky Atome."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,8 +48,6 @@ WEEKLY_TYPE = "week"
 MONTHLY_TYPE = "month"
 YEARLY_TYPE = "year"
 
-ICON = "mdi:flash"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
@@ -51,7 +57,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Atome sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -78,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AtomeData:
     """Stores data retrieved from Neurio sensor."""
 
-    def __init__(self, client: AtomeClient):
+    def __init__(self, client: AtomeClient) -> None:
         """Initialize the data."""
         self.atome_client = client
         self._live_power = None
@@ -108,11 +119,13 @@ class AtomeData:
         """Return latest active power value."""
         return self._is_connected
 
-    @Throttle(LIVE_SCAN_INTERVAL)
-    def update_live_usage(self):
-        """Return current power value."""
-        try:
-            values = self.atome_client.get_live()
+    def _retrieve_live(self):
+        values = self.atome_client.get_live()
+        if (
+            values.get("last")
+            and values.get("subscribed")
+            and (values.get("isConnected") is not None)
+        ):
             self._live_power = values["last"]
             self._subscribed_power = values["subscribed"]
             self._is_connected = values["isConnected"]
@@ -122,9 +135,47 @@ class AtomeData:
                 self._is_connected,
                 self._subscribed_power,
             )
+            return True
 
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        _LOGGER.error("Live Data : Missing last value in values: %s", values)
+        return False
+
+    @Throttle(LIVE_SCAN_INTERVAL)
+    def update_live_usage(self):
+        """Return current power value."""
+        if not self._retrieve_live():
+            _LOGGER.debug("Perform Reconnect during live request")
+            self.atome_client.login()
+            self._retrieve_live()
+
+    def _retrieve_period_usage(self, period_type):
+        """Return current daily/weekly/monthly/yearly power usage."""
+        values = self.atome_client.get_consumption(period_type)
+        if values.get("total") and values.get("price"):
+            period_usage = values["total"] / 1000
+            period_price = values["price"]
+            _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
+            return True, period_usage, period_price
+
+        _LOGGER.error("%s : Missing last value in values: %s", period_type, values)
+        return False, None, None
+
+    def _retrieve_period_usage_with_retry(self, period_type):
+        """Return current daily/weekly/monthly/yearly power usage with one retry."""
+        (
+            retrieve_success,
+            period_usage,
+            period_price,
+        ) = self._retrieve_period_usage(period_type)
+        if not retrieve_success:
+            _LOGGER.debug("Perform Reconnect during %s", period_type)
+            self.atome_client.login()
+            (
+                retrieve_success,
+                period_usage,
+                period_price,
+            ) = self._retrieve_period_usage(period_type)
+        return (period_usage, period_price)
 
     @property
     def day_usage(self):
@@ -139,14 +190,10 @@ class AtomeData:
     @Throttle(DAILY_SCAN_INTERVAL)
     def update_day_usage(self):
         """Return current daily power usage."""
-        try:
-            values = self.atome_client.get_consumption(DAILY_TYPE)
-            self._day_usage = values["total"] / 1000
-            self._day_price = values["price"]
-            _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        (
+            self._day_usage,
+            self._day_price,
+        ) = self._retrieve_period_usage_with_retry(DAILY_TYPE)
 
     @property
     def week_usage(self):
@@ -161,14 +208,10 @@ class AtomeData:
     @Throttle(WEEKLY_SCAN_INTERVAL)
     def update_week_usage(self):
         """Return current weekly power usage."""
-        try:
-            values = self.atome_client.get_consumption(WEEKLY_TYPE)
-            self._week_usage = values["total"] / 1000
-            self._week_price = values["price"]
-            _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        (
+            self._week_usage,
+            self._week_price,
+        ) = self._retrieve_period_usage_with_retry(WEEKLY_TYPE)
 
     @property
     def month_usage(self):
@@ -183,14 +226,10 @@ class AtomeData:
     @Throttle(MONTHLY_SCAN_INTERVAL)
     def update_month_usage(self):
         """Return current monthly power usage."""
-        try:
-            values = self.atome_client.get_consumption(MONTHLY_TYPE)
-            self._month_usage = values["total"] / 1000
-            self._month_price = values["price"]
-            _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        (
+            self._month_usage,
+            self._month_price,
+        ) = self._retrieve_period_usage_with_retry(MONTHLY_TYPE)
 
     @property
     def year_usage(self):
@@ -205,62 +244,30 @@ class AtomeData:
     @Throttle(YEARLY_SCAN_INTERVAL)
     def update_year_usage(self):
         """Return current yearly power usage."""
-        try:
-            values = self.atome_client.get_consumption(YEARLY_TYPE)
-            self._year_usage = values["total"] / 1000
-            self._year_price = values["price"]
-            _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        (
+            self._year_usage,
+            self._year_price,
+        ) = self._retrieve_period_usage_with_retry(YEARLY_TYPE)
 
 
-class AtomeSensor(Entity):
+class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
 
     def __init__(self, data, name, sensor_type):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
         self._data = data
-        self._state = None
-        self._attributes = {}
 
         self._sensor_type = sensor_type
 
         if sensor_type == LIVE_TYPE:
-            self._unit_of_measurement = POWER_WATT
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_native_unit_of_measurement = POWER_WATT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
-            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_POWER
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def update(self):
         """Update device state."""
@@ -268,11 +275,13 @@ class AtomeSensor(Entity):
         update_function()
 
         if self._sensor_type == LIVE_TYPE:
-            self._state = self._data.live_power
-            self._attributes["subscribed_power"] = self._data.subscribed_power
-            self._attributes["is_connected"] = self._data.is_connected
+            self._attr_native_value = self._data.live_power
+            self._attr_extra_state_attributes = {
+                "subscribed_power": self._data.subscribed_power,
+                "is_connected": self._data.is_connected,
+            }
         else:
-            self._state = getattr(self._data, f"{self._sensor_type}_usage")
-            self._attributes["price"] = getattr(
-                self._data, f"{self._sensor_type}_price"
-            )
+            self._attr_native_value = getattr(self._data, f"{self._sensor_type}_usage")
+            self._attr_extra_state_attributes = {
+                "price": getattr(self._data, f"{self._sensor_type}_price")
+            }

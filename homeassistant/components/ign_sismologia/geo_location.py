@@ -1,7 +1,8 @@
 """Support for IGN Sismologia (Earthquakes) Feeds."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from georss_ign_sismologia_client import IgnSismologiaFeedManager
 import voluptuous as vol
@@ -16,10 +17,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     LENGTH_KILOMETERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,12 +49,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
         vol.Optional(
             CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-        ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        ): cv.positive_float,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the IGN Sismologia Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     coordinates = (
@@ -131,6 +139,8 @@ class IgnSismologiaFeedEntityManager:
 class IgnSismologiaLocationEvent(GeolocationEvent):
     """This represents an external event with IGN Sismologia feed data."""
 
+    _attr_unit_of_measurement = LENGTH_KILOMETERS
+
     def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
@@ -165,7 +175,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         """Remove this entity."""
         self._remove_signal_delete()
         self._remove_signal_update()
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):
@@ -207,7 +217,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         if self._magnitude and self._region:
             return f"M {self._magnitude:.1f} - {self._region}"
@@ -218,27 +228,22 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         return self._title
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return LENGTH_KILOMETERS
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

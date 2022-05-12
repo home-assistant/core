@@ -1,92 +1,253 @@
 """Support for KNX/IP lights."""
-from xknx.devices import Light as XknxLight
+from __future__ import annotations
 
+from typing import Any, cast
+
+from xknx import XKNX
+from xknx.devices.light import Light as XknxLight, XYYColor
+
+from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_WHITE_VALUE,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_XY_COLOR,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
 from .knx_entity import KnxEntity
-
-DEFAULT_COLOR = (0.0, 0.0)
-DEFAULT_BRIGHTNESS = 255
-DEFAULT_WHITE_VALUE = 255
+from .schema import LightSchema
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up lights for KNX platform."""
-    entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxLight):
-            entities.append(KNXLight(device))
-    async_add_entities(entities)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up light(s) for KNX platform."""
+    xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.LIGHT]
+
+    async_add_entities(KNXLight(xknx, entity_config) for entity_config in config)
+
+
+def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
+    """Return a KNX Light device to be used within XKNX."""
+
+    def individual_color_addresses(color: str, feature: str) -> Any | None:
+        """Load individual color address list from configuration structure."""
+        if (
+            LightSchema.CONF_INDIVIDUAL_COLORS not in config
+            or color not in config[LightSchema.CONF_INDIVIDUAL_COLORS]
+        ):
+            return None
+        return config[LightSchema.CONF_INDIVIDUAL_COLORS][color].get(feature)
+
+    group_address_tunable_white = None
+    group_address_tunable_white_state = None
+    group_address_color_temp = None
+    group_address_color_temp_state = None
+    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.ABSOLUTE:
+        group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
+        group_address_color_temp_state = config.get(
+            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
+        )
+    elif config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.RELATIVE:
+        group_address_tunable_white = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
+        group_address_tunable_white_state = config.get(
+            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
+        )
+
+    return XknxLight(
+        xknx,
+        name=config[CONF_NAME],
+        group_address_switch=config.get(KNX_ADDRESS),
+        group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
+        group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
+        group_address_brightness_state=config.get(
+            LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_color=config.get(LightSchema.CONF_COLOR_ADDRESS),
+        group_address_color_state=config.get(LightSchema.CONF_COLOR_STATE_ADDRESS),
+        group_address_rgbw=config.get(LightSchema.CONF_RGBW_ADDRESS),
+        group_address_rgbw_state=config.get(LightSchema.CONF_RGBW_STATE_ADDRESS),
+        group_address_hue=config.get(LightSchema.CONF_HUE_ADDRESS),
+        group_address_hue_state=config.get(LightSchema.CONF_HUE_STATE_ADDRESS),
+        group_address_saturation=config.get(LightSchema.CONF_SATURATION_ADDRESS),
+        group_address_saturation_state=config.get(
+            LightSchema.CONF_SATURATION_STATE_ADDRESS
+        ),
+        group_address_xyy_color=config.get(LightSchema.CONF_XYY_ADDRESS),
+        group_address_xyy_color_state=config.get(LightSchema.CONF_XYY_STATE_ADDRESS),
+        group_address_tunable_white=group_address_tunable_white,
+        group_address_tunable_white_state=group_address_tunable_white_state,
+        group_address_color_temperature=group_address_color_temp,
+        group_address_color_temperature_state=group_address_color_temp_state,
+        group_address_switch_red=individual_color_addresses(
+            LightSchema.CONF_RED, KNX_ADDRESS
+        ),
+        group_address_switch_red_state=individual_color_addresses(
+            LightSchema.CONF_RED, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_red=individual_color_addresses(
+            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_red_state=individual_color_addresses(
+            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_switch_green=individual_color_addresses(
+            LightSchema.CONF_GREEN, KNX_ADDRESS
+        ),
+        group_address_switch_green_state=individual_color_addresses(
+            LightSchema.CONF_GREEN, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_green=individual_color_addresses(
+            LightSchema.CONF_GREEN, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_green_state=individual_color_addresses(
+            LightSchema.CONF_GREEN, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_switch_blue=individual_color_addresses(
+            LightSchema.CONF_BLUE, KNX_ADDRESS
+        ),
+        group_address_switch_blue_state=individual_color_addresses(
+            LightSchema.CONF_BLUE, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_blue=individual_color_addresses(
+            LightSchema.CONF_BLUE, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_blue_state=individual_color_addresses(
+            LightSchema.CONF_BLUE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_switch_white=individual_color_addresses(
+            LightSchema.CONF_WHITE, KNX_ADDRESS
+        ),
+        group_address_switch_white_state=individual_color_addresses(
+            LightSchema.CONF_WHITE, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_white=individual_color_addresses(
+            LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_white_state=individual_color_addresses(
+            LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
+        max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
+    )
 
 
 class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
-    def __init__(self, device: XknxLight):
-        """Initialize of KNX light."""
-        super().__init__(device)
+    _device: XknxLight
 
-        self._min_kelvin = device.min_kelvin
-        self._max_kelvin = device.max_kelvin
-        self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+        """Initialize of KNX light."""
+        super().__init__(_create_light(xknx, config))
+        self._max_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
+        self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
+
+        self._attr_max_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._min_kelvin
+        )
+        self._attr_min_mireds = color_util.color_temperature_kelvin_to_mired(
             self._max_kelvin
         )
-        self._max_mireds = color_util.color_temperature_kelvin_to_mired(
-            self._min_kelvin
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_unique_id = self._device_unique_id()
+
+    def _device_unique_id(self) -> str:
+        """Return unique id for this device."""
+        if self._device.switch.group_address is not None:
+            return f"{self._device.switch.group_address}"
+        return (
+            f"{self._device.red.brightness.group_address}_"
+            f"{self._device.green.brightness.group_address}_"
+            f"{self._device.blue.brightness.group_address}"
         )
 
     @property
-    def brightness(self):
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return bool(self._device.state)
+
+    @property
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._device.supports_brightness:
             return self._device.current_brightness
-        hsv_color = self._hsv_color
-        if self._device.supports_color and hsv_color:
-            return round(hsv_color[-1] / 100 * 255)
+        if self._device.current_xyy_color is not None:
+            _, brightness = self._device.current_xyy_color
+            return brightness
+        if self._device.supports_color or self._device.supports_rgbw:
+            rgb, white = self._device.current_color
+            if rgb is None:
+                return white
+            if white is None:
+                return max(rgb)
+            return max(*rgb, white)
         return None
 
     @property
-    def hs_color(self):
-        """Return the HS color value."""
-        rgb = None
-        if self._device.supports_rgbw or self._device.supports_color:
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the rgb color value [int, int, int]."""
+        if self._device.supports_color:
             rgb, _ = self._device.current_color
-        return color_util.color_RGB_to_hs(*rgb) if rgb else None
+            if rgb is not None:
+                if not self._device.supports_brightness:
+                    # brightness will be calculated from color so color must not hold brightness again
+                    return cast(
+                        tuple[int, int, int], color_util.match_max_scale((255,), rgb)
+                    )
+                return rgb
+        return None
 
     @property
-    def _hsv_color(self):
-        """Return the HSV color value."""
-        rgb = None
-        if self._device.supports_rgbw or self._device.supports_color:
-            rgb, _ = self._device.current_color
-        return color_util.color_RGB_to_hsv(*rgb) if rgb else None
-
-    @property
-    def white_value(self):
-        """Return the white value."""
-        white = None
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the rgbw color value [int, int, int, int]."""
         if self._device.supports_rgbw:
-            _, white = self._device.current_color
-        return white
+            rgb, white = self._device.current_color
+            if rgb is not None and white is not None:
+                if not self._device.supports_brightness:
+                    # brightness will be calculated from color so color must not hold brightness again
+                    return cast(
+                        tuple[int, int, int, int],
+                        color_util.match_max_scale((255,), (*rgb, white)),
+                    )
+                return (*rgb, white)
+        return None
 
     @property
-    def color_temp(self):
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        # Hue is scaled 0..360 int encoded in 1 byte in KNX (-> only 256 possible values)
+        # Saturation is scaled 0..100 int
+        return self._device.current_hs_color
+
+    @property
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value [float, float]."""
+        if self._device.current_xyy_color is not None:
+            xy_color, _ = self._device.current_xyy_color
+            return xy_color
+        return None
+
+    @property
+    def color_temp(self) -> int | None:
         """Return the color temperature in mireds."""
         if self._device.supports_color_temperature:
             kelvin = self._device.current_color_temperature
-            if kelvin is not None:
+            # Avoid division by zero if actuator reported 0 Kelvin (e.g., uninitialized DALI-Gateway)
+            if kelvin is not None and kelvin > 0:
                 return color_util.color_temperature_kelvin_to_mired(kelvin)
         if self._device.supports_tunable_white:
             relative_ct = self._device.current_tunable_white
@@ -100,92 +261,81 @@ class KNXLight(KnxEntity, LightEntity):
         return None
 
     @property
-    def min_mireds(self):
-        """Return the coldest color temp this light supports in mireds."""
-        return self._min_mireds
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color temp this light supports in mireds."""
-        return self._max_mireds
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return None
-
-    @property
-    def effect(self):
-        """Return the current effect."""
-        return None
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._device.state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        flags = 0
-        if self._device.supports_brightness:
-            flags |= SUPPORT_BRIGHTNESS
-        if self._device.supports_color:
-            flags |= SUPPORT_COLOR | SUPPORT_BRIGHTNESS
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode of the light."""
+        if self._device.supports_xyy_color:
+            return ColorMode.XY
+        if self._device.supports_hs_color:
+            return ColorMode.HS
         if self._device.supports_rgbw:
-            flags |= SUPPORT_COLOR | SUPPORT_WHITE_VALUE
+            return ColorMode.RGBW
+        if self._device.supports_color:
+            return ColorMode.RGB
         if (
             self._device.supports_color_temperature
             or self._device.supports_tunable_white
         ):
-            flags |= SUPPORT_COLOR_TEMP
-        return flags
+            return ColorMode.COLOR_TEMP
+        if self._device.supports_brightness:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
-    async def async_turn_on(self, **kwargs):
+    @property
+    def supported_color_modes(self) -> set | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
-        white_value = kwargs.get(ATTR_WHITE_VALUE, self.white_value)
-        mireds = kwargs.get(ATTR_COLOR_TEMP, self.color_temp)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        mireds = kwargs.get(ATTR_COLOR_TEMP)
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+        rgbw = kwargs.get(ATTR_RGBW_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        xy_color = kwargs.get(ATTR_XY_COLOR)
 
-        update_brightness = ATTR_BRIGHTNESS in kwargs
-        update_color = ATTR_HS_COLOR in kwargs
-        update_white_value = ATTR_WHITE_VALUE in kwargs
-        update_color_temp = ATTR_COLOR_TEMP in kwargs
-
-        # avoid conflicting changes and weird effects
-        if not (
-            self.is_on
-            or update_brightness
-            or update_color
-            or update_white_value
-            or update_color_temp
+        if (
+            not self.is_on
+            and brightness is None
+            and mireds is None
+            and rgb is None
+            and rgbw is None
+            and hs_color is None
+            and xy_color is None
         ):
             await self._device.set_on()
+            return
 
-        if self._device.supports_brightness and (
-            update_brightness and not update_color
-        ):
-            # if we don't need to update the color, try updating brightness
-            # directly if supported; don't do it if color also has to be
-            # changed, as RGB color implicitly sets the brightness as well
-            await self._device.set_brightness(brightness)
-        elif (self._device.supports_rgbw or self._device.supports_color) and (
-            update_brightness or update_color or update_white_value
-        ):
-            # change RGB color, white value (if supported), and brightness
-            # if brightness or hs_color was not yet set use the default value
-            # to calculate RGB from as a fallback
+        async def set_color(
+            rgb: tuple[int, int, int], white: int | None, brightness: int | None
+        ) -> None:
+            """Set color of light. Normalize colors for brightness when not writable."""
+            if self._device.brightness.writable:
+                # let the KNX light controller handle brightness
+                await self._device.set_color(rgb, white)
+                if brightness:
+                    await self._device.set_brightness(brightness)
+                return
+
             if brightness is None:
-                brightness = DEFAULT_BRIGHTNESS
-            if hs_color is None:
-                hs_color = DEFAULT_COLOR
-            if white_value is None and self._device.supports_rgbw:
-                white_value = DEFAULT_WHITE_VALUE
-            rgb = color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255)
-            await self._device.set_color(rgb, white_value)
+                # normalize for brightness if brightness is derived from color
+                brightness = self.brightness or 255
+            rgb = cast(
+                tuple[int, int, int],
+                tuple(color * brightness // 255 for color in rgb),
+            )
+            white = white * brightness // 255 if white is not None else None
+            await self._device.set_color(rgb, white)
 
-        if update_color_temp:
+        # return after RGB(W) color has changed as it implicitly sets the brightness
+        if rgbw is not None:
+            await set_color(rgbw[:3], rgbw[3], brightness)
+            return
+        if rgb is not None:
+            await set_color(rgb, None, brightness)
+            return
+
+        if mireds is not None:
             kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
             kelvin = min(self._max_kelvin, max(self._min_kelvin, kelvin))
 
@@ -199,6 +349,41 @@ class KNXLight(KnxEntity, LightEntity):
                 )
                 await self._device.set_tunable_white(relative_ct)
 
-    async def async_turn_off(self, **kwargs):
+        if xy_color is not None:
+            await self._device.set_xyy_color(
+                XYYColor(color=xy_color, brightness=brightness)
+            )
+            return
+
+        if hs_color is not None:
+            # round so only one telegram will be sent if the other matches state
+            hue = round(hs_color[0])
+            sat = round(hs_color[1])
+            await self._device.set_hs_color((hue, sat))
+
+        if brightness is not None:
+            # brightness: 1..255; 0 brightness will call async_turn_off()
+            if self._device.brightness.writable:
+                await self._device.set_brightness(brightness)
+                return
+            # brightness without color in kwargs; set via color
+            if self.color_mode == ColorMode.XY:
+                await self._device.set_xyy_color(XYYColor(brightness=brightness))
+                return
+            # default to white if color not known for RGB(W)
+            if self.color_mode == ColorMode.RGBW:
+                _rgbw = self.rgbw_color
+                if not _rgbw or not any(_rgbw):
+                    _rgbw = (0, 0, 0, 255)
+                await set_color(_rgbw[:3], _rgbw[3], brightness)
+                return
+            if self.color_mode == ColorMode.RGB:
+                _rgb = self.rgb_color
+                if not _rgb or not any(_rgb):
+                    _rgb = (255, 255, 255)
+                await set_color(_rgb, None, brightness)
+                return
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.set_off()

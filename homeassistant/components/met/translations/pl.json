@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Nie ustawiono wsp\u00f3\u0142rz\u0119dnych domu w konfiguracji Home Assistant"
+        },
         "error": {
-            "name_exists": "Lokalizacja ju\u017c istnieje."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "step": {
             "user": {

@@ -26,7 +26,7 @@ async def test_abort_if_already_setup(hass):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_only"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_user_step_without_user_input(hass):
@@ -46,8 +46,8 @@ async def test_pin_request_succeeds(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
-        mock_ecobee = MockEcobee.return_value
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_pin.return_value = True
         mock_ecobee.pin = "test-pin"
 
@@ -64,8 +64,8 @@ async def test_pin_request_fails(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
-        mock_ecobee = MockEcobee.return_value
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_pin.return_value = False
 
         result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
@@ -81,12 +81,14 @@ async def test_token_request_succeeds(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
-        mock_ecobee = MockEcobee.return_value
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
         mock_ecobee.refresh_token = "test-token"
+        # pylint: disable=protected-access
         flow._ecobee = mock_ecobee
+        # pylint: enable=protected-access
 
         result = await flow.async_step_authorize(user_input={})
 
@@ -104,11 +106,13 @@ async def test_token_request_fails(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
-        mock_ecobee = MockEcobee.return_value
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = False
         mock_ecobee.pin = "test-pin"
+        # pylint: disable=protected-access
         flow._ecobee = mock_ecobee
+        # pylint: enable=protected-access
 
         result = await flow.async_step_authorize(user_input={})
 
@@ -143,8 +147,8 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_t
     with patch(
         "homeassistant.components.ecobee.config_flow.load_json",
         return_value=MOCK_ECOBEE_CONF,
-    ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
-        mock_ecobee = MockEcobee.return_value
+    ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee = mock_ecobee.return_value
         mock_ecobee.refresh_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
         mock_ecobee.refresh_token = "test-token"
@@ -196,10 +200,10 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_t
         return_value=MOCK_ECOBEE_CONF,
     ), patch(
         "homeassistant.components.ecobee.config_flow.Ecobee"
-    ) as MockEcobee, patch.object(
+    ) as mock_ecobee, patch.object(
         flow, "async_step_user", return_value=mock_coro()
     ) as mock_async_step_user:
-        mock_ecobee = MockEcobee.return_value
+        mock_ecobee = mock_ecobee.return_value
         mock_ecobee.refresh_tokens.return_value = False
 
         await flow.async_step_import(import_data=None)

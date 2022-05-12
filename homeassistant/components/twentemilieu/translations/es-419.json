@@ -1,10 +1,6 @@
 {
     "config": {
-        "abort": {
-            "address_exists": "Direcci\u00f3n ya configurada."
-        },
         "error": {
-            "connection_error": "Error al conectar.",
             "invalid_address": "Direcci\u00f3n no encontrada en el \u00e1rea de servicio de Twente Milieu."
         },
         "step": {
@@ -14,8 +10,7 @@
                     "house_number": "N\u00famero de casa",
                     "post_code": "C\u00f3digo postal"
                 },
-                "description": "Configure Twente Milieu proporcionando informaci\u00f3n de recolecci\u00f3n de residuos en su direcci\u00f3n.",
-                "title": "Twente Milieu"
+                "description": "Configure Twente Milieu proporcionando informaci\u00f3n de recolecci\u00f3n de residuos en su direcci\u00f3n."
             }
         }
     }

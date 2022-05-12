@@ -1,12 +1,80 @@
 """Configuration for Sonos tests."""
-import pytest
+from copy import copy
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
+from soco import SoCo
+
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
-from tests.async_mock import Mock, patch as patch
 from tests.common import MockConfigEntry
+
+
+class SonosMockService:
+    """Mock a Sonos Service used in callbacks."""
+
+    def __init__(self, service_type):
+        """Initialize the instance."""
+        self.service_type = service_type
+        self.subscribe = AsyncMock()
+
+
+class SonosMockEvent:
+    """Mock a sonos Event used in callbacks."""
+
+    def __init__(self, soco, service, variables):
+        """Initialize the instance."""
+        self.sid = f"{soco.uid}_sub0000000001"
+        self.seq = "0"
+        self.timestamp = 1621000000.0
+        self.service = service
+        self.variables = variables
+
+    def increment_variable(self, var_name):
+        """Increment the value of the var_name key in variables dict attribute.
+
+        Assumes value has a format of <str>:<int>.
+        """
+        self.variables = copy(self.variables)
+        base, count = self.variables[var_name].split(":")
+        newcount = int(count) + 1
+        self.variables[var_name] = ":".join([base, str(newcount)])
+        return self.variables[var_name]
+
+
+@pytest.fixture
+def zeroconf_payload():
+    """Return a default zeroconf payload."""
+    return zeroconf.ZeroconfServiceInfo(
+        host="192.168.4.2",
+        addresses=["192.168.4.2"],
+        hostname="Sonos-aaa",
+        name="Sonos-aaa@Living Room._sonos._tcp.local.",
+        port=None,
+        properties={"bootseq": "1234"},
+        type="mock_type",
+    )
+
+
+@pytest.fixture
+async def async_autosetup_sonos(async_setup_sonos):
+    """Set up a Sonos integration instance on test run."""
+    await async_setup_sonos()
+
+
+@pytest.fixture
+def async_setup_sonos(hass, config_entry):
+    """Return a coroutine to set up a Sonos integration instance on demand."""
+
+    async def _wrapper():
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return _wrapper
 
 
 @pytest.fixture(name="config_entry")
@@ -16,31 +84,78 @@ def config_entry_fixture():
 
 
 @pytest.fixture(name="soco")
-def soco_fixture(music_library, speaker_info, dummy_soco_service):
-    """Create a mock pysonos SoCo fixture."""
-    with patch("pysonos.SoCo", autospec=True) as mock, patch(
+def soco_fixture(
+    music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
+):
+    """Create a mock soco SoCo fixture."""
+    with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
+        mock_soco.ip_address = "192.168.42.2"
         mock_soco.uid = "RINCON_test"
+        mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
+        mock_soco.get_current_track_info.return_value = current_track_info_empty
+        mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_speaker_info.return_value = speaker_info
-        mock_soco.avTransport = dummy_soco_service
-        mock_soco.renderingControl = dummy_soco_service
-        mock_soco.zoneGroupTopology = dummy_soco_service
-        mock_soco.contentDirectory = dummy_soco_service
-
+        mock_soco.avTransport = SonosMockService("AVTransport")
+        mock_soco.renderingControl = SonosMockService("RenderingControl")
+        mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology")
+        mock_soco.contentDirectory = SonosMockService("ContentDirectory")
+        mock_soco.deviceProperties = SonosMockService("DeviceProperties")
+        mock_soco.alarmClock = alarm_clock
+        mock_soco.mute = False
+        mock_soco.night_mode = True
+        mock_soco.dialog_level = True
+        mock_soco.volume = 19
+        mock_soco.audio_delay = 2
+        mock_soco.bass = 1
+        mock_soco.treble = -1
+        mock_soco.mic_enabled = False
+        mock_soco.sub_enabled = False
+        mock_soco.sub_gain = 5
+        mock_soco.surround_enabled = True
+        mock_soco.soundbar_audio_input_format = "Dolby 5.1"
+        mock_soco.get_battery_info.return_value = battery_info
+        mock_soco.all_zones = {mock_soco}
+        mock_soco.visible_zones = {mock_soco}
+        mock_soco.group.coordinator = mock_soco
         yield mock_soco
+
+
+@pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
 
 
 @pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
-    """Create a mock pysonos discover fixture."""
+    """Create a mock soco discover fixture."""
 
-    def do_callback(callback, **kwargs):
-        callback(soco)
+    async def do_callback(hass, callback, *args, **kwargs):
+        await callback(
+            ssdp.SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}/",
+                ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+                ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+                upnp={
+                    ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                },
+            ),
+            ssdp.SsdpChange.ALIVE,
+        )
+        return MagicMock()
 
-    with patch("pysonos.discover_thread", side_effect=do_callback) as mock:
+    with patch(
+        "homeassistant.components.ssdp.async_register_callback", side_effect=do_callback
+    ) as mock:
         yield mock
 
 
@@ -50,20 +165,50 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.1"]}}}
 
 
-@pytest.fixture(name="dummy_soco_service")
-def dummy_soco_service_fixture():
-    """Create dummy_soco_service fixture."""
-    service = Mock()
-    service.subscribe = Mock()
-    return service
-
-
 @pytest.fixture(name="music_library")
 def music_library_fixture():
     """Create music_library fixture."""
-    music_library = Mock()
-    music_library.get_sonos_favorites.return_value = []
+    music_library = MagicMock()
+    music_library.get_sonos_favorites.return_value.update_id = 1
     return music_library
+
+
+@pytest.fixture(name="alarm_clock")
+def alarm_clock_fixture():
+    """Create alarmClock fixture."""
+    alarm_clock = SonosMockService("AlarmClock")
+    alarm_clock.ListAlarms = Mock()
+    alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmListVersion": "RINCON_test:14",
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        "</Alarms>",
+    }
+    return alarm_clock
+
+
+@pytest.fixture(name="alarm_clock_extended")
+def alarm_clock_fixture_extended():
+    """Create alarmClock fixture."""
+    alarm_clock = SonosMockService("AlarmClock")
+    alarm_clock.ListAlarms = Mock()
+    alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmListVersion": "RINCON_test:15",
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
+        'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
+        'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+        'Volume="25" IncludeLinkedZones="0"/>'
+        "</Alarms>",
+    }
+    return alarm_clock
 
 
 @pytest.fixture(name="speaker_info")
@@ -71,7 +216,128 @@ def speaker_info_fixture():
     """Create speaker_info fixture."""
     return {
         "zone_name": "Zone A",
+        "uid": "RINCON_test",
         "model_name": "Model Name",
+        "model_number": "S12",
+        "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
+        "display_version": "13.1",
     }
+
+
+@pytest.fixture(name="current_track_info_empty")
+def current_track_info_empty_fixture():
+    """Create current_track_info_empty fixture."""
+    return {
+        "title": "",
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "NOT_IMPLEMENTED",
+        "playlist_position": "1",
+        "duration": "NOT_IMPLEMENTED",
+        "uri": "",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+
+
+@pytest.fixture(name="battery_info")
+def battery_info_fixture():
+    """Create battery_info fixture."""
+    return {
+        "Health": "GREEN",
+        "Level": 100,
+        "Temperature": "NORMAL",
+        "PowerSource": "SONOS_CHARGING_RING",
+    }
+
+
+@pytest.fixture(name="device_properties_event")
+def device_properties_event_fixture(soco):
+    """Create device_properties_event fixture."""
+    variables = {
+        "zone_name": "Zone A",
+        "mic_enabled": "1",
+        "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
+    }
+    return SonosMockEvent(soco, soco.deviceProperties, variables)
+
+
+@pytest.fixture(name="alarm_event")
+def alarm_event_fixture(soco):
+    """Create alarm_event fixture."""
+    variables = {
+        "time_zone": "ffc40a000503000003000502ffc4",
+        "time_server": "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org",
+        "time_generation": "20000001",
+        "alarm_list_version": "RINCON_test:1",
+        "time_format": "INV",
+        "date_format": "INV",
+        "daily_index_refresh_time": None,
+    }
+
+    return SonosMockEvent(soco, soco.alarmClock, variables)
+
+
+@pytest.fixture(name="no_media_event")
+def no_media_event_fixture(soco):
+    """Create no_media_event_fixture."""
+    variables = {
+        "current_crossfade_mode": "0",
+        "current_play_mode": "NORMAL",
+        "current_section": "0",
+        "current_track_meta_data": "",
+        "current_track_uri": "",
+        "enqueued_transport_uri": "",
+        "enqueued_transport_uri_meta_data": "",
+        "number_of_tracks": "0",
+        "transport_state": "STOPPED",
+    }
+    return SonosMockEvent(soco, soco.avTransport, variables)
+
+
+@pytest.fixture(name="tv_event")
+def tv_event_fixture(soco):
+    """Create alarm_event fixture."""
+    variables = {
+        "transport_state": "PLAYING",
+        "current_play_mode": "NORMAL",
+        "current_crossfade_mode": "0",
+        "number_of_tracks": "1",
+        "current_track": "1",
+        "current_section": "0",
+        "current_track_uri": f"x-sonos-htastream:{soco.uid}:spdif",
+        "current_track_duration": "",
+        "current_track_meta_data": {
+            "title": " ",
+            "parent_id": "-1",
+            "item_id": "-1",
+            "restricted": True,
+            "resources": [],
+            "desc": None,
+        },
+        "next_track_uri": "",
+        "next_track_meta_data": "",
+        "enqueued_transport_uri": "",
+        "enqueued_transport_uri_meta_data": "",
+        "playback_storage_medium": "NETWORK",
+        "av_transport_uri": f"x-sonos-htastream:{soco.uid}:spdif",
+        "av_transport_uri_meta_data": {
+            "title": soco.uid,
+            "parent_id": "0",
+            "item_id": "spdif-input",
+            "restricted": False,
+            "resources": [],
+            "desc": None,
+        },
+        "current_transport_actions": "Set, Play",
+        "current_valid_play_modes": "",
+    }
+    return SonosMockEvent(soco, soco.avTransport, variables)
+
+
+@pytest.fixture(autouse=True)
+def mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip in all sonos tests."""
+    return mock_get_source_ip

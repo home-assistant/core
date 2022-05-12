@@ -1,15 +1,20 @@
 """Triggers."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
+import functools
 import logging
-from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+
+from .typing import ConfigType, TemplateVarsType
 
 _PLATFORM_ALIASES = {
     "device_automation": ("device",),
@@ -17,10 +22,9 @@ _PLATFORM_ALIASES = {
 }
 
 
-async def _async_get_trigger_platform(
-    hass: HomeAssistantType, config: ConfigType
-) -> Any:
-    platform = config[CONF_PLATFORM]
+async def _async_get_trigger_platform(hass: HomeAssistant, config: ConfigType) -> Any:
+    platform_and_sub_type = config[CONF_PLATFORM].split(".")
+    platform = platform_and_sub_type[0]
     for alias, triggers in _PLATFORM_ALIASES.items():
         if platform in triggers:
             platform = alias
@@ -38,8 +42,8 @@ async def _async_get_trigger_platform(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistantType, trigger_config: List[ConfigType]
-) -> List[ConfigType]:
+    hass: HomeAssistant, trigger_config: list[ConfigType]
+) -> list[ConfigType]:
     """Validate triggers."""
     config = []
     for conf in trigger_config:
@@ -52,42 +56,83 @@ async def async_validate_trigger_config(
     return config
 
 
+def _trigger_action_wrapper(
+    hass: HomeAssistant, action: Callable, conf: ConfigType
+) -> Callable:
+    """Wrap trigger action with extra vars if configured."""
+    if CONF_VARIABLES not in conf:
+        return action
+
+    @functools.wraps(action)
+    async def with_vars(
+        run_variables: dict[str, Any], context: Context | None = None
+    ) -> None:
+        """Wrap action with extra vars."""
+        trigger_variables = conf[CONF_VARIABLES]
+        run_variables.update(trigger_variables.async_render(hass, run_variables))
+        await action(run_variables, context)
+
+    return with_vars
+
+
 async def async_initialize_triggers(
-    hass: HomeAssistantType,
-    trigger_config: List[ConfigType],
+    hass: HomeAssistant,
+    trigger_config: list[ConfigType],
     action: Callable,
     domain: str,
     name: str,
     log_cb: Callable,
     home_assistant_start: bool = False,
-    variables: Optional[Union[Dict[str, Any], MappingProxyType]] = None,
-) -> Optional[CALLBACK_TYPE]:
+    variables: TemplateVarsType = None,
+) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
-    info = {
-        "domain": domain,
-        "name": name,
-        "home_assistant_start": home_assistant_start,
-        "variables": variables,
-    }
 
     triggers = []
-    for conf in trigger_config:
+    for idx, conf in enumerate(trigger_config):
+        # Skip triggers that are not enabled
+        if not conf.get(CONF_ENABLED, True):
+            continue
+
         platform = await _async_get_trigger_platform(hass, conf)
-        triggers.append(platform.async_attach_trigger(hass, conf, action, info))
+        trigger_id = conf.get(CONF_ID, f"{idx}")
+        trigger_idx = f"{idx}"
+        trigger_data = {"id": trigger_id, "idx": trigger_idx}
+        info = {
+            "domain": domain,
+            "name": name,
+            "home_assistant_start": home_assistant_start,
+            "variables": variables,
+            "trigger_data": trigger_data,
+        }
 
-    removes = await asyncio.gather(*triggers)
+        triggers.append(
+            platform.async_attach_trigger(
+                hass, conf, _trigger_action_wrapper(hass, action, conf), info
+            )
+        )
 
-    if None in removes:
-        log_cb(logging.ERROR, "Error setting up trigger")
+    attach_results = await asyncio.gather(*triggers, return_exceptions=True)
+    removes: list[Callable[[], None]] = []
 
-    removes = list(filter(None, removes))
+    for result in attach_results:
+        if isinstance(result, HomeAssistantError):
+            log_cb(logging.ERROR, f"Got error '{result}' when setting up triggers for")
+        elif isinstance(result, Exception):
+            log_cb(logging.ERROR, "Error setting up trigger", exc_info=result)
+        elif result is None:
+            log_cb(
+                logging.ERROR, "Unknown error while setting up trigger (empty result)"
+            )
+        else:
+            removes.append(result)
+
     if not removes:
         return None
 
     log_cb(logging.INFO, "Initialized trigger")
 
     @callback
-    def remove_triggers():  # type: ignore
+    def remove_triggers() -> None:
         """Remove triggers."""
         for remove in removes:
             remove()

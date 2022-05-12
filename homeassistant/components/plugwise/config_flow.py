@@ -1,172 +1,171 @@
 """Config flow for Plugwise integration."""
-import logging
+from __future__ import annotations
 
-from Plugwise_Smile.Smile import Smile
+from typing import Any
+
+from plugwise.exceptions import (
+    InvalidAuthentication,
+    InvalidSetupError,
+    PlugwiseException,
+)
+from plugwise.smile import Smile
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import (
+    CONF_BASE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
+    API,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_USERNAME,
     DOMAIN,
+    FLOW_SMILE,
+    FLOW_STRETCH,
+    LOGGER,
+    PW_TYPE,
+    SMILE,
+    STRETCH,
+    STRETCH_USERNAME,
+    ZEROCONF_MAP,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-ZEROCONF_MAP = {
-    "smile": "P1 DSMR",
-    "smile_thermo": "Climate (Anna)",
-    "smile_open_therm": "Climate (Adam)",
-}
-
-
-def _base_schema(discovery_info):
-    """Generate base schema."""
-    base_schema = {}
+def _base_gw_schema(discovery_info):
+    """Generate base schema for gateways."""
+    base_gw_schema = {}
 
     if not discovery_info:
-        base_schema[vol.Required(CONF_HOST)] = str
-        base_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
+        base_gw_schema[vol.Required(CONF_HOST)] = str
+        base_gw_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
+        base_gw_schema[vol.Required(CONF_USERNAME, default=SMILE)] = vol.In(
+            {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+        )
 
-    base_schema[vol.Required(CONF_PASSWORD)] = str
+    base_gw_schema.update({vol.Required(CONF_PASSWORD): str})
 
-    return vol.Schema(base_schema)
+    return vol.Schema(base_gw_schema)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_gw_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
     """
-    Validate the user input allows us to connect.
+    Validate whether the user input allows us to connect to the gateway.
 
-    Data has the keys from _base_schema() with values provided by the user.
+    Data has the keys from _base_gw_schema() with values provided by the user.
     """
     websession = async_get_clientsession(hass, verify_ssl=False)
-
     api = Smile(
         host=data[CONF_HOST],
         password=data[CONF_PASSWORD],
         port=data[CONF_PORT],
+        username=data[CONF_USERNAME],
         timeout=30,
         websession=websession,
     )
-
-    try:
-        await api.connect()
-    except Smile.InvalidAuthentication as err:
-        raise InvalidAuth from err
-    except Smile.PlugwiseError as err:
-        raise CannotConnect from err
-
+    await api.connect()
     return api
 
 
-class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Plugwise Smile."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
-        """Initialize the Plugwise config flow."""
-        self.discovery_info = {}
+    discovery_info: ZeroconfServiceInfo | None = None
+    _username: str = DEFAULT_USERNAME
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
-        _properties = self.discovery_info.get("properties")
+        _properties = discovery_info.properties
 
-        unique_id = self.discovery_info.get("hostname").split(".")[0]
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        unique_id = discovery_info.hostname.split(".")[0]
+        if config_entry := await self.async_set_unique_id(unique_id):
+            try:
+                await validate_gw_input(
+                    self.hass,
+                    {
+                        CONF_HOST: discovery_info.host,
+                        CONF_PORT: discovery_info.port,
+                        CONF_USERNAME: config_entry.data[CONF_USERNAME],
+                        CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+                    },
+                )
+            except Exception:  # pylint: disable=broad-except
+                self._abort_if_unique_id_configured()
+            else:
+                self._abort_if_unique_id_configured(
+                    {
+                        CONF_HOST: discovery_info.host,
+                        CONF_PORT: discovery_info.port,
+                    }
+                )
 
+        if DEFAULT_USERNAME not in unique_id:
+            self._username = STRETCH_USERNAME
         _product = _properties.get("product", None)
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info[CONF_HOST],
-            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
-            "name": _name,
-        }
+        self.context.update(
+            {
+                "title_placeholders": {
+                    CONF_HOST: discovery_info.host,
+                    CONF_NAME: _name,
+                    CONF_PORT: discovery_info.port,
+                    CONF_USERNAME: self._username,
+                },
+                "configuration_url": f"http://{discovery_info.host}:{discovery_info.port}",
+            }
+        )
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step when using network/gateway setups."""
         errors = {}
 
         if user_input is not None:
-
             if self.discovery_info:
-                user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
-                user_input[CONF_PORT] = self.discovery_info.get(CONF_PORT, DEFAULT_PORT)
-
-            for entry in self._async_current_entries():
-                if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+                user_input[CONF_HOST] = self.discovery_info.host
+                user_input[CONF_PORT] = self.discovery_info.port
+                user_input[CONF_USERNAME] = self._username
 
             try:
-                api = await validate_input(self.hass, user_input)
-
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                api = await validate_gw_input(self.hass, user_input)
+            except InvalidSetupError:
+                errors[CONF_BASE] = "invalid_setup"
+            except InvalidAuthentication:
+                errors[CONF_BASE] = "invalid_auth"
+            except PlugwiseException:
+                errors[CONF_BASE] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            if not errors:
+                LOGGER.exception("Unexpected exception")
+                errors[CONF_BASE] = "unknown"
+            else:
                 await self.async_set_unique_id(
                     api.smile_hostname or api.gateway_id, raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured()
 
+                user_input[PW_TYPE] = API
                 return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_base_schema(self.discovery_info),
-            errors=errors or {},
+            data_schema=_base_gw_schema(self.discovery_info),
+            errors=errors,
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return PlugwiseOptionsFlowHandler(config_entry)
-
-
-class PlugwiseOptionsFlowHandler(config_entries.OptionsFlow):
-    """Plugwise option flow."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Manage the Plugwise options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        api = self.hass.data[DOMAIN][self.config_entry.entry_id]["api"]
-        interval = DEFAULT_SCAN_INTERVAL[api.smile_type]
-        data = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(CONF_SCAN_INTERVAL, interval),
-            ): int
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(data))
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

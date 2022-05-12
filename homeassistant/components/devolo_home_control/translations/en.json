@@ -1,22 +1,28 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Home Control Central Unit is already in use."
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "invalid_credentials": "Incorrect user name and/or password."
+            "invalid_auth": "Invalid authentication",
+            "reauth_failed": "Please use the same mydevolo user as before."
         },
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "Password",
-                    "username": "E-Mail-Address / devolo ID"
-                },
-                "title": "devolo Home Control"
+                    "username": "Email / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Password",
+                    "username": "Email / devolo ID"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

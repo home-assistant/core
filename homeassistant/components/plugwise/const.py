@@ -1,44 +1,55 @@
-"""Constant for Plugwise component."""
-DOMAIN = "plugwise"
+"""Constants for Plugwise component."""
+from __future__ import annotations
 
-# Sensor mapping
-SENSOR_MAP_MODEL = 0
-SENSOR_MAP_UOM = 1
-SENSOR_MAP_DEVICE_CLASS = 2
+from datetime import timedelta
+import logging
+from typing import Final
+
+from homeassistant.const import Platform
+
+DOMAIN: Final = "plugwise"
+
+LOGGER = logging.getLogger(__package__)
+
+API: Final = "api"
+FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
+FLOW_STRETCH: Final = "stretch (Stretch)"
+FLOW_TYPE: Final = "flow_type"
+GATEWAY: Final = "gateway"
+PW_TYPE: Final = "plugwise_type"
+SMILE: Final = "smile"
+STRETCH: Final = "stretch"
+STRETCH_USERNAME: Final = "stretch"
+UNIT_LUMEN: Final = "lm"
+
+PLATFORMS_GATEWAY: Final[list[str]] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SELECT,
+    Platform.SWITCH,
+]
+ZEROCONF_MAP: Final[dict[str, str]] = {
+    "smile": "P1",
+    "smile_thermo": "Anna",
+    "smile_open_therm": "Adam",
+    "stretch": "Stretch",
+}
 
 # Default directives
-DEFAULT_NAME = "Smile"
-DEFAULT_USERNAME = "smile"
-DEFAULT_TIMEOUT = 10
-DEFAULT_PORT = 80
-DEFAULT_MIN_TEMP = 4
-DEFAULT_MAX_TEMP = 30
-DEFAULT_SCAN_INTERVAL = {"thermostat": 60, "power": 10}
+DEFAULT_MAX_TEMP: Final = 30
+DEFAULT_MIN_TEMP: Final = 4
+DEFAULT_PORT: Final = 80
+DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
+    "power": timedelta(seconds=10),
+    "stretch": timedelta(seconds=60),
+    "thermostat": timedelta(seconds=60),
+}
+DEFAULT_USERNAME: Final = "smile"
 
-# Configuration directives
-CONF_MIN_TEMP = "min_temp"
-CONF_MAX_TEMP = "max_temp"
-CONF_THERMOSTAT = "thermostat"
-CONF_POWER = "power"
-CONF_HEATER = "heater"
-CONF_SOLAR = "solar"
-CONF_GAS = "gas"
-
-ATTR_ILLUMINANCE = "illuminance"
-UNIT_LUMEN = "lm"
-
-CURRENT_HVAC_DHW = "hot_water"
-
-DEVICE_STATE = "device_state"
-
-SCHEDULE_ON = "true"
-SCHEDULE_OFF = "false"
-
-COOL_ICON = "mdi:snowflake"
-FLAME_ICON = "mdi:fire"
-IDLE_ICON = "mdi:circle-off-outline"
-FLOW_OFF_ICON = "mdi:water-pump-off"
-FLOW_ON_ICON = "mdi:water-pump"
-
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-COORDINATOR = "coordinator"
+THERMOSTAT_CLASSES: Final[list[str]] = [
+    "thermostat",
+    "thermostatic_radiator_valve",
+    "zone_thermometer",
+    "zone_thermostat",
+]

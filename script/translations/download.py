@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
+from __future__ import annotations
+
 import json
 import os
 import pathlib
 import re
 import subprocess
-from typing import Dict, List, Union
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
@@ -51,7 +52,7 @@ def run_download_docker():
         raise ExitApp("Failed to download translations")
 
 
-def save_json(filename: str, data: Union[List, Dict]):
+def save_json(filename: str, data: list | dict):
     """Save JSON data to a file.
 
     Returns True on success.
@@ -69,7 +70,7 @@ def get_component_path(lang, component):
         return os.path.join(
             "homeassistant", "components", component, "translations", f"{lang}.json"
         )
-    raise ExitApp(f"Integration {component} not found under homeassistant/components/")
+    return None
 
 
 def get_platform_path(lang, component, platform):
@@ -97,7 +98,11 @@ def save_language_translations(lang, translations):
     for component, component_translations in components.items():
         base_translations = get_component_translations(component_translations)
         if base_translations:
-            path = get_component_path(lang, component)
+            if (path := get_component_path(lang, component)) is None:
+                print(
+                    f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
+                )
+                continue
             os.makedirs(os.path.dirname(path), exist_ok=True)
             save_json(path, base_translations)
 

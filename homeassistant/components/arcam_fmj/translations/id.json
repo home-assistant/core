@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm": {
+                "description": "Ingin menambahkan Arcam FMJ `{host}` ke Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Masukkan nama host atau alamat IP perangkat."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} diminta untuk dinyalakan"
+        }
+    }
+}

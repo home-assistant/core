@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan nama pengguna dan kata sandi untuk akun iAqualink Anda.",
+                "title": "Hubungkan ke iAqualink"
+            }
+        }
+    }
+}

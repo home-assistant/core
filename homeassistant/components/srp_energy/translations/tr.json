@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_account": "Hesap kimli\u011fi 9 haneli bir say\u0131 olmal\u0131d\u0131r",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Hesap Kimli\u011fi",
+                    "is_tou": "Kullan\u0131m Zaman\u0131 Plan\u0131 m\u0131",
+                    "password": "\u015eifre",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

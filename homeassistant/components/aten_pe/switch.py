@@ -1,4 +1,5 @@
 """The ATEN PE switch component."""
+from __future__ import annotations
 
 import logging
 
@@ -6,13 +7,18 @@ from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
     PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ATEN PE switch."""
     node = config[CONF_HOST]
     serv = config[CONF_PORT]
@@ -53,70 +64,57 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await hass.async_add_executor_job(dev.initialize)
         mac = await dev.deviceMAC()
         outlets = dev.outlets()
+        name = await dev.deviceName()
+        model = await dev.modelName()
+        sw_version = await dev.deviceFWversion()
     except AtenPEError as exc:
         _LOGGER.error("Failed to initialize %s:%s: %s", node, serv, str(exc))
         raise PlatformNotReady from exc
 
+    info = DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, mac)},
+        manufacturer="ATEN",
+        model=model,
+        name=name,
+        sw_version=sw_version,
+    )
+
     switches = []
     async for outlet in outlets:
-        switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
+        switches.append(AtenSwitch(dev, info, mac, outlet.id, outlet.name))
 
-    async_add_entities(switches)
+    async_add_entities(switches, True)
 
 
 class AtenSwitch(SwitchEntity):
     """Represents an ATEN PE switch."""
 
-    def __init__(self, device, mac, outlet, name):
+    _attr_device_class = SwitchDeviceClass.OUTLET
+
+    def __init__(
+        self, device: AtenPE, info: DeviceInfo, mac: str, outlet: str, name: str
+    ) -> None:
         """Initialize an ATEN PE switch."""
         self._device = device
-        self._mac = mac
         self._outlet = outlet
-        self._name = name or f"Outlet {outlet}"
-        self._enabled = False
-        self._outlet_power = 0.0
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._mac}-{self._outlet}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_OUTLET
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._enabled
-
-    @property
-    def current_power_w(self) -> float:
-        """Return the current power usage in W."""
-        return self._outlet_power
+        self._attr_device_info = info
+        self._attr_unique_id = f"{mac}-{outlet}"
+        self._attr_name = name or f"Outlet {outlet}"
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self._device.setOutletStatus(self._outlet, "on")
-        self._enabled = True
+        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self._device.setOutletStatus(self._outlet, "off")
-        self._enabled = False
+        self._attr_is_on = False
 
     async def async_update(self):
         """Process update from entity."""
         status = await self._device.displayOutletStatus(self._outlet)
         if status == "on":
-            self._enabled = True
-            self._outlet_power = await self._device.outletPower(self._outlet)
+            self._attr_is_on = True
         elif status == "off":
-            self._enabled = False
-            self._outlet_power = 0.0
+            self._attr_is_on = False

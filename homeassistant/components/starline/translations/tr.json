@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Yanl\u0131\u015f uygulama kimli\u011fi veya anahtar\u0131",
+            "error_auth_mfa": "Yanl\u0131\u015f kod",
+            "error_auth_user": "Yanl\u0131\u015f kullan\u0131c\u0131 ad\u0131 ya da parola"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "Uygulama Kimli\u011fi",
+                    "app_secret": "Gizli"
+                },
+                "description": "[StarLine geli\u015ftirici hesab\u0131ndan](https://my.starline.ru/developer) uygulama kimli\u011fi ve gizli kod",
+                "title": "Uygulama kimlik bilgileri"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "G\u00f6r\u00fcnt\u00fcden kod"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS kodu"
+                },
+                "description": "{phone_number} telefona g\u00f6nderilen kodu girin",
+                "title": "\u0130ki fakt\u00f6rl\u00fc yetkilendirme"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "StarLine hesab\u0131 e-postas\u0131 ve parolas\u0131",
+                "title": "Kullan\u0131c\u0131 kimlik bilgilerini"
+            }
+        }
+    }
+}

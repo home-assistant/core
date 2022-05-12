@@ -3,10 +3,6 @@
         "abort": {
             "updated_entry": "Ta vnos je bil \u017ee nastavljen, vendar se ime, aplikacije in/ali mo\u017enosti, dolo\u010dene v konfiguraciji, ne ujemajo s predhodno uvo\u017eeno konfiguracijo, zato je bil konfiguracijski vnos ustrezno posodobljen."
         },
-        "error": {
-            "host_exists": "Naprava Vizio z dolo\u010denim gostiteljem je \u017ee konfigurirana.",
-            "name_exists": "Naprava Vizio z navedenim imenom je \u017ee konfigurirana."
-        },
         "step": {
             "pair_tv": {
                 "data": {

@@ -2,14 +2,22 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert"
+            "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt",
+            "invalid_auth": "Ugyldig godkjenning",
             "send_verification_code": "Kunne ikke sende bekreftelseskode",
-            "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden din, velg en tillitsenhet og start bekreftelsen p\u00e5 nytt"
+            "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden, pr\u00f8v p\u00e5 nytt"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Ditt tidligere angitte passord for {username} fungerer ikke lenger. Oppdater passordet ditt for \u00e5 fortsette \u00e5 bruke denne integrasjonen.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "P\u00e5litelig enhet"

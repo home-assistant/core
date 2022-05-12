@@ -2,17 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "bad_config_file": "Slechte gegevens van het configuratiebestand",
             "link_local_address": "Link-lokale adressen worden niet ondersteund",
             "not_axis_device": "Ontdekte apparaat, is geen Axis-apparaat"
         },
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
-            "device_unavailable": "Apparaat is niet beschikbaar",
-            "faulty_credentials": "Ongeldige gebruikersreferenties"
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
         },
-        "flow_title": "Axis apparaat: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -22,6 +21,16 @@
                     "username": "Gebruikersnaam"
                 },
                 "title": "Stel het Axis-apparaat in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selecteer stream profiel om te gebruiken"
+                },
+                "title": "Opties voor videostreams van Axis-apparaten"
             }
         }
     }

@@ -10,14 +10,17 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "nextcloud"
-NEXTCLOUD_COMPONENTS = ("sensor", "binary_sensor")
+PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Validate user configuration
@@ -89,7 +92,7 @@ SENSORS = (
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nextcloud integration."""
     # Fetch Nextcloud Monitor api data
     conf = config[DOMAIN]
@@ -116,8 +119,8 @@ def setup(hass, config):
     # Update sensors on time interval
     track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
 
-    for component in NEXTCLOUD_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

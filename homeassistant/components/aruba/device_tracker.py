@@ -1,4 +1,6 @@
 """Support for Aruba Access Points."""
+from __future__ import annotations
+
 import logging
 import re
 
@@ -7,11 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +25,7 @@ _DEVICES_REGEX = re.compile(
     + r"(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+"
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -30,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a Aruba scanner."""
     scanner = ArubaDeviceScanner(config[DOMAIN])
 
@@ -74,8 +78,7 @@ class ArubaDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        data = self.get_aruba_data()
-        if not data:
+        if not (data := self.get_aruba_data()):
             return False
 
         self.last_results = data.values()
@@ -125,8 +128,7 @@ class ArubaDeviceScanner(DeviceScanner):
 
         devices = {}
         for device in devices_result:
-            match = _DEVICES_REGEX.search(device.decode("utf-8"))
-            if match:
+            if match := _DEVICES_REGEX.search(device.decode("utf-8")):
                 devices[match.group("ip")] = {
                     "ip": match.group("ip"),
                     "mac": match.group("mac").upper(),

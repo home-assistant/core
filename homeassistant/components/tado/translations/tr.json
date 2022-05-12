@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "no_homes": "Bu Tado hesab\u0131na ba\u011fl\u0131 ev yok.",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "title": "Tado hesab\u0131n\u0131za ba\u011flan\u0131n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Geri d\u00f6n\u00fc\u015f modunu se\u00e7in."
+                },
+                "description": "Geri d\u00f6n\u00fc\u015f modu, manuel b\u00f6lge yerle\u015fiminizden Ak\u0131ll\u0131 Programa ne zaman geri d\u00f6nece\u011finizi se\u00e7menizi sa\u011flar. (NEXT_TIME_BLOCK:= Sonraki Ak\u0131ll\u0131 Program de\u011fi\u015fikli\u011finde de\u011fi\u015ftirin; MANUAL:= \u0130ptal edene kadar de\u011fi\u015ftirmeyin; TADO_DEFAULT:= Tado Uygulamas\u0131ndaki ayar\u0131n\u0131za g\u00f6re de\u011fi\u015ftirin).",
+                "title": "Tado se\u00e7eneklerini ayarlay\u0131n."
+            }
+        }
+    }
+}

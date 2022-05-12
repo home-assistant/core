@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "create_entry": {
+            "default": "Berhasil terhubung ke AlarmDecoder."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Laju Baud Perangkat",
+                    "device_path": "Jalur Perangkat",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Konfigurasikan pengaturan koneksi"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokol"
+                },
+                "title": "Pilih Protokol AlarmDecoder"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "Bidang di bawah ini harus berupa bilangan bulat.",
+            "loop_range": "RF Loop harus merupakan bilangan bulat antara 1 dan 4.",
+            "loop_rfid": "RF Loop tidak dapat digunakan tanpa RF Serial.",
+            "relay_inclusive": "Relay Address dan Relay Channel saling tergantung dan harus disertakan bersama-sama."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Mode Malam Alternatif",
+                    "auto_bypass": "Diaktifkan Secara Otomatis",
+                    "code_arm_required": "Kode Diperlukan untuk Mengaktifkan"
+                },
+                "title": "Konfigurasikan AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Edit"
+                },
+                "description": "Apa yang ingin diedit?",
+                "title": "Konfigurasikan AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF Loop",
+                    "zone_name": "Nama Zona",
+                    "zone_relayaddr": "Relay Address",
+                    "zone_relaychan": "Relay Channel",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Jenis Zona"
+                },
+                "description": "Masukkan detail untuk zona {zone_number}. Untuk menghapus zona {zone_number}, kosongkan Nama Zona.",
+                "title": "Konfigurasikan AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Nomor Zona"
+                },
+                "description": "Masukkan nomor zona yang ingin ditambahkan, diedit, atau dihapus.",
+                "title": "Konfigurasikan AlarmDecoder"
+            }
+        }
+    }
+}

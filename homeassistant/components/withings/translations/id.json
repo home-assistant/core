@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konfigurasi diperbarui untuk profil.",
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})"
+        },
+        "create_entry": {
+            "default": "Berhasil mengautentikasi dengan Withings."
+        },
+        "error": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "flow_title": "{profile}",
+        "step": {
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Nama Profil"
+                },
+                "description": "Berikan nama profil unik untuk data ini. Umumnya namanya sama dengan nama profil yang Anda pilih di langkah sebelumnya.",
+                "title": "Profil Pengguna."
+            },
+            "reauth": {
+                "description": "Profil \"{profile}\" perlu diautentikasi ulang untuk terus menerima data Withings.",
+                "title": "Autentikasi Ulang Integrasi"
+            }
+        }
+    }
+}

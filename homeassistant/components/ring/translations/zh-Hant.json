@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
@@ -10,9 +10,9 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "\u96d9\u91cd\u9a57\u8b49\u78bc"
+                    "2fa": "\u96d9\u91cd\u8a8d\u8b49\u78bc"
                 },
-                "title": "\u96d9\u91cd\u9a57\u8b49"
+                "title": "\u96d9\u91cd\u8a8d\u8b49"
             },
             "user": {
                 "data": {

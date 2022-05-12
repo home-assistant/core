@@ -1,18 +1,21 @@
 """Webhook handlers for mobile_app."""
 import asyncio
+from contextlib import suppress
 from functools import wraps
+from http import HTTPStatus
 import logging
 import secrets
 
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
+from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import notify as hass_notify, tag
+from homeassistant.components import camera, cloud, notify as hass_notify, tag
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
-from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
@@ -20,23 +23,31 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
 )
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES as SENSOR_CLASSES,
+    STATE_CLASSES as SENSOSR_STATE_CLASSES,
+)
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
 )
-from homeassistant.core import EventOrigin
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import EventOrigin, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.template import attach
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -45,18 +56,21 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
+    ATTR_SENSOR_DEFAULT_DISABLED,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
     ATTR_SENSOR_STATE,
+    ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
     ATTR_SENSOR_TYPE_BINARY_SENSOR,
     ATTR_SENSOR_TYPE_SENSOR,
@@ -76,23 +90,23 @@ from .const import (
     CONF_SECRET,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
-    DATA_STORE,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    SCHEMA_APP_DATA,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
     _decrypt_payload,
+    _decrypt_payload_legacy,
     empty_okay_response,
     error_response,
     registration_context,
     safe_registration,
-    savable_state,
     supports_encryption,
     webhook_response,
 )
@@ -101,7 +115,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DELAY_SAVE = 10
 
-WEBHOOK_COMMANDS = Registry()
+WEBHOOK_COMMANDS = Registry()  # type: ignore[var-annotated]
 
 COMBINED_CLASSES = set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES)
 SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
@@ -142,7 +156,7 @@ def validate_schema(schema):
 
 
 async def handle_webhook(
-    hass: HomeAssistantType, webhook_id: str, request: Request
+    hass: HomeAssistant, webhook_id: str, request: Request
 ) -> Response:
     """Handle webhook callback."""
     if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
@@ -156,7 +170,7 @@ async def handle_webhook(
         req_data = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
-        return empty_okay_response(status=HTTP_BAD_REQUEST)
+        return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
 
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
@@ -183,7 +197,27 @@ async def handle_webhook(
 
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
-        webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+        try:
+            webhook_payload = _decrypt_payload(config_entry.data[CONF_SECRET], enc_data)
+            if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
+                data = {**config_entry.data, ATTR_NO_LEGACY_ENCRYPTION: True}
+                hass.config_entries.async_update_entry(config_entry, data=data)
+        except CryptoError:
+            if ATTR_NO_LEGACY_ENCRYPTION not in config_entry.data:
+                try:
+                    webhook_payload = _decrypt_payload_legacy(
+                        config_entry.data[CONF_SECRET], enc_data
+                    )
+                except CryptoError:
+                    _LOGGER.warning(
+                        "Ignoring encrypted payload because unable to decrypt"
+                    )
+                except ValueError:
+                    _LOGGER.warning("Ignoring invalid encrypted payload")
+            else:
+                _LOGGER.warning("Ignoring encrypted payload because unable to decrypt")
+        except ValueError:
+            _LOGGER.warning("Ignoring invalid encrypted payload")
 
     if webhook_type not in WEBHOOK_COMMANDS:
         _LOGGER.error(
@@ -257,21 +291,19 @@ async def webhook_fire_event(hass, config_entry, data):
 @validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(hass, config_entry, data):
     """Handle a request to HLS-stream a camera."""
-    camera = hass.states.get(data[ATTR_CAMERA_ENTITY_ID])
-
-    if camera is None:
+    if (camera_state := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
-    resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
+    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"}
 
-    if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
+    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CameraEntityFeature.STREAM:
         try:
-            resp["hls_path"] = await hass.components.camera.async_request_stream(
-                camera.entity_id, "hls"
+            resp["hls_path"] = await camera.async_request_stream(
+                hass, camera_state.entity_id, "hls"
             )
         except HomeAssistantError:
             resp["hls_path"] = None
@@ -285,7 +317,7 @@ async def webhook_stream_camera(hass, config_entry, data):
 @validate_schema(
     {
         str: {
-            vol.Required(ATTR_TEMPLATE): cv.template,
+            vol.Required(ATTR_TEMPLATE): cv.string,
             vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
         }
     }
@@ -295,10 +327,9 @@ async def webhook_render_template(hass, config_entry, data):
     resp = {}
     for key, item in data.items():
         try:
-            tpl = item[ATTR_TEMPLATE]
-            attach(hass, tpl)
+            tpl = template.Template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
-        except TemplateError as ex:
+        except template.TemplateError as ex:
             resp[key] = {"error": str(ex)}
 
     return webhook_response(resp, registration=config_entry.data)
@@ -306,16 +337,19 @@ async def webhook_render_template(hass, config_entry, data):
 
 @WEBHOOK_COMMANDS.register("update_location")
 @validate_schema(
-    {
-        vol.Optional(ATTR_LOCATION_NAME): cv.string,
-        vol.Required(ATTR_GPS): cv.gps,
-        vol.Required(ATTR_GPS_ACCURACY): cv.positive_int,
-        vol.Optional(ATTR_BATTERY): cv.positive_int,
-        vol.Optional(ATTR_SPEED): cv.positive_int,
-        vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-        vol.Optional(ATTR_COURSE): cv.positive_int,
-        vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-    }
+    vol.Schema(
+        cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
+        {
+            vol.Optional(ATTR_LOCATION_NAME): cv.string,
+            vol.Optional(ATTR_GPS): cv.gps,
+            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
+            vol.Optional(ATTR_BATTERY): cv.positive_int,
+            vol.Optional(ATTR_SPEED): cv.positive_int,
+            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
+            vol.Optional(ATTR_COURSE): cv.positive_int,
+            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+        },
+    )
 )
 async def webhook_update_location(hass, config_entry, data):
     """Handle an update location webhook."""
@@ -328,7 +362,7 @@ async def webhook_update_location(hass, config_entry, data):
 @WEBHOOK_COMMANDS.register("update_registration")
 @validate_schema(
     {
-        vol.Optional(ATTR_APP_DATA, default={}): dict,
+        vol.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
         vol.Required(ATTR_APP_VERSION): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_MANUFACTURER): cv.string,
@@ -340,7 +374,7 @@ async def webhook_update_registration(hass, config_entry, data):
     """Handle an update registration webhook."""
     new_registration = {**config_entry.data, **data}
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -389,22 +423,44 @@ async def webhook_enable_encryption(hass, config_entry, data):
     return json_response({"secret": secret})
 
 
+def _validate_state_class_sensor(value: dict):
+    """Validate we only set state class for sensors."""
+    if (
+        ATTR_SENSOR_STATE_CLASS in value
+        and value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR
+    ):
+        raise vol.Invalid("state_class only allowed for sensors")
+
+    return value
+
+
+def _gen_unique_id(webhook_id, sensor_unique_id):
+    """Return a unique sensor ID."""
+    return f"{webhook_id}_{sensor_unique_id}"
+
+
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
-    {
-        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-        vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
-            vol.Lower, vol.In(COMBINED_CLASSES)
-        ),
-        vol.Required(ATTR_SENSOR_NAME): cv.string,
-        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-        vol.Optional(ATTR_SENSOR_UOM): cv.string,
-        vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
-            None, bool, str, int, float
-        ),
-        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-    }
+    vol.All(
+        {
+            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
+                vol.Lower, vol.In(COMBINED_CLASSES)
+            ),
+            vol.Required(ATTR_SENSOR_NAME): cv.string,
+            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+            vol.Optional(ATTR_SENSOR_UOM): cv.string,
+            vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+                None, bool, str, int, float
+            ),
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
+            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
+            vol.Optional(ATTR_SENSOR_DEFAULT_DISABLED): bool,
+        },
+        _validate_state_class_sensor,
+    )
 )
 async def webhook_register_sensor(hass, config_entry, data):
     """Handle a register sensor webhook."""
@@ -412,8 +468,11 @@ async def webhook_register_sensor(hass, config_entry, data):
     unique_id = data[ATTR_SENSOR_UNIQUE_ID]
     device_name = config_entry.data[ATTR_DEVICE_NAME]
 
-    unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
-    existing_sensor = unique_store_key in hass.data[DOMAIN][entity_type]
+    unique_store_key = _gen_unique_id(config_entry.data[CONF_WEBHOOK_ID], unique_id)
+    entity_registry = er.async_get(hass)
+    existing_sensor = entity_registry.async_get_entity_id(
+        entity_type, DOMAIN, unique_store_key
+    )
 
     data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
 
@@ -422,25 +481,41 @@ async def webhook_register_sensor(hass, config_entry, data):
         _LOGGER.debug(
             "Re-register for %s of existing sensor %s", device_name, unique_id
         )
-        entry = hass.data[DOMAIN][entity_type][unique_store_key]
-        data = {**entry, **data}
 
-    hass.data[DOMAIN][entity_type][unique_store_key] = data
+        entry = entity_registry.async_get(existing_sensor)
+        changes = {}
 
-    hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        lambda: savable_state(hass), DELAY_SAVE
-    )
+        if (
+            new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
+        ) != entry.original_name:
+            changes["original_name"] = new_name
 
-    if existing_sensor:
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
+        for ent_reg_key, data_key in (
+            ("device_class", ATTR_SENSOR_DEVICE_CLASS),
+            ("unit_of_measurement", ATTR_SENSOR_UOM),
+            ("entity_category", ATTR_SENSOR_ENTITY_CATEGORY),
+            ("original_icon", ATTR_SENSOR_ICON),
+        ):
+            if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
+                changes[ent_reg_key] = data[data_key]
+
+        if changes:
+            entity_registry.async_update_entity(existing_sensor, **changes)
+
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, unique_store_key, data)
     else:
+        data[CONF_UNIQUE_ID] = unique_store_key
+        data[
+            CONF_NAME
+        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
         async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(
         {"success": True},
         registration=config_entry.data,
-        status=HTTP_CREATED,
+        status=HTTPStatus.CREATED,
     )
 
 
@@ -476,15 +551,19 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
+
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
 
         unique_id = sensor[ATTR_SENSOR_UNIQUE_ID]
 
-        unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
+        unique_store_key = _gen_unique_id(config_entry.data[CONF_WEBHOOK_ID], unique_id)
 
-        if unique_store_key not in hass.data[DOMAIN][entity_type]:
-            _LOGGER.error(
+        entity_registry = er.async_get(hass)
+        if not entity_registry.async_get_entity_id(
+            entity_type, DOMAIN, unique_store_key
+        ):
+            _LOGGER.debug(
                 "Refusing to update %s non-registered sensor: %s",
                 device_name,
                 unique_store_key,
@@ -495,8 +574,6 @@ async def webhook_update_sensor_states(hass, config_entry, data):
                 "error": {"code": ERR_SENSOR_NOT_REGISTERED, "message": err_msg},
             }
             continue
-
-        entry = hass.data[DOMAIN][entity_type][unique_store_key]
 
         try:
             sensor = sensor_schema_full(sensor)
@@ -514,17 +591,15 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        new_state = {**entry, **sensor}
-
-        hass.data[DOMAIN][entity_type][unique_store_key] = new_state
-
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+        sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+        async_dispatcher_send(
+            hass,
+            SIGNAL_SENSOR_UPDATE,
+            unique_store_key,
+            sensor,
+        )
 
         resp[unique_id] = {"success": True}
-
-    hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        lambda: savable_state(hass), DELAY_SAVE
-    )
 
     return webhook_response(resp, registration=config_entry.data)
 
@@ -559,10 +634,8 @@ async def webhook_get_config(hass, config_entry, data):
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    try:
-        resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-    except hass.components.cloud.CloudNotAvailable:
-        pass
+    with suppress(hass.components.cloud.CloudNotAvailable):
+        resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     return webhook_response(resp, registration=config_entry.data)
 

@@ -1,13 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Google Hangouts is already configured",
-      "unknown": "Unknown error occurred."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "invalid_login": "Invalid Login, please try again.",
       "invalid_2fa": "Invalid 2 Factor Authentication, please try again.",
-      "invalid_2fa_method": "Invalid 2FA Method (Verify on Phone)."
+      "invalid_2fa_method": "Invalid 2FA Method (verify on Phone)."
     },
     "step": {
       "user": {
@@ -16,11 +16,11 @@
           "password": "[%key:common::config_flow::data::password%]",
           "authorization_code": "Authorization Code (required for manual authentication)"
         },
-        "title": "Google Hangouts Login"
+        "title": "Google Chat Login"
       },
       "2fa": {
         "data": {
-          "2fa": "2FA Pin"
+          "2fa": "2FA PIN"
         },
         "title": "2-Factor-Authentication"
       }

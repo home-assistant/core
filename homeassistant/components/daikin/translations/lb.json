@@ -5,18 +5,18 @@
             "cannot_connect": "Feeler beim verbannen"
         },
         "error": {
-            "device_fail": "Onerwaarte Feeler",
-            "device_timeout": "Feeler beim verbannen",
-            "forbidden": "Ong\u00eblteg Authentifikatioun"
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API Schl\u00ebssel",
                     "host": "Apparat",
-                    "key": "API Schl\u00ebssel",
                     "password": "Passwuert"
                 },
-                "description": "Gitt d'IP Adresse vum Daikin AC an.\n\nRemarque: API Schl\u00ebssel a Passwuert gi vu BRP072Cxx a SKYFi Apparater respektiv benotzt.",
+                "description": "G\u00ebff d'IP Adresse vum Daikin AC an.\n\nRemarque: API Schl\u00ebssel a Passwuert gi vu BRP072Cxx a SKYFi Apparater benotzt.",
                 "title": "Daikin AC konfigur\u00e9ieren"
             }
         }

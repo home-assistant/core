@@ -1,4 +1,6 @@
 """Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
+from __future__ import annotations
+
 import logging
 import socket
 
@@ -6,11 +8,10 @@ from pyblackbird import get_blackbird
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,13 +22,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SERVICE_SETALLZONES
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
@@ -66,7 +68,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
     if DATA_BLACKBIRD not in hass.data:
         hass.data[DATA_BLACKBIRD] = {}
@@ -105,7 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices, True)
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         source = service.data.get(ATTR_SOURCE)
@@ -131,6 +138,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlackbirdZone(MediaPlayerEntity):
     """Representation of a Blackbird matrix zone."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, blackbird, sources, zone_id, zone_name):
         """Initialize new zone."""
         self._blackbird = blackbird
@@ -139,55 +152,28 @@ class BlackbirdZone(MediaPlayerEntity):
         # dict source name -> source_id
         self._source_name_id = {v: k for k, v in sources.items()}
         # ordered list of all source names
-        self._source_names = sorted(
+        self._attr_source_list = sorted(
             self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
         )
         self._zone_id = zone_id
-        self._name = zone_name
-        self._state = None
-        self._source = None
+        self._attr_name = zone_name
 
     def update(self):
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
             return
-        self._state = STATE_ON if state.power else STATE_OFF
+        self._attr_state = STATE_ON if state.power else STATE_OFF
         idx = state.av
         if idx in self._source_id_name:
-            self._source = self._source_id_name[idx]
+            self._attr_source = self._source_id_name[idx]
         else:
-            self._source = None
-
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the zone."""
-        return self._state
-
-    @property
-    def supported_features(self):
-        """Return flag of media commands that are supported."""
-        return SUPPORT_BLACKBIRD
+            self._attr_source = None
 
     @property
     def media_title(self):
         """Return the current source as media title."""
-        return self._source
-
-    @property
-    def source(self):
-        """Return the current input source of the device."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_names
+        return self.source
 
     def set_all_zones(self, source):
         """Set all zones to one source."""

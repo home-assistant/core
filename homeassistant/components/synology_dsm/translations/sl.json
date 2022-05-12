@@ -4,8 +4,6 @@
             "already_configured": "Gostitelj je \u017ee konfiguriran"
         },
         "error": {
-            "connection": "Napaka pri povezavi: preverite gostitelja, vrata in ssl",
-            "login": "Napaka pri prijavi: preverite svoje uporabni\u0161ko ime in geslo",
             "missing_data": "Manjkajo\u010di podatki: poskusite pozneje ali v drugi konfiguraciji",
             "otp_failed": "Dvostopenjska avtentikacija ni uspela. Poskusite z novim geslom",
             "unknown": "Neznana napaka: za ve\u010d podrobnosti preverite dnevnike"

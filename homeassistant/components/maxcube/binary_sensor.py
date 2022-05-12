@@ -1,65 +1,84 @@
 """Support for MAX! binary sensors via MAX! Cube."""
-import logging
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_KEY
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Iterate through all MAX! Devices and add window shutters."""
-    devices = []
+    devices: list[MaxCubeBinarySensorBase] = []
     for handler in hass.data[DATA_KEY].values():
-        cube = handler.cube
-        for device in cube.devices:
-            name = f"{cube.room_by_id(device.room_id).name} {device.name}"
-
+        for device in handler.cube.devices:
+            devices.append(MaxCubeBattery(handler, device))
             # Only add Window Shutters
-            if cube.is_windowshutter(device):
-                devices.append(MaxCubeShutter(handler, name, device.rf_address))
+            if device.is_windowshutter():
+                devices.append(MaxCubeShutter(handler, device))
 
     if devices:
         add_entities(devices)
 
 
-class MaxCubeShutter(BinarySensorEntity):
-    """Representation of a MAX! Cube Binary Sensor device."""
+class MaxCubeBinarySensorBase(BinarySensorEntity):
+    """Base class for maxcube binary sensors."""
 
-    def __init__(self, handler, name, rf_address):
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
-        self._name = name
-        self._sensor_type = DEVICE_CLASS_WINDOW
-        self._rf_address = rf_address
         self._cubehandle = handler
-        self._state = None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the BinarySensorEntity."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._sensor_type
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on/open."""
-        return self._state
+        self._device = device
+        self._room = handler.cube.room_by_id(device.room_id)
 
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-        device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        self._state = device.is_open
+
+
+class MaxCubeShutter(MaxCubeBinarySensorBase):
+    """Representation of a MAX! Cube Binary Sensor device."""
+
+    _attr_device_class = BinarySensorDeviceClass.WINDOW
+
+    def __init__(self, handler, device):
+        """Initialize MAX! Cube BinarySensorEntity."""
+        super().__init__(handler, device)
+
+        self._attr_name = f"{self._room.name} {self._device.name}"
+        self._attr_unique_id = self._device.serial
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on/open."""
+        return self._device.is_open
+
+
+class MaxCubeBattery(MaxCubeBinarySensorBase):
+    """Representation of a MAX! Cube Binary Sensor device."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
+    def __init__(self, handler, device):
+        """Initialize MAX! Cube BinarySensorEntity."""
+        super().__init__(handler, device)
+
+        self._attr_name = f"{self._room.name} {device.name} battery"
+        self._attr_unique_id = f"{self._device.serial}_battery"
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on/open."""
+        return self._device.battery == 1

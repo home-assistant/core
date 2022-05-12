@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat."
+            "already_configured": "El servei ja est\u00e0 configurat"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3 amb el servidor. Comprova l'amfitri\u00f3 i el port i torna-ho a provar. Assegurat que estas utilitzant la versi\u00f3 del servidor 1.7 o superior.",

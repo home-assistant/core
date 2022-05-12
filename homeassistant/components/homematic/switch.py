@@ -1,15 +1,21 @@
 """Support for HomeMatic switches."""
-import logging
+from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the HomeMatic switch platform."""
     if discovery_info is None:
         return

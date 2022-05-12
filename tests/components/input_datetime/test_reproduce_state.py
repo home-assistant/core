@@ -1,5 +1,6 @@
 """Test reproduce state for Input datetime."""
 from homeassistant.core import State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -19,11 +20,17 @@ async def test_reproducing_states(hass, caplog):
         "2010-10-10",
         {"has_date": True, "has_time": False},
     )
+    hass.states.async_set(
+        "input_datetime.invalid_data",
+        "unavailable",
+        {"has_date": False, "has_time": False},
+    )
 
     datetime_calls = async_mock_service(hass, "input_datetime", "set_datetime")
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("input_datetime.entity_datetime", "2010-10-10 01:20:00"),
             State("input_datetime.entity_time", "01:20:00"),
@@ -34,7 +41,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(datetime_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("input_datetime.entity_datetime", "not_supported"),
             State("input_datetime.entity_datetime", "not-valid-date"),
@@ -50,13 +58,15 @@ async def test_reproducing_states(hass, caplog):
     assert len(datetime_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("input_datetime.entity_datetime", "2011-10-10 02:20:00"),
             State("input_datetime.entity_time", "02:20:00"),
             State("input_datetime.entity_date", "2011-10-10"),
             # Should not raise
             State("input_datetime.non_existing", "2010-10-10 01:20:00"),
+            State("input_datetime.invalid_data", "2010-10-10 01:20:00"),
         ],
     )
 

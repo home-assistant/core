@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Punkt docelowy",
+                    "name": "Nazwa",
+                    "origin": "Punkt pocz\u0105tkowy",
+                    "region": "Region"
+                },
+                "description": "W polu Punkt pocz\u0105tkowy i Punkt docelowy, wprowad\u017a adres lub wsp\u00f3\u0142rz\u0119dne GPS (wsp\u00f3\u0142rz\u0119dne GPS musz\u0105 by\u0107 oddzielone przecinkiem). Mo\u017cesz r\u00f3wnie\u017c wprowadzi\u0107 identyfikator encji (entity_id), kt\u00f3ry dostarcza te informacje w swoim stanie, identyfikator jednostki z atrybutami szeroko\u015bci i d\u0142ugo\u015bci geograficznej lub przyjazn\u0105 nazw\u0119 strefy."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Unikaj prom\u00f3w?",
+                    "avoid_subscription_roads": "Unikaj dr\u00f3g wymagaj\u0105cych winiety / abonamentu?",
+                    "avoid_toll_roads": "Unikaj dr\u00f3g p\u0142atnych?",
+                    "excl_filter": "NIE MA podci\u0105gu w opisie wybranej trasy",
+                    "incl_filter": "Podci\u0105g w opisie wybranej trasy",
+                    "realtime": "Czas podr\u00f3\u017cy w czasie rzeczywistym?",
+                    "units": "Jednostki",
+                    "vehicle_type": "Typ pojazdu"
+                },
+                "description": "Dane wej\u015bciowe \u201epodci\u0105gu\u201d pozwol\u0105 Ci wymusi\u0107 na integracji u\u017cycie okre\u015blonej trasy lub omini\u0119cie okre\u015blonej trasy w obliczeniach dotycz\u0105cych czasu podr\u00f3\u017cy."
+            }
+        }
+    },
+    "title": "Czas podr\u00f3\u017cy Waze"
+}

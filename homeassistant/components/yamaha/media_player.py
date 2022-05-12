@@ -1,26 +1,18 @@
 """Support for Yamaha Receivers."""
+from __future__ import annotations
+
 import logging
 
 import requests
 import rxv
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -29,12 +21,26 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import SERVICE_ENABLE_OUTPUT, SERVICE_SELECT_SCENE
+from .const import (
+    CURSOR_TYPE_DOWN,
+    CURSOR_TYPE_LEFT,
+    CURSOR_TYPE_RETURN,
+    CURSOR_TYPE_RIGHT,
+    CURSOR_TYPE_SELECT,
+    CURSOR_TYPE_UP,
+    SERVICE_ENABLE_OUTPUT,
+    SERVICE_MENU_CURSOR,
+    SERVICE_SELECT_SCENE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CURSOR = "cursor"
 ATTR_ENABLED = "enabled"
 ATTR_PORT = "port"
 
@@ -45,17 +51,25 @@ CONF_SOURCE_NAMES = "source_names"
 CONF_ZONE_IGNORE = "zone_ignore"
 CONF_ZONE_NAMES = "zone_names"
 
+CURSOR_TYPE_MAP = {
+    CURSOR_TYPE_DOWN: rxv.RXV.menu_down.__name__,
+    CURSOR_TYPE_LEFT: rxv.RXV.menu_left.__name__,
+    CURSOR_TYPE_RETURN: rxv.RXV.menu_return.__name__,
+    CURSOR_TYPE_RIGHT: rxv.RXV.menu_right.__name__,
+    CURSOR_TYPE_SELECT: rxv.RXV.menu_sel.__name__,
+    CURSOR_TYPE_UP: rxv.RXV.menu_up.__name__,
+}
 DATA_YAMAHA = "yamaha_known_receivers"
 DEFAULT_NAME = "Yamaha Receiver"
 
 SUPPORT_YAMAHA = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_SELECT_SOUND_MODE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -77,11 +91,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: None, discovery_info: None):
+    def __init__(
+        self, config: ConfigType, discovery_info: DiscoveryInfoType | None
+    ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
-        self.ctrl_url = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
+        self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
         self.source_names = config.get(CONF_SOURCE_NAMES)
         self.zone_ignore = config.get(CONF_ZONE_IGNORE)
@@ -116,9 +132,13 @@ def _discovery(config_info):
     return receivers
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Yamaha platform."""
-
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
     # for. Map each device from its zone_id .
@@ -131,7 +151,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     entities = []
     for receiver in receivers:
-        if receiver.zone in config_info.zone_ignore:
+        if config_info.zone_ignore and receiver.zone in config_info.zone_ignore:
             continue
 
         entity = YamahaDevice(
@@ -152,7 +172,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
     # Register Service 'select_scene'
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SELECT_SCENE,
         {vol.Required(ATTR_SCENE): cv.string},
@@ -163,6 +183,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SERVICE_ENABLE_OUTPUT,
         {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
         "enable_output",
+    )
+    # Register Service 'menu_cursor'
+    platform.async_register_entity_service(
+        SERVICE_MENU_CURSOR,
+        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
+        YamahaDevice.menu_cursor.__name__,
     )
 
 
@@ -296,11 +322,13 @@ class YamahaDevice(MediaPlayerEntity):
 
         supports = self._playback_support
         mapping = {
-            "play": (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
-            "pause": SUPPORT_PAUSE,
-            "stop": SUPPORT_STOP,
-            "skip_f": SUPPORT_NEXT_TRACK,
-            "skip_r": SUPPORT_PREVIOUS_TRACK,
+            "play": (
+                MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
+            ),
+            "pause": MediaPlayerEntityFeature.PAUSE,
+            "stop": MediaPlayerEntityFeature.STOP,
+            "skip_f": MediaPlayerEntityFeature.NEXT_TRACK,
+            "skip_r": MediaPlayerEntityFeature.PREVIOUS_TRACK,
         }
         for attr, feature in mapping.items():
             if getattr(supports, attr, False):
@@ -381,6 +409,10 @@ class YamahaDevice(MediaPlayerEntity):
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
+
+    def menu_cursor(self, cursor):
+        """Press a menu cursor button."""
+        getattr(self.receiver, CURSOR_TYPE_MAP[cursor])()
 
     def set_scene(self, scene):
         """Set the current scene."""

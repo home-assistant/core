@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Csatlakoz\u00e1si hiba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Api kucs",
+                    "destination": "C\u00e9l",
+                    "name": "Elnevez\u00e9s",
+                    "origin": "Eredet"
+                },
+                "description": "Az eredet \u00e9s a c\u00e9l megad\u00e1sakor megadhat egy vagy t\u00f6bb helyet a pipa karakterrel elv\u00e1lasztva, c\u00edm, sz\u00e9less\u00e9gi / hossz\u00fas\u00e1gi koordin\u00e1t\u00e1k vagy Google helyazonos\u00edt\u00f3 form\u00e1j\u00e1ban. Amikor a helyet megadja egy Google helyazonos\u00edt\u00f3val, akkor az azonos\u00edt\u00f3t el\u0151taggal kell ell\u00e1tni a `hely_azonos\u00edt\u00f3:` sz\u00f3val."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "Elker\u00fcl",
+                    "language": "Nyelv",
+                    "mode": "Utaz\u00e1si m\u00f3d",
+                    "time": "Id\u0151",
+                    "time_type": "Id\u0151 t\u00edpusa",
+                    "transit_mode": "Tranzit m\u00f3d",
+                    "transit_routing_preference": "Tranzit \u00fatv\u00e1laszt\u00e1si be\u00e1ll\u00edt\u00e1s",
+                    "units": "Egys\u00e9gek"
+                },
+                "description": "Opcion\u00e1lisan megadhatja az indul\u00e1si id\u0151t vagy az \u00e9rkez\u00e9si id\u0151t. Indul\u00e1si id\u0151 megad\u00e1sakor megadhatja a \"most\", a Unix id\u0151b\u00e9lyegz\u0151t vagy a 24 \u00f3r\u00e1s id\u0151l\u00e1ncot, p\u00e9ld\u00e1ul a \"08:00:00\" karakterl\u00e1ncot. \u00c9rkez\u00e9si id\u0151 megad\u00e1sakor unix id\u0151b\u00e9lyeget vagy 24 \u00f3r\u00e1s id\u0151l\u00e1ncot haszn\u00e1lhat, p\u00e9ld\u00e1ul \"08:00:00\""
+            }
+        }
+    },
+    "title": "Google T\u00e9rk\u00e9p utaz\u00e1si id\u0151"
+}

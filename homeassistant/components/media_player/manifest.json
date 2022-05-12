@@ -3,6 +3,6 @@
   "name": "Media Player",
   "documentation": "https://www.home-assistant.io/integrations/media_player",
   "dependencies": ["http"],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

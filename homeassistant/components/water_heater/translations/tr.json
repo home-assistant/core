@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "{entity_name} kapat",
+            "turn_on": "{entity_name} a\u00e7\u0131n"
+        }
+    },
+    "state": {
+        "_": {
+            "eco": "Eko",
+            "electric": "Elektrik",
+            "gas": "Gaz",
+            "heat_pump": "Is\u0131 pompas\u0131",
+            "high_demand": "Y\u00fcksek talep",
+            "off": "Kapal\u0131",
+            "performance": "Performans"
+        }
+    }
+}

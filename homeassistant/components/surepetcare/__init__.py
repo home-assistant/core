@@ -1,183 +1,217 @@
-"""Support for Sure Petcare cat/pet flaps."""
-import logging
-from typing import Any, Dict, List
+"""The surepetcare integration."""
+from __future__ import annotations
 
-from surepy import (
-    SurePetcare,
-    SurePetcareAuthenticationError,
-    SurePetcareError,
-    SureProductID,
-)
+from datetime import timedelta
+import logging
+
+from surepy import Surepy, SurepyEntity
+from surepy.enums import EntityType, Location, LockState
+from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ID,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
-    CONF_TYPE,
+    CONF_TOKEN,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ATTR_FLAP_ID,
+    ATTR_LOCATION,
+    ATTR_LOCK_STATE,
+    ATTR_PET_NAME,
     CONF_FEEDERS,
     CONF_FLAPS,
-    CONF_PARENT,
     CONF_PETS,
-    CONF_PRODUCT_ID,
-    DATA_SURE_PETCARE,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    SPC,
+    SERVICE_SET_LOCK_STATE,
+    SERVICE_SET_PET_LOCATION,
     SURE_API_TIMEOUT,
-    TOPIC_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
+SCAN_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_FEEDERS, default=[]): vol.All(
-                    cv.ensure_list, [cv.positive_int]
-                ),
-                vol.Optional(CONF_FLAPS, default=[]): vol.All(
-                    cv.ensure_list, [cv.positive_int]
-                ),
-                vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    {
+                        vol.Required(CONF_USERNAME): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_FEEDERS): vol.All(
+                            cv.ensure_list, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FLAPS): vol.All(
+                            cv.ensure_list, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_PETS): vol.All(
+                            cv.ensure_list, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+                    },
+                    cv.deprecated(CONF_FEEDERS),
+                    cv.deprecated(CONF_FLAPS),
+                    cv.deprecated(CONF_PETS),
+                    cv.deprecated(CONF_SCAN_INTERVAL),
+                )
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass, config) -> bool:
-    """Initialize the Sure Petcare component."""
-    conf = config[DOMAIN]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sure Petcare integration."""
+    if DOMAIN not in config:
+        return True
 
-    # update interval
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-
-    # shared data
-    hass.data[DOMAIN] = hass.data[DATA_SURE_PETCARE] = {}
-
-    # sure petcare api connection
-    try:
-        surepy = SurePetcare(
-            conf[CONF_USERNAME],
-            conf[CONF_PASSWORD],
-            hass.loop,
-            async_get_clientsession(hass),
-            api_timeout=SURE_API_TIMEOUT,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
         )
-        await surepy.get_data()
-    except SurePetcareAuthenticationError:
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Sure Petcare from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    try:
+        hass.data[DOMAIN][entry.entry_id] = coordinator = SurePetcareDataCoordinator(
+            entry,
+            hass,
+        )
+    except SurePetcareAuthenticationError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
-        return False
+        raise ConfigEntryAuthFailed from error
     except SurePetcareError as error:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
-        return False
+        raise ConfigEntryNotReady from error
 
-    # add feeders
-    things = [
-        {CONF_ID: feeder, CONF_TYPE: SureProductID.FEEDER}
-        for feeder in conf[CONF_FEEDERS]
-    ]
+    await coordinator.async_config_entry_first_refresh()
 
-    # add flaps (don't differentiate between CAT and PET for now)
-    things.extend(
-        [
-            {CONF_ID: flap, CONF_TYPE: SureProductID.PET_FLAP}
-            for flap in conf[CONF_FLAPS]
-        ]
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    lock_state_service_schema = vol.Schema(
+        {
+            vol.Required(ATTR_FLAP_ID): vol.All(
+                cv.positive_int, vol.In(coordinator.data.keys())
+            ),
+            vol.Required(ATTR_LOCK_STATE): vol.All(
+                cv.string,
+                vol.Lower,
+                vol.In(coordinator.lock_states_callbacks.keys()),
+            ),
+        }
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_LOCK_STATE,
+        coordinator.handle_set_lock_state,
+        schema=lock_state_service_schema,
     )
 
-    # discover hubs the flaps/feeders are connected to
-    hub_ids = set()
-    for device in things.copy():
-        device_data = await surepy.device(device[CONF_ID])
-        if (
-            CONF_PARENT in device_data
-            and device_data[CONF_PARENT][CONF_PRODUCT_ID] == SureProductID.HUB
-            and device_data[CONF_PARENT][CONF_ID] not in hub_ids
-        ):
-            things.append(
-                {
-                    CONF_ID: device_data[CONF_PARENT][CONF_ID],
-                    CONF_TYPE: SureProductID.HUB,
-                }
-            )
-            hub_ids.add(device_data[CONF_PARENT][CONF_ID])
-
-    # add pets
-    things.extend(
-        [{CONF_ID: pet, CONF_TYPE: SureProductID.PET} for pet in conf[CONF_PETS]]
+    set_pet_location_schema = vol.Schema(
+        {
+            vol.Required(ATTR_PET_NAME): vol.In(coordinator.get_pets().keys()),
+            vol.Required(ATTR_LOCATION): vol.In(
+                [
+                    Location.INSIDE.name.title(),
+                    Location.OUTSIDE.name.title(),
+                ]
+            ),
+        }
     )
-
-    _LOGGER.debug("Devices and Pets to setup: %s", things)
-
-    spc = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(hass, surepy, things)
-
-    # initial update
-    await spc.async_update()
-
-    async_track_time_interval(hass, spc.async_update, scan_interval)
-
-    # load platforms
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("binary_sensor", DOMAIN, {}, config)
-    )
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("sensor", DOMAIN, {}, config)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PET_LOCATION,
+        coordinator.handle_set_pet_location,
+        schema=set_pet_location_schema,
     )
 
     return True
 
 
-class SurePetcareAPI:
-    """Define a generic Sure Petcare object."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    def __init__(self, hass, surepy: SurePetcare, ids: List[Dict[str, Any]]) -> None:
-        """Initialize the Sure Petcare object."""
-        self.hass = hass
-        self.surepy = surepy
-        self.ids = ids
-        self.states: Dict[str, Any] = {}
+    return unload_ok
 
-    async def async_update(self, arg: Any = None) -> None:
-        """Refresh Sure Petcare data."""
 
-        await self.surepy.get_data()
+class SurePetcareDataCoordinator(DataUpdateCoordinator):
+    """Handle Surepetcare data."""
 
-        for thing in self.ids:
-            sure_id = thing[CONF_ID]
-            sure_type = thing[CONF_TYPE]
+    def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:
+        """Initialize the data handler."""
+        self.surepy = Surepy(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            auth_token=entry.data[CONF_TOKEN],
+            api_timeout=SURE_API_TIMEOUT,
+            session=async_get_clientsession(hass),
+        )
+        self.lock_states_callbacks = {
+            LockState.UNLOCKED.name.lower(): self.surepy.sac.unlock,
+            LockState.LOCKED_IN.name.lower(): self.surepy.sac.lock_in,
+            LockState.LOCKED_OUT.name.lower(): self.surepy.sac.lock_out,
+            LockState.LOCKED_ALL.name.lower(): self.surepy.sac.lock,
+        }
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
-            try:
-                type_state = self.states.setdefault(sure_type, {})
+    async def _async_update_data(self) -> dict[int, SurepyEntity]:
+        """Get the latest data from Sure Petcare."""
+        try:
+            return await self.surepy.get_entities(refresh=True)
+        except SurePetcareAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Invalid username/password") from err
+        except SurePetcareError as err:
+            raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
-                if sure_type in [
-                    SureProductID.CAT_FLAP,
-                    SureProductID.PET_FLAP,
-                    SureProductID.FEEDER,
-                    SureProductID.HUB,
-                ]:
-                    type_state[sure_id] = await self.surepy.device(sure_id)
-                elif sure_type == SureProductID.PET:
-                    type_state[sure_id] = await self.surepy.pet(sure_id)
+    async def handle_set_lock_state(self, call: ServiceCall) -> None:
+        """Call when setting the lock state."""
+        flap_id = call.data[ATTR_FLAP_ID]
+        state = call.data[ATTR_LOCK_STATE]
+        await self.lock_states_callbacks[state](flap_id)
+        await self.async_request_refresh()
 
-            except SurePetcareError as error:
-                _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)
+    def get_pets(self) -> dict[str, int]:
+        """Get pets."""
+        pets = {}
+        for surepy_entity in self.data.values():
+            if surepy_entity.type == EntityType.PET and surepy_entity.name:
+                pets[surepy_entity.name] = surepy_entity.id
+        return pets
 
-        async_dispatcher_send(self.hass, TOPIC_UPDATE)
+    async def handle_set_pet_location(self, call: ServiceCall) -> None:
+        """Call when setting the pet location."""
+        pet_name = call.data[ATTR_PET_NAME]
+        location = call.data[ATTR_LOCATION]
+        device_id = self.get_pets()[pet_name]
+        await self.surepy.sac.set_pet_location(device_id, Location[location.upper()])
+        await self.async_request_refresh()

@@ -1,12 +1,12 @@
 {
-  "title": "Roon",
   "config": {
     "step": {
-      "user": {
-        "title": "Configure Roon Server",
-        "description": "Please enter your Roon server Hostname or IP.",
+      "user": {},
+      "fallback": {
+        "description": "Could not discover Roon server, please enter your Hostname and Port.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "link": {
@@ -16,8 +16,7 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "duplicate_entry": "That host has already been added."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

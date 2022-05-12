@@ -1,13 +1,16 @@
 """JSON utility functions."""
+from __future__ import annotations
+
 from collections import deque
+from collections.abc import Callable
 import json
 import logging
-import os
-import tempfile
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+
+from .file import write_utf8_file, write_utf8_file_atomic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,16 +23,14 @@ class WriteError(HomeAssistantError):
     """Error writing the data."""
 
 
-def load_json(
-    filename: str, default: Union[List, Dict, None] = None
-) -> Union[List, Dict]:
+def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore
+            return json.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -44,10 +45,11 @@ def load_json(
 
 def save_json(
     filename: str,
-    data: Union[List, Dict],
+    data: list | dict,
     private: bool = False,
     *,
-    encoder: Optional[Type[json.JSONEncoder]] = None,
+    encoder: type[json.JSONEncoder] | None = None,
+    atomic_writes: bool = False,
 ) -> None:
     """Save JSON data to a file.
 
@@ -60,32 +62,13 @@ def save_json(
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
-    tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
-    try:
-        # Modern versions of Python tempfile create this file with mode 0o600
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=tmp_path, delete=False
-        ) as fdesc:
-            fdesc.write(json_data)
-            tmp_filename = fdesc.name
-        if not private:
-            os.chmod(tmp_filename, 0o644)
-        os.replace(tmp_filename, filename)
-    except OSError as error:
-        _LOGGER.exception("Saving JSON file failed: %s", filename)
-        raise WriteError(error) from error
-    finally:
-        if os.path.exists(tmp_filename):
-            try:
-                os.remove(tmp_filename)
-            except OSError as err:
-                # If we are cleaning up then something else went wrong, so
-                # we should suppress likely follow-on errors in the cleanup
-                _LOGGER.error("JSON replacement cleanup failed: %s", err)
+    if atomic_writes:
+        write_utf8_file_atomic(filename, json_data, private)
+    else:
+        write_utf8_file(filename, json_data, private)
 
 
-def format_unserializable_data(data: Dict[str, Any]) -> str:
+def format_unserializable_data(data: dict[str, Any]) -> str:
     """Format output of find_paths in a friendly way.
 
     Format is comma separated: <path>=<value>(<type>)
@@ -95,7 +78,7 @@ def format_unserializable_data(data: Dict[str, Any]) -> str:
 
 def find_paths_unserializable_data(
     bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Find the paths to unserializable data.
 
     This method is slow! Only use for error handling.
@@ -112,12 +95,15 @@ def find_paths_unserializable_data(
         except (ValueError, TypeError):
             pass
 
-        # We convert states and events to dict so we can find bad data inside it
-        if isinstance(obj, State):
-            obj_path += f"(state: {obj.entity_id})"
-            obj = obj.as_dict()
-        elif isinstance(obj, Event):
-            obj_path += f"(event: {obj.event_type})"
+        # We convert objects with as_dict to their dict values so we can find bad data inside it
+        if hasattr(obj, "as_dict"):
+            desc = obj.__class__.__name__
+            if isinstance(obj, State):
+                desc += f": {obj.entity_id}"
+            elif isinstance(obj, Event):
+                desc += f": {obj.event_type}"
+
+            obj_path += f"({desc})"
             obj = obj.as_dict()
 
         if isinstance(obj, dict):

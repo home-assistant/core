@@ -1,11 +1,16 @@
 """Support for monitoring the state of Vultr subscriptions (VPS)."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_ALLOWED_BANDWIDTH,
@@ -37,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Vultr subscription (server) binary sensor."""
     vultr = hass.data[DATA_VULTR]
 
@@ -53,6 +63,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class VultrBinarySensor(BinarySensorEntity):
     """Representation of a Vultr subscription sensor."""
+
+    _attr_device_class = DEFAULT_DEVICE_CLASS
 
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr binary sensor."""
@@ -81,12 +93,7 @@ class VultrBinarySensor(BinarySensorEntity):
         return self.data["power_status"] == "running"
 
     @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Vultr subscription."""
         return {
             ATTR_ALLOWED_BANDWIDTH: self.data.get("allowed_bandwidth_gb"),

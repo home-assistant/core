@@ -22,7 +22,7 @@ from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_RSSI_DEVICE,
     ATTR_SABOTAGE,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
@@ -38,12 +38,10 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_access_point_cloud_connection_sensor(
-    hass, default_mock_hap_factory
-):
+async def test_hmip_home_cloud_connection_sensor(hass, default_mock_hap_factory):
     """Test HomematicipCloudConnectionSensor."""
-    entity_id = "binary_sensor.access_point_cloud_connection"
-    entity_name = "Access Point Cloud Connection"
+    entity_id = "binary_sensor.cloud_connection"
+    entity_name = "Cloud Connection"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
@@ -55,7 +53,7 @@ async def test_hmip_access_point_cloud_connection_sensor(
 
     assert ha_state.state == STATE_ON
 
-    await async_manipulate_test_data(hass, hmip_device, "connected", False)
+    await async_manipulate_test_data(hass, mock_hap.home, "connected", False)
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
@@ -154,7 +152,7 @@ async def test_hmip_contact_interface(hass, default_mock_hap_factory):
 
     await async_manipulate_test_data(hass, hmip_device, "windowState", None)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_OFF
+    assert ha_state.state == STATE_UNKNOWN
 
 
 async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
@@ -187,7 +185,7 @@ async def test_hmip_shutter_contact(hass, default_mock_hap_factory):
 
     await async_manipulate_test_data(hass, hmip_device, "windowState", None)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_OFF
+    assert ha_state.state == STATE_UNKNOWN
 
     # test common attributes
     assert ha_state.attributes[ATTR_RSSI_DEVICE] == -54
@@ -217,7 +215,7 @@ async def test_hmip_shutter_contact_optical(hass, default_mock_hap_factory):
 
     await async_manipulate_test_data(hass, hmip_device, "windowState", None)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_OFF
+    assert ha_state.state == STATE_UNKNOWN
 
     # test common attributes
     assert ha_state.attributes[ATTR_RSSI_DEVICE] == -72
@@ -540,3 +538,38 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap_factory):
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hmip_multi_contact_interface(hass, default_mock_hap_factory):
+    """Test HomematicipMultiContactInterface."""
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    device_model = "HmIPW-DRI32"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wired Eingangsmodul – 32-fach", "Licht Flur"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", WindowState.OPEN, channel=5
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", None, channel=5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "binary_sensor.licht_flur_5",
+        "Licht Flur 5",
+        "HmIP-FCI6",
+    )
+
+    assert ha_state.state == STATE_UNKNOWN

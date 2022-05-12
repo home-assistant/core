@@ -1,14 +1,14 @@
 """Config flow to configure WiLight."""
-import logging
 from urllib.parse import urlparse
 
 import pywilight
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"
@@ -16,16 +16,13 @@ CONF_MODEL_NAME = "model_name"
 WILIGHT_MANUFACTURER = "All Automacao Ltda"
 
 # List the components supported by this integration.
-ALLOWED_WILIGHT_COMPONENTS = ["light"]
-
-_LOGGER = logging.getLogger(__name__)
+ALLOWED_WILIGHT_COMPONENTS = ["cover", "fan", "light"]
 
 
 class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WiLight config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the WiLight flow."""
@@ -53,24 +50,24 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=self._title, data=data)
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered WiLight."""
         # Filter out basic information
         if (
-            ssdp.ATTR_SSDP_LOCATION not in discovery_info
-            or ssdp.ATTR_UPNP_MANUFACTURER not in discovery_info
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
-            or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info
-            or ssdp.ATTR_UPNP_MODEL_NUMBER not in discovery_info
+            not discovery_info.ssdp_location
+            or ssdp.ATTR_UPNP_MANUFACTURER not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
+            or ssdp.ATTR_UPNP_MODEL_NUMBER not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_wilight_device")
         # Filter out non-WiLight devices
-        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
+        if discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
             return self.async_abort(reason="not_wilight_device")
 
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
-        model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
+        host = urlparse(discovery_info.ssdp_location).hostname
+        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
 
         if not self._wilight_update(host, serial_number, model_name):
             return self.async_abort(reason="not_wilight_device")
@@ -87,7 +84,6 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
 

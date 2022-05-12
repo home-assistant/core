@@ -1,5 +1,4 @@
 """Support for AlarmDecoder devices."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -13,8 +12,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -36,15 +36,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["alarm_control_panel", "sensor", "binary_sensor"]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+]
 
 
-async def async_setup(hass, config):
-    """Set up for the AlarmDecoder devices."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AlarmDecoder config flow."""
     undo_listener = entry.add_update_listener(_update_listener)
 
@@ -130,25 +129,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     await open_connection()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a AlarmDecoder entry."""
     hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not unload_ok:
         return False
@@ -165,7 +155,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def _update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     _LOGGER.debug("AlarmDecoder options updated: %s", entry.as_dict()["options"])
     await hass.config_entries.async_reload(entry.entry_id)

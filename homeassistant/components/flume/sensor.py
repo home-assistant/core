@@ -4,20 +4,18 @@ import logging
 from numbers import Number
 
 from pyflume import FlumeData
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 from .const import (
     DEFAULT_NAME,
@@ -39,27 +37,12 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the platform into a config entry."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Flume sensor."""
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -88,119 +71,95 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             http_session=http_session,
         )
 
-        flume_data = FlumeSensorData(flume_device)
+        coordinator = _create_flume_device_coordinator(hass, flume_device)
 
-        for flume_query_sensor in FLUME_QUERIES_SENSOR.items():
-            flume_entity_list.append(
+        flume_entity_list.extend(
+            [
                 FlumeSensor(
-                    flume_data,
-                    flume_query_sensor,
-                    f"{device_friendly_name} {flume_query_sensor[1]['friendly_name']}",
+                    coordinator,
+                    flume_device,
+                    device_friendly_name,
                     device_id,
+                    description,
                 )
-            )
+                for description in FLUME_QUERIES_SENSOR
+            ]
+        )
 
     if flume_entity_list:
         async_add_entities(flume_entity_list)
 
 
-class FlumeSensor(Entity):
+class FlumeSensor(CoordinatorEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, flume_data, flume_query_sensor, name, device_id):
+    def __init__(
+        self,
+        coordinator,
+        flume_device,
+        name,
+        device_id,
+        description: SensorEntityDescription,
+    ):
         """Initialize the Flume sensor."""
-        self._flume_data = flume_data
-        self._flume_query_sensor = flume_query_sensor
-        self._name = name
-        self._device_id = device_id
-        self._undo_track_sensor = None
-        self._available = self._flume_data.available
-        self._state = None
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._flume_device = flume_device
+
+        self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{description.key}_{device_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            manufacturer="Flume, Inc.",
+            model="Flume Smart Water Monitor",
+            name=self.name,
+        )
 
     @property
-    def device_info(self):
-        """Device info for the flume sensor."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._device_id)},
-            "manufacturer": "Flume, Inc.",
-            "model": "Flume Smart Water Monitor",
-        }
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        return self._state
+        sensor_key = self.entity_description.key
+        if sensor_key not in self._flume_device.values:
+            return None
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        # This is in gallons per SCAN_INTERVAL
-        return self._flume_query_sensor[1]["unit_of_measurement"]
-
-    @property
-    def available(self):
-        """Device is available."""
-        return self._available
-
-    @property
-    def unique_id(self):
-        """Flume query and Device unique ID."""
-        return f"{self._flume_query_sensor[0]}_{self._device_id}"
-
-    def update(self):
-        """Get the latest data and updates the states."""
-
-        def format_state_value(value):
-            return round(value, 1) if isinstance(value, Number) else None
-
-        self._flume_data.update()
-        self._state = format_state_value(
-            self._flume_data.flume_device.values[self._flume_query_sensor[0]]
-        )
-        _LOGGER.debug(
-            "Updating sensor: '%s', value: '%s'",
-            self._name,
-            self._flume_data.flume_device.values[self._flume_query_sensor[0]],
-        )
-        self._available = self._flume_data.available
+        return _format_state_value(self._flume_device.values[sensor_key])
 
     async def async_added_to_hass(self):
         """Request an update when added."""
-        # We do ask for an update with async_add_entities()
+        await super().async_added_to_hass()
+        # We do not ask for an update with async_add_entities()
         # because it will update disabled entities
-        self.async_schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
 
 
-class FlumeSensorData:
-    """Get the latest data and update the states."""
+def _format_state_value(value):
+    return round(value, 1) if isinstance(value, Number) else None
 
-    def __init__(self, flume_device):
-        """Initialize the data object."""
-        self.flume_device = flume_device
-        self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+def _create_flume_device_coordinator(hass, flume_device):
+    """Create a data coordinator for the flume device."""
+
+    async def _async_update_data():
         """Get the latest data from the Flume."""
         _LOGGER.debug("Updating Flume data")
         try:
-            self.flume_device.update_force()
-        except Exception as ex:  # pylint: disable=broad-except
-            if self.available:
-                _LOGGER.error("Update of Flume data failed: %s", ex)
-            self.available = False
-            return
-        self.available = True
+            await hass.async_add_executor_job(flume_device.update_force)
+        except Exception as ex:
+            raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
             "Flume update details: %s",
             {
-                "values": self.flume_device.values,
-                "query_payload": self.flume_device.query_payload,
+                "values": flume_device.values,
+                "query_payload": flume_device.query_payload,
             },
         )
+
+    return DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=flume_device.device_id,
+        update_method=_async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=SCAN_INTERVAL,
+    )

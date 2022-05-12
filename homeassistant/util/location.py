@@ -3,16 +3,18 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+from __future__ import annotations
+
 import asyncio
-import collections
 import math
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, NamedTuple
 
 import aiohttp
 
-ELEVATION_URL = "https://api.open-elevation.com/api/v1/lookup"
-IP_API = "http://ip-api.com/json"
-IPAPI = "https://ipapi.co/json/"
+from homeassistant.const import __version__ as HA_VERSION
+
+WHOAMI_URL = "https://services.home-assistant.io/whoami/v1"
+WHOAMI_URL_DEV = "https://services-dev.home-assistant.workers.dev/whoami/v1"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -27,34 +29,28 @@ MILES_PER_KILOMETER = 0.621371
 MAX_ITERATIONS = 200
 CONVERGENCE_THRESHOLD = 1e-12
 
-LocationInfo = collections.namedtuple(
-    "LocationInfo",
-    [
-        "ip",
-        "country_code",
-        "country_name",
-        "region_code",
-        "region_name",
-        "city",
-        "zip_code",
-        "time_zone",
-        "latitude",
-        "longitude",
-        "use_metric",
-    ],
-)
+
+class LocationInfo(NamedTuple):
+    """Tuple with location information."""
+
+    ip: str
+    country_code: str
+    currency: str
+    region_code: str
+    region_name: str
+    city: str
+    zip_code: str
+    time_zone: str
+    latitude: float
+    longitude: float
+    use_metric: bool
 
 
 async def async_detect_location_info(
     session: aiohttp.ClientSession,
-) -> Optional[LocationInfo]:
+) -> LocationInfo | None:
     """Detect location information."""
-    data = await _get_ipapi(session)
-
-    if data is None:
-        data = await _get_ip_api(session)
-
-    if data is None:
+    if (data := await _get_whoami(session)) is None:
         return None
 
     data["use_metric"] = data["country_code"] not in ("US", "MM", "LR")
@@ -63,8 +59,8 @@ async def async_detect_location_info(
 
 
 def distance(
-    lat1: Optional[float], lon1: Optional[float], lat2: float, lon2: float
-) -> Optional[float]:
+    lat1: float | None, lon1: float | None, lat2: float, lon2: float
+) -> float | None:
     """Calculate the distance in meters between two points.
 
     Async friendly.
@@ -81,8 +77,8 @@ def distance(
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
 def vincenty(
-    point1: Tuple[float, float], point2: Tuple[float, float], miles: bool = False
-) -> Optional[float]:
+    point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
+) -> float | None:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
@@ -117,7 +113,7 @@ def vincenty(
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = math.atan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = 1 - sinAlpha ** 2
+        cosSqAlpha = 1 - sinAlpha**2
         try:
             cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
         except ZeroDivisionError:
@@ -126,14 +122,14 @@ def vincenty(
         LambdaPrev = Lambda
         Lambda = L + (1 - C) * FLATTENING * sinAlpha * (
             sigma
-            + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM ** 2))
+            + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM**2))
         )
         if abs(Lambda - LambdaPrev) < CONVERGENCE_THRESHOLD:
             break  # successful convergence
     else:
         return None  # failure to converge
 
-    uSq = cosSqAlpha * (AXIS_A ** 2 - AXIS_B ** 2) / (AXIS_B ** 2)
+    uSq = cosSqAlpha * (AXIS_A**2 - AXIS_B**2) / (AXIS_B**2)
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
     deltaSigma = (
@@ -144,12 +140,12 @@ def vincenty(
             + B
             / 4
             * (
-                cosSigma * (-1 + 2 * cos2SigmaM ** 2)
+                cosSigma * (-1 + 2 * cos2SigmaM**2)
                 - B
                 / 6
                 * cos2SigmaM
-                * (-3 + 4 * sinSigma ** 2)
-                * (-3 + 4 * cos2SigmaM ** 2)
+                * (-3 + 4 * sinSigma**2)
+                * (-3 + 4 * cos2SigmaM**2)
             )
         )
     )
@@ -162,56 +158,29 @@ def vincenty(
     return round(s, 6)
 
 
-async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
-    """Query ipapi.co for location data."""
+async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
+    """Query whoami.home-assistant.io for location data."""
     try:
-        resp = await session.get(IPAPI, timeout=5)
+        resp = await session.get(
+            WHOAMI_URL_DEV if HA_VERSION.endswith("0.dev0") else WHOAMI_URL, timeout=30
+        )
     except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
     try:
         raw_info = await resp.json()
     except (aiohttp.ClientError, ValueError):
-        return None
-
-    # ipapi allows 30k free requests/month. Some users exhaust those.
-    if raw_info.get("latitude") == "Sign up to access":
         return None
 
     return {
         "ip": raw_info.get("ip"),
         "country_code": raw_info.get("country"),
-        "country_name": raw_info.get("country_name"),
+        "currency": raw_info.get("currency"),
         "region_code": raw_info.get("region_code"),
         "region_name": raw_info.get("region"),
         "city": raw_info.get("city"),
-        "zip_code": raw_info.get("postal"),
+        "zip_code": raw_info.get("postal_code"),
         "time_zone": raw_info.get("timezone"),
-        "latitude": raw_info.get("latitude"),
-        "longitude": raw_info.get("longitude"),
-    }
-
-
-async def _get_ip_api(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
-    """Query ip-api.com for location data."""
-    try:
-        resp = await session.get(IP_API, timeout=5)
-    except (aiohttp.ClientError, asyncio.TimeoutError):
-        return None
-
-    try:
-        raw_info = await resp.json()
-    except (aiohttp.ClientError, ValueError):
-        return None
-    return {
-        "ip": raw_info.get("query"),
-        "country_code": raw_info.get("countryCode"),
-        "country_name": raw_info.get("country"),
-        "region_code": raw_info.get("region"),
-        "region_name": raw_info.get("regionName"),
-        "city": raw_info.get("city"),
-        "zip_code": raw_info.get("zip"),
-        "time_zone": raw_info.get("timezone"),
-        "latitude": raw_info.get("lat"),
-        "longitude": raw_info.get("lon"),
+        "latitude": float(raw_info.get("latitude")),
+        "longitude": float(raw_info.get("longitude")),
     }

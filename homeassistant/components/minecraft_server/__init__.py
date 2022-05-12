@@ -1,81 +1,67 @@
 """The Minecraft Server integration."""
+from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
 
 from mcstatus.server import MinecraftServer as MCStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import helpers
 from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the Minecraft Server component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
-    unique_id = config_entry.unique_id
+    unique_id = entry.unique_id
     _LOGGER.debug(
         "Creating server instance for '%s' (%s)",
-        config_entry.data[CONF_NAME],
-        config_entry.data[CONF_HOST],
+        entry.data[CONF_NAME],
+        entry.data[CONF_HOST],
     )
-    server = MinecraftServer(hass, unique_id, config_entry.data)
+    server = MinecraftServer(hass, unique_id, entry.data)
     domain_data[unique_id] = server
     await server.async_update()
     server.start_periodic_update()
 
     # Set up platforms.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Minecraft Server config entry."""
     unique_id = config_entry.unique_id
     server = hass.data[DOMAIN][unique_id]
 
     # Unload platforms.
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in PLATFORMS
-        ]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     # Clean up.
     server.stop_periodic_update()
     hass.data[DOMAIN].pop(unique_id)
 
-    return True
+    return unload_ok
 
 
 class MinecraftServer:
@@ -85,7 +71,7 @@ class MinecraftServer:
     _MAX_RETRIES_STATUS = 3
 
     def __init__(
-        self, hass: HomeAssistantType, unique_id: str, config_data: ConfigType
+        self, hass: HomeAssistant, unique_id: str, config_data: ConfigType
     ) -> None:
         """Initialize server instance."""
         self._hass = hass
@@ -109,6 +95,7 @@ class MinecraftServer:
         self.players_online = None
         self.players_max = None
         self.players_list = None
+        self.motd = None
 
         # Dispatcher signal name
         self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
@@ -193,6 +180,7 @@ class MinecraftServer:
             self.players_online = status_response.players.online
             self.players_max = status_response.players.max
             self.latency_time = status_response.latency
+            self.motd = (status_response.description).get("text")
             self.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
@@ -215,6 +203,7 @@ class MinecraftServer:
             self.players_max = None
             self.latency_time = None
             self.players_list = None
+            self.motd = None
 
             # Inform user once about failed update if necessary.
             if not self._last_status_request_failed:
@@ -238,15 +227,15 @@ class MinecraftServerEntity(Entity):
         self._name = f"{server.name} {type_name}"
         self._icon = icon
         self._unique_id = f"{self._server.unique_id}-{type_name}"
-        self._device_info = {
-            "identifiers": {(DOMAIN, self._server.unique_id)},
-            "name": self._server.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"Minecraft Server ({self._server.version})",
-            "sw_version": self._server.protocol_version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._server.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=f"Minecraft Server ({self._server.version})",
+            name=self._server.name,
+            sw_version=self._server.protocol_version,
+        )
         self._device_class = device_class
-        self._device_state_attributes = None
+        self._extra_state_attributes = None
         self._disconnect_dispatcher = None
 
     @property
@@ -258,11 +247,6 @@ class MinecraftServerEntity(Entity):
     def unique_id(self) -> str:
         """Return unique ID."""
         return self._unique_id
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information."""
-        return self._device_info
 
     @property
     def device_class(self) -> str:

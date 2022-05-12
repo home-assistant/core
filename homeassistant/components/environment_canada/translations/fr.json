@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "bad_station_id": "L'ID de station est non valide, manquant ou introuvable dans la base de donn\u00e9es des ID de stations",
+            "cannot_connect": "\u00c9chec de connexion",
+            "error_response": "R\u00e9ponse d'Environnement Canada par erreur",
+            "too_many_attempts": "Les connexions \u00e0 Environnement Canada sont limit\u00e9es en termes de taux; R\u00e9essayez dans 60 secondes",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Langue des informations m\u00e9t\u00e9orologiques",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "station": "ID de la station m\u00e9t\u00e9orologique"
+                },
+                "description": "Un ID de station ou une latitude/longitude doit \u00eatre sp\u00e9cifi\u00e9. La latitude/longitude par d\u00e9faut utilis\u00e9e sont les valeurs configur\u00e9es dans votre installation Home Assistant. La station m\u00e9t\u00e9o la plus proche des coordonn\u00e9es sera utilis\u00e9e si vous sp\u00e9cifiez des coordonn\u00e9es. Si un code de station est utilis\u00e9, il doit suivre le format : PP/code, o\u00f9 PP est la province \u00e0 deux lettres et le code est l'ID de la station. La liste des identifiants de station peut \u00eatre trouv\u00e9e ici : https://dd.weather.gc.ca/citypage_weather/docs/site_list_towns_en.csv. Les informations m\u00e9t\u00e9orologiques peuvent \u00eatre r\u00e9cup\u00e9r\u00e9es en anglais ou en fran\u00e7ais.",
+                "title": "Environnement Canada\u00a0: emplacement m\u00e9t\u00e9o et langue"
+            }
+        }
+    }
+}

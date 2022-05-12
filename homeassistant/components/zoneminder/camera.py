@@ -1,67 +1,52 @@
 """Support for ZoneMinder camera streaming."""
+from __future__ import annotations
+
 import logging
-from typing import Callable, List, Optional
 
-from zoneminder.monitor import Monitor
-
-from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL,
-    CONF_STILL_IMAGE_URL,
-    MjpegCamera,
-    filter_urllib3_logging,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .common import get_client_from_data
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
+    cameras = []
+    for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
+        if not (monitors := zm_client.get_monitors()):
+            _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
+            return
 
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
-) -> None:
-    """Set up the sensor config entry."""
-    zm_client = get_client_from_data(hass, config_entry.unique_id)
-
-    async_add_entities(
-        [
-            ZoneMinderCamera(monitor, zm_client.verify_ssl, config_entry)
-            for monitor in await hass.async_add_job(zm_client.get_monitors)
-        ]
-    )
+        for monitor in monitors:
+            _LOGGER.info("Initializing camera %s", monitor.id)
+            cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
+    add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, monitor: Monitor, verify_ssl: bool, config_entry: ConfigEntry):
+    def __init__(self, monitor, verify_ssl):
         """Initialize as a subclass of MjpegCamera."""
-        device_info = {
-            CONF_NAME: monitor.name,
-            CONF_MJPEG_URL: monitor.mjpeg_image_url,
-            CONF_STILL_IMAGE_URL: monitor.still_image_url,
-            CONF_VERIFY_SSL: verify_ssl,
-        }
-        super().__init__(device_info)
+        super().__init__(
+            name=monitor.name,
+            mjpeg_url=monitor.mjpeg_image_url,
+            still_image_url=monitor.still_image_url,
+            verify_ssl=verify_ssl,
+        )
         self._is_recording = None
         self._is_available = None
         self._monitor = monitor
-        self._config_entry = config_entry
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return f"{self._config_entry.unique_id}_{self._monitor.id}_camera"
 
     @property
     def should_poll(self):

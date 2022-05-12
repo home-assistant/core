@@ -1,15 +1,18 @@
 """Config flow for Vizio."""
+from __future__ import annotations
+
 import copy
 import logging
 import socket
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pyvizio import VizioAsync, async_guess_device_type
 from pyvizio.const import APP_HOME
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
+from homeassistant.components import zeroconf
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_IMPORT,
@@ -24,13 +27,11 @@ from homeassistant.const import (
     CONF_INCLUDE,
     CONF_NAME,
     CONF_PIN,
-    CONF_PORT,
-    CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -48,7 +49,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
+def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
     """
     Return schema defaults for init step based on user input/config dict.
 
@@ -67,7 +68,11 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
             vol.Required(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
-            ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
+            ): vol.All(
+                str,
+                vol.Lower,
+                vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
+            ),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
@@ -76,7 +81,7 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     )
 
 
-def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
+def _get_pairing_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
     """
     Return schema defaults for pairing data based on user input.
 
@@ -107,9 +112,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize vizio options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the vizio options."""
         if user_input is not None:
             if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
@@ -135,7 +138,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
             }
         )
 
-        if self.config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV:
+        if self.config_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV:
             default_include_or_exclude = (
                 CONF_EXCLUDE
                 if self.config_entry.options
@@ -158,10 +161,10 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                     ): cv.multi_select(
                         [
                             APP_HOME["name"],
-                            *[
+                            *(
                                 app["name"]
                                 for app in self.hass.data[DOMAIN][CONF_APPS].data
-                            ],
+                            ),
                         ]
                     ),
                 }
@@ -174,7 +177,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -191,7 +193,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data = None
         self._apps = {}
 
-    async def _create_entry(self, input_dict: Dict[str, Any]) -> Dict[str, Any]:
+    async def _create_entry(self, input_dict: dict[str, Any]) -> FlowResult:
         """Create vizio config entry."""
         # Remove extra keys that will not be used by entry setup
         input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
@@ -202,44 +204,42 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
-    async def async_step_user(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
-            unique_id = await VizioAsync.get_unique_id(
-                user_input[CONF_HOST],
-                user_input[CONF_DEVICE_CLASS],
-                session=async_get_clientsession(self.hass, False),
-            )
-
-            if not unique_id:
-                errors[CONF_HOST] = "cannot_connect"
-            else:
-                # Set unique ID and abort if a flow with the same unique ID is already in progress
-                existing_entry = await self.async_set_unique_id(
-                    unique_id=unique_id, raise_on_progress=True
+            if self.unique_id is None:
+                unique_id = await VizioAsync.get_unique_id(
+                    user_input[CONF_HOST],
+                    user_input[CONF_DEVICE_CLASS],
+                    session=async_get_clientsession(self.hass, False),
                 )
-                # If device was discovered, abort if existing entry found, otherwise display an error
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-                if self.context["source"] == SOURCE_ZEROCONF:
-                    self._abort_if_unique_id_configured()
-                elif existing_entry:
+
+                # Check if unique ID was found, set unique ID, and abort if a flow with
+                # the same unique ID is already in progress
+                if not unique_id:
+                    errors[CONF_HOST] = "cannot_connect"
+                elif (
+                    await self.async_set_unique_id(
+                        unique_id=unique_id, raise_on_progress=True
+                    )
+                    is not None
+                ):
                     errors[CONF_HOST] = "existing_config_entry_found"
 
             if not errors:
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 if self._must_show_form and self.context["source"] == SOURCE_ZEROCONF:
                     # Discovery should always display the config form before trying to
                     # create entry so that user can update default config options
                     self._must_show_form = False
                 elif user_input[
                     CONF_DEVICE_CLASS
-                ] == DEVICE_CLASS_SPEAKER or user_input.get(CONF_ACCESS_TOKEN):
+                ] == MediaPlayerDeviceClass.SPEAKER or user_input.get(
+                    CONF_ACCESS_TOKEN
+                ):
                     # Ensure config is valid for a device
                     if not await VizioAsync.validate_ha_config(
                         user_input[CONF_HOST],
@@ -251,7 +251,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     if not errors:
                         return await self._create_entry(user_input)
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 elif self._must_show_form and self.context["source"] == SOURCE_IMPORT:
                     # Import should always display the config form if CONF_ACCESS_TOKEN
                     # wasn't included but is needed so that the user can choose to update
@@ -271,19 +270,19 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = self._user_schema or _get_config_schema()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         if errors and self.context["source"] == SOURCE_IMPORT:
             # Log an error message if import config flow fails since otherwise failure is silent
             _LOGGER.error(
-                "configuration.yaml import failure: %s", ", ".join(errors.values())
+                "Importing from configuration.yaml failed: %s",
+                ", ".join(errors.values()),
             )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             # If source is ignore bypass host check and continue through loop
             if entry.source == SOURCE_IGNORE:
                 continue
@@ -343,31 +342,46 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
-        self, discovery_info: Optional[DiscoveryInfoType] = None
-    ) -> Dict[str, Any]:
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-
-        discovery_info[
-            CONF_HOST
-        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        host = discovery_info.host
+        # If host already has port, no need to add it again
+        if ":" not in host:
+            host = f"{host}:{discovery_info.port}"
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
-        num_chars_to_strip = len(discovery_info[CONF_TYPE]) + 1
-        discovery_info[CONF_NAME] = discovery_info[CONF_NAME][:-num_chars_to_strip]
+        num_chars_to_strip = len(discovery_info.type) + 1
+        name = discovery_info.name[:-num_chars_to_strip]
 
-        discovery_info[CONF_DEVICE_CLASS] = await async_guess_device_type(
-            discovery_info[CONF_HOST]
+        device_class = await async_guess_device_type(host)
+
+        # Set unique ID early for discovery flow so we can abort if needed
+        unique_id = await VizioAsync.get_unique_id(
+            host,
+            device_class,
+            session=async_get_clientsession(self.hass, False),
         )
+
+        if not unique_id:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
+        self._abort_if_unique_id_configured()
 
         # Form must be shown after discovery so user can confirm/update configuration
         # before ConfigEntry creation.
         self._must_show_form = True
-        return await self.async_step_user(user_input=discovery_info)
+        return await self.async_step_user(
+            user_input={
+                CONF_HOST: host,
+                CONF_NAME: name,
+                CONF_DEVICE_CLASS: device_class,
+            }
+        )
 
-    async def async_step_pair_tv(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    async def async_step_pair_tv(self, user_input: dict[str, Any] = None) -> FlowResult:
         """
         Start pairing process for TV.
 
@@ -416,7 +430,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
                 self._must_show_form = True
 
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 if self.context["source"] == SOURCE_IMPORT:
                     # If user is pairing via config import, show different message
                     return await self.async_step_pairing_complete_import()
@@ -433,7 +446,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _pairing_complete(self, step_id: str) -> Dict[str, Any]:
+    async def _pairing_complete(self, step_id: str) -> FlowResult:
         """Handle config flow completion."""
         if not self._must_show_form:
             return await self._create_entry(self._data)
@@ -441,13 +454,12 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._must_show_form = False
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema({}),
             description_placeholders={"access_token": self._data[CONF_ACCESS_TOKEN]},
         )
 
     async def async_step_pairing_complete(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResult:
         """
         Complete non-import sourced config flow.
 
@@ -456,8 +468,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._pairing_complete("pairing_complete")
 
     async def async_step_pairing_complete_import(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResult:
         """
         Complete import sourced config flow.
 

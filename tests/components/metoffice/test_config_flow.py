@@ -1,7 +1,8 @@
 """Test the National Weather Service (NWS) config flow."""
 import json
+from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
 
 from .const import (
@@ -12,7 +13,6 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
@@ -26,7 +26,6 @@ async def test_form(hass, requests_mock):
     all_sites = json.dumps(mock_json["all_sites"])
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -34,14 +33,13 @@ async def test_form(hass, requests_mock):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.metoffice.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.metoffice.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": TEST_API_KEY}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_SITE_NAME_WAVERTREE
@@ -51,8 +49,6 @@ async def test_form(hass, requests_mock):
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -69,6 +65,10 @@ async def test_form_already_configured(hass, requests_mock):
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
         "/public/data/val/wxfcs/all/json/354107?res=3hourly",
+        text="",
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily",
         text="",
     )
 

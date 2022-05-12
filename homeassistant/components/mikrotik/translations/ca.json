@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikrotik ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "La connexi\u00f3 no ha tingut \u00e8xit",
-            "name_exists": "El nom existeix",
-            "wrong_credentials": "Credencials incorrectes"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "name_exists": "El nom existeix"
         },
         "step": {
             "user": {

@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "unknown": "Erreur inattendue",
-            "wrong_info_relay_modes": "La s\u00e9lection du mode de relais doit \u00eatre monostable ou bistable."
+            "unknown": "Erreur inattendue"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "Configurer le tableau"
             }
         }
-    },
-    "title": "Automatisation ProgettiHWSW"
+    }
 }

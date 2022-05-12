@@ -12,10 +12,14 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILES,
+    LENGTH_YARD,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
 
@@ -37,7 +41,13 @@ DEFAULT_PROXIMITY_ZONE = "home"
 DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
-UNITS = [LENGTH_KILOMETERS, LENGTH_METERS, "mi", LENGTH_FEET]
+UNITS = [
+    LENGTH_METERS,
+    LENGTH_KILOMETERS,
+    LENGTH_FEET,
+    LENGTH_YARD,
+    LENGTH_MILES,
+]
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -56,18 +66,20 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup_proximity_component(hass, name, config):
+def setup_proximity_component(
+    hass: HomeAssistant, name: str, config: ConfigType
+) -> bool:
     """Set up the individual proximity component."""
-    ignored_zones = config.get(CONF_IGNORED_ZONES)
-    proximity_devices = config.get(CONF_DEVICES)
-    tolerance = config.get(CONF_TOLERANCE)
+    ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
+    proximity_devices: list[str] = config[CONF_DEVICES]
+    tolerance: int = config[CONF_TOLERANCE]
     proximity_zone = name
-    unit_of_measurement = config.get(
+    unit_of_measurement: str = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = f"zone.{config.get(CONF_ZONE)}"
+    zone_id = f"zone.{config[CONF_ZONE]}"
 
-    proximity = Proximity(
+    proximity = Proximity(  # type:ignore[no-untyped-call]
         hass,
         proximity_zone,
         DEFAULT_DIST_TO_ZONE,
@@ -88,7 +100,7 @@ def setup_proximity_component(hass, name, config):
     return True
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Get the zones and offsets from configuration.yaml."""
     for zone, proximity_config in config[DOMAIN].items():
         setup_proximity_component(hass, zone, proximity_config)
@@ -140,7 +152,7 @@ class Proximity(Entity):
         return self._unit_of_measurement
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_DIR_OF_TRAVEL: self.dir_of_travel, ATTR_NEAREST: self.nearest}
 
@@ -156,9 +168,7 @@ class Proximity(Entity):
 
         # Check for devices in the monitored zone.
         for device in self.proximity_devices:
-            device_state = self.hass.states.get(device)
-
-            if device_state is None:
+            if (device_state := self.hass.states.get(device)) is None:
                 devices_to_calculate = True
                 continue
 
@@ -222,10 +232,10 @@ class Proximity(Entity):
         closest_device: str = None
         dist_to_zone: float = None
 
-        for device in distances_to_zone:
-            if not dist_to_zone or distances_to_zone[device] < dist_to_zone:
+        for device, zone in distances_to_zone.items():
+            if not dist_to_zone or zone < dist_to_zone:
                 closest_device = device
-                dist_to_zone = distances_to_zone[device]
+                dist_to_zone = zone
 
         # If the closest device is one of the other devices.
         if closest_device != entity:

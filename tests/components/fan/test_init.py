@@ -1,7 +1,5 @@
 """Tests for fan platforms."""
 
-import unittest
-
 import pytest
 
 from homeassistant.components.fan import FanEntity
@@ -12,32 +10,75 @@ class BaseFan(FanEntity):
 
     def __init__(self):
         """Initialize the fan."""
-        pass
 
 
-class TestFanEntity(unittest.TestCase):
-    """Test coverage for base fan entity class."""
+def test_fanentity():
+    """Test fan entity methods."""
+    fan = BaseFan()
+    assert fan.state == "off"
+    assert fan.preset_modes is None
+    assert fan.supported_features == 0
+    assert fan.percentage_step == 1
+    assert fan.speed_count == 100
+    assert fan.capability_attributes == {}
+    # Test set_speed not required
+    with pytest.raises(NotImplementedError):
+        fan.oscillate(True)
+    with pytest.raises(AttributeError):
+        fan.set_speed("low")
+    with pytest.raises(NotImplementedError):
+        fan.set_percentage(0)
+    with pytest.raises(NotImplementedError):
+        fan.set_preset_mode("auto")
+    with pytest.raises(NotImplementedError):
+        fan.turn_on()
+    with pytest.raises(NotImplementedError):
+        fan.turn_off()
 
-    def setUp(self):
-        """Set up test data."""
-        self.fan = BaseFan()
-        self.addCleanup(self.tear_down_cleanup)
 
-    def tear_down_cleanup(self):
-        """Tear down unit test data."""
-        self.fan = None
+async def test_async_fanentity(hass):
+    """Test async fan entity methods."""
+    fan = BaseFan()
+    fan.hass = hass
+    assert fan.state == "off"
+    assert fan.preset_modes is None
+    assert fan.supported_features == 0
+    assert fan.percentage_step == 1
+    assert fan.speed_count == 100
+    assert fan.capability_attributes == {}
+    # Test set_speed not required
+    with pytest.raises(NotImplementedError):
+        await fan.async_oscillate(True)
+    with pytest.raises(AttributeError):
+        await fan.async_set_speed("low")
+    with pytest.raises(NotImplementedError):
+        await fan.async_set_percentage(0)
+    with pytest.raises(NotImplementedError):
+        await fan.async_set_preset_mode("auto")
+    with pytest.raises(NotImplementedError):
+        await fan.async_turn_on()
+    with pytest.raises(NotImplementedError):
+        await fan.async_turn_off()
+    with pytest.raises(NotImplementedError):
+        await fan.async_increase_speed()
+    with pytest.raises(NotImplementedError):
+        await fan.async_decrease_speed()
 
-    def test_fanentity(self):
-        """Test fan entity methods."""
-        assert self.fan.state == "off"
-        assert len(self.fan.speed_list) == 0
-        assert self.fan.supported_features == 0
-        assert self.fan.capability_attributes == {}
-        # Test set_speed not required
-        self.fan.oscillate(True)
-        with pytest.raises(NotImplementedError):
-            self.fan.set_speed("slow")
-        with pytest.raises(NotImplementedError):
-            self.fan.turn_on()
-        with pytest.raises(NotImplementedError):
-            self.fan.turn_off()
+
+@pytest.mark.parametrize(
+    "attribute_name, attribute_value",
+    [
+        ("current_direction", "forward"),
+        ("oscillating", True),
+        ("percentage", 50),
+        ("preset_mode", "medium"),
+        ("preset_modes", ["low", "medium", "high"]),
+        ("speed_count", 50),
+        ("supported_features", 1),
+    ],
+)
+def test_fanentity_attributes(attribute_name, attribute_value):
+    """Test fan entity attribute shorthand."""
+    fan = BaseFan()
+    setattr(fan, f"_attr_{attribute_name}", attribute_value)
+    assert getattr(fan, attribute_name) == attribute_value

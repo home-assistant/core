@@ -1,0 +1,148 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "usb_confirm": {
+        "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
+      },
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+        "data": {
+          "use_addon": "Use the Z-Wave JS Supervisor add-on"
+        }
+      },
+      "install_addon": {
+        "title": "The Z-Wave JS add-on installation has started"
+      },
+      "configure_addon": {
+        "title": "Enter the Z-Wave JS add-on configuration",
+        "description": "The add-on will generate security keys if those fields are left empty.",
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]",
+          "s0_legacy_key": "S0 Key (Legacy)",
+          "s2_authenticated_key": "S2 Authenticated Key",
+          "s2_unauthenticated_key": "S2 Unauthenticated Key",
+          "s2_access_control_key": "S2 Access Control Key"
+        }
+      },
+      "start_addon": {
+        "title": "The Z-Wave JS add-on is starting."
+      },
+      "hassio_confirm": {
+        "title": "Set up Z-Wave JS integration with the Z-Wave JS add-on"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the Z-Wave JS Server with home ID {home_id} found at {url} to Home Assistant?",
+        "title": "Discovered Z-Wave JS Server"
+      }
+    },
+    "error": {
+      "addon_start_failed": "Failed to start the Z-Wave JS add-on. Check the configuration.",
+      "invalid_ws_url": "Invalid websocket URL",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
+      "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
+      "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
+      "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
+      "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "discovery_requires_supervisor": "Discovery requires the supervisor.",
+      "not_zwave_device": "Discovered device is not a Z-Wave device."
+    },
+    "progress": {
+      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
+      "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
+    }
+  },
+  "options": {
+    "step": {
+      "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+        "data": {
+          "use_addon": "Use the Z-Wave JS Supervisor add-on"
+        }
+      },
+      "install_addon": {
+        "title": "The Z-Wave JS add-on installation has started"
+      },
+      "configure_addon": {
+        "title": "Enter the Z-Wave JS add-on configuration",
+        "description": "The add-on will generate security keys if those fields are left empty.",
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]",
+          "s0_legacy_key": "S0 Key (Legacy)",
+          "s2_authenticated_key": "S2 Authenticated Key",
+          "s2_unauthenticated_key": "S2 Unauthenticated Key",
+          "s2_access_control_key": "S2 Access Control Key",
+          "log_level": "Log level",
+          "emulate_hardware": "Emulate Hardware"
+        }
+      },
+      "start_addon": {
+        "title": "The Z-Wave JS add-on is starting."
+      }
+    },
+    "error": {
+      "invalid_ws_url": "Invalid websocket URL",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
+      "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
+      "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
+      "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
+      "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
+    },
+    "progress": {
+      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
+      "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "event.notification.entry_control": "Sent an Entry Control notification",
+      "event.notification.notification": "Sent a notification",
+      "event.value_notification.basic": "Basic CC event on {subtype}",
+      "event.value_notification.central_scene": "Central Scene action on {subtype}",
+      "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+      "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+      "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value",
+      "state.node_status": "Node status changed"
+    },
+    "condition_type": {
+      "node_status": "Node status",
+      "config_parameter": "Config parameter {subtype} value",
+      "value": "Current value of a Z-Wave Value"
+    },
+    "action_type": {
+      "clear_lock_usercode": "Clear usercode on {entity_name}",
+      "set_lock_usercode": "Set a usercode on {entity_name}",
+      "set_config_parameter": "Set value of config parameter {subtype}",
+      "set_value": "Set value of a Z-Wave Value",
+      "refresh_value": "Refresh the value(s) for {entity_name}",
+      "ping": "Ping device",
+      "reset_meter": "Reset meters on {subtype}"
+    }
+  }
+}

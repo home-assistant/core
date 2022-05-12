@@ -1,21 +1,20 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Indirizzo gi\u00e0 impostato."
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "connection_error": "Impossibile connettersi.",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_address": "Indirizzo non trovato nell'area di servizio di Twente Milieu."
         },
         "step": {
             "user": {
                 "data": {
-                    "house_letter": "Edificio, Scala, Interno, ecc. / Informazioni aggiuntive",
+                    "house_letter": "Lettera aggiuntiva",
                     "house_number": "Numero civico",
-                    "post_code": "Codice di Avviamento Postale"
+                    "post_code": "CAP"
                 },
-                "description": "Imposta Twente Milieu fornendo le informazioni sulla raccolta dei rifiuti al tuo indirizzo.",
-                "title": "Twente Milieu"
+                "description": "Imposta Twente Milieu fornendo le informazioni sulla raccolta dei rifiuti al tuo indirizzo."
             }
         }
     }

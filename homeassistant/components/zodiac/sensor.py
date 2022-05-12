@@ -1,7 +1,10 @@
 """Support for tracking the zodiac sign."""
-import logging
+from __future__ import annotations
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
@@ -28,8 +31,6 @@ from .const import (
     SIGN_TAURUS,
     SIGN_VIRGO,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ZODIAC_BY_DATE = (
     (
@@ -158,7 +159,12 @@ ZODIAC_ICONS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Zodiac sensor platform."""
     if discovery_info is None:
         return
@@ -166,45 +172,45 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([ZodiacSensor()], True)
 
 
-class ZodiacSensor(Entity):
+class ZodiacSensor(SensorEntity):
     """Representation of a Zodiac sensor."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the zodiac sensor."""
-        self._attrs = None
-        self._state = None
+        self._attrs: dict[str, str] = {}
+        self._state: str = ""
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return DOMAIN
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return "Zodiac"
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device class of the entity."""
         return "zodiac__sign"
 
     @property
-    def state(self):
+    def native_value(self) -> str:
         """Return the state of the device."""
         return self._state
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
+    def icon(self) -> str | None:
+        """Icon to use in the frontend."""
         return ZODIAC_ICONS.get(self._state)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return self._attrs
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the time and updates the state."""
         today = as_local(utcnow()).date()
 

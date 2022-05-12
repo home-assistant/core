@@ -1,6 +1,7 @@
 # https://bandit.readthedocs.io/en/latest/config.html
 
 tests:
+  - B103
   - B108
   - B306
   - B307
@@ -13,5 +14,8 @@ tests:
   - B319
   - B320
   - B325
+  - B601
   - B602
   - B604
+  - B608
+  - B609

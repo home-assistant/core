@@ -5,22 +5,27 @@ import logging
 import os
 import time
 
-from RestrictedPython import compile_restricted_exec
+from RestrictedPython import (
+    compile_restricted_exec,
+    limited_builtins,
+    safe_builtins,
+    utility_builtins,
+)
 from RestrictedPython.Eval import default_guarded_getitem
 from RestrictedPython.Guards import (
     full_write_guard,
     guarded_iter_unpack_sequence,
     guarded_unpack_sequence,
-    safe_builtins,
 )
-from RestrictedPython.Utilities import utility_builtins
 import voluptuous as vol
 
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import sanitize_filename
+from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.loader import load_yaml
 
@@ -68,12 +73,14 @@ ALLOWED_DT_UTIL = {
     "get_age",
 }
 
+CONF_FIELDS = "fields"
+
 
 class ScriptError(HomeAssistantError):
     """When a script error occurs."""
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Python script component."""
     path = hass.config.path(FOLDER)
 
@@ -83,7 +90,7 @@ def setup(hass, config):
 
     discover_scripts(hass)
 
-    def reload_scripts_handler(call):
+    def reload_scripts_handler(call: ServiceCall) -> None:
         """Handle reload service calls."""
         discover_scripts(hass)
 
@@ -100,7 +107,7 @@ def discover_scripts(hass):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
         return False
 
-    def python_script_service_handler(call):
+    def python_script_service_handler(call: ServiceCall) -> None:
         """Handle python script service calls."""
         execute_script(hass, call.service, call.data)
 
@@ -122,8 +129,9 @@ def discover_scripts(hass):
         hass.services.register(DOMAIN, name, python_script_service_handler)
 
         service_desc = {
-            "description": services_dict.get(name, {}).get("description", ""),
-            "fields": services_dict.get(name, {}).get("fields", {}),
+            CONF_NAME: services_dict.get(name, {}).get("name", name),
+            CONF_DESCRIPTION: services_dict.get(name, {}).get("description", ""),
+            CONF_FIELDS: services_dict.get(name, {}).get("fields", {}),
         }
         async_set_service_schema(hass, DOMAIN, name, service_desc)
 
@@ -132,7 +140,8 @@ def discover_scripts(hass):
 def execute_script(hass, name, data=None):
     """Execute a script."""
     filename = f"{name}.py"
-    with open(hass.config.path(FOLDER, sanitize_filename(filename))) as fil:
+    raise_if_invalid_filename(filename)
+    with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
     execute(hass, filename, source, data)
 
@@ -178,12 +187,22 @@ def execute(hass, filename, source, data=None):
 
         return getattr(obj, name, default)
 
+    extra_builtins = {
+        "datetime": datetime,
+        "sorted": sorted,
+        "time": TimeWrapper(),
+        "dt_util": dt_util,
+        "min": min,
+        "max": max,
+        "sum": sum,
+        "any": any,
+        "all": all,
+        "enumerate": enumerate,
+    }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
-    builtins["datetime"] = datetime
-    builtins["sorted"] = sorted
-    builtins["time"] = TimeWrapper()
-    builtins["dt_util"] = dt_util
+    builtins.update(limited_builtins)
+    builtins.update(extra_builtins)
     logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
@@ -217,7 +236,6 @@ class StubPrinter:
 
     def _call_print(self, *objects, **kwargs):
         """Print text."""
-        # pylint: disable=no-self-use
         _LOGGER.warning("Don't use print() inside scripts. Use logger.info() instead")
 
 
@@ -227,7 +245,6 @@ class TimeWrapper:
     # Class variable, only going to warn once per Home Assistant run
     warned = False
 
-    # pylint: disable=no-self-use
     def sleep(self, *args, **kwargs):
         """Sleep method that warns once."""
         if not TimeWrapper.warned:

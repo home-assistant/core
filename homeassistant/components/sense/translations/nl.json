@@ -1,20 +1,35 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
-            "user": {
+            "reauth_validate": {
                 "data": {
-                    "email": "E-mailadres",
                     "password": "Wachtwoord"
                 },
+                "description": "De Sense-integratie moet uw account {email} opnieuw verifi\u00ebren.",
+                "title": "Verifieer de integratie opnieuw"
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord",
+                    "timeout": "Timeout"
+                },
                 "title": "Maak verbinding met uw Sense Energy Monitor"
+            },
+            "validation": {
+                "data": {
+                    "code": "Verificatiecode"
+                },
+                "title": "Sense Multi-factor authenticatie"
             }
         }
     }

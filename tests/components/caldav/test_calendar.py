@@ -1,5 +1,7 @@
 """The tests for the webdav calendar component."""
 import datetime
+from http import HTTPStatus
+from unittest.mock import MagicMock, Mock, patch
 
 from caldav.objects import Event
 import pytest
@@ -7,8 +9,6 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
-
-from tests.async_mock import MagicMock, Mock, patch
 
 # pylint: disable=redefined-outer-name
 
@@ -224,6 +224,30 @@ CALDAV_CONFIG = {
 }
 
 
+@pytest.fixture
+def set_tz(request):
+    """Set the default TZ to the one requested."""
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def utc(hass):
+    """Set the default TZ to UTC."""
+    hass.config.set_time_zone("UTC")
+
+
+@pytest.fixture
+def new_york(hass):
+    """Set the default TZ to America/New_York."""
+    hass.config.set_time_zone("America/New_York")
+
+
+@pytest.fixture
+def baghdad(hass):
+    """Set the default TZ to Asia/Baghdad."""
+    hass.config.set_time_zone("Asia/Baghdad")
+
+
 @pytest.fixture(autouse=True)
 def mock_http(hass):
     """Mock the http component."""
@@ -249,6 +273,23 @@ def mock_private_cal():
     patch_dav_client = patch("caldav.DAVClient", return_value=client)
     with patch_dav_client:
         yield _calendar
+
+
+@pytest.fixture
+def get_api_events(hass_client):
+    """Fixture to return events for a specific calendar using the API."""
+
+    async def api_call(entity_id):
+        client = await hass_client()
+        response = await client.get(
+            # The start/end times are arbitrary since they are ignored by `_mock_calendar`
+            # which just returns all events for the calendar.
+            f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
+        )
+        assert response.status == HTTPStatus.OK
+        return await response.json()
+
+    return api_call
 
 
 def _local_datetime(hours, minutes):
@@ -332,8 +373,9 @@ async def test_setup_component_with_one_custom_calendar(hass, mock_dav_client):
     assert state.name == "HomeOffice"
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 45))
-async def test_ongoing_event(mock_now, hass, calendar):
+async def test_ongoing_event(mock_now, hass, calendar, set_tz):
     """Test that the ongoing event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -353,8 +395,9 @@ async def test_ongoing_event(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 30))
-async def test_just_ended_event(mock_now, hass, calendar):
+async def test_just_ended_event(mock_now, hass, calendar, set_tz):
     """Test that the next ongoing event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -374,8 +417,9 @@ async def test_just_ended_event(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 00))
-async def test_ongoing_event_different_tz(mock_now, hass, calendar):
+async def test_ongoing_event_different_tz(mock_now, hass, calendar, set_tz):
     """Test that the ongoing event with another timezone is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -395,15 +439,14 @@ async def test_ongoing_event_different_tz(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(19, 10))
-async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
+async def test_ongoing_floating_event_returned(mock_now, hass, calendar, set_tz):
     """Test that floating events without timezones work."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
     state = hass.states.get("calendar.private")
-    print(dt.DEFAULT_TIME_ZONE)
-    print(state)
     assert state.name == calendar.name
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
@@ -418,8 +461,9 @@ async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(8, 30))
-async def test_ongoing_event_with_offset(mock_now, hass, calendar):
+async def test_ongoing_event_with_offset(mock_now, hass, calendar, set_tz):
     """Test that the offset is taken into account."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -439,8 +483,9 @@ async def test_ongoing_event_with_offset(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(12, 00))
-async def test_matching_filter(mock_now, hass, calendar):
+async def test_matching_filter(mock_now, hass, calendar, set_tz):
     """Test that the matching event is returned."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
@@ -465,8 +510,9 @@ async def test_matching_filter(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(12, 00))
-async def test_matching_filter_real_regexp(mock_now, hass, calendar):
+async def test_matching_filter_real_regexp(mock_now, hass, calendar, set_tz):
     """Test that the event matching the regexp is returned."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
@@ -527,34 +573,77 @@ async def test_no_result_with_filtering(mock_now, hass, calendar):
     assert state.state == "off"
 
 
-@patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 30))
-async def test_all_day_event_returned(mock_now, hass, calendar):
-    """Test that the event lasting the whole day is returned."""
+async def _day_event_returned(hass, calendar, config, date_time):
+    with patch("homeassistant.util.dt.now", return_value=date_time):
+        assert await async_setup_component(hass, "calendar", {"calendar": config})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("calendar.private_private")
+        assert state.name == calendar.name
+        assert state.state == STATE_ON
+        assert dict(state.attributes) == {
+            "friendly_name": "Private",
+            "message": "This is an all day event",
+            "all_day": True,
+            "offset_reached": False,
+            "start_time": "2017-11-27 00:00:00",
+            "end_time": "2017-11-28 00:00:00",
+            "location": "Hamburg",
+            "description": "What a beautiful day",
+        }
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_all_day_event_returned_early(hass, calendar, set_tz):
+    """Test that the event lasting the whole day is returned, if it's early in the local day."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
         {"name": "Private", "calendar": "Private", "search": ".*"}
     ]
 
-    assert await async_setup_component(hass, "calendar", {"calendar": config})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.private_private")
-    assert state.name == calendar.name
-    assert state.state == STATE_ON
-    assert dict(state.attributes) == {
-        "friendly_name": "Private",
-        "message": "This is an all day event",
-        "all_day": True,
-        "offset_reached": False,
-        "start_time": "2017-11-27 00:00:00",
-        "end_time": "2017-11-28 00:00:00",
-        "location": "Hamburg",
-        "description": "What a beautiful day",
-    }
+    await _day_event_returned(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2017, 11, 27, 0, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
 
 
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_all_day_event_returned_mid(hass, calendar, set_tz):
+    """Test that the event lasting the whole day is returned, if it's in the middle of the local day."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _day_event_returned(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2017, 11, 27, 12, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_all_day_event_returned_late(hass, calendar, set_tz):
+    """Test that the event lasting the whole day is returned, if it's late in the local day."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _day_event_returned(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2017, 11, 27, 23, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
+
+
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(21, 45))
-async def test_event_rrule(mock_now, hass, calendar):
+async def test_event_rrule(mock_now, hass, calendar, set_tz):
     """Test that the future recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -574,8 +663,9 @@ async def test_event_rrule(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(22, 15))
-async def test_event_rrule_ongoing(mock_now, hass, calendar):
+async def test_event_rrule_ongoing(mock_now, hass, calendar, set_tz):
     """Test that the current recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -595,8 +685,9 @@ async def test_event_rrule_ongoing(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(22, 45))
-async def test_event_rrule_duration(mock_now, hass, calendar):
+async def test_event_rrule_duration(mock_now, hass, calendar, set_tz):
     """Test that the future recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -616,8 +707,9 @@ async def test_event_rrule_duration(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 15))
-async def test_event_rrule_duration_ongoing(mock_now, hass, calendar):
+async def test_event_rrule_duration_ongoing(mock_now, hass, calendar, set_tz):
     """Test that the ongoing recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -637,8 +729,9 @@ async def test_event_rrule_duration_ongoing(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 37))
-async def test_event_rrule_endless(mock_now, hass, calendar):
+async def test_event_rrule_endless(mock_now, hass, calendar, set_tz):
     """Test that the endless recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -658,40 +751,80 @@ async def test_event_rrule_endless(mock_now, hass, calendar):
     }
 
 
-@patch(
-    "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2016, 12, 1, 17, 30)),
-)
-async def test_event_rrule_all_day(mock_now, hass, calendar):
-    """Test that the recurring all day event is returned."""
+async def _event_rrule_all_day(hass, calendar, config, date_time):
+    with patch("homeassistant.util.dt.now", return_value=date_time):
+        assert await async_setup_component(hass, "calendar", {"calendar": config})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("calendar.private_private")
+        assert state.name == calendar.name
+        assert state.state == STATE_ON
+        assert dict(state.attributes) == {
+            "friendly_name": "Private",
+            "message": "This is a recurring all day event",
+            "all_day": True,
+            "offset_reached": False,
+            "start_time": "2016-12-01 00:00:00",
+            "end_time": "2016-12-02 00:00:00",
+            "location": "Hamburg",
+            "description": "Groundhog Day",
+        }
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_event_rrule_all_day_early(hass, calendar, set_tz):
+    """Test that the recurring all day event is returned early in the local day, and not on the first occurrence."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
         {"name": "Private", "calendar": "Private", "search": ".*"}
     ]
 
-    assert await async_setup_component(hass, "calendar", {"calendar": config})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.private_private")
-    assert state.name == calendar.name
-    assert state.state == STATE_ON
-    assert dict(state.attributes) == {
-        "friendly_name": "Private",
-        "message": "This is a recurring all day event",
-        "all_day": True,
-        "offset_reached": False,
-        "start_time": "2016-12-01 00:00:00",
-        "end_time": "2016-12-02 00:00:00",
-        "location": "Hamburg",
-        "description": "Groundhog Day",
-    }
+    await _event_rrule_all_day(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2016, 12, 1, 0, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
 
 
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_event_rrule_all_day_mid(hass, calendar, set_tz):
+    """Test that the recurring all day event is returned in the middle of the local day, and not on the first occurrence."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _event_rrule_all_day(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2016, 12, 1, 17, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_event_rrule_all_day_late(hass, calendar, set_tz):
+    """Test that the recurring all day event is returned late in the local day, and not on the first occurrence."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _event_rrule_all_day(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2016, 12, 1, 23, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
+
+
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch(
     "homeassistant.util.dt.now",
     return_value=dt.as_local(datetime.datetime(2015, 11, 27, 0, 15)),
 )
-async def test_event_rrule_hourly_on_first(mock_now, hass, calendar):
+async def test_event_rrule_hourly_on_first(mock_now, hass, calendar, set_tz):
     """Test that the endless recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -711,11 +844,12 @@ async def test_event_rrule_hourly_on_first(mock_now, hass, calendar):
     }
 
 
+@pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch(
     "homeassistant.util.dt.now",
     return_value=dt.as_local(datetime.datetime(2015, 11, 27, 11, 15)),
 )
-async def test_event_rrule_hourly_on_last(mock_now, hass, calendar):
+async def test_event_rrule_hourly_on_last(mock_now, hass, calendar, set_tz):
     """Test that the endless recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
@@ -775,3 +909,33 @@ async def test_event_rrule_hourly_ended(mock_now, hass, calendar):
     state = hass.states.get("calendar.private")
     assert state.name == calendar.name
     assert state.state == STATE_OFF
+
+
+async def test_get_events(hass, calendar, get_api_events):
+    """Test that all events are returned on API."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    events = await get_api_events("calendar.private")
+    assert len(events) == 14
+    assert calendar.call
+
+
+async def test_get_events_custom_calendars(hass, calendar, get_api_events):
+    """Test that only searched events are returned on API."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": "This is a normal event"}
+    ]
+
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
+    await hass.async_block_till_done()
+
+    events = await get_api_events("calendar.private_private")
+    assert events == [
+        {
+            "end": {"dateTime": "2017-11-27T10:00:00-08:00"},
+            "start": {"dateTime": "2017-11-27T09:00:00-08:00"},
+            "summary": "This is a normal event",
+        }
+    ]

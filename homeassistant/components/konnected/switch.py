@@ -1,20 +1,25 @@
 """Support for wired switches attached to a Konnected device."""
 import logging
 
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICES,
     CONF_NAME,
+    CONF_REPEAT,
     CONF_SWITCHES,
     CONF_ZONE,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ACTIVATION,
     CONF_MOMENTARY,
     CONF_PAUSE,
-    CONF_REPEAT,
     DOMAIN as KONNECTED_DOMAIN,
     STATE_HIGH,
     STATE_LOW,
@@ -23,7 +28,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
     device_id = config_entry.data["id"]
@@ -34,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class KonnectedSwitch(ToggleEntity):
+class KonnectedSwitch(SwitchEntity):
     """Representation of a Konnected switch."""
 
     def __init__(self, device_id, zone_num, data):
@@ -75,11 +84,9 @@ class KonnectedSwitch(ToggleEntity):
         return device_data.get("panel")
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
-        }
+        return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
 
     @property
     def available(self):
@@ -130,6 +137,16 @@ class KonnectedSwitch(ToggleEntity):
             state,
         )
 
+    @callback
+    def async_set_state(self, state):
+        """Update the switch state."""
+        self._set_state(state)
+
     async def async_added_to_hass(self):
-        """Store entity_id."""
+        """Store entity_id and register state change callback."""
         self._data["entity_id"] = self.entity_id
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"konnected.{self.entity_id}.update", self.async_set_state
+            )
+        )

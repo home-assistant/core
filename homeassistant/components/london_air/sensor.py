@@ -1,14 +1,18 @@
 """Sensor for checking the status of London air."""
+from __future__ import annotations
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import HTTP_OK
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,12 +65,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the London Air sensor."""
     data = APIData()
     data.update()
     sensors = []
-    for name in config.get(CONF_LOCATIONS):
+    for name in config[CONF_LOCATIONS]:
         sensors.append(AirSensor(name, data))
 
     add_entities(sensors, True)
@@ -84,21 +93,21 @@ class APIData:
     def update(self):
         """Get the latest data from TFL."""
         response = requests.get(URL, timeout=10)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         else:
             self.data = parse_api_response(response.json())
 
 
-class AirSensor(Entity):
+class AirSensor(SensorEntity):
     """Single authority air sensor."""
 
     ICON = "mdi:cloud-outline"
 
-    def __init__(self, name, APIdata):
+    def __init__(self, name, api_data):
         """Initialize the sensor."""
         self._name = name
-        self._api_data = APIdata
+        self._api_data = api_data
         self._site_data = None
         self._state = None
         self._updated = None
@@ -109,7 +118,7 @@ class AirSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -124,23 +133,25 @@ class AirSensor(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated
-        attrs["sites"] = len(self._site_data)
+        attrs["sites"] = len(self._site_data) if self._site_data is not None else 0
         attrs["data"] = self._site_data
         return attrs
 
     def update(self):
         """Update the sensor."""
-        self._api_data.update()
-        self._site_data = self._api_data.data[self._name]
-        self._updated = self._site_data[0]["updated"]
         sites_status = []
-        for site in self._site_data:
-            if site["pollutants_status"] != "no_species_data":
-                sites_status.append(site["pollutants_status"])
+        self._api_data.update()
+        if self._api_data.data:
+            self._site_data = self._api_data.data[self._name]
+            self._updated = self._site_data[0]["updated"]
+            for site in self._site_data:
+                if site["pollutants_status"] != "no_species_data":
+                    sites_status.append(site["pollutants_status"])
+
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:

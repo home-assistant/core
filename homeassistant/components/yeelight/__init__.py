@@ -1,75 +1,63 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+from __future__ import annotations
+
 import asyncio
-from datetime import timedelta
 import logging
-from typing import Optional
 
 import voluptuous as vol
-from yeelight import Bulb, BulbException, discover_bulbs
+from yeelight import BulbException
+from yeelight.aio import AsyncBulb
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    ACTION_OFF,
+    ACTION_RECOVER,
+    ACTION_STAY,
+    ATTR_ACTION,
+    ATTR_COUNT,
+    ATTR_TRANSITIONS,
+    CONF_CUSTOM_EFFECTS,
+    CONF_DETECTED_MODEL,
+    CONF_FLOW_PARAMS,
+    CONF_MODE_MUSIC,
+    CONF_NIGHTLIGHT_SWITCH,
+    CONF_NIGHTLIGHT_SWITCH_TYPE,
+    CONF_SAVE_ON_CHANGE,
+    CONF_TRANSITION,
+    DATA_CONFIG_ENTRIES,
+    DATA_CUSTOM_EFFECTS,
+    DATA_DEVICE,
+    DEFAULT_MODE_MUSIC,
+    DEFAULT_NAME,
+    DEFAULT_NIGHTLIGHT_SWITCH,
+    DEFAULT_SAVE_ON_CHANGE,
+    DEFAULT_TRANSITION,
+    DOMAIN,
+    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    PLATFORMS,
+    YEELIGHT_HSV_TRANSACTION,
+    YEELIGHT_RGB_TRANSITION,
+    YEELIGHT_SLEEP_TRANSACTION,
+    YEELIGHT_TEMPERATURE_TRANSACTION,
+)
+from .device import YeelightDevice, async_format_id
+from .scanner import YeelightScanner
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "yeelight"
-DATA_YEELIGHT = DOMAIN
-DATA_UPDATED = "yeelight_{}_data_updated"
-DEVICE_INITIALIZED = f"{DOMAIN}_device_initialized"
-
-DEFAULT_NAME = "Yeelight"
-DEFAULT_TRANSITION = 350
-DEFAULT_MODE_MUSIC = False
-DEFAULT_SAVE_ON_CHANGE = False
-DEFAULT_NIGHTLIGHT_SWITCH = False
-
-CONF_MODEL = "model"
-CONF_TRANSITION = "transition"
-CONF_SAVE_ON_CHANGE = "save_on_change"
-CONF_MODE_MUSIC = "use_music_mode"
-CONF_FLOW_PARAMS = "flow_params"
-CONF_CUSTOM_EFFECTS = "custom_effects"
-CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
-CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
-CONF_DEVICE = "device"
-
-DATA_CONFIG_ENTRIES = "config_entries"
-DATA_CUSTOM_EFFECTS = "custom_effects"
-DATA_SCAN_INTERVAL = "scan_interval"
-DATA_DEVICE = "device"
-DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
-
-ATTR_COUNT = "count"
-ATTR_ACTION = "action"
-ATTR_TRANSITIONS = "transitions"
-
-ACTION_RECOVER = "recover"
-ACTION_STAY = "stay"
-ACTION_OFF = "off"
-
-ACTIVE_MODE_NIGHTLIGHT = "1"
-ACTIVE_COLOR_FLOWING = "1"
-
-NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
-
-SCAN_INTERVAL = timedelta(seconds=30)
-DISCOVERY_INTERVAL = timedelta(seconds=60)
-
-YEELIGHT_RGB_TRANSITION = "RGBTransition"
-YEELIGHT_HSV_TRANSACTION = "HSVTransition"
-YEELIGHT_TEMPERATURE_TRANSACTION = "TemperatureTransition"
-YEELIGHT_SLEEP_TRANSACTION = "SleepTransition"
 
 YEELIGHT_FLOW_TRANSITION_SCHEMA = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
@@ -112,7 +100,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
                 vol.Optional(CONF_CUSTOM_EFFECTS): [
                     {
                         vol.Required(CONF_NAME): cv.string,
@@ -125,81 +112,73 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-UPDATE_REQUEST_PROPERTIES = [
-    "power",
-    "main_power",
-    "bright",
-    "ct",
-    "rgb",
-    "hue",
-    "sat",
-    "color_mode",
-    "flowing",
-    "bg_power",
-    "bg_lmode",
-    "bg_flowing",
-    "bg_ct",
-    "bg_bright",
-    "bg_hue",
-    "bg_sat",
-    "bg_rgb",
-    "nl_br",
-    "active_mode",
-]
 
-PLATFORMS = ["binary_sensor", "light"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
     hass.data[DOMAIN] = {
         DATA_CUSTOM_EFFECTS: conf.get(CONF_CUSTOM_EFFECTS, {}),
         DATA_CONFIG_ENTRIES: {},
-        DATA_SCAN_INTERVAL: conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
     }
+    # Make sure the scanner is always started in case we are
+    # going to retry via ConfigEntryNotReady and the bulb has changed
+    # ip
+    scanner = YeelightScanner.async_get(hass)
+    await scanner.async_setup()
 
     # Import manually configured devices
     for host, device_config in config.get(DOMAIN, {}).get(CONF_DEVICES, {}).items():
         _LOGGER.debug("Importing configured %s", host)
-        entry_config = {
-            CONF_HOST: host,
-            **device_config,
-        }
+        entry_config = {CONF_HOST: host, **device_config}
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=entry_config,
-            ),
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
+            )
         )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Yeelight from a config entry."""
+async def _async_initialize(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device: YeelightDevice,
+) -> None:
+    entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {}
+    await device.async_setup()
+    entry_data[DATA_DEVICE] = device
 
-    async def _initialize(host: str) -> None:
-        device = await _async_setup_device(hass, host, entry.options)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
+    if (
+        device.capabilities
+        and entry.data.get(CONF_DETECTED_MODEL) != device.capabilities["model"]
+    ):
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_DETECTED_MODEL: device.capabilities["model"]},
+        )
 
-    # Move options from data for imported entries
-    # Initialize options with default values for other entries
+
+@callback
+def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Move options from data for imported entries.
+
+    Initialize options with default values for other entries.
+
+    Copy the unique id to CONF_ID if it is missing
+    """
     if not entry.options:
         hass.config_entries.async_update_entry(
             entry,
             data={
                 CONF_HOST: entry.data.get(CONF_HOST),
-                CONF_ID: entry.data.get(CONF_ID),
+                CONF_ID: entry.data.get(CONF_ID) or entry.unique_id,
+                CONF_DETECTED_MODEL: entry.data.get(CONF_DETECTED_MODEL),
             },
             options={
                 CONF_NAME: entry.data.get(CONF_NAME, ""),
-                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+                CONF_MODEL: entry.data.get(
+                    CONF_MODEL, entry.data.get(CONF_DETECTED_MODEL, "")
+                ),
                 CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
                 CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
                 CONF_SAVE_ON_CHANGE: entry.data.get(
@@ -209,354 +188,98 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     CONF_NIGHTLIGHT_SWITCH, DEFAULT_NIGHTLIGHT_SWITCH
                 ),
             },
+            unique_id=entry.unique_id or entry.data.get(CONF_ID),
+        )
+    elif entry.unique_id and not entry.data.get(CONF_ID):
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_HOST: entry.data.get(CONF_HOST), CONF_ID: entry.unique_id},
+        )
+    elif entry.data.get(CONF_ID) and not entry.unique_id:
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=entry.data[CONF_ID],
         )
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
-        DATA_UNSUB_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener)
-    }
 
-    if entry.data.get(CONF_HOST):
-        # manually added device
-        await _initialize(entry.data[CONF_HOST])
-    else:
-        # discovery
-        scanner = YeelightScanner.async_get(hass)
-        scanner.async_register_callback(entry.data[CONF_ID], _initialize)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Yeelight from a config entry."""
+    _async_normalize_config_entry(hass, entry)
+
+    if not entry.data.get(CONF_HOST):
+        bulb_id = async_format_id(entry.data.get(CONF_ID, entry.unique_id))
+        raise ConfigEntryNotReady(f"Waiting for {bulb_id} to be discovered")
+
+    try:
+        device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
+        await _async_initialize(hass, entry, device)
+    except (asyncio.TimeoutError, OSError, BulbException) as ex:
+        raise ConfigEntryNotReady from ex
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Wait to install the reload listener until everything was successfully initialized
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
-    if unload_ok:
-        data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
-        data[DATA_UNSUB_UPDATE_LISTENER]()
-        data[DATA_DEVICE].async_unload()
-        if entry.data[CONF_ID]:
-            # discovery
-            scanner = YeelightScanner.async_get(hass)
-            scanner.async_unregister_callback(entry.data[CONF_ID])
-
-    return unload_ok
+    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+    data_config_entries.pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_setup_device(
-    hass: HomeAssistant,
-    host: str,
-    config: dict,
-) -> None:
-    # Set up device
-    bulb = Bulb(host, model=config.get(CONF_MODEL) or None)
-    capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
-    if capabilities is None:  # timeout
-        _LOGGER.error("Failed to get capabilities from %s", host)
-        raise ConfigEntryNotReady
-    device = YeelightDevice(hass, host, config, bulb)
-    await hass.async_add_executor_job(device.update)
-    await device.async_setup()
-    return device
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class YeelightScanner:
-    """Scan for Yeelight devices."""
+async def _async_get_device(
+    hass: HomeAssistant, host: str, entry: ConfigEntry
+) -> YeelightDevice:
+    # Get model from config and capabilities
+    model = entry.options.get(CONF_MODEL) or entry.data.get(CONF_DETECTED_MODEL)
 
-    _scanner = None
+    # Set up device
+    bulb = AsyncBulb(host, model=model or None)
 
-    @classmethod
-    @callback
-    def async_get(cls, hass: HomeAssistant):
-        """Get scanner instance."""
-        if cls._scanner is None:
-            cls._scanner = cls(hass)
-        return cls._scanner
+    device = YeelightDevice(hass, host, {**entry.options, **entry.data}, bulb)
+    # start listening for local pushes
+    await device.bulb.async_listen(device.async_update_callback)
 
-    def __init__(self, hass: HomeAssistant):
-        """Initialize class."""
-        self._hass = hass
-        self._seen = {}
-        self._callbacks = {}
-        self._scan_task = None
-
-    async def _async_scan(self):
-        _LOGGER.debug("Yeelight scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            devices = await self._hass.async_add_executor_job(discover_bulbs)
-            for device in devices:
-                unique_id = device["capabilities"]["id"]
-                if unique_id in self._seen:
-                    continue
-                host = device["ip"]
-                self._seen[unique_id] = host
-                _LOGGER.debug("Yeelight discovered at %s", host)
-                if unique_id in self._callbacks:
-                    self._hass.async_create_task(self._callbacks[unique_id](host))
-                    self._callbacks.pop(unique_id)
-                    if len(self._callbacks) == 0:
-                        self._async_stop_scan()
-
-        await asyncio.sleep(SCAN_INTERVAL.seconds)
-        self._scan_task = self._hass.loop.create_task(self._async_scan())
+    # register stop callback to shutdown listening for local pushes
+    async def async_stop_listen_task(event):
+        """Stop listen task."""
+        _LOGGER.debug("Shutting down Yeelight Listener (stop event)")
+        await device.bulb.async_stop_listening()
 
     @callback
-    def _async_start_scan(self):
-        """Start scanning for Yeelight devices."""
-        _LOGGER.debug("Start scanning")
-        # Use loop directly to avoid home assistant track this task
-        self._scan_task = self._hass.loop.create_task(self._async_scan())
+    def _async_stop_listen_on_unload():
+        """Stop listen task."""
+        _LOGGER.debug("Shutting down Yeelight Listener (unload)")
+        hass.async_create_task(device.bulb.async_stop_listening())
 
-    @callback
-    def _async_stop_scan(self):
-        """Stop scanning."""
-        _LOGGER.debug("Stop scanning")
-        if self._scan_task is not None:
-            self._scan_task.cancel()
-            self._scan_task = None
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_listen_task)
+    )
+    entry.async_on_unload(_async_stop_listen_on_unload)
 
-    @callback
-    def async_register_callback(self, unique_id, callback_func):
-        """Register callback function."""
-        host = self._seen.get(unique_id)
-        if host is not None:
-            self._hass.async_add_job(callback_func(host))
-        else:
-            self._callbacks[unique_id] = callback_func
-            if len(self._callbacks) == 1:
-                self._async_start_scan()
+    # fetch initial state
+    await device.async_update()
 
-    @callback
-    def async_unregister_callback(self, unique_id):
-        """Unregister callback function."""
-        if unique_id not in self._callbacks:
-            return
-        self._callbacks.pop(unique_id)
-        if len(self._callbacks) == 0:
-            self._async_stop_scan()
-
-
-class YeelightDevice:
-    """Represents single Yeelight device."""
-
-    def __init__(self, hass, host, config, bulb):
-        """Initialize device."""
-        self._hass = hass
-        self._config = config
-        self._host = host
-        unique_id = bulb.capabilities.get("id")
-        self._name = config.get(CONF_NAME) or f"yeelight_{bulb.model}_{unique_id}"
-        self._bulb_device = bulb
-        self._device_type = None
-        self._available = False
-        self._remove_time_tracker = None
-
-    @property
-    def bulb(self):
-        """Return bulb device."""
-        return self._bulb_device
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def config(self):
-        """Return device config."""
-        return self._config
-
-    @property
-    def host(self):
-        """Return hostname."""
-        return self._host
-
-    @property
-    def available(self):
-        """Return true is device is available."""
-        return self._available
-
-    @property
-    def model(self):
-        """Return configured/autodetected device model."""
-        return self._bulb_device.model
-
-    @property
-    def fw_version(self):
-        """Return the firmware version."""
-        return self._bulb_device.capabilities.get("fw_ver")
-
-    @property
-    def is_nightlight_supported(self) -> bool:
-        """
-        Return true / false if nightlight is supported.
-
-        Uses brightness as it appears to be supported in both ceiling and other lights.
-        """
-
-        return self._nightlight_brightness is not None
-
-    @property
-    def is_nightlight_enabled(self) -> bool:
-        """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
-        # Only ceiling lights have active_mode, from SDK docs:
-        # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
-        if self._active_mode is not None:
-            return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
-
-        if self._nightlight_brightness is not None:
-            return int(self._nightlight_brightness) > 0
-
-        return False
-
-    @property
-    def is_color_flow_enabled(self) -> bool:
-        """Return true / false if color flow is currently running."""
-        return self._color_flow == ACTIVE_COLOR_FLOWING
-
-    @property
-    def _active_mode(self):
-        return self.bulb.last_properties.get("active_mode")
-
-    @property
-    def _color_flow(self):
-        return self.bulb.last_properties.get("flowing")
-
-    @property
-    def _nightlight_brightness(self):
-        return self.bulb.last_properties.get("nl_br")
-
-    @property
-    def type(self):
-        """Return bulb type."""
-        if not self._device_type:
-            self._device_type = self.bulb.bulb_type
-
-        return self._device_type
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self.bulb.capabilities.get("id")
-
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
-        """Turn on device."""
-        try:
-            self.bulb.turn_on(
-                duration=duration, light_type=light_type, power_mode=power_mode
-            )
-        except BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb on: %s", ex)
-
-    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
-        """Turn off device."""
-        try:
-            self.bulb.turn_off(duration=duration, light_type=light_type)
-        except BulbException as ex:
-            _LOGGER.error(
-                "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex
-            )
-
-    def _update_properties(self):
-        """Read new properties from the device."""
-        if not self.bulb:
-            return
-
-        try:
-            self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
-            self._available = True
-        except BulbException as ex:
-            if self._available:  # just inform once
-                _LOGGER.error(
-                    "Unable to update device %s, %s: %s", self._host, self.name, ex
-                )
-            self._available = False
-
-        return self._available
-
-    def _get_capabilities(self):
-        """Request device capabilities."""
-        try:
-            self.bulb.get_capabilities()
-            _LOGGER.debug(
-                "Device %s, %s capabilities: %s",
-                self._host,
-                self.name,
-                self.bulb.capabilities,
-            )
-        except BulbException as ex:
-            _LOGGER.error(
-                "Unable to get device capabilities %s, %s: %s",
-                self._host,
-                self.name,
-                ex,
-            )
-
-    def update(self):
-        """Update device properties and send data updated signal."""
-        self._update_properties()
-        dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
-
-    async def async_setup(self):
-        """Set up the device."""
-
-        async def _async_update(_):
-            await self._hass.async_add_executor_job(self.update)
-
-        await _async_update(None)
-        self._remove_time_tracker = async_track_time_interval(
-            self._hass, _async_update, self._hass.data[DOMAIN][DATA_SCAN_INTERVAL]
+    if (
+        # Must have last_properties
+        not device.bulb.last_properties
+        # Must have at least a power property
+        or (
+            "main_power" not in device.bulb.last_properties
+            and "power" not in device.bulb.last_properties
+        )
+    ):
+        raise ConfigEntryNotReady(
+            "Could not fetch initial state; try power cycling the device"
         )
 
-    @callback
-    def async_unload(self):
-        """Unload the device."""
-        self._remove_time_tracker()
-
-
-class YeelightEntity(Entity):
-    """Represents single Yeelight entity."""
-
-    def __init__(self, device: YeelightDevice):
-        """Initialize the entity."""
-        self._device = device
-
-    @property
-    def device_info(self) -> dict:
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Yeelight",
-            "model": self._device.model,
-            "sw_version": self._device.fw_version,
-        }
-
-    @property
-    def available(self) -> bool:
-        """Return if bulb is available."""
-        return self._device.available
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    def update(self) -> None:
-        """Update the entity."""
-        self._device.update()
+    return device

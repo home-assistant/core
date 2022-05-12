@@ -1,11 +1,12 @@
 """Tests for the Config Entry Flow helper."""
+from unittest.mock import Mock, PropertyMock, patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -25,7 +26,7 @@ def discovery_flow_conf(hass):
 
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_discovery_flow(
-            "test", "Test", has_discovered_devices, config_entries.CONN_CLASS_LOCAL_POLL
+            "test", "Test", has_discovered_devices
         )
         yield handler_conf
 
@@ -77,11 +78,29 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
+    progress = hass.config_entries.flow.async_progress()
+    assert len(progress) == 1
+    assert progress[0]["flow_id"] == result["flow_id"]
+    assert progress[0]["context"] == {
+        "confirm_only": True,
+        "source": config_entries.SOURCE_USER,
+        "unique_id": "test",
+    }
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-@pytest.mark.parametrize("source", ["discovery", "ssdp", "zeroconf"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        config_entries.SOURCE_DISCOVERY,
+        config_entries.SOURCE_MQTT,
+        config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_ZEROCONF,
+        config_entries.SOURCE_DHCP,
+    ],
+)
 async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     """Test we not allow duplicates."""
     flow = config_entries.HANDLERS["test"]()
@@ -95,7 +114,16 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.parametrize("source", ["discovery", "ssdp", "zeroconf"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        config_entries.SOURCE_DISCOVERY,
+        config_entries.SOURCE_MQTT,
+        config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_ZEROCONF,
+        config_entries.SOURCE_DHCP,
+    ],
+)
 async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
@@ -219,7 +247,7 @@ async def test_ignored_discoveries(hass, discovery_flow_conf):
     await hass.config_entries.flow.async_init(
         flow["handler"],
         context={"source": config_entries.SOURCE_IGNORE},
-        data={"unique_id": flow["context"]["unique_id"]},
+        data={"unique_id": flow["context"]["unique_id"], "title": "Ignored Entry"},
     )
 
     # Second discovery should be aborted
@@ -238,7 +266,7 @@ async def test_webhook_single_entry_allowed(hass, webhook_flow_conf):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_webhook_multiple_entries_allowed(hass, webhook_flow_conf):
@@ -269,7 +297,7 @@ async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
 
 
 async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
-    """Test only a single entry is allowed."""
+    """Test cloudhook will be created if subscribed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
     async_setup_entry = Mock(return_value=True)
@@ -295,11 +323,15 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
         return_value={"cloudhook_url": "https://example.com"},
     ) as mock_create, patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "hass_nabucasa.Cloud.subscription_expired",
+        new_callable=PropertyMock(return_value=False),
     ), patch(
-        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+        "hass_nabucasa.Cloud.is_logged_in",
+        new_callable=PropertyMock(return_value=True),
+    ), patch(
+        "hass_nabucasa.iot_base.BaseIoT.connected",
+        new_callable=PropertyMock(return_value=True),
     ):
-
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -316,3 +348,57 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
 
     assert len(mock_delete.mock_calls) == 1
     assert result["require_restart"] is False
+
+
+async def test_webhook_create_cloudhook_aborts_not_connected(hass, webhook_flow_conf):
+    """Test cloudhook aborts if subscribed but not connected."""
+    assert await setup.async_setup_component(hass, "cloud", {})
+
+    async_setup_entry = Mock(return_value=True)
+    async_unload_entry = Mock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test_single",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+            async_remove_entry=config_entry_flow.webhook_async_remove_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.test_single", None)
+
+    result = await hass.config_entries.flow.async_init(
+        "test_single", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    with patch(
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://example.com"},
+    ), patch(
+        "hass_nabucasa.Cloud.subscription_expired",
+        new_callable=PropertyMock(return_value=False),
+    ), patch(
+        "hass_nabucasa.Cloud.is_logged_in",
+        new_callable=PropertyMock(return_value=True),
+    ), patch(
+        "hass_nabucasa.iot_base.BaseIoT.connected",
+        new_callable=PropertyMock(return_value=False),
+    ):
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cloud_not_connected"
+
+
+async def test_warning_deprecated_connection_class(hass, caplog):
+    """Test that we log a warning when the connection_class is used."""
+    discovery_function = Mock()
+    with patch.dict(config_entries.HANDLERS):
+        config_entry_flow.register_discovery_flow(
+            "test", "Test", discovery_function, connection_class="local_polling"
+        )
+
+    assert "integration is setting a connection_class" in caplog.text

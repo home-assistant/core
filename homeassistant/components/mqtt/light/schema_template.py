@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -12,31 +11,18 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
+    ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
-)
-from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
+    LightEntityFeature,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_UNIQUE_ID,
+    CONF_STATE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
 )
@@ -45,8 +31,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from .. import MqttValueTemplate, subscription
+from ... import mqtt
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
+)
 from ..debug_info import log_messages
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
+from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,10 +64,9 @@ CONF_GREEN_TEMPLATE = "green_template"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
-CONF_STATE_TEMPLATE = "state_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
-PLATFORM_SCHEMA_TEMPLATE = (
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
@@ -77,7 +74,6 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
@@ -87,13 +83,23 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+)
+
+PLATFORM_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
+
+DISCOVERY_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -101,23 +107,18 @@ async def async_setup_entity_template(
     hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttLightTemplate(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightTemplate(hass, config, config_entry, discovery_data)])
 
 
-class MqttLightTemplate(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    LightEntity,
-    RestoreEntity,
-):
+class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _entity_id_format = ENTITY_ID_FORMAT
+    _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
-        self._state = False
-        self._sub_state = None
+        self._state = None
 
         self._topics = None
         self._templates = None
@@ -129,37 +130,16 @@ class MqttLightTemplate(
         self._white_value = None
         self._hs = None
         self._effect = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA_TEMPLATE(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return DISCOVERY_SCHEMA_TEMPLATE
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         self._topics = {
             key: config.get(key) for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
         }
@@ -185,39 +165,11 @@ class MqttLightTemplate(
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
 
-        # features
-        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
-            self._brightness = 255
-        else:
-            self._brightness = None
-
-        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
-            self._color_temp = 255
-        else:
-            self._color_temp = None
-
-        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
-            self._white_value = 255
-        else:
-            self._white_value = None
-
-        if (
-            self._templates[CONF_RED_TEMPLATE] is not None
-            and self._templates[CONF_GREEN_TEMPLATE] is not None
-            and self._templates[CONF_BLUE_TEMPLATE] is not None
-        ):
-            self._hs = [0, 0]
-        else:
-            self._hs = None
-        self._effect = None
-
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl.hass = self.hass
-
-        last_state = await self.async_get_last_state()
+                tpl = MqttValueTemplate(tpl, entity=self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -230,10 +182,12 @@ class MqttLightTemplate(
                 self._state = True
             elif state == STATE_OFF:
                 self._state = False
+            elif state == PAYLOAD_NONE:
+                self._state = None
             else:
                 _LOGGER.warning("Invalid state value received")
 
-            if self._brightness is not None:
+            if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
                 try:
                     self._brightness = int(
                         self._templates[
@@ -243,7 +197,7 @@ class MqttLightTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
 
-            if self._color_temp is not None:
+            if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
                 try:
                     self._color_temp = int(
                         self._templates[
@@ -253,7 +207,11 @@ class MqttLightTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
-            if self._hs is not None:
+            if (
+                self._templates[CONF_RED_TEMPLATE] is not None
+                and self._templates[CONF_GREEN_TEMPLATE] is not None
+                and self._templates[CONF_BLUE_TEMPLATE] is not None
+            ):
                 try:
                     red = int(
                         self._templates[
@@ -274,7 +232,7 @@ class MqttLightTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
-            if self._white_value is not None:
+            if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
                 try:
                     self._white_value = int(
                         self._templates[
@@ -297,7 +255,7 @@ class MqttLightTemplate(
             self.async_write_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -305,10 +263,16 @@ class MqttLightTemplate(
                         "topic": self._topics[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
+        last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
             if last_state.attributes.get(ATTR_BRIGHTNESS):
@@ -321,15 +285,6 @@ class MqttLightTemplate(
                 self._effect = last_state.attributes.get(ATTR_EFFECT)
             if last_state.attributes.get(ATTR_WHITE_VALUE):
                 self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):
@@ -360,24 +315,6 @@ class MqttLightTemplate(
     def white_value(self):
         """Return the white property."""
         return self._white_value
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def is_on(self):
@@ -429,7 +366,8 @@ class MqttLightTemplate(
                 brightness = 255
             else:
                 brightness = kwargs.get(
-                    ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
+                    ATTR_BRIGHTNESS,
+                    self._brightness if self._brightness is not None else 255,
                 )
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100
@@ -437,6 +375,8 @@ class MqttLightTemplate(
             values["red"] = rgb[0]
             values["green"] = rgb[1]
             values["blue"] = rgb[2]
+            values["hue"] = hs_color[0]
+            values["sat"] = hs_color[1]
 
             if self._optimistic:
                 self._hs = kwargs[ATTR_HS_COLOR]
@@ -457,14 +397,16 @@ class MqttLightTemplate(
             values["flash"] = kwargs.get(ATTR_FLASH)
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
+            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
+                parse_result=False, **values
+            ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -480,14 +422,16 @@ class MqttLightTemplate(
             self._state = False
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
-        mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
+            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
+                parse_result=False, **values
+            ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -496,16 +440,20 @@ class MqttLightTemplate(
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = SUPPORT_FLASH | SUPPORT_TRANSITION
-        if self._brightness is not None:
+        features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
             features = features | SUPPORT_BRIGHTNESS
-        if self._hs is not None:
-            features = features | SUPPORT_COLOR
+        if (
+            self._templates[CONF_RED_TEMPLATE] is not None
+            and self._templates[CONF_GREEN_TEMPLATE] is not None
+            and self._templates[CONF_BLUE_TEMPLATE] is not None
+        ):
+            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
-            features = features | SUPPORT_EFFECT
-        if self._color_temp is not None:
+            features = features | LightEntityFeature.EFFECT
+        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
             features = features | SUPPORT_COLOR_TEMP
-        if self._white_value is not None:
+        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
             features = features | SUPPORT_WHITE_VALUE
 
         return features

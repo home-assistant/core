@@ -3,6 +3,8 @@ Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
+from __future__ import annotations
+
 import datetime
 import logging
 
@@ -22,6 +24,7 @@ from homeassistant.components.light import (
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
     CONF_NAME,
@@ -31,9 +34,12 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, event
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy_brightness,
@@ -49,7 +55,6 @@ CONF_STOP_TIME = "stop_time"
 CONF_START_CT = "start_colortemp"
 CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
-CONF_BRIGHTNESS = "brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
 
@@ -128,7 +133,12 @@ async def async_set_lights_rgb(hass, lights, rgb, transition):
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
@@ -159,7 +169,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     async_add_entities([flux])
 
-    async def async_update(call=None):
+    async def async_update(call: ServiceCall | None = None) -> None:
         """Update lights."""
         await flux.async_flux_update()
 

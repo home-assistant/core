@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "missing_configuration": "Osis on seadistamata. Vaata dokumentatsiooni.",
+            "no_url_available": "URL pole saadaval. Rohkem teavet [spikrijaotis]({docs_url})",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Kas soovid seadistada Home Assistant-i \u00fchendust Almondiga mida pakub lisandmoodul: {addon} ?",
+                "title": "Almond  Home Assistanti lisandmooduli abil"
+            },
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            }
+        }
+    }
+}

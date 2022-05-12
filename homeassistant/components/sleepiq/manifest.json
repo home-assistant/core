@@ -1,7 +1,15 @@
 {
   "domain": "sleepiq",
   "name": "SleepIQ",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sleepiq",
-  "requirements": ["sleepyq==0.7"],
-  "codeowners": []
+  "requirements": ["asyncsleepiq==1.2.3"],
+  "codeowners": ["@mfugate1", "@kbickar"],
+  "dhcp": [
+    {
+      "macaddress": "64DBA0*"
+    }
+  ],
+  "iot_class": "cloud_polling",
+  "loggers": ["asyncsleepiq"]
 }

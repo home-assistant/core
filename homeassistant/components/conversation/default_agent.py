@@ -1,7 +1,7 @@
-"""Standard conversastion implementation for Home Assistant."""
-import logging
+"""Standard conversation implementation for Home Assistant."""
+from __future__ import annotations
+
 import re
-from typing import Optional
 
 from homeassistant import core, setup
 from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
@@ -17,8 +17,6 @@ from homeassistant.setup import ATTR_COMPONENT
 from .agent import AbstractConversationAgent
 from .const import DOMAIN
 from .util import create_matcher
-
-_LOGGER = logging.getLogger(__name__)
 
 REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
 REGEX_TYPE = type(re.compile(""))
@@ -55,7 +53,7 @@ def async_register(hass, intent_type, utterances):
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
-    def __init__(self, hass: core.HomeAssistant):
+    def __init__(self, hass: core.HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
 
@@ -68,9 +66,7 @@ class DefaultAgent(AbstractConversationAgent):
         intents = self.hass.data.setdefault(DOMAIN, {})
 
         for intent_type, utterances in config.get("intents", {}).items():
-            conf = intents.get(intent_type)
-
-            if conf is None:
+            if (conf := intents.get(intent_type)) is None:
                 conf = intents[intent_type] = []
 
             conf.extend(create_matcher(utterance) for utterance in utterances)
@@ -115,16 +111,14 @@ class DefaultAgent(AbstractConversationAgent):
             async_register(self.hass, intent_type, sentences)
 
     async def async_process(
-        self, text: str, context: core.Context, conversation_id: Optional[str] = None
+        self, text: str, context: core.Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
 
         for intent_type, matchers in intents.items():
             for matcher in matchers:
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
 
                 return await intent.async_handle(

@@ -1,11 +1,12 @@
 """Support for Alexa skill service end point."""
 import copy
 import hmac
+from http import HTTPStatus
 import logging
 import uuid
 
 from homeassistant.components import http
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
@@ -20,7 +21,6 @@ from .const import (
     ATTR_UPDATE_DATE,
     CONF_AUDIO,
     CONF_DISPLAY_URL,
-    CONF_PASSWORD,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
@@ -59,7 +59,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         if request.query.get(API_PASSWORD) is None:
             err = "No password provided for Alexa flash briefing: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", HTTP_UNAUTHORIZED
+            return b"", HTTPStatus.UNAUTHORIZED
 
         if not hmac.compare_digest(
             request.query[API_PASSWORD].encode("utf-8"),
@@ -67,12 +67,12 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         ):
             err = "Wrong password for Alexa flash briefing: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", HTTP_UNAUTHORIZED
+            return b"", HTTPStatus.UNAUTHORIZED
 
         if not isinstance(self.flash_briefings.get(briefing_id), list):
             err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", HTTP_NOT_FOUND
+            return b"", HTTPStatus.NOT_FOUND
 
         briefing = []
 
@@ -80,30 +80,37 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
             output = {}
             if item.get(CONF_TITLE) is not None:
                 if isinstance(item.get(CONF_TITLE), template.Template):
-                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render()
+                    output[ATTR_TITLE_TEXT] = item[CONF_TITLE].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_TITLE_TEXT] = item.get(CONF_TITLE)
 
             if item.get(CONF_TEXT) is not None:
                 if isinstance(item.get(CONF_TEXT), template.Template):
-                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render()
+                    output[ATTR_MAIN_TEXT] = item[CONF_TEXT].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_MAIN_TEXT] = item.get(CONF_TEXT)
 
-            uid = item.get(CONF_UID)
-            if uid is None:
+            if (uid := item.get(CONF_UID)) is None:
                 uid = str(uuid.uuid4())
             output[ATTR_UID] = uid
 
             if item.get(CONF_AUDIO) is not None:
                 if isinstance(item.get(CONF_AUDIO), template.Template):
-                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render()
+                    output[ATTR_STREAM_URL] = item[CONF_AUDIO].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_STREAM_URL] = item.get(CONF_AUDIO)
 
             if item.get(CONF_DISPLAY_URL) is not None:
                 if isinstance(item.get(CONF_DISPLAY_URL), template.Template):
-                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render()
+                    output[ATTR_REDIRECTION_URL] = item[CONF_DISPLAY_URL].async_render(
+                        parse_result=False
+                    )
                 else:
                     output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
 

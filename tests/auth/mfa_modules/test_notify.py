@@ -1,12 +1,12 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
 import asyncio
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.components.notify import NOTIFY_SERVICE_SCHEMA
 
-from tests.async_mock import patch
 from tests.common import MockUser, async_mock_service
 
 MOCK_CODE = "123456"
@@ -229,7 +229,7 @@ async def test_login_flow_validates_mfa(hass):
             result["flow_id"], {"code": MOCK_CODE}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"].id == "mock-user"
+        assert result["data"].id == "mock-id"
 
 
 async def test_setup_user_notify_service(hass):

@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "site_exists": "Este site_id ya est\u00e1 configurado"
-        },
-        "error": {
-            "site_exists": "Este site_id ya est\u00e1 configurado"
-        },
         "step": {
             "user": {
                 "data": {

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "not_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Codice della stazione"
+                },
+                "data_description": {
+                    "code": "Assomiglia a ECAT4300000043206B"
+                }
+            }
+        }
+    }
+}

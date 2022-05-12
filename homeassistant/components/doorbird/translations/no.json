@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne DoorBird er allerede konfigurert",
+            "already_configured": "Enheten er allerede konfigurert",
             "link_local_address": "Linking av lokale adresser st\u00f8ttes ikke",
             "not_doorbird_device": "Denne enheten er ikke en DoorBird"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "DoorBird {name} ( {host} )",
+        "flow_title": "{name} ( {host} )",
         "step": {
             "user": {
                 "data": {
@@ -28,6 +28,9 @@
             "init": {
                 "data": {
                     "events": "Kommaseparert liste over hendelser."
+                },
+                "data_description": {
+                    "events": "Legg til et navn p\u00e5 en kommadelt hendelse for hver hendelse du vil spore. N\u00e5r du har skrevet dem inn her, bruker du DoorBird-appen til \u00e5 tilordne dem til en bestemt hendelse.\n\nEksempel: somebody_pressed_the_button, bevegelse"
                 },
                 "description": "Legg til et kommaseparert hendelsesnavn for hvert arrangement du \u00f8nsker \u00e5 spore. Etter \u00e5 ha skrevet dem inn her, bruker du DoorBird-appen til \u00e5 tilordne dem til en bestemt hendelse. Se dokumentasjonen p\u00e5 https://www.home-assistant.io/integrations/doorbird/#events. Eksempel: noen_trykket_knappen, bevegelse"
             }

@@ -1,4 +1,6 @@
 """Test the Risco config flow."""
+from unittest.mock import PropertyMock, patch
+
 import pytest
 import voluptuous as vol
 
@@ -9,7 +11,6 @@ from homeassistant.components.risco.config_flow import (
 )
 from homeassistant.components.risco.const import DOMAIN
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 TEST_SITE_NAME = "test-site-name"
@@ -58,20 +59,17 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoAPI.close"
     ) as mock_close, patch(
-        "homeassistant.components.risco.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_SITE_NAME
     assert result2["data"] == TEST_DATA
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 

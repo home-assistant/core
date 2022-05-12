@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Hubungkan ke perangkat Wi-Fi Balboa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sync_time": "Selalu sinkronkan waktu Balboa Spa Client Anda dengan Home Assistant"
+                }
+            }
+        }
+    }
+}

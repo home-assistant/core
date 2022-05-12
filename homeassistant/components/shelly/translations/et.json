@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "unsupported_firmware": "Seade kasutab toetuseta p\u00fcsivara versiooni."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "",
+        "step": {
+            "confirm_discovery": {
+                "description": "Kas soovid seadistada seadet {model} saidil {host} ? \n\n Enne seadistamise j\u00e4tkamist tuleb parooliga kaitstud akutoitega seadmed \u00e4ratada.\n Patareitoitega seadmed, mis pole parooliga kaitstud, lisatakse seadme \u00e4rkamisel. N\u00fc\u00fcd saad seadme k\u00e4sitsi \u00fcles \u00e4ratada, kasutades sellel olevat nuppu v\u00f5i oodata seadme j\u00e4rgmist andmete v\u00e4rskendamist."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadme nuppu."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Nupp",
+            "button1": "Esimene nupp",
+            "button2": "Teine nupp",
+            "button3": "Kolmas nupp",
+            "button4": "Neljas nupp"
+        },
+        "trigger_type": {
+            "btn_down": "{subtype} nupp vajutatud",
+            "btn_up": "{subtype} nupp vabastatud",
+            "double": "Nuppu  {subtype}  topeltkl\u00f5psati",
+            "double_push": "{subtype} topeltkl\u00f5ps",
+            "long": "Nuppu \"{subtype}\" hoiti all",
+            "long_push": "{subtype} pikk vajutus",
+            "long_single": "Nuppu {subtype} hoiti all ja seej\u00e4rel kl\u00f5psati",
+            "single": "Nuppu {subtype} kl\u00f5psati",
+            "single_long": "Nuppu {subtype} kl\u00f5psati \u00fcks kord ja seej\u00e4rel hoiti all",
+            "single_push": "{subtype} l\u00fchike vajutus",
+            "triple": "Nuppu {subtype} kl\u00f5psati kolm korda"
+        }
+    }
+}

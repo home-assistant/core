@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "ESP on jo m\u00e4\u00e4ritetty"
         },
-        "error": {
-            "invalid_password": "Virheellinen salasana!"
-        },
         "flow_title": "ESPHome: {name}",
         "step": {
             "user": {

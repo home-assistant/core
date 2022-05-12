@@ -6,27 +6,38 @@ from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
     MEDIA_TYPE_GAME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_LOCKED,
     CONF_REGION,
     CONF_TOKEN,
+    Platform,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
-from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
+from .config_flow import PlayStation4FlowHandler  # noqa: F401
+from .const import (
+    ATTR_MEDIA_IMAGE_URL,
+    COMMANDS,
+    COUNTRYCODE_NAMES,
+    DOMAIN,
+    GAMES_FILE,
+    PS4_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +50,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
+PLATFORMS = [Platform.MEDIA_PLAYER]
+
 
 class PS4Data:
     """Init Data Class."""
@@ -49,7 +62,7 @@ class PS4Data:
         self.protocol = None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PS4 Component."""
     hass.data[PS4_DATA] = PS4Data()
 
@@ -60,21 +73,18 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PS4 from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a PS4 config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass, entry):
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     config_entries = hass.config_entries
     data = entry.data
@@ -89,11 +99,9 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(
-            hass.helpers.aiohttp_client.async_get_clientsession()
-        )
+        loc = await location.async_detect_location_info(async_get_clientsession(hass))
         if loc:
-            country = loc.country_name
+            country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
                 for device in data["devices"]:
                     device[CONF_REGION] = country
@@ -143,7 +151,8 @@ async def async_migrate_entry(hass, entry):
             Please remove the PS4 Integration and re-configure
             [here](/config/integrations)."""
 
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         title="PlayStation 4 Integration Configuration Requires Update",
         message=msg,
         notification_id="config_entry_migration",
@@ -157,7 +166,7 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
@@ -176,7 +185,7 @@ def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
     return games
 
 
-def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
+def save_games(hass: HomeAssistant, games: dict, unique_id: str):
     """Save games to file."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
@@ -185,7 +194,7 @@ def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
         _LOGGER.error("Could not save game list, %s", error)
 
 
-def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict:
+def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
     """Reformat data to correct format."""
     data_reformatted = False
 
@@ -208,10 +217,10 @@ def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict
     return games
 
 
-def service_handle(hass: HomeAssistantType):
+def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
-    async def async_service_command(call):
+    async def async_service_command(call: ServiceCall) -> None:
         """Service for sending commands."""
         entity_ids = call.data[ATTR_ENTITY_ID]
         command = call.data[ATTR_COMMAND]

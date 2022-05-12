@@ -1,20 +1,19 @@
 """Support for Powerview scenes from a Powerview hub."""
-import logging
+from __future__ import annotations
+
 from typing import Any
 
 from aiopvapi.resources.scene import Scene as PvScene
-import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PLATFORM
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     COORDINATOR,
     DEVICE_INFO,
     DOMAIN,
-    HUB_ADDRESS,
     PV_API,
     PV_ROOM_DATA,
     PV_SCENE_DATA,
@@ -23,26 +22,10 @@ from .const import (
 )
 from .entity import HDEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): DOMAIN, vol.Required(HUB_ADDRESS): cv.string}
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import platform from yaml."""
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_HOST: config[HUB_ADDRESS]},
-        )
-    )
-
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up powerview scene entries."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
@@ -52,23 +35,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = pv_data[COORDINATOR]
     device_info = pv_data[DEVICE_INFO]
 
-    pvscenes = (
-        PowerViewScene(
-            PvScene(raw_scene, pv_request), room_data, coordinator, device_info
-        )
-        for scene_id, raw_scene in scene_data.items()
-    )
+    pvscenes = []
+    for raw_scene in scene_data.values():
+        scene = PvScene(raw_scene, pv_request)
+        room_name = room_data.get(scene.room_id, {}).get(ROOM_NAME_UNICODE, "")
+        pvscenes.append(PowerViewScene(coordinator, device_info, room_name, scene))
     async_add_entities(pvscenes)
 
 
 class PowerViewScene(HDEntity, Scene):
     """Representation of a Powerview scene."""
 
-    def __init__(self, scene, room_data, coordinator, device_info):
+    def __init__(self, coordinator, device_info, room_name, scene):
         """Initialize the scene."""
-        super().__init__(coordinator, device_info, scene.id)
+        super().__init__(coordinator, device_info, room_name, scene.id)
         self._scene = scene
-        self._room_name = room_data.get(scene.room_id, {}).get(ROOM_NAME_UNICODE, "")
 
     @property
     def name(self):
@@ -76,7 +57,7 @@ class PowerViewScene(HDEntity, Scene):
         return self._scene.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 

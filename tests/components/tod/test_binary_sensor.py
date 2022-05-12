@@ -1,906 +1,788 @@
 """Test Times of the Day Binary Sensor."""
 from datetime import datetime, timedelta
-import unittest
 
+from freezegun import freeze_time
 import pytest
-import pytz
 
-from homeassistant import setup
 from homeassistant.const import STATE_OFF, STATE_ON
-import homeassistant.core as ha
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component, async_fire_time_changed
+
+
+@pytest.fixture
+def hass_time_zone():
+    """Return default hass timezone."""
+    return "US/Pacific"
 
 
 @pytest.fixture(autouse=True)
-def mock_legacy_time(legacy_patchable_time):
-    """Make time patchable for all the tests."""
-    yield
+def setup_fixture(hass, hass_time_zone):
+    """Set up things to be run when tests are started."""
+    hass.config.latitude = 50.27583
+    hass.config.longitude = 18.98583
+    hass.config.set_time_zone(hass_time_zone)
 
 
-class TestBinarySensorTod(unittest.TestCase):
-    """Test for Binary sensor tod platform."""
+@pytest.fixture
+def hass_tz_info(hass):
+    """Return timezone info for the hass timezone."""
+    return dt_util.get_time_zone(hass.config.time_zone)
 
-    hass = None
-    # pylint: disable=invalid-name
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.hass.config.latitude = 50.27583
-        self.hass.config.longitude = 18.98583
+async def test_setup(hass):
+    """Test the setup."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Early Morning",
+                "after": "sunrise",
+                "after_offset": "-02:00",
+                "before": "7:00",
+                "before_offset": "1:00",
+            },
+            {
+                "platform": "tod",
+                "name": "Morning",
+                "after": "sunrise",
+                "before": "12:00",
+            },
+        ]
+    }
+    with assert_setup_component(2):
+        assert await async_setup_component(hass, "binary_sensor", config)
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_setup(self):
-        """Test the setup."""
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Early Morning",
-                    "after": "sunrise",
-                    "after_offset": "-02:00",
-                    "before": "7:00",
-                    "before_offset": "1:00",
-                },
-                {
-                    "platform": "tod",
-                    "name": "Morning",
-                    "after": "sunrise",
-                    "before": "12:00",
-                },
-            ]
-        }
-        with assert_setup_component(2):
-            assert setup.setup_component(self.hass, "binary_sensor", config)
-
-    def test_setup_no_sensors(self):
-        """Test setup with no sensors."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass, "binary_sensor", {"binary_sensor": {"platform": "tod"}}
-            )
-
-    def test_in_period_on_start(self):
-        """Test simple setting."""
-        test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=self.hass.config.time_zone)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Evening",
-                    "after": "18:00",
-                    "before": "22:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.evening")
-        assert state.state == STATE_ON
-
-    def test_midnight_turnover_before_midnight_inside_period(self):
-        """Test midnight turnover setting before midnight inside period ."""
-        test_time = datetime(2019, 1, 10, 22, 30, 0, tzinfo=self.hass.config.time_zone)
-        config = {
-            "binary_sensor": [
-                {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.night")
-        assert state.state == STATE_ON
-
-    def test_midnight_turnover_after_midnight_inside_period(self):
-        """Test midnight turnover setting before midnight inside period ."""
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 10, 21, 0, 0)
-        ).astimezone(pytz.UTC)
-        config = {
-            "binary_sensor": [
-                {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            state = self.hass.states.get("binary_sensor.night")
-            assert state.state == STATE_OFF
-
-            self.hass.block_till_done()
-
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time + timedelta(hours=1),
-        ):
-
-            self.hass.bus.fire(
-                ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: test_time + timedelta(hours=1)}
-            )
-
-            self.hass.block_till_done()
-            state = self.hass.states.get("binary_sensor.night")
-            assert state.state == STATE_ON
-
-    def test_midnight_turnover_before_midnight_outside_period(self):
-        """Test midnight turnover setting before midnight outside period."""
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 10, 20, 30, 0)
-        ).astimezone(pytz.UTC)
-        config = {
-            "binary_sensor": [
-                {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.night")
-        assert state.state == STATE_OFF
-
-    def test_midnight_turnover_after_midnight_outside_period(self):
-        """Test midnight turnover setting before midnight inside period ."""
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 10, 20, 0, 0)
-        ).astimezone(pytz.UTC)
-
-        config = {
-            "binary_sensor": [
-                {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.night")
-        assert state.state == STATE_OFF
-
-        switchover_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 11, 4, 59, 0)
-        ).astimezone(pytz.UTC)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=switchover_time,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: switchover_time})
-            self.hass.block_till_done()
-            state = self.hass.states.get("binary_sensor.night")
-            assert state.state == STATE_ON
-
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=switchover_time + timedelta(minutes=1, seconds=1),
-        ):
-
-            self.hass.bus.fire(
-                ha.EVENT_TIME_CHANGED,
-                {ha.ATTR_NOW: switchover_time + timedelta(minutes=1, seconds=1)},
-            )
-
-            self.hass.block_till_done()
-            state = self.hass.states.get("binary_sensor.night")
-            assert state.state == STATE_OFF
-
-    def test_from_sunrise_to_sunset(self):
-        """Test period from sunrise to sunset."""
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 12)
-        ).astimezone(pytz.UTC)
-        sunrise = dt_util.as_local(
-            get_astral_event_date(self.hass, "sunrise", dt_util.as_utc(test_time))
+async def test_setup_no_sensors(hass):
+    """Test setup with no sensors."""
+    with assert_setup_component(0):
+        assert await async_setup_component(
+            hass, "binary_sensor", {"binary_sensor": {"platform": "tod"}}
         )
-        sunset = dt_util.as_local(
-            get_astral_event_date(self.hass, "sunset", dt_util.as_utc(test_time))
-        )
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Day",
-                    "after": "sunrise",
-                    "before": "sunset",
-                }
-            ]
-        }
-        entity_id = "binary_sensor.day"
-        testtime = sunrise + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            self.hass.block_till_done()
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunrise
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunrise + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-    def test_from_sunset_to_sunrise(self):
-        """Test period from sunset to sunrise."""
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 12)
-        ).astimezone(pytz.UTC)
-        sunset = dt_util.as_local(get_astral_event_date(self.hass, "sunset", test_time))
-        sunrise = dt_util.as_local(get_astral_event_next(self.hass, "sunrise", sunset))
-        # assert sunset == sunrise
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Night",
-                    "after": "sunset",
-                    "before": "sunrise",
-                }
-            ]
-        }
-        entity_id = "binary_sensor.night"
-        testtime = sunset + timedelta(minutes=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            self.hass.block_till_done()
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunset
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunset + timedelta(minutes=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunrise + timedelta(minutes=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunrise
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            self.hass.block_till_done()
-            # assert state == "dupa"
-            assert state.state == STATE_OFF
-
-        testtime = sunrise + timedelta(minutes=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-    def test_offset(self):
-        """Test offset."""
-        after = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 10, 18, 0, 0)
-        ).astimezone(pytz.UTC) + timedelta(hours=1, minutes=34)
-
-        before = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 10, 22, 0, 0)
-        ).astimezone(pytz.UTC) + timedelta(hours=1, minutes=45)
-
-        entity_id = "binary_sensor.evening"
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Evening",
-                    "after": "18:00",
-                    "after_offset": "1:34",
-                    "before": "22:00",
-                    "before_offset": "1:45",
-                }
-            ]
-        }
-        testtime = after + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-
-        testtime = after
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = before + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = before
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = before + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-    def test_offset_overnight(self):
-        """Test offset overnight."""
-        after = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 10, 18, 0, 0)
-        ).astimezone(pytz.UTC) + timedelta(hours=1, minutes=34)
-        entity_id = "binary_sensor.evening"
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Evening",
-                    "after": "18:00",
-                    "after_offset": "1:34",
-                    "before": "22:00",
-                    "before_offset": "3:00",
-                }
-            ]
-        }
-        testtime = after + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-
-        testtime = after
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-    def test_norwegian_case_winter(self):
-        """Test location in Norway where the sun doesn't set in summer."""
-        self.hass.config.latitude = 69.6
-        self.hass.config.longitude = 18.8
-
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2010, 1, 1)
-        ).astimezone(pytz.UTC)
-        sunrise = dt_util.as_local(
-            get_astral_event_next(self.hass, "sunrise", dt_util.as_utc(test_time))
-        )
-        sunset = dt_util.as_local(
-            get_astral_event_next(self.hass, "sunset", dt_util.as_utc(test_time))
-        )
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Day",
-                    "after": "sunrise",
-                    "before": "sunset",
-                }
-            ]
-        }
-        entity_id = "binary_sensor.day"
-        testtime = test_time
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            self.hass.block_till_done()
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunrise + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunrise
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunrise + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-    def test_norwegian_case_summer(self):
-        """Test location in Norway where the sun doesn't set in summer."""
-        self.hass.config.latitude = 69.6
-        self.hass.config.longitude = 18.8
-
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2010, 6, 1)
-        ).astimezone(pytz.UTC)
-
-        sunrise = dt_util.as_local(
-            get_astral_event_next(self.hass, "sunrise", dt_util.as_utc(test_time))
-        )
-        sunset = dt_util.as_local(
-            get_astral_event_next(self.hass, "sunset", dt_util.as_utc(test_time))
-        )
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Day",
-                    "after": "sunrise",
-                    "before": "sunset",
-                }
-            ]
-        }
-        entity_id = "binary_sensor.day"
-        testtime = test_time
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            self.hass.block_till_done()
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunrise + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunrise
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunrise + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-    def test_sun_offset(self):
-        """Test sun event with offset."""
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 1, 12)
-        ).astimezone(pytz.UTC)
-        sunrise = dt_util.as_local(
-            get_astral_event_date(self.hass, "sunrise", dt_util.as_utc(test_time))
-            + timedelta(hours=-1, minutes=-30)
-        )
-        sunset = dt_util.as_local(
-            get_astral_event_date(self.hass, "sunset", dt_util.as_utc(test_time))
-            + timedelta(hours=1, minutes=30)
-        )
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Day",
-                    "after": "sunrise",
-                    "after_offset": "-1:30",
-                    "before": "sunset",
-                    "before_offset": "1:30",
-                }
-            ]
-        }
-        entity_id = "binary_sensor.day"
-        testtime = sunrise + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            self.hass.block_till_done()
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        testtime = sunrise
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        testtime = sunrise + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=-1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-        self.hass.block_till_done()
-
-        testtime = sunset
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        self.hass.block_till_done()
-
-        testtime = sunset + timedelta(seconds=1)
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_OFF
-
-        test_time = test_time + timedelta(days=1)
-        sunrise = dt_util.as_local(
-            get_astral_event_date(self.hass, "sunrise", dt_util.as_utc(test_time))
-            + timedelta(hours=-1, minutes=-30)
-        )
-        testtime = sunrise
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: testtime})
-            self.hass.block_till_done()
-
-            state = self.hass.states.get(entity_id)
-            assert state.state == STATE_ON
-
-    def test_dst(self):
-        """Test sun event with offset."""
-        self.hass.config.time_zone = pytz.timezone("CET")
-        test_time = self.hass.config.time_zone.localize(
-            datetime(2019, 3, 30, 3, 0, 0)
-        ).astimezone(pytz.UTC)
-        config = {
-            "binary_sensor": [
-                {"platform": "tod", "name": "Day", "after": "2:30", "before": "2:40"}
-            ]
-        }
-        # after 2019-03-30 03:00 CET the next update should ge scheduled
-        # at 3:30 not 2:30 local time
-        # Internally the
-        entity_id = "binary_sensor.day"
-        testtime = test_time
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=testtime,
-        ):
-            setup_component(self.hass, "binary_sensor", config)
-            self.hass.block_till_done()
-
-            self.hass.block_till_done()
-            state = self.hass.states.get(entity_id)
-            state.attributes["after"] == "2019-03-31T03:30:00+02:00"
-            state.attributes["before"] == "2019-03-31T03:40:00+02:00"
-            state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
-            assert state.state == STATE_OFF
+
+
+@freeze_time("2019-01-10 18:43:00-08:00")
+async def test_in_period_on_start(hass):
+    """Test simple setting."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Evening",
+                "after": "18:00",
+                "before": "22:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.evening")
+    assert state.state == STATE_ON
+
+
+@freeze_time("2019-01-10 22:30:00-08:00")
+async def test_midnight_turnover_before_midnight_inside_period(hass):
+    """Test midnight turnover setting before midnight inside period ."""
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+
+
+async def test_midnight_turnover_after_midnight_inside_period(
+    hass, freezer, hass_tz_info
+):
+    """Test midnight turnover setting before midnight inside period ."""
+    test_time = datetime(2019, 1, 10, 21, 0, 0, tzinfo=hass_tz_info)
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
+        ]
+    }
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+
+    await hass.async_block_till_done()
+
+    freezer.move_to(test_time + timedelta(hours=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+
+
+@freeze_time("2019-01-10 20:30:00-08:00")
+async def test_midnight_turnover_before_midnight_outside_period(hass):
+    """Test midnight turnover setting before midnight outside period."""
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+
+
+@freeze_time("2019-01-10 10:00:00-08:00")
+async def test_after_happens_tomorrow(hass):
+    """Test when both before and after are in the future, and after is later than before."""
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Night", "after": "23:00", "before": "12:00"}
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+
+
+async def test_midnight_turnover_after_midnight_outside_period(
+    hass, freezer, hass_tz_info
+):
+    """Test midnight turnover setting before midnight inside period ."""
+    test_time = datetime(2019, 1, 10, 20, 0, 0, tzinfo=hass_tz_info)
+
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
+        ]
+    }
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+
+    switchover_time = datetime(2019, 1, 11, 4, 59, 0, tzinfo=hass_tz_info)
+    freezer.move_to(switchover_time)
+
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+
+    freezer.move_to(switchover_time + timedelta(minutes=1, seconds=1))
+
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+
+
+async def test_from_sunrise_to_sunset(hass, freezer, hass_tz_info):
+    """Test period from sunrise to sunset."""
+    test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
+    sunrise = dt_util.as_local(
+        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
+    )
+    sunset = dt_util.as_local(
+        get_astral_event_date(hass, "sunset", dt_util.as_utc(test_time))
+    )
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Day",
+                "after": "sunrise",
+                "before": "sunset",
+            }
+        ]
+    }
+    entity_id = "binary_sensor.day"
+    freezer.move_to(sunrise + timedelta(seconds=-1))
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunrise + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunset + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
+async def test_from_sunset_to_sunrise(hass, freezer, hass_tz_info):
+    """Test period from sunset to sunrise."""
+    test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
+    sunset = dt_util.as_local(get_astral_event_date(hass, "sunset", test_time))
+    sunrise = dt_util.as_local(get_astral_event_next(hass, "sunrise", sunset))
+    # assert sunset == sunrise
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "after": "sunset",
+                "before": "sunrise",
+            }
+        ]
+    }
+    entity_id = "binary_sensor.night"
+    freezer.move_to(sunset + timedelta(seconds=-1))
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunset)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset + timedelta(minutes=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunrise + timedelta(minutes=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunrise)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise + timedelta(minutes=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
+async def test_offset(hass, freezer, hass_tz_info):
+    """Test offset."""
+    after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=hass_tz_info) + timedelta(
+        hours=1, minutes=34
+    )
+
+    before = datetime(2019, 1, 10, 22, 0, 0, tzinfo=hass_tz_info) + timedelta(
+        hours=1, minutes=45
+    )
+
+    entity_id = "binary_sensor.evening"
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Evening",
+                "after": "18:00",
+                "after_offset": "1:34",
+                "before": "22:00",
+                "before_offset": "1:45",
+            }
+        ]
+    }
+    freezer.move_to(after + timedelta(seconds=-1))
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(after)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(before + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(before)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(before + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
+async def test_offset_overnight(hass, freezer, hass_tz_info):
+    """Test offset overnight."""
+    after = datetime(2019, 1, 10, 18, 0, 0, tzinfo=hass_tz_info) + timedelta(
+        hours=1, minutes=34
+    )
+    entity_id = "binary_sensor.evening"
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Evening",
+                "after": "18:00",
+                "after_offset": "1:34",
+                "before": "22:00",
+                "before_offset": "3:00",
+            }
+        ]
+    }
+    freezer.move_to(after + timedelta(seconds=-1))
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(after)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
+async def test_norwegian_case_winter(hass, freezer, hass_tz_info):
+    """Test location in Norway where the sun doesn't set in summer."""
+    hass.config.latitude = 69.6
+    hass.config.longitude = 18.8
+
+    test_time = datetime(2010, 1, 1, tzinfo=hass_tz_info)
+    sunrise = dt_util.as_local(
+        get_astral_event_next(hass, "sunrise", dt_util.as_utc(test_time))
+    )
+    sunset = dt_util.as_local(
+        get_astral_event_next(hass, "sunset", dt_util.as_utc(test_time))
+    )
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Day",
+                "after": "sunrise",
+                "before": "sunset",
+            }
+        ]
+    }
+    entity_id = "binary_sensor.day"
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunrise + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunset + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
+async def test_norwegian_case_summer(hass, freezer, hass_tz_info):
+    """Test location in Norway where the sun doesn't set in summer."""
+    hass.config.latitude = 69.6
+    hass.config.longitude = 18.8
+    hass.config.elevation = 10.0
+
+    test_time = datetime(2010, 6, 1, tzinfo=hass_tz_info)
+
+    sunrise = dt_util.as_local(
+        get_astral_event_next(hass, "sunrise", dt_util.as_utc(test_time))
+    )
+    sunset = dt_util.as_local(
+        get_astral_event_next(hass, "sunset", dt_util.as_utc(sunrise))
+    )
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Day",
+                "after": "sunrise",
+                "before": "sunset",
+            }
+        ]
+    }
+    entity_id = "binary_sensor.day"
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunrise + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunset + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
+async def test_sun_offset(hass, freezer, hass_tz_info):
+    """Test sun event with offset."""
+    test_time = datetime(2019, 1, 12, tzinfo=hass_tz_info)
+    sunrise = dt_util.as_local(
+        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
+        + timedelta(hours=-1, minutes=-30)
+    )
+    sunset = dt_util.as_local(
+        get_astral_event_date(hass, "sunset", dt_util.as_utc(test_time))
+        + timedelta(hours=1, minutes=30)
+    )
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Day",
+                "after": "sunrise",
+                "after_offset": "-1:30",
+                "before": "sunset",
+                "before_offset": "1:30",
+            }
+        ]
+    }
+    entity_id = "binary_sensor.day"
+    freezer.move_to(sunrise + timedelta(seconds=-1))
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunrise)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunrise + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    freezer.move_to(sunset + timedelta(seconds=-1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    await hass.async_block_till_done()
+
+    freezer.move_to(sunset)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    freezer.move_to(sunset + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    test_time = test_time + timedelta(days=1)
+    sunrise = dt_util.as_local(
+        get_astral_event_date(hass, "sunrise", dt_util.as_utc(test_time))
+        + timedelta(hours=-1, minutes=-30)
+    )
+    freezer.move_to(sunrise)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
+async def test_dst(hass, freezer, hass_tz_info):
+    """Test sun event with offset."""
+    hass.config.time_zone = "CET"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
+    test_time = datetime(2019, 3, 30, 3, 0, 0, tzinfo=hass_tz_info)
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "2:30", "before": "2:40"}
+        ]
+    }
+    # Test DST:
+    # after 2019-03-30 03:00 CET the next update should ge scheduled
+    # at 3:30 not 2:30 local time
+    entity_id = "binary_sensor.day"
+    freezer.move_to(test_time)
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
+    assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
+    assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+    assert state.state == STATE_OFF
+
+
+@freeze_time("2019-01-10 18:43:00")
+@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+async def test_simple_before_after_does_not_loop_utc_not_in_range(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-10T22:00:00+00:00"
+
+
+@freeze_time("2019-01-10 22:43:00")
+@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+async def test_simple_before_after_does_not_loop_utc_in_range(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
+
+
+@freeze_time("2019-01-11 06:00:00")
+@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+async def test_simple_before_after_does_not_loop_utc_fire_at_before(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-11T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-12T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T22:00:00+00:00"
+
+
+@freeze_time("2019-01-10 22:00:00")
+@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+async def test_simple_before_after_does_not_loop_utc_fire_at_after(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
+
+
+@freeze_time("2019-01-10 22:00:00")
+@pytest.mark.parametrize("hass_time_zone", ("UTC",))
+async def test_simple_before_after_does_not_loop_utc_both_before_now(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Morning",
+                "before": "08:00",
+                "after": "00:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.morning")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-11T00:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T08:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T00:00:00+00:00"
+
+
+@freeze_time("2019-01-10 17:43:00+01:00")
+@pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
+async def test_simple_before_after_does_not_loop_berlin_not_in_range(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Dark",
+                "before": "06:00",
+                "after": "00:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.dark")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
+    assert state.attributes["next_update"] == "2019-01-11T00:00:00+01:00"
+
+
+@freeze_time("2019-01-11 00:43:00+01:00")
+@pytest.mark.parametrize("hass_time_zone", ("Europe/Berlin",))
+async def test_simple_before_after_does_not_loop_berlin_in_range(hass):
+    """Test simple before after."""
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Dark",
+                "before": "06:00",
+                "after": "00:00",
+            }
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.dark")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
+    assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"

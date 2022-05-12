@@ -1,28 +1,21 @@
 """Automation manager for boards manufactured by ProgettiHWSW Italy."""
-import asyncio
 
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 from ProgettiHWSW.input import Input
 from ProgettiHWSW.relay import Relay
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch", "binary_sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
 
-async def async_setup(hass, config):
-    """Set up the ProgettiHWSW Automation component."""
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ProgettiHWSW Automation from a config entry."""
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = ProgettiHWSWAPI(
         f'{entry.data["host"]}:{entry.data["port"]}'
     )
@@ -30,24 +23,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Check board validation again to load new values to API.
     await hass.data[DOMAIN][entry.entry_id].check_board()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

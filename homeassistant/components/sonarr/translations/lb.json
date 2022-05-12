@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Service ass scho konfigur\u00e9iert",
+            "reauth_successful": "Erfollegr\u00e4ich re-authentifiz\u00e9iert",
             "unknown": "Onerwaarte Feeler"
         },
         "error": {
@@ -10,16 +11,19 @@
         },
         "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "description": "Sonarr Integratioun muss manuell mat der Sonarr API um {host} re-authentifiz\u00e9iert ginn.",
+                "title": "Integratioun re-authentifiz\u00e9ieren"
+            },
             "user": {
                 "data": {
                     "api_key": "API Schl\u00ebssel",
                     "base_path": "Pad zur API",
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Sonarr benotzt een SSL Zertifikat",
-                    "verify_ssl": "Sonarr benotzt ee g\u00ebltegen SSL Zertifikat"
-                },
-                "title": "Mat Sonarr verbannen"
+                    "ssl": "Benotzt ee SSL Zertifikat",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                }
             }
         }
     },
@@ -32,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

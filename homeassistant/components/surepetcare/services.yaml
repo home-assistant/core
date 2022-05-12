@@ -1,0 +1,42 @@
+set_lock_state:
+  name: Set lock state
+  description: Sets lock state
+  fields:
+    flap_id:
+      name: Flap ID
+      description: Flap ID to lock/unlock
+      required: true
+      example: "123456"
+      selector:
+        text:
+    lock_state:
+      name: Lock state
+      description: New lock state.
+      required: true
+      selector:
+        select:
+          options:
+            - "locked_all"
+            - "locked_in"
+            - "locked_out"
+            - "unlocked"
+
+set_pet_location:
+  name: Set pet location
+  description: Set pet location
+  fields:
+    pet_name:
+      description: Name of pet
+      example: My_cat
+      required: true
+      selector:
+        text:
+    location:
+      description: Pet location (Inside or Outside)
+      example: Inside
+      required: true
+      selector:
+        select:
+          options:
+            - "Inside"
+            - "Outside"

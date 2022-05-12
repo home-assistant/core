@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "Za to pot ni bilo mogo\u010de najti veljavnega klju\u010da"
         },
-        "flow_title": "ENOcean nastavitev",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Vnesite pot do va\u0161ega ENOcean klju\u010dka"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

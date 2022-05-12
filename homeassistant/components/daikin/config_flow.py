@@ -5,24 +5,25 @@ from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
-from pydaikin.daikin_base import Appliance
+from pydaikin.daikin_base import Appliance, DaikinException
 from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_KEY, CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("daikin")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Daikin config flow."""
@@ -34,7 +35,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return vol.Schema(
             {
                 vol.Required(CONF_HOST, default=self.host): str,
-                vol.Optional(CONF_KEY): str,
+                vol.Optional(CONF_API_KEY): str,
                 vol.Optional(CONF_PASSWORD): str,
             }
         )
@@ -50,7 +51,7 @@ class FlowHandler(config_entries.ConfigFlow):
             data={
                 CONF_HOST: host,
                 KEY_MAC: mac,
-                CONF_KEY: key,
+                CONF_API_KEY: key,
                 CONF_UUID: uuid,
                 CONF_PASSWORD: password,
             },
@@ -69,39 +70,40 @@ class FlowHandler(config_entries.ConfigFlow):
             password = None
 
         try:
-            with timeout(TIMEOUT):
+            async with timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
-                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    async_get_clientsession(self.hass),
                     key=key,
                     uuid=uuid,
                     password=password,
                 )
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, ClientError):
+            self.host = None
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "device_timeout"},
+                errors={"base": "cannot_connect"},
             )
         except web_exceptions.HTTPForbidden:
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "forbidden"},
+                errors={"base": "invalid_auth"},
             )
-        except ClientError:
-            _LOGGER.exception("ClientError")
+        except DaikinException as daikin_exp:
+            _LOGGER.error(daikin_exp)
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "device_fail"},
+                errors={"base": "unknown"},
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
-                errors={"base": "device_fail"},
+                errors={"base": "unknown"},
             )
 
         mac = device.mac
@@ -111,39 +113,33 @@ class FlowHandler(config_entries.ConfigFlow):
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.schema)
+        if user_input.get(CONF_API_KEY) and user_input.get(CONF_PASSWORD):
+            self.host = user_input.get(CONF_HOST)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "api_password"},
+            )
         return await self._create_device(
             user_input[CONF_HOST],
-            user_input.get(CONF_KEY),
+            user_input.get(CONF_API_KEY),
             user_input.get(CONF_PASSWORD),
         )
 
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        host = user_input.get(CONF_HOST)
-        if not host:
-            return await self.async_step_user()
-        return await self._create_device(host)
-
-    async def async_step_discovery(self, discovery_info):
-        """Initialize step from discovery."""
-        _LOGGER.debug("Discovered device: %s", discovery_info)
-        await self.async_set_unique_id(discovery_info[KEY_MAC])
-        self._abort_if_unique_id_configured()
-        self.host = discovery_info[KEY_IP]
-        return await self.async_step_user()
-
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        devices = Discovery().poll(ip=discovery_info.host)
         if not devices:
             _LOGGER.debug(
                 "Could not find MAC-address for %s,"
                 " make sure the required UDP ports are open (see integration documentation)",
-                discovery_info[CONF_HOST],
+                discovery_info.host,
             )
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
-        self.host = discovery_info[CONF_HOST]
+        self.host = discovery_info.host
         return await self.async_step_user()

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Seade on juba h\u00e4\u00e4lestatud. Ainult \u00fcks konto on lubatud.",
+            "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp.",
+            "connection_error": "\u00dchendamine nurjus",
+            "missing_configuration": "Soma komponent pole seadistatud. Palun loe dokumentatsiooni.",
+            "result_error": "SOMA Connect vastas t\u00f5rkeolekuga."
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "description": "Sisesta oma SOMA Connect \u00fchenduse teave.",
+                "title": ""
+            }
+        }
+    }
+}

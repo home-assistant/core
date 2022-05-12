@@ -1,14 +1,15 @@
 """Media Source models."""
+from __future__ import annotations
+
 from abc import ABC
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, cast
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_CHANNELS,
+    MEDIA_CLASS_APP,
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_APPS,
 )
 from homeassistant.core import HomeAssistant, callback
 
@@ -26,9 +27,11 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    children: Optional[List["BrowseMediaSource"]]
+    children: list[BrowseMediaSource | BrowseMedia] | None
 
-    def __init__(self, *, domain: Optional[str], identifier: Optional[str], **kwargs):
+    def __init__(
+        self, *, domain: str | None, identifier: str | None, **kwargs: Any
+    ) -> None:
         """Initialize media source browse media."""
         media_content_id = f"{URI_SCHEME}{domain or ''}"
         if identifier:
@@ -45,7 +48,7 @@ class MediaSourceItem:
     """A parsed media item."""
 
     hass: HomeAssistant
-    domain: Optional[str]
+    domain: str | None
     identifier: str
 
     async def async_browse(self) -> BrowseMediaSource:
@@ -54,25 +57,29 @@ class MediaSourceItem:
             base = BrowseMediaSource(
                 domain=None,
                 identifier=None,
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_type=MEDIA_TYPE_CHANNELS,
+                media_class=MEDIA_CLASS_APP,
+                media_content_type=MEDIA_TYPE_APPS,
                 title="Media Sources",
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_CHANNEL,
+                children_media_class=MEDIA_CLASS_APP,
             )
-            base.children = [
-                BrowseMediaSource(
-                    domain=source.domain,
-                    identifier=None,
-                    media_class=MEDIA_CLASS_CHANNEL,
-                    media_content_type=MEDIA_TYPE_CHANNEL,
-                    title=source.name,
-                    can_play=False,
-                    can_expand=True,
-                )
-                for source in self.hass.data[DOMAIN].values()
-            ]
+            base.children = sorted(
+                (
+                    BrowseMediaSource(
+                        domain=source.domain,
+                        identifier=None,
+                        media_class=MEDIA_CLASS_APP,
+                        media_content_type=MEDIA_TYPE_APP,
+                        thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
+                        title=source.name,
+                        can_play=False,
+                        can_expand=True,
+                    )
+                    for source in self.hass.data[DOMAIN].values()
+                ),
+                key=lambda item: item.title,
+            )
             return base
 
         return await self.async_media_source().async_browse_media(self)
@@ -82,16 +89,14 @@ class MediaSourceItem:
         return await self.async_media_source().async_resolve_media(self)
 
     @callback
-    def async_media_source(self) -> "MediaSource":
+    def async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
-        return self.hass.data[DOMAIN][self.domain]
+        return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
 
     @classmethod
-    def from_uri(cls, hass: HomeAssistant, uri: str) -> "MediaSourceItem":
+    def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
         """Create an item from a uri."""
-        match = URI_SCHEME_REGEX.match(uri)
-
-        if not match:
+        if not (match := URI_SCHEME_REGEX.match(uri)):
             raise ValueError("Invalid media source URI")
 
         domain = match.group("domain")
@@ -103,9 +108,9 @@ class MediaSourceItem:
 class MediaSource(ABC):
     """Represents a source of media files."""
 
-    name: str = None
+    name: str | None = None
 
-    def __init__(self, domain: str):
+    def __init__(self, domain: str) -> None:
         """Initialize a media source."""
         self.domain = domain
         if not self.name:
@@ -115,8 +120,6 @@ class MediaSource(ABC):
         """Resolve a media item to a playable item."""
         raise NotImplementedError
 
-    async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str]
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
         raise NotImplementedError

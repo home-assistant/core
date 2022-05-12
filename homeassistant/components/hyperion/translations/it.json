@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "auth_new_token_not_granted_error": "Il token appena creato non \u00e8 stato approvato sull'interfaccia utente di Hyperion",
+            "auth_new_token_not_work_error": "Autenticazione utilizzando il token appena creato non riuscita",
+            "auth_required_error": "Impossibile determinare se \u00e8 necessaria l'autorizzazione",
+            "cannot_connect": "Impossibile connettersi",
+            "no_id": "L'istanza Hyperion Ambilight non ha segnalato il suo ID",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_access_token": "Token di accesso non valido"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Crea automaticamente un nuovo token",
+                    "token": "Oppure fornisci un token preesistente"
+                },
+                "description": "Configura l'autorizzazione per il tuo server Hyperion Ambilight"
+            },
+            "confirm": {
+                "description": "Vuoi aggiungere questo Hyperion Ambilight a Home Assistant? \n\n **Host:** {host}\n **Porta:** {port}\n **ID:** {id}",
+                "title": "Conferma l'aggiunta del servizio Hyperion Ambilight"
+            },
+            "create_token": {
+                "description": "Scegli **Invia** di seguito per richiedere un nuovo token di autenticazione. Sarai reindirizzato all'interfaccia utente di Hyperion per approvare la richiesta. Verifica che l'ID visualizzato sia \"{auth_id}\"",
+                "title": "Crea automaticamente un nuovo token di autenticazione"
+            },
+            "create_token_external": {
+                "title": "Accetta il nuovo token nell'interfaccia utente di Hyperion"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Effetti di Hyperion da mostrare",
+                    "priority": "Priorit\u00e0 Hyperion da usare per colori ed effetti"
+                }
+            }
+        }
+    }
+}

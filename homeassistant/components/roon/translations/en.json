@@ -4,11 +4,17 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "duplicate_entry": "That host has already been added.",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Could not discover Roon server, please enter your Hostname and Port."
+            },
             "link": {
                 "description": "You must authorize Home Assistant in Roon. After you click submit, go to the Roon Core application, open Settings and enable HomeAssistant on the Extensions tab.",
                 "title": "Authorize HomeAssistant in Roon"
@@ -17,10 +23,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Please enter your Roon server Hostname or IP.",
-                "title": "Configure Roon Server"
+                "description": "Could not discover Roon server, please enter your the Hostname or IP."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

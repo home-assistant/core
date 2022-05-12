@@ -5,6 +5,9 @@
             "open": "Abrir {entity_name}",
             "unlock": "Desbloquear {entity_name}"
         },
+        "condition_type": {
+            "is_unlocked": "{entity_name} est\u00e1 destrancado"
+        },
         "trigger_type": {
             "locked": "{entity_name} fechada",
             "unlocked": "{entity_name} aberta"

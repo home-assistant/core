@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Selle velbus-\u00fchenduse nimi",
+                    "port": "\u00dchendusstring"
+                },
+                "title": "M\u00e4\u00e4ra velbus-\u00fchenduse t\u00fc\u00fcp"
+            }
+        }
+    }
+}

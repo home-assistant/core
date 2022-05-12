@@ -1,20 +1,12 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
-import logging
+from __future__ import annotations
 
 import aiohttp
 from sisyphus_control import Track
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -23,29 +15,25 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_SISYPHUS
 
-_LOGGER = logging.getLogger(__name__)
-
 MEDIA_TYPE_TRACK = "sisyphus_track"
 
-SUPPORTED_FEATURES = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_PAUSE
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY
-)
 
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a media player entity for a Sisyphus table."""
+    if not discovery_info:
+        return
     host = discovery_info[CONF_HOST]
     try:
         table_holder = hass.data[DATA_SISYPHUS][host]
@@ -59,6 +47,18 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class SisyphusPlayer(MediaPlayerEntity):
     """Representation of a Sisyphus table as a media player device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PLAY
+    )
+
     def __init__(self, name, host, table):
         """Initialize the Sisyphus media device."""
         self._name = name
@@ -68,6 +68,10 @@ class SisyphusPlayer(MediaPlayerEntity):
     async def async_added_to_hass(self):
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
+
+    async def async_update(self):
+        """Force update table state."""
+        await self._table.refresh()
 
     @property
     def unique_id(self):
@@ -134,9 +138,22 @@ class SisyphusPlayer(MediaPlayerEntity):
         return self._table.active_track.id if self._table.active_track else None
 
     @property
-    def supported_features(self):
-        """Return the features supported by this table."""
-        return SUPPORTED_FEATURES
+    def media_duration(self):
+        """Return the total time it will take to run this track at the current speed."""
+        return self._table.active_track_total_time.total_seconds()
+
+    @property
+    def media_position(self):
+        """Return the current position within the track."""
+        return (
+            self._table.active_track_total_time
+            - self._table.active_track_remaining_time
+        ).total_seconds()
+
+    @property
+    def media_position_updated_at(self):
+        """Return the last time we got a position update."""
+        return self._table.active_track_remaining_time_as_of
 
     @property
     def media_image_url(self):
@@ -145,7 +162,7 @@ class SisyphusPlayer(MediaPlayerEntity):
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(Track.ThumbnailSize.LARGE)
 
-        return super.media_image_url()
+        return super().media_image_url
 
     async def async_turn_on(self):
         """Wake up a sleeping table."""

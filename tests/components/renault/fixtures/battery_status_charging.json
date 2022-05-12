@@ -1,0 +1,18 @@
+{
+  "data": {
+    "type": "Car",
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "timestamp": "2020-01-12T21:40:16Z",
+      "batteryLevel": 60,
+      "batteryTemperature": 20,
+      "batteryAutonomy": 141,
+      "batteryCapacity": 0,
+      "batteryAvailableEnergy": 31,
+      "plugStatus": 1,
+      "chargingStatus": 1.0,
+      "chargingRemainingTime": 145,
+      "chargingInstantaneousPower": 27
+    }
+  }
+}

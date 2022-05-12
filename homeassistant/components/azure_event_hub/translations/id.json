@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "cannot_connect": "Menghubungkan dengan kredensial dari configuration.yaml gagal, hapus dari yaml dan gunakan proses konfigurasi.",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "unknown": "Menghubungkan dengan kredensial dari configuration.yaml gagal disertai kesalahan yang tidak dikenal, hapus dari yaml dan gunakan proses konfigurasi."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "String Koneksi Event Hub"
+                },
+                "description": "Masukkan string koneksi untuk: {event_hub_instance_name}",
+                "title": "Metode String Koneksi"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Namespace Event Hub",
+                    "event_hub_sas_key": "Kunci SAS Event Hub",
+                    "event_hub_sas_policy": "Kebijakan SAS Event Hub"
+                },
+                "description": "Masukkan kredensial SAS (shared access signature) untuk: {event_hub_instance_name}",
+                "title": "Metode Kredensial SAS"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Nama Instans Event Hub",
+                    "use_connection_string": "Gunakan String Koneksi"
+                },
+                "title": "Siapkan integrasi Azure Event Hub Anda"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Interval antara pengiriman batch ke hub."
+                },
+                "title": "Opsi untuk Azure Event Hub."
+            }
+        }
+    }
+}

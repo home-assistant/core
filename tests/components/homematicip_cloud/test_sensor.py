@@ -46,11 +46,11 @@ async def test_manually_configured_platform(hass):
 
 async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     """Test HomematicipSwitch."""
-    entity_id = "sensor.access_point_duty_cycle"
-    entity_name = "Access Point Duty Cycle"
-    device_model = None
+    entity_id = "sensor.home_control_access_point_duty_cycle"
+    entity_name = "HOME_CONTROL_ACCESS_POINT Duty Cycle"
+    device_model = "HmIP-HAP"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["HOME_CONTROL_ACCESS_POINT"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -59,11 +59,6 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     assert hmip_device
     assert ha_state.state == "8.0"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-
-    await async_manipulate_test_data(hass, hmip_device, "dutyCycle", 17.3)
-
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == "17.3"
 
 
 async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):

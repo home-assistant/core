@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Ja hi ha un UPB PIM configurat amb aquesta adre\u00e7a."
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar a UPB PIM, torna-ho a provar.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_upb_file": "El fitxer d'exportaci\u00f3 UPB UPStart no hi \u00e9s o \u00e9s erroni, comprova el nom i la ruta del fitxer.",
-            "unknown": "Error inesperat."
+            "unknown": "Error inesperat"
         },
         "step": {
             "user": {

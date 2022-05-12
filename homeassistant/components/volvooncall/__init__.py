@@ -8,10 +8,12 @@ from volvooncall import Connection
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -21,6 +23,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 DOMAIN = "volvooncall"
@@ -32,14 +35,13 @@ _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
-CONF_REGION = "region"
 CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"
 
 SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
-COMPONENTS = {
+PLATFORMS = {
     "sensor": "sensor",
     "binary_sensor": "binary_sensor",
     "lock": "lock",
@@ -114,7 +116,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Volvo On Call component."""
     session = async_get_clientsession(hass)
 
@@ -146,7 +148,7 @@ async def async_setup(hass, config):
         for instrument in (
             instrument
             for instrument in dashboard.instruments
-            if instrument.component in COMPONENTS and is_enabled(instrument.slug_attr)
+            if instrument.component in PLATFORMS and is_enabled(instrument.slug_attr)
         ):
 
             data.instruments.add(instrument)
@@ -154,9 +156,14 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    COMPONENTS[instrument.component],
+                    PLATFORMS[instrument.component],
                     DOMAIN,
-                    (vehicle.vin, instrument.component, instrument.attr),
+                    (
+                        vehicle.vin,
+                        instrument.component,
+                        instrument.attr,
+                        instrument.slug_attr,
+                    ),
                     config,
                 )
             )
@@ -192,7 +199,7 @@ class VolvoData:
         self.config = config[DOMAIN]
         self.names = self.config.get(CONF_NAME)
 
-    def instrument(self, vin, component, attr):
+    def instrument(self, vin, component, attr, slug_attr):
         """Return corresponding instrument."""
         return next(
             (
@@ -201,6 +208,7 @@ class VolvoData:
                 if instrument.vehicle.vin == vin
                 and instrument.component == component
                 and instrument.attr == attr
+                and instrument.slug_attr == slug_attr
             ),
             None,
         )
@@ -223,12 +231,13 @@ class VolvoData:
 class VolvoEntity(Entity):
     """Base class for all VOC entities."""
 
-    def __init__(self, data, vin, component, attribute):
+    def __init__(self, data, vin, component, attribute, slug_attr):
         """Initialize the entity."""
         self.data = data
         self.vin = vin
         self.component = component
         self.attribute = attribute
+        self.slug_attr = slug_attr
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
@@ -241,7 +250,9 @@ class VolvoEntity(Entity):
     @property
     def instrument(self):
         """Return corresponding instrument."""
-        return self.data.instrument(self.vin, self.component, self.attribute)
+        return self.data.instrument(
+            self.vin, self.component, self.attribute, self.slug_attr
+        )
 
     @property
     def icon(self):
@@ -277,7 +288,7 @@ class VolvoEntity(Entity):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return dict(
             self.instrument.attributes,
@@ -287,4 +298,7 @@ class VolvoEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self.vin}-{self.component}-{self.attribute}"
+        slug_override = ""
+        if self.instrument.slug_override is not None:
+            slug_override = f"-{self.instrument.slug_override}"
+        return f"{self.vin}-{self.component}-{self.attribute}{slug_override}"

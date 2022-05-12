@@ -1,8 +1,18 @@
 {
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "user": {
+                "description": "Ingin memulai penyiapan?"
+            }
+        }
+    },
     "state": {
         "_": {
             "above_horizon": "Terbit",
-            "below_horizon": "Tenggelam"
+            "below_horizon": "Terbenam"
         }
     },
     "title": "Matahari"

@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "ignore_ip6_link_local": "Alamat lokal tautan IPv6 tidak didukung.",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "not_supported": "Tersambung ke AVM FRITZ!Box tetapi tidak dapat mengontrol perangkat Smart Home.",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Perbarui informasi masuk Anda untuk {name}."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan informasi AVM FRITZ!Box Anda."
+            }
+        }
+    }
+}

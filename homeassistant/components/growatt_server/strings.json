@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "no_plants": "No plants have been found on this account"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "plant": {
+        "data": {
+          "plant_id": "Plant"
+        },
+        "title": "Select your plant"
+      },
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "title": "Enter your Growatt information"
+      }
+    }
+  },
+  "title": "Growatt Server"
+}

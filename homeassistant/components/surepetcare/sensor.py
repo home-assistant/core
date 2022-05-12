@@ -1,184 +1,108 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
-import logging
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from surepy import SureLockStateID, SureProductID
+from typing import cast
 
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    CONF_ID,
-    CONF_TYPE,
-    DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
-)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from surepy.entities import SurepyEntity
+from surepy.entities.devices import Felaqua as SurepyFelaqua
+from surepy.enums import EntityType
 
-from . import SurePetcareAPI
-from .const import (
-    DATA_SURE_PETCARE,
-    SPC,
-    SURE_BATT_VOLTAGE_DIFF,
-    SURE_BATT_VOLTAGE_LOW,
-    TOPIC_UPDATE,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, VOLUME_MILLILITERS
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from . import SurePetcareDataCoordinator
+from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
+from .entity import SurePetcareEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Sure PetCare Flaps sensors."""
-    if discovery_info is None:
-        return
 
-    entities = []
+    entities: list[SurePetcareEntity] = []
 
-    spc = hass.data[DATA_SURE_PETCARE][SPC]
+    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    for entity in spc.ids:
-        sure_type = entity[CONF_TYPE]
+    for surepy_entity in coordinator.data.values():
 
-        if sure_type in [
-            SureProductID.CAT_FLAP,
-            SureProductID.PET_FLAP,
-            SureProductID.FEEDER,
+        if surepy_entity.type in [
+            EntityType.CAT_FLAP,
+            EntityType.PET_FLAP,
+            EntityType.FEEDER,
+            EntityType.FELAQUA,
         ]:
-            entities.append(SureBattery(entity[CONF_ID], sure_type, spc))
+            entities.append(SureBattery(surepy_entity.id, coordinator))
 
-        if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
-            entities.append(Flap(entity[CONF_ID], sure_type, spc))
+        if surepy_entity.type == EntityType.FELAQUA:
+            entities.append(Felaqua(surepy_entity.id, coordinator))
 
-    async_add_entities(entities, True)
-
-
-class SurePetcareSensor(Entity):
-    """A binary sensor implementation for Sure Petcare Entities."""
-
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
-        """Initialize a Sure Petcare sensor."""
-
-        self._id = _id
-        self._sure_type = sure_type
-
-        self._spc = spc
-        self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
-        self._state: Dict[str, Any] = {}
-
-        self._name = (
-            f"{self._sure_type.name.capitalize()} "
-            f"{self._spc_data['name'].capitalize()}"
-        )
-
-        self._async_unsub_dispatcher_connect = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._spc_data['household_id']}-{self._id}"
-
-    @property
-    def available(self) -> bool:
-        """Return true if entity is available."""
-        return bool(self._state)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return true."""
-        return False
-
-    async def async_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._spc_data = self._spc.states[self._sure_type].get(self._id)
-        self._state = self._spc_data.get("status")
-        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
+    async_add_entities(entities)
 
 
-class Flap(SurePetcareSensor):
-    """Sure Petcare Flap."""
+class SureBattery(SurePetcareEntity, SensorEntity):
+    """A sensor implementation for Sure Petcare batteries."""
 
-    @property
-    def state(self) -> Optional[int]:
-        """Return battery level in percent."""
-        return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
 
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes of the device."""
-        attributes = None
-        if self._state:
-            attributes = {"learn_mode": bool(self._state["learn_mode"])}
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare battery sensor."""
+        super().__init__(surepetcare_id, coordinator)
 
-        return attributes
+        self._attr_name = f"{self._device_name} Battery Level"
+        self._attr_unique_id = f"{self._device_id}-battery"
 
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state and attributes."""
+        state = surepy_entity.raw_data()["status"]
 
-class SureBattery(SurePetcareSensor):
-    """Sure Petcare Flap."""
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return f"{self._name} Battery Level"
-
-    @property
-    def state(self) -> Optional[int]:
-        """Return battery level in percent."""
-        battery_percent: Optional[int]
         try:
-            per_battery_voltage = self._state["battery"] / 4
+            per_battery_voltage = state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
-            battery_percent = min(int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100)
+            self._attr_native_value = min(
+                int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100
+            )
         except (KeyError, TypeError):
-            battery_percent = None
+            self._attr_native_value = None
 
-        return battery_percent
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._spc_data['household_id']}-{self._id}-battery"
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return state attributes."""
-        attributes = None
-        if self._state:
-            voltage_per_battery = float(self._state["battery"]) / 4
-            attributes = {
-                ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
+        if state:
+            voltage_per_battery = float(state["battery"]) / 4
+            self._attr_extra_state_attributes = {
+                ATTR_VOLTAGE: f"{float(state['battery']):.2f}",
                 f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
             }
+        else:
+            self._attr_extra_state_attributes = {}
 
-        return attributes
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return PERCENTAGE
+class Felaqua(SurePetcareEntity, SensorEntity):
+    """Sure Petcare Felaqua."""
+
+    _attr_native_unit_of_measurement = VOLUME_MILLILITERS
+
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare Felaqua sensor."""
+        super().__init__(surepetcare_id, coordinator)
+
+        surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
+
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
+        self._attr_entity_picture = surepy_entity.icon
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state."""
+        surepy_entity = cast(SurepyFelaqua, surepy_entity)
+        self._attr_native_value = surepy_entity.water_remaining

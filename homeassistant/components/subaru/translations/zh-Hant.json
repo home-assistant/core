@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "error": {
+            "bad_pin_format": "PIN \u78bc\u61c9\u8a72\u70ba 4 \u4f4d\u6578\u5b57",
+            "bad_validation_code_format": "\u9a57\u8b49\u78bc\u5fc5\u9808\u5305\u542b 6 \u4f4d\u6578\u5b57",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "incorrect_pin": "PIN \u78bc\u932f\u8aa4",
+            "incorrect_validation_code": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "two_factor_request_failed": "\u6240\u9700\u96d9\u91cd\u8a8d\u8b49\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "\u8acb\u8f38\u5165 MySubaru PIN \u78bc\n\u6ce8\u610f\uff1a\u6240\u4ee5\u5e33\u865f\u5167\u8eca\u8f1b\u90fd\u5fc5\u9808\u4f7f\u7528\u76f8\u540c PIN \u78bc",
+                "title": "Subaru Starlink \u8a2d\u5b9a"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "\u8acb\u9078\u64c7\u806f\u7d61\u65b9\u5f0f\uff1a"
+                },
+                "description": "\u9700\u8981\u96d9\u91cd\u8a8d\u8b49\u78bc",
+                "title": "Subaru Starlink \u8a2d\u5b9a"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "\u9a57\u8b49\u78bc"
+                },
+                "description": "\u8acb\u8f38\u5165\u6240\u6536\u5230\u7684\u9a57\u8b49\u78bc",
+                "title": "Subaru Starlink \u8a2d\u5b9a"
+            },
+            "user": {
+                "data": {
+                    "country": "\u9078\u64c7\u570b\u5bb6",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u8f38\u5165 MySubaru \u8a8d\u8b49\n\u6ce8\u610f\uff1a\u555f\u59cb\u8a2d\u5b9a\u5927\u7d04\u9700\u8981 30 \u79d2",
+                "title": "Subaru Starlink \u8a2d\u5b9a"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "\u958b\u555f\u8eca\u8f1b\u8cc7\u6599\u4e0b\u8f09"
+                },
+                "description": "\u958b\u555f\u5f8c\uff0c\u5c07\u6703\u6bcf 2 \u5c0f\u6642\u50b3\u9001\u9060\u7aef\u547d\u4ee4\u81f3\u8eca\u8f1b\u4ee5\u7372\u5f97\u6700\u65b0\u611f\u6e2c\u5668\u8cc7\u6599\u3002\u5982\u679c\u6c92\u6709\u958b\u555f\uff0c\u611f\u6e2c\u5668\u65b0\u8cc7\u6599\u50c5\u6703\u65bc\u8eca\u8f1b\u81ea\u52d5\u63a8\u9001\u8cc7\u6599\u6642\u63a5\u6536\uff08\u901a\u5e38\u70ba\u5f15\u64ce\u7184\u706b\u4e4b\u5f8c\uff09\u3002",
+                "title": "Subaru Starlink \u9078\u9805"
+            }
+        }
+    }
+}

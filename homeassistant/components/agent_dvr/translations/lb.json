@@ -4,8 +4,8 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "already_in_progress": "Konfiguratioun's Oflaf fir den Apparat ass schonn am gaangen.",
-            "device_unavailable": "Apparat ass net erreechbar"
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "Agent DVR ariichten"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

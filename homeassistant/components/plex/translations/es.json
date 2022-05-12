@@ -4,11 +4,12 @@
             "all_configured": "Todos los servidores vinculados ya configurados",
             "already_configured": "Este servidor Plex ya est\u00e1 configurado",
             "already_in_progress": "Plex se est\u00e1 configurando",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "token_request_timeout": "Tiempo de espera agotado para la obtenci\u00f3n del token",
             "unknown": "Fall\u00f3 por razones desconocidas"
         },
         "error": {
-            "faulty_credentials": "La autorizaci\u00f3n fall\u00f3, verifica el token",
+            "faulty_credentials": "La autorizaci\u00f3n ha fallado, verifica el token",
             "host_or_token": "Debes proporcionar al menos uno de Host o Token",
             "no_servers": "No hay servidores vinculados a la cuenta Plex",
             "not_found": "No se ha encontrado el servidor Plex",
@@ -20,7 +21,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Puerto",
-                    "ssl": "Usar SSL",
+                    "ssl": "Utiliza un certificado SSL",
                     "token": "Token (Opcional)",
                     "verify_ssl": "Verificar certificado SSL"
                 },

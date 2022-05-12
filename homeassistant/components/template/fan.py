@@ -1,22 +1,21 @@
 """Support for Template fans."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
-    ATTR_SPEED,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     ENTITY_ID_FORMAT,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -28,31 +27,39 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FANS = "fans"
-CONF_SPEED_LIST = "speeds"
-CONF_SPEED_TEMPLATE = "speed_template"
+CONF_SPEED_COUNT = "speed_count"
+CONF_PRESET_MODES = "preset_modes"
+CONF_PERCENTAGE_TEMPLATE = "percentage_template"
+CONF_PRESET_MODE_TEMPLATE = "preset_mode_template"
 CONF_OSCILLATING_TEMPLATE = "oscillating_template"
 CONF_DIRECTION_TEMPLATE = "direction_template"
 CONF_ON_ACTION = "turn_on"
 CONF_OFF_ACTION = "turn_off"
+CONF_SET_PERCENTAGE_ACTION = "set_percentage"
 CONF_SET_SPEED_ACTION = "set_speed"
 CONF_SET_OSCILLATING_ACTION = "set_oscillating"
 CONF_SET_DIRECTION_ACTION = "set_direction"
+CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
 
 _VALID_STATES = [STATE_ON, STATE_OFF]
-_VALID_OSC = [True, False]
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
 FAN_SCHEMA = vol.All(
@@ -61,22 +68,22 @@ FAN_SCHEMA = vol.All(
         {
             vol.Optional(CONF_FRIENDLY_NAME): cv.string,
             vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
+            vol.Optional(CONF_PERCENTAGE_TEMPLATE): cv.template,
+            vol.Optional(CONF_PRESET_MODE_TEMPLATE): cv.template,
             vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
             vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
-            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
             vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
             vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(
-                CONF_SPEED_LIST, default=[SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-            ): cv.ensure_list,
+            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
+            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ),
+    ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -88,40 +95,17 @@ async def _async_create_entities(hass, config):
     """Create the Template Fans."""
     fans = []
 
-    for device, device_config in config[CONF_FANS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
+    for object_id, entity_config in config[CONF_FANS].items():
 
-        state_template = device_config[CONF_VALUE_TEMPLATE]
-        speed_template = device_config.get(CONF_SPEED_TEMPLATE)
-        oscillating_template = device_config.get(CONF_OSCILLATING_TEMPLATE)
-        direction_template = device_config.get(CONF_DIRECTION_TEMPLATE)
-        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
+        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
 
-        on_action = device_config[CONF_ON_ACTION]
-        off_action = device_config[CONF_OFF_ACTION]
-        set_speed_action = device_config.get(CONF_SET_SPEED_ACTION)
-        set_oscillating_action = device_config.get(CONF_SET_OSCILLATING_ACTION)
-        set_direction_action = device_config.get(CONF_SET_DIRECTION_ACTION)
-
-        speed_list = device_config[CONF_SPEED_LIST]
-        unique_id = device_config.get(CONF_UNIQUE_ID)
+        unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         fans.append(
             TemplateFan(
                 hass,
-                device,
-                friendly_name,
-                state_template,
-                speed_template,
-                oscillating_template,
-                direction_template,
-                availability_template,
-                on_action,
-                off_action,
-                set_speed_action,
-                set_oscillating_action,
-                set_direction_action,
-                speed_list,
+                object_id,
+                entity_config,
                 unique_id,
             )
         )
@@ -129,10 +113,13 @@ async def _async_create_entities(hass, config):
     return fans
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template fans."""
-
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -142,84 +129,80 @@ class TemplateFan(TemplateEntity, FanEntity):
     def __init__(
         self,
         hass,
-        device_id,
-        friendly_name,
-        state_template,
-        speed_template,
-        oscillating_template,
-        direction_template,
-        availability_template,
-        on_action,
-        off_action,
-        set_speed_action,
-        set_oscillating_action,
-        set_direction_action,
-        speed_list,
+        object_id,
+        config,
         unique_id,
     ):
         """Initialize the fan."""
-        super().__init__(availability_template=availability_template)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.hass = hass
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, device_id, hass=hass
+            ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name
+        friendly_name = self._attr_name
 
-        self._template = state_template
-        self._speed_template = speed_template
-        self._oscillating_template = oscillating_template
-        self._direction_template = direction_template
+        self._template = config[CONF_VALUE_TEMPLATE]
+        self._percentage_template = config.get(CONF_PERCENTAGE_TEMPLATE)
+        self._preset_mode_template = config.get(CONF_PRESET_MODE_TEMPLATE)
+        self._oscillating_template = config.get(CONF_OSCILLATING_TEMPLATE)
+        self._direction_template = config.get(CONF_DIRECTION_TEMPLATE)
         self._supported_features = 0
 
-        domain = __name__.split(".")[-2]
-
-        self._on_script = Script(hass, on_action, friendly_name, domain)
-        self._off_script = Script(hass, off_action, friendly_name, domain)
+        self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
+        self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
 
         self._set_speed_script = None
-        if set_speed_action:
+        if set_speed_action := config.get(CONF_SET_SPEED_ACTION):
             self._set_speed_script = Script(
-                hass, set_speed_action, friendly_name, domain
+                hass, set_speed_action, friendly_name, DOMAIN
+            )
+
+        self._set_percentage_script = None
+        if set_percentage_action := config.get(CONF_SET_PERCENTAGE_ACTION):
+            self._set_percentage_script = Script(
+                hass, set_percentage_action, friendly_name, DOMAIN
+            )
+
+        self._set_preset_mode_script = None
+        if set_preset_mode_action := config.get(CONF_SET_PRESET_MODE_ACTION):
+            self._set_preset_mode_script = Script(
+                hass, set_preset_mode_action, friendly_name, DOMAIN
             )
 
         self._set_oscillating_script = None
-        if set_oscillating_action:
+        if set_oscillating_action := config.get(CONF_SET_OSCILLATING_ACTION):
             self._set_oscillating_script = Script(
-                hass, set_oscillating_action, friendly_name, domain
+                hass, set_oscillating_action, friendly_name, DOMAIN
             )
 
         self._set_direction_script = None
-        if set_direction_action:
+        if set_direction_action := config.get(CONF_SET_DIRECTION_ACTION):
             self._set_direction_script = Script(
-                hass, set_direction_action, friendly_name, domain
+                hass, set_direction_action, friendly_name, DOMAIN
             )
 
         self._state = STATE_OFF
-        self._speed = None
+        self._percentage = None
+        self._preset_mode = None
         self._oscillating = None
         self._direction = None
 
-        if self._speed_template:
-            self._supported_features |= SUPPORT_SET_SPEED
+        # Number of valid speeds
+        self._speed_count = config.get(CONF_SPEED_COUNT)
+
+        # List of valid preset modes
+        self._preset_modes = config.get(CONF_PRESET_MODES)
+
+        if self._percentage_template:
+            self._supported_features |= FanEntityFeature.SET_SPEED
+        if self._preset_mode_template and self._preset_modes:
+            self._supported_features |= FanEntityFeature.PRESET_MODE
         if self._oscillating_template:
-            self._supported_features |= SUPPORT_OSCILLATE
+            self._supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
-            self._supported_features |= SUPPORT_DIRECTION
-
-        self._unique_id = unique_id
-
-        # List of valid speeds
-        self._speed_list = speed_list
-
-    @property
-    def name(self):
-        """Return the display name of this fan."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this fan."""
-        return self._unique_id
+            self._supported_features |= FanEntityFeature.DIRECTION
 
     @property
     def supported_features(self) -> int:
@@ -227,9 +210,14 @@ class TemplateFan(TemplateEntity, FanEntity):
         return self._supported_features
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self._speed_list
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return self._speed_count or 100
+
+    @property
+    def preset_modes(self) -> list[str]:
+        """Get the list of available preset modes."""
+        return self._preset_modes
 
     @property
     def is_on(self):
@@ -237,9 +225,14 @@ class TemplateFan(TemplateEntity, FanEntity):
         return self._state == STATE_ON
 
     @property
-    def speed(self):
-        """Return the current speed."""
-        return self._speed
+    def preset_mode(self):
+        """Return the current preset mode."""
+        return self._preset_mode
+
+    @property
+    def percentage(self):
+        """Return the current speed percentage."""
+        return self._percentage
 
     @property
     def oscillating(self):
@@ -251,34 +244,61 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Return the oscillation state."""
         return self._direction
 
-    # pylint: disable=arguments-differ
-    async def async_turn_on(self, speed: str = None) -> None:
+    async def async_turn_on(
+        self,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
-        await self._on_script.async_run({ATTR_SPEED: speed}, context=self._context)
+        await self._on_script.async_run(
+            {
+                ATTR_PERCENTAGE: percentage,
+                ATTR_PRESET_MODE: preset_mode,
+            },
+            context=self._context,
+        )
         self._state = STATE_ON
 
-        if speed is not None:
-            await self.async_set_speed(speed)
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+        elif percentage is not None:
+            await self.async_set_percentage(percentage)
 
-    # pylint: disable=arguments-differ
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self._off_script.async_run(context=self._context)
         self._state = STATE_OFF
 
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if self._set_speed_script is None:
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage speed of the fan."""
+        self._state = STATE_OFF if percentage == 0 else STATE_ON
+        self._percentage = percentage
+        self._preset_mode = None
+
+        if self._set_percentage_script:
+            await self._set_percentage_script.async_run(
+                {ATTR_PERCENTAGE: self._percentage}, context=self._context
+            )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset_mode of the fan."""
+        if self.preset_modes and preset_mode not in self.preset_modes:
+            _LOGGER.error(
+                "Received invalid preset_mode: %s for entity %s. Expected: %s",
+                preset_mode,
+                self.entity_id,
+                self.preset_modes,
+            )
             return
 
-        if speed in self._speed_list:
-            self._speed = speed
-            await self._set_speed_script.async_run(
-                {ATTR_SPEED: speed}, context=self._context
-            )
-        else:
-            _LOGGER.error(
-                "Received invalid speed: %s. Expected: %s", speed, self._speed_list
+        self._state = STATE_ON
+        self._preset_mode = preset_mode
+        self._percentage = None
+
+        if self._set_preset_mode_script:
+            await self._set_preset_mode_script.async_run(
+                {ATTR_PRESET_MODE: self._preset_mode}, context=self._context
             )
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -286,17 +306,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._set_oscillating_script is None:
             return
 
-        if oscillating in _VALID_OSC:
-            self._oscillating = oscillating
-            await self._set_oscillating_script.async_run(
-                {ATTR_OSCILLATING: oscillating}, context=self._context
-            )
-        else:
-            _LOGGER.error(
-                "Received invalid oscillating value: %s. Expected: %s",
-                oscillating,
-                ", ".join(_VALID_OSC),
-            )
+        self._oscillating = oscillating
+        await self._set_oscillating_script.async_run(
+            {ATTR_OSCILLATING: oscillating}, context=self._context
+        )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -310,8 +323,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             )
         else:
             _LOGGER.error(
-                "Received invalid direction: %s. Expected: %s",
+                "Received invalid direction: %s for entity %s. Expected: %s",
                 direction,
+                self.entity_id,
                 ", ".join(_VALID_DIRECTIONS),
             )
 
@@ -325,12 +339,13 @@ class TemplateFan(TemplateEntity, FanEntity):
         # Validate state
         if result in _VALID_STATES:
             self._state = result
-        elif result in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif result in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid fan is_on state: %s. Expected: %s",
+                "Received invalid fan is_on state: %s for entity %s. Expected: %s",
                 result,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             self._state = None
@@ -338,12 +353,20 @@ class TemplateFan(TemplateEntity, FanEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
-        if self._speed_template is not None:
+        if self._preset_mode_template is not None:
             self.add_template_attribute(
-                "_speed",
-                self._speed_template,
+                "_preset_mode",
+                self._preset_mode_template,
                 None,
-                self._update_speed,
+                self._update_preset_mode,
+                none_on_template_error=True,
+            )
+        if self._percentage_template is not None:
+            self.add_template_attribute(
+                "_percentage",
+                self._percentage_template,
+                None,
+                self._update_percentage,
                 none_on_template_error=True,
             )
         if self._oscillating_template is not None:
@@ -365,17 +388,52 @@ class TemplateFan(TemplateEntity, FanEntity):
         await super().async_added_to_hass()
 
     @callback
-    def _update_speed(self, speed):
-        # Validate speed
-        if speed in self._speed_list:
-            self._speed = speed
-        elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
-            self._speed = None
+    def _update_percentage(self, percentage):
+        # Validate percentage
+        try:
+            percentage = int(float(percentage))
+        except ValueError:
+            _LOGGER.error(
+                "Received invalid percentage: %s for entity %s",
+                percentage,
+                self.entity_id,
+            )
+            self._percentage = 0
+            self._preset_mode = None
+            return
+
+        if 0 <= percentage <= 100:
+            self._percentage = percentage
+            self._preset_mode = None
         else:
             _LOGGER.error(
-                "Received invalid speed: %s. Expected: %s", speed, self._speed_list
+                "Received invalid percentage: %s for entity %s",
+                percentage,
+                self.entity_id,
             )
-            self._speed = None
+            self._percentage = 0
+            self._preset_mode = None
+
+    @callback
+    def _update_preset_mode(self, preset_mode):
+        # Validate preset mode
+        preset_mode = str(preset_mode)
+
+        if self.preset_modes and preset_mode in self.preset_modes:
+            self._percentage = None
+            self._preset_mode = preset_mode
+        elif preset_mode in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            self._percentage = None
+            self._preset_mode = None
+        else:
+            _LOGGER.error(
+                "Received invalid preset_mode: %s for entity %s. Expected: %s",
+                preset_mode,
+                self.entity_id,
+                self.preset_mode,
+            )
+            self._percentage = None
+            self._preset_mode = None
 
     @callback
     def _update_oscillating(self, oscillating):
@@ -384,12 +442,13 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._oscillating = True
         elif oscillating == "False" or oscillating is False:
             self._oscillating = False
-        elif oscillating in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif oscillating in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False",
+                "Received invalid oscillating: %s for entity %s. Expected: True/False",
                 oscillating,
+                self.entity_id,
             )
             self._oscillating = None
 
@@ -398,12 +457,13 @@ class TemplateFan(TemplateEntity, FanEntity):
         # Validate direction
         if direction in _VALID_DIRECTIONS:
             self._direction = direction
-        elif direction in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        elif direction in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             self._direction = None
         else:
             _LOGGER.error(
-                "Received invalid direction: %s. Expected: %s",
+                "Received invalid direction: %s for entity %s. Expected: %s",
                 direction,
+                self.entity_id,
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None

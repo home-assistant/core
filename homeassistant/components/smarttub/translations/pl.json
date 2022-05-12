@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Integracja SmartTub wymaga ponownego uwierzytelnienia konta",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "user": {
+                "data": {
+                    "email": "Adres e-mail",
+                    "password": "Has\u0142o"
+                },
+                "description": "Wprowad\u017a sw\u00f3j adres e-mail SmartTub oraz has\u0142o, aby si\u0119 zalogowa\u0107",
+                "title": "Logowanie"
+            }
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "empty": "Tidak ada hasil dalam penelusuran kota: periksa bidang isian kota"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Kota"
+                },
+                "description": "Pilih kota Anda dari daftar"
+            },
+            "user": {
+                "data": {
+                    "city": "Kota"
+                },
+                "description": "Masukkan kode pos (hanya untuk Prancis, disarankan) atau nama kota"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Mode prakiraan"
+                }
+            }
+        }
+    }
+}

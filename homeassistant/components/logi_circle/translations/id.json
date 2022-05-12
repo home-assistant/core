@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "external_error": "Eksepsi terjadi dari alur lain.",
+            "external_setup": "Logi Circle berhasil dikonfigurasi dari alur lain.",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi."
+        },
+        "error": {
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "follow_link": "Ikuti tautan dan autentikasi sebelum menekan Kirim.",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "auth": {
+                "description": "Buka tautan di bawah ini dan **Terima** akses ke akun Logi Circle Anda, lalu kembali dan tekan **Kirim** di bawah ini.\n\n[Tautan] ({authorization_url})",
+                "title": "Autentikasi dengan Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Penyedia"
+                },
+                "description": "Pilih melalui penyedia autentikasi mana yang ingin Anda autentikasi dengan Logi Circle.",
+                "title": "Penyedia Autentikasi"
+            }
+        }
+    }
+}

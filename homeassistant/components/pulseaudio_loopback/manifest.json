@@ -3,5 +3,6 @@
   "name": "PulseAudio Loopback",
   "documentation": "https://www.home-assistant.io/integrations/pulseaudio_loopback",
   "requirements": ["pulsectl==20.2.4"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

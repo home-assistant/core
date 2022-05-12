@@ -1,7 +1,10 @@
 """The tests for the InfluxDB sensor."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Dict, List, Type
+from http import HTTPStatus
+from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
@@ -24,7 +27,6 @@ from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_T
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import async_fire_time_changed
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"
@@ -42,27 +44,36 @@ BASE_V1_QUERY = {
     "queries": [
         {
             "name": "test",
+            "unique_id": "unique_test_id",
             "measurement": "measurement",
             "where": "where",
             "field": "field",
         }
     ],
 }
-BASE_V2_QUERY = {"queries_flux": [{"name": "test", "query": "query"}]}
+BASE_V2_QUERY = {
+    "queries_flux": [
+        {
+            "name": "test",
+            "unique_id": "unique_test_id",
+            "query": "query",
+        }
+    ]
+}
 
 
 @dataclass
 class Record:
     """Record in a Table."""
 
-    values: Dict
+    values: dict
 
 
 @dataclass
 class Table:
     """Table in an Influx 2 resultset."""
 
-    records: List[Type[Record]]
+    records: list[type[Record]]
 
 
 @pytest.fixture(name="mock_client")
@@ -230,6 +241,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "measurement": "measurement",
                         "where": "where",
@@ -258,6 +270,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries_flux": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "range_start": "start",
                         "range_stop": "end",
@@ -312,7 +325,7 @@ async def test_config_failure(hass, config_ext):
 async def test_state_matches_query_result(
     hass, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
-    """Test state of sensor matches respone from query api."""
+    """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42))
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
@@ -343,7 +356,7 @@ async def test_state_matches_query_result(
 async def test_state_matches_first_query_result_for_multiple_return(
     hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
 ):
-    """Test state of sensor matches respone from query api."""
+    """Test state of sensor matches response from query api."""
     set_query_mock(mock_client, return_value=make_resultset(42, "not used"))
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
@@ -369,7 +382,7 @@ async def test_state_matches_first_query_result_for_multiple_return(
 async def test_state_for_no_results(
     hass, caplog, mock_client, config_ext, queries, set_query_mock
 ):
-    """Test state of sensor matches respone from query api."""
+    """Test state of sensor matches response from query api."""
     set_query_mock(mock_client)
 
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
@@ -415,14 +428,14 @@ async def test_state_for_no_results(
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(status=400),
+            ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
         ),
     ],
     indirect=["mock_client"],
@@ -441,7 +454,7 @@ async def test_error_querying_influx(
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext, queries, set_query_mock, make_resultset",
+    "mock_client, config_ext, queries, set_query_mock, make_resultset, key",
     [
         (
             DEFAULT_API_VERSION,
@@ -450,6 +463,7 @@ async def test_error_querying_influx(
                 "queries": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "measurement": "measurement",
                         "where": "{{ illegal.template }}",
                         "field": "field",
@@ -458,19 +472,29 @@ async def test_error_querying_influx(
             },
             _set_query_mock_v1,
             _make_v1_resultset,
+            "where",
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
-            {"queries_flux": [{"name": "test", "query": "{{ illegal.template }}"}]},
+            {
+                "queries_flux": [
+                    {
+                        "name": "test",
+                        "unique_id": "unique_test_id",
+                        "query": "{{ illegal.template }}",
+                    }
+                ]
+            },
             _set_query_mock_v2,
             _make_v2_resultset,
+            "query",
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_error_rendering_template(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
+    hass, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset, key
 ):
     """Test behavior of sensor with error rendering template."""
     set_query_mock(mock_client, return_value=make_resultset(42))
@@ -478,7 +502,15 @@ async def test_error_rendering_template(
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
     assert sensors[0].state == STATE_UNKNOWN
     assert (
-        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
+        len(
+            [
+                record
+                for record in caplog.records
+                if record.levelname == "ERROR"
+                and f"Could not render {key} template" in record.msg
+            ]
+        )
+        == 1
     )
 
 
@@ -522,7 +554,7 @@ async def test_error_rendering_template(
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
             _make_v2_resultset,
         ),
     ],

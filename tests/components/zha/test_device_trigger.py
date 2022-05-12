@@ -3,21 +3,24 @@ from datetime import timedelta
 import time
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
-import homeassistant.components.zha.core.device as zha_core_device
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import (
     async_fire_time_changed,
     async_get_device_automations,
     async_mock_service,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 ON = 1
 OFF = 0
@@ -56,9 +59,10 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.Basic.cluster_id],
-                "out_clusters": [general.OnOff.cluster_id],
-                "device_type": 0,
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         }
     )
@@ -84,10 +88,12 @@ async def test_triggers(hass, mock_devices):
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
 
     expected_triggers = [
         {
@@ -96,6 +102,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -103,6 +110,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHAKEN,
             "subtype": SHAKEN,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -110,6 +118,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": DOUBLE_PRESS,
             "subtype": DOUBLE_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -117,6 +126,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHORT_PRESS,
             "subtype": SHORT_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -124,6 +134,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_PRESS,
             "subtype": LONG_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -131,6 +142,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_RELEASE,
             "subtype": LONG_RELEASE,
+            "metadata": {},
         },
     ]
     assert _same_lists(triggers, expected_triggers)
@@ -142,10 +154,12 @@ async def test_no_triggers(hass, mock_devices):
     _, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
     assert triggers == [
         {
             "device_id": reg_device.id,
@@ -153,6 +167,7 @@ async def test_no_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         }
     ]
 
@@ -171,8 +186,8 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
     }
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     assert await async_setup_component(
         hass,
@@ -250,9 +265,7 @@ async def test_device_offline_fires(
     await hass.async_block_till_done()
     assert zha_device.available is True
 
-    zigpy_device.last_seen = (
-        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2
-    )
+    zigpy_device.last_seen = time.time() - zha_device.consider_unavailable_time - 2
 
     # there are 3 checkins to perform before marking the device unavailable
     future = dt_util.utcnow() + timedelta(seconds=90)
@@ -264,7 +277,7 @@ async def test_device_offline_fires(
     await hass.async_block_till_done()
 
     future = dt_util.utcnow() + timedelta(
-        seconds=zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 100
+        seconds=zha_device.consider_unavailable_time + 100
     )
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
@@ -280,8 +293,8 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
     _, zha_device = mock_devices
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
         hass,
@@ -322,8 +335,8 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
     }
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    ha_device_registry = dr.async_get(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
         hass,

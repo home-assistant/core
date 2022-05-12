@@ -1,4 +1,6 @@
 """Tests for the Abode alarm control panel device."""
+from unittest.mock import PropertyMock, patch
+
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
@@ -14,25 +16,25 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.async_mock import PropertyMock, patch
 
 DEVICE_ID = "alarm_control_panel.abode_alarm"
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, ALARM_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     # Abode alarm device unique_id is the MAC address
     assert entry.unique_id == "001122334455"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the alarm control panel attributes are correct."""
     await setup_platform(hass, ALARM_DOMAIN)
 
@@ -45,7 +47,7 @@ async def test_attributes(hass):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
 
 
-async def test_set_alarm_away(hass):
+async def test_set_alarm_away(hass: HomeAssistant) -> None:
     """Test the alarm control panel can be set to away."""
     with patch("abodepy.AbodeEventController.add_device_callback") as mock_callback:
         with patch("abodepy.ALARM.AbodeAlarm.set_away") as mock_set_away:
@@ -74,7 +76,7 @@ async def test_set_alarm_away(hass):
             assert state.state == STATE_ALARM_ARMED_AWAY
 
 
-async def test_set_alarm_home(hass):
+async def test_set_alarm_home(hass: HomeAssistant) -> None:
     """Test the alarm control panel can be set to home."""
     with patch("abodepy.AbodeEventController.add_device_callback") as mock_callback:
         with patch("abodepy.ALARM.AbodeAlarm.set_home") as mock_set_home:
@@ -102,7 +104,7 @@ async def test_set_alarm_home(hass):
             assert state.state == STATE_ALARM_ARMED_HOME
 
 
-async def test_set_alarm_standby(hass):
+async def test_set_alarm_standby(hass: HomeAssistant) -> None:
     """Test the alarm control panel can be set to standby."""
     with patch("abodepy.AbodeEventController.add_device_callback") as mock_callback:
         with patch("abodepy.ALARM.AbodeAlarm.set_standby") as mock_set_standby:
@@ -129,7 +131,7 @@ async def test_set_alarm_standby(hass):
             assert state.state == STATE_ALARM_DISARMED
 
 
-async def test_state_unknown(hass):
+async def test_state_unknown(hass: HomeAssistant) -> None:
     """Test an unknown alarm control panel state."""
     with patch("abodepy.ALARM.AbodeAlarm.mode", new_callable=PropertyMock) as mock_mode:
         await setup_platform(hass, ALARM_DOMAIN)

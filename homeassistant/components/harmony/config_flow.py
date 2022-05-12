@@ -1,7 +1,10 @@
 """Config flow for Logitech Harmony Hub integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
+from aioharmony.hubconnector_websocket import HubConnector
+import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -13,8 +16,9 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
+from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -48,9 +52,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Harmony Hub."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Harmony config flow."""
         self.harmony_config = {}
 
@@ -79,17 +82,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Harmony device."""
         _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
 
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        parsed_url = urlparse(discovery_info.ssdp_location)
+        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
-        if self._host_already_configured(parsed_url.hostname):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
 
         self.harmony_config = {
@@ -97,16 +98,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
         }
 
-        harmony = await get_harmony_client_if_available(parsed_url.hostname)
+        connector = HubConnector(parsed_url.hostname, asyncio.Queue())
+        try:
+            remote_id = await connector.get_remote_id()
+        except aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
+        finally:
+            await connector.async_close_session()
 
-        if harmony:
-            unique_id = find_unique_id_for_remote(harmony)
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: self.harmony_config[CONF_HOST]}
-            )
-            self.harmony_config[UNIQUE_ID] = unique_id
-
+        unique_id = str(remote_id)
+        await self.async_set_unique_id(str(unique_id))
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.harmony_config[CONF_HOST]}
+        )
+        self.harmony_config[UNIQUE_ID] = unique_id
         return await self.async_step_link()
 
     async def async_step_link(self, user_input=None):
@@ -120,6 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.harmony_config, {}
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="link",
             errors=errors,
@@ -127,19 +133,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.harmony_config[CONF_NAME],
                 CONF_NAME: self.harmony_config[CONF_HOST],
             },
-        )
-
-    async def async_step_import(self, validated_input):
-        """Handle import."""
-        await self.async_set_unique_id(
-            validated_input[UNIQUE_ID], raise_on_progress=False
-        )
-        self._abort_if_unique_id_configured()
-
-        # Everything was validated in remote async_setup_platform
-        # all we do now is create.
-        return await self._async_create_entry_from_valid_input(
-            validated_input, validated_input
         )
 
     @staticmethod
@@ -161,16 +154,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=validated[CONF_NAME], data=data)
 
-    def _host_already_configured(self, host):
-        """See if we already have a harmony entry matching the host."""
-        for entry in self._async_current_entries():
-            if CONF_HOST not in entry.data:
-                continue
-
-            if entry.data[CONF_HOST] == host:
-                return True
-        return False
-
 
 def _options_from_user_input(user_input):
     options = {}
@@ -184,7 +167,7 @@ def _options_from_user_input(user_input):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Harmony."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -193,7 +176,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        remote = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        remote = self.hass.data[DOMAIN][self.config_entry.entry_id][HARMONY_DATA]
 
         data_schema = vol.Schema(
             {

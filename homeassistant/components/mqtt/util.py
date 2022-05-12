@@ -4,7 +4,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 
 from .const import (
     ATTR_PAYLOAD,
@@ -31,6 +31,15 @@ def valid_topic(value: Any) -> str:
         )
     if "\0" in value:
         raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+    if any(char <= "\u001F" for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
+    if any("\u007f" <= char <= "\u009F" for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
+    if any("\ufdd0" <= char <= "\ufdef" for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
+    if any((ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF) for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain noncharacters.")
+
     return value
 
 
@@ -59,6 +68,16 @@ def valid_subscribe_topic(value: Any) -> str:
             )
 
     return value
+
+
+def valid_subscribe_topic_template(value: Any) -> template.Template:
+    """Validate either a jinja2 template or a valid MQTT subscription topic."""
+    tpl = template.Template(value)
+
+    if tpl.is_static:
+        valid_subscribe_topic(value)
+
+    return tpl
 
 
 def valid_publish_topic(value: Any) -> str:

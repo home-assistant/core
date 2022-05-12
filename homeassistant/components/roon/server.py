@@ -2,16 +2,18 @@
 import asyncio
 import logging
 
-from roon import RoonApi
+from roonapi import RoonApi, RoonDiscovery
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
-from .const import ROON_APPINFO
+from .const import CONF_ROON_ID, ROON_APPINFO
 
 _LOGGER = logging.getLogger(__name__)
+INITIAL_SYNC_INTERVAL = 5
 FULL_SYNC_INTERVAL = 30
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 class RoonServer:
@@ -22,33 +24,51 @@ class RoonServer:
         self.config_entry = config_entry
         self.hass = hass
         self.roonapi = None
+        self.roon_id = None
         self.all_player_ids = set()
         self.all_playlists = []
         self.offline_devices = set()
         self._exit = False
-
-    @property
-    def host(self):
-        """Return the host of this server."""
-        return self.config_entry.data[CONF_HOST]
+        self._roon_name_by_id = {}
+        self._id_by_roon_name = {}
 
     async def async_setup(self, tries=0):
-        """Set up a roon server based on host parameter."""
-        host = self.host
+        """Set up a roon server based on config parameters."""
+
+        def get_roon_host():
+            host = self.config_entry.data.get(CONF_HOST)
+            port = self.config_entry.data.get(CONF_PORT)
+            if host:
+                _LOGGER.debug("static roon core host=%s port=%s", host, port)
+                return (host, port)
+
+            discover = RoonDiscovery(core_id)
+            server = discover.first()
+            discover.stop()
+            _LOGGER.debug("dynamic roon core core_id=%s server=%s", core_id, server)
+            return (server[0], server[1])
+
+        def get_roon_api():
+            token = self.config_entry.data[CONF_API_KEY]
+            (host, port) = get_roon_host()
+            return RoonApi(ROON_APPINFO, token, host, port, blocking_init=True)
+
         hass = self.hass
-        token = self.config_entry.data[CONF_API_KEY]
-        _LOGGER.debug("async_setup: %s %s", token, host)
-        self.roonapi = RoonApi(ROON_APPINFO, token, host, blocking_init=False)
+        core_id = self.config_entry.data.get(CONF_ROON_ID)
+
+        self.roonapi = await self.hass.async_add_executor_job(get_roon_api)
+
         self.roonapi.register_state_callback(
             self.roonapi_state_callback, event_filter=["zones_changed"]
         )
 
-        # initialize media_player platform
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "media_player"
-            )
+        # Default to 'host' for compatibility with older configs without core_id
+        self.roon_id = (
+            core_id if core_id is not None else self.config_entry.data[CONF_HOST]
         )
+
+        # initialize media_player platform
+        hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         # Initialize Roon background polling
         asyncio.create_task(self.async_do_loop())
@@ -69,6 +89,19 @@ class RoonServer:
         """Return list of zones."""
         return self.roonapi.zones
 
+    def add_player_id(self, entity_id, roon_name):
+        """Register a roon player."""
+        self._roon_name_by_id[entity_id] = roon_name
+        self._id_by_roon_name[roon_name] = entity_id
+
+    def roon_name(self, entity_id):
+        """Get the name of the roon player from entity_id."""
+        return self._roon_name_by_id.get(entity_id)
+
+    def entity_id(self, roon_name):
+        """Get the id of the roon player from the roon name."""
+        return self._id_by_roon_name.get(roon_name)
+
     def stop_roon(self):
         """Stop background worker."""
         self.roonapi.stop()
@@ -81,13 +114,14 @@ class RoonServer:
     async def async_do_loop(self):
         """Background work loop."""
         self._exit = False
+        await asyncio.sleep(INITIAL_SYNC_INTERVAL)
         while not self._exit:
             await self.async_update_players()
-            # await self.async_update_playlists()
             await asyncio.sleep(FULL_SYNC_INTERVAL)
 
     async def async_update_changed_players(self, changed_zones_ids):
         """Update the players which were reported as changed by the Roon API."""
+        _LOGGER.debug("async_update_changed_players %s", changed_zones_ids)
         for zone_id in changed_zones_ids:
             if zone_id not in self.roonapi.zones:
                 # device was removed ?
@@ -110,6 +144,7 @@ class RoonServer:
     async def async_update_players(self):
         """Periodic full scan of all devices."""
         zone_ids = self.roonapi.zones.keys()
+        _LOGGER.debug("async_update_players %s", zone_ids)
         await self.async_update_changed_players(zone_ids)
         # check for any removed devices
         all_devs = {}
@@ -127,27 +162,16 @@ class RoonServer:
             async_dispatcher_send(self.hass, "roon_media_player", player_data)
             self.offline_devices.add(dev_id)
 
-    async def async_update_playlists(self):
-        """Store lists in memory with all playlists - could be used by a custom lovelace card."""
-        all_playlists = []
-        roon_playlists = self.roonapi.playlists()
-        if roon_playlists and "items" in roon_playlists:
-            all_playlists += [item["title"] for item in roon_playlists["items"]]
-        roon_playlists = self.roonapi.internet_radio()
-        if roon_playlists and "items" in roon_playlists:
-            all_playlists += [item["title"] for item in roon_playlists["items"]]
-        self.all_playlists = all_playlists
-
     async def async_create_player_data(self, zone, output):
         """Create player object dict by combining zone with output."""
         new_dict = zone.copy()
         new_dict.update(output)
         new_dict.pop("outputs")
-        new_dict["host"] = self.host
+        new_dict["roon_id"] = self.roon_id
         new_dict["is_synced"] = len(zone["outputs"]) > 1
         new_dict["zone_name"] = zone["display_name"]
         new_dict["display_name"] = output["display_name"]
         new_dict["last_changed"] = utcnow()
         # we don't use the zone_id or output_id for now as unique id as I've seen cases were it changes for some reason
-        new_dict["dev_id"] = f"roon_{self.host}_{output['display_name']}"
+        new_dict["dev_id"] = f"roon_{self.roon_id}_{output['display_name']}"
         return new_dict

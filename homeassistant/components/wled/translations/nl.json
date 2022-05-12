@@ -1,23 +1,33 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit WLED-apparaat is al geconfigureerd.",
-            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "cct_unsupported": "Dit WLED-apparaat maakt gebruik van CCT-kanalen, wat niet wordt ondersteund door deze integratie"
         },
         "error": {
-            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostnaam of IP-adres"
+                    "host": "Host"
                 },
                 "description": "Stel uw WLED-integratie in met Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Wil je de WLED genaamd `{name}` toevoegen aan Home Assistant?",
                 "title": "Ontdekt WLED-apparaat"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Houd master light, zelfs met 1 LED-segment."
+                }
             }
         }
     }

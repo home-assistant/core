@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "\u10db\u10dd\u10ec\u10e7\u10dd\u10d1\u10d8\u10da\u10dd\u10d1\u10d0 \u10e3\u10d9\u10d5\u10d4 \u10d3\u10d0\u10d9\u10dd\u10dc\u10e4\u10d8\u10d2\u10e3\u10e0\u10d4\u10d1\u10e3\u10da\u10d8\u10d0"
+        },
+        "error": {
+            "cannot_connect": "\u10d9\u10d0\u10d5\u10e8\u10d8\u10e0\u10d8 \u10d5\u10d4\u10e0 \u10d3\u10d0\u10db\u10e7\u10d0\u10e0\u10d3\u10d0"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u10d7\u10e5\u10d5\u10d4\u10dc\u10d8 twinkly \u10db\u10dd\u10ec\u10e7\u10dd\u10d1\u10d8\u10da\u10dd\u10d1\u10d8\u10e1 \u10f0\u10dd\u10e1\u10e2\u10d8 (\u10d0\u10dc IP \u10db\u10d8\u10e1\u10d0\u10db\u10d0\u10e0\u10d7\u10d8)"
+                }
+            }
+        }
+    }
+}

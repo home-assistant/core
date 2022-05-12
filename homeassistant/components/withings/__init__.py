@@ -3,24 +3,27 @@ Support for the Withings API.
 
 For more details about this platform, please refer to the documentation at
 """
+from __future__ import annotations
+
 import asyncio
-from typing import Optional, cast
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
-from withings_api import WithingsAuth
-from withings_api.common import NotifyAppli, enum_or_raise
+from withings_api import AbstractWithingsApi, WithingsAuth
+from withings_api.common import NotifyAppli
 
 from homeassistant.components import webhook
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.webhook import (
     async_unregister as async_unregister_webhook,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_WEBHOOK_ID,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
@@ -36,11 +39,12 @@ from .common import (
 )
 
 DOMAIN = const.DOMAIN
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(const.CONF_PROFILES, invalidation_version="0.114"),
+            cv.deprecated(const.CONF_PROFILES),
             vol.Schema(
                 {
                     vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
@@ -65,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Withings component."""
     conf = config.get(DOMAIN, {})
-    if not conf:
+    if not (conf := config.get(DOMAIN, {})):
         return True
 
     # Make the config available to the oauth2 config flow.
@@ -80,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             conf[CONF_CLIENT_ID],
             conf[CONF_CLIENT_SECRET],
             f"{WithingsAuth.URL}/oauth2_user/authorize2",
-            f"{WithingsAuth.URL}/oauth2/token",
+            f"{AbstractWithingsApi.URL}/v2/oauth2",
         ),
     )
 
@@ -107,10 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     const.CONF_USE_WEBHOOK
                 ],
                 CONF_WEBHOOK_ID: webhook_id,
-                const.CONF_WEBHOOK_URL: entry.data.get(
-                    const.CONF_WEBHOOK_URL,
-                    webhook.async_generate_url(hass, webhook_id),
-                ),
             },
         }
 
@@ -120,9 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_manager = await async_get_data_manager(hass, entry)
 
     _LOGGER.debug("Confirming %s is authenticated to withings", data_manager.profile)
-    await data_manager.poll_data_update_coordinator.async_refresh()
-    if not data_manager.poll_data_update_coordinator.last_update_success:
-        raise ConfigEntryNotReady()
+    await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
 
     webhook.async_register(
         hass,
@@ -145,12 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Start subscription check in the background, outside this component's setup.
         async_call_later(hass, 1, async_call_later_callback)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -164,8 +157,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await asyncio.gather(
         data_manager.async_unsubscribe_webhook(),
-        hass.config_entries.async_forward_entry_unload(entry, BINARY_SENSOR_DOMAIN),
-        hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN),
+        hass.config_entries.async_unload_platforms(entry, PLATFORMS),
     )
 
     async_remove_data_manager(hass, entry)
@@ -175,7 +167,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_webhook_handler(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> Optional[Response]:
+) -> Response | None:
     """Handle webhooks calls."""
     # Handle http head calls to the path.
     # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.
@@ -195,9 +187,7 @@ async def async_webhook_handler(
         return json_message_response("Parameter appli not provided", message_code=20)
 
     try:
-        appli = cast(
-            NotifyAppli, enum_or_raise(int(params.getone("appli")), NotifyAppli)
-        )
+        appli = NotifyAppli(int(params.getone("appli")))
     except ValueError:
         return json_message_response("Invalid appli provided", message_code=21)
 

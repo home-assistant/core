@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Integrasi Sense perlu mengautentikasi ulang akun Anda {email}.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Kata Sandi",
+                    "timeout": "Tenggang waktu"
+                },
+                "title": "Hubungkan ke Sense Energy Monitor Anda"
+            },
+            "validation": {
+                "data": {
+                    "code": "Kode verifikasi"
+                },
+                "title": "Autentikasi Multifaktor Sense"
+            }
+        }
+    }
+}

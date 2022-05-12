@@ -1,8 +1,0 @@
-{
-    "config": {
-        "error": {
-            "cannot_connect": "Falha ao conectar, tente novamente",
-            "unknown": "Erro inesperado"
-        }
-    }
-}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "name": "\u540d\u7a31"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "\u95a5\u503c (%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA Aurora \u611f\u6e2c\u5668"
+}
