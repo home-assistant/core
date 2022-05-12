@@ -1,4 +1,8 @@
-"""The tests for sensor recorder platform migrating statistics from v23."""
+"""The tests for sensor recorder platform migrating statistics from v23.
+
+The v23 schema used for these tests has been slightly modified to add the
+EventData table to allow the recorder to startup successfully.
+"""
 # pylint: disable=protected-access,invalid-name
 import importlib
 import json
@@ -21,6 +25,7 @@ from tests.components.recorder.common import wait_recording_done
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
+SCHEMA_MODULE = "tests.components.recorder.models_schema_23_with_newer_columns"
 
 
 def _create_engine_test(*args, **kwargs):
@@ -28,9 +33,8 @@ def _create_engine_test(*args, **kwargs):
 
     This simulates an existing db with the old schema.
     """
-    module = "tests.components.recorder.models_schema_23_with_newer_columns"
-    importlib.import_module(module)
-    old_models = sys.modules[module]
+    importlib.import_module(SCHEMA_MODULE)
+    old_models = sys.modules[SCHEMA_MODULE]
     engine = create_engine(*args, **kwargs)
     old_models.Base.metadata.create_all(engine)
     with Session(engine) as session:
@@ -47,9 +51,8 @@ def test_delete_duplicates(caplog, tmpdir):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    module = "tests.components.recorder.models_schema_23_with_newer_columns"
-    importlib.import_module(module)
-    old_models = sys.modules[module]
+    importlib.import_module(SCHEMA_MODULE)
+    old_models = sys.modules[SCHEMA_MODULE]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -214,9 +217,8 @@ def test_delete_duplicates_many(caplog, tmpdir):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    module = "tests.components.recorder.models_schema_23_with_newer_columns"
-    importlib.import_module(module)
-    old_models = sys.modules[module]
+    importlib.import_module(SCHEMA_MODULE)
+    old_models = sys.modules[SCHEMA_MODULE]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -388,9 +390,8 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    module = "tests.components.recorder.models_schema_23_with_newer_columns"
-    importlib.import_module(module)
-    old_models = sys.modules[module]
+    importlib.import_module(SCHEMA_MODULE)
+    old_models = sys.modules[SCHEMA_MODULE]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -558,9 +559,8 @@ def test_delete_duplicates_short_term(caplog, tmpdir):
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    module = "tests.components.recorder.models_schema_23"
-    importlib.import_module(module)
-    old_models = sys.modules[module]
+    importlib.import_module(SCHEMA_MODULE)
+    old_models = sys.modules[SCHEMA_MODULE]
 
     period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
 
