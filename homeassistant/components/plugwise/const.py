@@ -12,7 +12,6 @@ DOMAIN: Final = "plugwise"
 LOGGER = logging.getLogger(__package__)
 
 API: Final = "api"
-CONF_VENDOR: Final = "vendor"
 FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
 FLOW_STRETCH: Final = "stretch (Stretch)"
 FLOW_TYPE: Final = "flow_type"
