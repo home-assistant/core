@@ -11,6 +11,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
+from homeassistant.const import TIME_SECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +34,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         min_value=ONE_MIN_SECS,
         max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
     ),
     NumberEntityDescription(
         key="motion_sense_timeout",
@@ -40,6 +42,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         min_value=ONE_MIN_SECS,
         max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
     ),
     NumberEntityDescription(
         key="comfort_min_speed",
@@ -71,6 +74,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         min_value=ONE_MIN_SECS,
         max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
     ),
     NumberEntityDescription(
         key="light_auto_motion_timeout",
@@ -78,6 +82,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         min_value=ONE_MIN_SECS,
         max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
     ),
 )
 
