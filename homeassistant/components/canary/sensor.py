@@ -221,7 +221,6 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         reading = self.reading
 
         if self._sensor_type[0] == SensorType.AIR_QUALITY.value and reading is not None:
-            air_quality = None
             if reading <= 0.4:
                 air_quality = STATE_AIR_QUALITY_VERY_ABNORMAL
             elif reading <= 0.59:

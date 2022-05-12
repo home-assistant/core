@@ -204,6 +204,8 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             self._last_image_id = (
                 None if self._last_event is None else self._last_event.entry_id
             )
+            utcnow = dt_util.utcnow()
+            self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
             _LOGGER.debug("Got the latest entry image for %s", self._attr_name)
         except httpx.TimeoutException:
             _LOGGER.error("Timeout getting camera image from %s", self._attr_name)
@@ -215,15 +217,20 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     async def _check_for_new_image(self) -> None:
         await self._set_last_event()
 
+        utcnow = dt_util.utcnow()
+
         if self._last_event is None:
             # if we don't have any events for the day refresh the image every so often
-            utcnow = dt_util.utcnow()
             if utcnow <= self._expires_at:
                 return
-            self._image = None
-            self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
-            _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
+            await self._expire_image()
+            return
 
+        if (
+            self._last_image_id == self._last_event.entry_id
+            and utcnow >= self._expires_at
+        ):
+            await self._expire_image()
             return
         if self._last_image_id != self._last_event.entry_id:
             self._image = None
@@ -231,6 +238,13 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             self._image_url = self._last_event.thumbnails[0].image_url
         except IndexError:
             self._image_url = None
+
+    async def _expire_image(self) -> None:
+        utcnow = dt_util.utcnow()
+        self._image = None
+        self._image_url = None
+        self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
+        _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
