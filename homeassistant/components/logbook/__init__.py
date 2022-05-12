@@ -221,6 +221,7 @@ async def ws_get_events(
     """Handle logbook get events websocket command."""
     start_time_str = msg["start_time"]
     end_time_str = msg.get("end_time")
+    utc_now = dt_util.utcnow()
 
     if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
@@ -235,9 +236,9 @@ async def ws_get_events(
             connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
             return
     else:
-        end_time = None
+        end_time = utc_now
 
-    if start_time > dt_util.utcnow():
+    if start_time > utc_now:
         connection.send_result(msg["id"], {})
         return
 
