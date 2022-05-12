@@ -123,7 +123,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_form_already_configured(hass):
-    """Test we handle cannot connect error."""
+    """Test we handle already configured error."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
@@ -188,7 +188,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test a successful reconfig flow."""
+    """Test a successful reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -236,7 +236,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
-    """Test a successful reconfig flow."""
+    """Test a successful reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -280,7 +280,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_flow_other_error(hass: HomeAssistant) -> None:
-    """Test a successful reconfig flow."""
+    """Test an unsuccessful reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
