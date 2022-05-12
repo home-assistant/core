@@ -45,6 +45,8 @@ from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
+PARALLEL_UPDATES = 0
+
 LOGGER = logging.getLogger(__name__)
 
 MULTI_COLOR_MAP = {
