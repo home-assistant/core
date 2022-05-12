@@ -623,7 +623,7 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
 
 
 def process_datetime_to_timestamp(ts: datetime) -> float:
-    """Process a timestamp into a unix timestamp.
+    """Process a datebase datetime to epoch.
 
     Since the databases store all the times in UTC
     when sqlalchemy (sqlite case) converts the row
