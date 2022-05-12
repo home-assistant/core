@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import ValuesView
 from typing import Optional, TypedDict
 
-from canary.model import Entry, Location
+from canary.model import Entry, Location, SensorType
 
 
 class CanaryData(TypedDict):
@@ -15,4 +15,6 @@ class CanaryData(TypedDict):
     entries: dict[str, list[Entry]]
 
 
-SensorTypeItem = tuple[str, Optional[str], Optional[str], Optional[str], list[str]]
+SensorTypeItem = tuple[
+    SensorType, Optional[str], Optional[str], Optional[str], list[str], str
+]

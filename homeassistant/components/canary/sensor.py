@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from typing import Final, cast
 
 from canary.model import Device, Location, SensorType
@@ -18,7 +19,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .const import (
+    DATA_COORDINATOR,
+    DATA_TYPE_ENTRY,
+    DATA_TYPE_READING,
+    DOMAIN,
+    MANUFACTURER,
+)
 from .coordinator import CanaryDataUpdateCoordinator
 from .model import SensorTypeItem
 
@@ -36,36 +43,69 @@ CANARY_VIEW: Final = "Canary View"
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES: Final[list[SensorTypeItem]] = [
-    ("temperature", TEMP_CELSIUS, None, SensorDeviceClass.TEMPERATURE, [CANARY_PRO]),
-    ("humidity", PERCENTAGE, None, SensorDeviceClass.HUMIDITY, [CANARY_PRO]),
-    ("air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]),
     (
-        "wifi",
+        SensorType.TEMPERATURE,
+        TEMP_CELSIUS,
+        None,
+        SensorDeviceClass.TEMPERATURE,
+        [CANARY_PRO],
+        DATA_TYPE_READING,
+    ),
+    (
+        SensorType.HUMIDITY,
+        PERCENTAGE,
+        None,
+        SensorDeviceClass.HUMIDITY,
+        [CANARY_PRO],
+        DATA_TYPE_READING,
+    ),
+    (
+        SensorType.AIR_QUALITY,
+        None,
+        "weather-windy",
+        None,
+        [CANARY_PRO],
+        DATA_TYPE_READING,
+    ),
+    (
+        SensorType.WIFI,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
         SensorDeviceClass.SIGNAL_STRENGTH,
         [CANARY_PRO, CANARY_FLEX, CANARY_VIEW],
+        DATA_TYPE_READING,
     ),
-    ("battery", PERCENTAGE, None, SensorDeviceClass.BATTERY, [CANARY_FLEX]),
     (
-        "last_entry_date",
+        SensorType.BATTERY,
+        PERCENTAGE,
         None,
-        "mdi:run-fast",
+        SensorDeviceClass.BATTERY,
+        [CANARY_FLEX],
+        DATA_TYPE_READING,
+    ),
+    (
+        SensorType.DATE_LAST_ENTRY,
+        None,
+        "run-fast",
         SensorDeviceClass.TIMESTAMP,
         [CANARY_PRO, CANARY_FLEX],
+        DATA_TYPE_ENTRY,
     ),
     (
-        "entries_captured_today",
+        SensorType.ENTRIES_CAPTURED_TODAY,
         None,
-        "mdi:file-video",
+        "file-video",
         None,
         [CANARY_PRO, CANARY_FLEX, CANARY_VIEW],
+        DATA_TYPE_ENTRY,
     ),
 ]
 
 STATE_AIR_QUALITY_NORMAL: Final = "normal"
 STATE_AIR_QUALITY_ABNORMAL: Final = "abnormal"
 STATE_AIR_QUALITY_VERY_ABNORMAL: Final = "very_abnormal"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -108,36 +148,11 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._sensor_type = sensor_type
         self._device_id = device.device_id
 
-        sensor_type_name = sensor_type[0].replace("_", " ").title()
+        sensor_type_name = sensor_type[0].value.replace("_", " ").title()
         self._attr_name = f"{location.name} {device.name} {sensor_type_name}"
-
-        canary_sensor_type = None
-        canary_data_type = None
-        if self._sensor_type[0] == "air_quality":
-            canary_sensor_type = SensorType.AIR_QUALITY
-            canary_data_type = "reading"
-        elif self._sensor_type[0] == "temperature":
-            canary_sensor_type = SensorType.TEMPERATURE
-            canary_data_type = "reading"
-        elif self._sensor_type[0] == "humidity":
-            canary_sensor_type = SensorType.HUMIDITY
-            canary_data_type = "reading"
-        elif self._sensor_type[0] == "wifi":
-            canary_sensor_type = SensorType.WIFI
-            canary_data_type = "reading"
-        elif self._sensor_type[0] == "battery":
-            canary_sensor_type = SensorType.BATTERY
-            canary_data_type = "reading"
-        elif self._sensor_type[0] == "last_entry_date":
-            canary_sensor_type = SensorType.DATE_LAST_ENTRY
-            canary_data_type = "entry"
-        elif self._sensor_type[0] == "entries_captured_today":
-            canary_sensor_type = SensorType.ENTRIES_CAPTURED_TODAY
-            canary_data_type = "entry"
-
-        self._canary_type = canary_sensor_type
-        self._canary_data_type = canary_data_type
-        self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
+        self._canary_type = self._sensor_type[0]
+        self._canary_data_type = self._sensor_type[5]
+        self._attr_unique_id = f"{device.device_id}_{sensor_type[0].value}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device.device_id))},
             model=device.device_type["name"],
@@ -146,13 +161,14 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         )
         self._attr_native_unit_of_measurement = sensor_type[1]
         self._attr_device_class = sensor_type[3]
-        self._attr_icon = sensor_type[2]
+        self._attr_icon = None if sensor_type[2] is None else f"mdi:{sensor_type[2]}"
+        _LOGGER.info("CanarySensor: %s created", self._attr_name)
 
     @property
     def reading(self) -> float | None:
         """Return the device sensor reading."""
         try:
-            readings = self.coordinator.data["readings"][self._device_id]
+            readings = self.coordinator.data[DATA_TYPE_READING][self._device_id]
         except KeyError:
             return None
 
@@ -171,26 +187,31 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         return None
 
     @property
+    def entry(self) -> str | datetime | int | None:
+        """Return the state of the entry sensor."""
+        try:
+            entry = self.coordinator.data[DATA_TYPE_ENTRY][self._device_id]
+        except KeyError:
+            return None
+
+        if entry is not None:
+            if self._sensor_type[0] == SensorType.ENTRIES_CAPTURED_TODAY:
+                return len(entry)
+            if self._sensor_type[0] == SensorType.DATE_LAST_ENTRY:
+                try:
+                    last_entry_date = entry[0].start_time
+                    return cast(datetime, last_entry_date)
+                except IndexError:
+                    return None
+        return None
+
+    @property
     def native_value(self) -> float | str | datetime | int | None:
         """Return the state of the sensor."""
-        if self._canary_data_type == "reading":
+        if self._canary_data_type == DATA_TYPE_READING:
             return self.reading
-        if self._canary_data_type == "entry":
-            try:
-                entry = self.coordinator.data["entries"][self._device_id]
-            except KeyError:
-                return None
-
-            if entry is not None:
-                if self._sensor_type[0] == "entries_captured_today":
-                    return len(entry)
-                if self._sensor_type[0] == "last_entry_date":
-                    try:
-                        last_entry_date = entry[0].start_time
-                        return cast(datetime, last_entry_date)
-                    except IndexError:
-                        return None
-
+        if self._canary_data_type == DATA_TYPE_ENTRY:
+            return self.entry
         return None
 
     @property
