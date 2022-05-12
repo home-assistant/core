@@ -570,7 +570,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
     @property
     def current_cover_tilt_position(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self._current_hd_cover_vane)
+        return hd_position_to_hass(self._current_hd_cover_vane, self._max_tilt)
 
     @property
     def get_transition_steps(self):
