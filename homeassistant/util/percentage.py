@@ -21,11 +21,12 @@ def ordered_list_item_to_percentage(ordered_list: list[_T], item: _T) -> int:
         very_high: 100
 
     """
-    if item not in ordered_list:
+    s_item = str(item)
+    if s_item not in ordered_list:
         raise ValueError(f'The item "{item}"" is not in "{ordered_list}"')
 
     list_len = len(ordered_list)
-    list_position = ordered_list.index(item) + 1
+    list_position = ordered_list.index(s_item) + 1
     return (list_position * 100) // list_len
 
 
