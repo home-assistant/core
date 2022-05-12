@@ -103,7 +103,7 @@ async def test_configure_platforms_dynamically(
     assert hass.states.get("siren.eerste_etage") is not None
     assert hass.states.get("siren.zolder") is not None
 
-    # Remove device 1 from api data, entity should be removed
+    # Remove device 1 from api data, entity should appear offline with an unknown state
     updated_status_data.pop(1)
 
     mock_k1_connector["result"].return_value = updated_status_data
@@ -111,6 +111,6 @@ async def test_configure_platforms_dynamically(
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
 
-    assert hass.states.get("siren.beganegrond") is None
+    assert hass.states.get("siren.beganegrond").state == "unknown"
     assert hass.states.get("siren.eerste_etage") is not None
     assert hass.states.get("siren.zolder") is not None

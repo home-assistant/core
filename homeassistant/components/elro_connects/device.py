@@ -18,7 +18,7 @@ from elro.utils import update_state_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -66,7 +66,6 @@ class ElroConnectsK1(K1):
         """Synchronize with the K1 connector."""
         new_data: dict[int, dict] = {}
         try:
-            self._retry_count += 1
             # Only connect the first time or if there were recent issues
             if not self._connected:
                 await self.async_connect()
@@ -78,6 +77,7 @@ class ElroConnectsK1(K1):
             self._retry_count = 0
             self._data = new_data
         except K1.K1ConnectionError as err:
+            self._retry_count += 1
             self._connected = False
             if not self._data or self._retry_count >= MAX_RETRIES:
                 raise K1.K1ConnectionError(err) from err
@@ -139,17 +139,7 @@ class ElroConnectsEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        if self._device_id in self.coordinator.data:
-            self.data = self.coordinator.data[self._device_id]
-        else:
-            # device removed, remove entity
-            _LOGGER.debug(
-                "Entity %s was removed from the connector, cleaning up", self.entity_id
-            )
-            entity_registry = er.async_get(self.hass)
-            if entity_registry.async_get(self.entity_id):
-                entity_registry.async_remove(self.entity_id)
-
+        self.data = self.coordinator.data[self._device_id]
         self.async_write_ha_state()
 
     @property

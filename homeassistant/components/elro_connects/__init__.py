@@ -1,10 +1,12 @@
 """The Elro Connects integration."""
 from __future__ import annotations
 
+import copy
 from datetime import timedelta
 import logging
 
 from elro.api import K1
+from elro.device import ATTR_DEVICE_STATE, STATE_OFFLINE, STATE_UNKNOWN
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_RELOAD, Platform
@@ -27,8 +29,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _async_update_data() -> dict[int, dict]:
         """Update data via API."""
         nonlocal current_device_set
+        # get state from coordinator cash in case the current state is unknown
+        coordinator_update: dict[int, dict] = copy.deepcopy(coordinator.data or {})
+        # set initial state to offline
+        for device_id, state_base in coordinator_update.items():
+            state_base[ATTR_DEVICE_STATE] = STATE_OFFLINE
         try:
             await elro_connects_api.async_update()
+            device_update = copy.deepcopy(elro_connects_api.data)
+            for device_id, device_data in device_update.items():
+                if device_id not in coordinator_update:
+                    # new device, or known state
+                    coordinator_update[device_id] = device_data
+                elif device_data[ATTR_DEVICE_STATE] == STATE_UNKNOWN:
+                    # update device state only, other data is not valid
+                    coordinator_update[device_id][ATTR_DEVICE_STATE] = device_data[
+                        ATTR_DEVICE_STATE
+                    ]
+                else:
+                    # update full state
+                    coordinator_update[device_id] = device_data
+
         except K1.K1ConnectionError as err:
             raise UpdateFailed(err) from err
         new_set = set(elro_connects_api.data.keys())
@@ -43,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 {},
                 blocking=False,
             )
-        return elro_connects_api.data
+        return coordinator_update
 
     async def async_reload(call: ServiceCall) -> None:
         """Reload the integration."""
