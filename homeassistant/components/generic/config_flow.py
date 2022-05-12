@@ -46,6 +46,7 @@ from .const import (
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     DOMAIN,
     GET_IMAGE_TIMEOUT,
@@ -214,6 +215,13 @@ async def async_test_stream(hass, info) -> dict[str, str]:
                 "stimeout": "5000000",
                 **pyav_options,
             }
+<<<<<<< HEAD
+=======
+        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+            stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
+        if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+            stream_options[FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]] = "1"
+>>>>>>> 2500cc6132 (Add use_wallclock_as_timestamps option to generic (#71245))
         _LOGGER.debug("Attempting to open stream %s", stream_source)
         container = await hass.async_add_executor_job(
             partial(
@@ -372,10 +380,14 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
+<<<<<<< HEAD
                         CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                         self.config_entry.options.get(
                             CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
                         ),
+=======
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS
+>>>>>>> 2500cc6132 (Add use_wallclock_as_timestamps option to generic (#71245))
                     ),
                 }
                 return self.async_create_entry(

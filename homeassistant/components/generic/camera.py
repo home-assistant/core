@@ -41,6 +41,7 @@ from .const import (
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     GET_IMAGE_TIMEOUT,
 )
@@ -161,7 +162,13 @@ class GenericCamera(Camera):
             self.stream_options[CONF_RTSP_TRANSPORT] = device_info[CONF_RTSP_TRANSPORT]
         self._auth = generate_auth(device_info)
         if device_info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+<<<<<<< HEAD
             self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+=======
+            self.stream_options[
+                FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]
+            ] = "1"
+>>>>>>> 2500cc6132 (Add use_wallclock_as_timestamps option to generic (#71245))
 
         self._last_url = None
         self._last_image = None
