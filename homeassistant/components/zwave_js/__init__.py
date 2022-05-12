@@ -131,7 +131,7 @@ def register_node_in_dev_reg(
     dev_reg: device_registry.DeviceRegistry,
     client: ZwaveClient,
     node: ZwaveNode,
-    remove_device_func: Callable[[device_registry.DeviceEntry], None] | None = None,
+    remove_device_func: Callable[[device_registry.DeviceEntry], None],
 ) -> device_registry.DeviceEntry:
     """Register node in dev reg."""
     device_id = get_device_id(client, node)
@@ -141,8 +141,7 @@ def register_node_in_dev_reg(
     # Replace the device if it can be determined that this node is not the
     # same product as it was previously.
     if (
-        remove_device_func
-        and device_id_ext
+        device_id_ext
         and device
         and len(device.identifiers) == 2
         and device_id_ext not in device.identifiers

@@ -387,21 +387,6 @@ def copy_available_params(
     )
 
 
-@callback
-def async_is_device_config_entry_not_loaded(
-    hass: HomeAssistant, device_id: str
-) -> bool:
-    """Return whether device's config entries are not loaded."""
-    dev_reg = dr.async_get(hass)
-    if (device := dev_reg.async_get(device_id)) is None:
-        raise ValueError(f"Device {device_id} not found")
-    return any(
-        (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.state != ConfigEntryState.LOADED
-        for entry_id in device.config_entries
-    )
-
-
 def get_value_state_schema(
     value: ZwaveValue,
 ) -> vol.Schema | None:
