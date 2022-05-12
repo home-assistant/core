@@ -17,10 +17,18 @@ from .entity import JuiceNetDevice
 
 
 @dataclass
-class JuiceNetNumberEntityDescription(NumberEntityDescription):
+class JuiceNetNumberEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    setter_key: str
+
+
+@dataclass
+class JuiceNetNumberEntityDescription(
+    NumberEntityDescription, JuiceNetNumberEntityDescriptionMixin
+):
     """An entity description for a JuiceNetNumber."""
 
-    setter_key: str | None = None
     max_value_key: str | None = None
 
 
@@ -87,7 +95,4 @@ class JuiceNetNumber(JuiceNetDevice, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-        if self.entity_description.setter_key is not None:
-            await getattr(self.device, self.entity_description.setter_key)(value)
-        else:
-            raise NotImplementedError
+        await getattr(self.device, self.entity_description.setter_key)(value)
