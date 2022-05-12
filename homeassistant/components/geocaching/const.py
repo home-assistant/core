@@ -19,9 +19,9 @@ ENVIRONMENT_URLS = {
         token_url="https://oauth-staging.geocaching.com/token",
     ),
     GeocachingApiEnvironment.Production: GeocachingOAuthApiUrls(
-        authorize_url="https://geocaching.com/oauth/authorize.aspx",
-        token_url="https://staging.geocaching.com/token",
+        authorize_url="https://www.geocaching.com/oauth/authorize.aspx",
+        token_url="https://oauth.geocaching.com/token",
     ),
 }
 
-ENVIRONMENT = GeocachingApiEnvironment.Staging
+ENVIRONMENT = GeocachingApiEnvironment.Production
