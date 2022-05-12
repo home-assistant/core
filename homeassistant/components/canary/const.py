@@ -14,6 +14,7 @@ DATA_COORDINATOR: Final = "coordinator"
 DATA_UNDO_UPDATE_LISTENER: Final = "undo_update_listener"
 DATA_TYPE_ENTRY: Final = "entries"
 DATA_TYPE_READING: Final = "readings"
+DATA_TYPE_LOCATIONS: Final = "locations"
 
 # Defaults
 DEFAULT_FFMPEG_ARGUMENTS: Final = "-pred 1"
