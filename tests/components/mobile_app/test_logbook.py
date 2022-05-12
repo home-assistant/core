@@ -41,8 +41,10 @@ async def test_humanify_ios_events(hass):
     assert event1["domain"] == DOMAIN
     assert event1["message"] == "entered zone zone.happy_place"
     assert event1["icon"] == "mdi:crosshairs-gps"
+    assert event1["entity_id"] == "zone.happy_place"
 
     assert event2["name"] == "test_phone"
     assert event2["domain"] == DOMAIN
     assert event2["message"] == "exited zone passport control"
     assert event2["icon"] == "mdi:airplane-marker"
+    assert event2["entity_id"] == "zone.bad_place"
