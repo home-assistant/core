@@ -526,7 +526,7 @@ async def test_set_config_parameter_gather(
     integration,
 ):
     """Test the set_config_parameter service gather functionality."""
-    # Test setting config parameter by property and validate that the first node which
+    # Test setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -799,7 +799,7 @@ async def test_bulk_set_config_parameters_gather(
     integration,
 ):
     """Test the bulk_set_partial_config_parameters service gather functionality."""
-    # Test setting config parameter by property and validate that the first node which
+    # Test setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -1238,7 +1238,7 @@ async def test_set_value_gather(
     integration,
 ):
     """Test the set_value service gather functionality."""
-    # Test setting config parameter by property and validate that the first node which
+    # Test setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -1893,7 +1893,7 @@ async def test_invoke_cc_api(
     client.async_send_command_no_wait.reset_mock()
 
     # Test failed invoke_cc_api call on one node. We return the error on
-    # the first node int he call to make sure that gather works as expected
+    # the first node in the call to make sure that gather works as expected
     client.async_send_command.return_value = {"response": True}
     client.async_send_command_no_wait.side_effect = FailedZWaveCommand(
         "test", 12, "test"
