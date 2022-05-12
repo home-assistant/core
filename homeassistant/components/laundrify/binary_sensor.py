@@ -68,4 +68,4 @@ class LaundrifyPowerPlug(
     @property
     def is_on(self) -> bool:
         """Return entity state."""
-        return bool(self.coordinator.data[self.unique_id]["status"] == "ON")
+        return self._device["status"] == "ON"
