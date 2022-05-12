@@ -65,6 +65,7 @@ SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 def build_schema(
     user_input: dict[str, Any] | MappingProxyType[str, Any],
     is_options_flow: bool = False,
+    show_advanced_options=False,
 ):
     """Create schema for camera config setup."""
     spec = {
@@ -107,12 +108,13 @@ def build_schema(
                 default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
             )
         ] = bool
-        spec[
-            vol.Required(
-                CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                default=user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
-            )
-        ] = bool
+        if show_advanced_options:
+            spec[
+                vol.Required(
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                    default=user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+                )
+            ] = bool
     return vol.Schema(spec)
 
 
@@ -365,9 +367,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     ],
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input[
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
                         CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-                    ],
+                    ),
                 }
                 return self.async_create_entry(
                     title=title,
@@ -375,6 +377,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 )
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(user_input or self.config_entry.options, True),
+            data_schema=build_schema(
+                user_input or self.config_entry.options,
+                True,
+                self.show_advanced_options,
+            ),
             errors=errors,
         )

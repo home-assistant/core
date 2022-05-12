@@ -672,7 +672,9 @@ async def test_use_wallclock_as_timestamps_option(hass, fakeimg_png, mock_av_ope
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+        result = await hass.config_entries.options.async_init(
+            mock_entry.entry_id, context={"show_advanced_options": True}
+        )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
 
