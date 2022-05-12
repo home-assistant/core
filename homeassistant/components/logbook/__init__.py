@@ -598,15 +598,17 @@ class ContextAugmenter:
                     data["context_entity_id_name"] = described[ATTR_ENTITY_ID]
             return
 
-        if not entity_id:
-            return
-
-        attr_entity_id = _row_event_data_extract(context_row, ENTITY_ID_JSON_EXTRACT)
-        if attr_entity_id is None or (
-            event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
+        if (
+            not entity_id
+            or (
+                attr_entity_id := _row_event_data_extract(
+                    context_row, ENTITY_ID_JSON_EXTRACT
+                )
+            )
+            is None
+            or attr_entity_id == entity_id
         ):
             return
-
         data["context_entity_id"] = attr_entity_id
         data["context_entity_id_name"] = self.entity_name_cache.get(
             attr_entity_id, context_row
