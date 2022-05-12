@@ -2092,7 +2092,7 @@ async def websocket_subscribe_node_statistics(
             {
                 "event": "statistics updated",
                 "source": "node",
-                "node_id": node.node_id,
+                "nodeId": node.node_id,
                 **_get_node_statistics_dict(node.statistics),
             },
         )
