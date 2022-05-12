@@ -33,6 +33,7 @@ UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 
 EVENT_COLUMNS = (
+    Events.event_id.label("event_id"),
     Events.event_type.label("event_type"),
     Events.event_data.label("event_data"),
     Events.time_fired.label("time_fired"),
@@ -42,6 +43,7 @@ EVENT_COLUMNS = (
 )
 
 STATE_COLUMNS = (
+    States.state_id.label("state_id"),
     States.state.label("state"),
     States.entity_id.label("entity_id"),
     States.attributes.label("attributes"),
@@ -49,6 +51,7 @@ STATE_COLUMNS = (
 )
 
 EMPTY_STATE_COLUMNS = (
+    literal(value=None, type_=sqlalchemy.String).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.Text).label("attributes"),
@@ -294,6 +297,7 @@ def _select_states(start_day: dt, end_day: dt) -> Select:
     old_state = aliased(States, name="old_state")
     return (
         select(
+            literal(value=None, type_=sqlalchemy.Text).label("event_id"),
             literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
                 "event_type"
             ),
