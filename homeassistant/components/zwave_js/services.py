@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, CommandStatus
-from zwave_js_server.exceptions import FailedCommand, SetValueFailed
+from zwave_js_server.exceptions import SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import get_value_id
@@ -38,6 +39,12 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SET_VALUE_FAILED_EXC = SetValueFailed(
+    "Unable to set value, refer to "
+    "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue for "
+    "possible reasons"
+)
+
 
 def parameter_name_does_not_need_bitmask(
     val: dict[str, int | str | list[str]]
@@ -62,6 +69,33 @@ def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
         "Either `broadcast` must be set to True or multiple devices/entities must be "
         "specified"
     )
+
+
+def get_valid_responses_from_results(
+    zwave_objects: set[ZwaveNode | Endpoint], results: tuple[Any, ...]
+) -> Generator[tuple[ZwaveNode | Endpoint, Any], None, None]:
+    """Return valid responses from a list of results."""
+    for zwave_object, result in zip(zwave_objects, results):
+        if not isinstance(result, Exception):
+            yield zwave_object, result
+
+
+def raise_exceptions_from_results(
+    zwave_objects: set[ZwaveNode | Endpoint] | tuple[ZwaveNode | str, ...],
+    results: tuple[Any, ...],
+) -> None:
+    """Raise list of exceptions from a list of results."""
+    if errors := [
+        tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
+    ]:
+        lines = (
+            f"{len(errors)} error(s):",
+            *(
+                f"{zwave_object} - {error.__class__.__name__}: {error.args[0]}"
+                for zwave_object, error in errors
+            ),
+        )
+        raise HomeAssistantError("\n".join(lines))
 
 
 class ZWaveServices:
@@ -371,14 +405,21 @@ class ZWaveServices:
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
-        for node in nodes:
-            zwave_value, cmd_status = await async_set_config_parameter(
-                node,
-                new_value,
-                property_or_property_name,
-                property_key=property_key,
-            )
-
+        results = await asyncio.gather(
+            *(
+                async_set_config_parameter(
+                    node,
+                    new_value,
+                    property_or_property_name,
+                    property_key=property_key,
+                )
+                for node in nodes
+            ),
+            return_exceptions=True,
+        )
+        for node, result in get_valid_responses_from_results(nodes, results):
+            zwave_value = result[0]
+            cmd_status = result[1]
             if cmd_status == CommandStatus.ACCEPTED:
                 msg = "Set configuration parameter %s on Node %s with value %s"
             else:
@@ -386,8 +427,8 @@ class ZWaveServices:
                     "Added command to queue to set configuration parameter %s on Node "
                     "%s with value %s. Parameter will be set when the device wakes up"
                 )
-
             _LOGGER.info(msg, zwave_value, node, new_value)
+        raise_exceptions_from_results(nodes, results)
 
     async def async_bulk_set_partial_config_parameters(
         self, service: ServiceCall
@@ -397,22 +438,30 @@ class ZWaveServices:
         property_ = service.data[const.ATTR_CONFIG_PARAMETER]
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
-        for node in nodes:
-            cmd_status = await async_bulk_set_partial_config_parameters(
-                node,
-                property_,
-                new_value,
-            )
+        results = await asyncio.gather(
+            *(
+                async_bulk_set_partial_config_parameters(
+                    node,
+                    property_,
+                    new_value,
+                )
+                for node in nodes
+            ),
+            return_exceptions=True,
+        )
 
+        for node, cmd_status in get_valid_responses_from_results(nodes, results):
             if cmd_status == CommandStatus.ACCEPTED:
                 msg = "Bulk set partials for configuration parameter %s on Node %s"
             else:
                 msg = (
-                    "Added command to queue to bulk set partials for configuration "
-                    "parameter %s on Node %s"
+                    "Queued command to bulk set partials for configuration parameter "
+                    "%s on Node %s"
                 )
 
             _LOGGER.info(msg, property_, node)
+
+        raise_exceptions_from_results(nodes, results)
 
     async def async_poll_value(self, service: ServiceCall) -> None:
         """Poll value on a node."""
@@ -436,6 +485,7 @@ class ZWaveServices:
         wait_for_result = service.data.get(const.ATTR_WAIT_FOR_RESULT)
         options = service.data.get(const.ATTR_OPTIONS)
 
+        coros = []
         for node in nodes:
             value_id = get_value_id(
                 node,
@@ -455,19 +505,29 @@ class ZWaveServices:
                 new_value_ = str(new_value)
             else:
                 new_value_ = new_value
-            success = await node.async_set_value(
-                value_id,
-                new_value_,
-                options=options,
-                wait_for_result=wait_for_result,
+            coros.append(
+                node.async_set_value(
+                    value_id,
+                    new_value_,
+                    options=options,
+                    wait_for_result=wait_for_result,
+                )
             )
 
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        # multiple set_values my fail so we will track the entire list
+        set_value_failed_nodes_list = []
+        for node, success in get_valid_responses_from_results(nodes, results):
             if success is False:
-                raise HomeAssistantError(
-                    "Unable to set value, refer to "
-                    "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue "
-                    "for possible reasons"
-                ) from SetValueFailed
+                # If we failed to set a value, add node to SetValueFailed exception list
+                set_value_failed_nodes_list.append(node)
+
+        # Add the SetValueFailed exception to the results and the nodes to the node
+        # list. No-op if there are no SetValueFailed exceptions
+        raise_exceptions_from_results(
+            (*nodes, *set_value_failed_nodes_list),
+            (*results, *([SET_VALUE_FAILED_EXC] * len(set_value_failed_nodes_list))),
+        )
 
     async def async_multicast_set_value(self, service: ServiceCall) -> None:
         """Set a value via multicast to multiple nodes."""
@@ -556,24 +616,29 @@ class ZWaveServices:
 
         async def _async_invoke_cc_api(endpoints: set[Endpoint]) -> None:
             """Invoke the CC API on a node endpoint."""
-            errors: list[str] = []
-            for endpoint in endpoints:
+            results = await asyncio.gather(
+                *(
+                    endpoint.async_invoke_cc_api(
+                        command_class, method_name, *parameters
+                    )
+                    for endpoint in endpoints
+                ),
+                return_exceptions=True,
+            )
+            for endpoint, result in get_valid_responses_from_results(
+                endpoints, results
+            ):
                 _LOGGER.info(
-                    "Invoking %s CC API method %s on endpoint %s",
+                    (
+                        "Invoked %s CC API method %s on endpoint %s with the following "
+                        "result: %s"
+                    ),
                     command_class.name,
                     method_name,
                     endpoint,
+                    result,
                 )
-                try:
-                    await endpoint.async_invoke_cc_api(
-                        command_class, method_name, *parameters
-                    )
-                except FailedCommand as err:
-                    errors.append(cast(str, err.args[0]))
-            if errors:
-                raise HomeAssistantError(
-                    "\n".join([f"{len(errors)} error(s):", *errors])
-                )
+            raise_exceptions_from_results(endpoints, results)
 
         # If an endpoint is provided, we assume the user wants to call the CC API on
         # that endpoint for all target nodes

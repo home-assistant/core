@@ -247,7 +247,7 @@ async def test_lazy_state_handles_include_json(caplog):
         entity_id="sensor.invalid",
         shared_attrs="{INVALID_JSON}",
     )
-    assert LazyState(row).attributes == {}
+    assert LazyState(row, {}).attributes == {}
     assert "Error converting row to state attributes" in caplog.text
 
 
@@ -258,7 +258,7 @@ async def test_lazy_state_prefers_shared_attrs_over_attrs(caplog):
         shared_attrs='{"shared":true}',
         attributes='{"shared":false}',
     )
-    assert LazyState(row).attributes == {"shared": True}
+    assert LazyState(row, {}).attributes == {"shared": True}
 
 
 async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog):
@@ -271,7 +271,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(caplog
         last_updated=now,
         last_changed=now - timedelta(seconds=60),
     )
-    lstate = LazyState(row)
+    lstate = LazyState(row, {})
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -300,7 +300,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
         last_updated=now,
         last_changed=now,
     )
-    lstate = LazyState(row)
+    lstate = LazyState(row, {})
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",

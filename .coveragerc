@@ -411,6 +411,11 @@ omit =
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
+    homeassistant/components/geocaching/__init__.py
+    homeassistant/components/geocaching/const.py
+    homeassistant/components/geocaching/coordinator.py
+    homeassistant/components/geocaching/oauth.py
+    homeassistant/components/geocaching/sensor.py
     homeassistant/components/github/__init__.py
     homeassistant/components/github/coordinator.py
     homeassistant/components/github/sensor.py
@@ -574,6 +579,7 @@ omit =
     homeassistant/components/juicenet/const.py
     homeassistant/components/juicenet/device.py
     homeassistant/components/juicenet/entity.py
+    homeassistant/components/juicenet/number.py
     homeassistant/components/juicenet/sensor.py
     homeassistant/components/juicenet/switch.py
     homeassistant/components/kaiterra/*
