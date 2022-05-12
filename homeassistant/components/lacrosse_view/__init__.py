@@ -22,6 +22,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def get_data(start) -> list[Sensor]:
         """Get the data from the LaCrosse View."""
+        if hass.data[DOMAIN][entry.entry_id][
+            "last_update"
+        ] < datetime.utcnow() - timedelta(
+            hours=1
+        ):  # Get new token
+            hass.data[DOMAIN][entry.entry_id]["last_update"] = datetime.utcnow()
+            await api.login(entry.data["username"], entry.data["password"])
+
         return await api.get_sensors(
             location=Location(id=entry.data["id"], name=entry.data["name"]),
             tz=hass.config.time_zone,
@@ -30,7 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "api": LaCrosse(async_get_clientsession(hass))
+        "api": LaCrosse(async_get_clientsession(hass)),
+        "last_update": datetime.utcnow(),
     }
     api = hass.data[DOMAIN][entry.entry_id]["api"]
 
