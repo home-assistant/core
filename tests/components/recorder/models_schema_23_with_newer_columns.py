@@ -5,7 +5,7 @@ used by Home Assistant Core 2021.11.0, which adds the name column
 to statistics_meta.
 
 The v23 schema as been slightly modified to add the EventData table to
-allow the recordeer to startup successfully,
+allow the recorder to startup successfully.
 
 It is used to test the schema migration logic.
 """
