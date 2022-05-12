@@ -1,5 +1,4 @@
 """The tests for the Template number platform."""
-import pytest
 
 from homeassistant import setup
 from homeassistant.components.input_number import (
@@ -19,11 +18,7 @@ from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers.entity_registry import async_get
 
-from tests.common import (
-    assert_setup_component,
-    async_capture_events,
-    async_mock_service,
-)
+from tests.common import assert_setup_component, async_capture_events
 
 _TEST_NUMBER = "number.template_number"
 # Represent for number's value
@@ -47,13 +42,7 @@ _VALUE_INPUT_NUMBER_CONFIG = {
 }
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-async def test_missing_optional_config(hass, calls):
+async def test_missing_optional_config(hass):
     """Test: missing optional template is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -77,7 +66,7 @@ async def test_missing_optional_config(hass, calls):
     _verify(hass, 4, 1, 0.0, 100.0)
 
 
-async def test_missing_required_keys(hass, calls):
+async def test_missing_required_keys(hass):
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
@@ -112,7 +101,7 @@ async def test_missing_required_keys(hass, calls):
     assert hass.states.async_all("number") == []
 
 
-async def test_all_optional_config(hass, calls):
+async def test_all_optional_config(hass):
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -138,7 +127,7 @@ async def test_all_optional_config(hass, calls):
     _verify(hass, 4, 1, 3, 5)
 
 
-async def test_templates_with_entities(hass, calls):
+async def test_templates_with_entities(hass):
     """Test templates with values from other entities."""
     with assert_setup_component(4, "input_number"):
         assert await setup.async_setup_component(

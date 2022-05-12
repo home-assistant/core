@@ -122,6 +122,7 @@ FLOWS = {
         "garages_amsterdam",
         "gdacs",
         "generic",
+        "geocaching",
         "geofency",
         "geonetnz_quakes",
         "geonetnz_volcano",

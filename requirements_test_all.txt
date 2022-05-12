@@ -491,6 +491,9 @@ garages-amsterdam==3.0.0
 # homeassistant.components.google
 gcal-sync==0.7.1
 
+# homeassistant.components.geocaching
+geocachingapi==0.2.1
+
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
@@ -838,7 +841,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.17.3
+plugwise==0.18.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
