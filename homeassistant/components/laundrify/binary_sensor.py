@@ -40,8 +40,6 @@ class LaundrifyPowerPlug(
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
 
-    coordinator: LaundrifyUpdateCoordinator
-
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
     ) -> None:

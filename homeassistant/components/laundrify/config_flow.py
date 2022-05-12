@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
 
@@ -48,7 +48,7 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             access_token = await LaundrifyAPI.exchange_auth_code(user_input[CONF_CODE])
 
-            session = async_create_clientsession(self.hass)
+            session = async_get_clientsession(self.hass)
             api_client = LaundrifyAPI(access_token, session)
 
             account_id = await api_client.get_account_id()
