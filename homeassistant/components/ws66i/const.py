@@ -19,6 +19,3 @@ INIT_OPTIONS_DEFAULT = {
     "5": "Source 5",
     "6": "Source 6",
 }
-
-SERVICE_SNAPSHOT = "snapshot"
-SERVICE_RESTORE = "restore"

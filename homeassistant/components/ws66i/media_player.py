@@ -1,6 +1,4 @@
 """Support for interfacing with WS66i 6 zone home audio controller."""
-from copy import deepcopy
-
 from pyws66i import WS66i, ZoneStatus
 
 from homeassistant.components.media_player import (
@@ -10,15 +8,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
+from .const import DOMAIN
 from .coordinator import Ws66iDataUpdateCoordinator
 from .models import Ws66iData
 
@@ -48,21 +42,6 @@ async def async_setup_entry(
         for idx, zone_id in enumerate(ws66i_data.zones)
     )
 
-    # Set up services
-    platform = async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SNAPSHOT,
-        {},
-        "snapshot",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_RESTORE,
-        {},
-        "async_restore",
-    )
-
 
 class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity):
     """Representation of a WS66i amplifier zone."""
@@ -82,7 +61,6 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._ws66i_data: Ws66iData = ws66i_data
         self._zone_id: int = zone_id
         self._zone_id_idx: int = data_idx
-        self._snapshot = None
         self._status: ZoneStatus = coordinator.data[data_idx]
         self._attr_source_list = ws66i_data.sources.name_list
         self._attr_unique_id = f"{entry_id}_{self._zone_id}"
@@ -129,20 +107,6 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
     def _async_update_attrs_write_ha_state(self) -> None:
         self._set_attrs_from_status()
         self.async_write_ha_state()
-
-    @callback
-    def snapshot(self):
-        """Save zone's current state."""
-        self._snapshot = deepcopy(self._status)
-
-    async def async_restore(self):
-        """Restore saved state."""
-        if not self._snapshot:
-            raise HomeAssistantError("There is no snapshot to restore")
-
-        await self.hass.async_add_executor_job(self._ws66i.restore_zone, self._snapshot)
-        self._status = self._snapshot
-        self._async_update_attrs_write_ha_state()
 
     async def async_select_source(self, source):
         """Set input source."""

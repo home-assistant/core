@@ -3,8 +3,6 @@ from collections import defaultdict
 from datetime import timedelta
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -17,8 +15,6 @@ from homeassistant.components.ws66i.const import (
     CONF_SOURCES,
     DOMAIN,
     INIT_OPTIONS_DEFAULT,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -31,7 +27,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -173,137 +168,6 @@ async def _call_media_player_service(hass, name, data):
 
 async def _call_ws66i_service(hass, name, data):
     await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
-
-
-async def test_service_calls_with_entity_id(hass):
-    """Test snapshot save/restore service calls."""
-    _ = await _setup_ws66i_with_options(hass, MockWs66i())
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
-    )
-
-    # Saving existing values
-    await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
-    )
-    await hass.async_block_till_done()
-
-    # Restoring other media player to its previous state
-    # The zone should not be restored
-    with pytest.raises(HomeAssistantError):
-        await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_2_ID})
-        await hass.async_block_till_done()
-
-    # Checking that values were not (!) restored
-    state = hass.states.get(ZONE_1_ID)
-
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
-
-    # Restoring media player to its previous state
-    await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ZONE_1_ID)
-
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
-
-
-async def test_service_calls_with_all_entities(hass):
-    """Test snapshot save/restore service calls with entity id all."""
-    _ = await _setup_ws66i_with_options(hass, MockWs66i())
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
-    )
-
-    # Saving existing values
-    await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
-    )
-
-    # Restoring media player to its previous state
-    await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ZONE_1_ID)
-
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
-
-
-async def test_service_calls_without_relevant_entities(hass):
-    """Test snapshot save/restore service calls with bad entity id."""
-    _ = await _setup_ws66i_with_options(hass, MockWs66i())
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
-    )
-
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    # Saving existing values
-    await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
-    )
-
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    # Restoring media player to its previous state
-    await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ZONE_1_ID)
-
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
-
-
-async def test_restore_without_snapshot(hass):
-    """Test restore when snapshot wasn't called."""
-    await _setup_ws66i(hass, MockWs66i())
-
-    with patch.object(MockWs66i, "restore_zone") as method_call:
-        with pytest.raises(HomeAssistantError):
-            await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
-            await hass.async_block_till_done()
-
-        assert not method_call.called
 
 
 async def test_update(hass):
@@ -596,58 +460,3 @@ async def test_unload_config_entry(hass):
         assert method_call.called
 
     assert not hass.data[DOMAIN]
-
-
-async def test_restore_snapshot_on_reconnect(hass):
-    """Test restoring a saved snapshot when reconnecting to amp."""
-    ws66i = MockWs66i()
-    _ = await _setup_ws66i_with_options(hass, ws66i)
-
-    # Changing media player to new state
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
-    )
-
-    # Save a snapshot
-    await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
-
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    # Failed update,
-    with patch.object(MockWs66i, "zone_status", return_value=None):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-        await hass.async_block_till_done()
-
-    assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
-
-    # A connection re-attempt succeeds
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    # confirm entity is back on
-    state = hass.states.get(ZONE_1_ID)
-
-    assert hass.states.is_state(ZONE_1_ID, STATE_ON)
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
-
-    # Change states
-    await _call_media_player_service(
-        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
-    )
-    await _call_media_player_service(
-        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "six"}
-    )
-
-    # Now confirm that the snapshot before the disconnect works
-    await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ZONE_1_ID)
-
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
-    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
