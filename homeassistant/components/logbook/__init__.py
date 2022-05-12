@@ -15,7 +15,7 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.query import Query
 import voluptuous as vol
 
-from homeassistant.components import frontend
+from homeassistant.components import frontend, websocket_api
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.history import (
     Filters,
@@ -23,7 +23,10 @@ from homeassistant.components.history import (
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    process_datetime_to_timestamp,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
@@ -102,6 +105,10 @@ LOG_MESSAGE_SCHEMA = vol.Schema(
 )
 
 
+LOGBOOK_FILTERS = "logbook_filters"
+LOGBOOK_ENTITIES_FILTER = "entities_filter"
+
+
 @bind_hass
 def log_entry(
     hass: HomeAssistant,
@@ -168,7 +175,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         filters = None
         entities_filter = None
 
+    hass.data[LOGBOOK_FILTERS] = filters
+    hass.data[LOGBOOK_ENTITIES_FILTER] = entities_filter
+
     hass.http.register_view(LogbookView(conf, filters, entities_filter))
+    websocket_api.async_register_command(hass, ws_get_events)
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
 
@@ -192,6 +203,61 @@ async def _process_logbook_platform(
         hass.data[DOMAIN][event_name] = (domain, describe_callback)
 
     platform.async_describe_events(hass, _async_describe_event)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "logbook/get_events",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("entity_ids"): [str],
+        vol.Optional("context_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_get_events(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle logbook get events websocket command."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+    utc_now = dt_util.utcnow()
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if not end_time_str:
+        end_time = utc_now
+    elif parsed_end_time := dt_util.parse_datetime(end_time_str):
+        end_time = dt_util.as_utc(parsed_end_time)
+    else:
+        connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+        return
+
+    if start_time > utc_now:
+        connection.send_result(msg["id"], {})
+        return
+
+    entity_ids = msg.get("entity_ids")
+    context_id = msg.get("context_id")
+
+    logbook_events: list[dict[str, Any]] = await get_instance(
+        hass
+    ).async_add_executor_job(
+        _get_events,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        hass.data[LOGBOOK_FILTERS],
+        hass.data[LOGBOOK_ENTITIES_FILTER],
+        context_id,
+        True,
+    )
+    connection.send_result(msg["id"], logbook_events)
 
 
 class LogbookView(HomeAssistantView):
@@ -267,6 +333,7 @@ class LogbookView(HomeAssistantView):
                     self.filters,
                     self.entities_filter,
                     context_id,
+                    False,
                 )
             )
 
@@ -281,6 +348,7 @@ def _humanify(
     entity_name_cache: EntityNameCache,
     event_cache: EventCache,
     context_augmenter: ContextAugmenter,
+    format_time: Callable[[Row], Any],
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into Entry objects.
 
@@ -307,7 +375,7 @@ def _humanify(
                 continue
 
             data = {
-                "when": _row_time_fired_isoformat(row),
+                "when": format_time(row),
                 "name": entity_name_cache.get(entity_id, row),
                 "state": row.state,
                 "entity_id": entity_id,
@@ -321,21 +389,21 @@ def _humanify(
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
             data = describe_event(event_cache.get(row))
-            data["when"] = _row_time_fired_isoformat(row)
+            data["when"] = format_time(row)
             data["domain"] = domain
             context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
             yield data
 
         elif event_type == EVENT_HOMEASSISTANT_START:
             yield {
-                "when": _row_time_fired_isoformat(row),
+                "when": format_time(row),
                 "name": "Home Assistant",
                 "message": "started",
                 "domain": HA_DOMAIN,
             }
         elif event_type == EVENT_HOMEASSISTANT_STOP:
             yield {
-                "when": _row_time_fired_isoformat(row),
+                "when": format_time(row),
                 "name": "Home Assistant",
                 "message": "stopped",
                 "domain": HA_DOMAIN,
@@ -351,7 +419,7 @@ def _humanify(
                     domain = split_entity_id(str(entity_id))[0]
 
             data = {
-                "when": _row_time_fired_isoformat(row),
+                "when": format_time(row),
                 "name": event_data.get(ATTR_NAME),
                 "message": event_data.get(ATTR_MESSAGE),
                 "domain": domain,
@@ -369,6 +437,7 @@ def _get_events(
     filters: Filters | None = None,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
     context_id: str | None = None,
+    timestamp: bool = False,
 ) -> list[dict[str, Any]]:
     """Get events for a period of time."""
     assert not (
@@ -386,6 +455,7 @@ def _get_events(
         context_lookup, entity_name_cache, external_events, event_cache
     )
     event_types = (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
+    format_time = _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
@@ -424,6 +494,7 @@ def _get_events(
                 entity_name_cache,
                 event_cache,
                 context_augmenter,
+                format_time,
             )
         )
 
@@ -575,9 +646,14 @@ def _row_attributes_extract(row: Row, extractor: re.Pattern) -> str | None:
     return result.group(1) if result else None
 
 
-def _row_time_fired_isoformat(row: Row) -> dt | None:
+def _row_time_fired_isoformat(row: Row) -> str:
     """Convert the row timed_fired to isoformat."""
-    return process_timestamp_to_utc_isoformat(row.time_fired) or dt_util.utcnow()
+    return process_timestamp_to_utc_isoformat(row.time_fired or dt_util.utcnow())
+
+
+def _row_time_fired_timestamp(row: Row) -> float:
+    """Convert the row timed_fired to timestamp."""
+    return process_datetime_to_timestamp(row.time_fired or dt_util.utcnow())
 
 
 class LazyEventPartialState:
