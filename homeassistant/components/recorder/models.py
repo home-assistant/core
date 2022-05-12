@@ -54,6 +54,7 @@ SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
+EPOCHORDINAL = 719163
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
@@ -620,9 +621,13 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
 
 def process_datetime_to_timestamp(ts: datetime) -> float:
     """Process a timestamp into a unix timestamp."""
-    if ts.tzinfo == dt_util.UTC:
-        return ts.timestamp()
-    return ts.replace(tzinfo=dt_util.UTC).timestamp()
+    if ts.tzinfo is None:
+        return (
+            (((ts.toordinal() - EPOCHORDINAL) * 24 + ts.hour) * 60 + ts.minute) * 60
+            + ts.second
+            + (ts.microsecond / 100000)
+        )
+    return ts.astimezone(dt_util.UTC).timestamp()
 
 
 class LazyState(State):
