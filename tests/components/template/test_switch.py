@@ -5,28 +5,52 @@ import pytest
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_SERVICE_DATA,
+    EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, State, callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    assert_setup_component,
-    async_mock_service,
-    mock_component,
-    mock_restore_cache,
-)
+from tests.common import assert_setup_component, mock_component, mock_restore_cache
 
 
 @pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+def service_calls(hass):
+    """Track service call events for switch.test_state."""
+    events = []
+    entity_id = "switch.test_state"
+
+    @callback
+    def capture_events(event):
+        print(event.data)
+        if event.data[ATTR_DOMAIN] != "switch":
+            return
+        if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
+            return
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_CALL_SERVICE, capture_events)
+
+    return events
+
+
+OPTIMISTIC_SWITCH_CONFIG = {
+    "turn_on": {
+        "service": "switch.turn_on",
+        "entity_id": "switch.test_state",
+    },
+    "turn_off": {
+        "service": "switch.turn_off",
+        "entity_id": "switch.test_state",
+    },
+}
 
 
 async def test_template_state_text(hass):
@@ -40,15 +64,8 @@ async def test_template_state_text(hass):
                     "platform": "template",
                     "switches": {
                         "test_template_switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                         }
                     },
                 }
@@ -83,15 +100,8 @@ async def test_template_state_boolean_on(hass):
                     "platform": "template",
                     "switches": {
                         "test_template_switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ 1 == 1 }}",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                         }
                     },
                 }
@@ -117,15 +127,8 @@ async def test_template_state_boolean_off(hass):
                     "platform": "template",
                     "switches": {
                         "test_template_switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ 1 == 2 }}",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                         }
                     },
                 }
@@ -151,15 +154,8 @@ async def test_icon_template(hass):
                     "platform": "template",
                     "switches": {
                         "test_template_switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                             "icon_template": "{% if states.switch.test_state.state %}"
                             "mdi:check"
                             "{% endif %}",
@@ -194,15 +190,8 @@ async def test_entity_picture_template(hass):
                     "platform": "template",
                     "switches": {
                         "test_template_switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                             "entity_picture_template": "{% if states.switch.test_state.state %}"
                             "/local/switch.png"
                             "{% endif %}",
@@ -237,15 +226,8 @@ async def test_template_syntax_error(hass):
                     "platform": "template",
                     "switches": {
                         "test_template_switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{% if rubbish %}",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                         }
                     },
                 }
@@ -270,15 +252,8 @@ async def test_invalid_name_does_not_create(hass):
                     "platform": "template",
                     "switches": {
                         "test INVALID switch": {
+                            **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ rubbish }",
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
                         }
                     },
                 }
@@ -393,7 +368,7 @@ async def test_missing_off_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_on_action(hass, calls):
+async def test_on_action(hass, service_calls):
     """Test on action."""
     assert await async_setup_component(
         hass,
@@ -403,12 +378,8 @@ async def test_on_action(hass, calls):
                 "platform": "template",
                 "switches": {
                     "test_template_switch": {
+                        **OPTIMISTIC_SWITCH_CONFIG,
                         "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {"service": "test.automation"},
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
                     }
                 },
             }
@@ -432,10 +403,11 @@ async def test_on_action(hass, calls):
         blocking=True,
     )
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
+    assert service_calls[-1].data["service"] == "turn_on"
 
 
-async def test_on_action_optimistic(hass, calls):
+async def test_on_action_optimistic(hass, service_calls):
     """Test on action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -445,11 +417,7 @@ async def test_on_action_optimistic(hass, calls):
                 "platform": "template",
                 "switches": {
                     "test_template_switch": {
-                        "turn_on": {"service": "test.automation"},
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
+                        **OPTIMISTIC_SWITCH_CONFIG,
                     }
                 },
             }
@@ -473,11 +441,13 @@ async def test_on_action_optimistic(hass, calls):
     )
 
     state = hass.states.get("switch.test_template_switch")
-    assert len(calls) == 1
     assert state.state == STATE_ON
 
+    assert len(service_calls) == 1
+    assert service_calls[-1].data["service"] == "turn_on"
 
-async def test_off_action(hass, calls):
+
+async def test_off_action(hass, service_calls):
     """Test off action."""
     assert await async_setup_component(
         hass,
@@ -487,12 +457,8 @@ async def test_off_action(hass, calls):
                 "platform": "template",
                 "switches": {
                     "test_template_switch": {
+                        **OPTIMISTIC_SWITCH_CONFIG,
                         "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {"service": "test.automation"},
                     }
                 },
             }
@@ -516,10 +482,11 @@ async def test_off_action(hass, calls):
         blocking=True,
     )
 
-    assert len(calls) == 1
+    assert len(service_calls) == 1
+    assert service_calls[-1].data["service"] == "turn_off"
 
 
-async def test_off_action_optimistic(hass, calls):
+async def test_off_action_optimistic(hass, service_calls):
     """Test off action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -529,11 +496,7 @@ async def test_off_action_optimistic(hass, calls):
                 "platform": "template",
                 "switches": {
                     "test_template_switch": {
-                        "turn_off": {"service": "test.automation"},
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
+                        **OPTIMISTIC_SWITCH_CONFIG,
                     }
                 },
             }
@@ -557,8 +520,10 @@ async def test_off_action_optimistic(hass, calls):
     )
 
     state = hass.states.get("switch.test_template_switch")
-    assert len(calls) == 1
     assert state.state == STATE_OFF
+
+    assert len(service_calls) == 1
+    assert service_calls[-1].data["service"] == "turn_off"
 
 
 async def test_restore_state(hass):
@@ -582,12 +547,10 @@ async def test_restore_state(hass):
                 "platform": "template",
                 "switches": {
                     "s1": {
-                        "turn_on": {"service": "test.automation"},
-                        "turn_off": {"service": "test.automation"},
+                        **OPTIMISTIC_SWITCH_CONFIG,
                     },
                     "s2": {
-                        "turn_on": {"service": "test.automation"},
-                        "turn_off": {"service": "test.automation"},
+                        **OPTIMISTIC_SWITCH_CONFIG,
                     },
                 },
             }
@@ -614,15 +577,8 @@ async def test_available_template_with_entities(hass):
                 "platform": "template",
                 "switches": {
                     "test_template_switch": {
+                        **OPTIMISTIC_SWITCH_CONFIG,
                         "value_template": "{{ 1 == 1 }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
                         "availability_template": "{{ is_state('availability_state.state', 'on') }}",
                     }
                 },
@@ -655,15 +611,8 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
                 "platform": "template",
                 "switches": {
                     "test_template_switch": {
+                        **OPTIMISTIC_SWITCH_CONFIG,
                         "value_template": "{{ true }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
                         "availability_template": "{{ x - 12 }}",
                     }
                 },
@@ -689,28 +638,14 @@ async def test_unique_id(hass):
                 "platform": "template",
                 "switches": {
                     "test_template_switch_01": {
+                        **OPTIMISTIC_SWITCH_CONFIG,
                         "unique_id": "not-so-unique-anymore",
                         "value_template": "{{ true }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
                     },
                     "test_template_switch_02": {
+                        **OPTIMISTIC_SWITCH_CONFIG,
                         "unique_id": "not-so-unique-anymore",
                         "value_template": "{{ false }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
                     },
                 },
             }
