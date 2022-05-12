@@ -396,7 +396,7 @@ async def test_on_off(hass):
         _verify(hass, state, 0, None, None, None)
 
 
-async def test_set_invalid_direction_from_initial_stage(hass, calls):
+async def test_set_invalid_direction_from_initial_stage(hass):
     """Test set invalid direction when fan is in initial state."""
     await _register_components(hass)
 

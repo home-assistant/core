@@ -2,8 +2,6 @@
 import datetime as dt
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import setup
 from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.template.button import DEFAULT_NAME
@@ -16,19 +14,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_registry import async_get
 
-from tests.common import assert_setup_component, async_mock_service
+from tests.common import assert_setup_component
 
 _TEST_BUTTON = "button.template_button"
 _TEST_OPTIONS_BUTTON = "button.test"
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-async def test_missing_optional_config(hass, calls):
+async def test_missing_optional_config(hass):
     """Test: missing optional template is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -50,7 +42,7 @@ async def test_missing_optional_config(hass, calls):
     _verify(hass, STATE_UNKNOWN)
 
 
-async def test_missing_required_keys(hass, calls):
+async def test_missing_required_keys(hass):
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
@@ -128,7 +120,7 @@ async def test_all_optional_config(hass, calls):
     assert er.async_get_entity_id("button", "template", "test-test")
 
 
-async def test_name_template(hass, calls):
+async def test_name_template(hass):
     """Test: name template."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -158,7 +150,7 @@ async def test_name_template(hass, calls):
     )
 
 
-async def test_unique_id(hass, calls):
+async def test_unique_id(hass):
     """Test: unique id is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
