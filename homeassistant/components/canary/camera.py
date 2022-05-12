@@ -26,7 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import Throttle
+from homeassistant.util import dt as dt_util  # Throttle,
 
 from ...helpers.httpx_client import get_async_client
 from .const import (
@@ -40,6 +40,7 @@ from .const import (
 from .coordinator import CanaryDataUpdateCoordinator
 
 MIN_TIME_BETWEEN_SESSION_RENEW: Final = timedelta(seconds=90)
+FORCE_CAMERA_REFRESH_INTERVAL = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
@@ -112,12 +113,12 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             model=device.device_type["name"],
             name=device.name,
         )
-        self._live_stream_url: str | None = None
         self._image: bytes | None = None
         self._last_event: Entry | None = None
         self._last_image_id = None
         self._image_url: str | None = None
         self.verify_ssl = True
+        self._expires_at = dt_util.utcnow() - FORCE_CAMERA_REFRESH_INTERVAL
 
     @property
     def location(self) -> Location:
@@ -157,36 +158,25 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         await self._check_for_new_image()
         url = self._image_url
         if self._image is None and url:
-            # grab the latest entry image
-            _LOGGER.debug("Getting the latest entry image for %s", self._attr_name)
-            try:
-                async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
-                response = await async_client.get(url, timeout=10)
-                response.raise_for_status()
-                self._image = response.content
-                self._last_image_id = (
-                    None if self._last_event is None else self._last_event.entry_id
-                )
-            except httpx.TimeoutException:
-                _LOGGER.error("Timeout getting camera image from %s", self._attr_name)
-            except (httpx.RequestError, httpx.HTTPStatusError) as err:
-                _LOGGER.error(
-                    "Error getting new camera image from %s: %s", self._attr_name, err
-                )
+            await self._get_entry_image(url)
 
         if self._image is None:
             # if we still don't have an image, grab the live view
             _LOGGER.debug("Grabbing a live view image from %s", self._attr_name)
             await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
-            if not self._live_stream_url:
+            if self._live_stream_session is None:
+                return None
+
+            live_stream_url = self._live_stream_session.live_stream_url
+            if not live_stream_url:
                 return None
 
             ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
-            if self._image is None and self._live_stream_url:
+            if self._image is None and live_stream_url:
                 image = await ffmpeg.async_get_image(
                     self.hass,
-                    self._live_stream_url,
+                    live_stream_url,
                     extra_cmd=ffmpeg_args,
                     width=width,
                     height=height,
@@ -194,13 +184,45 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
                 if image:
                     self._image = image
+                    _LOGGER.debug("Grabbed a live view image from %s", self._attr_name)
+                await self.hass.async_add_executor_job(
+                    self._live_stream_session.stop_session
+                )
+                _LOGGER.debug("Stopped live session from %s", self._attr_name)
 
         return self._image
+
+    async def _get_entry_image(self, url: str) -> None:
+        # grab the latest entry image
+        _LOGGER.debug("Getting the latest entry image for %s", self._attr_name)
+        try:
+            async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
+            response = await async_client.get(url, timeout=10)
+            response.raise_for_status()
+            self._image = response.content
+            self._last_image_id = (
+                None if self._last_event is None else self._last_event.entry_id
+            )
+            _LOGGER.debug("Got the latest entry image for %s", self._attr_name)
+        except httpx.TimeoutException:
+            _LOGGER.error("Timeout getting camera image from %s", self._attr_name)
+        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            _LOGGER.error(
+                "Error getting new camera image from %s: %s", self._attr_name, err
+            )
 
     async def _check_for_new_image(self) -> None:
         await self._set_last_event()
 
         if self._last_event is None:
+            # if we don't have any events for the day refresh the image every so often
+            utcnow = dt_util.utcnow()
+            if utcnow <= self._expires_at:
+                return
+            self._image = None
+            self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
+            _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
+
             return
         if self._last_image_id != self._last_event.entry_id:
             self._image = None
@@ -235,16 +257,20 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
-        if not self._live_stream_url:
+        if self._live_stream_session is None:
             return None
 
-        _LOGGER.info(
-            "Starting connection to %s at %s", self._attr_name, self._live_stream_url
+        live_stream_url = self._live_stream_session.live_stream_url
+        if not live_stream_url:
+            return None
+
+        _LOGGER.debug(
+            "Starting connection to %s at %s", self._attr_name, live_stream_url
         )
 
         ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
         stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(self._live_stream_url, extra_cmd=ffmpeg_args)
+        await stream.open_camera(live_stream_url, extra_cmd=ffmpeg_args)
 
         try:
             stream_reader = await stream.get_reader()
@@ -255,17 +281,28 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
                 self._ffmpeg.ffmpeg_stream_content_type,
             )
         finally:
+            _LOGGER.debug(
+                "Stopping the live stream on %s to %s", self._attr_name, live_stream_url
+            )
             await stream.close()
+            await self.hass.async_add_executor_job(
+                self._live_stream_session.stop_session
+            )
+            _LOGGER.debug(
+                "Streaming connection closed on %s to %s",
+                self._attr_name,
+                live_stream_url,
+            )
 
-    @Throttle(MIN_TIME_BETWEEN_SESSION_RENEW)
+    # @Throttle(MIN_TIME_BETWEEN_SESSION_RENEW)
     def renew_live_stream_session(self) -> None:
         """Renew live stream session."""
         self._live_stream_session = self.coordinator.canary.get_live_stream_session(
             self._device
         )
-        self._live_stream_session.start_renew_session()
 
-        self._live_stream_url = self._live_stream_session.live_stream_url
-        _LOGGER.info(
-            "Live stream URL set on %s to %s", self._attr_name, self._live_stream_url
+        _LOGGER.debug(
+            "Live Stream URL for %s is %s",
+            self._attr_name,
+            self._live_stream_session.live_stream_url,
         )
