@@ -9,6 +9,7 @@ from geocachingapi.models import GeocachingStatus
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,7 +36,7 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         key="username",
         name="username",
         icon="mdi:account",
-        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.user.username,
     ),
     GeocachingSensorEntityDescription(
@@ -50,6 +51,7 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         name="Total hides",
         icon="mdi:eye-off-outline",
         native_unit_of_measurement="caches",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.user.hide_count,
     ),
     GeocachingSensorEntityDescription(
@@ -57,7 +59,7 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         name="Favorite points",
         icon="mdi:heart-outline",
         native_unit_of_measurement="points",
-        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.user.favorite_points,
     ),
     GeocachingSensorEntityDescription(
@@ -65,7 +67,7 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         name="Total souvenirs",
         icon="mdi:license",
         native_unit_of_measurement="souvenirs",
-        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.user.souvenir_count,
     ),
     GeocachingSensorEntityDescription(
@@ -73,7 +75,7 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         name="Awarded favorite points",
         icon="mdi:heart",
         native_unit_of_measurement="points",
-        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.user.awarded_favorite_points,
     ),
 )
