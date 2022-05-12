@@ -8,7 +8,7 @@ from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -20,7 +20,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LaCrosse View from a config entry."""
 
-    async def get_data(start) -> list[Sensor]:
+    async def get_data() -> list[Sensor]:
         """Get the data from the LaCrosse View."""
         if hass.data[DOMAIN][entry.entry_id][
             "last_update"
@@ -30,10 +30,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN][entry.entry_id]["last_update"] = datetime.utcnow()
             await api.login(entry.data["username"], entry.data["password"])
 
+        # Get the timestamp for yesterday at 6 PM (this is what is used in the app, i noticed it when proxying the request)
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        yesterday = yesterday.replace(hour=18, minute=0, second=0, microsecond=0)
+        yesterday_timestamp = datetime.timestamp(yesterday)
+
         return await api.get_sensors(
             location=Location(id=entry.data["id"], name=entry.data["name"]),
             tz=hass.config.time_zone,
-            start=int(datetime.timestamp(datetime.utcnow() - timedelta(minutes=start))),
+            start=int(yesterday_timestamp),
             end=int(datetime.timestamp(datetime.utcnow())),
         )
 
@@ -50,32 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> list[Sensor]:
         """Fetch data from API."""
-        start = 15
-        retry_count = 0
-        while True:
-            try:
-                data: list[Sensor] = await get_data(start)
-                # Test if the data is valid
-                for sensor in data:
-                    if not sensor.data:
-                        raise NoData(
-                            "No data for sensor {}. Can you make sure your display can connect to the app server?".format(
-                                sensor.name
-                            )
-                        )
-                break
-            except HTTPError as error:
-                raise error
-            except NoData as error:
-                retry_count += 1
-                if retry_count > 10:
-                    raise error
-                start += 15
-                LOGGER.warning(
-                    "No data found, getting data from %s minutes ago (retry attempt: %s)",
-                    start,
-                    retry_count,
-                )
+        try:
+            data: list[Sensor] = await get_data()
+        except HTTPError as error:
+            raise error
 
         return data
 
@@ -102,7 +85,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class NoData(HomeAssistantError):
-    """Raised when the data is invalid."""
