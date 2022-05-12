@@ -9,7 +9,7 @@ from yarl import URL
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_manager
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT
+from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant

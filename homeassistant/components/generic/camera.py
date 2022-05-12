@@ -12,7 +12,7 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
 )
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
+from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
