@@ -634,18 +634,13 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     so we convert it to an ordinal since this happens in
     native code and add the hours, minutes, seconds,
     and microseconds which are already expresed in UTC.
-
-    If the tzinfo is present and not UTC, we fallback
-    to converting it using the standard methods if somehow
-    the user has manually changed the timezone on their database.
     """
-    if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
-        return (
-            (((ts.toordinal() - EPOCHORDINAL) * 24 + ts.hour) * 60 + ts.minute) * 60
-            + ts.second
-            + (ts.microsecond / 100000)
-        )
-    return ts.astimezone(dt_util.UTC).timestamp()
+    assert ts.tzinfo is None or ts.tzinfo == dt_util.UTC
+    return (
+        (((ts.toordinal() - EPOCHORDINAL) * 24 + ts.hour) * 60 + ts.minute) * 60
+        + ts.second
+        + (ts.microsecond / 100000)
+    )
 
 
 class LazyState(State):
