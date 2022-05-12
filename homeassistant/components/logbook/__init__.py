@@ -162,7 +162,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         message.hass = hass
         message = message.async_render(parse_result=False)
-        async_log_entry(hass, name, message, domain, entity_id)
+        async_log_entry(hass, name, message, domain, entity_id, service.context)
 
     frontend.async_register_built_in_panel(
         hass, "logbook", "logbook", "hass:format-list-bulleted-type"
