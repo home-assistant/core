@@ -591,7 +591,9 @@ class ContextAugmenter:
             description = describe_event(event)
             if name := description.get(ATTR_NAME):
                 data["context_name"] = name
+                # TODO - make this context_message instead
                 if "message" in description:
+                    data["context_message"] = description['message']
                     data["context_entity_id_name"] = f"{name} {description['message']}"
                 else:
                     data["context_entity_id_name"] = name
