@@ -55,7 +55,7 @@ SCHEMA_VERSION = 28
 _LOGGER = logging.getLogger(__name__)
 
 # EPOCHORDINAL is not exposed as a constant
-# https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Lib/zoneinfo/_zoneinfo.py#L12
+# https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
 EPOCHORDINAL = datetime(1970, 1, 1).toordinal()
 
 DB_TIMEZONE = "+00:00"
@@ -642,10 +642,14 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     supported this.
     """
     if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
+        # Taken from
+        # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
         return (
-            (((ts.toordinal() - EPOCHORDINAL) * 24 + ts.hour) * 60 + ts.minute) * 60
+            (ts.toordinal() - EPOCHORDINAL) * 86400
+            + ts.hour * 3600
+            + ts.minute * 60
             + ts.second
-            + (ts.microsecond / 100000)
+            + (ts.microsecond / 1000000)
         )
     return ts.astimezone(dt_util.UTC).timestamp()
 

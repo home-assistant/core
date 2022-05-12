@@ -14,6 +14,7 @@ from homeassistant.components.recorder.models import (
     RecorderRuns,
     StateAttributes,
     States,
+    process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
@@ -333,3 +334,11 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
         "last_updated": "2020-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+
+
+def test_process_datetime_to_timestamp():
+    """Test we can handle processing database datatimes to timestamps."""
+    utc_now = dt_util.utcnow()
+    assert process_datetime_to_timestamp(utc_now) == utc_now.timestamp()
+    now = dt_util.now()
+    assert process_datetime_to_timestamp(now) == now.timestamp()
