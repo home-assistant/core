@@ -96,7 +96,11 @@ class HistoryStats:
             new_data = False
             if event and event.data["new_state"] is not None:
                 new_state: State = event.data["new_state"]
-                if current_period_start <= new_state.last_changed <= current_period_end:
+                if (
+                    current_period_start_timestamp
+                    <= floored_timestamp(new_state.last_changed)
+                    <= current_period_end_timestamp
+                ):
                     self._history_current_period.append(new_state)
                     new_data = True
             if not new_data and current_period_end_timestamp < now_timestamp:
