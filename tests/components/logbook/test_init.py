@@ -4,7 +4,6 @@ import collections
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -13,7 +12,6 @@ import voluptuous as vol
 from homeassistant.components import logbook
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -42,7 +40,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import mock_humanify
+from .common import MockRow, mock_humanify
 
 from tests.common import async_capture_events, mock_platform
 from tests.components.recorder.common import (
@@ -2140,27 +2138,152 @@ def _assert_entry(
         assert state == entry["state"]
 
 
-class MockRow:
-    """Minimal row mock."""
+async def test_get_events(hass, hass_ws_client, recorder_mock):
+    """Test logbook get_events."""
+    now = dt_util.utcnow()
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
 
-    def __init__(self, event_type: str, data: dict[str, Any] = None):
-        """Init the fake row."""
-        self.event_type = event_type
-        self.shared_data = json.dumps(data, cls=JSONEncoder)
-        self.data = data
-        self.time_fired = dt_util.utcnow()
-        self.context_parent_id = None
-        self.context_user_id = None
-        self.context_id = None
-        self.state = None
-        self.entity_id = None
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-    @property
-    def time_fired_minute(self):
-        """Minute the event was fired."""
-        return self.time_fired.minute
+    hass.states.async_set("light.kitchen", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 200})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 300})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
+    await hass.async_block_till_done()
+    context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
 
-    @property
-    def time_fired_isoformat(self):
-        """Time event was fired in utc isoformat."""
-        return process_timestamp_to_utc_isoformat(self.time_fired)
+    hass.states.async_set("light.kitchen", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "entity_ids": ["light.kitchen"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+    assert response["result"] == []
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": ["light.kitchen"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 3
+
+    results = response["result"]
+    assert results[0]["entity_id"] == "light.kitchen"
+    assert results[0]["state"] == "on"
+    assert results[1]["entity_id"] == "light.kitchen"
+    assert results[1]["state"] == "off"
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 4
+
+    results = response["result"]
+    assert len(results) == 3
+    assert results[0]["message"] == "started"
+    assert results[1]["entity_id"] == "light.kitchen"
+    assert results[1]["state"] == "on"
+    assert isinstance(results[1]["when"], float)
+    assert results[2]["entity_id"] == "light.kitchen"
+    assert results[2]["state"] == "off"
+    assert isinstance(results[2]["when"], float)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 5
+
+    results = response["result"]
+    assert len(results) == 1
+    assert results[0]["entity_id"] == "light.kitchen"
+    assert results[0]["state"] == "off"
+    assert isinstance(results[0]["when"], float)
+
+
+async def test_get_events_bad_start_time(hass, hass_ws_client, recorder_mock):
+    """Test get_events bad start time."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_get_events_bad_end_time(hass, hass_ws_client, recorder_mock):
+    """Test get_events bad end time."""
+    now = dt_util.utcnow()
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
