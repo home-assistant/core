@@ -4,8 +4,7 @@
       "init": {
         "description": "Please enter your personal Auth Code that is shown in the laundrify-App.",
         "data": {
-          "code": "Auth Code (xxx-xxx)",
-          "poll_interval": "Poll Interval (in seconds)"
+          "code": "Auth Code (xxx-xxx)"
         }
       },
       "reauth_confirm": {
@@ -21,16 +20,6 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure laundrify",
-        "data": {
-          "poll_interval": "Poll Interval (in seconds)"
-        }
-      }
     }
   }
 }

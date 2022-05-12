@@ -78,4 +78,4 @@ class LaundrifyPowerPlug(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data[self.unique_id]
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()

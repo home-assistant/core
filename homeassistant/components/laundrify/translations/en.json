@@ -12,24 +12,13 @@
     "step": {
       "init": {
         "data": {
-          "code": "Auth Code (xxx-xxx)",
-          "poll_interval": "Poll Interval (in seconds)"
+          "code": "Auth Code (xxx-xxx)"
         },
         "description": "Please enter your personal AuthCode that is shown in the laundrify-App."
       },
       "reauth_confirm": {
         "description": "The laundrify integration needs to re-authenticate.",
         "title": "Reauthenticate Integration"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure laundrify",
-        "data": {
-          "poll_interval": "Poll Interval (in seconds)"
-        }
       }
     }
   }
