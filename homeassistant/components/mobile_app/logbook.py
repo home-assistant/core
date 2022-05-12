@@ -20,8 +20,8 @@ ATTR_ZONE = "zone"
 ATTR_SOURCE_DEVICE_NAME = "sourceDeviceName"
 ATTR_SOURCE_DEVICE_ID = "sourceDeviceID"
 EVENT_TO_DESCRIPTION = {
-    IOS_EVENT_ZONE_ENTERED: "Entered zone",
-    IOS_EVENT_ZONE_EXITED: "Exited zone",
+    IOS_EVENT_ZONE_ENTERED: "entered zone",
+    IOS_EVENT_ZONE_EXITED: "exited zone",
 }
 
 
