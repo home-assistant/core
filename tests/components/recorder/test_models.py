@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import PropertyMock
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -336,19 +337,71 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(caplog):
     }
 
 
-def test_process_datetime_to_timestamp():
+@pytest.mark.parametrize(
+    "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
+)
+def test_process_datetime_to_timestamp(time_zone, hass):
     """Test we can handle processing database datatimes to timestamps."""
+    hass.config.set_time_zone(time_zone)
     utc_now = dt_util.utcnow()
     assert process_datetime_to_timestamp(utc_now) == utc_now.timestamp()
     now = dt_util.now()
     assert process_datetime_to_timestamp(now) == now.timestamp()
-    now_without_tzinfo = datetime(
-        now.year,
-        now.month,
-        now.day,
-        now.hour,
-        now.minute,
-        now.second,
-        now.microsecond,
+
+
+@pytest.mark.parametrize(
+    "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
+)
+def test_process_datetime_to_timestamp_freeze_time(time_zone, hass):
+    """Test we can handle processing database datatimes to timestamps.
+
+    This test freezes time to make sure everything matches.
+    """
+    hass.config.set_time_zone(time_zone)
+    utc_now = dt_util.utcnow()
+    with freeze_time(utc_now):
+        epoch = utc_now.timestamp()
+        assert process_datetime_to_timestamp(dt_util.utcnow()) == epoch
+        now = dt_util.now()
+        assert process_datetime_to_timestamp(now) == epoch
+
+
+@pytest.mark.parametrize(
+    "time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii", "UTC"]
+)
+async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
+    time_zone, hass
+):
+    """Test process_datetime_to_timestamp mirrors process_timestamp_to_utc_isoformat."""
+    hass.config.set_time_zone(time_zone)
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
+    est = dt_util.get_time_zone("US/Eastern")
+    datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
+    est = dt_util.get_time_zone("US/Eastern")
+    datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
+    nst = dt_util.get_time_zone("Canada/Newfoundland")
+    datetime_nst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=nst)
+    hst = dt_util.get_time_zone("US/Hawaii")
+    datetime_hst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=hst)
+
+    assert (
+        process_datetime_to_timestamp(datetime_with_tzinfo)
+        == dt_util.parse_datetime("2016-07-09T11:00:00+00:00").timestamp()
     )
-    assert process_datetime_to_timestamp(now_without_tzinfo) == now.timestamp()
+    assert (
+        process_datetime_to_timestamp(datetime_without_tzinfo)
+        == dt_util.parse_datetime("2016-07-09T11:00:00+00:00").timestamp()
+    )
+    assert (
+        process_datetime_to_timestamp(datetime_est_timezone)
+        == dt_util.parse_datetime("2016-07-09T15:00:00+00:00").timestamp()
+    )
+    assert (
+        process_datetime_to_timestamp(datetime_nst_timezone)
+        == dt_util.parse_datetime("2016-07-09T13:30:00+00:00").timestamp()
+    )
+    assert (
+        process_datetime_to_timestamp(datetime_hst_timezone)
+        == dt_util.parse_datetime("2016-07-09T21:00:00+00:00").timestamp()
+    )
