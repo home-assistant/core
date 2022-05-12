@@ -34,8 +34,10 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_NAME,
     ATTR_SERVICE,
+    ATTR_STATE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
@@ -67,7 +69,6 @@ from .queries import statement_for_request
 
 _LOGGER = logging.getLogger(__name__)
 
-
 FRIENDLY_NAME_JSON_EXTRACT = re.compile('"friendly_name": ?"([^"]+)"')
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
@@ -76,10 +77,19 @@ ATTR_MESSAGE = "message"
 
 DOMAIN = "logbook"
 
-
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
+
+ATTR_CONTEXT_ENTITY_ID = f"context_{ATTR_ENTITY_ID}"
+ATTR_CONTEXT_ENTITY_ID_NAME = f"context_{ATTR_ENTITY_ID}_{ATTR_NAME}"
+ATTR_CONTEXT_EVENT_TYPE = "context_event_type"
+ATTR_CONTEXT_DOMAIN = f"context_{ATTR_DOMAIN}"
+ATTR_CONTEXT_SERVICE = f"context_{ATTR_SERVICE}"
+ATTR_CONTEXT_NAME = f"context_{ATTR_NAME}"
+ATTR_CONTEXT_MESSAGE = f"context_{ATTR_MESSAGE}"
+
+ATTR_WHEN = "when"
 
 
 ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
@@ -366,13 +376,13 @@ def _humanify(
                 continue
 
             data = {
-                "when": format_time(row),
-                "name": entity_name_cache.get(entity_id, row),
-                "state": row.state,
-                "entity_id": entity_id,
+                ATTR_WHEN: format_time(row),
+                ATTR_NAME: entity_name_cache.get(entity_id, row),
+                ATTR_STATE: row.state,
+                ATTR_ENTITY_ID: entity_id,
             }
             if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
-                data["icon"] = icon
+                data[ATTR_ICON] = icon
 
             context_augmenter.augment(data, entity_id, row)
             yield data
@@ -380,8 +390,8 @@ def _humanify(
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
             data = describe_event(event_cache.get(row))
-            data["when"] = format_time(row)
-            data["domain"] = domain
+            data[ATTR_WHEN] = format_time(row)
+            data[ATTR_DOMAIN] = domain
             context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
             yield data
 
@@ -395,11 +405,11 @@ def _humanify(
                     domain = split_entity_id(str(entity_id))[0]
 
             data = {
-                "when": format_time(row),
-                "name": event_data.get(ATTR_NAME),
-                "message": event_data.get(ATTR_MESSAGE),
-                "domain": domain,
-                "entity_id": entity_id,
+                ATTR_WHEN: format_time(row),
+                ATTR_NAME: event_data.get(ATTR_NAME),
+                ATTR_MESSAGE: event_data.get(ATTR_MESSAGE),
+                ATTR_DOMAIN: domain,
+                ATTR_ENTITY_ID: entity_id,
             }
             context_augmenter.augment(data, entity_id, row)
             yield data
@@ -540,36 +550,38 @@ class ContextAugmenter:
 
         # State change
         if context_entity_id := context_row.entity_id:
-            data["context_entity_id"] = context_entity_id
-            data["context_entity_id_name"] = self.entity_name_cache.get(
+            data[ATTR_CONTEXT_ENTITY_ID] = context_entity_id
+            data[ATTR_CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                 context_entity_id, context_row
             )
-            data["context_event_type"] = event_type
+            data[ATTR_CONTEXT_EVENT_TYPE] = event_type
             return
 
         # Call service
         if event_type == EVENT_CALL_SERVICE:
             event = self.event_cache.get(context_row)
             event_data = event.data
-            data["context_domain"] = event_data.get(ATTR_DOMAIN)
-            data["context_service"] = event_data.get(ATTR_SERVICE)
-            data["context_event_type"] = event_type
+            data[ATTR_CONTEXT_DOMAIN] = event_data.get(ATTR_DOMAIN)
+            data[ATTR_CONTEXT_SERVICE] = event_data.get(ATTR_SERVICE)
+            data[ATTR_CONTEXT_EVENT_TYPE] = event_type
             return
 
         if event_type not in self.external_events:
             return
 
         domain, describe_event = self.external_events[event_type]
-        data["context_event_type"] = event_type
-        data["context_domain"] = domain
+        data[ATTR_CONTEXT_EVENT_TYPE] = event_type
+        data[ATTR_CONTEXT_DOMAIN] = domain
         event = self.event_cache.get(context_row)
         described = describe_event(event)
         if name := described.get(ATTR_NAME):
-            data["context_name"] = name
+            data[ATTR_CONTEXT_NAME] = name
+        if message := described.get(ATTR_MESSAGE):
+            data[ATTR_CONTEXT_MESSAGE] = message
         if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
             return
-        data["context_entity_id"] = attr_entity_id
-        data["context_entity_id_name"] = self.entity_name_cache.get(
+        data[ATTR_CONTEXT_ENTITY_ID] = attr_entity_id
+        data[ATTR_CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
             attr_entity_id, context_row
         )
 
