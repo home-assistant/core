@@ -1628,7 +1628,8 @@ async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mo
     # User sets up a config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
     # Discover a device to verify the entry was setup correctly
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
