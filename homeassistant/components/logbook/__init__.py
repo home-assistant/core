@@ -37,13 +37,10 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
     Context,
     Event,
     HomeAssistant,
@@ -79,19 +76,13 @@ ATTR_MESSAGE = "message"
 
 DOMAIN = "logbook"
 
-HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
-HOMEASSISTANT_EVENTS = {EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP}
 
-ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = (
-    EVENT_LOGBOOK_ENTRY,
-    EVENT_CALL_SERVICE,
-    *HOMEASSISTANT_EVENTS,
-)
+ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
 
 SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
@@ -394,21 +385,6 @@ def _humanify(
             context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
             yield data
 
-        elif event_type == EVENT_HOMEASSISTANT_START:
-            yield {
-                "when": format_time(row),
-                "name": "Home Assistant",
-                "message": "started",
-                "domain": HA_DOMAIN,
-            }
-        elif event_type == EVENT_HOMEASSISTANT_STOP:
-            yield {
-                "when": format_time(row),
-                "name": "Home Assistant",
-                "message": "stopped",
-                "domain": HA_DOMAIN,
-            }
-
         elif event_type == EVENT_LOGBOOK_ENTRY:
             event = event_cache.get(row)
             event_data = event.data
@@ -505,9 +481,6 @@ def _keep_row(
     row: Row,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
 ) -> bool:
-    if event_type in HOMEASSISTANT_EVENTS:
-        return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
-
     if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
         return entities_filter is None or entities_filter(entity_id)
 
