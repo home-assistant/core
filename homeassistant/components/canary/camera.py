@@ -217,15 +217,20 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     async def _check_for_new_image(self) -> None:
         await self._set_last_event()
 
+        utcnow = dt_util.utcnow()
+
         if self._last_event is None:
             # if we don't have any events for the day refresh the image every so often
-            utcnow = dt_util.utcnow()
             if utcnow <= self._expires_at:
                 return
-            self._image = None
-            self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
-            _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
+            await self._expire_image()
+            return
 
+        if (
+            self._last_image_id == self._last_event.entry_id
+            and utcnow >= self._expires_at
+        ):
+            await self._expire_image()
             return
 
         if self._last_image_id != self._last_event.entry_id:
@@ -238,6 +243,13 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             return None
         except IndexError:
             return None
+
+    async def _expire_image(self) -> None:
+        utcnow = dt_util.utcnow()
+        self._image = None
+        self._image_url = None
+        self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
+        _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
