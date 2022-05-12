@@ -231,8 +231,8 @@ async def ws_get_events(
 
     if not end_time_str:
         end_time = utc_now
-    elif end_time := dt_util.parse_datetime(end_time_str):
-        end_time = dt_util.as_utc(end_time)
+    elif parsed_end_time := dt_util.parse_datetime(end_time_str):
+        end_time = dt_util.as_utc(parsed_end_time)
     else:
         connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
         return
