@@ -95,16 +95,13 @@ async def async_setup_entry(
     """Set up the deCONZ climate devices."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
-    clip_sensor_ids = set()
 
     @callback
     def async_add_climate(_: EventType, climate_id: str) -> None:
         """Add climate from deCONZ."""
         climate = gateway.api.sensors.thermostat[climate_id]
-        if climate.type.startswith("CLIP"):
-            clip_sensor_ids.add(climate_id)
-            if not gateway.option_allow_clip_sensor:
-                return
+        if not gateway.option_allow_clip_sensor and climate.type.startswith("CLIP"):
+            return
         async_add_entities([DeconzThermostat(climate, gateway)])
 
     config_entry.async_on_unload(
@@ -118,9 +115,10 @@ async def async_setup_entry(
 
     @callback
     def async_reload_clip_sensors() -> None:
-        """Load deCONZ groups."""
-        for clip_sensor_id in clip_sensor_ids:
-            async_add_climate(EventType.ADDED, clip_sensor_id)
+        """Load clip climate sensors from deCONZ."""
+        for climate_id, climate in gateway.api.sensors.thermostat.items():
+            if climate.type.startswith("CLIP"):
+                async_add_climate(EventType.ADDED, climate_id)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
