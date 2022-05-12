@@ -20,14 +20,11 @@
                 },
                 "description": "If you want to monitor not only state, choose its specific district"
             },
-            "state": {
+            "user": {
                 "data": {
                     "region": "Region"
                 },
                 "description": "Choose state to monitor"
-            },
-            "user": {
-                "description": "Set up the Ukraine Alarm integration"
             }
         }
     }
