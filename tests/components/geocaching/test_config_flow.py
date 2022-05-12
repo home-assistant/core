@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_EXTERNAL_STEP
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_EXTERNAL_STEP
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -150,6 +150,56 @@ async def test_existing_entry(
 
     await hass.config_entries.flow.async_configure(result["flow_id"])
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_oauth_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    mock_geocaching_config_flow: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Check if aborted when oauth error occurs."""
+    assert await setup_geocaching_component(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert "flow_id" in result
+
+    # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URI,
+        },
+    )
+    assert result.get("type") == RESULT_TYPE_EXTERNAL_STEP
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    # No user information is returned from API
+    mock_geocaching_config_flow.update.return_value.user = None
+
+    aioclient_mock.post(
+        CURRENT_ENVIRONMENT_URLS["token_url"],
+        json={
+            "access_token": "mock-access-token",
+            "token_type": "bearer",
+            "expires_in": 3599,
+            "refresh_token": "mock-refresh_token",
+        },
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("reason") == "oauth_error"
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_reauthentication(
