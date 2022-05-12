@@ -593,6 +593,8 @@ class ContextAugmenter:
                 data["context_name"] = name
                 if ATTR_MESSAGE in described:
                     data["context_message"] = described[ATTR_MESSAGE]
+                if ATTR_ENTITY_ID in described:
+                    data["context_entity_id"] = described[ATTR_ENTITY_ID]
             return
 
         if (
