@@ -44,6 +44,7 @@ from .const import (
     NODE_FILTERS,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_EZIO2X4_SENSORS,
@@ -294,6 +295,10 @@ def _categorize_nodes(
         if hasattr(node, "protocol") and node.protocol == PROTO_GROUP:
             hass_isy_data[ISY994_NODES][ISY_GROUP_PLATFORM].append(node)
             continue
+
+        if getattr(node, "protocol", None) == PROTO_INSTEON:
+            for control in node.aux_properties:
+                hass_isy_data[ISY994_NODES][SENSOR_AUX].append((node, control))
 
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to

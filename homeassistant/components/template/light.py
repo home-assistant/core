@@ -352,25 +352,37 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
             )
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             optimistic_set = True
 
         if self._white_value_template is None and ATTR_WHITE_VALUE in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting white value to %s", kwargs[ATTR_WHITE_VALUE]
             )
             self._white_value = kwargs[ATTR_WHITE_VALUE]
             optimistic_set = True
 
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting color temperature to %s",
                 kwargs[ATTR_COLOR_TEMP],
             )
             self._temperature = kwargs[ATTR_COLOR_TEMP]
+            if self._color_template is None:
+                self._color = None
+            optimistic_set = True
+
+        if self._color_template is None and ATTR_HS_COLOR in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting color to %s",
+                kwargs[ATTR_HS_COLOR],
+            )
+            self._color = kwargs[ATTR_HS_COLOR]
+            if self._temperature_template is None:
+                self._temperature = None
             optimistic_set = True
 
         common_params = {}
@@ -397,8 +409,9 @@ class LightTemplate(TemplateEntity, LightEntity):
             effect = kwargs[ATTR_EFFECT]
             if effect not in self._effect_list:
                 _LOGGER.error(
-                    "Received invalid effect: %s. Expected one of: %s",
+                    "Received invalid effect: %s for entity %s. Expected one of: %s",
                     effect,
+                    self.entity_id,
                     self._effect_list,
                     exc_info=True,
                 )
@@ -447,7 +460,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._brightness = int(brightness)
             else:
                 _LOGGER.error(
-                    "Received invalid brightness : %s. Expected: 0-255", brightness
+                    "Received invalid brightness : %s for entity %s. Expected: 0-255",
+                    brightness,
+                    self.entity_id,
                 )
                 self._brightness = None
         except ValueError:
@@ -468,7 +483,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._white_value = int(white_value)
             else:
                 _LOGGER.error(
-                    "Received invalid white value: %s. Expected: 0-255", white_value
+                    "Received invalid white value: %s for entity %s. Expected: 0-255",
+                    white_value,
+                    self.entity_id,
                 )
                 self._white_value = None
         except ValueError:
@@ -487,8 +504,9 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if not isinstance(effect_list, list):
             _LOGGER.error(
-                "Received invalid effect list: %s. Expected list of strings",
+                "Received invalid effect list: %s for entity %s. Expected list of strings",
                 effect_list,
+                self.entity_id,
             )
             self._effect_list = None
             return
@@ -508,8 +526,9 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if effect not in self._effect_list:
             _LOGGER.error(
-                "Received invalid effect: %s. Expected one of: %s",
+                "Received invalid effect: %s for entity %s. Expected one of: %s",
                 effect,
+                self.entity_id,
                 self._effect_list,
             )
             self._effect = None
@@ -537,8 +556,9 @@ class LightTemplate(TemplateEntity, LightEntity):
             return
 
         _LOGGER.error(
-            "Received invalid light is_on state: %s. Expected: %s",
+            "Received invalid light is_on state: %s for entity %s. Expected: %s",
             state,
+            self.entity_id,
             ", ".join(_VALID_STATES),
         )
         self._state = None
@@ -555,8 +575,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = temperature
             else:
                 _LOGGER.error(
-                    "Received invalid color temperature : %s. Expected: %s-%s",
+                    "Received invalid color temperature : %s for entity %s. Expected: %s-%s",
                     temperature,
+                    self.entity_id,
                     self.min_mireds,
                     self.max_mireds,
                 )
@@ -595,13 +616,16 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color = (h_str, s_str)
         elif h_str is not None and s_str is not None:
             _LOGGER.error(
-                "Received invalid hs_color : (%s, %s). Expected: (0-360, 0-100)",
+                "Received invalid hs_color : (%s, %s) for entity %s. Expected: (0-360, 0-100)",
                 h_str,
                 s_str,
+                self.entity_id,
             )
             self._color = None
         else:
-            _LOGGER.error("Received invalid hs_color : (%s)", render)
+            _LOGGER.error(
+                "Received invalid hs_color : (%s) for entity %s", render, self.entity_id
+            )
             self._color = None
 
     @callback

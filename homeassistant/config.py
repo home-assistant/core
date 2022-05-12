@@ -951,8 +951,9 @@ def async_notify_setup_error(
     message = "The following integrations and platforms could not be set up:\n\n"
 
     for name, link in errors.items():
+        show_logs = f"[Show logs](/config/logs?filter={name})"
         part = f"[{name}]({link})" if link else name
-        message += f" - {part}\n"
+        message += f" - {part} ({show_logs})\n"
 
     message += "\nPlease check your config and [logs](/config/logs)."
 

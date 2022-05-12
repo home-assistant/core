@@ -9,6 +9,7 @@
             "updated_instance": "DeCONZ-i eksemplarile omistati uus hostiaadress"
         },
         "error": {
+            "linking_not_possible": "\u00dchendus l\u00fc\u00fcsiga nurjus",
             "no_key": "API v\u00f5tit ei leitud"
         },
         "flow_title": "{host}",

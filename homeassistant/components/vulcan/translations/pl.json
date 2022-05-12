@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Wszyscy uczniowie zostali ju\u017c dodani.",
             "already_configured": "Ten ucze\u0144 zosta\u0142 ju\u017c dodany.",
+            "no_matching_entries": "Nie znaleziono pasuj\u0105cych wpis\u00f3w. U\u017cyj innego konta lub usu\u0144 integracj\u0119 z nieaktualnym uczniem.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -32,6 +33,14 @@
             "reauth": {
                 "data": {
                     "pin": "Kod pin",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Zaloguj si\u0119 do swojego konta Vulcan za pomoc\u0105 strony rejestracji aplikacji mobilnej."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Kod PIN",
                     "region": "Symbol",
                     "token": "Token"
                 },

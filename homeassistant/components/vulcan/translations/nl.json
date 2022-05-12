@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Alle studenten zijn al toegevoegd.",
             "already_configured": "Die student is al toegevoegd.",
+            "no_matching_entries": "Geen overeenkomende vermeldingen gevonden, gebruik een ander account of verwijder integratie met verouderde student..",
             "reauth_successful": "Opnieuw verifi\u00ebren gelukt"
         },
         "error": {
@@ -36,6 +37,14 @@
                     "token": "Token"
                 },
                 "description": "Log in op uw Vulcan-account via de registratiepagina voor mobiele apps."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Pincode",
+                    "region": "Symbool",
+                    "token": "Token"
+                },
+                "description": "Log in op je Vulcan Account met behulp van de registratie pagina in de mobiele app."
             },
             "select_saved_credentials": {
                 "data": {

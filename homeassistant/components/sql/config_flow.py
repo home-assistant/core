@@ -26,7 +26,9 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
         vol.Optional(CONF_DB_URL): selector.TextSelector(),
         vol.Required(CONF_COLUMN_NAME): selector.TextSelector(),
-        vol.Required(CONF_QUERY): selector.TextSelector(),
+        vol.Required(CONF_QUERY): selector.TextSelector(
+            selector.TextSelectorConfig(multiline=True)
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
         vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
     }
@@ -43,15 +45,15 @@ def validate_sql_select(value: str) -> str | None:
 def validate_query(db_url: str, query: str, column: str) -> bool:
     """Validate SQL query."""
     try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
     except SQLAlchemyError as error:
         raise error
 
     sess: scoped_session = sessmaker()
 
     try:
-        result: Result = sess.execute(query)
+        result: Result = sess.execute(sqlalchemy.text(query))
         for res in result.mappings():
             data = res[column]
             _LOGGER.debug("Return value from query: %s", data)
@@ -165,7 +167,14 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_NAME: self.entry.title,
+                        **self.entry.options,
+                        **user_input,
+                    },
+                )
 
         return self.async_show_form(
             step_id="init",
@@ -180,7 +189,9 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_QUERY,
                         description={"suggested_value": self.entry.options[CONF_QUERY]},
-                    ): selector.TextSelector(),
+                    ): selector.TextSelector(
+                        selector.TextSelectorConfig(multiline=True)
+                    ),
                     vol.Required(
                         CONF_COLUMN_NAME,
                         description={

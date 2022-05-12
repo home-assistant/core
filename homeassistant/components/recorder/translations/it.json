@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Ora di inizio esecuzione corrente",
+            "estimated_db_size": "Dimensione stimata del database (MiB)",
+            "oldest_recorder_run": "Ora di inizio esecuzione meno recente"
+        }
+    }
+}

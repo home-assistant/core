@@ -14,7 +14,7 @@
             "unknown": "Unexpected error"
         },
         "progress": {
-            "email_2fa": "Input the two-factor authentication code\nsent to you via email."
+            "email_2fa": "Check your email for a verification link from Simplisafe."
         },
         "step": {
             "mfa": {

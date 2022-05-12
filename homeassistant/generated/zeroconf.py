@@ -103,7 +103,10 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         },
         {
-            "domain": "devolo_home_network"
+            "domain": "devolo_home_network",
+            "properties": {
+                "MT": "*"
+            }
         }
     ],
     "_easylink._tcp.local.": [
@@ -376,6 +379,12 @@ ZEROCONF = {
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
             "domain": "kodi"
+        }
+    ],
+    "_zigate-zigbee-gateway._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigate*"
         }
     ],
     "_zwave-js-server._tcp.local.": [

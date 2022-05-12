@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "\ud540\ucf54\ub4dc \uc22b\uc790 \uac1c\uc218"
+                }
+            }
+        }
+    }
+}
