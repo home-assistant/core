@@ -59,6 +59,9 @@
           "username": "[%key:common::config_flow::data::username%]",
           "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
         }
       },
       "content_type": {
