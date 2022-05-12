@@ -1,32 +1,8 @@
 [
-	{
-		"_id": "14",
-		"name": "Demo Waschmaschine",
-		"status": "OFF",
-		"lastChange": null,
-		"time_threshold": 95,
-		"power_threshold": 8,
-		"has_creaseprotect": true,
-		"share_id": "demo",
-		"ssid": null,
-		"internalIP": null,
-		"subnet": null,
-		"gateway": null,
-		"firmwareVersion": null,
-		"chipID": null,
-		"useInterpolation": false,
-		"poweron_threshold": 10000,
-		"createdAt": "2018-09-09T06:27:08.943Z",
-		"updatedAt": "2022-01-25T18:57:38.977Z",
-		"_hub": null,
-		"Listing": {
-			"_id": "659d4a73",
-			"origin": "migration",
-			"isSubscribed": false,
-			"createdAt": "2022-01-20T13:28:47.824Z",
-			"updatedAt": "2022-01-20T13:28:47.825Z",
-			"_machine": "14",
-			"_user": 9125
-		}
-	}
+  {
+    "_id": "14",
+    "name": "Demo Waschmaschine",
+    "status": "OFF",
+    "firmwareVersion": "2.1.0"
+  }
 ]
