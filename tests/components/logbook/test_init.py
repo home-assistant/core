@@ -2251,6 +2251,28 @@ async def test_get_events(hass, hass_ws_client, recorder_mock):
     assert isinstance(results[0]["when"], float)
 
 
+async def test_get_events_future_start_time(hass, hass_ws_client, recorder_mock):
+    """Test get_events with a future start time."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    future = dt_util.utcnow() + timedelta(hours=10)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": future.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+
+    results = response["result"]
+    assert len(results) == 0
+
+
 async def test_get_events_bad_start_time(hass, hass_ws_client, recorder_mock):
     """Test get_events bad start time."""
     await async_setup_component(hass, "logbook", {})
