@@ -1,10 +1,13 @@
 """The Hardware websocket API."""
 from __future__ import annotations
 
+import contextlib
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .models import HardwareProtocol
@@ -33,6 +36,7 @@ def ws_info(
     ]
     for platform in hardware_platform.values():
         if hasattr(platform, "async_info"):
-            hardware_info.append(platform.async_info())
+            with contextlib.suppress(HomeAssistantError):
+                hardware_info.append(platform.async_info(hass))
 
     connection.send_result(msg["id"], hardware_info)

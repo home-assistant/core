@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Protocol, TypedDict
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 
 class HardwareInfo(TypedDict):
@@ -19,5 +19,5 @@ class HardwareProtocol(Protocol):
     """Define the format of hardware platforms."""
 
     @callback
-    def async_info(self) -> HardwareInfo:
+    def async_info(self, hass: HomeAssistant) -> HardwareInfo:
         """Return info."""

@@ -7,7 +7,7 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": ["hardware"],
+  "dependencies": ["hardware", "hassio"],
   "codeowners": ["@core"],
   "iot_class": "calculated"
 }

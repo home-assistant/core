@@ -1,11 +1,17 @@
 """Test the Raspberry Pi hardware platform."""
+from homeassistant.components.hassio import DATA_OS_INFO
 from homeassistant.components.raspberrypi.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockModule, mock_integration
+
 
 async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
     """Test we can get the board info."""
+    mock_integration(hass, MockModule("hassio"))
+    hass.data[DATA_OS_INFO] = {"board": "rpi"}
+
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
