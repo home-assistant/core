@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN
@@ -42,11 +42,14 @@ def async_describe_events(
             ATTR_SOURCE_DEVICE_NAME, data.get(ATTR_SOURCE_DEVICE_ID)
         )
         zone_name = None
+        zone_icon = None
         if zone_entity_id and (zone_state := hass.states.get(zone_entity_id)):
             zone_name = zone_state.attributes.get(ATTR_FRIENDLY_NAME)
+            zone_icon = zone_state.attributes.get(ATTR_ICON)
         return {
             "name": source_device_name,
             "message": f"{event_description} {zone_name or zone_entity_id}",
+            "icon": zone_icon or "mdi:crosshairs-gps",
         }
 
     async_describe_event(DOMAIN, IOS_EVENT_ZONE_ENTERED, async_describe_zone_event)
