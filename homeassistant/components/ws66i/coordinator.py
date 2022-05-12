@@ -1,7 +1,6 @@
 """Coordinator for WS66i."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from pyws66i import WS66i, ZoneStatus
@@ -9,9 +8,9 @@ from pyws66i import WS66i, ZoneStatus
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-_LOGGER = logging.getLogger(__name__)
+from .const import POLL_INTERVAL
 
-POLL_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 
 class Ws66iDataUpdateCoordinator(DataUpdateCoordinator[list[ZoneStatus]]):

@@ -12,13 +12,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MAX_VOL
 from .coordinator import Ws66iDataUpdateCoordinator
 from .models import Ws66iData
 
 PARALLEL_UPDATES = 1
-
-MAX_VOL = 38
 
 
 async def async_setup_entry(
@@ -143,24 +141,30 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self.hass.async_add_executor_job(
-            self._ws66i.set_volume, self._zone_id, int(volume * MAX_VOL)
-        )
-        self._status.volume = int(volume * MAX_VOL)
+        await self.hass.async_add_executor_job(self._set_volume, int(volume * MAX_VOL))
         self._async_update_attrs_write_ha_state()
 
     async def async_volume_up(self):
         """Volume up the media player."""
         await self.hass.async_add_executor_job(
-            self._ws66i.set_volume, self._zone_id, min(self._status.volume + 1, MAX_VOL)
+            self._set_volume, min(self._status.volume + 1, MAX_VOL)
         )
-        self._status.volume = min(self._status.volume + 1, MAX_VOL)
         self._async_update_attrs_write_ha_state()
 
     async def async_volume_down(self):
         """Volume down media player."""
         await self.hass.async_add_executor_job(
-            self._ws66i.set_volume, self._zone_id, max(self._status.volume - 1, 0)
+            self._set_volume, max(self._status.volume - 1, 0)
         )
-        self._status.volume = max(self._status.volume - 1, 0)
         self._async_update_attrs_write_ha_state()
+
+    def _set_volume(self, volume: int) -> None:
+        """Set the volume of the media player."""
+        # Can't set a new volume level when this zone is muted.
+        # Follow behavior of keypads, where zone is unmuted when volume changes.
+        if self._status.mute:
+            self._ws66i.set_mute(self._zone_id, False)
+            self._status.mute = False
+
+        self._ws66i.set_volume(self._zone_id, volume)
+        self._status.volume = volume

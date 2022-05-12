@@ -1,4 +1,5 @@
 """Constants for the Soundavo WS66i 6-Zone Amplifier Media Player component."""
+from datetime import timedelta
 
 DOMAIN = "ws66i"
 
@@ -19,3 +20,7 @@ INIT_OPTIONS_DEFAULT = {
     "5": "Source 5",
     "6": "Source 6",
 }
+
+POLL_INTERVAL = timedelta(seconds=30)
+
+MAX_VOL = 38

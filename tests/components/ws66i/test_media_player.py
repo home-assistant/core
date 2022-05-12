@@ -1,6 +1,5 @@
 """The tests for WS66i Media player platform."""
 from collections import defaultdict
-from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -15,6 +14,8 @@ from homeassistant.components.ws66i.const import (
     CONF_SOURCES,
     DOMAIN,
     INIT_OPTIONS_DEFAULT,
+    MAX_VOL,
+    POLL_INTERVAL,
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -166,10 +167,6 @@ async def _call_media_player_service(hass, name, data):
     )
 
 
-async def _call_ws66i_service(hass, name, data):
-    await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
-
-
 async def test_update(hass):
     """Test updating values from ws66i."""
     ws66i = MockWs66i()
@@ -184,10 +181,10 @@ async def test_update(hass):
     )
 
     ws66i.set_source(11, 3)
-    ws66i.set_volume(11, 38)
+    ws66i.set_volume(11, MAX_VOL)
 
     with patch.object(MockWs66i, "open") as method_call:
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
         await hass.async_block_till_done()
 
         assert not method_call.called
@@ -213,25 +210,25 @@ async def test_failed_update(hass):
     )
 
     ws66i.set_source(11, 3)
-    ws66i.set_volume(11, 38)
+    ws66i.set_volume(11, MAX_VOL)
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
 
     # Failed update, close called
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
         await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
     # A connection re-attempt fails
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
         await hass.async_block_till_done()
 
     # A connection re-attempt succeeds
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
 
     # confirm entity is back on
@@ -298,7 +295,7 @@ async def test_source_select(hass):
 
     ws66i.set_source(11, 5)
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
@@ -350,34 +347,89 @@ async def test_volume_up_down(hass):
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
     # should not go below zero
     assert ws66i.zones[11].volume == 0
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
     assert ws66i.zones[11].volume == 1
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
     )
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
-    assert ws66i.zones[11].volume == 38
+    assert ws66i.zones[11].volume == MAX_VOL
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done()
-    # should not go above 38
-    assert ws66i.zones[11].volume == 38
+    # should not go above 38 (MAX_VOL)
+    assert ws66i.zones[11].volume == MAX_VOL
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
-    assert ws66i.zones[11].volume == 37
+    assert ws66i.zones[11].volume == MAX_VOL - 1
+
+
+async def test_volume_while_mute(hass):
+    """Test increasing volume by one."""
+    ws66i = MockWs66i()
+    _ = await _setup_ws66i(hass, ws66i)
+
+    # Set vol to a known value
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    assert ws66i.zones[11].volume == 0
+
+    # Set mute to a known value, False
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_MUTE, {"entity_id": ZONE_1_ID, "is_volume_muted": False}
+    )
+    assert not ws66i.zones[11].mute
+
+    # Mute the zone
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_MUTE, {"entity_id": ZONE_1_ID, "is_volume_muted": True}
+    )
+    assert ws66i.zones[11].mute
+
+    # Increase volume. Mute state should go back to unmutted
+    await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
+    assert ws66i.zones[11].volume == 1
+    assert not ws66i.zones[11].mute
+
+    # Mute the zone again
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_MUTE, {"entity_id": ZONE_1_ID, "is_volume_muted": True}
+    )
+    assert ws66i.zones[11].mute
+
+    # Decrease volume. Mute state should go back to unmutted
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
+    )
+    assert ws66i.zones[11].volume == 0
+    assert not ws66i.zones[11].mute
+
+    # Mute the zone again
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_MUTE, {"entity_id": ZONE_1_ID, "is_volume_muted": True}
+    )
+    assert ws66i.zones[11].mute
+
+    # Set to max volume. Mute state should go back to unmutted
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    assert ws66i.zones[11].volume == MAX_VOL
+    assert not ws66i.zones[11].mute
 
 
 async def test_first_run_with_available_zones(hass):
