@@ -1,5 +1,6 @@
 """Test the System Bridge config flow."""
 from unittest.mock import patch
+import asyncio
 
 from systembridgeconnector.const import (
     EVENT_DATA,
@@ -171,6 +172,31 @@ async def test_form_connection_closed_cannot_connect(hass: HomeAssistant) -> Non
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
         side_effect=ConnectionClosedException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_timeout_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle timeout cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch("systembridgeconnector.websocket_client.WebSocketClient.connect"), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.get_data"
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
+        side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
