@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -21,14 +22,15 @@ _LOGGER = logging.getLogger(__name__)
 
 def validate_path(hass: HomeAssistant, path: str) -> pathlib.Path:
     """Validate path."""
-    try:
-        get_path = pathlib.Path(path)
-    except OSError as error:
-        _LOGGER.error("Can not access file %s, error %s", path, error)
-        raise NotValidError from error
+    get_path = pathlib.Path(path)
+    exist = get_path.exists()
+    is_file = get_path.is_file()
+    if not exist or not is_file:
+        _LOGGER.error("Can not access file %s", path)
+        raise NotValidError
 
     if not hass.config.is_allowed_path(path):
-        _LOGGER.error("Filepath %s is not valid or allowed", path)
+        _LOGGER.error("Filepath %s is not allowed", path)
         raise NotAllowedError
 
     return get_path
@@ -68,9 +70,9 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class NotValidError(Exception):
+class NotValidError(HomeAssistantError):
     """Path is not valid error."""
 
 
-class NotAllowedError(Exception):
+class NotAllowedError(HomeAssistantError):
     """Path is not allowed error."""

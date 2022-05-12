@@ -74,13 +74,12 @@ async def async_setup_entry(
     coordinator = FileSizeCoordinator(hass, fullpath)
     await coordinator.async_config_entry_first_refresh()
 
-    if get_path.exists() and get_path.is_file():
-        async_add_entities(
-            [
-                FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
-                for description in SENSOR_TYPES
-            ]
-        )
+    async_add_entities(
+        [
+            FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
+            for description in SENSOR_TYPES
+        ]
+    )
 
 
 class FileSizeCoordinator(DataUpdateCoordinator):
@@ -119,7 +118,7 @@ class FileSizeCoordinator(DataUpdateCoordinator):
 
 
 class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
-    """Encapsulates file size information."""
+    """Filesize sensor."""
 
     entity_description: SensorEntityDescription
 
@@ -130,7 +129,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         entry_id: str,
         coordinator: FileSizeCoordinator,
     ) -> None:
-        """Initialize the data object."""
+        """Initialize the Filesize sensor."""
         super().__init__(coordinator)
         base_name = path.split("/")[-1]
         self._attr_name = f"{base_name} {description.name}"
