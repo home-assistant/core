@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.logbook import ATTR_MESSAGE
+from homeassistant.const import (
+    ATTR_ICON,
+    ATTR_NAME,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 
 from . import DOMAIN
@@ -24,7 +30,11 @@ def async_describe_events(
     @callback
     def async_describe_hass_event(event: Event) -> dict[str, str]:
         """Describe homeassisant logbook event."""
-        return {"name": "Home Assistant", "message": EVENT_TO_NAME[event.event_type]}
+        return {
+            ATTR_NAME: "Home Assistant",
+            ATTR_MESSAGE: EVENT_TO_NAME[event.event_type],
+            ATTR_ICON: "mdi:home-assistant",
+        }
 
     async_describe_event(DOMAIN, EVENT_HOMEASSISTANT_STOP, async_describe_hass_event)
     async_describe_event(DOMAIN, EVENT_HOMEASSISTANT_START, async_describe_hass_event)
