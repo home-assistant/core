@@ -11,7 +11,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,13 +34,6 @@ class GeocachingSensorEntityDescription(
 
 
 SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
-    GeocachingSensorEntityDescription(
-        key="username",
-        name="username",
-        icon="mdi:account",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda status: status.user.username,
-    ),
     GeocachingSensorEntityDescription(
         key="find_count",
         name="Total finds",
