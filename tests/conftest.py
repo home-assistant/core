@@ -547,7 +547,7 @@ def mqtt_client_mock(hass):
 
 
 @pytest.fixture
-async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
+async def mqtt_mock(hass, mqtt_client_mock, mqtt_config, setup_components: list = []):
     """Fixture to mock MQTT component."""
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
@@ -561,9 +561,9 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     )
 
     entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.mqtt.PLATFORMS", setup_components):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],

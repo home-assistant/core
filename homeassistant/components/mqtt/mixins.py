@@ -9,7 +9,6 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
-from homeassistant.config import async_hass_config_yaml
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -66,6 +65,7 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -252,7 +252,7 @@ async def async_get_platform_config_from_yaml(
         config[CONF_PLATFORM] = DOMAIN
         return schema(config)
 
-    config_yaml = await async_hass_config_yaml(hass)
+    config_yaml: ConfigType = hass.data.get(DATA_MQTT_CONFIG, {})
     if not (integration_config := config_yaml.get(DOMAIN)) or not (
         platform_configs := integration_config.get(domain)
     ):
