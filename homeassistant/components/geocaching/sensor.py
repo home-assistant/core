@@ -118,7 +118,7 @@ class GeocachingSensor(
             name=f"Geocaching {coordinator.data.user.username}",
             identifiers={(DOMAIN, cast(str, coordinator.data.user.reference_code))},
             entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Groundspeak, Inc",
+            manufacturer="Groundspeak, Inc.",
         )
 
     @property
