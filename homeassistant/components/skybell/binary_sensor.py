@@ -12,12 +12,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, SkybellEntity
+from . import DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
+from .entity import SkybellEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -32,7 +33,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2022.5
+# Deprecated in Home Assistant 2022.6
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
@@ -65,9 +66,9 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         """Initialize a binary sensor for a Skybell device."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_name = f"{self._device.name} {description.name}"
         self._event: dict[str, str] = {}
-        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
+        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     @property
     def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
@@ -77,10 +78,10 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
             attrs["event_date"] = event
         return attrs
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if entity is on."""
-        event = self.coordinator.device.latest(f"{self.entity_description.key}")
-        result = bool(event.get(CONST.ID) != self._event.get(CONST.ID))
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        event = self._device.latest(f"{self.entity_description.key}")
+        self._attr_is_on = bool(event.get(CONST.ID) != self._event.get(CONST.ID))
         self._event = event
-        return result
+        super()._handle_coordinator_update()

@@ -70,8 +70,8 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
 
 async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
-    with _patch_skybell() as skybellmock:
-        skybellmock.side_effect = exceptions.SkybellException(hass)
+    with _patch_skybell() as skybell_mock:
+        skybell_mock.side_effect = exceptions.SkybellException(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
@@ -82,8 +82,8 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
-    with patch("homeassistant.components.skybell.Skybell.async_login") as skybellmock:
-        skybellmock.side_effect = exceptions.SkybellAuthenticationException(hass)
+    with patch("homeassistant.components.skybell.Skybell.async_login") as skybell_mock:
+        skybell_mock.side_effect = exceptions.SkybellAuthenticationException(hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
@@ -95,8 +95,8 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
-    with _patch_skybell_devices() as skybellmock:
-        skybellmock.side_effect = Exception
+    with _patch_skybell_devices() as skybell_mock:
+        skybell_mock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )

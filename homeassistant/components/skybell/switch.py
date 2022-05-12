@@ -16,9 +16,9 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SkybellEntity
 from .const import DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
+from .entity import SkybellEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -31,7 +31,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2022.5
+# Deprecated in Home Assistant 2022.6
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
@@ -64,22 +64,18 @@ class SkybellSwitch(SkybellEntity, SwitchEntity):
         """Initialize a light for a Skybell device."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
-        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
+        self._attr_name = f"{self._device.name} {description.name}"
+        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await self.coordinator.device.async_set_setting(
-            self.entity_description.key, True
-        )
+        await self._device.async_set_setting(self.entity_description.key, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await self.coordinator.device.async_set_setting(
-            self.entity_description.key, False
-        )
+        await self._device.async_set_setting(self.entity_description.key, False)
 
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        return getattr(self.coordinator.device, self.entity_description.key)
+        return getattr(self._device, self.entity_description.key)

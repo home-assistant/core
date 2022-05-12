@@ -13,9 +13,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SkybellEntity
 from .const import DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
+from .entity import SkybellEntity
 
 
 async def async_setup_entry(
@@ -32,34 +32,31 @@ class SkybellLight(SkybellEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS, ColorMode.RGB}
 
-    def __init__(
-        self,
-        coordinator: SkybellDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
         """Initialize a light for a Skybell device."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.name
-        self._attr_unique_id = f"{coordinator.device.device_id}_{self.name}"
+        self._attr_name = self._device.name
+        self._attr_unique_id = f"{self._device.device_id}_{self.name}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs[ATTR_RGB_COLOR]
-            await self.coordinator.device.async_set_setting(ATTR_RGB_COLOR, rgb)
+            await self._device.async_set_setting(ATTR_RGB_COLOR, rgb)
         if ATTR_BRIGHTNESS in kwargs:
             level = int((kwargs.get(ATTR_BRIGHTNESS, 0) * 100) / 255)
-            await self.coordinator.device.async_set_setting(ATTR_BRIGHTNESS, level)
+            await self._device.async_set_setting(ATTR_BRIGHTNESS, level)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self.coordinator.device.async_set_setting(ATTR_BRIGHTNESS, 0)
+        await self._device.async_set_setting(ATTR_BRIGHTNESS, 0)
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.coordinator.device.led_intensity > 0
+        return self._device.led_intensity > 0
 
     @property
     def brightness(self) -> int:
         """Return the brightness of the light."""
-        return int((self.coordinator.device.led_intensity * 255) / 100)
+        return int((self._device.led_intensity * 255) / 100)

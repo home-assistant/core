@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, SkybellEntity
 from .coordinator import SkybellDataUpdateCoordinator
+from .entity import DOMAIN, SkybellEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -25,12 +25,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2022.5
+MONITORED_CONDITIONS = SENSOR_TYPES
+
+# Deprecated in Home Assistant 2022.6
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]
         ),
     }
 )
@@ -58,10 +60,10 @@ class SkybellSensor(SkybellEntity, SensorEntity):
         """Initialize a sensor for a Skybell device."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
-        self._attr_unique_id = f"{coordinator.device.device_id}_{description.key}"
+        self._attr_name = f"{self._device.name} {description.name}"
+        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        return self.coordinator.device.outdoor_chime_level
+        return self._device.outdoor_chime_level

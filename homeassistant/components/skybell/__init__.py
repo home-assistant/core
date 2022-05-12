@@ -9,27 +9,19 @@ from aioskybell.exceptions import SkybellAuthenticationException, SkybellExcepti
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_CACHEDB, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_CACHEDB, DOMAIN
 from .coordinator import SkybellDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2022.5
+        # Deprecated in Home Assistant 2022.6
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
@@ -118,45 +110,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
-    """An HA implementation for Skybell entity."""
-
-    _attr_attribution = "Data provided by Skybell.com"
-
-    def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
-        """Initialize a SkyBell entity."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device.device_id)},
-            manufacturer=DEFAULT_NAME,
-            model=self.coordinator.device.type,
-            name=self.coordinator.device.name,
-            sw_version=self.coordinator.device.firmware_ver,
-        )
-        if self.coordinator.device.mac:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, self.coordinator.device.mac)
-            }
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
-        """Return the state attributes."""
-        attr: dict[str, str | int | tuple[str, str]] = {
-            "device_id": self.coordinator.device.device_id,
-            "status": self.coordinator.device.status,
-            "location": self.coordinator.device.location,
-            "motion_threshold": self.coordinator.device.motion_threshold,
-            "video_profile": self.coordinator.device.video_profile,
-        }
-        if self.coordinator.device.owner:
-            attr["wifi_ssid"] = self.coordinator.device.wifi_ssid
-            attr["wifi_status"] = self.coordinator.device.wifi_status
-            attr["last_check_in"] = self.coordinator.device.last_check_in
-        return attr
-
-    @property
-    def available(self) -> bool:
-        """Return True if device is available."""
-        return super().available
