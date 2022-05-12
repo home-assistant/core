@@ -591,10 +591,13 @@ class ContextAugmenter:
             described = describe_event(event)
             if name := described.get(ATTR_NAME):
                 data["context_name"] = name
-                if ATTR_MESSAGE in described:
-                    data["context_message"] = described[ATTR_MESSAGE]
-                if ATTR_ENTITY_ID in described:
-                    data["context_entity_id"] = described[ATTR_ENTITY_ID]
+            if attr_entity_id := described.get(ATTR_ENTITY_ID):
+                data["context_entity_id"] = attr_entity_id
+                data["context_entity_id_name"] = self.entity_name_cache.get(
+                    attr_entity_id, context_row
+                )
+            if ATTR_MESSAGE in described:
+                data["context_message"] = described[ATTR_MESSAGE]
             return
 
         if (
