@@ -1,15 +1,20 @@
 """Support for DSMR Reader through MQTT."""
 from __future__ import annotations
+import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import SOURCE_PLATFORM_CONFIG
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
+from .const import DOMAIN
 from .definitions import SENSORS, DSMRReaderSensorEntityDescription
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -18,8 +23,22 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up DSMR Reader sensors."""
-    async_add_entities(DSMRSensor(description) for description in SENSORS)
+    """Set up DSMR Reader sensors via configuration.yaml and show deprecation warning."""
+    _LOGGER.warning(
+        "DSMR Reader yaml config is now deprecated and has been imported. "
+        "Please remove it from your config"
+    )
+    current_entries = hass.config_entries.async_entries(domain=DOMAIN)
+    if not current_entries:
+        await hass.config_entries.async_add(
+            ConfigEntry(
+                version=1,
+                domain=DOMAIN,
+                title="DSMR Reader",
+                data={},
+                source=SOURCE_PLATFORM_CONFIG,
+            )
+        )
 
 
 async def async_setup_entry(

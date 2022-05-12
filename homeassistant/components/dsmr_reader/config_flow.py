@@ -3,15 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-import logging
-
 from homeassistant import config_entries
 from homeassistant.components.mqtt import MqttServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -24,6 +20,10 @@ class DsmrReaderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user step."""
+        if self._async_current_entries():
+            return self.async_show_form(
+                step_id="user", errors={"base": "single_instance_allowed"}
+            )
         if not self.hass.services.has_service(domain="mqtt", service="publish"):
             return self.async_show_form(step_id="user", errors={"base": "mqtt_missing"})
         if user_input is not None:
@@ -37,5 +37,5 @@ class DsmrReaderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
         await self.async_set_unique_id(DOMAIN)
 
-        # Register all sensors whenever we encounter at least one dsmr/# topic
+        # Offer to register all sensors whenever we encounter at least one dsmr/# topic
         return await self.async_step_user()
