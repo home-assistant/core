@@ -600,23 +600,6 @@ class ContextAugmenter:
                 data["context_message"] = described[ATTR_MESSAGE]
             return
 
-        if (
-            not entity_id
-            or (
-                attr_entity_id := _row_event_data_extract(
-                    context_row, ENTITY_ID_JSON_EXTRACT
-                )
-            )
-            is None
-            or attr_entity_id == entity_id
-        ):
-            return
-        data["context_entity_id"] = attr_entity_id
-        data["context_entity_id_name"] = self.entity_name_cache.get(
-            attr_entity_id, context_row
-        )
-        data["context_event_type"] = event_type
-
 
 def _is_sensor_continuous(
     hass: HomeAssistant,
