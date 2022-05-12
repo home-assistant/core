@@ -45,22 +45,22 @@ OPTIMISTIC_TEMPLATE_ALARM_CONFIG = {
     "arm_away": {
         "service": "alarm_control_panel.alarm_arm_away",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
     },
     "arm_home": {
         "service": "alarm_control_panel.alarm_arm_home",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
     },
     "arm_night": {
         "service": "alarm_control_panel.alarm_arm_night",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
     },
     "disarm": {
         "service": "alarm_control_panel.alarm_disarm",
         "entity_id": "alarm_control_panel.test",
-        "data": {"code": "1234"},
+        "data": {"code": "{{ this.entity_id }}"},
     },
 }
 
@@ -262,6 +262,7 @@ async def test_actions(hass, service, start_ha, service_calls):
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["service"] == service
+    assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME
 
 
 @pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
