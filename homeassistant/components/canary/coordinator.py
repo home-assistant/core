@@ -13,7 +13,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DATA_TYPE_ENTRY, DATA_TYPE_READING, DOMAIN
 from .model import CanaryData
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
 
         return {
             "locations": locations_by_id,
-            "readings": readings_by_device_id,
-            "entries": entries_by_device_id,
+            DATA_TYPE_READING: readings_by_device_id,
+            DATA_TYPE_ENTRY: entries_by_device_id,
         }
 
     def _group_entries_by_device(

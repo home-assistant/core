@@ -32,6 +32,7 @@ from ...helpers.httpx_client import get_async_client
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
+    DATA_TYPE_ENTRY,
     DEFAULT_FFMPEG_ARGUMENTS,
     DOMAIN,
     MANUFACTURER,
@@ -219,7 +220,9 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
     async def _get_latest_entry(self) -> Entry | None:
         try:
-            last_event = self.coordinator.data["entries"][self._device.device_id][0]
+            last_event = self.coordinator.data[DATA_TYPE_ENTRY][self._device.device_id][
+                0
+            ]
             return last_event
         except KeyError:
             return None
