@@ -1,0 +1,28 @@
+{
+  "state": {
+    "litterrobot__status_code": {
+      "BR": "Bonnet Removed",
+      "CCC": "Clean Cycle Complete",
+      "CCP": "Clean Cycle In Progress",
+      "CSF": "Cat Sensor Fault",
+      "CSI": "Cat Sensor Interrupted",
+      "CST": "Cat Sensor Timing",
+      "DF1": "Drawer Almost Full - 2 Cycles Left",
+      "DF2": "Drawer Almost Full - 1 Cycle Left",
+      "DFS": "Drawer Full",
+      "DHF": "Dump + Home Position Fault",
+      "DPF": "Dump Position Fault",
+      "EC": "Empty Cycle",
+      "HPF": "Home Position Fault",
+      "OFF": "[%key:common::state::off%]",
+      "OFFLINE": "Offline",
+      "OTF": "Over Torque Fault",
+      "P": "[%key:common::state::paused%]",
+      "PD": "Pinch Detect",
+      "RDY": "Ready",
+      "SCF": "Cat Sensor Fault At Startup",
+      "SDF": "Drawer Full At Startup",
+      "SPF": "Pinch Detect At Startup"
+    }
+  }
+}

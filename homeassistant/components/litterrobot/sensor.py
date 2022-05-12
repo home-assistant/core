@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -92,6 +93,18 @@ ROBOT_SENSORS = [
         key="sleep_mode_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         should_report=lambda robot: robot.sleep_mode_enabled,
+    ),
+    LitterRobotSensorEntityDescription(
+        name="Last Seen",
+        key="last_seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LitterRobotSensorEntityDescription(
+        name="Status Code",
+        key="status_code",
+        device_class="litterrobot__status_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
