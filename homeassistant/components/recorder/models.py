@@ -633,7 +633,7 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     quite expensive if we are loading 100000s timestamps
     so we convert it to an ordinal since this happens in
     native code and add the hours, minutes, seconds,
-    and microseconds which are already expresed in UTC.
+    and microseconds.
 
     If somehow the database timezone has been set to something
     else, we fallback to the slow methods. We do not

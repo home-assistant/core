@@ -342,3 +342,13 @@ def test_process_datetime_to_timestamp():
     assert process_datetime_to_timestamp(utc_now) == utc_now.timestamp()
     now = dt_util.now()
     assert process_datetime_to_timestamp(now) == now.timestamp()
+    now_without_tzinfo = datetime(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+        now.minute,
+        now.second,
+        now.microsecond,
+    )
+    assert process_datetime_to_timestamp(now_without_tzinfo) == now.timestamp()
