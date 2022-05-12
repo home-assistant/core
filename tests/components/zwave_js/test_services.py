@@ -799,7 +799,7 @@ async def test_bulk_set_config_parameters_gather(
     integration,
 ):
     """Test the bulk_set_partial_config_parameters service gather functionality."""
-    # Test setting config parameter by property and validate that the first node
+    # Test bulk setting config parameter by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -1238,7 +1238,7 @@ async def test_set_value_gather(
     integration,
 ):
     """Test the set_value service gather functionality."""
-    # Test setting config parameter by property and validate that the first node
+    # Test setting value by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
