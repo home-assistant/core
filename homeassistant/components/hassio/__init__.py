@@ -713,6 +713,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async def _async_setup_hardware_integration(hass):
         """Set up hardaware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
+            # os info not yet fetched from supervisor, retry later
+            hass.helpers.event.async_track_point_in_utc_time(
+                _async_setup_hardware_integration, utcnow() + HASSIO_UPDATE_INTERVAL
+            )
             return
         if (board := os_info.get("board")) is None:
             return
