@@ -3,13 +3,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from geocachingapi.models import GeocachingStatus
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -111,6 +113,12 @@ class GeocachingSensor(
         )
         self._attr_unique_id = (
             f"{coordinator.data.user.reference_code}_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            name=f"Geocaching {coordinator.data.user.username}",
+            identifiers={(DOMAIN, cast(str, coordinator.data.user.reference_code))},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Groundspeak, Inc",
         )
 
     @property
