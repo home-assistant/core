@@ -74,7 +74,7 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(self, device, controller):
-        """Set up tracked device."""
+        """Set up device update entity."""
         super().__init__(device, controller)
 
         self.device = self._item
