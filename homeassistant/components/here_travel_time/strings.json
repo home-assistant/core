@@ -6,40 +6,35 @@
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "mode": "Travel Mode"
-        },
-        "menu_options": {
-          "origin_coordinates": "Configure origin by using GPS coordinates",
-          "origin_entity": "Configure origin by using an entity"
         }
       },
       "origin_coordinates": {
-        "description": "Origin as GPS coordinates",
+        "title": "Choose Origin",
         "data": {
           "origin": "Origin as GPS coordinates"
-        },
-        "menu_options": {
-          "destination_coordinates": "Configure destination by using GPS coordinates",
-          "destination_entity": "Configure destination by using an entity"
         }
       },
       "origin_entity_id": {
-        "description": "Origin using an entity",
+        "title": "Choose Origin",
         "data": {
           "origin_entity_id": "Origin using an entity"
-        },
+        }
+      },
+      "destination_menu": {
+        "title": "Choose Destination",
         "menu_options": {
-          "destination_coordinates": "Configure destination by using GPS coordinates",
-          "destination_entity": "Configure destination by using an entity"
+          "destination_coordinates": "Using a map location",
+          "destination_entity": "Using an entity"
         }
       },
       "destination_coordinates": {
-        "description": "Destination as GPS coordinates",
+        "title": "Choose Destination",
         "data": {
           "destination": "Destination as GPS coordinates"
         }
       },
       "destination_entity_id": {
-        "description": "Destination using an entity",
+        "title": "Choose Destination",
         "data": {
           "destination_entity_id": "Destination using an entity"
         }

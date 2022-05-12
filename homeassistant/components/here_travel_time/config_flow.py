@@ -149,7 +149,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self._config = user_input
                 return self.async_show_menu(
-                    step_id="user",
+                    step_id="origin_menu",
                     menu_options=["origin_coordinates", "origin_entity"],
                 )
             except InvalidCredentialsError:
@@ -171,7 +171,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ORIGIN
             ] = f"{user_input[CONF_ORIGIN]['latitude']},{user_input[CONF_ORIGIN]['longitude']}"
             return self.async_show_menu(
-                step_id="origin_coordinates",
+                step_id="destination_menu",
                 menu_options=["destination_coordinates", "destination_entity"],
             )
         schema = vol.Schema(
@@ -187,7 +187,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert self._config is not None
             self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
             return self.async_show_menu(
-                step_id="origin_entity",
+                step_id="destination_menu",
                 menu_options=["destination_coordinates", "destination_entity"],
             )
         schema = vol.Schema(
