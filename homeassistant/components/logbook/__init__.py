@@ -596,8 +596,6 @@ class ContextAugmenter:
                 data["context_entity_id_name"] = self.entity_name_cache.get(
                     attr_entity_id, context_row
                 )
-            if ATTR_MESSAGE in described:
-                data["context_message"] = described[ATTR_MESSAGE]
             return
 
 
