@@ -81,6 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
+ATTR_CONTEXT_USER_ID = "context_user_id"
 ATTR_CONTEXT_ENTITY_ID = f"context_{ATTR_ENTITY_ID}"
 ATTR_CONTEXT_ENTITY_ID_NAME = f"context_{ATTR_ENTITY_ID}_{ATTR_NAME}"
 ATTR_CONTEXT_EVENT_TYPE = "context_event_type"
@@ -527,7 +528,7 @@ class ContextAugmenter:
     def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
-            data["context_user_id"] = context_user_id
+            data[ATTR_CONTEXT_USER_ID] = context_user_id
 
         if not (context_row := self.context_lookup.get(row.context_id)):
             return
