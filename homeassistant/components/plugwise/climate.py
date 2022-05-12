@@ -53,9 +53,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         # Determine preset modes
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if presets := self.device.get("presets"):
+        if presets := self.device.get("preset_modes"):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self._attr_preset_modes = list(presets)
+            self._attr_preset_modes = presets
 
         # Determine hvac modes and current hvac mode
         self._attr_hvac_modes = [HVACMode.HEAT]
