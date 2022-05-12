@@ -397,7 +397,6 @@ def async_is_device_config_entry_not_loaded(
         raise ValueError(f"Device {device_id} not found")
     return any(
         (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.domain == DOMAIN
         and entry.state != ConfigEntryState.LOADED
         for entry_id in device.config_entries
     )
