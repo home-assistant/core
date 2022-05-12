@@ -85,7 +85,7 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
 
     assert events[0]["name"] == "Keypad"
     assert events[0]["domain"] == "deconz"
-    assert events[0]["message"] == "fired event 'armed_away'."
+    assert events[0]["message"] == "fired event 'armed_away'"
 
 
 async def test_humanifying_deconz_event(hass, aioclient_mock):

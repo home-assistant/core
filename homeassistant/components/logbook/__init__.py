@@ -37,13 +37,10 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
     Context,
     Event,
     HomeAssistant,
@@ -79,19 +76,13 @@ ATTR_MESSAGE = "message"
 
 DOMAIN = "logbook"
 
-HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
-HOMEASSISTANT_EVENTS = {EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP}
 
-ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = (
-    EVENT_LOGBOOK_ENTRY,
-    EVENT_CALL_SERVICE,
-    *HOMEASSISTANT_EVENTS,
-)
+ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
 
 SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
@@ -162,7 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         message.hass = hass
         message = message.async_render(parse_result=False)
-        async_log_entry(hass, name, message, domain, entity_id)
+        async_log_entry(hass, name, message, domain, entity_id, service.context)
 
     frontend.async_register_built_in_panel(
         hass, "logbook", "logbook", "hass:format-list-bulleted-type"
@@ -394,21 +385,6 @@ def _humanify(
             context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
             yield data
 
-        elif event_type == EVENT_HOMEASSISTANT_START:
-            yield {
-                "when": format_time(row),
-                "name": "Home Assistant",
-                "message": "started",
-                "domain": HA_DOMAIN,
-            }
-        elif event_type == EVENT_HOMEASSISTANT_STOP:
-            yield {
-                "when": format_time(row),
-                "name": "Home Assistant",
-                "message": "stopped",
-                "domain": HA_DOMAIN,
-            }
-
         elif event_type == EVENT_LOGBOOK_ENTRY:
             event = event_cache.get(row)
             event_data = event.data
@@ -505,9 +481,6 @@ def _keep_row(
     row: Row,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
 ) -> bool:
-    if event_type in HOMEASSISTANT_EVENTS:
-        return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
-
     if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
         return entities_filter is None or entities_filter(entity_id)
 
@@ -583,39 +556,22 @@ class ContextAugmenter:
             data["context_event_type"] = event_type
             return
 
-        if event_type in self.external_events:
-            domain, describe_event = self.external_events[event_type]
-            data["context_event_type"] = event_type
-            data["context_domain"] = domain
-            event = self.event_cache.get(context_row)
-            described = describe_event(event)
-            if name := described.get(ATTR_NAME):
-                data["context_name"] = name
-            if attr_entity_id := described.get(ATTR_ENTITY_ID):
-                data["context_entity_id"] = attr_entity_id
-                data["context_entity_id_name"] = self.entity_name_cache.get(
-                    attr_entity_id, context_row
-                )
-            if ATTR_MESSAGE in described:
-                data["context_message"] = described[ATTR_MESSAGE]
+        if event_type not in self.external_events:
             return
 
-        if (
-            not entity_id
-            or (
-                attr_entity_id := _row_event_data_extract(
-                    context_row, ENTITY_ID_JSON_EXTRACT
-                )
-            )
-            is None
-            or attr_entity_id == entity_id
-        ):
+        domain, describe_event = self.external_events[event_type]
+        data["context_event_type"] = event_type
+        data["context_domain"] = domain
+        event = self.event_cache.get(context_row)
+        described = describe_event(event)
+        if name := described.get(ATTR_NAME):
+            data["context_name"] = name
+        if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
             return
         data["context_entity_id"] = attr_entity_id
         data["context_entity_id_name"] = self.entity_name_cache.get(
             attr_entity_id, context_row
         )
-        data["context_event_type"] = event_type
 
 
 def _is_sensor_continuous(
