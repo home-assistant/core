@@ -788,7 +788,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config_entries_key = f"{component}.mqtt"
             if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                 hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                hass.async_add_job(
+                hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(entry, component)
                 )
 
