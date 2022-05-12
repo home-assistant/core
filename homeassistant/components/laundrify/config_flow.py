@@ -10,15 +10,14 @@ from laundrify_aio.exceptions import (
     InvalidFormat,
     UnknownAuthCode,
 )
-from voluptuous import All, Optional, Range, Required, Schema
+from voluptuous import Required, Schema
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,40 +92,3 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=Schema({}),
             )
         return await self.async_step_init()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> LaundrifyOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return LaundrifyOptionsFlowHandler(config_entry)
-
-
-class LaundrifyOptionsFlowHandler(OptionsFlow):
-    """Handle options flow for laundrify."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=Schema(
-                {
-                    Optional(
-                        CONF_POLL_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
-                        ),
-                    ): All(int, Range(min=10)),
-                }
-            ),
-        )

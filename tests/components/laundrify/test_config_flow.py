@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from laundrify_aio import exceptions
 
-from homeassistant.components.laundrify.const import CONF_POLL_INTERVAL, DOMAIN
+from homeassistant.components.laundrify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -157,21 +157,23 @@ async def test_setup_entry_api_unauthorized(hass: HomeAssistant):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_options_flow(hass: HomeAssistant):
-    """Test options flow is shown."""
+async def test_setup_entry_successful(hass: HomeAssistant):
+    """Test entry can be setup successfully."""
     with _patch_laundrify_exchange_code(), _patch_laundrify_validate_token(), _patch_laundrify_get_machines():
         config_entry = create_entry(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state == ConfigEntryState.LOADED
 
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_POLL_INTERVAL: 30}
-        )
+async def test_setup_entry_unload(hass: HomeAssistant):
+    """Test unloading the laundrify entry."""
+    with _patch_laundrify_exchange_code(), _patch_laundrify_validate_token(), _patch_laundrify_get_machines():
+        config_entry = create_entry(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_unload(config_entry.entry_id)
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {CONF_POLL_INTERVAL: 30}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
