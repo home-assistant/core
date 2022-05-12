@@ -45,15 +45,15 @@ def validate_sql_select(value: str) -> str | None:
 def validate_query(db_url: str, query: str, column: str) -> bool:
     """Validate SQL query."""
     try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
     except SQLAlchemyError as error:
         raise error
 
     sess: scoped_session = sessmaker()
 
     try:
-        result: Result = sess.execute(query)
+        result: Result = sess.execute(sqlalchemy.text(query))
         for res in result.mappings():
             data = res[column]
             _LOGGER.debug("Return value from query: %s", data)
