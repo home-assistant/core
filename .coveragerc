@@ -579,6 +579,7 @@ omit =
     homeassistant/components/juicenet/const.py
     homeassistant/components/juicenet/device.py
     homeassistant/components/juicenet/entity.py
+    homeassistant/components/juicenet/number.py
     homeassistant/components/juicenet/sensor.py
     homeassistant/components/juicenet/switch.py
     homeassistant/components/kaiterra/*
