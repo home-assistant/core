@@ -64,7 +64,7 @@ async def async_setup_entry(
     )
 
 
-class Ws66iZone(CoordinatorEntity, MediaPlayerEntity):
+class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity):
     """Representation of a WS66i amplifier zone."""
 
     def __init__(
@@ -82,8 +82,7 @@ class Ws66iZone(CoordinatorEntity, MediaPlayerEntity):
         self._ws66i_data: Ws66iData = ws66i_data
         self._zone_id: int = zone_id
         self._zone_id_idx: int = data_idx
-        self._coordinator = coordinator
-        self._snapshot: ZoneStatus = None
+        self._snapshot = None
         self._status: ZoneStatus = coordinator.data[data_idx]
         self._attr_source_list = ws66i_data.sources.name_list
         self._attr_unique_id = f"{entry_id}_{self._zone_id}"

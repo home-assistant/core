@@ -1,21 +1,17 @@
 """The tests for WS66i Media player platform."""
 from collections import defaultdict
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.ws66i.const import (
     CONF_SOURCES,
@@ -37,8 +33,9 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_SOURCE_DIC = {
     "1": "one",
@@ -178,29 +175,6 @@ async def _call_ws66i_service(hass, name, data):
     await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
 
 
-async def test_cannot_connect(hass):
-    """Test connection error."""
-    with patch(
-        "homeassistant.components.ws66i.get_ws66i",
-        new=lambda *a: MockWs66i(fail_open=True),
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hass.states.get(ZONE_1_ID) is None
-
-
-async def test_cannot_connect_2(hass):
-    """Test connection error pt 2."""
-    # Another way to test same case as test_cannot_connect
-    ws66i = MockWs66i()
-
-    with patch.object(MockWs66i, "open", side_effect=ConnectionError):
-        await _setup_ws66i(hass, ws66i)
-        assert hass.states.get(ZONE_1_ID) is None
-
-
 async def test_service_calls_with_entity_id(hass):
     """Test snapshot save/restore service calls."""
     _ = await _setup_ws66i_with_options(hass, MockWs66i())
@@ -270,9 +244,6 @@ async def test_service_calls_with_all_entities(hass):
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
     )
 
-    # await coordinator.async_refresh()
-    # await hass.async_block_till_done()
-
     # Restoring media player to its previous state
     await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
     await hass.async_block_till_done()
@@ -285,7 +256,7 @@ async def test_service_calls_with_all_entities(hass):
 
 async def test_service_calls_without_relevant_entities(hass):
     """Test snapshot save/restore service calls with bad entity id."""
-    config_entry = await _setup_ws66i_with_options(hass, MockWs66i())
+    _ = await _setup_ws66i_with_options(hass, MockWs66i())
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -295,9 +266,7 @@ async def test_service_calls_without_relevant_entities(hass):
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
     )
 
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # Saving existing values
@@ -311,11 +280,12 @@ async def test_service_calls_without_relevant_entities(hass):
         hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
     )
 
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # Restoring media player to its previous state
     await _call_ws66i_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
@@ -339,7 +309,7 @@ async def test_restore_without_snapshot(hass):
 async def test_update(hass):
     """Test updating values from ws66i."""
     ws66i = MockWs66i()
-    config_entry = await _setup_ws66i_with_options(hass, ws66i)
+    _ = await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -352,11 +322,8 @@ async def test_update(hass):
     ws66i.set_source(11, 3)
     ws66i.set_volume(11, 38)
 
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
-
     with patch.object(MockWs66i, "open") as method_call:
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
         assert not method_call.called
@@ -371,7 +338,7 @@ async def test_update(hass):
 async def test_failed_update(hass):
     """Test updating failure from ws66i."""
     ws66i = MockWs66i()
-    config_entry = await _setup_ws66i_with_options(hass, ws66i)
+    _ = await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -383,25 +350,24 @@ async def test_failed_update(hass):
 
     ws66i.set_source(11, 3)
     ws66i.set_volume(11, 38)
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
-    await coordinator.async_refresh()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # Failed update, close called
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
     # A connection re-attempt fails
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
     # A connection re-attempt succeeds
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # confirm entity is back on
@@ -418,12 +384,12 @@ async def test_supported_features(hass):
 
     state = hass.states.get(ZONE_1_ID)
     assert (
-        SUPPORT_VOLUME_MUTE
-        | SUPPORT_VOLUME_SET
-        | SUPPORT_VOLUME_STEP
-        | SUPPORT_TURN_ON
-        | SUPPORT_TURN_OFF
-        | SUPPORT_SELECT_SOURCE
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
         == state.attributes["supported_features"]
     )
 
@@ -462,15 +428,13 @@ async def test_select_source(hass):
 
 
 async def test_source_select(hass):
-    """Test behavior when device has unknown source."""
+    """Test source selection simulated from keypad."""
     ws66i = MockWs66i()
-    config_entry = await _setup_ws66i_with_options(hass, ws66i)
+    _ = await _setup_ws66i_with_options(hass, ws66i)
 
     ws66i.set_source(11, 5)
 
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
@@ -512,10 +476,7 @@ async def test_mute_volume(hass):
 async def test_volume_up_down(hass):
     """Test increasing volume by one."""
     ws66i = MockWs66i()
-    config_entry = await _setup_ws66i(hass, ws66i)
-
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
+    _ = await _setup_ws66i(hass, ws66i)
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
@@ -525,26 +486,26 @@ async def test_volume_up_down(hass):
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     # should not go below zero
     assert ws66i.zones[11].volume == 0
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     assert ws66i.zones[11].volume == 1
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
     )
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     assert ws66i.zones[11].volume == 38
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
 
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     # should not go above 38
     assert ws66i.zones[11].volume == 38
@@ -640,7 +601,7 @@ async def test_unload_config_entry(hass):
 async def test_restore_snapshot_on_reconnect(hass):
     """Test restoring a saved snapshot when reconnecting to amp."""
     ws66i = MockWs66i()
-    config_entry = await _setup_ws66i_with_options(hass, ws66i)
+    _ = await _setup_ws66i_with_options(hass, ws66i)
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -653,18 +614,18 @@ async def test_restore_snapshot_on_reconnect(hass):
     # Save a snapshot
     await _call_ws66i_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
 
-    ws66i_data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = ws66i_data.coordinator
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
 
     # Failed update,
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
     # A connection re-attempt succeeds
-    await coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # confirm entity is back on
