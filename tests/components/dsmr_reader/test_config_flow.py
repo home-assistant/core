@@ -17,6 +17,18 @@ async def test_initial_user_step(hass: HomeAssistant):
     assert {"base": "mqtt_missing"} == init_result["errors"]
 
 
+async def test_duplicate_user_step(hass: HomeAssistant):
+    """Test the user step call when an instance has already been installed."""
+    MockConfigEntry(domain="dsmr_reader").add_to_hass(hass)
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert init_result["type"] == RESULT_TYPE_FORM
+    assert init_result["step_id"] == SOURCE_USER
+    assert {"base": "single_instance_allowed"} == init_result["errors"]
+
+
 async def test_user_step_with_mqtt(hass: HomeAssistant):
     """Test the user step call with mqtt available."""
     # configure bogus mqtt service to pass validation
