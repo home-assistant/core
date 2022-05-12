@@ -29,7 +29,6 @@ def service_calls(hass):
 
     @callback
     def capture_events(event):
-        print(event.data)
         if event.data[ATTR_DOMAIN] != ALARM_DOMAIN:
             return
         if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
