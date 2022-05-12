@@ -222,21 +222,27 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         if self._last_event is None:
             # if we don't have any events for the day refresh the image every so often
             if utcnow <= self._expires_at:
+                _LOGGER.debug("no need to get a new image")
                 return
             await self._expire_image()
             return
 
-        if (
-            self._last_image_id == self._last_event.entry_id
-            and utcnow >= self._expires_at
-        ):
-            await self._expire_image()
-            return
+        # if (
+        #     self._last_image_id == self._last_event.entry_id
+        #     and utcnow >= self._expires_at
+        # ):
+        #     _LOGGER.debug("last image id = last event entry id and now >= expire")
+        #     await self._expire_image()
+        #     return
+
         if self._last_image_id != self._last_event.entry_id:
+            _LOGGER.debug("last image id != last event entry id")
             self._image = None
+
         try:
             self._image_url = self._last_event.thumbnails[0].image_url
         except IndexError:
+            _LOGGER.debug("setting image url to none")
             self._image_url = None
 
     async def _expire_image(self) -> None:
