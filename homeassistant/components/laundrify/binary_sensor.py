@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,7 +47,6 @@ class LaundrifyPowerPlug(
         super().__init__(coordinator)
         self._device = device
         self._attr_unique_id = device["_id"]
-        self._attr_name = device["name"]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -66,6 +65,17 @@ class LaundrifyPowerPlug(
         return self.unique_id in self.coordinator.data
 
     @property
+    def name(self) -> str:
+        """Name of the entity."""
+        return self._device["name"]
+
+    @property
     def is_on(self) -> bool:
         """Return entity state."""
         return self._device["status"] == "ON"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._device = self.coordinator.data[self.unique_id]
+        self.async_write_ha_state()
