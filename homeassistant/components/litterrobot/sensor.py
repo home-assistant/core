@@ -39,7 +39,7 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
 class LitterRobotSensorEntityDescription(SensorEntityDescription):
     """A class that describes Litter-Robot sensor entities."""
 
-    icon_fn: Callable[[Any], str | None] | None = None
+    icon_fn: Callable[[Any], str | None] = lambda _: None
     should_report: Callable[[Robot], bool] = lambda _: True
 
 
@@ -69,8 +69,8 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        if (icon_fn := self.entity_description.icon_fn) is not None:
-            return icon_fn(self.state)
+        if (icon := self.entity_description.icon_fn(self.state)) is not None:
+            return icon
         return super().icon
 
 
@@ -108,11 +108,3 @@ async def async_setup_entry(
         for description in ROBOT_SENSORS
         for robot in hub.account.robots
     )
-    entities = []
-    for robot in hub.account.robots:
-        for description in ROBOT_SENSORS:
-            entities.append(
-                LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
-            )
-
-    async_add_entities(entities)
