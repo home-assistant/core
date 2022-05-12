@@ -1525,7 +1525,7 @@ twitchAPI==2.5.2
 uEagle==0.0.2
 
 # homeassistant.components.ukraine_alarm
-ukrainealarm==0.0.1
+uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.2
