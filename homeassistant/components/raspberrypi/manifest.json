@@ -8,6 +8,6 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": ["hardware", "hassio"],
-  "codeowners": ["@core"],
+  "codeowners": ["@home-assistant/core"],
   "iot_class": "calculated"
 }
