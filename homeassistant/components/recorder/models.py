@@ -625,21 +625,8 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
 def process_datetime_to_timestamp(ts: datetime) -> float:
     """Process a datebase datetime to epoch.
 
-    Since the databases store all the times in UTC
-    when sqlalchemy (sqlite case) converts the row
-    to a datetime object it will have no tzinfo.
-
-    Recreating the datetime object with .replace is
-    quite expensive if we are loading 100000s timestamps
-    so we convert it to an ordinal since this happens in
-    native code and add the hours, minutes, seconds,
-    and microseconds.
-
-    If somehow the database timezone has been set to something
-    else, we fallback to the slow methods. We do not
-    expect this to actually happen, but its supported since
-    process_timestamp_to_utc_isoformat historiclly has
-    supported this.
+    Mirrors the behavior of process_timestamp_to_utc_isoformat
+    except it returns the epoch time.
     """
     if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
         # Taken from
