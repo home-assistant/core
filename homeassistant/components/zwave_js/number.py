@@ -14,6 +14,8 @@ from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
