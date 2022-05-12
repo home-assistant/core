@@ -530,8 +530,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
             if not payload or payload == PAYLOAD_NONE:
                 _LOGGER.debug(
-                    "Invalid [%s] action: %s, ignoring",
-                    str([e.value for e in HVACAction])[1:-1],
+                    "Invalid %s action: %s, ignoring",
+                    [e.value for e in HVACAction],
                     payload,
                 )
                 return
@@ -539,8 +539,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 self._action = HVACAction(payload)
             except ValueError:
                 _LOGGER.warning(
-                    "Invalid [%s] action: %s",
-                    str([e.value for e in HVACAction])[1:-1],
+                    "Invalid %s action: %s",
+                    [e.value for e in HVACAction],
                     payload,
                 )
                 return
