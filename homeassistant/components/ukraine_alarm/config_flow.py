@@ -30,6 +30,9 @@ class UkraineAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
 
+        if len(self._async_current_entries()) == 5:
+            return self.async_abort(reason="max_regions")
+
         if not self.states:
             websession = async_get_clientsession(self.hass)
             reason = None

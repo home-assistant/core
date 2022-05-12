@@ -16,6 +16,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.common import MockConfigEntry
+
 
 def _region(rid, recurse=0, depth=0):
     if depth == 0:
@@ -209,6 +211,22 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
         "name": result5["title"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_max_regions(hass: HomeAssistant) -> None:
+    """Test max regions config."""
+    for i in range(5):
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=i,
+        ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "max_regions"
 
 
 async def test_rate_limit(hass: HomeAssistant, mock_get_regions: AsyncMock) -> None:

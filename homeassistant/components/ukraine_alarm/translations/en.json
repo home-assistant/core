@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Location is already configured",
             "cannot_connect": "Failed to connect",
+            "max_regions": "Max 5 regions can be configured",
             "rate_limit": "Too much requests",
             "timeout": "Timeout establishing connection",
             "unknown": "Unexpected error"

@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "max_regions": "Max 5 regions can be configured",
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
       "rate_limit": "Too much requests",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
