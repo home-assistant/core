@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DATA_COORDINATOR,
     DATA_TYPE_ENTRY,
+    DATA_TYPE_LOCATIONS,
     DATA_TYPE_READING,
     DOMAIN,
     MANUFACTURER,
@@ -119,7 +120,7 @@ async def async_setup_entry(
     ]
     sensors: list[CanarySensor] = []
 
-    for location in coordinator.data["locations"].values():
+    for location in coordinator.data[DATA_TYPE_LOCATIONS].values():
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
