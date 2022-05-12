@@ -1032,6 +1032,19 @@ async def test_logbook_context_id_automation_script_started_manually(
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    script_2_context = ha.Context(
+        id="1234",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script"},
+        context=script_2_context,
+    )
+    hass.states.async_set("switch.new", STATE_ON, context=script_2_context)
+    hass.states.async_set("switch.new", STATE_OFF, context=script_2_context)
+
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
@@ -1060,6 +1073,19 @@ async def test_logbook_context_id_automation_script_started_manually(
     assert json_dict[1]["context_id"] == "ac5bd62de45711eaaeb351041eec8dd9"
 
     assert json_dict[2]["domain"] == "homeassistant"
+
+    assert json_dict[3]["entity_id"] is None
+    assert json_dict[3]["name"] == "Mock script"
+    assert "context_entity_id" not in json_dict[1]
+    assert json_dict[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert json_dict[3]["context_id"] == "1234"
+
+    assert json_dict[4]["entity_id"] == "switch.new"
+    assert json_dict[4]["state"] == "off"
+    assert "context_entity_id" not in json_dict[1]
+    assert json_dict[4]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert json_dict[4]["context_event_type"] == "script_started"
+    assert json_dict[4]["context_domain"] == "script"
 
 
 async def test_logbook_entity_context_parent_id(hass, hass_client, recorder_mock):
