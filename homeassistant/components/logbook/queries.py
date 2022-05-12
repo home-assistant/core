@@ -185,18 +185,13 @@ def _select_entity_context_ids_sub_query(
     """Generate a subquery to find context ids for a single entity."""
     return select(
         union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types)
-            .where(
+            _select_events_context_id_subquery(start_day, end_day, event_types).where(
                 Events.event_data.like(entity_id_like)
                 | EventData.shared_data.like(entity_id_like)
-            )
-            .union_all(
-                select(States.context_id)
-                .filter(
-                    (States.last_updated > start_day) & (States.last_updated < end_day)
-                )
-                .where(States.entity_id == entity_id)
-            )
+            ),
+            select(States.context_id)
+            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+            .where(States.entity_id == entity_id),
         ).c.context_id
     )
 
