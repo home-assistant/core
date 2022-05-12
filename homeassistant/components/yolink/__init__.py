@@ -8,7 +8,7 @@ import voluptuous as vol
 from yolink.client import YoLinkClient
 from yolink.mqtt_client import MqttClient
 
-from homeassistant.components import application_credentials
+from homeassistant.components import application_credentials as app_credentials
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -48,10 +48,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     if DOMAIN not in config:
         return True
-    await application_credentials.async_import_client_credential(
+    await app_credentials.async_import_client_credential(
         hass,
         DOMAIN,
-        application_credentials.ClientCredential(
+        app_credentials.ClientCredential(
             config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
         ),
     )
