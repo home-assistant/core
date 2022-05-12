@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+from .hardware import async_process_hardware_platforms
 from .models import HardwareProtocol
 
 
@@ -24,12 +25,15 @@ def async_setup(hass: HomeAssistant) -> None:
         vol.Required("type"): "hardware/info",
     }
 )
-@callback
-def ws_info(
+@websocket_api.async_response
+async def ws_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return hardware info."""
     hardware_info = []
+
+    if "hardware_platform" not in hass.data[DOMAIN]:
+        await async_process_hardware_platforms(hass)
 
     hardware_platform: dict[str, HardwareProtocol] = hass.data[DOMAIN][
         "hardware_platform"
