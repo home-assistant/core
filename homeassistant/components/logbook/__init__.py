@@ -639,11 +639,14 @@ def _is_sensor_continuous(
 
 def _rows_match(row: Row, other_row: Row) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    return bool(
-        row.event_type == other_row.event_type
-        and row.context_id == other_row.context_id
-        and row.time_fired == other_row.time_fired
-    )
+    if (
+        (state_id := row.state_id) is not None
+        and state_id == other_row.state_id
+        or (event_id := row.event_id) is not None
+        and event_id == other_row.event_id
+    ):
+        return True
+    return False
 
 
 def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
