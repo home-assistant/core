@@ -2023,7 +2023,11 @@ async def websocket_subscribe_controller_statistics(
     connection.send_message(
         websocket_api.event_message(
             msg[ID],
-            _get_controller_statistics_dict(controller.statistics),
+            {
+                "event": "statistics updated",
+                "source": "controller",
+                **_get_controller_statistics_dict(controller.statistics),
+            },
         )
     )
 
@@ -2087,7 +2091,8 @@ async def websocket_subscribe_node_statistics(
             msg[ID],
             {
                 "event": "statistics updated",
-                "source": "controller",
+                "source": "node",
+                "node_id": node.node_id,
                 **_get_node_statistics_dict(node.statistics),
             },
         )
