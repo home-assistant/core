@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Kuva sirvimisel \u00fchildumatu meedia",
                     "callback_url_override": "S\u00fcndmuse kuulaja URL",
                     "listen_port": "S\u00fcndmuste kuulaja port (juhuslik kui pole m\u00e4\u00e4ratud)",
                     "poll_availability": "K\u00fcsitle seadme saadavuse kohta"

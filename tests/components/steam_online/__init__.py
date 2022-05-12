@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.components.steam_online import DOMAIN
 from homeassistant.components.steam_online.const import CONF_ACCOUNT, CONF_ACCOUNTS
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,38 +19,19 @@ CONF_DATA = {
     CONF_ACCOUNT: ACCOUNT_1,
 }
 
-CONF_OPTIONS = {
-    CONF_ACCOUNTS: {
-        ACCOUNT_1: {
-            CONF_NAME: ACCOUNT_NAME_1,
-            "enabled": True,
-        }
-    }
-}
+CONF_OPTIONS = {CONF_ACCOUNTS: {ACCOUNT_1: ACCOUNT_NAME_1}}
 
 CONF_OPTIONS_2 = {
     CONF_ACCOUNTS: {
-        ACCOUNT_1: {
-            CONF_NAME: ACCOUNT_NAME_1,
-            "enabled": True,
-        },
-        ACCOUNT_2: {
-            CONF_NAME: ACCOUNT_NAME_2,
-            "enabled": True,
-        },
+        ACCOUNT_1: ACCOUNT_NAME_1,
+        ACCOUNT_2: ACCOUNT_NAME_2,
     }
 }
 
 CONF_IMPORT_OPTIONS = {
     CONF_ACCOUNTS: {
-        ACCOUNT_1: {
-            CONF_NAME: ACCOUNT_NAME_1,
-            "enabled": True,
-        },
-        ACCOUNT_2: {
-            CONF_NAME: ACCOUNT_NAME_2,
-            "enabled": True,
-        },
+        ACCOUNT_1: ACCOUNT_NAME_1,
+        ACCOUNT_2: ACCOUNT_NAME_2,
     }
 }
 

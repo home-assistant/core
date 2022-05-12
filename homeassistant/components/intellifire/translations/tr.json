@@ -24,7 +24,7 @@
             },
             "manual_device_entry": {
                 "data": {
-                    "host": "Sunucu (IP Adresi)"
+                    "host": "Ana Bilgisayar (IP Adresi)"
                 },
                 "description": "Yerel Yap\u0131land\u0131rma"
             },

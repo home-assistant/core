@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "M\u00e1r minden tanul\u00f3 hozz\u00e1adva.",
             "already_configured": "Ezt a tanul\u00f3t m\u00e1r hozz\u00e1adt\u00e1k.",
+            "no_matching_entries": "Nem tal\u00e1ltunk megfelel\u0151 bejegyz\u00e9st, k\u00e9rj\u00fck, haszn\u00e1ljon m\u00e1sik fi\u00f3kot, vagy t\u00e1vol\u00edtsa el az elavult di\u00e1kkal val\u00f3 integr\u00e1ci\u00f3t...",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Jelentkezzen be Vulcan fi\u00f3kj\u00e1ba a mobilalkalmaz\u00e1s regisztr\u00e1ci\u00f3s oldal\u00e1n."
             },
             "reauth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "Szimb\u00f3lum",
+                    "token": "Token"
+                },
+                "description": "Jelentkezzen be Vulcan fi\u00f3kj\u00e1ba a mobilalkalmaz\u00e1s regisztr\u00e1ci\u00f3s oldal\u00e1n."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
                     "region": "Szimb\u00f3lum",

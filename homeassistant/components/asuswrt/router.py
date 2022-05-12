@@ -51,6 +51,7 @@ from .const import (
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
+DEFAULT_NAME = "Asuswrt"
 
 KEY_COORDINATOR = "coordinator"
 KEY_SENSORS = "sensors"
@@ -260,10 +261,10 @@ class AsusWrtRouter:
             raise ConfigEntryNotReady
 
         # System
-        model = await _get_nvram_info(self._api, "MODEL")
+        model = await get_nvram_info(self._api, "MODEL")
         if model and "model" in model:
             self._model = model["model"]
-        firmware = await _get_nvram_info(self._api, "FIRMWARE")
+        firmware = await get_nvram_info(self._api, "FIRMWARE")
         if firmware and "firmver" in firmware and "buildno" in firmware:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
@@ -441,7 +442,7 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
-            identifiers={(DOMAIN, "AsusWRT")},
+            identifiers={(DOMAIN, self.unique_id or "AsusWRT")},
             name=self._host,
             model=self._model,
             manufacturer="Asus",
@@ -465,6 +466,16 @@ class AsusWrtRouter:
         return self._host
 
     @property
+    def unique_id(self) -> str | None:
+        """Return router unique id."""
+        return self._entry.unique_id
+
+    @property
+    def name(self) -> str:
+        """Return router name."""
+        return self._host if self.unique_id else DEFAULT_NAME
+
+    @property
     def devices(self) -> dict[str, AsusWrtDevInfo]:
         """Return devices."""
         return self._devices
@@ -475,7 +486,7 @@ class AsusWrtRouter:
         return self._sensors_coordinator
 
 
-async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
+async def get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
     """Get AsusWrt router info from nvram."""
     info = {}
     try:

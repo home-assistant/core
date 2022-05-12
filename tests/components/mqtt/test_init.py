@@ -522,11 +522,29 @@ def test_validate_topic():
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
-    mqtt.util.valid_topic("\u0001")
-    mqtt.util.valid_topic("\u001F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\uffff")
+    # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u0001")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u001F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u007F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u009F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdd0")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdef")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\uffff")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001fffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001ffff")
 
 
 def test_validate_subscribe_topic():
@@ -2360,26 +2378,6 @@ async def test_publish_json_from_template(hass, mqtt_mock):
 
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = mqtt.MqttServiceInfo(
-        topic="tasmota/discovery/DC4F220848A2/config",
-        payload="",
-        qos=0,
-        retain=False,
-        subscribed_topic="tasmota/discovery/#",
-        timestamp=None,
-    )
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected integration that accessed discovery_info['topic']" in caplog.text
 
 
 async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):

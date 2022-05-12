@@ -15,7 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Credenziali necessarie. Premi 'Invia' e poi, nella seconda schermata della App PS4, aggiorna i dispositivi e seleziona il dispositivo 'Home-Assistant' per continuare.",
+                "description": "Credenziali necessarie. Premi 'Invia' e poi, nell'applicazione PS4 Second Screen, aggiorna i dispositivi e seleziona il dispositivo 'Home-Assistant' per continuare.",
                 "title": "PlayStation 4"
             },
             "link": {

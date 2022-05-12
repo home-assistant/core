@@ -8,6 +8,9 @@
             "no_devices": "\uacc4\uc815\uc5d0 \ub4f1\ub85d\ub41c \uae30\uae30\uac00 \uc874\uc7ac\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "{username} \uc758 \ube44\ubc00\ubc88\ud638\ub97c \ub2e4\uc2dc \uc785\ub825\ud558\uc138\uc694."
+            },
             "user": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",

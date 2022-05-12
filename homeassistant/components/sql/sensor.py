@@ -42,7 +42,7 @@ _QUERY_SCHEME = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_QUERY): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
     }
 )
 
@@ -111,8 +111,8 @@ async def async_setup_entry(
             value_template.hass = hass
 
     try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
     except SQLAlchemyError as err:
         _LOGGER.error("Can not open database %s", {redact_credentials(str(err))})
         return
@@ -179,7 +179,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
-            result = sess.execute(self._query)
+            result = sess.execute(sqlalchemy.text(self._query))
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",

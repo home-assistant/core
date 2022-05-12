@@ -14,6 +14,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import (
     Events,
+    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
@@ -40,9 +41,19 @@ async def _async_get_states(
 
     def _get_states_with_session():
         with session_scope(hass=hass) as session:
-            return history._get_states_with_session(
-                hass, session, utc_point_in_time, entity_ids, run, None, no_attributes
-            )
+            attr_cache = {}
+            return [
+                LazyState(row, attr_cache)
+                for row in history._get_rows_with_session(
+                    hass,
+                    session,
+                    utc_point_in_time,
+                    entity_ids,
+                    run,
+                    None,
+                    no_attributes,
+                )
+            ]
 
     return await recorder.get_instance(hass).async_add_executor_job(
         _get_states_with_session
@@ -52,7 +63,7 @@ async def _async_get_states(
 def _add_db_entries(
     hass: ha.HomeAssistant, point: datetime, entity_ids: list[str]
 ) -> None:
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         for idx, entity_id in enumerate(entity_ids):
             session.add(
                 Events(
@@ -87,7 +98,9 @@ def _setup_get_states(hass):
     """Set up for testing get_states."""
     states = []
     now = dt_util.utcnow()
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
+    ):
         for i in range(5):
             state = ha.State(
                 f"test.point_in_time_{i % 5}",
@@ -102,7 +115,9 @@ def _setup_get_states(hass):
         wait_recording_done(hass)
 
     future = now + timedelta(seconds=1)
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
+    ):
         for i in range(5):
             state = ha.State(
                 f"test.point_in_time_{i % 5}",
@@ -122,7 +137,7 @@ def test_get_full_significant_states_with_session_entity_no_matches(hass_recorde
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         assert (
             history.get_full_significant_states_with_session(
                 hass, session, time_before_recorder_ran, now, entity_ids=["demo.id"]
@@ -148,7 +163,7 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with recorder.session_scope(hass=hass) as session:
+    with session_scope(hass=hass) as session:
         assert (
             history.get_significant_states_with_session(
                 hass,
@@ -197,11 +212,15 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("idle")
         set_state("YouTube")
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         states = [
             set_state("idle"),
             set_state("Netflix"),
@@ -209,7 +228,9 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
             set_state("YouTube"),
         ]
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=end):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+    ):
         set_state("Netflix")
         set_state("Plex")
 
@@ -235,11 +256,15 @@ def test_state_changes_during_period_descending(hass_recorder):
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("idle")
         set_state("YouTube")
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         states = [
             set_state("idle"),
             set_state("Netflix"),
@@ -247,7 +272,9 @@ def test_state_changes_during_period_descending(hass_recorder):
             set_state("YouTube"),
         ]
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=end):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
+    ):
         set_state("Netflix")
         set_state("Plex")
 
@@ -277,14 +304,20 @@ def test_get_last_state_changes(hass_recorder):
     point = start + timedelta(minutes=1)
     point2 = point + timedelta(minutes=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("1")
 
     states = []
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         states.append(set_state("2"))
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point2):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
+    ):
         states.append(set_state("3"))
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
@@ -310,10 +343,14 @@ def test_ensure_state_can_be_copied(hass_recorder):
     start = dt_util.utcnow() - timedelta(minutes=2)
     point = start + timedelta(minutes=1)
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("1")
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
+    ):
         set_state("2")
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
@@ -486,23 +523,28 @@ def test_get_significant_states_only(hass_recorder):
         points.append(start + timedelta(minutes=i))
 
     states = []
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
+    ):
         set_state("123", attributes={"attribute": 10.64})
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[0],
     ):
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[1],
     ):
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=points[2],
     ):
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
@@ -547,7 +589,9 @@ def record_states(hass):
     four = three + timedelta(seconds=1)
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+    ):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -564,7 +608,9 @@ def record_states(hass):
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
         # This state will be skipped because domain is excluded
@@ -579,7 +625,9 @@ def record_states(hass):
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
 
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
+    ):
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
         )
@@ -628,7 +676,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = history.state_changes_during_period(
             hass, start, end, entity_id, no_attributes, include_start_time_state=False
@@ -674,7 +722,7 @@ async def test_get_states_query_during_migration_to_schema_25(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = await _async_get_states(
             hass, end, [entity_id], no_attributes=no_attributes
@@ -723,7 +771,7 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
         conn.execute(text("drop table state_attributes;"))
         conn.commit()
 
-    with patch.object(instance, "migration_in_progress", True):
+    with patch.object(instance, "schema_version", 24):
         no_attributes = True
         hist = await _async_get_states(
             hass, end, entity_ids, no_attributes=no_attributes

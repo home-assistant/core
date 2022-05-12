@@ -36,6 +36,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.CAMERA,
+    Platform.SIREN,
 ]
 
 

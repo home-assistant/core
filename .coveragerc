@@ -56,7 +56,6 @@ omit =
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
-    homeassistant/components/androidtv/__init__.py
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
@@ -410,6 +409,11 @@ omit =
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
+    homeassistant/components/geocaching/__init__.py
+    homeassistant/components/geocaching/const.py
+    homeassistant/components/geocaching/coordinator.py
+    homeassistant/components/geocaching/oauth.py
+    homeassistant/components/geocaching/sensor.py
     homeassistant/components/github/__init__.py
     homeassistant/components/github/coordinator.py
     homeassistant/components/github/sensor.py
@@ -573,6 +577,7 @@ omit =
     homeassistant/components/juicenet/const.py
     homeassistant/components/juicenet/device.py
     homeassistant/components/juicenet/entity.py
+    homeassistant/components/juicenet/number.py
     homeassistant/components/juicenet/sensor.py
     homeassistant/components/juicenet/switch.py
     homeassistant/components/kaiterra/*
@@ -1016,12 +1021,6 @@ omit =
     homeassistant/components/senseme/fan.py
     homeassistant/components/senseme/light.py
     homeassistant/components/senseme/switch.py
-    homeassistant/components/sensibo/__init__.py
-    homeassistant/components/sensibo/binary_sensor.py
-    homeassistant/components/sensibo/climate.py
-    homeassistant/components/sensibo/coordinator.py
-    homeassistant/components/sensibo/diagnostics.py
-    homeassistant/components/sensibo/entity.py
     homeassistant/components/sensibo/number.py
     homeassistant/components/sensibo/select.py
     homeassistant/components/sensibo/sensor.py
@@ -1318,6 +1317,9 @@ omit =
     homeassistant/components/twitter/notify.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
+    homeassistant/components/ukraine_alarm/__init__.py
+    homeassistant/components/ukraine_alarm/const.py
+    homeassistant/components/ukraine_alarm/binary_sensor.py
     homeassistant/components/unifiled/*
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/const.py
