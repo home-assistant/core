@@ -369,6 +369,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def _async_force_refresh_state(self):
         """Refresh the cover state and force the device cache to be bypassed."""
         await self._shade.refresh()
+        _LOGGER.debug("Force update: %s", self._shade.raw_data)
         self._async_update_current_cover_position()
         self.async_write_ha_state()
 
@@ -450,6 +451,20 @@ class PowerViewShadeTDBU(PowerViewShade):
         if ATTR_POSITION2 in position_data:
             if int(position_data[ATTR_POSKIND2]) == POS_KIND_SECONDARY:
                 self.set_position_secondary(int(position_data[ATTR_POSITION2]))
+
+    async def _async_move(self, target_hass_position):
+        """Move the shade to a position."""
+        # custom move command to prevent excessive refresh on tdbu
+        self._async_cancel_scheduled_transition_update()
+        self._forced_resync = async_call_later(
+            self.hass, RESYNC_DELAY, self._async_force_resync
+        )
+
+        await self._shade.move(self._set_shade_postion(target_hass_position))
+
+        self._async_cover_transition_complete(
+            self.current_cover_position, target_hass_position
+        )
 
 
 class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
