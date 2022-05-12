@@ -636,7 +636,8 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     and microseconds which are already expresed in UTC.
 
     If the tzinfo is present and not UTC, we fallback
-    to converting it using the standard methods.
+    to converting it using the standard methods if somehow
+    the user has manually changed the timezone on their database.
     """
     if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
         return (
