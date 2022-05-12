@@ -21,6 +21,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 YAML_CONFIG = {"username": "test-user", "password": "test-password"}
+
 DEVICE_CONFIG_OPEN = {
     "device_id": 533255,
     "door_number": 1,
@@ -76,8 +77,19 @@ DEVICE_CONFIG_BAD_NO_DOOR = {
 }
 
 
-async def test_setup_component_typeerror(hass: HomeAssistant) -> None:
-    """Test component setup TypeError."""
+@pytest.mark.parametrize(
+    "sideeffect",
+    [
+        (TypeError),
+        (KeyError),
+        (NameError),
+        (ValueError),
+    ],
+)
+async def test_setup_get_doors_errors(
+    hass: HomeAssistant, sideeffect: Exception
+) -> None:
+    """Test component setup Get Doors Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=YAML_CONFIG,
@@ -89,15 +101,24 @@ async def test_setup_component_typeerror(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        side_effect=TypeError,
+        side_effect=sideeffect,
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
 
 
-async def test_setup_component_keyerror(hass: HomeAssistant) -> None:
-    """Test component setup KeyError."""
+@pytest.mark.parametrize(
+    "sideeffect",
+    [
+        (TypeError),
+        (KeyError),
+        (NameError),
+        (ValueError),
+    ],
+)
+async def test_setup_login_error(hass: HomeAssistant, sideeffect: Exception) -> None:
+    """Test component setup Login Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=YAML_CONFIG,
@@ -106,41 +127,7 @@ async def test_setup_component_keyerror(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        side_effect=KeyError,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-        await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
-
-
-async def test_setup_component_nameerror(hass: HomeAssistant) -> None:
-    """Test component setup Namerror."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        side_effect=NameError,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-        await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
-
-
-async def test_setup_component_valueerror(hass: HomeAssistant) -> None:
-    """Test component setup ValueError."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        side_effect=ValueError,
+        side_effect=sideeffect,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
@@ -165,30 +152,6 @@ async def test_setup_component_noerror(hass: HomeAssistant) -> None:
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-async def test_load_and_unload(hass: HomeAssistant) -> None:
-    """Test loading and unloading Aladdin Connect entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ):
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    assert await config_entry.async_unload(hass)
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_cover_operation(hass: HomeAssistant) -> None:
@@ -301,7 +264,7 @@ async def test_yaml_import(hass: HomeAssistant, caplog: pytest.LogCaptureFixture
         await cover.async_setup_platform(hass, YAML_CONFIG, None)
         await hass.async_block_till_done()
 
-    assert "Configuring aladdin_connect through yaml is deprecated" in caplog.text
+    assert "Configuring Aladdin Connect through yaml is deprecated" in caplog.text
 
     assert hass.config_entries.async_entries(DOMAIN)
     config_data = hass.config_entries.async_entries(DOMAIN)[0].data
