@@ -159,6 +159,15 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_face_detection_on",
         ufp_set_method="set_face_detection",
     ),
+    ProtectSwitchEntityDescription(
+        key="smart_package",
+        name="Detections: Package",
+        icon="mdi:package-variant-closed",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_package",
+        ufp_value="is_package_detection_on",
+        ufp_set_method="set_package_detection",
+    ),
 )
 
 SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
