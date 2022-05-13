@@ -162,11 +162,8 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
-            "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
             "sleep_mode_enabled": self.robot.sleep_mode_enabled,
             "power_status": self.robot.power_status,
-            "status_code": self.robot.status_code,
-            "last_seen": self.robot.last_seen,
             "status": self.status,
         }
