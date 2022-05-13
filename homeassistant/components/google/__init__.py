@@ -40,7 +40,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
-from .api import ApiAuthImpl, DeviceAuth
+from .api import ApiAuthImpl, DeviceAuth, get_feature_access
 from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
@@ -172,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # a ConfigEntry managed by home assistant.
     storage = Storage(hass.config.path(TOKEN_FILE))
     creds = await hass.async_add_executor_job(storage.get)
-    if creds and conf[CONF_CALENDAR_ACCESS].scope in creds.scopes:
+    if creds and get_feature_access(hass).scope in creds.scopes:
         _LOGGER.debug("Importing configuration entry with credentials")
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -210,8 +210,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    required_scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
-    if required_scope not in session.token.get("scope", []):
+    access = get_feature_access(hass)
+    if access.scope not in session.token.get("scope", []):
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
@@ -220,7 +220,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][DATA_SERVICE] = calendar_service
 
-    await async_setup_services(hass, hass.data[DOMAIN][DATA_CONFIG], calendar_service)
+    track_new = hass.data[DOMAIN][DATA_CONFIG].get(CONF_TRACK_NEW, True)
+    await async_setup_services(hass, track_new, calendar_service)
+    # Only expose the add event service if we have the correct permissions
+    if access is FeatureAccess.read_write:
+        await async_setup_add_event_service(hass, calendar_service)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -234,7 +238,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_services(
     hass: HomeAssistant,
-    config: ConfigType,
+    track_new: bool,
     calendar_service: GoogleCalendarService,
 ) -> None:
     """Set up the service listeners."""
@@ -274,13 +278,20 @@ async def async_setup_services(
         tasks = []
         for calendar_item in result.items:
             calendar = calendar_item.dict(exclude_unset=True)
-            calendar[CONF_TRACK] = config[CONF_TRACK_NEW]
+            calendar[CONF_TRACK] = track_new
             tasks.append(
                 hass.services.async_call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
             )
         await asyncio.gather(*tasks)
 
     hass.services.async_register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
+
+
+async def async_setup_add_event_service(
+    hass: HomeAssistant,
+    calendar_service: GoogleCalendarService,
+) -> None:
+    """Add the service to add events."""
 
     async def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
@@ -333,11 +344,9 @@ async def async_setup_services(
             ),
         )
 
-    # Only expose the add event service if we have the correct permissions
-    if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
-        hass.services.async_register(
-            DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
-        )
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
+    )
 
 
 def get_calendar_info(
