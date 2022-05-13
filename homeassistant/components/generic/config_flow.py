@@ -41,6 +41,7 @@ from .const import (
     CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     DOMAIN,
     FFMPEG_OPTION_MAP,
@@ -64,6 +65,7 @@ SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 def build_schema(
     user_input: dict[str, Any] | MappingProxyType[str, Any],
     is_options_flow: bool = False,
+    show_advanced_options=False,
 ):
     """Create schema for camera config setup."""
     spec = {
@@ -106,6 +108,13 @@ def build_schema(
                 default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
             )
         ] = bool
+        if show_advanced_options:
+            spec[
+                vol.Required(
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                    default=user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+                )
+            ] = bool
     return vol.Schema(spec)
 
 
@@ -199,6 +208,8 @@ async def async_test_stream(hass, info) -> dict[str, str]:
             }
         if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
             stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
+        if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+            stream_options[FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]] = "1"
         _LOGGER.debug("Attempting to open stream %s", stream_source)
         container = await hass.async_add_executor_job(
             partial(
@@ -356,6 +367,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     ],
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS
+                    ),
                 }
                 return self.async_create_entry(
                     title=title,
@@ -363,6 +377,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 )
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(user_input or self.config_entry.options, True),
+            data_schema=build_schema(
+                user_input or self.config_entry.options,
+                True,
+                self.show_advanced_options,
+            ),
             errors=errors,
         )
