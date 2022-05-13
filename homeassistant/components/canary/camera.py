@@ -40,7 +40,6 @@ from .const import (
 from .coordinator import CanaryDataUpdateCoordinator
 
 MIN_TIME_BETWEEN_SESSION_RENEW: Final = timedelta(seconds=90)
-FORCE_CAMERA_REFRESH_INTERVAL = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
@@ -118,7 +117,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self._last_image_id = None
         self._image_url: str | None = None
         self.verify_ssl = True
-        self._expires_at = dt_util.utcnow() - FORCE_CAMERA_REFRESH_INTERVAL
 
     @property
     def name(self) -> str:
@@ -217,12 +215,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     async def _check_for_new_image(self) -> None:
         await self._set_last_event()
 
-        utcnow = dt_util.utcnow()
-
         if self._last_event is None:
-            # if we don't have any events for the day refresh the image every so often
-            if self._expires_at <= utcnow:
-                await self._expire_image()
             return
 
         if (
@@ -243,13 +236,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             return None
         except IndexError:
             return None
-
-    async def _expire_image(self) -> None:
-        utcnow = dt_util.utcnow()
-        self._image = None
-        self._image_url = None
-        self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
-        _LOGGER.debug("Forcing a new camera image from %s", self.name)
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
