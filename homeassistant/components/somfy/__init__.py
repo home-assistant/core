@@ -79,8 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Somfy from a config entry."""
 
     _LOGGER.warning(
-        "The Somfy Open API has been deprecated and will shutdown after June 21st 2022, "
-        "migrate to the Overkiz integration to control your Somfy devices"
+        "The Somfy integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.7; due to the Somfy Open API deprecation."
+        "The Somfy Open API will shutdown June 21st 2022, migrate to the "
+        "Overkiz integration to control your Somfy devices"
     )
 
     # Backwards compat
