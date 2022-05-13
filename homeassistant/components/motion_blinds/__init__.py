@@ -25,6 +25,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
+    KEY_SETUP_LOCK,
     KEY_VERSION,
     MANUFACTURER,
     PLATFORMS,
@@ -106,6 +107,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the motion_blinds components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    setup_lock = hass.data[DOMAIN].setdefault(KEY_SETUP_LOCK, asyncio.Lock())
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
@@ -114,34 +116,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Create multicast Listener
-    if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        # check multicast interface
-        check_multicast_class = ConnectMotionGateway(
-            hass, interface=multicast_interface
-        )
-        working_interface = await check_multicast_class.async_check_interface(host, key)
-        if working_interface != multicast_interface:
-            data = {**entry.data, CONF_INTERFACE: working_interface}
-            hass.config_entries.async_update_entry(entry, data=data)
-            _LOGGER.debug(
-                "Motion Blinds interface updated from %s to %s, "
-                "this should only occur after a network change",
-                multicast_interface,
-                working_interface,
+    async with setup_lock:
+        if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
+            # check multicast interface
+            check_multicast_class = ConnectMotionGateway(
+                hass, interface=multicast_interface
             )
+            working_interface = await check_multicast_class.async_check_interface(host, key)
+            if working_interface != multicast_interface:
+                data = {**entry.data, CONF_INTERFACE: working_interface}
+                hass.config_entries.async_update_entry(entry, data=data)
+                _LOGGER.debug(
+                    "Motion Blinds interface updated from %s to %s, "
+                    "this should only occur after a network change",
+                    multicast_interface,
+                    working_interface,
+                )
 
-        multicast = AsyncMotionMulticast(interface=working_interface)
-        hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
-        # start listening for local pushes (only once)
-        await multicast.Start_listen()
+            multicast = AsyncMotionMulticast(interface=working_interface)
+            hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
+            # start listening for local pushes (only once)
+            await multicast.Start_listen()
 
-        # register stop callback to shutdown listening for local pushes
-        def stop_motion_multicast(event):
-            """Stop multicast thread."""
-            _LOGGER.debug("Shutting down Motion Listener")
-            multicast.Stop_listen()
+            # register stop callback to shutdown listening for local pushes
+            def stop_motion_multicast(event):
+                """Stop multicast thread."""
+                _LOGGER.debug("Shutting down Motion Listener")
+                multicast.Stop_listen()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
 
     # Connect to motion gateway
     multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
