@@ -83,7 +83,7 @@ def statement_for_request(
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids:
-        entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
+        entity_filter = filters.entity_filter() if filters else None
         return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
 
     # Multiple entities: logbook sends everything for the timeframe for the entities
