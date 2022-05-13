@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -107,12 +107,23 @@ class LaCrosseViewSensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        sensor = self.coordinator.data[int(description.key.split(" ")[0])]
+
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data[0].location.id}-{description.key}"
         self._attr_name = f"{coordinator.data[0].location.name} {description.name}"
         self._attr_icon = ICON_LIST.get(
             description.key.split(" ")[1], "mdi:thermometer"
         )
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, sensor.sensor_id)},
+            "name": sensor.name.split(" ")[0],
+            "manufacturer": "LaCrosse Technologies",
+            "model": sensor.model,
+            "via_device": (DOMAIN, sensor.location.id),
+        }
+
+        LOGGER.debug(self._attr_device_info)
 
     @property
     def native_value(self) -> int:

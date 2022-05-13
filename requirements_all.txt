@@ -930,7 +930,7 @@ kostal_plenticore==0.2.0
 krakenex==2.1.0
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==0.0.3
+lacrosse-view==0.0.4
 
 # homeassistant.components.eufy
 lakeside==0.12

@@ -97,6 +97,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         location_id = user_input["location"].split(" ")[0]
         location_name = user_input["location"].split(" ")[1]
 
+        await self.async_set_unique_id(location_id)
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=location_name,
             data={

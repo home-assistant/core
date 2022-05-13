@@ -16,4 +16,6 @@ TEST_SENSOR = Sensor(
     sensor_field_names=["Temperature"],
     location=Location(id="1", name="Test"),
     data={"Temperature": {"values": [{"s": "2"}], "unit": "degrees_celsius"}},
+    permissions={"read": True},
+    model="Test",
 )

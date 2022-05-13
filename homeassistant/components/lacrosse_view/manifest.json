@@ -3,7 +3,7 @@
   "name": "LaCrosse View",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lacrosse_view",
-  "requirements": ["lacrosse-view==0.0.3"],
+  "requirements": ["lacrosse-view==0.0.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
