@@ -49,9 +49,6 @@ PyViCare==2.16.1
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
 
-# homeassistant.components.rpi_gpio
-# RPi.GPIO==0.7.1a4
-
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 

@@ -134,7 +134,6 @@ jobs:
             sed -i "s|# pybluez|pybluez|g" ${requirement_file}
             sed -i "s|# bluepy|bluepy|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
-            sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
