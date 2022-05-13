@@ -64,7 +64,9 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         if self.entity_description.should_report(self.robot):
-            return getattr(self.robot, self.entity_description.key)
+            if isinstance(val := getattr(self.robot, self.entity_description.key), str):
+                return val.lower()
+            return val
         return None
 
     @property
