@@ -340,13 +340,13 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
                     CONF_ROUTE_MODE, ROUTE_MODE_FASTEST
                 ),
             ): vol.In(ROUTE_MODES),
-            vol.Optional(CONF_TIME, default=default_time): cv.string,
             vol.Optional(
                 CONF_UNIT_SYSTEM,
                 default=self.config_entry.options.get(
                     CONF_UNIT_SYSTEM, self.hass.config.units.name
                 ),
             ): vol.In(UNITS),
+            vol.Optional(CONF_TIME, default=default_time): cv.string,
         }
         # Arrival is only allowed for publicTransportTimeTable
         if self.config_entry.data[CONF_MODE] == TRAVEL_MODE_PUBLIC_TIME_TABLE:
