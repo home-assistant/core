@@ -51,11 +51,8 @@ GLOB_TO_SQL_CHARS = {
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_ORDER),
-            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
-            ),
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -70,7 +67,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf
     )
 
-    hass.http.register_view(HistoryPeriodView(filters))
+    use_include_order = conf.get(CONF_ORDER)
+
+    hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
@@ -283,9 +282,10 @@ class HistoryPeriodView(HomeAssistantView):
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
 
-    def __init__(self, filters: Filters | None) -> None:
+    def __init__(self, filters: Filters | None, use_include_order: bool) -> None:
         """Initialize the history period view."""
         self.filters = filters
+        self.use_include_order = use_include_order
 
     async def get(
         self, request: web.Request, datetime: str | None = None
@@ -381,7 +381,18 @@ class HistoryPeriodView(HomeAssistantView):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug("Extracted %d states in %fs", sum(map(len, states)), elapsed)
 
-        return self.json(list(states.values()))
+        # Optionally reorder the result to respect the ordering given
+        # by any entities explicitly included in the configuration.
+        if not self.filters or not self.use_include_order:
+            return self.json(list(states.values()))
+
+        sorted_result = [
+            states.pop(order_entity)
+            for order_entity in self.filters.included_entities
+            if order_entity in states
+        ]
+        sorted_result.extend(list(states.values()))
+        return self.json(sorted_result)
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
