@@ -248,6 +248,9 @@ airthings_cloud==0.1.0
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
+# homeassistant.components.aladdin_connect
+aladdin_connect==0.4
+
 # homeassistant.components.ambee
 ambee==0.4.0
 
