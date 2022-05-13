@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 import logging
 
+from homeassistant.const import Platform
+
 DOMAIN = "aqara"
 LOGGER = logging.getLogger(__package__)
 
@@ -31,7 +33,7 @@ AQARA_RESPONSE_PLATFORM_URL = "platform_url"
 EMPTY_UNIT = "  "
 
 PLATFORMS = [
-    "binary_sensor",
+    Platform.BINARY_SENSOR,
 ]
 
 
