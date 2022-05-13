@@ -235,7 +235,7 @@ class ApplicationCredentialsProtocol(Protocol):
     async def async_get_auth_implementation(
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
     ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
-        """Return auth implementation for a custom auth implementation."""
+        """Return a custom auth implementation."""
 
 
 async def _get_platform(
