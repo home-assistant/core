@@ -44,7 +44,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .addon_panel import async_setup_addon_panel
@@ -722,7 +721,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             return
         if (hw_integration := HARDWARE_INTEGRATIONS.get(board)) is None:
             return
-        await async_setup_component(hass, hw_integration, {})
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                hw_integration, context={"source": "system"}
+            )
+        )
 
     await _async_setup_hardware_integration(hass)
 
