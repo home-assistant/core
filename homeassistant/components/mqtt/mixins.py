@@ -253,9 +253,7 @@ async def async_get_platform_config_from_yaml(
         return schema(config)
 
     config_yaml: ConfigType = hass.data.get(DATA_MQTT_CONFIG, {})
-    if not (integration_config := config_yaml.get(DOMAIN)) or not (
-        platform_configs := integration_config.get(domain)
-    ):
+    if not (platform_configs := config_yaml.get(domain)):
         return []
     errors = []
     try:

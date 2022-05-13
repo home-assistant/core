@@ -7,7 +7,9 @@ import voluptuous as vol
 
 from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -57,6 +59,7 @@ def validate_mqtt_light(value):
 DISCOVERY_SCHEMA = vol.All(
     MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light_discovery,
+    cv.deprecated(CONF_PLATFORM),  # Deprecated in HA Core 2022.6
 )
 
 
@@ -72,6 +75,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT light through configuration.yaml (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, light.DOMAIN, config, async_add_entities, _async_setup_entity
     )

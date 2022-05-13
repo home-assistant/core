@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_PLATFORM,
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -177,6 +178,7 @@ PLATFORM_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
+    cv.deprecated(CONF_PLATFORM),  # Deprecated in HA Core 2022.6
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -203,6 +205,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT fan through configuration.yaml (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, fan.DOMAIN, config, async_add_entities, _async_setup_entity
     )

@@ -1690,3 +1690,33 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     assert hass.states.get(f"{domain}.test_new_1")
     assert hass.states.get(f"{domain}.test_new_2")
     assert hass.states.get(f"{domain}.test_new_3")
+
+
+async def help_test_setup_manual_entity_from_yaml(
+    hass, caplog, tmp_path, platform, config
+):
+    """Test setup from yaml through configuration entry."""
+    yaml_config = copy.deepcopy(config)
+    yaml_config["name"] = "test"
+    # Remove platform key from the config since this is not valid here
+    del yaml_config["platform"]
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump({mqtt.DOMAIN: {platform: [yaml_config]}})
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    await async_setup_component(
+        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {platform: [yaml_config]}}
+    )
+    # Mock config entry
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file), patch(
+        "paho.mqtt.client.Client"
+    ) as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(f"{platform}.test") is not None
