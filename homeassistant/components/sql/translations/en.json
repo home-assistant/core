@@ -5,7 +5,8 @@
         },
         "error": {
             "db_url_invalid": "Database URL invalid",
-            "query_invalid": "SQL Query invalid"
+            "query_invalid": "SQL Query invalid",
+            "value_template_invalid": "Value Template invalid"
         },
         "step": {
             "user": {
@@ -31,7 +32,8 @@
     "options": {
         "error": {
             "db_url_invalid": "Database URL invalid",
-            "query_invalid": "SQL Query invalid"
+            "query_invalid": "SQL Query invalid",
+            "value_template_invalid": "Value Template invalid"
         },
         "step": {
             "init": {
