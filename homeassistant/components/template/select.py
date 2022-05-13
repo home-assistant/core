@@ -133,8 +133,10 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
-        await self._command_select_option.async_run(
-            {ATTR_OPTION: option}, context=self._context
+        await self.async_run_script(
+            self._command_select_option,
+            run_variables={ATTR_OPTION: option},
+            context=self._context,
         )
 
 
