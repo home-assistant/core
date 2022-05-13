@@ -957,7 +957,7 @@ lmnotify==0.0.4
 locationsharinglib==4.1.5
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.2
+logi_circle==0.2.3
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
@@ -1065,7 +1065,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.3
+nettigo-air-monitor==1.2.4
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1399,7 +1399,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==12.1.1
+pychromecast==12.1.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1432,7 +1432,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==91
+pydeconz==92
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1981,7 +1981,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.4.0
+pyunifiprotect==3.4.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2153,7 +2153,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.0
+simplisafe-python==2022.05.1
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
@@ -2343,7 +2343,7 @@ twitchAPI==2.5.2
 uEagle==0.0.2
 
 # homeassistant.components.ukraine_alarm
-ukrainealarm==0.0.1
+uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.2
