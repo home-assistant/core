@@ -1,6 +1,6 @@
 """Test the System Bridge config flow."""
-from unittest.mock import patch
 import asyncio
+from unittest.mock import patch
 
 from systembridgeconnector.const import (
     EVENT_DATA,
@@ -115,9 +115,9 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch("homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.get_data"
-    ), patch(
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+    ), patch("systembridgeconnector.websocket_client.WebSocketClient.get_data"), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
         return_value=FIXTURE_DATA_SYSTEM,
     ), patch(
@@ -233,8 +233,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown error."""
+async def test_form_uuid_error(hass: HomeAssistant) -> None:
+    """Test we handle error from bad uuid."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -255,7 +255,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:

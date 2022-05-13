@@ -85,7 +85,7 @@ async def validate_input(
 
     if "uuid" not in message["data"]:
         error = "No UUID in result!"
-        raise Exception(error)
+        raise CannotConnect(error)
 
     return {"hostname": host, "uuid": message["data"]["uuid"]}
 
