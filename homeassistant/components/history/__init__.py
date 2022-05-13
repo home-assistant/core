@@ -10,6 +10,8 @@ from typing import Any, Literal, cast
 
 from aiohttp import web
 from sqlalchemy import not_, or_
+from sqlalchemy.ext.baked import BakedQuery
+from sqlalchemy.orm import Query
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
@@ -35,8 +37,6 @@ from homeassistant.helpers.entityfilter import (
 )
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -351,20 +351,20 @@ class HistoryPeriodView(HomeAssistantView):
 
     def _sorted_significant_states_json(
         self,
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        include_start_time_state,
-        significant_changes_only,
-        minimal_response,
-        no_attributes,
-    ):
+        hass: HomeAssistant,
+        start_time: dt,
+        end_time: dt,
+        entity_ids: list[str] | None,
+        include_start_time_state: bool,
+        significant_changes_only: bool,
+        minimal_response: bool,
+        no_attributes: bool,
+    ) -> web.Response:
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
-            result = history.get_significant_states_with_session(
+            states = history.get_significant_states_with_session(
                 hass,
                 session,
                 start_time,
@@ -377,18 +377,18 @@ class HistoryPeriodView(HomeAssistantView):
                 no_attributes,
             )
 
-        result = list(result.values())
+        result = list(states.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
-        if self.filters and self.use_include_order:
+        if not minimal_response and self.filters and self.use_include_order:
             sorted_result = []
             for order_entity in self.filters.included_entities:
                 for state_list in result:
-                    if state_list[0].entity_id == order_entity:
+                    if state_list[0].entity_id == order_entity:  # type: ignore[union-attr]
                         sorted_result.append(state_list)
                         result.remove(state_list)
                         break
@@ -426,7 +426,7 @@ class Filters:
         self.included_domains: list[str] = []
         self.included_entity_globs: list[str] = []
 
-    def apply(self, query):
+    def apply(self, query: Query) -> Query:
         """Apply the entity filter."""
         if not self.has_config:
             return query
@@ -434,21 +434,18 @@ class Filters:
         return query.filter(self.entity_filter())
 
     @property
-    def has_config(self):
+    def has_config(self) -> bool:
         """Determine if there is any filter configuration."""
-        if (
+        return bool(
             self.excluded_entities
             or self.excluded_domains
             or self.excluded_entity_globs
             or self.included_entities
             or self.included_domains
             or self.included_entity_globs
-        ):
-            return True
+        )
 
-        return False
-
-    def bake(self, baked_query):
+    def bake(self, baked_query: BakedQuery) -> None:
         """Update a baked query.
 
         Works the same as apply on a baked_query.
@@ -458,7 +455,7 @@ class Filters:
 
         baked_query += lambda q: q.filter(self.entity_filter())
 
-    def entity_filter(self):
+    def entity_filter(self) -> Any:
         """Generate the entity filter query."""
         includes = []
         if self.included_domains:
@@ -502,7 +499,7 @@ class Filters:
         return or_(*includes) & not_(or_(*excludes))
 
 
-def _glob_to_like(glob_str):
+def _glob_to_like(glob_str: str) -> Any:
     """Translate glob to sql."""
     return history_models.States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
 
