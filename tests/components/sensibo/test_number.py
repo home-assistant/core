@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
 import pytest
@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
@@ -25,30 +24,12 @@ from tests.common import async_fire_time_changed
 
 async def test_number(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
     load_int: ConfigEntry,
     monkeypatch: MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo number."""
-
-    registry = er.async_get(hass)
-    registry.async_update_entity(
-        "number.hallway_temperature_calibration", disabled_by=None
-    )
-    registry.async_update_entity(
-        "number.hallway_humidity_calibration", disabled_by=None
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=1),
-        )
-        await hass.async_block_till_done()
 
     state1 = hass.states.get("number.hallway_temperature_calibration")
     state2 = hass.states.get("number.hallway_humidity_calibration")
@@ -73,26 +54,11 @@ async def test_number(
 
 async def test_number_set_value(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
     load_int: ConfigEntry,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo number service."""
-
-    registry = er.async_get(hass)
-    registry.async_update_entity(
-        "number.hallway_temperature_calibration", disabled_by=None
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=1),
-        )
-        await hass.async_block_till_done()
 
     state1 = hass.states.get("number.hallway_temperature_calibration")
     assert state1.state == "0.1"
