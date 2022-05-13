@@ -47,13 +47,13 @@ class MockRow:
 def mock_humanify(hass_, rows):
     """Wrap humanify with mocked logbook objects."""
     entity_name_cache = logbook.EntityNameCache(hass_)
-    registry = er.async_get(hass_)
+    ent_reg = er.async_get(hass_)
     external_events = hass_.data.get(logbook.DOMAIN, {})
     return list(
         logbook._humanify(
             rows,
             None,
-            registry,
+            ent_reg,
             external_events,
             entity_name_cache,
             logbook._row_time_fired_isoformat,
