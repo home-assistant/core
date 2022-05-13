@@ -23,6 +23,7 @@ from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+from isodate import parse_duration
 import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -1822,6 +1823,11 @@ def slugify(value, separator="_"):
     return slugify_util(value, separator=separator)
 
 
+def parse_iso8601_duration(value: str) -> Any:
+    """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
+    return parse_duration(value)
+
+
 def iif(
     value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
 ) -> Any:
@@ -1953,6 +1959,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
+        self.filters["parse_iso8601_duration"] = parse_iso8601_duration
         self.filters["iif"] = iif
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
@@ -1983,6 +1990,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
+        self.globals["parse_iso8601_duration"] = parse_iso8601_duration
         self.globals["iif"] = iif
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
