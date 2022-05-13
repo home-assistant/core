@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -63,7 +64,9 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         if self.entity_description.should_report(self.robot):
-            return getattr(self.robot, self.entity_description.key)
+            if isinstance(val := getattr(self.robot, self.entity_description.key), str):
+                return val.lower()
+            return val
         return None
 
     @property
@@ -92,6 +95,18 @@ ROBOT_SENSORS = [
         key="sleep_mode_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         should_report=lambda robot: robot.sleep_mode_enabled,
+    ),
+    LitterRobotSensorEntityDescription(
+        name="Last Seen",
+        key="last_seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LitterRobotSensorEntityDescription(
+        name="Status Code",
+        key="status_code",
+        device_class="litterrobot__status_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 

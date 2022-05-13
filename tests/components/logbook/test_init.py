@@ -323,6 +323,7 @@ def create_state_changed_event_from_old_new(
             "old_state_id",
             "shared_attrs",
             "shared_data",
+            "context_only",
         ],
     )
 
@@ -335,6 +336,7 @@ def create_state_changed_event_from_old_new(
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]
+    row.context_only = False
     row.context_id = None
     row.context_user_id = None
     row.context_parent_id = None
@@ -1761,13 +1763,21 @@ async def test_fire_logbook_entries(hass, hass_client, recorder_mock):
             logbook.EVENT_LOGBOOK_ENTRY,
             {},
         )
+    hass.bus.async_fire(
+        logbook.EVENT_LOGBOOK_ENTRY,
+        {
+            logbook.ATTR_NAME: "Alarm",
+            logbook.ATTR_MESSAGE: "is triggered",
+            logbook.ATTR_DOMAIN: "switch",
+        },
+    )
     await async_wait_recording_done(hass)
 
     client = await hass_client()
     response_json = await _async_fetch_logbook(client)
 
     # The empty events should be skipped
-    assert len(response_json) == 10
+    assert len(response_json) == 11
 
 
 async def test_exclude_events_domain(hass, hass_client, recorder_mock):
@@ -1986,6 +1996,15 @@ async def test_include_events_domain_glob(hass, hass_client, recorder_mock):
     )
     await async_recorder_block_till_done(hass)
 
+    # Should get excluded by domain
+    hass.bus.async_fire(
+        logbook.EVENT_LOGBOOK_ENTRY,
+        {
+            logbook.ATTR_NAME: "Alarm",
+            logbook.ATTR_MESSAGE: "is triggered",
+            logbook.ATTR_DOMAIN: "switch",
+        },
+    )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     hass.bus.async_fire(
