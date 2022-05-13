@@ -449,7 +449,7 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        # This check intentionally checks .days and not .total_seconds()
+        # end_day - start_day intentionally checks .days and not .total_seconds()
         # since we don't want to switch over to buffered if they go
         # over one day by a few hours since the UI makes it so easy to do that.
         if entity_ids or context_id or (end_day - start_day).days <= 1:
