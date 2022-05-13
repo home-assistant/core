@@ -1,7 +1,7 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Iterable
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
@@ -24,8 +24,10 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.websocket_api import messages
+from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
@@ -167,6 +169,38 @@ async def ws_get_list_statistic_ids(
     connection.send_result(msg["id"], statistic_ids)
 
 
+def _ws_get_significant_states(
+    hass: HomeAssistant,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt | None = None,
+    entity_ids: list[str] | None = None,
+    filters: Any | None = None,
+    include_start_time_state: bool = True,
+    significant_changes_only: bool = True,
+    minimal_response: bool = False,
+    no_attributes: bool = False,
+) -> str:
+    """Fetch history significant_states and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id,
+            history.get_significant_states(
+                hass,
+                start_time,
+                end_time,
+                entity_ids,
+                filters,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
+                no_attributes,
+                True,
+            ),
+        )
+    )
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "history/history_during_period",
@@ -220,24 +254,22 @@ async def ws_get_history_during_period(
     significant_changes_only = msg["significant_changes_only"]
     no_attributes = msg["no_attributes"]
     minimal_response = msg["minimal_response"]
-    compressed_state_format = True
 
-    history_during_period: MutableMapping[
-        str, list[State | dict[str, Any]]
-    ] = await get_instance(hass).async_add_executor_job(
-        history.get_significant_states,
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        hass.data[HISTORY_FILTERS],
-        include_start_time_state,
-        significant_changes_only,
-        minimal_response,
-        no_attributes,
-        compressed_state_format,
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_get_significant_states,
+            hass,
+            msg["id"],
+            start_time,
+            end_time,
+            entity_ids,
+            hass.data[HISTORY_FILTERS],
+            include_start_time_state,
+            significant_changes_only,
+            minimal_response,
+            no_attributes,
+        )
     )
-    connection.send_result(msg["id"], history_during_period)
 
 
 class HistoryPeriodView(HomeAssistantView):
