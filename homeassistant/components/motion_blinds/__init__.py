@@ -122,7 +122,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             check_multicast_class = ConnectMotionGateway(
                 hass, interface=multicast_interface
             )
-            working_interface = await check_multicast_class.async_check_interface(host, key)
+            working_interface = await check_multicast_class.async_check_interface(
+                host, key
+            )
             if working_interface != multicast_interface:
                 data = {**entry.data, CONF_INTERFACE: working_interface}
                 hass.config_entries.async_update_entry(entry, data=data)
