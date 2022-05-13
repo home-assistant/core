@@ -63,6 +63,7 @@ class DeconzGateway:
 
         self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
         self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
+        self.signal_reload_clip_sensors = f"deconz_reload_clip_{config_entry.entry_id}"
 
         self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
         self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
@@ -212,6 +213,7 @@ class DeconzGateway:
 
         if self.option_allow_clip_sensor:
             self.async_add_device_callback(ResourceGroup.SENSOR.value)
+            async_dispatcher_send(self.hass, self.signal_reload_clip_sensors)
 
         else:
             deconz_ids += [

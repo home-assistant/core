@@ -395,6 +395,12 @@ ZEROCONF = {
             "domain": "kodi"
         }
     ],
+    "_zigate-zigbee-gateway._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigate*"
+        }
+    ],
     "_zwave-js-server._tcp.local.": [
         {
             "domain": "zwave_js"

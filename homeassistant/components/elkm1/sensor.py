@@ -3,12 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from elkm1_lib.const import (
-    SettingFormat,
-    ZoneLogicalStatus,
-    ZonePhysicalStatus,
-    ZoneType,
-)
+from elkm1_lib.const import SettingFormat, ZoneType
 from elkm1_lib.counters import Counter
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
@@ -237,25 +232,25 @@ class ElkZone(ElkSensor):
     def icon(self) -> str:
         """Icon to use in the frontend."""
         zone_icons = {
-            ZoneType.FIRE_ALARM.value: "fire",
-            ZoneType.FIRE_VERIFIED.value: "fire",
-            ZoneType.FIRE_SUPERVISORY.value: "fire",
-            ZoneType.KEYFOB.value: "key",
-            ZoneType.NON_ALARM.value: "alarm-off",
-            ZoneType.MEDICAL_ALARM.value: "medical-bag",
-            ZoneType.POLICE_ALARM.value: "alarm-light",
-            ZoneType.POLICE_NO_INDICATION.value: "alarm-light",
-            ZoneType.KEY_MOMENTARY_ARM_DISARM.value: "power",
-            ZoneType.KEY_MOMENTARY_ARM_AWAY.value: "power",
-            ZoneType.KEY_MOMENTARY_ARM_STAY.value: "power",
-            ZoneType.KEY_MOMENTARY_DISARM.value: "power",
-            ZoneType.KEY_ON_OFF.value: "toggle-switch",
-            ZoneType.MUTE_AUDIBLES.value: "volume-mute",
-            ZoneType.POWER_SUPERVISORY.value: "power-plug",
-            ZoneType.TEMPERATURE.value: "thermometer-lines",
-            ZoneType.ANALOG_ZONE.value: "speedometer",
-            ZoneType.PHONE_KEY.value: "phone-classic",
-            ZoneType.INTERCOM_KEY.value: "deskphone",
+            ZoneType.FIRE_ALARM: "fire",
+            ZoneType.FIRE_VERIFIED: "fire",
+            ZoneType.FIRE_SUPERVISORY: "fire",
+            ZoneType.KEYFOB: "key",
+            ZoneType.NON_ALARM: "alarm-off",
+            ZoneType.MEDICAL_ALARM: "medical-bag",
+            ZoneType.POLICE_ALARM: "alarm-light",
+            ZoneType.POLICE_NO_INDICATION: "alarm-light",
+            ZoneType.KEY_MOMENTARY_ARM_DISARM: "power",
+            ZoneType.KEY_MOMENTARY_ARM_AWAY: "power",
+            ZoneType.KEY_MOMENTARY_ARM_STAY: "power",
+            ZoneType.KEY_MOMENTARY_DISARM: "power",
+            ZoneType.KEY_ON_OFF: "toggle-switch",
+            ZoneType.MUTE_AUDIBLES: "volume-mute",
+            ZoneType.POWER_SUPERVISORY: "power-plug",
+            ZoneType.TEMPERATURE: "thermometer-lines",
+            ZoneType.ANALOG_ZONE: "speedometer",
+            ZoneType.PHONE_KEY: "phone-classic",
+            ZoneType.INTERCOM_KEY: "deskphone",
         }
         return f"mdi:{zone_icons.get(self._element.definition, 'alarm-bell')}"
 
@@ -263,13 +258,9 @@ class ElkZone(ElkSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the sensor."""
         attrs: dict[str, Any] = self.initial_attrs()
-        attrs["physical_status"] = ZonePhysicalStatus(
-            self._element.physical_status
-        ).name.lower()
-        attrs["logical_status"] = ZoneLogicalStatus(
-            self._element.logical_status
-        ).name.lower()
-        attrs["definition"] = ZoneType(self._element.definition).name.lower()
+        attrs["physical_status"] = self._element.physical_status.name.lower()
+        attrs["logical_status"] = self._element.logical_status.name.lower()
+        attrs["definition"] = self._element.definition.name.lower()
         attrs["area"] = self._element.area + 1
         attrs["triggered_alarm"] = self._element.triggered_alarm
         return attrs
@@ -277,27 +268,25 @@ class ElkZone(ElkSensor):
     @property
     def temperature_unit(self) -> str | None:
         """Return the temperature unit."""
-        if self._element.definition == ZoneType.TEMPERATURE.value:
+        if self._element.definition == ZoneType.TEMPERATURE:
             return self._temperature_unit
         return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self._element.definition == ZoneType.TEMPERATURE.value:
+        if self._element.definition == ZoneType.TEMPERATURE:
             return self._temperature_unit
-        if self._element.definition == ZoneType.ANALOG_ZONE.value:
+        if self._element.definition == ZoneType.ANALOG_ZONE:
             return ELECTRIC_POTENTIAL_VOLT
         return None
 
     def _element_changed(self, _: Element, changeset: Any) -> None:
-        if self._element.definition == ZoneType.TEMPERATURE.value:
+        if self._element.definition == ZoneType.TEMPERATURE:
             self._state = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE
             )
-        elif self._element.definition == ZoneType.ANALOG_ZONE.value:
+        elif self._element.definition == ZoneType.ANALOG_ZONE:
             self._state = f"{self._element.voltage}"
         else:
-            self._state = pretty_const(
-                ZoneLogicalStatus(self._element.logical_status).name
-            )
+            self._state = pretty_const(self._element.logical_status.name)

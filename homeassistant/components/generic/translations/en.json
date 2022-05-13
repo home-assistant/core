@@ -79,8 +79,12 @@
                     "rtsp_transport": "RTSP transport protocol",
                     "still_image_url": "Still Image URL (e.g. http://...)",
                     "stream_source": "Stream Source URL (e.g. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Use wallclock as timestamps",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
                 }
             }
         }

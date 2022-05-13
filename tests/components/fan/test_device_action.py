@@ -50,7 +50,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": False},
         }
-        for action in ["turn_on", "turn_off"]
+        for action in ["turn_on", "turn_off", "toggle"]
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -98,7 +98,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": True},
         }
-        for action in ["turn_on", "turn_off"]
+        for action in ["turn_on", "turn_off", "toggle"]
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -137,19 +137,40 @@ async def test_action(hass):
                         "type": "turn_on",
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_toggle",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "fan.entity",
+                        "type": "toggle",
+                    },
+                },
             ]
         },
     )
 
     turn_off_calls = async_mock_service(hass, "fan", "turn_off")
     turn_on_calls = async_mock_service(hass, "fan", "turn_on")
+    toggle_calls = async_mock_service(hass, "fan", "toggle")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 0
+    assert len(toggle_calls) == 0
 
     hass.bus.async_fire("test_event_turn_on")
     await hass.async_block_till_done()
     assert len(turn_off_calls) == 1
     assert len(turn_on_calls) == 1
+    assert len(toggle_calls) == 0
+
+    hass.bus.async_fire("test_event_toggle")
+    await hass.async_block_till_done()
+    assert len(turn_off_calls) == 1
+    assert len(turn_on_calls) == 1
+    assert len(toggle_calls) == 1

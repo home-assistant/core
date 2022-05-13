@@ -6,7 +6,7 @@ from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import cast
+from typing import Any, Literal, cast
 
 from aiohttp import web
 from sqlalchemy import not_, or_
@@ -24,10 +24,11 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.websocket_api import messages
+from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -40,6 +41,7 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
+HISTORY_FILTERS = "history_filters"
 CONF_ORDER = "use_include_order"
 
 GLOB_TO_SQL_CHARS = {
@@ -57,33 +59,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@deprecated_function("homeassistant.components.recorder.history.get_significant_states")
-def get_significant_states(hass, *args, **kwargs):
-    """Wrap get_significant_states_with_session with an sql session."""
-    return history.get_significant_states(hass, *args, **kwargs)
-
-
-@deprecated_function(
-    "homeassistant.components.recorder.history.state_changes_during_period"
-)
-def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
-    """Return states changes during UTC period start_time - end_time."""
-    return history.state_changes_during_period(
-        hass, start_time, end_time=None, entity_id=None
-    )
-
-
-@deprecated_function("homeassistant.components.recorder.history.get_last_state_changes")
-def get_last_state_changes(hass, number_of_states, entity_id):
-    """Return the last number_of_states."""
-    return history.get_last_state_changes(hass, number_of_states, entity_id)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
 
-    filters = sqlalchemy_filter_from_include_exclude_conf(conf)
+    hass.data[HISTORY_FILTERS] = filters = sqlalchemy_filter_from_include_exclude_conf(
+        conf
+    )
 
     use_include_order = conf.get(CONF_ORDER)
 
@@ -91,13 +73,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
+    websocket_api.async_register_command(hass, ws_get_history_during_period)
 
     return True
 
 
-@deprecated_class("homeassistant.components.recorder.models.LazyState")
-class LazyState(history_models.LazyState):
-    """A lazy version of core State."""
+def _ws_get_statistics_during_period(
+    hass: HomeAssistant,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt | None = None,
+    statistic_ids: list[str] | None = None,
+    period: Literal["5minute", "day", "hour", "month"] = "hour",
+) -> str:
+    """Fetch statistics and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id,
+            statistics_during_period(hass, start_time, end_time, statistic_ids, period),
+        )
+    )
 
 
 @websocket_api.websocket_command(
@@ -132,15 +127,28 @@ async def ws_get_statistics_during_period(
     else:
         end_time = None
 
-    statistics = await get_instance(hass).async_add_executor_job(
-        statistics_during_period,
-        hass,
-        start_time,
-        end_time,
-        msg.get("statistic_ids"),
-        msg.get("period"),
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_get_statistics_during_period,
+            hass,
+            msg["id"],
+            start_time,
+            end_time,
+            msg.get("statistic_ids"),
+            msg.get("period"),
+        )
     )
-    connection.send_result(msg["id"], statistics)
+
+
+def _ws_get_list_statistic_ids(
+    hass: HomeAssistant,
+    msg_id: int,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+) -> str:
+    """Fetch a list of available statistic_id and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
+    )
 
 
 @websocket_api.websocket_command(
@@ -154,13 +162,117 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await get_instance(hass).async_add_executor_job(
-        list_statistic_ids,
-        hass,
-        None,
-        msg.get("statistic_type"),
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_get_list_statistic_ids,
+            hass,
+            msg["id"],
+            msg.get("statistic_type"),
+        )
     )
-    connection.send_result(msg["id"], statistic_ids)
+
+
+def _ws_get_significant_states(
+    hass: HomeAssistant,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt | None = None,
+    entity_ids: list[str] | None = None,
+    filters: Any | None = None,
+    include_start_time_state: bool = True,
+    significant_changes_only: bool = True,
+    minimal_response: bool = False,
+    no_attributes: bool = False,
+) -> str:
+    """Fetch history significant_states and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id,
+            history.get_significant_states(
+                hass,
+                start_time,
+                end_time,
+                entity_ids,
+                filters,
+                include_start_time_state,
+                significant_changes_only,
+                minimal_response,
+                no_attributes,
+                True,
+            ),
+        )
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/history_during_period",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("entity_ids"): [str],
+        vol.Optional("include_start_time_state", default=True): bool,
+        vol.Optional("significant_changes_only", default=True): bool,
+        vol.Optional("minimal_response", default=False): bool,
+        vol.Optional("no_attributes", default=False): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_get_history_during_period(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle history during period websocket command."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if end_time_str:
+        if end_time := dt_util.parse_datetime(end_time_str):
+            end_time = dt_util.as_utc(end_time)
+        else:
+            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+            return
+    else:
+        end_time = None
+
+    if start_time > dt_util.utcnow():
+        connection.send_result(msg["id"], {})
+        return
+
+    entity_ids = msg.get("entity_ids")
+    include_start_time_state = msg["include_start_time_state"]
+
+    if (
+        not include_start_time_state
+        and entity_ids
+        and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+    ):
+        connection.send_result(msg["id"], {})
+        return
+
+    significant_changes_only = msg["significant_changes_only"]
+    no_attributes = msg["no_attributes"]
+    minimal_response = msg["minimal_response"]
+
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_get_significant_states,
+            hass,
+            msg["id"],
+            start_time,
+            end_time,
+            entity_ids,
+            hass.data[HISTORY_FILTERS],
+            include_start_time_state,
+            significant_changes_only,
+            minimal_response,
+            no_attributes,
+        )
+    )
 
 
 class HistoryPeriodView(HomeAssistantView):

@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "Muuda {entity_name} olekut",
             "turn_off": "L\u00fclita {entity_name} v\u00e4lja",
             "turn_on": "L\u00fclita {entity_name} sisse"
         },

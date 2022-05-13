@@ -329,9 +329,9 @@ class EDL21:
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
-                        "Unhandled sensor %s detected. Please report at "
-                        'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
+                        "Unhandled sensor %s detected. Please report at %s",
                         obis,
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
                     )
                     self._OBIS_BLACKLIST.add(obis)
 

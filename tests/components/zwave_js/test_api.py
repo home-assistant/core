@@ -3172,10 +3172,12 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
     result = msg["result"]
     assert result is None
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "driver.enable_statistics"
     assert args["applicationName"] == "Home Assistant"
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "driver.enable_error_reporting"
     assert entry.data[CONF_DATA_COLLECTION_OPTED_IN]
 
     client.async_send_command.reset_mock()
@@ -3477,7 +3479,14 @@ async def test_subscribe_firmware_update_status_initial_value(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"sent_fragments": 1, "total_fragments": 10}
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update progress",
+        "sent_fragments": 1,
+        "total_fragments": 10,
+    }
 
 
 async def test_subscribe_firmware_update_status_failures(
@@ -3686,7 +3695,12 @@ async def test_subscribe_controller_statistics(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "statistics updated",
+        "source": "controller",
         "messages_tx": 0,
         "messages_rx": 0,
         "messages_dropped_tx": 0,
@@ -3781,7 +3795,13 @@ async def test_subscribe_node_statistics(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "source": "node",
+        "event": "statistics updated",
+        "nodeId": multisensor_6.node_id,
         "commands_tx": 0,
         "commands_rx": 0,
         "commands_dropped_tx": 0,
