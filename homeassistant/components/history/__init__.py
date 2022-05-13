@@ -199,16 +199,21 @@ def _ws_get_significant_states(
         no_attributes,
         True,
     )
+
     if not use_include_order or not filters:
         return JSON_DUMP(messages.result_message(msg_id, states))
 
-    sorted_states = {
-        order_entity: states.pop(order_entity)
-        for order_entity in filters.included_entities
-        if order_entity in states
-    }
-    sorted_states.update(states)
-    return JSON_DUMP(messages.result_message(msg_id, sorted_states))
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id,
+            {
+                order_entity: states.pop(order_entity)
+                for order_entity in filters.included_entities
+                if order_entity in states
+            }
+            | states,
+        )
+    )
 
 
 @websocket_api.websocket_command(
@@ -387,7 +392,9 @@ class HistoryPeriodView(HomeAssistantView):
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
-            _LOGGER.debug("Extracted %d states in %fs", sum(map(len, states)), elapsed)
+            _LOGGER.debug(
+                "Extracted %d states in %fs", sum(map(len, states.values())), elapsed
+            )
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
