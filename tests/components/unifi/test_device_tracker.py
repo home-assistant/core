@@ -499,6 +499,7 @@ async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
         "board_rev": 3,
         "device_id": "mock-id",
         "last_seen": 1562600145,
+        "ip": "10.0.1.1",
         "mac": "00:00:00:00:01:01",
         "model": "US16P150",
         "name": "Device",
