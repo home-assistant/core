@@ -255,18 +255,17 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         try:
             entry = self.coordinator.data[DATA_TYPE_ENTRY][self._device_id]
         except KeyError:
-            return None
+            entry = None
 
         if entry is not None:
-            if self._sensor_type[0] == SensorType.ENTRIES_CAPTURED_TODAY:
-                return len(entry)
-            if self._sensor_type[0] == SensorType.DATE_LAST_ENTRY:
+            if self._canary_type == SensorType.ENTRIES_CAPTURED_TODAY:
+                self._state = len(entry)
+            if self._canary_type == SensorType.DATE_LAST_ENTRY:
                 try:
                     last_entry_date = entry[0].start_time
-                    return cast(datetime, last_entry_date)
+                    self._state = cast(datetime, last_entry_date)
                 except IndexError:
-                    return None
-        return None
+                    self._state = None
 
     @property
     def native_value(self) -> float | str | datetime | int | None:
