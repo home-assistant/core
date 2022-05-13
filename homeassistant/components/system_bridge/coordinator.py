@@ -57,7 +57,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         for update_callback in self._listeners:
             update_callback()
 
-    async def async_handle_message(self, message: dict):
+    async def async_handle_message(self, message: dict) -> None:
         """Handle messages from the WebSocket."""
         # No need to update anything, as everything is updated in the caller
         self.logger.debug("New message from %s: %s", self.title, message[EVENT_TYPE])
