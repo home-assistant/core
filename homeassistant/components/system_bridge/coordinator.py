@@ -7,10 +7,13 @@ from datetime import timedelta
 import logging
 
 import async_timeout
+from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from systembridgeconnector.const import (
     EVENT_DATA,
     EVENT_MODULE,
+    EVENT_SUBTYPE,
     EVENT_TYPE,
+    SUBTYPE_LISTENER_ALREADY_REGISTERED,
     TYPE_DATA_UPDATE,
     TYPE_ERROR,
 )
@@ -19,6 +22,14 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.battery import Battery
+from systembridgeconnector.models.cpu import Cpu
+from systembridgeconnector.models.disk import Disk
+from systembridgeconnector.models.display import Display
+from systembridgeconnector.models.generic import Generic
+from systembridgeconnector.models.gpu import Gpu
+from systembridgeconnector.models.memory import Memory
+from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +41,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, MODULES
 
 
-class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
+class SystemBridgeCoordinatorData(BaseModel):
+    """System Bridge Coordianator Data."""
+
+    battery: Battery = None
+    cpu: Cpu = None
+    disk: Disk = None
+    display: Display = None
+    gpu: Gpu = None
+    memory: Memory = None
+    system: System = None
+
+
+class SystemBridgeDataUpdateCoordinator(
+    DataUpdateCoordinator[SystemBridgeCoordinatorData]
+):
     """Class to manage fetching System Bridge data from single endpoint."""
 
     def __init__(
@@ -45,7 +70,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self.title = entry.title
         self.unsub: Callable | None = None
 
-        self.systembridge_data: dict = {}
+        self.systembridge_data = SystemBridgeCoordinatorData()
         self.websocket_client = websocket_client
 
         super().__init__(
@@ -57,16 +82,33 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         for update_callback in self._listeners:
             update_callback()
 
-    async def async_handle_message(self, message: dict) -> None:
+    async def async_handle_message(self, message: Generic) -> None:
         """Handle messages from the WebSocket."""
         # No need to update anything, as everything is updated in the caller
         self.logger.debug("New message from %s: %s", self.title, message[EVENT_TYPE])
         if message[EVENT_TYPE] == TYPE_DATA_UPDATE:
             self.logger.debug("Set new data for: %s", message[EVENT_MODULE])
-            self.systembridge_data[message[EVENT_MODULE]] = message[EVENT_DATA]
+            if message[EVENT_MODULE] == "battery":
+                self.systembridge_data.battery = Battery(**message[EVENT_DATA])
+            elif message[EVENT_MODULE] == "cpu":
+                self.systembridge_data.cpu = Cpu(**message[EVENT_DATA])
+            elif message[EVENT_MODULE] == "disk":
+                self.systembridge_data.disk = Disk(**message[EVENT_DATA])
+            elif message[EVENT_MODULE] == "display":
+                self.systembridge_data.display = Display(**message[EVENT_DATA])
+            elif message[EVENT_MODULE] == "gpu":
+                self.systembridge_data.gpu = Gpu(**message[EVENT_DATA])
+            elif message[EVENT_MODULE] == "memory":
+                self.systembridge_data.memory = Memory(**message[EVENT_DATA])
+            elif message[EVENT_MODULE] == "system":
+                self.systembridge_data.system = System(**message[EVENT_DATA])
+
             self.async_set_updated_data(self.systembridge_data)
         elif message[EVENT_TYPE] == TYPE_ERROR:
-            self.logger.warning("Error message from %s: %s", self.title, message)
+            if message[EVENT_SUBTYPE] == SUBTYPE_LISTENER_ALREADY_REGISTERED:
+                self.logger.debug(message)
+            else:
+                self.logger.warning("Error message from %s: %s", self.title, message)
 
     async def _listen_for_events(self) -> None:
         """Listen for events from the WebSocket."""
@@ -152,7 +194,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             EVENT_HOMEASSISTANT_STOP, close_websocket
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> SystemBridgeCoordinatorData:
         """Update System Bridge data from WebSocket."""
         self.logger.debug(
             "_async_update_data - WebSocket Connected: %s",
@@ -163,4 +205,4 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
         self.hass.async_create_task(self._listen_for_events())
 
-        return self.systembridge_data if self.systembridge_data is not None else {}
+        return self.systembridge_data

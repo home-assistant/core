@@ -31,7 +31,7 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
         key="version_available",
         name="New Version Available",
         device_class=BinarySensorDeviceClass.UPDATE,
-        value=lambda data: data["system"].get("version_newer_avaliable"),
+        value=lambda data: data.system.version_newer_avaliable,
     ),
 )
 
@@ -40,7 +40,7 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
         key="battery_is_charging",
         name="Battery Is Charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value=lambda data: data["battery"].get("is_charging"),
+        value=lambda data: data.battery.is_charging,
     ),
 )
 
@@ -58,9 +58,9 @@ async def async_setup_entry(
         )
 
     if (
-        coordinator.data["battery"]
-        and coordinator.data["battery"]["percentage"]
-        and coordinator.data["battery"]["percentage"] > -1
+        coordinator.data.battery
+        and coordinator.data.battery.percentage
+        and coordinator.data.battery.percentage > -1
     ):
         for description in BATTERY_BINARY_SENSOR_TYPES:
             entities.append(

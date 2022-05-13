@@ -88,10 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # Wait for initial data
         async with async_timeout.timeout(30):
-            while (
-                coordinator.data is None
-                or coordinator.data == {}
-                or all(module not in coordinator.data for module in MODULES)
+            while coordinator.data is None or all(
+                getattr(coordinator.data, module) is None for module in MODULES
             ):
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s): %s",
@@ -254,14 +252,14 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
-        self._hostname = coordinator.data["system"]["hostname"]
+        self._hostname = coordinator.data.system.hostname
         self._key = f"{self._hostname}_{key}"
         self._name = f"{self._hostname} {name}"
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
-        self._mac_address = coordinator.data["system"]["mac_address"]
-        self._version = coordinator.data["system"]["version"]
+        self._mac_address = coordinator.data.system.mac_address
+        self._version = coordinator.data.system.version
 
     @property
     def unique_id(self) -> str:
