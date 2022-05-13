@@ -656,7 +656,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.2
+logi_circle==0.2.3
 
 # homeassistant.components.recorder
 lru-dict==1.1.7
@@ -728,7 +728,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.2.3
+nettigo-air-monitor==1.2.4
 
 # homeassistant.components.nexia
 nexia==0.9.13
@@ -942,7 +942,7 @@ pybotvac==0.0.23
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==12.1.1
+pychromecast==12.1.2
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -957,7 +957,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==91
+pydeconz==92
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1308,7 +1308,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.4.0
+pyunifiprotect==3.4.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1408,7 +1408,7 @@ sharkiq==0.0.1
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.0
+simplisafe-python==2022.05.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1529,7 +1529,7 @@ twitchAPI==2.5.2
 uEagle==0.0.2
 
 # homeassistant.components.ukraine_alarm
-ukrainealarm==0.0.1
+uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.2

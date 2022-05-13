@@ -8,7 +8,11 @@ CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 CONF_RTSP_TRANSPORT = "rtsp_transport"
-FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
+CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
+FFMPEG_OPTION_MAP = {
+    CONF_RTSP_TRANSPORT: "rtsp_transport",
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: "use_wallclock_as_timestamps",
+}
 RTSP_TRANSPORTS = {
     "tcp": "TCP",
     "udp": "UDP",
