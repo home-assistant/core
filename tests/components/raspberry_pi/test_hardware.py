@@ -1,6 +1,6 @@
 """Test the Raspberry Pi hardware platform."""
 from homeassistant.components.hassio import DATA_OS_INFO
-from homeassistant.components.raspberrypi.const import DOMAIN
+from homeassistant.components.raspberry_pi.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

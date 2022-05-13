@@ -821,8 +821,8 @@ build.json @home-assistant/supervisor
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
 /tests/components/random/ @fabaff
-/homeassistant/components/raspberrypi/ @home-assistant/core
-/tests/components/raspberrypi/ @home-assistant/core
+/homeassistant/components/raspberry_pi/ @home-assistant/core
+/tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck
 /tests/components/rdw/ @frenck
 /homeassistant/components/recollect_waste/ @bachya

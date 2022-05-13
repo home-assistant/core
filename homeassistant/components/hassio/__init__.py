@@ -205,7 +205,7 @@ MAP_SERVICE_API = {
 }
 
 HARDWARE_INTEGRATIONS = {
-    "rpi": "raspberrypi",
+    "rpi": "raspberry_pi",
 }
 
 

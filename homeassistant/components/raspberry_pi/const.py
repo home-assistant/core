@@ -1,3 +1,3 @@
 """Constants for the Raspberry Pi integration."""
 
-DOMAIN = "raspberrypi"
+DOMAIN = "raspberry_pi"
