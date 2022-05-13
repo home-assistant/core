@@ -30,6 +30,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from .test_common import help_test_setup_manual_entity_from_yaml
+
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -1277,6 +1279,57 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             # Check if the password override worked
             assert calls_username_password_set[0][0] == "someuser"
             assert calls_username_password_set[0][1] == "somepassword"
+
+
+async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
+    """Test set up a manual MQTT item with a platform key."""
+    config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+        assert_entity_exists=False,
+        remove_platform=False,
+    )
+    assert (
+        "Invalid keyword 'platform' found, please remove it from your configuration"
+        in caplog.text
+    )
+
+
+async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
+    """Test set up a manual MQTT item with an invalid config."""
+    config = {"name": "test"}
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+        assert_entity_exists=False,
+        remove_platform=False,
+    )
+    assert (
+        "voluptuous.error.MultipleInvalid: required key not provided @ data['command_topic']"
+        in caplog.text
+    )
+
+
+async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
+    """Test set up a manual MQTT platform without items."""
+    config = None
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+        assert_entity_exists=False,
+        remove_platform=False,
+    )
+    assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
 async def test_setup_mqtt_client_protocol(hass):
