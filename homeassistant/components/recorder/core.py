@@ -41,6 +41,7 @@ from .const import (
     DB_WORKER_PREFIX,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
+    MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -77,6 +78,7 @@ from .tasks import (
     WaitTask,
 )
 from .util import (
+    build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
     is_second_sunday,
@@ -1014,6 +1016,8 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+        elif self.db_url.startswith(MYSQLDB_URL_PREFIX):
+            kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
         else:
             kwargs["echo"] = False
 
