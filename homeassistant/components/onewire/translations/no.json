@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Vert",
+                    "port": "Port",
                     "type": "Tilkoblingstype"
                 },
-                "title": "Sett opp 1-Wire"
+                "title": "Angi serverdetaljer"
             }
         }
     },

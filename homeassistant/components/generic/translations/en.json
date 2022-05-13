@@ -32,6 +32,7 @@
             "user": {
                 "data": {
                     "authentication": "Authentication",
+                    "content_type": "Content Type",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Limit refetch to url change",
                     "password": "Password",
@@ -71,6 +72,7 @@
             "init": {
                 "data": {
                     "authentication": "Authentication",
+                    "content_type": "Content Type",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Limit refetch to url change",
                     "password": "Password",
