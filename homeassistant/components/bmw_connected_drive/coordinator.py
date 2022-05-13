@@ -8,6 +8,7 @@ import async_timeout
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
 from bimmer_connected.vehicle.models import GPSPosition
+from httpx import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
@@ -60,7 +61,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
                         CONF_REFRESH_TOKEN: self.account.refresh_token,
                     },
                 )
-        except OSError as err:
+        except HTTPError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def notify_listeners(self) -> None:
