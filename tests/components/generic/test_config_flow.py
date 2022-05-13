@@ -17,10 +17,12 @@ from homeassistant.components.generic.const import (
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DOMAIN,
 )
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT
+from homeassistant.components.stream.const import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,

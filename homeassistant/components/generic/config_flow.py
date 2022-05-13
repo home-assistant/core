@@ -16,8 +16,12 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
-from homeassistant.components.stream.const import SOURCE_TIMEOUT
+from homeassistant.components.stream.const import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
+    SOURCE_TIMEOUT,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -41,7 +45,6 @@ from .const import (
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     DOMAIN,
     GET_IMAGE_TIMEOUT,
@@ -198,7 +201,7 @@ async def async_test_stream(hass, info) -> dict[str, str]:
         # For RTSP streams, prefer TCP. This code is duplicated from
         # homeassistant.components.stream.__init__.py:create_stream()
         # It may be possible & better to call create_stream() directly.
-        stream_options: dict[str, str] = {}
+        stream_options: dict[str, bool | str] = {}
         if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
             stream_options = {
                 "rtsp_flags": "prefer_tcp",

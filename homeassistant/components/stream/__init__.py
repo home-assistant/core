@@ -41,6 +41,7 @@ from .const import (
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DOMAIN,
     HLS_PROVIDER,
     MAX_SEGMENTS,
@@ -489,5 +490,7 @@ def convert_stream_options(stream_options: dict[str, Any]) -> dict[str, str]:
 
     if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
         pyav_options["rtsp_transport"] = rtsp_transport
+    if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+        pyav_options["use_wallclock_as_timestamps"] = "1"
 
     return pyav_options

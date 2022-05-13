@@ -52,3 +52,4 @@ RTSP_TRANSPORTS = {
     "udp_multicast": "UDP Multicast",
     "http": "HTTP",
 }
+CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
