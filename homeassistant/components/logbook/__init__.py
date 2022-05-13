@@ -449,10 +449,10 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        if entity_ids or context_id or (end_day - start_day).days < 2:
+        if entity_ids or context_id or (end_day - start_day).days <= 1:
             rows = query.all()
         else:
-            rows = query.yield_per(4096)
+            rows = query.yield_per(1024)
         for row in rows:
             context_lookup.setdefault(row.context_id, row)
             if row.context_only:
