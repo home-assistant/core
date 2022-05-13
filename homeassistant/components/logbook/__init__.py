@@ -378,22 +378,55 @@ class LogbookView(HomeAssistantView):
 
 def _humanify(
     rows: Generator[Row, None, None],
+    entities_filter: EntityFilter | Callable[[str], bool] | None,
     registry: er.EntityRegistry,
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ],
     entity_name_cache: EntityNameCache,
-    event_cache: EventCache,
-    context_augmenter: ContextAugmenter,
     format_time: Callable[[Row], Any],
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
+    event_data_cache: dict[str, dict[str, Any]] = {}
+    context_lookup: dict[str | None, Row | None] = {None: None}
+    event_cache = EventCache(event_data_cache)
+    context_augmenter = ContextAugmenter(
+        context_lookup, entity_name_cache, external_events, event_cache
+    )
 
-    # Process events
+    def _keep_row(row: Row, event_type: str) -> bool:
+        """Check if the entity_filter rejects a row."""
+        assert entities_filter is not None
+        if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
+            return entities_filter(entity_id)
+
+        if event_type in external_events:
+            # If the entity_id isn't described, use the domain that describes
+            # the event for filtering.
+            domain: str | None = external_events[event_type][0]
+        else:
+            domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
+
+        return domain is not None and entities_filter(f"{domain}._")
+
+    # Process rows
     for row in rows:
+        context_id = row.context_id
         event_type = row.event_type
+        context_lookup.setdefault(context_id, row)
+        if (
+            row.context_only
+            or event_type == EVENT_CALL_SERVICE
+            or (
+                event_type != EVENT_STATE_CHANGED
+                and entities_filter is not None
+                and not _keep_row(row, event_type)
+            )
+        ):
+            continue
+
         if event_type == EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
@@ -428,7 +461,8 @@ def _humanify(
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
             event = event_cache.get(row)
-            event_data = event.data
+            if not (event_data := event.data):
+                continue
             entry_domain = event_data.get(ATTR_DOMAIN)
             entry_entity_id = event_data.get(ATTR_ENTITY_ID)
             if entry_domain is None and entry_entity_id is not None:
@@ -461,18 +495,16 @@ def _get_events(
         entity_ids and context_id
     ), "can't pass in both entity_ids and context_id"
 
-    entity_name_cache = EntityNameCache(hass)
-    event_data_cache: dict[str, dict[str, Any]] = {}
-    context_lookup: dict[str | None, Row | None] = {None: None}
-    event_cache = EventCache(event_data_cache)
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ] = hass.data.get(DOMAIN, {})
-    context_augmenter = ContextAugmenter(
-        context_lookup, entity_name_cache, external_events, event_cache
-    )
     event_types = (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
     format_time = _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
+    entity_name_cache = EntityNameCache(hass)
+    registry = er.async_get(hass)
+
+    if entity_ids is not None:
+        entities_filter = generate_filter([], entity_ids, [], [])
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
@@ -480,31 +512,17 @@ def _get_events(
         # since we don't want to switch over to buffered if they go
         # over one day by a few hours since the UI makes it so easy to do that.
         if entity_ids or context_id or (end_day - start_day).days <= 1:
-            rows = query.all()
-        else:
-            # Only buffer rows to reduce memory pressure
-            # if we expect the result set is going to be very large.
-            # What is considered very large is going to differ
-            # based on the hardware Home Assistant is running on.
-            #
-            # sqlalchemy suggests that is at least 10k, but for
-            # even and RPi3 that number seems higher in testing
-            # so we don't switch over until we request > 1 day+ of data.
-            #
-            rows = query.yield_per(1024)
-        for row in rows:
-            context_lookup.setdefault(row.context_id, row)
-            if row.context_only:
-                continue
-            event_type = row.event_type
-            if event_type != EVENT_CALL_SERVICE and (
-                event_type == EVENT_STATE_CHANGED
-                or _keep_row(hass, event_type, row, entities_filter)
-            ):
-                yield row
-
-    if entity_ids is not None:
-        entities_filter = generate_filter([], entity_ids, [], [])
+            return query.all()  # type: ignore[no-any-return]
+        # Only buffer rows to reduce memory pressure
+        # if we expect the result set is going to be very large.
+        # What is considered very large is going to differ
+        # based on the hardware Home Assistant is running on.
+        #
+        # sqlalchemy suggests that is at least 10k, but for
+        # even and RPi3 that number seems higher in testing
+        # so we don't switch over until we request > 1 day+ of data.
+        #
+        return query.yield_per(1024)  # type: ignore[no-any-return]
 
     stmt = statement_for_request(
         start_day, end_day, event_types, entity_ids, filters, context_id
@@ -515,40 +533,17 @@ def _get_events(
             stmt.compile(compile_kwargs={"literal_binds": True}),
         )
 
-    registry = er.async_get(hass)
     with session_scope(hass=hass) as session:
         return list(
             _humanify(
                 yield_rows(session.execute(stmt)),
+                entities_filter,
                 registry,
                 external_events,
                 entity_name_cache,
-                event_cache,
-                context_augmenter,
                 format_time,
             )
         )
-
-
-def _keep_row(
-    hass: HomeAssistant,
-    event_type: str,
-    row: Row,
-    entities_filter: EntityFilter | Callable[[str], bool] | None = None,
-) -> bool:
-    if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
-        return entities_filter is None or entities_filter(entity_id)
-
-    if event_type in hass.data[DOMAIN]:
-        # If the entity_id isn't described, use the domain that describes
-        # the event for filtering.
-        domain = hass.data[DOMAIN][event_type][0]
-    else:
-        domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
-
-    return domain is not None and (
-        entities_filter is None or entities_filter(f"{domain}._")
-    )
 
 
 class ContextAugmenter:
