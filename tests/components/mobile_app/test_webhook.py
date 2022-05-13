@@ -268,7 +268,7 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
             "name": "Battery Charging",
             "type": "sensor",
             "unique_id": "battery-charging-id",
-            "default_disabled": True,
+            "disabled": True,
         },
     ):
         reg_resp = await webhook_client.post(
@@ -927,6 +927,7 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
     assert entry.unit_of_measurement is None
     assert entry.entity_category is None
     assert entry.original_icon == "mdi:cellphone"
+    assert entry.disabled_by is None
 
     reg_resp = await webhook_client.post(
         webhook_url,
@@ -942,6 +943,7 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
                 "entity_category": "diagnostic",
                 "icon": "mdi:new-icon",
                 "unit_of_measurement": "%",
+                "disabled": True,
             },
         },
     )
@@ -953,3 +955,21 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
     assert entry.unit_of_measurement == "%"
     assert entry.entity_category == "diagnostic"
     assert entry.original_icon == "mdi:new-icon"
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "New Name",
+                "type": "sensor",
+                "unique_id": "abcd",
+                "disabled": False,
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.disabled_by is None

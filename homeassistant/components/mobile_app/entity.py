@@ -9,8 +9,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_SENSOR_ATTRIBUTES,
-    ATTR_SENSOR_DEFAULT_DISABLED,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_DISABLED,
     ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_STATE,
@@ -64,7 +64,7 @@ class MobileAppEntity(RestoreEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity should be enabled by default."""
-        return not self._config.get(ATTR_SENSOR_DEFAULT_DISABLED)
+        return not self._config.get(ATTR_SENSOR_DISABLED)
 
     @property
     def device_class(self):

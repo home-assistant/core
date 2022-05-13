@@ -355,7 +355,7 @@ async def test_default_disabling_entity(hass, create_registrations, webhook_clie
                 "name": "Battery State",
                 "type": "sensor",
                 "unique_id": "battery_state",
-                "default_disabled": True,
+                "disabled": True,
             },
         },
     )

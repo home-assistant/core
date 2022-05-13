@@ -64,8 +64,8 @@ from .const import (
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
-    ATTR_SENSOR_DEFAULT_DISABLED,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_DISABLED,
     ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
@@ -462,7 +462,7 @@ def _extract_sensor_unique_id(webhook_id, unique_id):
             vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
             vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
-            vol.Optional(ATTR_SENSOR_DEFAULT_DISABLED): bool,
+            vol.Optional(ATTR_SENSOR_DISABLED): bool,
         },
         _validate_state_class_sensor,
     )
@@ -494,6 +494,15 @@ async def webhook_register_sensor(hass, config_entry, data):
             new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
         ) != entry.original_name:
             changes["original_name"] = new_name
+
+        if (
+            should_be_disabled := data.get(ATTR_SENSOR_DISABLED)
+        ) is None or should_be_disabled == entry.disabled:
+            pass
+        elif should_be_disabled:
+            changes["disabled_by"] = er.RegistryEntryDisabler.INTEGRATION
+        else:
+            changes["disabled_by"] = None
 
         for ent_reg_key, data_key in (
             ("device_class", ATTR_SENSOR_DEVICE_CLASS),
