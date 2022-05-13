@@ -50,6 +50,8 @@ build.json @home-assistant/supervisor
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airzone/ @Noltari
 /tests/components/airzone/ @Noltari
+/homeassistant/components/aladdin_connect/ @mkmer
+/tests/components/aladdin_connect/ @mkmer
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core
