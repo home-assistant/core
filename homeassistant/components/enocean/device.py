@@ -15,6 +15,7 @@ class EnOceanEntity(Entity):
         """Initialize the device."""
         self.dev_id = dev_id
         self.dev_name = dev_name
+        self._unique_id = f"{combine_hex(self.dev_id)}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -38,3 +39,8 @@ class EnOceanEntity(Entity):
 
         packet = Packet(packet_type, data=data, optional=optional)
         self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_SEND_MESSAGE, packet)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id base on the device address."""
+        return self._unique_id
