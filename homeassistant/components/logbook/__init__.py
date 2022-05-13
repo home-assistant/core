@@ -37,13 +37,10 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
     Context,
     Event,
     HomeAssistant,
@@ -70,7 +67,6 @@ from .queries import statement_for_request
 
 _LOGGER = logging.getLogger(__name__)
 
-
 FRIENDLY_NAME_JSON_EXTRACT = re.compile('"friendly_name": ?"([^"]+)"')
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
@@ -79,19 +75,28 @@ ATTR_MESSAGE = "message"
 
 DOMAIN = "logbook"
 
-HA_DOMAIN_ENTITY_ID = f"{HA_DOMAIN}._"
-
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
-HOMEASSISTANT_EVENTS = {EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP}
+CONTEXT_USER_ID = "context_user_id"
+CONTEXT_ENTITY_ID = "context_entity_id"
+CONTEXT_ENTITY_ID_NAME = "context_entity_id_name"
+CONTEXT_EVENT_TYPE = "context_event_type"
+CONTEXT_DOMAIN = "context_domain"
+CONTEXT_SERVICE = "context_service"
+CONTEXT_NAME = "context_name"
+CONTEXT_MESSAGE = "context_message"
 
-ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = (
-    EVENT_LOGBOOK_ENTRY,
-    EVENT_CALL_SERVICE,
-    *HOMEASSISTANT_EVENTS,
-)
+LOGBOOK_ENTRY_DOMAIN = "domain"
+LOGBOOK_ENTRY_ENTITY_ID = "entity_id"
+LOGBOOK_ENTRY_ICON = "icon"
+LOGBOOK_ENTRY_MESSAGE = "message"
+LOGBOOK_ENTRY_NAME = "name"
+LOGBOOK_ENTRY_STATE = "state"
+LOGBOOK_ENTRY_WHEN = "when"
+
+ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
 
 SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
@@ -133,12 +138,12 @@ def async_log_entry(
     context: Context | None = None,
 ) -> None:
     """Add an entry to the logbook."""
-    data = {ATTR_NAME: name, ATTR_MESSAGE: message}
+    data = {LOGBOOK_ENTRY_NAME: name, LOGBOOK_ENTRY_MESSAGE: message}
 
     if domain is not None:
-        data[ATTR_DOMAIN] = domain
+        data[LOGBOOK_ENTRY_DOMAIN] = domain
     if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
+        data[LOGBOOK_ENTRY_ENTITY_ID] = entity_id
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
 
 
@@ -162,7 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         message.hass = hass
         message = message.async_render(parse_result=False)
-        async_log_entry(hass, name, message, domain, entity_id)
+        async_log_entry(hass, name, message, domain, entity_id, service.context)
 
     frontend.async_register_built_in_panel(
         hass, "logbook", "logbook", "hass:format-list-bulleted-type"
@@ -375,13 +380,13 @@ def _humanify(
                 continue
 
             data = {
-                "when": format_time(row),
-                "name": entity_name_cache.get(entity_id, row),
-                "state": row.state,
-                "entity_id": entity_id,
+                LOGBOOK_ENTRY_WHEN: format_time(row),
+                LOGBOOK_ENTRY_NAME: entity_name_cache.get(entity_id, row),
+                LOGBOOK_ENTRY_STATE: row.state,
+                LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
-                data["icon"] = icon
+                data[LOGBOOK_ENTRY_ICON] = icon
 
             context_augmenter.augment(data, entity_id, row)
             yield data
@@ -389,25 +394,10 @@ def _humanify(
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]
             data = describe_event(event_cache.get(row))
-            data["when"] = format_time(row)
-            data["domain"] = domain
+            data[LOGBOOK_ENTRY_WHEN] = format_time(row)
+            data[LOGBOOK_ENTRY_DOMAIN] = domain
             context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
             yield data
-
-        elif event_type == EVENT_HOMEASSISTANT_START:
-            yield {
-                "when": format_time(row),
-                "name": "Home Assistant",
-                "message": "started",
-                "domain": HA_DOMAIN,
-            }
-        elif event_type == EVENT_HOMEASSISTANT_STOP:
-            yield {
-                "when": format_time(row),
-                "name": "Home Assistant",
-                "message": "stopped",
-                "domain": HA_DOMAIN,
-            }
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
             event = event_cache.get(row)
@@ -419,11 +409,11 @@ def _humanify(
                     domain = split_entity_id(str(entity_id))[0]
 
             data = {
-                "when": format_time(row),
-                "name": event_data.get(ATTR_NAME),
-                "message": event_data.get(ATTR_MESSAGE),
-                "domain": domain,
-                "entity_id": entity_id,
+                LOGBOOK_ENTRY_WHEN: format_time(row),
+                LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
+                LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
+                LOGBOOK_ENTRY_DOMAIN: domain,
+                LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             context_augmenter.augment(data, entity_id, row)
             yield data
@@ -505,9 +495,6 @@ def _keep_row(
     row: Row,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
 ) -> bool:
-    if event_type in HOMEASSISTANT_EVENTS:
-        return entities_filter is None or entities_filter(HA_DOMAIN_ENTITY_ID)
-
     if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
         return entities_filter is None or entities_filter(entity_id)
 
@@ -544,7 +531,7 @@ class ContextAugmenter:
     def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
-            data["context_user_id"] = context_user_id
+            data[CONTEXT_USER_ID] = context_user_id
 
         if not (context_row := self.context_lookup.get(row.context_id)):
             return
@@ -567,43 +554,40 @@ class ContextAugmenter:
 
         # State change
         if context_entity_id := context_row.entity_id:
-            data["context_entity_id"] = context_entity_id
-            data["context_entity_id_name"] = self.entity_name_cache.get(
+            data[CONTEXT_ENTITY_ID] = context_entity_id
+            data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                 context_entity_id, context_row
             )
-            data["context_event_type"] = event_type
+            data[CONTEXT_EVENT_TYPE] = event_type
             return
 
         # Call service
         if event_type == EVENT_CALL_SERVICE:
             event = self.event_cache.get(context_row)
             event_data = event.data
-            data["context_domain"] = event_data.get(ATTR_DOMAIN)
-            data["context_service"] = event_data.get(ATTR_SERVICE)
-            data["context_event_type"] = event_type
+            data[CONTEXT_DOMAIN] = event_data.get(ATTR_DOMAIN)
+            data[CONTEXT_SERVICE] = event_data.get(ATTR_SERVICE)
+            data[CONTEXT_EVENT_TYPE] = event_type
             return
 
-        if not entity_id:
+        if event_type not in self.external_events:
             return
 
-        attr_entity_id = _row_event_data_extract(context_row, ENTITY_ID_JSON_EXTRACT)
-        if attr_entity_id is None or (
-            event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
-        ):
+        domain, describe_event = self.external_events[event_type]
+        data[CONTEXT_EVENT_TYPE] = event_type
+        data[CONTEXT_DOMAIN] = domain
+        event = self.event_cache.get(context_row)
+        described = describe_event(event)
+        if name := described.get(ATTR_NAME):
+            data[CONTEXT_NAME] = name
+        if message := described.get(ATTR_MESSAGE):
+            data[CONTEXT_MESSAGE] = message
+        if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
             return
-
-        data["context_entity_id"] = attr_entity_id
-        data["context_entity_id_name"] = self.entity_name_cache.get(
+        data[CONTEXT_ENTITY_ID] = attr_entity_id
+        data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
             attr_entity_id, context_row
         )
-        data["context_event_type"] = event_type
-
-        if event_type in self.external_events:
-            domain, describe_event = self.external_events[event_type]
-            data["context_domain"] = domain
-            event = self.event_cache.get(context_row)
-            if name := describe_event(event).get(ATTR_NAME):
-                data["context_name"] = name
 
 
 def _is_sensor_continuous(
@@ -627,11 +611,14 @@ def _is_sensor_continuous(
 
 def _rows_match(row: Row, other_row: Row) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    return bool(
-        row.event_type == other_row.event_type
-        and row.context_id == other_row.context_id
-        and row.time_fired == other_row.time_fired
-    )
+    if (
+        (state_id := row.state_id) is not None
+        and state_id == other_row.state_id
+        or (event_id := row.event_id) is not None
+        and event_id == other_row.event_id
+    ):
+        return True
+    return False
 
 
 def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:

@@ -1,5 +1,6 @@
 """The tests for the logbook component."""
 # pylint: disable=protected-access,invalid-name
+import asyncio
 import collections
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -208,8 +209,10 @@ async def test_filter_sensor(hass_: ha.HomeAssistant, hass_client):
     _assert_entry(entries[2], name="ble", entity_id=entity_id4, state="10")
 
 
-def test_home_assistant_start_stop_not_grouped(hass_):
+async def test_home_assistant_start_stop_not_grouped(hass_):
     """Test if HA start and stop events are no longer grouped."""
+    await async_setup_component(hass_, "homeassistant", {})
+    await hass_.async_block_till_done()
     entries = mock_humanify(
         hass_,
         (
@@ -223,8 +226,10 @@ def test_home_assistant_start_stop_not_grouped(hass_):
     assert_entry(entries[1], name="Home Assistant", message="started", domain=ha.DOMAIN)
 
 
-def test_home_assistant_start(hass_):
+async def test_home_assistant_start(hass_):
     """Test if HA start is not filtered or converted into a restart."""
+    await async_setup_component(hass_, "homeassistant", {})
+    await hass_.async_block_till_done()
     entity_id = "switch.bla"
     pointA = dt_util.utcnow()
 
@@ -604,9 +609,12 @@ async def test_logbook_view_end_time_entity(hass, hass_client, recorder_mock):
 
 async def test_logbook_entity_filter_with_automations(hass, hass_client, recorder_mock):
     """Test the logbook view with end_time and entity with automations and scripts."""
-    await async_setup_component(hass, "logbook", {})
-    await async_setup_component(hass, "automation", {})
-    await async_setup_component(hass, "script", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
 
     await async_recorder_block_till_done(hass)
 
@@ -749,7 +757,12 @@ async def test_filter_continuous_sensor_values(
 
 async def test_exclude_new_entities(hass, hass_client, recorder_mock, set_utc):
     """Test if events are excluded on first update."""
-    await async_setup_component(hass, "logbook", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
     await async_recorder_block_till_done(hass)
 
     entity_id = "climate.bla"
@@ -781,7 +794,12 @@ async def test_exclude_new_entities(hass, hass_client, recorder_mock, set_utc):
 
 async def test_exclude_removed_entities(hass, hass_client, recorder_mock, set_utc):
     """Test if events are excluded on last update."""
-    await async_setup_component(hass, "logbook", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
     await async_recorder_block_till_done(hass)
 
     entity_id = "climate.bla"
@@ -820,7 +838,12 @@ async def test_exclude_removed_entities(hass, hass_client, recorder_mock, set_ut
 
 async def test_exclude_attribute_changes(hass, hass_client, recorder_mock, set_utc):
     """Test if events of attribute changes are filtered."""
-    await async_setup_component(hass, "logbook", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -855,9 +878,12 @@ async def test_exclude_attribute_changes(hass, hass_client, recorder_mock, set_u
 
 async def test_logbook_entity_context_id(hass, recorder_mock, hass_client):
     """Test the logbook view with end_time and entity with automations and scripts."""
-    await async_setup_component(hass, "logbook", {})
-    await async_setup_component(hass, "automation", {})
-    await async_setup_component(hass, "script", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
 
     await async_recorder_block_till_done(hass)
 
@@ -1004,9 +1030,12 @@ async def test_logbook_context_id_automation_script_started_manually(
     hass, recorder_mock, hass_client
 ):
     """Test the logbook populates context_ids for scripts and automations started manually."""
-    await async_setup_component(hass, "logbook", {})
-    await async_setup_component(hass, "automation", {})
-    await async_setup_component(hass, "script", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
 
     await async_recorder_block_till_done(hass)
 
@@ -1032,6 +1061,19 @@ async def test_logbook_context_id_automation_script_started_manually(
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    script_2_context = ha.Context(
+        id="1234",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script"},
+        context=script_2_context,
+    )
+    hass.states.async_set("switch.new", STATE_ON, context=script_2_context)
+    hass.states.async_set("switch.new", STATE_OFF, context=script_2_context)
+
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
@@ -1061,12 +1103,28 @@ async def test_logbook_context_id_automation_script_started_manually(
 
     assert json_dict[2]["domain"] == "homeassistant"
 
+    assert json_dict[3]["entity_id"] is None
+    assert json_dict[3]["name"] == "Mock script"
+    assert "context_entity_id" not in json_dict[1]
+    assert json_dict[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert json_dict[3]["context_id"] == "1234"
+
+    assert json_dict[4]["entity_id"] == "switch.new"
+    assert json_dict[4]["state"] == "off"
+    assert "context_entity_id" not in json_dict[1]
+    assert json_dict[4]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert json_dict[4]["context_event_type"] == "script_started"
+    assert json_dict[4]["context_domain"] == "script"
+
 
 async def test_logbook_entity_context_parent_id(hass, hass_client, recorder_mock):
     """Test the logbook view links events via context parent_id."""
-    await async_setup_component(hass, "logbook", {})
-    await async_setup_component(hass, "automation", {})
-    await async_setup_component(hass, "script", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
 
     await async_recorder_block_till_done(hass)
 
@@ -1240,7 +1298,13 @@ async def test_logbook_entity_context_parent_id(hass, hass_client, recorder_mock
 
 async def test_logbook_context_from_template(hass, hass_client, recorder_mock):
     """Test the logbook view with end_time and entity with automations and scripts."""
-    await async_setup_component(hass, "logbook", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+
     assert await async_setup_component(
         hass,
         "switch",
@@ -1637,7 +1701,13 @@ async def test_logbook_invalid_entity(hass, hass_client, recorder_mock):
 
 async def test_icon_and_state(hass, hass_client, recorder_mock):
     """Test to ensure state and custom icons are returned."""
-    await async_setup_component(hass, "logbook", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1705,6 +1775,7 @@ async def test_exclude_events_domain(hass, hass_client, recorder_mock):
     entity_id = "switch.bla"
     entity_id2 = "sensor.blu"
 
+    await async_setup_component(hass, "homeassistant", {})
     config = logbook.CONFIG_SCHEMA(
         {
             ha.DOMAIN: {},
@@ -1750,7 +1821,10 @@ async def test_exclude_events_domain_glob(hass, hass_client, recorder_mock):
             },
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1789,7 +1863,10 @@ async def test_include_events_entity(hass, hass_client, recorder_mock):
             },
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1821,7 +1898,10 @@ async def test_exclude_events_entity(hass, hass_client, recorder_mock):
             logbook.DOMAIN: {CONF_EXCLUDE: {CONF_ENTITIES: [entity_id]}},
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1854,7 +1934,10 @@ async def test_include_events_domain(hass, hass_client, recorder_mock):
             },
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1897,7 +1980,10 @@ async def test_include_events_domain_glob(hass, hass_client, recorder_mock):
             },
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1948,7 +2034,10 @@ async def test_include_exclude_events(hass, hass_client, recorder_mock):
             },
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2004,7 +2093,10 @@ async def test_include_exclude_events_with_glob_filters(
             },
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2047,7 +2139,10 @@ async def test_empty_config(hass, hass_client, recorder_mock):
             logbook.DOMAIN: {},
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await asyncio.gather(
+        async_setup_component(hass, "homeassistant", {}),
+        async_setup_component(hass, "logbook", config),
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2141,7 +2236,12 @@ def _assert_entry(
 async def test_get_events(hass, hass_ws_client, recorder_mock):
     """Test logbook get_events."""
     now = dt_util.utcnow()
-    await async_setup_component(hass, "logbook", {})
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
