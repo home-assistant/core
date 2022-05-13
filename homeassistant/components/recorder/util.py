@@ -346,8 +346,10 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    from MySQLdb.constants import FIELD_TYPE  # pylint: disable=import-outside-toplevel
-    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel
+    from MySQLdb.constants import (  # pylint: disable=import-outside-toplevel,import-error
+        FIELD_TYPE,
+    )
+    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel,import-error
         conversions,
     )
 
