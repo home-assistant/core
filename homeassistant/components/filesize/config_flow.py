@@ -20,7 +20,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_FILE_PATH): str})
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_path(hass: HomeAssistant, path: str) -> pathlib.Path:
+def validate_path(hass: HomeAssistant, path: str) -> str:
     """Validate path."""
     get_path = pathlib.Path(path)
     exist = get_path.exists()
@@ -33,7 +33,9 @@ def validate_path(hass: HomeAssistant, path: str) -> pathlib.Path:
         _LOGGER.error("Filepath %s is not allowed", path)
         raise NotAllowedError
 
-    return get_path
+    full_path = get_path.absolute()
+
+    return str(full_path)
 
 
 class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,13 +51,12 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                get_path = validate_path(self.hass, user_input[CONF_FILE_PATH])
+                fullpath = validate_path(self.hass, user_input[CONF_FILE_PATH])
             except NotValidError:
                 errors["base"] = "not_valid"
             except NotAllowedError:
                 errors["base"] = "not_allowed"
             else:
-                fullpath = str(get_path.absolute())
                 await self.async_set_unique_id(fullpath)
                 self._abort_if_unique_id_configured()
 
