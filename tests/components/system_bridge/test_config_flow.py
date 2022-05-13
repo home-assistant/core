@@ -258,6 +258,31 @@ async def test_form_uuid_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with patch("systembridgeconnector.websocket_client.WebSocketClient.connect"), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.get_data"
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on authorization error."""
     result = await hass.config_entries.flow.async_init(
