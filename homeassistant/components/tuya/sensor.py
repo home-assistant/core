@@ -87,6 +87,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "dgnbj": (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
+            name="Gas",
             icon="mdi:gas-cylinder",
             device_class=SensorStateClass.MEASUREMENT,
         ),
@@ -110,12 +111,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
             name="Carbon Monoxide",
+            icon="mdi:molecule-co",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
             name="Carbon Dioxide",
+            icon="mdi:molecule-co2",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -132,6 +135,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_VALUE,
             name="Luminosity",
+            icon="mdi:brightness-6",
             device_class=SensorDeviceClass.ILLUMINANCE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
