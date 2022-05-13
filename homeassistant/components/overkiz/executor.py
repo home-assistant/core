@@ -68,17 +68,18 @@ class OverkizExecutor:
 
     async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
+        parameters = [arg for arg in args if arg is not None]
         # Set the execution duration to 0 seconds for RTS devices on supported commands
         # Default execution duration is 30 seconds and will block consecutive commands
         if (
             self.device.protocol == Protocol.RTS
             and command_name not in COMMANDS_WITHOUT_DELAY
         ):
-            args = args + (0,)
+            parameters.append(0)
 
         exec_id = await self.coordinator.client.execute_command(
             self.device.device_url,
-            Command(command_name, list(args)),
+            Command(command_name, parameters),
             "Home Assistant",
         )
 
