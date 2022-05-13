@@ -51,8 +51,11 @@ GLOB_TO_SQL_CHARS = {
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_ORDER),
+            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -67,9 +70,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf
     )
 
-    use_include_order = conf.get(CONF_ORDER)
-
-    hass.http.register_view(HistoryPeriodView(filters, use_include_order))
+    hass.http.register_view(HistoryPeriodView(filters))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_list_statistic_ids)
@@ -282,10 +283,9 @@ class HistoryPeriodView(HomeAssistantView):
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
 
-    def __init__(self, filters: Filters | None, use_include_order: bool) -> None:
+    def __init__(self, filters: Filters | None) -> None:
         """Initialize the history period view."""
         self.filters = filters
-        self.use_include_order = use_include_order
 
     async def get(
         self, request: web.Request, datetime: str | None = None
@@ -377,25 +377,11 @@ class HistoryPeriodView(HomeAssistantView):
                 no_attributes,
             )
 
-        result = list(states.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
-            _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
+            _LOGGER.debug("Extracted %d states in %fs", sum(map(len, states)), elapsed)
 
-        # Optionally reorder the result to respect the ordering given
-        # by any entities explicitly included in the configuration.
-        if not minimal_response and self.filters and self.use_include_order:
-            sorted_result = []
-            for order_entity in self.filters.included_entities:
-                for state_list in result:
-                    if state_list[0].entity_id == order_entity:  # type: ignore[union-attr]
-                        sorted_result.append(state_list)
-                        result.remove(state_list)
-                        break
-            sorted_result.extend(result)
-            result = sorted_result
-
-        return self.json(result)
+        return self.json(list(states.values()))
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
