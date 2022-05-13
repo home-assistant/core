@@ -15,6 +15,4 @@ class CanaryData(TypedDict):
     entries: dict[str, list[Entry]]
 
 
-SensorTypeItem = tuple[
-    SensorType, Optional[str], Optional[str], Optional[str], list[str], str
-]
+SensorTypeItem = tuple[SensorType, Optional[str], Optional[str], list[str], str]
