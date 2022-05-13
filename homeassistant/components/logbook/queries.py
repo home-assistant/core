@@ -76,6 +76,7 @@ def statement_for_request(
     event_types: tuple[str, ...],
     entity_ids: list[str] | None = None,
     filters: Filters | None = None,
+    exclude_entities: Iterable[str] | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate the logbook statement for a logbook request."""
@@ -84,7 +85,9 @@ def statement_for_request(
     # limited by the context_id and the yaml configured filter
     if not entity_ids:
         entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
-        return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
+        return _all_stmt(
+            start_day, end_day, event_types, entity_filter, exclude_entities, context_id
+        )
 
     # Multiple entities: logbook sends everything for the timeframe for the entities
     #
@@ -233,6 +236,7 @@ def _all_stmt(
     end_day: dt,
     event_types: tuple[str, ...],
     entity_filter: Any | None = None,
+    exclude_entities: Iterable[str] | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -248,11 +252,25 @@ def _all_stmt(
             _legacy_select_events_context_id(start_day, end_day, context_id),
         )
     elif entity_filter is not None:
-        stmt += lambda s: s.union_all(
-            _select_states(start_day, end_day).where(entity_filter)
-        )
+        if exclude_entities:
+            stmt += lambda s: s.union_all(
+                _select_states(start_day, end_day)
+                .where(entity_filter)
+                .where(States.entity_id.not_in(exclude_entities))
+            )
+        else:
+            stmt += lambda s: s.union_all(
+                _select_states(start_day, end_day).where(entity_filter)
+            )
     else:
-        stmt += lambda s: s.union_all(_select_states(start_day, end_day))
+        if exclude_entities:
+            stmt += lambda s: s.union_all(
+                _select_states(start_day, end_day).where(
+                    States.entity_id.not_in(exclude_entities)
+                )
+            )
+        else:
+            stmt += lambda s: s.union_all(_select_states(start_day, end_day))
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 
