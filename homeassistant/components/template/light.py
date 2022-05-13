@@ -396,14 +396,18 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
 
-            await self._temperature_script.async_run(
-                common_params, context=self._context
+            await self.async_run_script(
+                self._temperature_script,
+                run_variables=common_params,
+                context=self._context,
             )
         elif ATTR_WHITE_VALUE in kwargs and self._white_value_script:
             common_params["white_value"] = kwargs[ATTR_WHITE_VALUE]
 
-            await self._white_value_script.async_run(
-                common_params, context=self._context
+            await self.async_run_script(
+                self._white_value_script,
+                run_variables=common_params,
+                context=self._context,
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
@@ -418,21 +422,26 @@ class LightTemplate(TemplateEntity, LightEntity):
 
             common_params["effect"] = effect
 
-            await self._effect_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._effect_script, run_variables=common_params, context=self._context
+            )
         elif ATTR_HS_COLOR in kwargs and self._color_script:
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
-            await self._color_script.async_run(
-                common_params,
-                context=self._context,
+            await self.async_run_script(
+                self._color_script, run_variables=common_params, context=self._context
             )
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
-            await self._level_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._level_script, run_variables=common_params, context=self._context
+            )
         else:
-            await self._on_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._on_script, run_variables=common_params, context=self._context
+            )
 
         if optimistic_set:
             self.async_write_ha_state()
@@ -440,11 +449,13 @@ class LightTemplate(TemplateEntity, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self._off_script.async_run(
-                {"transition": kwargs[ATTR_TRANSITION]}, context=self._context
+            await self.async_run_script(
+                self._off_script,
+                run_variables={"transition": kwargs[ATTR_TRANSITION]},
+                context=self._context,
             )
         else:
-            await self._off_script.async_run(context=self._context)
+            await self.async_run_script(self._off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
