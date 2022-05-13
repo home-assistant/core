@@ -27,7 +27,6 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -58,28 +57,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@deprecated_function("homeassistant.components.recorder.history.get_significant_states")
-def get_significant_states(hass, *args, **kwargs):
-    """Wrap get_significant_states_with_session with an sql session."""
-    return history.get_significant_states(hass, *args, **kwargs)
-
-
-@deprecated_function(
-    "homeassistant.components.recorder.history.state_changes_during_period"
-)
-def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
-    """Return states changes during UTC period start_time - end_time."""
-    return history.state_changes_during_period(
-        hass, start_time, end_time=None, entity_id=None
-    )
-
-
-@deprecated_function("homeassistant.components.recorder.history.get_last_state_changes")
-def get_last_state_changes(hass, number_of_states, entity_id):
-    """Return the last number_of_states."""
-    return history.get_last_state_changes(hass, number_of_states, entity_id)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
@@ -97,11 +74,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, ws_get_history_during_period)
 
     return True
-
-
-@deprecated_class("homeassistant.components.recorder.models.LazyState")
-class LazyState(history_models.LazyState):
-    """A lazy version of core State."""
 
 
 @websocket_api.websocket_command(
