@@ -4,8 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.http import CONF_BASE_URL, DOMAIN as DOMAIN_HTTP
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.components import application_credentials
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -46,13 +45,12 @@ async def test_full_flow(
     assert await setup.async_setup_component(
         hass,
         DOMAIN,
-        {
-            DOMAIN: {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-            },
-            DOMAIN_HTTP: {CONF_BASE_URL: "https://example.com"},
-        },
+        {},
+    )
+    await application_credentials.async_import_client_credential(
+        hass,
+        DOMAIN,
+        application_credentials.ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -114,14 +112,13 @@ async def test_abort_if_authorization_timeout(hass, current_request_with_host):
     assert await setup.async_setup_component(
         hass,
         DOMAIN,
-        {
-            DOMAIN: {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-            }
-        },
+        {},
     )
-
+    await application_credentials.async_import_client_credential(
+        hass,
+        DOMAIN,
+        application_credentials.ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
     with patch(
         "homeassistant.components.yolink.config_entry_oauth2_flow."
         "LocalOAuth2Implementation.async_generate_authorize_url",
@@ -142,12 +139,13 @@ async def test_reauthentication(
     await setup.async_setup_component(
         hass,
         DOMAIN,
-        {
-            DOMAIN: {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-            }
-        },
+        {},
+    )
+
+    await application_credentials.async_import_client_credential(
+        hass,
+        DOMAIN,
+        application_credentials.ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     old_entry = MockConfigEntry(

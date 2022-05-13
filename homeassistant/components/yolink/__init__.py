@@ -7,13 +7,11 @@ import logging
 from yolink.client import YoLinkClient
 from yolink.mqtt_client import MqttClient
 
-from homeassistant.components import application_credentials as app_credentials
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
-from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import ATTR_CLIENT, ATTR_COORDINATOR, ATTR_MQTT_CLIENT, DOMAIN
@@ -26,25 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the yolink component."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-    # import application credential from yml file
-    await app_credentials.async_import_client_credential(
-        hass,
-        DOMAIN,
-        app_credentials.ClientCredential(
-            config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
-        ),
-    )
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up yolink from a config entry."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
