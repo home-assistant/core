@@ -212,6 +212,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
 
     if unload_ok:
+        multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
+        multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     if len(hass.data[DOMAIN]) == 2:
