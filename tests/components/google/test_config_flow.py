@@ -330,6 +330,21 @@ async def test_missing_configuration(
     assert result.get("reason") == "missing_configuration"
 
 
+@pytest.mark.parametrize("google_config", [None])
+async def test_missing_configuration_yaml_empty(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+) -> None:
+    """Test setup with an empty yaml configuration and no credentials."""
+    assert await component_setup()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "missing_configuration"
+
+
 async def test_wrong_configuration(
     hass: HomeAssistant,
 ) -> None:
