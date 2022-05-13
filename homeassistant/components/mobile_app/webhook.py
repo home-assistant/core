@@ -439,6 +439,11 @@ def _gen_unique_id(webhook_id, sensor_unique_id):
     return f"{webhook_id}_{sensor_unique_id}"
 
 
+def _extract_sensor_unique_id(webhook_id, unique_id):
+    """Return a unique sensor ID."""
+    return unique_id[len(webhook_id) + 1 :]
+
+
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
     vol.All(
@@ -644,6 +649,21 @@ async def webhook_get_config(hass, config_entry, data):
 
     with suppress(hass.components.cloud.CloudNotAvailable):
         resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    entities = {}
+    for entry in er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry.entry_id
+    ):
+        if entry.domain in ("binary_sensor", "sensor"):
+            unique_id = _extract_sensor_unique_id(webhook_id, entry.unique_id)
+        else:
+            unique_id = entry.unique_id
+
+        entities[unique_id] = {"disabled": entry.disabled}
+
+    resp["entities"] = entities
 
     return webhook_response(resp, registration=config_entry.data)
 
