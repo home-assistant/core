@@ -127,6 +127,28 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
+def icon_for_air_quality_level(air_quality_level: float) -> str:
+    """Return the icon for air_quality level."""
+    if air_quality_level <= 0.4:
+        return "mdi:hazard-lights"
+    if air_quality_level <= 0.59:
+        return "mdi:smoke"
+    return "mdi:weather-windy"
+
+
+def icon_for_wifi_level(wifi_level: float) -> str:
+    """Return the icon for wifi signal strength."""
+    if wifi_level >= -50:
+        return "mdi:wifi-strength-4"
+    if wifi_level >= -67:
+        return "mdi:wifi-strength-3"
+    if wifi_level >= -70:
+        return "mdi:wifi-strength-2"
+    if wifi_level >= -80:
+        return "mdi:wifi-strength-1"
+    return "mdi:wifi-strength-outline"
+
+
 class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity):
     """Representation of a Canary sensor."""
 
@@ -157,7 +179,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._attr_native_unit_of_measurement = sensor_type[1]
         self._icon = None if sensor_type[2] is None else f"mdi:{sensor_type[2]}"
         self._state: str | int | float | datetime | None = None
-        _LOGGER.info("CanarySensor: %s created", self._attr_name)
+        _LOGGER.info("CanarySensor: %s created", self.name)
 
     @property
     def device_class(self) -> str | None:
@@ -175,6 +197,11 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         return None
 
     @property
+    def name(self) -> str:
+        """Name of sensor."""
+        return str(self._attr_name)
+
+    @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         self._state = str(self._state)
@@ -184,32 +211,12 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
             )
         if self._canary_type == SensorType.WIFI and self._state != "None":
             self._state = float(self._state)
-            return self.icon_for_wifi_level(wifi_level=self._state)
+            return icon_for_wifi_level(wifi_level=self._state)
         if self._canary_type == SensorType.AIR_QUALITY and self._state != "None":
             self._state = float(str(self._state))
-            return self.icon_for_air_quality_level(air_quality_level=self._state)
+            return icon_for_air_quality_level(air_quality_level=self._state)
 
         return self._icon
-
-    def icon_for_air_quality_level(self, air_quality_level: float) -> str:
-        """Return the icon for air_quality level."""
-        if air_quality_level <= 0.4:
-            return "mdi:hazard-lights"
-        if air_quality_level <= 0.59:
-            return "mdi:smoke"
-        return "mdi:weather-windy"
-
-    def icon_for_wifi_level(self, wifi_level: float) -> str:
-        """Return the icon for wifi signal strength."""
-        if wifi_level >= -50:
-            return "mdi:wifi-strength-4"
-        if wifi_level >= -67:
-            return "mdi:wifi-strength-3"
-        if wifi_level >= -70:
-            return "mdi:wifi-strength-2"
-        if wifi_level >= -80:
-            return "mdi:wifi-strength-1"
-        return "mdi:wifi-strength-outline"
 
     # @property
     def reading(self) -> None:

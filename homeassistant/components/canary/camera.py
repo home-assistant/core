@@ -122,6 +122,11 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self._expires_at = dt_util.utcnow() - FORCE_CAMERA_REFRESH_INTERVAL
 
     @property
+    def name(self) -> str:
+        """Name of sensor."""
+        return str(self._attr_name)
+
+    @property
     def location(self) -> Location:
         """Return information about the location."""
         return self.coordinator.data[DATA_TYPE_LOCATIONS][self._location_id]
@@ -163,7 +168,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         if self._image is None:
             # if we still don't have an image, grab the live view
-            _LOGGER.debug("Grabbing a live view image from %s", self._attr_name)
+            _LOGGER.debug("Grabbing a live view image from %s", self.name)
             await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
             if self._live_stream_session is None:
@@ -185,17 +190,17 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
                 if image:
                     self._image = image
-                    _LOGGER.debug("Grabbed a live view image from %s", self._attr_name)
+                    _LOGGER.debug("Grabbed a live view image from %s", self.name)
                 await self.hass.async_add_executor_job(
                     self._live_stream_session.stop_session
                 )
-                _LOGGER.debug("Stopped live session from %s", self._attr_name)
+                _LOGGER.debug("Stopped live session from %s", self.name)
 
         return self._image
 
     async def _get_entry_image(self, url: str) -> None:
         # grab the latest entry image
-        _LOGGER.debug("Getting the latest entry image for %s", self._attr_name)
+        _LOGGER.debug("Getting the latest entry image for %s", self.name)
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(url, timeout=10)
@@ -206,13 +211,11 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             )
             utcnow = dt_util.utcnow()
             self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
-            _LOGGER.debug("Got the latest entry image for %s", self._attr_name)
+            _LOGGER.debug("Got the latest entry image for %s", self.name)
         except httpx.TimeoutException:
-            _LOGGER.error("Timeout getting camera image from %s", self._attr_name)
+            _LOGGER.error("Timeout getting camera image from %s", self.name)
         except (httpx.RequestError, httpx.HTTPStatusError) as err:
-            _LOGGER.error(
-                "Error getting new camera image from %s: %s", self._attr_name, err
-            )
+            _LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
 
     async def _check_for_new_image(self) -> None:
         await self._set_last_event()
@@ -248,7 +251,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self._image = None
         self._image_url = None
         self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
-        _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
+        _LOGGER.debug("Forcing a new camera image from %s", self.name)
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
@@ -283,9 +286,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         if not live_stream_url:
             return None
 
-        _LOGGER.debug(
-            "Starting connection to %s at %s", self._attr_name, live_stream_url
-        )
+        _LOGGER.debug("Starting connection to %s at %s", self.name, live_stream_url)
 
         ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
         stream = CameraMjpeg(self._ffmpeg.binary)
@@ -301,7 +302,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             )
         finally:
             _LOGGER.debug(
-                "Stopping the live stream on %s to %s", self._attr_name, live_stream_url
+                "Stopping the live stream on %s to %s", self.name, live_stream_url
             )
             await stream.close()
             await self.hass.async_add_executor_job(
@@ -309,7 +310,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             )
             _LOGGER.debug(
                 "Streaming connection closed on %s to %s",
-                self._attr_name,
+                self.name,
                 live_stream_url,
             )
 
@@ -322,6 +323,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         _LOGGER.debug(
             "Live Stream URL for %s is %s",
-            self._attr_name,
+            self.name,
             self._live_stream_session.live_stream_url,
         )
