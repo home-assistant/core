@@ -1,3 +1,3 @@
-"""Constant values for DSMR Reader"""
+"""Constant values for DSMR Reader."""
 
 DOMAIN = "dsmr_reader"

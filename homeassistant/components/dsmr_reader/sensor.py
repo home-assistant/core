@@ -1,5 +1,6 @@
 """Support for DSMR Reader through MQTT."""
 from __future__ import annotations
+
 import logging
 
 from homeassistant.components import mqtt

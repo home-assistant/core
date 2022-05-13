@@ -3,6 +3,7 @@ from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+
 from tests.common import MockConfigEntry
 
 
@@ -50,7 +51,7 @@ async def test_user_step_with_mqtt(hass: HomeAssistant):
 
 
 async def test_mqtt_step(hass: HomeAssistant):
-    """Test the MQTT discovery step preventing duplicate entries"""
+    """Test the MQTT discovery step preventing duplicate entries."""
     MockConfigEntry(domain="dsmr_reader").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
