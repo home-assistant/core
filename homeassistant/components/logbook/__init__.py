@@ -38,7 +38,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     ATTR_SERVICE,
-    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
@@ -494,7 +493,6 @@ def _get_events(
         entity_ids and context_id
     ), "can't pass in both entity_ids and context_id"
 
-    all_query = not entity_ids and not context_id
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ] = hass.data.get(DOMAIN, {})
@@ -511,7 +509,7 @@ def _get_events(
         # end_day - start_day intentionally checks .days and not .total_seconds()
         # since we don't want to switch over to buffered if they go
         # over one day by a few hours since the UI makes it so easy to do that.
-        if not all_query or (end_day - start_day).days <= 1:
+        if entity_ids or context_id or (end_day - start_day).days <= 1:
             return query.all()  # type: ignore[no-any-return]
         # Only buffer rows to reduce memory pressure
         # if we expect the result set is going to be very large.
@@ -524,22 +522,8 @@ def _get_events(
         #
         return query.yield_per(1024)  # type: ignore[no-any-return]
 
-    exclude_entities = None
-    if all_query:
-        exclude_entities = [
-            state.entity_id
-            for state in hass.states.async_all(SENSOR_DOMAIN)
-            if ATTR_UNIT_OF_MEASUREMENT in state.attributes
-        ]
-
     stmt = statement_for_request(
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        filters,
-        exclude_entities,
-        context_id,
+        start_day, end_day, event_types, entity_ids, filters, context_id
     )
     if _LOGGER.isEnabledFor(logging.DEBUG):
         _LOGGER.debug(
