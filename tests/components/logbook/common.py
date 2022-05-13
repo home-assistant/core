@@ -31,6 +31,10 @@ class MockRow:
         self.context_id = context.id if context else None
         self.state = None
         self.entity_id = None
+        self.state_id = None
+        self.event_id = None
+        self.shared_attrs = None
+        self.attributes = None
         self.context_only = False
 
     @property

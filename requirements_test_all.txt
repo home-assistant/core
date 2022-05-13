@@ -251,6 +251,9 @@ airthings_cloud==0.1.0
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
+# homeassistant.components.aladdin_connect
+aladdin_connect==0.4
+
 # homeassistant.components.ambee
 ambee==0.4.0
 
@@ -1310,7 +1313,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.4.1
+pyunifiprotect==3.5.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
