@@ -43,8 +43,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 
-from . import config_flow
-from .api import ApiAuthImpl, DeviceAuth, get_feature_access
+from .api import ApiAuthImpl, get_feature_access
 from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
