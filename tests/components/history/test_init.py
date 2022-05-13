@@ -603,18 +603,6 @@ async def test_fetch_period_api(hass, hass_client, recorder_mock):
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_use_include_order(
-    hass, hass_client, recorder_mock
-):
-    """Test the fetch period view for history with include order."""
-    await async_setup_component(
-        hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
-    )
-    client = await hass_client()
-    response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
-    assert response.status == HTTPStatus.OK
-
-
 async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_client):
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
@@ -653,26 +641,6 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mo
     await async_setup_component(hass, "history", {})
     client = await hass_client()
     response = await client.get("/api/history/period")
-    assert response.status == HTTPStatus.OK
-
-
-async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_mock):
-    """Test the fetch period view for history."""
-    await async_setup_component(
-        hass,
-        "history",
-        {
-            "history": {
-                "use_include_order": True,
-                "include": {"entities": ["light.kitchen"]},
-            }
-        },
-    )
-    client = await hass_client()
-    response = await client.get(
-        f"/api/history/period/{dt_util.utcnow().isoformat()}",
-        params={"filter_entity_id": "non.existing,something.else"},
-    )
     assert response.status == HTTPStatus.OK
 
 
