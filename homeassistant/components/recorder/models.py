@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Any, TypedDict, cast, overload
 
+import ciso8601
 from fnvhash import fnv1a_32
 from sqlalchemy import (
     BigInteger,
@@ -22,7 +23,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
@@ -91,8 +92,18 @@ TABLES_TO_CHECK = [
 EMPTY_JSON_OBJECT = "{}"
 
 
-DATETIME_TYPE = DateTime(timezone=True).with_variant(
-    mysql.DATETIME(timezone=True, fsp=6), "mysql"
+class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
+    """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
+
+    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+        """Offload the datetime parsing to ciso8601."""
+        return lambda value: None if value is None else ciso8601.parse_datetime(value)
+
+
+DATETIME_TYPE = (
+    DateTime(timezone=True)
+    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
+    .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")
 )
 DOUBLE_TYPE = (
     Float()
