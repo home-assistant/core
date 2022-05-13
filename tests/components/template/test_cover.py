@@ -4,10 +4,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN
 from homeassistant.const import (
-    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_SERVICE_DATA,
-    EVENT_CALL_SERVICE,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -25,40 +22,26 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
 
 from tests.common import assert_setup_component
 
 ENTITY_COVER = "cover.test_template_cover"
 
 
-@pytest.fixture
-def service_calls(hass):
-    """Track service call events for cover.test_state."""
-    events = []
-    entity_id = "cover.test_state"
-
-    @callback
-    def capture_events(event):
-        if event.data[ATTR_DOMAIN] != DOMAIN:
-            return
-        if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
-            return
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, capture_events)
-
-    return events
-
-
 OPEN_CLOSE_COVER_CONFIG = {
     "open_cover": {
-        "service": "cover.open_cover",
-        "entity_id": "cover.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "open_cover",
+            "caller": "{{ this.entity_id }}",
+        },
     },
     "close_cover": {
-        "service": "cover.close_cover",
-        "entity_id": "cover.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "close_cover",
+            "caller": "{{ this.entity_id }}",
+        },
     },
 }
 
@@ -299,8 +282,11 @@ async def test_template_out_of_bounds(hass, start_ha):
                     "test_template_cover": {
                         "value_template": "{{ 1 == 1 }}",
                         "open_cover": {
-                            "service": "cover.open_cover",
-                            "entity_id": "cover.test_state",
+                            "service": "test.automation",
+                            "data_template": {
+                                "action": "open_cover",
+                                "caller": "{{ this.entity_id }}",
+                            },
                         },
                     }
                 },
@@ -331,7 +317,7 @@ async def test_template_open_or_position(hass, start_ha, caplog_setup_text):
         },
     ],
 )
-async def test_open_action(hass, start_ha, service_calls):
+async def test_open_action(hass, start_ha, calls):
     """Test the open_cover command."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
@@ -341,8 +327,9 @@ async def test_open_action(hass, start_ha, service_calls):
     )
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert service_calls[0].data["service"] == "open_cover"
+    assert len(calls) == 1
+    assert calls[0].data["action"] == "open_cover"
+    assert calls[0].data["caller"] == "cover.test_template_cover"
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -357,8 +344,11 @@ async def test_open_action(hass, start_ha, service_calls):
                         **OPEN_CLOSE_COVER_CONFIG,
                         "position_template": "{{ 100 }}",
                         "stop_cover": {
-                            "service": "cover.stop_cover",
-                            "entity_id": "cover.test_state",
+                            "service": "test.automation",
+                            "data_template": {
+                                "action": "stop_cover",
+                                "caller": "{{ this.entity_id }}",
+                            },
                         },
                     }
                 },
@@ -366,7 +356,7 @@ async def test_open_action(hass, start_ha, service_calls):
         },
     ],
 )
-async def test_close_stop_action(hass, start_ha, service_calls):
+async def test_close_stop_action(hass, start_ha, calls):
     """Test the close-cover and stop_cover commands."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
@@ -381,9 +371,11 @@ async def test_close_stop_action(hass, start_ha, service_calls):
     )
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 2
-    assert service_calls[0].data["service"] == "close_cover"
-    assert service_calls[1].data["service"] == "stop_cover"
+    assert len(calls) == 2
+    assert calls[0].data["action"] == "close_cover"
+    assert calls[0].data["caller"] == "cover.test_template_cover"
+    assert calls[1].data["action"] == "stop_cover"
+    assert calls[1].data["caller"] == "cover.test_template_cover"
 
 
 @pytest.mark.parametrize("count,domain", [(1, "input_number")])
@@ -393,7 +385,7 @@ async def test_close_stop_action(hass, start_ha, service_calls):
         {"input_number": {"test": {"min": "0", "max": "100", "initial": "42"}}},
     ],
 )
-async def test_set_position(hass, start_ha, service_calls):
+async def test_set_position(hass, start_ha, calls):
     """Test the set_position command."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -405,9 +397,12 @@ async def test_set_position(hass, start_ha, service_calls):
                     "covers": {
                         "test_template_cover": {
                             "set_cover_position": {
-                                "service": "cover.set_cover_position",
-                                "entity_id": "cover.test_state",
-                                "data_template": {"position": "{{ position }}"},
+                                "service": "test.automation",
+                                "data_template": {
+                                    "action": "set_cover_position",
+                                    "caller": "{{ this.entity_id }}",
+                                    "position": "{{ position }}",
+                                },
                             },
                         }
                     },
@@ -430,9 +425,10 @@ async def test_set_position(hass, start_ha, service_calls):
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 100.0
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "set_cover_position"
-    assert service_calls[-1].data["service_data"]["position"] == 100
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "set_cover_position"
+    assert calls[-1].data["caller"] == "cover.test_template_cover"
+    assert calls[-1].data["position"] == 100
 
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -440,9 +436,10 @@ async def test_set_position(hass, start_ha, service_calls):
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 0.0
-    assert len(service_calls) == 2
-    assert service_calls[-1].data["service"] == "set_cover_position"
-    assert service_calls[-1].data["service_data"]["position"] == 0
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "set_cover_position"
+    assert calls[-1].data["caller"] == "cover.test_template_cover"
+    assert calls[-1].data["position"] == 0
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -450,9 +447,10 @@ async def test_set_position(hass, start_ha, service_calls):
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 100.0
-    assert len(service_calls) == 3
-    assert service_calls[-1].data["service"] == "set_cover_position"
-    assert service_calls[-1].data["service_data"]["position"] == 100
+    assert len(calls) == 3
+    assert calls[-1].data["action"] == "set_cover_position"
+    assert calls[-1].data["caller"] == "cover.test_template_cover"
+    assert calls[-1].data["position"] == 100
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -460,9 +458,10 @@ async def test_set_position(hass, start_ha, service_calls):
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 0.0
-    assert len(service_calls) == 4
-    assert service_calls[-1].data["service"] == "set_cover_position"
-    assert service_calls[-1].data["service_data"]["position"] == 0
+    assert len(calls) == 4
+    assert calls[-1].data["action"] == "set_cover_position"
+    assert calls[-1].data["caller"] == "cover.test_template_cover"
+    assert calls[-1].data["position"] == 0
 
     await hass.services.async_call(
         DOMAIN,
@@ -473,9 +472,10 @@ async def test_set_position(hass, start_ha, service_calls):
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 25.0
-    assert len(service_calls) == 5
-    assert service_calls[-1].data["service"] == "set_cover_position"
-    assert service_calls[-1].data["service_data"]["position"] == 25
+    assert len(calls) == 5
+    assert calls[-1].data["action"] == "set_cover_position"
+    assert calls[-1].data["caller"] == "cover.test_template_cover"
+    assert calls[-1].data["position"] == 25
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -489,9 +489,12 @@ async def test_set_position(hass, start_ha, service_calls):
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
                         "set_cover_tilt_position": {
-                            "service": "cover.set_cover_tilt_position",
-                            "entity_id": "cover.test_state",
-                            "data_template": {"tilt_position": "{{ tilt }}"},
+                            "service": "test.automation",
+                            "data_template": {
+                                "action": "set_cover_tilt_position",
+                                "caller": "{{ this.entity_id }}",
+                                "tilt_position": "{{ tilt }}",
+                            },
                         },
                     }
                 },
@@ -511,9 +514,7 @@ async def test_set_position(hass, start_ha, service_calls):
         (SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: ENTITY_COVER}, 0),
     ],
 )
-async def test_set_tilt_position(
-    hass, service, attr, start_ha, service_calls, tilt_position
-):
+async def test_set_tilt_position(hass, service, attr, start_ha, calls, tilt_position):
     """Test the set_tilt_position command."""
     await hass.services.async_call(
         DOMAIN,
@@ -523,9 +524,10 @@ async def test_set_tilt_position(
     )
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert service_calls[-1].data["service"] == "set_cover_tilt_position"
-    assert service_calls[-1].data["service_data"]["tilt_position"] == tilt_position
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "set_cover_tilt_position"
+    assert calls[-1].data["caller"] == "cover.test_template_cover"
+    assert calls[-1].data["tilt_position"] == tilt_position
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
