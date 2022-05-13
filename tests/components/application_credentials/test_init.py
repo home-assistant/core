@@ -14,6 +14,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
     DOMAIN,
+    AuthImplementation,
     AuthorizationServer,
     ClientCredential,
     async_import_client_credential,
@@ -67,9 +68,7 @@ async def setup_application_credentials_integration(
     mock_platform_impl = Mock(
         async_get_authorization_server=AsyncMock(return_value=authorization_server),
     )
-    del (
-        mock_platform_impl.async_get_auth_implementation
-    )  # Ensure it returns false on hasattr check
+    del mock_platform_impl.async_get_auth_implementation  # return False on hasattr
     mock_platform(
         hass,
         f"{domain}.application_credentials",
@@ -614,6 +613,45 @@ async def test_websocket_without_authorization_server(
         await hass.config_entries.flow.async_init(
             TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+
+
+@pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
+async def test_platform_with_auth_implementation(
+    hass,
+    hass_client_no_auth,
+    aioclient_mock,
+    oauth_fixture,
+    config_credential,
+    import_config_credential,
+    authorization_server,
+):
+    """Test config flow with custom OAuth2 implementation."""
+
+    assert await async_setup_component(hass, "application_credentials", {})
+    hass.config.components.add(TEST_DOMAIN)
+
+    async def get_auth_impl(
+        hass: HomeAssistant, auth_domain: str, credential: ClientCredential
+    ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
+        return AuthImplementation(hass, auth_domain, credential, authorization_server)
+
+    mock_platform_impl = Mock(
+        async_get_auth_implementation=get_auth_impl,
+    )
+    del mock_platform_impl.async_get_authorization_server
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.application_credentials",
+        mock_platform_impl,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    result = await oauth_fixture.complete_external_step(result)
+    # Uses the imported auth domain for compatibility
+    assert result["data"].get("auth_implementation") == TEST_DOMAIN
 
 
 async def test_websocket_integration_list(ws_client: ClientFixture):
