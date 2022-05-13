@@ -115,7 +115,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch("systembridgeconnector.websocket_client.WebSocketClient.connect"), patch(
+    with patch("homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.get_data"
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.receive_message",
