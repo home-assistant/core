@@ -1988,10 +1988,14 @@ pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
 <<<<<<< HEAD
+<<<<<<< HEAD
 pyunifiprotect==3.6.0
 =======
 pyunifiprotect==3.4.1
 >>>>>>> 2caa92b1eb (Fix typer/click incompatibilty for unifiprotect (#71555))
+=======
+pyunifiprotect==3.5.1
+>>>>>>> 5f3c7f11d8 (Fix handling package detection for latest UniFi Protect beta (#71821))
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

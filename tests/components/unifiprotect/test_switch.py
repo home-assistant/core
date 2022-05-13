@@ -33,9 +33,13 @@ from .conftest import (
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
+<<<<<<< HEAD
     if d.name != "Detections: Face"
     and d.name != "Detections: Package"
     and d.name != "SSH Enabled"
+=======
+    if d.name != "Detections: Face" and d.name != "Detections: Package"
+>>>>>>> 5f3c7f11d8 (Fix handling package detection for latest UniFi Protect beta (#71821))
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
