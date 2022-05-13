@@ -55,9 +55,13 @@
           "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
           "limit_refetch_to_url_change": "[%key:component::generic::config::step::user::data::limit_refetch_to_url_change%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "use_wallclock_as_timestamps": "Use wallclock as timestamps",
           "username": "[%key:common::config_flow::data::username%]",
           "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
         }
       },
       "content_type": {
