@@ -1,6 +1,7 @@
 """Support for EnOcean sensors."""
 from __future__ import annotations
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -70,7 +71,7 @@ SENSOR_DESC_POWER = SensorEntityDescription(
 SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
-    icon="mdi:window",
+    icon="mdi:window-open-variant",
 )
 
 
@@ -159,6 +160,11 @@ class EnOceanPowerSensor(EnOceanSensor):
     - A5-12-01 (Automated Meter Reading, Electricity)
     """
 
+    def __init__(self, dev_id, dev_name, description: SensorEntityDescription):
+        """Initialize the EnOcean power sensor device."""
+        super().__init__(dev_id, dev_name, description)
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{SENSOR_TYPE_POWER}"
+
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
         if packet.rorg != 0xA5:
@@ -207,6 +213,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self._scale_max = scale_max
         self.range_from = range_from
         self.range_to = range_to
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{SENSOR_TYPE_TEMPERATURE}"
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
@@ -230,6 +237,11 @@ class EnOceanHumiditySensor(EnOceanSensor):
     - A5-10-10 to A5-10-14 (Room Operating Panels)
     """
 
+    def __init__(self, dev_id, dev_name, description: SensorEntityDescription):
+        """Initialize the EnOcean humidity sensor device."""
+        super().__init__(dev_id, dev_name, description)
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{SENSOR_TYPE_HUMIDITY}"
+
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
         if packet.rorg != 0xA5:
@@ -246,9 +258,13 @@ class EnOceanWindowHandle(EnOceanSensor):
     - F6-10-00 (Mechanical handle / Hoppe AG)
     """
 
+    def __init__(self, dev_id, dev_name, description: SensorEntityDescription):
+        """Initialize the EnOcean window handle device."""
+        super().__init__(dev_id, dev_name, description)
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}"
+
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
-
         action = (packet.data[1] & 0x70) >> 4
 
         if action == 0x07:

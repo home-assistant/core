@@ -15,7 +15,6 @@ class EnOceanEntity(Entity):
         """Initialize the device."""
         self.dev_id = dev_id
         self.dev_name = dev_name
-        self._attr_unique_id = f"{combine_hex(self.dev_id)}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
