@@ -131,7 +131,7 @@ async def test_missing_required_keys(hass):
     assert hass.states.async_all("select") == []
 
 
-async def test_templates_with_entities(hass):
+async def test_templates_with_entities(hass, calls):
     """Test templates with values from other entities."""
     with assert_setup_component(1, "input_select"):
         assert await setup.async_setup_component(
@@ -158,13 +158,23 @@ async def test_templates_with_entities(hass):
                     "select": {
                         "state": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
                         "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
-                        "select_option": {
-                            "service": "input_select.select_option",
-                            "data_template": {
-                                "entity_id": _OPTION_INPUT_SELECT,
-                                "option": "{{ option }}",
+                        "select_option": [
+                            {
+                                "service": "input_select.select_option",
+                                "data_template": {
+                                    "entity_id": _OPTION_INPUT_SELECT,
+                                    "option": "{{ option }}",
+                                },
                             },
-                        },
+                            {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "action": "select_option",
+                                    "caller": "{{ this.entity_id }}",
+                                    "option": "{{ option }}",
+                                },
+                            },
+                        ],
                         "optimistic": True,
                         "unique_id": "a",
                     },
@@ -211,6 +221,12 @@ async def test_templates_with_entities(hass):
         blocking=True,
     )
     _verify(hass, "c", ["a", "b", "c"])
+
+    # Check this variable can be used in set_value script
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "select_option"
+    assert calls[-1].data["caller"] == _TEST_SELECT
+    assert calls[-1].data["option"] == "c"
 
 
 async def test_trigger_select(hass):

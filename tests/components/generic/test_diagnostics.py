@@ -11,8 +11,8 @@ async def test_entry_diagnostics(hass, hass_client, setup_entry):
         "title": "Test Camera",
         "data": {},
         "options": {
-            "still_image_url": "http://****:****@example.com",
-            "stream_source": "http://****:****@example.com/stream",
+            "still_image_url": "http://****:****@example.com/****?****=****",
+            "stream_source": "http://****:****@example.com/****",
             "username": REDACTED,
             "password": REDACTED,
             "limit_refetch_to_url_change": False,

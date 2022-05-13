@@ -384,11 +384,7 @@ def _humanify(
     context_augmenter: ContextAugmenter,
     format_time: Callable[[Row], Any],
 ) -> Generator[dict[str, Any], None, None]:
-    """Generate a converted list of events into Entry objects.
-
-    Will try to group events if possible:
-    - if Home Assistant stop and start happen in same minute call it restarted
-    """
+    """Generate a converted list of events into entries."""
     external_events = hass.data.get(DOMAIN, {})
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
@@ -431,6 +427,8 @@ def _humanify(
         elif event_type == EVENT_LOGBOOK_ENTRY:
             event = event_cache.get(row)
             event_data = event.data
+            if not event_data:
+                continue
             domain = event_data.get(ATTR_DOMAIN)
             entity_id = event_data.get(ATTR_ENTITY_ID)
             if domain is None and entity_id is not None:
@@ -478,6 +476,22 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
+
+        def _keep_row(row: Row, event_type: str) -> bool:
+            """Check if the entity_filter rejects a row."""
+            assert entities_filter is not None
+            if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
+                return entities_filter(entity_id)
+
+            if event_type in external_events:
+                # If the entity_id isn't described, use the domain that describes
+                # the event for filtering.
+                domain: str | None = external_events[event_type][0]
+            else:
+                domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
+
+            return domain is not None and entities_filter(f"{domain}._")
+
         # end_day - start_day intentionally checks .days and not .total_seconds()
         # since we don't want to switch over to buffered if they go
         # over one day by a few hours since the UI makes it so easy to do that.
@@ -496,14 +510,14 @@ def _get_events(
             rows = query.yield_per(1024)
         for row in rows:
             context_lookup.setdefault(row.context_id, row)
-            if row.context_only:
-                continue
-            event_type = row.event_type
-            if event_type != EVENT_CALL_SERVICE and (
-                event_type == EVENT_STATE_CHANGED
-                or _keep_row(hass, event_type, row, entities_filter)
-            ):
-                yield row
+            if not row.context_only:
+                event_type = row.event_type
+                if event_type != EVENT_CALL_SERVICE and (
+                    entities_filter is None
+                    or event_type == EVENT_STATE_CHANGED
+                    or _keep_row(row, event_type)
+                ):
+                    yield row
 
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
@@ -528,27 +542,6 @@ def _get_events(
                 format_time,
             )
         )
-
-
-def _keep_row(
-    hass: HomeAssistant,
-    event_type: str,
-    row: Row,
-    entities_filter: EntityFilter | Callable[[str], bool] | None = None,
-) -> bool:
-    if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
-        return entities_filter is None or entities_filter(entity_id)
-
-    if event_type in hass.data[DOMAIN]:
-        # If the entity_id isn't described, use the domain that describes
-        # the event for filtering.
-        domain = hass.data[DOMAIN][event_type][0]
-    else:
-        domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
-
-    return domain is not None and (
-        entities_filter is None or entities_filter(f"{domain}._")
-    )
 
 
 class ContextAugmenter:
