@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 from yolink.client import YoLinkClient
 from yolink.mqtt_client import MqttClient
 
@@ -13,11 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -28,18 +23,6 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = [Platform.SENSOR]
 
 
@@ -48,6 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     if DOMAIN not in config:
         return True
+    # import application credential from yml file
     await app_credentials.async_import_client_credential(
         hass,
         DOMAIN,
@@ -60,6 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up yolink from a config entry."""
+    hass.data[DOMAIN] = {}
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
