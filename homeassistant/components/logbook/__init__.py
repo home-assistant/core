@@ -505,23 +505,7 @@ def _get_events(
         entities_filter = generate_filter([], entity_ids, [], [])
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
-        """Yield Events that are not filtered away."""
-
-        def _keep_row(row: Row, event_type: str) -> bool:
-            """Check if the entity_filter rejects a row."""
-            assert entities_filter is not None
-            if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
-                return entities_filter(entity_id)
-
-            if event_type in external_events:
-                # If the entity_id isn't described, use the domain that describes
-                # the event for filtering.
-                domain: str | None = external_events[event_type][0]
-            else:
-                domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
-
-            return domain is not None and entities_filter(f"{domain}._")
-
+        """Yield rows from the database."""
         # end_day - start_day intentionally checks .days and not .total_seconds()
         # since we don't want to switch over to buffered if they go
         # over one day by a few hours since the UI makes it so easy to do that.
