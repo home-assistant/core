@@ -6,7 +6,7 @@ from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from aiohttp import web
 from sqlalchemy import not_, or_
@@ -106,6 +106,23 @@ class LazyState(history_models.LazyState):
     """A lazy version of core State."""
 
 
+def _ws_get_statistics_during_period(
+    hass: HomeAssistant,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt | None = None,
+    statistic_ids: list[str] | None = None,
+    period: Literal["5minute", "day", "hour", "month"] = "hour",
+) -> str:
+    """Fetch statistics and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id,
+            statistics_during_period(hass, start_time, end_time, statistic_ids, period),
+        )
+    )
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "history/statistics_during_period",
@@ -138,15 +155,28 @@ async def ws_get_statistics_during_period(
     else:
         end_time = None
 
-    statistics = await get_instance(hass).async_add_executor_job(
-        statistics_during_period,
-        hass,
-        start_time,
-        end_time,
-        msg.get("statistic_ids"),
-        msg.get("period"),
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_get_statistics_during_period,
+            hass,
+            msg["id"],
+            start_time,
+            end_time,
+            msg.get("statistic_ids"),
+            msg.get("period"),
+        )
     )
-    connection.send_result(msg["id"], statistics)
+
+
+def _ws_get_list_statistic_ids(
+    hass: HomeAssistant,
+    msg_id: int,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+) -> str:
+    """Fetch a list of available statistic_id and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
+    )
 
 
 @websocket_api.websocket_command(
@@ -160,13 +190,14 @@ async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fetch a list of available statistic_id."""
-    statistic_ids = await get_instance(hass).async_add_executor_job(
-        list_statistic_ids,
-        hass,
-        None,
-        msg.get("statistic_type"),
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_get_list_statistic_ids,
+            hass,
+            msg["id"],
+            msg.get("statistic_type"),
+        )
     )
-    connection.send_result(msg["id"], statistic_ids)
 
 
 def _ws_get_significant_states(
