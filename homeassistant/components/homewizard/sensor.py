@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -129,12 +129,9 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
-    if coordinator.api.data is not None:
+    if coordinator.data["data"] is not None:
         for description in SENSORS:
-            if (
-                description.key in coordinator.api.data.available_datapoints
-                and getattr(coordinator.api.data, description.key) is not None
-            ):
+            if getattr(coordinator.data["data"], description.key) is not None:
                 entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
@@ -165,7 +162,7 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
             "total_power_export_t1_kwh",
             "total_power_export_t2_kwh",
         ]:
-            if self.data["data"][self.data_type] == 0:
+            if self.native_value == 0:
                 self._attr_entity_registry_enabled_default = False
 
     @property
@@ -187,9 +184,9 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        return self.data["data"][self.data_type]
+        return cast(StateType, getattr(self.data["data"], self.data_type))
 
     @property
     def available(self) -> bool:
         """Return availability of meter."""
-        return super().available and self.data_type in self.data["data"]
+        return super().available and self.native_value is not None
