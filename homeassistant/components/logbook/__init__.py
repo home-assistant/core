@@ -426,8 +426,7 @@ def _humanify(
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
             event = event_cache.get(row)
-            event_data = event.data
-            if not event_data:
+            if not (event_data := event.data):
                 continue
             domain = event_data.get(ATTR_DOMAIN)
             entity_id = event_data.get(ATTR_ENTITY_ID)
