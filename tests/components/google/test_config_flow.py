@@ -13,6 +13,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.google.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, YieldFixture
@@ -254,12 +255,38 @@ async def test_existing_config_entry(
 async def test_missing_configuration(
     hass: HomeAssistant,
 ) -> None:
-    """Test can't configure when config entry already exists."""
+    """Test can't configure when no authentication source is available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == "abort"
     assert result.get("reason") == "missing_configuration"
+
+
+async def test_wrong_configuration(
+    hass: HomeAssistant,
+) -> None:
+    """Test can't use the wrong type of authentication."""
+
+    # Google calendar flow currently only supports device auth
+    config_entry_oauth2_flow.async_register_implementation(
+        hass,
+        DOMAIN,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            "client-id",
+            "client-secret",
+            "http://example/authorize",
+            "http://example/token",
+        ),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "oauth_error"
 
 
 async def test_import_config_entry_from_existing_token(
