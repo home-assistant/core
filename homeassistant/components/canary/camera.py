@@ -249,7 +249,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self._image = None
         self._image_url = None
         self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
-        _LOGGER.debug("Forcing a new camera image from %s", self._attr_name)
+        _LOGGER.debug("Forcing a new camera image from %s", self.name)
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
