@@ -42,6 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
+HISTORY_USE_INCLUDE_ORDER = "history_use_include_order"
+
 CONF_ORDER = "use_include_order"
 
 GLOB_TO_SQL_CHARS = {
@@ -66,8 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[HISTORY_FILTERS] = filters = sqlalchemy_filter_from_include_exclude_conf(
         conf
     )
-
-    use_include_order = conf.get(CONF_ORDER)
+    hass.data[HISTORY_USE_INCLUDE_ORDER] = use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
@@ -176,32 +177,38 @@ def _ws_get_significant_states(
     hass: HomeAssistant,
     msg_id: int,
     start_time: dt,
-    end_time: dt | None = None,
-    entity_ids: list[str] | None = None,
-    filters: Any | None = None,
-    include_start_time_state: bool = True,
-    significant_changes_only: bool = True,
-    minimal_response: bool = False,
-    no_attributes: bool = False,
+    end_time: dt | None,
+    entity_ids: list[str] | None,
+    filters: Filters | None,
+    use_include_order: bool | None,
+    include_start_time_state: bool,
+    significant_changes_only: bool,
+    minimal_response: bool,
+    no_attributes: bool,
 ) -> str:
     """Fetch history significant_states and convert them to json in the executor."""
-    return JSON_DUMP(
-        messages.result_message(
-            msg_id,
-            history.get_significant_states(
-                hass,
-                start_time,
-                end_time,
-                entity_ids,
-                filters,
-                include_start_time_state,
-                significant_changes_only,
-                minimal_response,
-                no_attributes,
-                True,
-            ),
-        )
+    states = history.get_significant_states(
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        filters,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+        True,
     )
+    if not use_include_order or not filters:
+        return JSON_DUMP(messages.result_message(msg_id, states))
+
+    sorted_states = {
+        order_entity: states.pop(order_entity)
+        for order_entity in filters.included_entities
+        if order_entity in states
+    }
+    sorted_states.update(states)
+    return JSON_DUMP(messages.result_message(msg_id, sorted_states))
 
 
 @websocket_api.websocket_command(
@@ -267,6 +274,7 @@ async def ws_get_history_during_period(
             end_time,
             entity_ids,
             hass.data[HISTORY_FILTERS],
+            hass.data[HISTORY_USE_INCLUDE_ORDER],
             include_start_time_state,
             significant_changes_only,
             minimal_response,
