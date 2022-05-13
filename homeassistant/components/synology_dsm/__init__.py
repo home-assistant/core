@@ -28,6 +28,7 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     async_get_registry as get_dev_reg,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import SynoApi
@@ -38,10 +39,10 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    EVENT_CAMERA_SOURCE_CHANGED,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     PLATFORMS,
+    SIGNAL_CAMERA_SOURCE_CHANGED,
     SYNO_API,
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
@@ -148,10 +149,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 (cam_data_current := current_data.get(cam_id)) is not None
                 and cam_data_current.live_view.rtsp != cam_data_new.live_view.rtsp
             ):
-
-                hass.bus.async_fire(
-                    EVENT_CAMERA_SOURCE_CHANGED,
-                    {"camera_id": cam_id, "stream_source": cam_data_new.live_view.rtsp},
+                async_dispatcher_send(
+                    hass,
+                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{cam_id}",
+                    cam_data_new.live_view.rtsp,
                 )
 
         return {"cameras": new_data}
