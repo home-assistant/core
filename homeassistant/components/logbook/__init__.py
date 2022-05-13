@@ -355,11 +355,7 @@ def _humanify(
     context_augmenter: ContextAugmenter,
     format_time: Callable[[Row], Any],
 ) -> Generator[dict[str, Any], None, None]:
-    """Generate a converted list of events into Entry objects.
-
-    Will try to group events if possible:
-    - if Home Assistant stop and start happen in same minute call it restarted
-    """
+    """Generate a converted list of events into entries."""
     external_events = hass.data.get(DOMAIN, {})
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
