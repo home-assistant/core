@@ -214,7 +214,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if len(hass.data[DOMAIN]) == 1:
+    if len(hass.data[DOMAIN]) == 2:
         # No motion gateways left, stop Motion multicast
         _LOGGER.debug("Shutting down Motion Listener")
         multicast = hass.data[DOMAIN].pop(KEY_MULTICAST_LISTENER)
