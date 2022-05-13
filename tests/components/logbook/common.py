@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components import logbook
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.core import Context
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
@@ -48,13 +49,16 @@ def mock_humanify(hass_, rows):
     context_lookup = {}
     entity_name_cache = logbook.EntityNameCache(hass_)
     event_cache = logbook.EventCache(event_data_cache)
+    registry = er.async_get(hass_)
+    external_events = hass_.data.get(logbook.DOMAIN, {})
     context_augmenter = logbook.ContextAugmenter(
         context_lookup, entity_name_cache, {}, event_cache
     )
     return list(
         logbook._humanify(
-            hass_,
             rows,
+            registry,
+            external_events,
             entity_name_cache,
             event_cache,
             context_augmenter,
