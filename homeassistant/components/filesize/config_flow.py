@@ -51,13 +51,13 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                fullpath = validate_path(self.hass, user_input[CONF_FILE_PATH])
+                full_path = validate_path(self.hass, user_input[CONF_FILE_PATH])
             except NotValidError:
                 errors["base"] = "not_valid"
             except NotAllowedError:
                 errors["base"] = "not_allowed"
             else:
-                await self.async_set_unique_id(fullpath)
+                await self.async_set_unique_id(full_path)
                 self._abort_if_unique_id_configured()
 
                 name = str(user_input[CONF_FILE_PATH]).rsplit("/", maxsplit=1)[-1]
