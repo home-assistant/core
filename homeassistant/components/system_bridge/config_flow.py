@@ -81,13 +81,10 @@ async def validate_input(
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
 
-    _LOGGER.info("%s Message: %s", TYPE_DATA_UPDATE, message)
-
-    print("message:", message)
+    _LOGGER.debug("%s Message: %s", TYPE_DATA_UPDATE, message)
 
     if "uuid" not in message["data"]:
         error = "No UUID in result!"
-        _LOGGER.info(error)
         raise Exception(error)
 
     return {"hostname": host, "uuid": message["data"]["uuid"]}
