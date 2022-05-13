@@ -433,16 +433,16 @@ def _humanify(
             entry_entity_id = event_data.get(ATTR_ENTITY_ID)
             if entry_domain is None and entry_entity_id is not None:
                 with suppress(IndexError):
-                    entry_domain = split_entity_id(str(entity_id))[0]
+                    entry_domain = split_entity_id(str(entry_entity_id))[0]
 
             data = {
                 LOGBOOK_ENTRY_WHEN: format_time(row),
                 LOGBOOK_ENTRY_NAME: event_data.get(ATTR_NAME),
                 LOGBOOK_ENTRY_MESSAGE: event_data.get(ATTR_MESSAGE),
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
-                LOGBOOK_ENTRY_ENTITY_ID: entity_id,
+                LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, entity_id, row)
+            context_augmenter.augment(data, entry_entity_id, row)
             yield data
 
 
