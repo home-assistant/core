@@ -31,6 +31,7 @@ class MockRow:
         self.context_id = context.id if context else None
         self.state = None
         self.entity_id = None
+        self.context_only = False
 
     @property
     def time_fired_minute(self):
@@ -45,23 +46,16 @@ class MockRow:
 
 def mock_humanify(hass_, rows):
     """Wrap humanify with mocked logbook objects."""
-    event_data_cache = {}
-    context_lookup = {}
     entity_name_cache = logbook.EntityNameCache(hass_)
-    event_cache = logbook.EventCache(event_data_cache)
     registry = er.async_get(hass_)
     external_events = hass_.data.get(logbook.DOMAIN, {})
-    context_augmenter = logbook.ContextAugmenter(
-        context_lookup, entity_name_cache, {}, event_cache
-    )
     return list(
         logbook._humanify(
             rows,
+            None,
             registry,
             external_events,
             entity_name_cache,
-            event_cache,
-            context_augmenter,
             logbook._row_time_fired_isoformat,
         ),
     )

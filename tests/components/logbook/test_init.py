@@ -323,6 +323,7 @@ def create_state_changed_event_from_old_new(
             "old_state_id",
             "shared_attrs",
             "shared_data",
+            "context_only",
         ],
     )
 
@@ -335,6 +336,7 @@ def create_state_changed_event_from_old_new(
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]
+    row.context_only = False
     row.context_id = None
     row.context_user_id = None
     row.context_parent_id = None
