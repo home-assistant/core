@@ -449,9 +449,21 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
+        # end_day - start_day intentionally checks .days and not .total_seconds()
+        # since we don't want to switch over to buffered if they go
+        # over one day by a few hours since the UI makes it so easy to do that.
         if entity_ids or context_id or (end_day - start_day).days <= 1:
             rows = query.all()
         else:
+            # Only buffer rows to reduce memory pressure
+            # if we expect the result set is going to be very large.
+            # What is considered very large is going to differ
+            # based on the hardware Home Assistant is running on.
+            #
+            # sqlalchemy suggests that is at least 10k, but for
+            # even and RPi3 that number seems higher in testing
+            # so we don't switch over until we request > 1 day+ of data.
+            #
             rows = query.yield_per(1024)
         for row in rows:
             context_lookup.setdefault(row.context_id, row)
