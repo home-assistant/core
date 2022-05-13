@@ -191,10 +191,6 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
-        if not gateway.option_allow_new_devices:
-            gateway.to_load_ignored_devices.add((async_add_sensor, sensor_id))
-            return
-
         sensor = gateway.api.sensors[sensor_id]
 
         if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
@@ -213,7 +209,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.sensors.subscribe(
-            async_add_sensor,
+            gateway.evaluate_add_device(async_add_sensor),
             EventType.ADDED,
         )
     )

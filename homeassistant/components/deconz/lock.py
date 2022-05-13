@@ -27,34 +27,34 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock_from_light(_: EventType, lock_id: str) -> None:
+    def async_add_light(_: EventType, light_id: str) -> None:
         """Add lock from deCONZ."""
-        lock = gateway.api.lights.locks[lock_id]
+        lock = gateway.api.lights.locks[light_id]
         async_add_entities([DeconzLock(lock, gateway)])
 
     config_entry.async_on_unload(
         gateway.api.lights.locks.subscribe(
-            async_add_lock_from_light,
+            gateway.evaluate_add_device(async_add_light),
             EventType.ADDED,
         )
     )
-    for lock_id in gateway.api.lights.locks:
-        async_add_lock_from_light(EventType.ADDED, lock_id)
+    for light_id in gateway.api.lights.locks:
+        async_add_light(EventType.ADDED, light_id)
 
     @callback
-    def async_add_lock_from_sensor(_: EventType, lock_id: str) -> None:
+    def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add lock from deCONZ."""
-        lock = gateway.api.sensors.door_lock[lock_id]
+        lock = gateway.api.sensors.door_lock[sensor_id]
         async_add_entities([DeconzLock(lock, gateway)])
 
     config_entry.async_on_unload(
         gateway.api.sensors.door_lock.subscribe(
-            async_add_lock_from_sensor,
+            gateway.evaluate_add_device(async_add_sensor),
             EventType.ADDED,
         )
     )
-    for lock_id in gateway.api.sensors.door_lock:
-        async_add_lock_from_sensor(EventType.ADDED, lock_id)
+    for sensor_id in gateway.api.sensors.door_lock:
+        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 class DeconzLock(DeconzDevice, LockEntity):

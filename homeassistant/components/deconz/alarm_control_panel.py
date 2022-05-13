@@ -81,7 +81,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.sensors.ancillary_control.subscribe(
-            async_add_sensor,
+            gateway.evaluate_add_device(async_add_sensor),
             EventType.ADDED,
         )
     )

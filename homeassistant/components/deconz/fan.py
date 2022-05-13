@@ -43,19 +43,19 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(_: EventType, fan_id: str) -> None:
-        """Add fan from deCONZ."""
-        fan = gateway.api.lights.fans[fan_id]
-        async_add_entities([DeconzFan(fan, gateway)])
+    def async_add_light(_: EventType, light_id: str) -> None:
+        """Add light from deCONZ."""
+        light = gateway.api.lights.fans[light_id]
+        async_add_entities([DeconzFan(light, gateway)])
 
     config_entry.async_on_unload(
         gateway.api.lights.fans.subscribe(
-            async_add_fan,
+            gateway.evaluate_add_device(async_add_light),
             EventType.ADDED,
         )
     )
-    for fan_id in gateway.api.lights.fans:
-        async_add_fan(EventType.ADDED, fan_id)
+    for light_id in gateway.api.lights.fans:
+        async_add_light(EventType.ADDED, light_id)
 
 
 class DeconzFan(DeconzDevice, FanEntity):
