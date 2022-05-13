@@ -43,4 +43,4 @@ async def ws_info(
             with contextlib.suppress(HomeAssistantError):
                 hardware_info.append(platform.async_info(hass))
 
-    connection.send_result(msg["id"], hardware_info)
+    connection.send_result(msg["id"], {"hardware": hardware_info})
