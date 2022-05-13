@@ -36,12 +36,18 @@ _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 
 OPTIMISTIC_ON_OFF_LIGHT_CONFIG = {
     "turn_on": {
-        "service": "light.turn_on",
-        "entity_id": "light.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_on",
+            "caller": "{{ this.entity_id }}",
+        },
     },
     "turn_off": {
-        "service": "light.turn_off",
-        "entity_id": "light.test_state",
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_off",
+            "caller": "{{ this.entity_id }}",
+        },
     },
 }
 
@@ -49,10 +55,38 @@ OPTIMISTIC_ON_OFF_LIGHT_CONFIG = {
 OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
     "set_level": {
-        "service": "light.turn_on",
+        "service": "test.automation",
         "data_template": {
-            "entity_id": "light.test_state",
+            "action": "set_level",
             "brightness": "{{brightness}}",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+
+
+OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG = {
+    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+    "set_temperature": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "set_temperature",
+            "caller": "{{ this.entity_id }}",
+            "color_temp": "{{color_temp}}",
+        },
+    },
+}
+
+
+OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
+    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+    "set_color": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "set_color",
+            "caller": "{{ this.entity_id }}",
+            "s": "{{s}}",
+            "h": "{{h}}",
         },
     },
 }
@@ -61,9 +95,10 @@ OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG = {
 OPTIMISTIC_WHITE_VALUE_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
     "set_white_value": {
-        "service": "light.turn_on",
+        "service": "test.automation",
         "data_template": {
-            "entity_id": "light.test_state",
+            "action": "set_white_value",
+            "caller": "{{ this.entity_id }}",
             "white_value": "{{white_value}}",
         },
     },
@@ -270,7 +305,6 @@ async def test_missing_key(hass, count, setup_light):
             "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "value_template": "{{states.light.test_state.state}}",
-                "turn_on": {"service": "test.automation"},
             }
         },
     ],
@@ -296,6 +330,8 @@ async def test_on_action(
     )
 
     assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == "light.test_template_light"
 
     assert state.state == STATE_OFF
     assert "color_mode" not in state.attributes
@@ -377,7 +413,6 @@ async def test_on_action_with_transition(
         {
             "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "turn_on": {"service": "test.automation"},
             }
         },
     ],
@@ -409,6 +444,8 @@ async def test_on_action_optimistic(
 
     state = hass.states.get("light.test_template_light")
     assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == "light.test_template_light"
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
@@ -422,7 +459,10 @@ async def test_on_action_optimistic(
     )
 
     state = hass.states.get("light.test_template_light")
-    assert len(calls) == 1
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "set_level"
+    assert calls[-1].data["brightness"] == 100
+    assert calls[-1].data["caller"] == "light.test_template_light"
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == expected_color_mode
     assert state.attributes["supported_color_modes"] == supported_color_modes
@@ -441,7 +481,6 @@ async def test_on_action_optimistic(
             "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "value_template": "{{states.light.test_state.state}}",
-                "turn_off": {"service": "test.automation"},
             }
         },
     ],
@@ -467,6 +506,8 @@ async def test_off_action(
     )
 
     assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == "light.test_template_light"
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == ColorMode.UNKNOWN  # Brightness is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
@@ -546,7 +587,6 @@ async def test_off_action_with_transition(
         {
             "test_template_light": {
                 **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
-                "turn_off": {"service": "test.automation"},
             }
         },
     ],
@@ -586,15 +626,8 @@ async def test_off_action_optimistic(
     [
         {
             "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                **OPTIMISTIC_WHITE_VALUE_LIGHT_CONFIG,
                 "value_template": "{{1 == 1}}",
-                "set_white_value": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "white_value": "{{white_value}}",
-                    },
-                },
             }
         },
     ],
@@ -619,7 +652,9 @@ async def test_white_value_action_no_template(
     )
 
     assert len(calls) == 1
-    assert calls[0].data["white_value"] == 124
+    assert calls[-1].data["action"] == "set_white_value"
+    assert calls[-1].data["caller"] == "light.test_template_light"
+    assert calls[-1].data["white_value"] == 124
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("white_value") == 124
@@ -682,15 +717,8 @@ async def test_white_value_template(
     [
         {
             "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "value_template": "{{1 == 1}}",
-                "set_level": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "brightness": "{{brightness}}",
-                    },
-                },
             }
         },
     ],
@@ -715,7 +743,9 @@ async def test_level_action_no_template(
     )
 
     assert len(calls) == 1
-    assert calls[0].data["brightness"] == 124
+    assert calls[-1].data["action"] == "set_level"
+    assert calls[-1].data["brightness"] == 124
+    assert calls[-1].data["caller"] == "light.test_template_light"
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_ON
@@ -757,15 +787,8 @@ async def test_level_template(
     """Test the template for the level."""
     light_config = {
         "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+            **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
             "value_template": "{{ 1 == 1 }}",
-            "set_level": {
-                "service": "light.turn_on",
-                "data_template": {
-                    "entity_id": "light.test_state",
-                    "brightness": "{{brightness}}",
-                },
-            },
             "level_template": level_template,
         }
     }
@@ -806,15 +829,8 @@ async def test_temperature_template(
     """Test the template for the temperature."""
     light_config = {
         "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+            **OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG,
             "value_template": "{{ 1 == 1 }}",
-            "set_temperature": {
-                "service": "light.turn_on",
-                "data_template": {
-                    "entity_id": "light.test_state",
-                    "color_temp": "{{color_temp}}",
-                },
-            },
             "temperature_template": temperature_template,
         }
     }
@@ -837,15 +853,8 @@ async def test_temperature_template(
     [
         {
             "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                **OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG,
                 "value_template": "{{1 == 1}}",
-                "set_temperature": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "color_temp": "{{color_temp}}",
-                    },
-                },
             }
         },
     ],
@@ -870,7 +879,9 @@ async def test_temperature_action_no_template(
     )
 
     assert len(calls) == 1
-    assert calls[0].data["color_temp"] == 345
+    assert calls[-1].data["action"] == "set_temperature"
+    assert calls[-1].data["caller"] == "light.test_template_light"
+    assert calls[-1].data["color_temp"] == 345
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
@@ -971,18 +982,8 @@ async def test_entity_picture_template(hass, setup_light):
     [
         {
             "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                **OPTIMISTIC_HS_COLOR_LIGHT_CONFIG,
                 "value_template": "{{1 == 1}}",
-                "set_color": [
-                    {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "s": "{{s}}",
-                            "h": "{{h}}",
-                        },
-                    },
-                ],
             }
         },
     ],
@@ -1007,8 +1008,10 @@ async def test_color_action_no_template(
     )
 
     assert len(calls) == 1
-    assert calls[0].data["h"] == 40
-    assert calls[0].data["s"] == 50
+    assert calls[-1].data["action"] == "set_color"
+    assert calls[-1].data["caller"] == "light.test_template_light"
+    assert calls[-1].data["h"] == 40
+    assert calls[-1].data["s"] == 50
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_ON
@@ -1048,17 +1051,8 @@ async def test_color_template(
     """Test the template for the color."""
     light_config = {
         "test_template_light": {
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+            **OPTIMISTIC_HS_COLOR_LIGHT_CONFIG,
             "value_template": "{{ 1 == 1 }}",
-            "set_color": [
-                {
-                    "service": "input_number.set_value",
-                    "data_template": {
-                        "entity_id": "input_number.h",
-                        "color_temp": "{{h}}",
-                    },
-                }
-            ],
             "color_template": color_template,
         }
     }
@@ -1192,18 +1186,13 @@ async def test_color_and_temperature_actions_no_template(
     [
         {
             "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "value_template": "{{true}}",
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                    },
-                },
                 "set_effect": {
                     "service": "test.automation",
                     "data_template": {
+                        "action": "set_effect",
+                        "caller": "{{ this.entity_id }}",
                         "entity_id": "test.test_state",
                         "effect": "{{effect}}",
                     },
@@ -1227,7 +1216,9 @@ async def test_effect_action_valid_effect(hass, setup_light, calls):
     )
 
     assert len(calls) == 1
-    assert calls[0].data["effect"] == "Disco"
+    assert calls[-1].data["action"] == "set_effect"
+    assert calls[-1].data["caller"] == "light.test_template_light"
+    assert calls[-1].data["effect"] == "Disco"
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
@@ -1240,15 +1231,8 @@ async def test_effect_action_valid_effect(hass, setup_light, calls):
     [
         {
             "test_template_light": {
-                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                **OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG,
                 "value_template": "{{true}}",
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                    },
-                },
                 "set_effect": {
                     "service": "test.automation",
                     "data_template": {
