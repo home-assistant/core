@@ -69,7 +69,7 @@ class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info.name,
-                    data=user_input | {CONF_NAME: user_input.get(CONF_NAME, info.name)},
+                    data=user_input | {CONF_NAME: info.name},
                 )
 
         user_input = user_input or {}
