@@ -13,22 +13,26 @@
             "community": {
                 "data": {
                     "region": "Region"
-                }
+                },
+                "description": "Je\u015bli nie chcesz monitorowa\u0107 tylko rejonu i dystryktu, wybierz jego konkretn\u0105 spo\u0142eczno\u015b\u0107"
             },
             "district": {
                 "data": {
                     "region": "Region"
-                }
+                },
+                "description": "Je\u015bli nie chcesz monitorowa\u0107 tylko rejonu, wybierz jego konkretny dystrykt"
             },
             "state": {
                 "data": {
                     "region": "Region"
-                }
+                },
+                "description": "Wybierz rejon do monitorowania"
             },
             "user": {
                 "data": {
                     "api_key": "Klucz API"
-                }
+                },
+                "description": "Skonfiguruj integracj\u0119 Alarmy w Ukrainie. Aby wygenerowa\u0107 klucz API, przejd\u017a do {api_url}."
             }
         }
     }
