@@ -39,8 +39,3 @@ class EnOceanEntity(Entity):
 
         packet = Packet(packet_type, data=data, optional=optional)
         self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_SEND_MESSAGE, packet)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id base on the device address."""
-        return self._unique_id
