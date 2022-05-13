@@ -1032,7 +1032,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.5
+motionblinds==0.6.7
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
