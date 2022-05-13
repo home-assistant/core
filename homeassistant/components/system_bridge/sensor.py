@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -51,6 +51,76 @@ class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     value: Callable = round
 
 
+def battery_time_remaining(data: dict) -> datetime | None:
+    """Return the battery time remaining."""
+    if data["battery"].get("sensors_secsleft") is not None:
+        return utcnow() + timedelta(seconds=data["battery"]["sensors_secsleft"])
+    return None
+
+
+def cpu_speed(data: dict) -> float | None:
+    """Return the CPU speed."""
+    if data["cpu"].get("frequency_current") is not None:
+        return round(data["cpu"]["frequency_current"] / 1000, 2)
+    return None
+
+
+def gpu_core_clock_speed(data: dict, key: str) -> float | None:
+    """Return the GPU core clock speed."""
+    if data["gpu"].get(f"{key}_core_clock") is not None:
+        return round(data["gpu"][f"{key}_core_clock"])
+    return None
+
+
+def gpu_memory_clock_speed(data: dict, key: str) -> float | None:
+    """Return the GPU memory clock speed."""
+    if data["gpu"].get(f"{key}_memory_clock") is not None:
+        return round(data["gpu"][f"{key}_memory_clock"])
+    return None
+
+
+def gpu_memory_free(data: dict, key: str) -> float | None:
+    """Return the free GPU memory."""
+    if data["gpu"].get(f"{key}_memory_free") is not None:
+        return round(data["gpu"][f"{key}_memory_free"] / 10**3, 2)
+    return None
+
+
+def gpu_memory_used(data: dict, key: str) -> float | None:
+    """Return the used GPU memory."""
+    if data["gpu"].get(f"{key}_memory_used") is not None:
+        return round(data["gpu"][f"{key}_memory_used"] / 10**3, 2)
+    return None
+
+
+def gpu_memory_used_percentage(data: dict, key: str) -> float | None:
+    """Return the used GPU memory percentage."""
+    if (
+        data["gpu"].get(f"{key}_memory_used") is not None
+        and data["gpu"].get(f"{key}_memory_total") is not None
+    ):
+        return round(
+            (data["gpu"][f"{key}_memory_used"] / data["gpu"][f"{key}_memory_total"])
+            * 100,
+            2,
+        )
+    return None
+
+
+def memory_free(data: dict) -> float | None:
+    """Return the free memory."""
+    if data["memory"].get("virtual_free") is not None:
+        return round(data["memory"]["virtual_free"] / 1000**3, 2)
+    return None
+
+
+def memory_used(data: dict) -> float | None:
+    """Return the used memory."""
+    if data["memory"].get("virtual_used") is not None:
+        return round(data["memory"].get("virtual_used") / 1000**3, 2)
+    return None
+
+
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
@@ -58,9 +128,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
         icon="mdi:speedometer",
-        value=lambda data: round(data["cpu"]["frequency_current"] / 1000, 2)
-        if data["cpu"].get("frequency_current") is not None
-        else None,
+        value=cpu_speed,
     ),
     SystemBridgeSensorEntityDescription(
         key="cpu_temperature",
@@ -93,9 +161,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda data: round(data["memory"]["virtual_free"] / 1000**3, 2)
-        if data["memory"].get("virtual_free") is not None
-        else None,
+        value=memory_free,
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
@@ -112,9 +178,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda data: round(data["memory"].get("virtual_used") / 1000**3, 2)
-        if data["memory"].get("virtual_used") is not None
-        else None,
+        value=memory_used,
     ),
     SystemBridgeSensorEntityDescription(
         key="os",
@@ -159,10 +223,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         name="Battery Time Remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: utcnow()
-        + timedelta(seconds=data["battery"]["sensors_secsleft"])
-        if data["battery"].get("sensors_secsleft") is not None
-        else None,
+        value=battery_time_remaining,
     ),
 )
 
@@ -301,11 +362,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                     icon="mdi:speedometer",
-                    value=lambda data, k=gpu["key"]: round(
-                        data["gpu"][f"{k}_core_clock"]
-                    )
-                    if data["gpu"].get(f"{k}_core_clock") is not None
-                    else None,
+                    value=lambda data, k=gpu["key"]: gpu_core_clock_speed(data, k),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -318,11 +375,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                     icon="mdi:speedometer",
-                    value=lambda data, k=gpu["key"]: round(
-                        data["gpu"][f"{k}_memory_clock"]
-                    )
-                    if data["gpu"].get(f"{k}_memory_clock") is not None
-                    else None,
+                    value=lambda data, k=gpu["key"]: gpu_memory_clock_speed(data, k),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -334,11 +387,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=DATA_GIGABYTES,
                     icon="mdi:memory",
-                    value=lambda data, k=gpu["key"]: round(
-                        data["gpu"][f"{k}_memory_free"] / 10**3, 2
-                    )
-                    if data["gpu"].get(f"{k}_memory_free") is not None
-                    else None,
+                    value=lambda data, k=gpu["key"]: gpu_memory_free(data, k),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -350,17 +399,9 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:memory",
-                    value=lambda data, k=gpu["key"]: round(
-                        (
-                            data["gpu"][f"{k}_memory_used"]
-                            / data["gpu"][f"{k}_memory_total"]
-                        )
-                        * 100,
-                        2,
-                    )
-                    if data["gpu"].get(f"{k}_memory_used") is not None
-                    and data["gpu"].get(f"{k}_memory_total") is not None
-                    else None,
+                    value=lambda data, k=gpu["key"]: gpu_memory_used_percentage(
+                        data, k
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -373,11 +414,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=DATA_GIGABYTES,
                     icon="mdi:memory",
-                    value=lambda data, k=gpu["key"]: round(
-                        data["gpu"][f"{k}_memory_used"] / 10**3, 2
-                    )
-                    if data["gpu"].get(f"{k}_memory_used") is not None
-                    else None,
+                    value=lambda data, k=gpu["key"]: gpu_memory_used(data, k),
                 ),
                 entry.data[CONF_PORT],
             ),
