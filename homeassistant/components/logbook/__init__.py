@@ -30,6 +30,8 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.websocket_api import messages
+from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -210,6 +212,34 @@ async def _process_logbook_platform(
     platform.async_describe_events(hass, _async_describe_event)
 
 
+def _ws_formatted_get_events(
+    hass: HomeAssistant,
+    msg_id: int,
+    start_day: dt,
+    end_day: dt,
+    entity_ids: list[str] | None = None,
+    filters: Filters | None = None,
+    entities_filter: EntityFilter | Callable[[str], bool] | None = None,
+    context_id: str | None = None,
+) -> str:
+    """Fetch events and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id,
+            _get_events(
+                hass,
+                start_day,
+                end_day,
+                entity_ids,
+                filters,
+                entities_filter,
+                context_id,
+                True,
+            ),
+        )
+    )
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "logbook/get_events",
@@ -249,20 +279,19 @@ async def ws_get_events(
     entity_ids = msg.get("entity_ids")
     context_id = msg.get("context_id")
 
-    logbook_events: list[dict[str, Any]] = await get_instance(
-        hass
-    ).async_add_executor_job(
-        _get_events,
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        hass.data[LOGBOOK_FILTERS],
-        hass.data[LOGBOOK_ENTITIES_FILTER],
-        context_id,
-        True,
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_formatted_get_events,
+            hass,
+            msg["id"],
+            start_time,
+            end_time,
+            entity_ids,
+            hass.data[LOGBOOK_FILTERS],
+            hass.data[LOGBOOK_ENTITIES_FILTER],
+            context_id,
+        )
     )
-    connection.send_result(msg["id"], logbook_events)
 
 
 class LogbookView(HomeAssistantView):
@@ -355,11 +384,7 @@ def _humanify(
     context_augmenter: ContextAugmenter,
     format_time: Callable[[Row], Any],
 ) -> Generator[dict[str, Any], None, None]:
-    """Generate a converted list of events into Entry objects.
-
-    Will try to group events if possible:
-    - if Home Assistant stop and start happen in same minute call it restarted
-    """
+    """Generate a converted list of events into entries."""
     external_events = hass.data.get(DOMAIN, {})
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
@@ -449,10 +474,22 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
-        if entity_ids or context_id:
+        # end_day - start_day intentionally checks .days and not .total_seconds()
+        # since we don't want to switch over to buffered if they go
+        # over one day by a few hours since the UI makes it so easy to do that.
+        if entity_ids or context_id or (end_day - start_day).days <= 1:
             rows = query.all()
         else:
-            rows = query.yield_per(1000)
+            # Only buffer rows to reduce memory pressure
+            # if we expect the result set is going to be very large.
+            # What is considered very large is going to differ
+            # based on the hardware Home Assistant is running on.
+            #
+            # sqlalchemy suggests that is at least 10k, but for
+            # even and RPi3 that number seems higher in testing
+            # so we don't switch over until we request > 1 day+ of data.
+            #
+            rows = query.yield_per(1024)
         for row in rows:
             context_lookup.setdefault(row.context_id, row)
             if row.context_only:
