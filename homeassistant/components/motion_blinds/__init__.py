@@ -146,7 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.debug("Shutting down Motion Listener")
                 multicast.Stop_listen()
 
-            unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
+            unsub = hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, stop_motion_multicast
+            )
             entry.async_on_unload(unsub)
 
     # Connect to motion gateway
