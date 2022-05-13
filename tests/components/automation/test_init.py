@@ -1243,12 +1243,12 @@ async def test_logbook_humanify_automation_triggered_event(hass):
 
     assert event1["name"] == "Hello Automation"
     assert event1["domain"] == "automation"
-    assert event1["message"] == "has been triggered"
+    assert event1["message"] == "triggered"
     assert event1["entity_id"] == "automation.hello"
 
     assert event2["name"] == "Bye Automation"
     assert event2["domain"] == "automation"
-    assert event2["message"] == "has been triggered by source of trigger"
+    assert event2["message"] == "triggered by source of trigger"
     assert event2["entity_id"] == "automation.bye"
 
 
