@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import os
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from sqlalchemy import text
@@ -641,3 +641,20 @@ def test_is_second_sunday():
     assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
 
     assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
+
+
+def test_build_mysqldb_conv():
+    """Test building the MySQLdb connect conv param."""
+    mock_converters = Mock(conversions={"original": "preserved"})
+    mock_constants = Mock(FIELD_TYPE=Mock(DATETIME="DATETIME"))
+    with patch.dict(
+        "sys.modules",
+        **{"MySQLdb.constants": mock_constants, "MySQLdb.converters": mock_converters},
+    ):
+        conv = util.build_mysqldb_conv()
+
+    assert conv["original"] == "preserved"
+    assert conv["DATETIME"]("INVALID") is None
+    assert conv["DATETIME"]("2022-05-13T22:33:12.741") == datetime(
+        2022, 5, 13, 22, 33, 12, 741000, tzinfo=None
+    )
