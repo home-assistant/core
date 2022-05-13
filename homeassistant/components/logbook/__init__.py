@@ -414,16 +414,14 @@ def _humanify(
     # Process rows
     for row in rows:
         context_id = row.context_id
-        event_type = row.event_type
         context_lookup.setdefault(context_id, row)
-        if (
-            row.context_only
-            or event_type == EVENT_CALL_SERVICE
-            or (
-                event_type != EVENT_STATE_CHANGED
-                and entities_filter is not None
-                and not _keep_row(row, event_type)
-            )
+        if row.context_only:
+            continue
+        event_type = row.event_type
+        if event_type == EVENT_CALL_SERVICE or (
+            event_type != EVENT_STATE_CHANGED
+            and entities_filter is not None
+            and not _keep_row(row, event_type)
         ):
             continue
 
@@ -448,7 +446,7 @@ def _humanify(
             if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, row)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
         elif event_type in external_events:
@@ -456,7 +454,7 @@ def _humanify(
             data = describe_event(event_cache.get(row))
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -476,7 +474,7 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, row)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
 
@@ -564,12 +562,12 @@ class ContextAugmenter:
         self.external_events = external_events
         self.event_cache = event_cache
 
-    def augment(self, data: dict[str, Any], row: Row) -> None:
+    def augment(self, data: dict[str, Any], row: Row, context_id: str) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
 
-        if not (context_row := self.context_lookup.get(row.context_id)):
+        if not (context_row := self.context_lookup.get(context_id)):
             return
 
         if _rows_match(row, context_row):
