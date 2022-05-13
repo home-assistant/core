@@ -55,6 +55,10 @@ SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
+# EPOCHORDINAL is not exposed as a constant
+# https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
+EPOCHORDINAL = datetime(1970, 1, 1).toordinal()
+
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
@@ -630,10 +634,22 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
 
 
 def process_datetime_to_timestamp(ts: datetime) -> float:
-    """Process a timestamp into a unix timestamp."""
-    if ts.tzinfo == dt_util.UTC:
-        return ts.timestamp()
-    return ts.replace(tzinfo=dt_util.UTC).timestamp()
+    """Process a datebase datetime to epoch.
+
+    Mirrors the behavior of process_timestamp_to_utc_isoformat
+    except it returns the epoch time.
+    """
+    if ts.tzinfo is None:
+        # Taken from
+        # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
+        return (
+            (ts.toordinal() - EPOCHORDINAL) * 86400
+            + ts.hour * 3600
+            + ts.minute * 60
+            + ts.second
+            + (ts.microsecond / 1000000)
+        )
+    return ts.timestamp()
 
 
 class LazyState(State):
