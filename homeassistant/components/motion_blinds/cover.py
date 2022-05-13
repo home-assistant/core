@@ -162,6 +162,7 @@ async def async_setup_entry(
 
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
+    _restore_tilt = False
 
     def __init__(self, coordinator, blind, device_class, sw_version):
         """Initialize the blind."""
@@ -285,9 +286,13 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
+        angle = kwargs.get(ATTR_TILT_POSITION)
         async with self._api_lock:
             await self.hass.async_add_executor_job(
-                self._blind.Set_position, 100 - position
+                self._blind.Set_position,
+                100 - position,
+                angle=angle,
+                restore_angle=self._restore_tilt,
             )
         await self.async_request_position_till_stop()
 
@@ -308,6 +313,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
 class MotionTiltDevice(MotionPositionDevice):
     """Representation of a Motion Blind Device."""
+    _restore_tilt = True
 
     @property
     def current_cover_tilt_position(self):
