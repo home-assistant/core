@@ -446,7 +446,7 @@ def _humanify(
             if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, entity_id, row, context_id)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
         elif event_type in external_events:
@@ -454,7 +454,7 @@ def _humanify(
             data = describe_event(event_cache.get(row))
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row, context_id)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -474,7 +474,7 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, entry_entity_id, row, context_id)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
 
@@ -506,6 +506,22 @@ def _get_events(
 
     def yield_rows(query: Query) -> Generator[Row, None, None]:
         """Yield Events that are not filtered away."""
+
+        def _keep_row(row: Row, event_type: str) -> bool:
+            """Check if the entity_filter rejects a row."""
+            assert entities_filter is not None
+            if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
+                return entities_filter(entity_id)
+
+            if event_type in external_events:
+                # If the entity_id isn't described, use the domain that describes
+                # the event for filtering.
+                domain: str | None = external_events[event_type][0]
+            else:
+                domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
+
+            return domain is not None and entities_filter(f"{domain}._")
+
         # end_day - start_day intentionally checks .days and not .total_seconds()
         # since we don't want to switch over to buffered if they go
         # over one day by a few hours since the UI makes it so easy to do that.
@@ -562,9 +578,7 @@ class ContextAugmenter:
         self.external_events = external_events
         self.event_cache = event_cache
 
-    def augment(
-        self, data: dict[str, Any], entity_id: str | None, row: Row, context_id: str
-    ) -> None:
+    def augment(self, data: dict[str, Any], row: Row, context_id: str) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
