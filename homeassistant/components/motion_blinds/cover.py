@@ -71,6 +71,7 @@ TDBU_DEVICE_MAP = {
 
 SET_ABSOLUTE_POSITION_SCHEMA = {
     vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
+    vol.Optional(ATTR_TILT_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
     vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 
@@ -286,22 +287,27 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        angle = kwargs.get(ATTR_TILT_POSITION)
         async with self._api_lock:
             await self.hass.async_add_executor_job(
                 self._blind.Set_position,
                 100 - position,
-                angle=angle,
-                restore_angle=self._restore_tilt,
+                None,
+                self._restore_tilt,
             )
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
+        angle = kwargs.get(ATTR_TILT_POSITION)
+        if angle is not None:
+            angle = angle * 180 / 100
         async with self._api_lock:
             await self.hass.async_add_executor_job(
-                self._blind.Set_position, 100 - position
+                self._blind.Set_position,
+                100 - position,
+                angle,
+                self._restore_tilt,
             )
         await self.async_request_position_till_stop()
 

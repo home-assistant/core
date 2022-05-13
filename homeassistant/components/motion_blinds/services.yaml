@@ -16,6 +16,13 @@ set_absolute_position:
         number:
           min: 1
           max: 100
+    tilt_position:
+      name: Tilt position
+      description: Tilt position to move to.
+      selector:
+        number:
+          min: 1
+          max: 100
     width:
       name: Width
       description: Specify the width that is covered, only for TDBU Combined entities.
