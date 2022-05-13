@@ -145,7 +145,7 @@ async def test_integration_already_exists(hass: HomeAssistant):
 
 async def test_setup_entry_api_unauthorized(hass: HomeAssistant):
     """Test that ConfigEntryAuthFailed is thrown when authentication fails."""
-    with _patch_setup_entry(), _patch_laundrify_get_machines() as laundrify_mock:
+    with _patch_laundrify_validate_token() as laundrify_mock:
         laundrify_mock.side_effect = exceptions.UnauthorizedException
         config_entry = create_entry(hass)
 
@@ -154,6 +154,20 @@ async def test_setup_entry_api_unauthorized(hass: HomeAssistant):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert not hass.data.get(DOMAIN)
+
+
+async def test_setup_entry_api_cannot_connect(hass: HomeAssistant):
+    """Test that ApiConnectionException is thrown when connection fails."""
+    with _patch_laundrify_validate_token() as laundrify_mock:
+        laundrify_mock.side_effect = exceptions.ApiConnectionException
+        config_entry = create_entry(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
