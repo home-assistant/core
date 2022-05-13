@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
-    await async_create_file(TEST_FILE)
+    await async_create_file(hass, TEST_FILE)
     hass.config.allowlist_external_dirs = {TEST_DIR}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -43,7 +43,7 @@ async def test_unique_path(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already setup."""
-    await async_create_file(TEST_FILE)
+    await async_create_file(hass, TEST_FILE)
     hass.config.allowlist_external_dirs = {TEST_DIR}
     mock_config_entry.add_to_hass(hass)
 
@@ -76,7 +76,7 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
 
     assert result2["errors"] == {"base": "not_valid"}
 
-    await async_create_file(TEST_FILE)
+    await async_create_file(hass, TEST_FILE)
 
     with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
         "homeassistant.components.filesize.async_setup_entry",

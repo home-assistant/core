@@ -11,15 +11,24 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import PLATFORMS
 
 
+def check_path(path: pathlib.Path) -> bool:
+    """Check path."""
+    exists = path.exists()
+    is_file = path.is_file()
+
+    if exists and is_file:
+        return True
+    return False
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
     path = entry.data[CONF_FILE_PATH]
     get_path = pathlib.Path(path)
 
-    exist = await hass.async_add_executor_job(get_path.exists)
-    is_file = await hass.async_add_executor_job(get_path.is_file)
-    if not exist or not is_file:
+    check_file = await hass.async_add_executor_job(check_path, get_path)
+    if not check_file:
         raise ConfigEntryNotReady(f"Can not access file {path}")
 
     if not hass.config.is_allowed_path(path):

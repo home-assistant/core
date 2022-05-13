@@ -75,10 +75,8 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        [
-            FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
-            for description in SENSOR_TYPES
-        ]
+        FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
+        for description in SENSOR_TYPES
     )
 
 

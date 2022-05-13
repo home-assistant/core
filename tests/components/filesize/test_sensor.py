@@ -28,7 +28,7 @@ async def test_valid_path(
 ) -> None:
     """Test for a valid path."""
     testfile = f"{tmpdir}/file.txt"
-    await async_create_file(testfile)
+    await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmpdir}
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -50,7 +50,7 @@ async def test_state_unavailable(
 ) -> None:
     """Verify we handle state unavailable."""
     testfile = f"{tmpdir}/file.txt"
-    await async_create_file(testfile)
+    await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmpdir}
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
