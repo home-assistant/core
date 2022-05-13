@@ -413,7 +413,7 @@ def _humanify(
             if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, entity_id, row)
+            context_augmenter.augment(data, row)
             yield data
 
         elif event_type in external_events:
@@ -421,7 +421,7 @@ def _humanify(
             data = describe_event(event_cache.get(row))
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, data.get(ATTR_ENTITY_ID), row)
+            context_augmenter.augment(data, row)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -440,7 +440,7 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
-            context_augmenter.augment(data, entity_id, row)
+            context_augmenter.augment(data, row)
             yield data
 
 
@@ -565,7 +565,7 @@ class ContextAugmenter:
         self.external_events = external_events
         self.event_cache = event_cache
 
-    def augment(self, data: dict[str, Any], entity_id: str | None, row: Row) -> None:
+    def augment(self, data: dict[str, Any], row: Row) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
