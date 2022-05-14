@@ -80,11 +80,7 @@ class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
         status: int = self.ialarmxr.get_status()
         _LOGGER.debug("iAlarmXR status: %s", status)
 
-        decoded_status = IALARMXR_TO_HASS.get(status)
-        if decoded_status is not None:
-            self.state = decoded_status
-        else:
-            self.state = STATE_UNKNOWN
+        self.state = IALARMXR_TO_HASS.get(status)
 
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarmXR."""
