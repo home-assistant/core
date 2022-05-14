@@ -23,7 +23,7 @@
         },
         "data_description": {
           "resource": "The URL to the website that contains the value",
-          "select": "Defines the HTML tag to search for",
+          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
           "attribute": "Get value of an attribute on the selected tag",
           "index": "Defines which of the elements returned by the CSS selector to use",
           "value_template": "Defines a template to get the state of the sensor",
