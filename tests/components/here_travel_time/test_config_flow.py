@@ -1,6 +1,7 @@
 """Test the HERE Travel Time config flow."""
 from unittest.mock import patch
 
+from herepy import HEREError
 from herepy.routing_api import InvalidCredentialsError
 import pytest
 
@@ -229,7 +230,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     with patch(
         "herepy.RoutingApi.public_transport_timetable",
-        side_effect=Exception,
+        side_effect=HEREError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
