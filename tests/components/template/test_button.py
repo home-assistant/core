@@ -68,7 +68,10 @@ async def test_all_optional_config(hass, calls):
                 "template": {
                     "unique_id": "test",
                     "button": {
-                        "press": {"service": "test.automation"},
+                        "press": {
+                            "service": "test.automation",
+                            "data_template": {"caller": "{{ this.entity_id }}"},
+                        },
                         "device_class": "restart",
                         "unique_id": "test",
                         "name": "test",
@@ -104,6 +107,7 @@ async def test_all_optional_config(hass, calls):
         )
 
     assert len(calls) == 1
+    assert calls[0].data["caller"] == _TEST_OPTIONS_BUTTON
 
     _verify(
         hass,
