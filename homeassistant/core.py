@@ -734,7 +734,9 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context()
+        self.context: Context = context or Context(
+            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+        )
 
     def __hash__(self) -> int:
         """Make hashable."""
@@ -1363,10 +1365,10 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        if context is None:
-            context = Context()
-
         now = dt_util.utcnow()
+
+        if context is None:
+            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
 
         state = State(
             entity_id,
