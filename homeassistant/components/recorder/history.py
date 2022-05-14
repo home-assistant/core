@@ -238,8 +238,10 @@ def _significant_states_stmt(
         stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
     else:
         stmt += _ignore_domains_filter
-        if filters:
-            filters.bake(stmt)
+        if filters and filters.has_config:
+            stmt.add_criteria(
+                lambda q: q.filter(filters.entity_filter()), track_on=filters
+            )
 
     stmt += lambda q: q.filter(States.last_updated > start_time)
     if end_time:
@@ -523,8 +525,8 @@ def _get_states_for_all_stmt(
         ).c.max_state_id,
     )
     stmt += _ignore_domains_filter
-    if filters:
-        filters.bake(stmt)
+    if filters and filters.has_config:
+        stmt.add_criteria(lambda q: q.filter(filters.entity_filter()), track_on=filters)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
