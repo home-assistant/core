@@ -24,6 +24,24 @@ DATETIME_RE = re.compile(
     r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
 )
 
+# Copyright (c) 2021, Hugo van Kemenade and contributors
+# Copyright (c) 2009-2018, Gerhard Weis and contributors
+# Copyright (c) 2009, Gerhard Weis
+# All rights reserved.
+# https://github.com/gweis/isodate/blob/master/LICENSE
+ISO8601_DURATION_RE = re.compile(
+    r"^(?P<sign>[+-])?"
+    r"P(?!\b)"
+    r"(?P<years>[0-9]+([,.][0-9]+)?Y)?"
+    r"(?P<months>[0-9]+([,.][0-9]+)?M)?"
+    r"(?P<weeks>[0-9]+([,.][0-9]+)?W)?"
+    r"(?P<days>[0-9]+([,.][0-9]+)?D)?"
+    r"((?P<separator>T)"
+    r"(?P<hours>[0-9]+([,.][0-9]+)?H)?"
+    r"(?P<minutes>[0-9]+([,.][0-9]+)?M)?"
+    r"(?P<seconds>[0-9]+([,.][0-9]+)?S)?)?$"
+)
+
 
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """Set a default time zone to be used when none is specified.
@@ -144,6 +162,42 @@ def parse_datetime(dt_str: str) -> dt.datetime | None:
     kws = {k: int(v) for k, v in kws.items() if v is not None}
     kws["tzinfo"] = tzinfo
     return dt.datetime(**kws)
+
+
+def parse_iso8601_duration(datestring: str) -> dt.timedelta:
+    """
+    Parse an ISO 8601 duration into datetime.timedelta object.
+
+    Years and months are ignored.
+
+    Leading sign is not supported.
+
+    Does not support the alternative formats
+    PYYYYMMDDThhmmss or P[YYYY]-[MM]-[DD]T[hh]:[mm]:[ss].
+    """
+    match = ISO8601_DURATION_RE.match(datestring)
+    if not match:
+        raise ValueError(
+            "Duration string is not supported by this implementation %r" % datestring
+        )
+    groups = match.groupdict()
+    for key, val in groups.items():
+        if key != "separator":
+            if val is None:
+                groups[key] = "0n"
+            if key in ("sign", "years", "months") and val is not None:
+                raise ValueError(
+                    "Sign, years and months are not supported by this implementation."
+                )
+            groups[key] = float(groups[key][:-1].replace(",", "."))
+    result = dt.timedelta(
+        days=float(groups["days"]),
+        hours=float(groups["hours"]),
+        minutes=float(groups["minutes"]),
+        seconds=float(groups["seconds"]),
+        weeks=float(groups["weeks"]),
+    )
+    return result
 
 
 def parse_date(dt_str: str) -> dt.date | None:

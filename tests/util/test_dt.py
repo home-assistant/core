@@ -136,6 +136,41 @@ def test_parse_datetime_returns_none_for_incorrect_format():
     assert dt_util.parse_datetime("not a datetime string") is None
 
 
+@pytest.mark.parametrize(
+    "iso_string,expected_result",
+    [
+        ("PT10M", timedelta(minutes=10)),
+        ("P01W", timedelta(weeks=1)),
+        ("PT0S", timedelta(0)),
+        ("P10DT11H11M01S", timedelta(days=10, hours=11, minutes=11, seconds=1)),
+    ],
+)
+def test_parse_iso8601_duration(iso_string: str, expected_result: timedelta) -> None:
+    """Test that parse_iso8601_duration returns the expected result."""
+    assert dt_util.parse_iso8601_duration(iso_string) == expected_result
+
+
+def test_parse_iso8601_duration_errors() -> None:
+    """Test that wrong inputs raise an ValueError."""
+    with pytest.raises(ValueError):
+        dt_util.parse_iso8601_duration("P1YT10M")
+
+    with pytest.raises(ValueError):
+        dt_util.parse_iso8601_duration("P1MT10M")
+
+    with pytest.raises(ValueError):
+        dt_util.parse_iso8601_duration("1MT10M")
+
+    with pytest.raises(ValueError):
+        dt_util.parse_iso8601_duration("P1MT100M")
+
+    with pytest.raises(ValueError):
+        dt_util.parse_iso8601_duration("P")
+
+    with pytest.raises(ValueError):
+        dt_util.parse_iso8601_duration("P1234")
+
+
 def test_get_age():
     """Test get_age."""
     diff = dt_util.now() - timedelta(seconds=0)
