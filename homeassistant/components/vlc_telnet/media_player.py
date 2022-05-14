@@ -101,6 +101,7 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc = vlc
         self._available = available
         self._volume_bkp = 0.0
+        self._media_album_name: str | None = None
         self._media_artist: str | None = None
         self._media_title: str | None = None
         config_entry_id = config_entry.entry_id
@@ -162,8 +163,16 @@ class VlcDevice(MediaPlayerEntity):
         data = info.data
         LOGGER.debug("Info data: %s", data)
 
-        self._media_artist = data.get(0, {}).get("artist")
-        self._media_title = data.get(0, {}).get("title")
+        self._media_album_name = data.get("data", {}).get("album")
+        self._media_artist = data.get("data", {}).get("artist")
+        self._media_title = data.get("data", {}).get("title")
+        now_playing = data.get("data", {}).get("now_playing")
+
+        # Many radio streams put artist/title/album in now_playing and title is the station name.
+        if now_playing:
+            if not self._media_artist:
+                self._media_artist = self._media_title
+            self._media_title = now_playing
 
         if self._media_title:
             return
@@ -225,6 +234,11 @@ class VlcDevice(MediaPlayerEntity):
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._media_title
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Album name of current playing media, music track only."""
+        return self._media_album_name
 
     @property
     def media_artist(self) -> str | None:
