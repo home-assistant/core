@@ -153,6 +153,10 @@ def lambda_stmt_and_join_attributes(
     return lambda_stmt(lambda: select(*QUERY_STATES_NO_LAST_CHANGED)), True
 
 
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the history hooks."""
+
+
 def get_significant_states(
     hass: HomeAssistant,
     start_time: datetime,
@@ -204,6 +208,9 @@ def _significant_states_stmt(
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Query the database for significant state changes."""
+    stmt, join_attributes = lambda_stmt_and_join_attributes(
+        schema_version, no_attributes, include_last_changed=True
+    )
 
     if entity_ids and len(entity_ids) == 1:
         if (
@@ -217,14 +224,7 @@ def _significant_states_stmt(
                 (States.last_changed == States.last_updated)
                 | States.last_changed.is_(None)
             )
-        else:
-            stmt, join_attributes = lambda_stmt_and_join_attributes(
-                schema_version, no_attributes, include_last_changed=True
-            )
     elif significant_changes_only:
-        stmt, join_attributes = lambda_stmt_and_join_attributes(
-            schema_version, no_attributes, include_last_changed=True
-        )
         stmt += lambda q: q.filter(
             or_(
                 *[
@@ -294,9 +294,7 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = execute_stmt_lambda_element(
-        session, stmt, None if entity_ids else start_time, end_time
-    )
+    states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -395,9 +393,7 @@ def state_changes_during_period(
             descending,
             limit,
         )
-        states = execute_stmt_lambda_element(
-            session, stmt, None if entity_id else start_time, end_time
-        )
+        states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
