@@ -133,9 +133,9 @@ def lambda_stmt_and_join_attributes(
     # state_attributes table
     if no_attributes:
         if include_last_changed:
-            return lambda_stmt(select(*QUERY_STATE_NO_ATTR)), False
+            return lambda_stmt(lambda: select(*QUERY_STATE_NO_ATTR)), False
         return (
-            lambda_stmt(select(*QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),
+            lambda_stmt(lambda: select(*QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),
             False,
         )
     # If we in the process of migrating schema we do
@@ -144,19 +144,19 @@ def lambda_stmt_and_join_attributes(
     if recorder.get_instance(hass).schema_version < 25:
         if include_last_changed:
             return (
-                lambda_stmt(select(*QUERY_STATES_PRE_SCHEMA_25)),
+                lambda_stmt(lambda: select(*QUERY_STATES_PRE_SCHEMA_25)),
                 False,
             )
         return (
-            lambda_stmt(select(*QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),
+            lambda_stmt(lambda: select(*QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),
             False,
         )
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
     # join state_attributes
     if include_last_changed:
-        return lambda_stmt(select(*QUERY_STATES)), True
-    return lambda_stmt(select(*QUERY_STATES_NO_LAST_CHANGED)), True
+        return lambda_stmt(lambda: select(*QUERY_STATES)), True
+    return lambda_stmt(lambda: select(*QUERY_STATES_NO_LAST_CHANGED)), True
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -353,32 +353,24 @@ def _state_changed_during_period_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         hass, no_attributes, include_last_changed=False
     )
-
     stmt += lambda q: q.filter(
         ((States.last_changed == States.last_updated) | States.last_changed.is_(None))
         & (States.last_updated > start_time)
     )
-
     if end_time is not None:
         stmt += lambda q: q.filter(States.last_updated < end_time)
-
     if entity_id is not None:
         stmt += lambda q: q.filter_by(entity_id)
-        entity_id = entity_id.lower()
-
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-
     if descending:
         stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
     else:
         stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
-
     if limit:
         stmt += lambda q: q.limit(limit)
-
     return stmt
 
 
@@ -398,14 +390,13 @@ def state_changes_during_period(
             hass,
             start_time,
             end_time,
-            entity_id,
+            entity_id.lower(),
             no_attributes,
             descending,
             limit,
         )
 
         states = _execute_decider(stmt(session), start_time, end_time)
-
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
@@ -427,23 +418,18 @@ def _get_last_state_changes_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         hass, False, include_last_changed=False
     )
-
     stmt += lambda q: q.filter(
         (States.last_changed == States.last_updated) | States.last_changed.is_(None)
     )
-
     if entity_id is not None:
         stmt += lambda q: q.filter_by(entity_id)
-        entity_id = entity_id.lower()
-
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
-
-    stmt += lambda q: q.limit(number_of_states)
-
+    stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc()).limit(
+        number_of_states
+    )
     return stmt
 
 
@@ -454,9 +440,8 @@ def get_last_state_changes(
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
-        stmt = _get_last_state_changes_stmt(hass, number_of_states, entity_id)
+        stmt = _get_last_state_changes_stmt(hass, number_of_states, entity_id.lower())
         states = list(execute(stmt(session)))
-
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
