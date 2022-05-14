@@ -335,36 +335,6 @@ def _state_changed_during_period_stmt(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None,
-    no_attributes: bool,
-    descending: bool,
-    limit: int | None,
-) -> StatementLambdaElement:
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=False
-    )
-    stmt += lambda q: q.filter(
-        ((States.last_changed == States.last_updated) | States.last_changed.is_(None))
-        & (States.last_updated > start_time)
-    )
-    if end_time:
-        stmt += lambda q: q.filter(States.last_updated < end_time)
-    if join_attributes:
-        stmt += lambda q: q.outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
-        )
-    if descending:
-        stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
-    else:
-        stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
-    if limit:
-        stmt += lambda q: q.limit(limit)
-    return stmt
-
-
-def _state_changed_during_period_with_entity_id_stmt(
-    hass: HomeAssistant,
-    start_time: datetime,
-    end_time: datetime | None,
     entity_id: str | None,
     no_attributes: bool,
     descending: bool,
@@ -407,26 +377,15 @@ def state_changes_during_period(
     entity_id = entity_id.lower() if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
-        if entity_id:
-            stmt = _state_changed_during_period_with_entity_id_stmt(
-                hass,
-                start_time,
-                end_time,
-                entity_id,
-                no_attributes,
-                descending,
-                limit,
-            )
-        else:
-            stmt = _state_changed_during_period_stmt(
-                hass,
-                start_time,
-                end_time,
-                no_attributes,
-                descending,
-                limit,
-            )
-
+        stmt = _state_changed_during_period_stmt(
+            hass,
+            start_time,
+            end_time,
+            entity_id,
+            no_attributes,
+            descending,
+            limit,
+        )
         states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
         entity_ids = [entity_id] if entity_id is not None else None
 
