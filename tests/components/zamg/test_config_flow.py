@@ -16,7 +16,6 @@ from .conftest import TEST_STATION_ID, TEST_STATION_NAME
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistant,
-    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -43,7 +42,6 @@ async def test_full_user_flow_implementation(
 
 async def test_error_update(
     hass: HomeAssistant,
-    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -68,7 +66,6 @@ async def test_error_update(
 
 async def test_full_import_flow_implementation(
     hass: HomeAssistant,
-    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:
@@ -103,7 +100,6 @@ async def test_import_flow_not_found(
 
 async def test_user_flow_duplicate(
     hass: HomeAssistant,
-    mock_zamg_stations: MagicMock,
     mock_zamg: MagicMock,
     mock_setup_entry: None,
 ) -> None:

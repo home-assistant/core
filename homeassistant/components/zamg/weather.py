@@ -95,7 +95,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
-        # self._attr_unique_id = f"{station_id}_{description.key}"
 
     @property
     def condition(self):
