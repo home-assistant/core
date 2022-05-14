@@ -1493,23 +1493,8 @@ async def test_reserving_states(hass):
     assert hass.states.async_available("light.bedroom") is True
 
 
-async def test_state_change_events_context_id_match_state_time(hass):
-    """Test last_updated, timed_fired, and the ulid all have the same time."""
-    events = []
-
-    @ha.callback
-    def _event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
-
-    hass.states.async_set("light.bedroom", "on")
-    await hass.async_block_till_done()
-    state: State = hass.states.get("light.bedroom")
-    assert state.last_updated == events[0].time_fired
-    assert len(state.context.id) == 26
-
-    encoded = state.context.id[:10].encode("ascii")
+def _ulid_timestamp(ulid: str) -> int:
+    encoded = ulid[:10].encode("ascii")
     # This unpacks the time from the ulid
 
     # Copied from
@@ -1775,7 +1760,7 @@ async def test_state_change_events_context_id_match_state_time(hass):
             0xFF,
         ),
     )
-    timestamp = int.from_bytes(
+    return int.from_bytes(
         bytes(
             (
                 ((decoding[encoded[0]] << 5) | decoding[encoded[1]]) & 0xFF,
@@ -1799,5 +1784,44 @@ async def test_state_change_events_context_id_match_state_time(hass):
         byteorder="big",
     )
 
+
+async def test_state_change_events_context_id_match_state_time(hass):
+    """Test last_updated, timed_fired, and the ulid all have the same time."""
+    events = []
+
+    @ha.callback
+    def _event_listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
+
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state: State = hass.states.get("light.bedroom")
+    assert state.last_updated == events[0].time_fired
+    assert len(state.context.id) == 26
     # ULIDs store time to 3 decimal places compared to python timestamps
-    assert timestamp == int(state.last_updated.timestamp() * 1000)
+    assert _ulid_timestamp(state.context.id) == int(
+        state.last_updated.timestamp() * 1000
+    )
+
+
+async def test_state_firing_event_matches_context_id_ulid_time(hass):
+    """Test timed_fired and the ulid have the same time."""
+    events = []
+
+    @ha.callback
+    def _event_listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _event_listener)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    event = events[0]
+    assert len(event.context.id) == 26
+    # ULIDs store time to 3 decimal places compared to python timestamps
+    assert _ulid_timestamp(event.context.id) == int(
+        events[0].time_fired.timestamp() * 1000
+    )
