@@ -446,16 +446,20 @@ def get_last_state_changes(
         )
 
 
-def _most_recent_state_ids_entities_subquery(
-    query: Query,
+def _get_states_for_entites_stmt(
+    hass: HomeAssistant,
     run_start: datetime,
     utc_point_in_time: datetime,
     entity_ids: list[str],
-) -> Query:
-    """Query to find the most recent state id for specific entities."""
+    no_attributes: bool,
+) -> StatementLambdaElement:
+    """Baked query to get states for specific entities."""
+    stmt, join_attributes = lambda_stmt_and_join_attributes(
+        hass, no_attributes, include_last_changed=True
+    )
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    return query.where(
+    stmt += lambda q: q.where(
         States.state_id
         == (
             select(func.max(States.state_id).label("max_state_id"))
@@ -468,22 +472,6 @@ def _most_recent_state_ids_entities_subquery(
             .subquery()
         ).c.max_state_id
     )
-
-
-def _get_states_for_entites_stmt(
-    hass: HomeAssistant,
-    run_start: datetime,
-    utc_point_in_time: datetime,
-    entity_ids: list[str],
-    no_attributes: bool,
-) -> StatementLambdaElement:
-    """Baked query to get states for specific entities."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=True
-    )
-    stmt += lambda q: _most_recent_state_ids_entities_subquery(
-        q, run_start, utc_point_in_time, entity_ids
-    )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -491,10 +479,17 @@ def _get_states_for_entites_stmt(
     return stmt
 
 
-def _most_recent_state_ids_subquery(
-    query: Query, run_start: datetime, utc_point_in_time: datetime
-) -> Query:
-    """Find the most recent state ids for all entiites."""
+def _get_states_for_all_stmt(
+    hass: HomeAssistant,
+    run_start: datetime,
+    utc_point_in_time: datetime,
+    filters: Any | None,
+    no_attributes: bool,
+) -> StatementLambdaElement:
+    """Baked query to get states for all entities."""
+    stmt, join_attributes = lambda_stmt_and_join_attributes(
+        hass, no_attributes, include_last_changed=True
+    )
     # We did not get an include-list of entities, query all states in the inner
     # query, then filter out unwanted domains as well as applying the custom filter.
     # This filtering can't be done in the inner query because the domain column is
@@ -511,7 +506,7 @@ def _most_recent_state_ids_subquery(
         .group_by(States.entity_id)
         .subquery()
     )
-    return query.where(
+    stmt += lambda q: q.where(
         States.state_id
         == (
             select(func.max(States.state_id).label("max_state_id"))
@@ -527,20 +522,6 @@ def _most_recent_state_ids_subquery(
             .subquery()
         ).c.max_state_id,
     )
-
-
-def _get_states_for_all_stmt(
-    hass: HomeAssistant,
-    run_start: datetime,
-    utc_point_in_time: datetime,
-    filters: Any | None,
-    no_attributes: bool,
-) -> StatementLambdaElement:
-    """Baked query to get states for all entities."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=True
-    )
-    stmt += lambda q: _most_recent_state_ids_subquery(q, run_start, utc_point_in_time)
     stmt += _ignore_domains_filter
     if filters:
         filters.bake(stmt)
