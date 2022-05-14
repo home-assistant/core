@@ -1,0 +1,76 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "platform": "Select Platform to configure",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "Name that will be used for Config Entry and also the Sensor"
+        }
+      },
+      "final": {
+        "data": {
+          "command": "Command to Execute",
+          "payload_off": "Payload that represents off",
+          "payload_on": "Payload that represents on",
+          "device_class": "Set class of the device",
+          "value_template": "Value template",
+          "command_timeout": "Command timeout",
+          "json_attributes": "JSON attributes",
+          "unit_of_measurement": "Unit of Measurement",
+          "command_close": "Command to close",
+          "command_open": "Command to open",
+          "command_state": "Command to get state",
+          "command_stop": "Command to stop",
+          "command_off": "Command to turn off",
+          "command_on": "Command to turn on",
+          "icon_template": "Icon template"
+        },
+        "data_description": {
+          "payload_off": "Returned payload from command that represents off",
+          "payload_on": "Returned payload from command that represents on",
+          "value_template": "Define a template to extract/modify the value",
+          "command_timeout": "Timeout in seconds",
+          "json_attributes": "Defines a list of keys to extract values from a JSON dictionary result and then set as sensor attributes",
+          "icon_template": "Define a template to extract/modify the icon"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "command": "[%key:component::command_line::config::step::final::data::command%]",
+          "payload_off": "[%key:component::command_line::config::step::final::data::payload_off%]",
+          "payload_on": "[%key:component::command_line::config::step::final::data::payload_on%]",
+          "device_class": "[%key:component::command_line::config::step::final::data::device_class%]",
+          "value_template": "[%key:component::command_line::config::step::final::data::value_template%]",
+          "command_timeout": "[%key:component::command_line::config::step::final::data::command_timeout%]",
+          "json_attributes": "[%key:component::command_line::config::step::final::data::json_attributes%]",
+          "unit_of_measurement": "[%key:component::command_line::config::step::final::data::unit_of_measurement%]",
+          "command_close": "[%key:component::command_line::config::step::final::data::command_close%]",
+          "command_open": "[%key:component::command_line::config::step::final::data::command_open%]",
+          "command_state": "[%key:component::command_line::config::step::final::data::command_state%]",
+          "command_stop": "[%key:component::command_line::config::step::final::data::command_stop%]",
+          "command_off": "[%key:component::command_line::config::step::final::data::command_off%]",
+          "command_on": "[%key:component::command_line::config::step::final::data::command_on%]",
+          "icon_template": "[%key:component::command_line::config::step::final::data::icon_template%]"
+        },
+        "data_description": {
+          "payload_off": "[%key:component::command_line::config::step::final::data_description::payload_off%]",
+          "payload_on": "[%key:component::command_line::config::step::final::data_description::payload_on%]",
+          "value_template": "[%key:component::command_line::config::step::final::data_description::value_template%]",
+          "command_timeout": "[%key:component::command_line::config::step::final::data_description::command_timeout%]",
+          "json_attributes": "[%key:component::command_line::config::step::final::data_description::json_attributes%]",
+          "icon_template": "[%key:component::command_line::config::step::final::data_description::icon_template%]"
+        }
+      }
+    }
+  }
+}

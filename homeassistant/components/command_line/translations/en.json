@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "final": {
+                "data": {
+                    "command": "Command to Execute",
+                    "command_close": "Command to close",
+                    "command_off": "Command to turn off",
+                    "command_on": "Command to turn on",
+                    "command_open": "Command to open",
+                    "command_state": "Command to get state",
+                    "command_stop": "Command to stop",
+                    "command_timeout": "Command timeout",
+                    "device_class": "Set class of the device",
+                    "icon_template": "Icon template",
+                    "json_attributes": "JSON attributes",
+                    "payload_off": "Payload that represents off",
+                    "payload_on": "Payload that represents on",
+                    "unit_of_measurement": "Unit of Measurement",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "command_timeout": "Timeout in seconds",
+                    "icon_template": "Define a template to extract/modify the icon",
+                    "json_attributes": "Defines a list of keys to extract values from a JSON dictionary result and then set as sensor attributes",
+                    "payload_off": "Returned payload from command that represents off",
+                    "payload_on": "Returned payload from command that represents on",
+                    "value_template": "Define a template to extract/modify the value"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "platform": "Select Platform to configure"
+                },
+                "data_description": {
+                    "name": "Name that will be used for Config Entry and also the Sensor"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "command": "Command to Execute",
+                    "command_close": "Command to close",
+                    "command_off": "Command to turn off",
+                    "command_on": "Command to turn on",
+                    "command_open": "Command to open",
+                    "command_state": "Command to get state",
+                    "command_stop": "Command to stop",
+                    "command_timeout": "Command timeout",
+                    "device_class": "Set class of the device",
+                    "icon_template": "Icon template",
+                    "json_attributes": "JSON attributes",
+                    "payload_off": "Payload that represents off",
+                    "payload_on": "Payload that represents on",
+                    "unit_of_measurement": "Unit of Measurement",
+                    "value_template": "Value template"
+                },
+                "data_description": {
+                    "command_timeout": "Timeout in seconds",
+                    "icon_template": "Define a template to extract/modify the icon",
+                    "json_attributes": "Defines a list of keys to extract values from a JSON dictionary result and then set as sensor attributes",
+                    "payload_off": "Returned payload from command that represents off",
+                    "payload_on": "Returned payload from command that represents on",
+                    "value_template": "Define a template to extract/modify the value"
+                }
+            }
+        }
+    }
+}

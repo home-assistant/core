@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
-
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -11,18 +11,20 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -73,6 +75,7 @@ async def async_setup_platform(
     new_config = {
         **config,
         CONF_VALUE_TEMPLATE: value_template.template if value_template else None,
+        CONF_PLATFORM: Platform.BINARY_SENSOR,
     }
 
     hass.async_create_task(
@@ -89,30 +92,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Command Line Binary Sensor entry."""
 
-    name: str = entry.data[CONF_NAME]
-    command: str = entry.data[CONF_COMMAND]
-    payload_off: str = entry.data[CONF_PAYLOAD_OFF]
-    payload_on: str = entry.data[CONF_PAYLOAD_ON]
-    device_class: str | None = entry.data.get(CONF_DEVICE_CLASS)
-    value_template: Template | str | None = entry.data.get(CONF_VALUE_TEMPLATE)
-    command_timeout: int = entry.data[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = entry.data.get(CONF_UNIQUE_ID)
+    name: str = entry.options[CONF_NAME]
+    command: str = entry.options[CONF_COMMAND]
+    payload_off: str = entry.options[CONF_PAYLOAD_OFF]
+    payload_on: str = entry.options[CONF_PAYLOAD_ON]
+    device_class: str | None = entry.options.get(CONF_DEVICE_CLASS)
+    value_template: Template | str | None = entry.options.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = entry.options[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = entry.options.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template = Template(value_template)
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
 
     async_add_entities(
-        CommandBinarySensor(
-            data,
-            name,
-            device_class,
-            payload_on,
-            payload_off,
-            value_template,
-            unique_id,
-            entry.entry_id,
-        ),
+        [
+            CommandBinarySensor(
+                data,
+                name,
+                device_class,
+                payload_on,
+                payload_off,
+                value_template,
+                unique_id,
+                entry.entry_id,
+            )
+        ],
         True,
     )
 

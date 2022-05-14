@@ -11,25 +11,31 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA,
     SwitchEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_COMMAND_CLOSE,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
+    CONF_COMMAND_STOP,
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
+    CONF_PLATFORM,
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_COMMAND_TIMEOUT, CONF_OBJECT_ID, DEFAULT_TIMEOUT, DOMAIN
 from .util import call_shell_with_timeout, check_output_or_log
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,48 +57,91 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    _LOGGER.warning(
+        # Command Line config flow added in 2022.6 and should be removed in 2022.8
+        "Configuration of the Command Line Switch platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.8; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
 
     devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
-    switches = []
 
     for object_id, device_config in devices.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
-
         if value_template is not None:
-            value_template.hass = hass
-
+            template_value = value_template.template
         icon_template: Template | None = device_config.get(CONF_ICON_TEMPLATE)
         if icon_template is not None:
-            icon_template.hass = hass
+            template_icon = icon_template.template
 
-        switches.append(
-            CommandSwitch(
-                object_id,
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
-                device_config[CONF_COMMAND_ON],
-                device_config[CONF_COMMAND_OFF],
-                device_config.get(CONF_COMMAND_STATE),
-                icon_template,
-                value_template,
-                device_config[CONF_COMMAND_TIMEOUT],
-                device_config.get(CONF_UNIQUE_ID),
+        new_config = {
+            CONF_OBJECT_ID: object_id,
+            CONF_NAME: device_config.get(CONF_FRIENDLY_NAME, object_id),
+            CONF_COMMAND_OPEN: device_config[CONF_COMMAND_OPEN],
+            CONF_COMMAND_CLOSE: device_config[CONF_COMMAND_CLOSE],
+            CONF_COMMAND_STOP: device_config[CONF_COMMAND_STOP],
+            CONF_COMMAND_STATE: device_config.get(CONF_COMMAND_STATE),
+            CONF_ICON_TEMPLATE: template_icon,
+            CONF_VALUE_TEMPLATE: template_value,
+            CONF_COMMAND_TIMEOUT: device_config[CONF_COMMAND_TIMEOUT],
+            CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
+            CONF_PLATFORM: Platform.SWITCH,
+        }
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=new_config,
             )
         )
 
-    if not switches:
-        _LOGGER.error("No switches added")
-        return
 
-    add_entities(switches)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Command Line Switch entry."""
+
+    object_id = entry.options[CONF_OBJECT_ID]
+    name = entry.options.get(CONF_FRIENDLY_NAME, object_id)
+    command_on = entry.options[CONF_COMMAND_ON]
+    command_off = entry.options[CONF_COMMAND_OFF]
+    command_state = entry.options.get(CONF_COMMAND_STATE)
+    icon_template = entry.options.get(CONF_ICON_TEMPLATE)
+    value_template = entry.options.get(CONF_VALUE_TEMPLATE)
+    command_timeout = entry.options[CONF_COMMAND_TIMEOUT]
+    unique_id = entry.options.get(CONF_UNIQUE_ID)
+    if value_template is not None:
+        template_value = Template(value_template)
+        template_value.hass = hass
+    if icon_template is not None:
+        template_icon = Template(icon_template)
+        template_icon.hass = hass
+
+    async_add_entities(
+        [
+            CommandSwitch(
+                object_id,
+                name,
+                command_on,
+                command_off,
+                command_state,
+                template_icon,
+                template_value,
+                command_timeout,
+                unique_id,
+                entry.entry_id,
+            )
+        ]
+    )
 
 
 class CommandSwitch(SwitchEntity):
@@ -109,6 +158,7 @@ class CommandSwitch(SwitchEntity):
         value_template: Template | None,
         timeout: int,
         unique_id: str | None,
+        entry_id: str,
     ) -> None:
         """Initialize the switch."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
@@ -120,7 +170,7 @@ class CommandSwitch(SwitchEntity):
         self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = unique_id if unique_id else entry_id
         self._attr_should_poll = bool(command_state)
 
     def _switch(self, command: str) -> bool:

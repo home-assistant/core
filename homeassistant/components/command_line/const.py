@@ -3,6 +3,7 @@
 from homeassistant.const import Platform
 
 CONF_COMMAND_TIMEOUT = "command_timeout"
+CONF_OBJECT_ID = "object_id"
 DEFAULT_TIMEOUT = 15
 DOMAIN = "command_line"
 PLATFORMS = [
