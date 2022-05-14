@@ -49,7 +49,7 @@ async def test_button(
 
     mock_entry.api.reboot_device = AsyncMock()
 
-    unique_id = f"{camera[0].id}"
+    unique_id = f"{camera[0].id}_reboot"
     entity_id = camera[1]
 
     entity_registry = er.async_get(hass)
