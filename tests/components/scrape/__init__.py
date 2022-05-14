@@ -31,7 +31,7 @@ async def init_integration(
     config_entry.add_to_hass(hass)
     mocker = MockRestData(data)
     with patch(
-        "homeassistant.components.scrape.sensor.RestData",
+        "homeassistant.components.scrape.RestData",
         return_value=mocker,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

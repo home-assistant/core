@@ -133,7 +133,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.scrape.sensor.RestData",
+        "homeassistant.components.scrape.RestData",
         return_value=mocker,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -207,7 +207,7 @@ async def test_import(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> 
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.scrape.sensor.RestData",
+        "homeassistant.components.scrape.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, "sensor", config)
