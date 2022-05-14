@@ -84,3 +84,29 @@ set_doorbell_message:
           step: 1
           mode: slider
           unit_of_measurement: minutes
+set_chime_paired_doorbells:
+  name: Set Chime Paired Doorbells
+  description: >
+    Use to set the paired doorbell(s) with a smart chime.
+  fields:
+    entity_id:
+      name: Chime
+      description: The Chimes to link to the doorbells to
+      example: "button.chime_play_chime"
+      required: true
+      selector:
+        entity:
+          integration: unifiprotect
+          domain: button
+          device_class: unifiprotect__chime_button
+    doorbells:
+      name: Doorbells
+      description: The Doorbells to link to the chime
+      example: "binary_sensor.front_doorbell_doorbell"
+      required: true
+      selector:
+        target:
+          entity:
+            integration: unifiprotect
+            domain: binary_sensor
+            device_class: occupancy

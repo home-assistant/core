@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Optional, cast
 
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import (
@@ -44,6 +44,7 @@ class ProtectData:
         self._hass = hass
         self._update_interval = update_interval
         self._subscriptions: dict[str, list[CALLBACK_TYPE]] = {}
+        self._device_id_lookup: dict[str, tuple[ModelType, str]] = {}
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
@@ -154,26 +155,33 @@ class ProtectData:
 
     @callback
     def async_subscribe_device_id(
-        self, device_id: str, update_callback: CALLBACK_TYPE
+        self,
+        unique_id: str,
+        device: ProtectAdoptableDeviceModel,
+        update_callback: CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self.async_refresh, self._update_interval
             )
-        self._subscriptions.setdefault(device_id, []).append(update_callback)
+        self._subscriptions.setdefault(device.id, []).append(update_callback)
+        if device.model is not None:
+            self._device_id_lookup[unique_id] = (device.model, device.id)
 
         def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(device_id, update_callback)
+            self.async_unsubscribe_device_id(unique_id, device.id, update_callback)
 
         return _unsubscribe
 
     @callback
     def async_unsubscribe_device_id(
-        self, device_id: str, update_callback: CALLBACK_TYPE
+        self, unique_id: str, device_id: str, update_callback: CALLBACK_TYPE
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[device_id].remove(update_callback)
+        if unique_id in self._device_id_lookup:
+            del self._device_id_lookup[unique_id]
         if not self._subscriptions[device_id]:
             del self._subscriptions[device_id]
         if not self._subscriptions and self._unsub_interval:
@@ -189,3 +197,16 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
             update_callback()
+
+    @callback
+    def async_get_ufp_device(
+        self, unique_id: str
+    ) -> ProtectAdoptableDeviceModel | None:
+        """Retrieve Protect device from entity unique ID."""
+
+        if unique_id not in self._device_id_lookup:
+            return None
+
+        model, device_id = self._device_id_lookup[unique_id]
+        device = getattr(self.api.bootstrap, f"{model}s").get(device_id)
+        return cast(Optional[ProtectAdoptableDeviceModel], device)
