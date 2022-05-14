@@ -49,6 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+DEFAULT_YIELD_STATES_ROWS = 32768
 
 MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SIMPLEVER)
@@ -176,13 +177,14 @@ def execute_stmt_lambda_element(
     stmt: StatementLambdaElement,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
+    yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
 ) -> Iterable[Row]:
     """Use yield_per automatically for expectedly large queries."""
     executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
         try:
-            return executed.all() if use_all else executed.yield_per(32768)  # type: ignore[no-any-return]
+            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
