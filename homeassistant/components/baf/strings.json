@@ -12,6 +12,7 @@
       }
     },
     "abort": {
+      "ipv6_not_supported": "IPv6 is not supported.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
