@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -18,9 +18,12 @@ from awesomeversion import (
 import ciso8601
 from sqlalchemy import text
 from sqlalchemy.engine.cursor import CursorFetchStrategy
+from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.ext.baked import Result
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
@@ -46,6 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+DEFAULT_YIELD_STATES_ROWS = 32768
 
 MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SIMPLEVER)
@@ -119,8 +123,10 @@ def commit(session: Session, work: Any) -> bool:
 
 
 def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list:
+    qry: Query | Result,
+    to_native: bool = False,
+    validate_entity_ids: bool = True,
+) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -159,6 +165,38 @@ def execute(
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
+            if tryno == RETRIES - 1:
+                raise
+            time.sleep(QUERY_RETRY_WAIT)
+
+    assert False  # unreachable
+
+
+def execute_stmt_lambda_element(
+    session: Session,
+    stmt: StatementLambdaElement,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+    yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
+) -> Iterable[Row]:
+    """Execute a StatementLambdaElement.
+
+    If the time window passed is greater than one day
+    the execution method will switch to yield_per to
+    reduce memory pressure.
+
+    It is not recommended to pass a time window
+    when selecting non-ranged rows (ie selecting
+    specific entities) since they are usually faster
+    with .all().
+    """
+    executed = session.execute(stmt)
+    use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
+    for tryno in range(0, RETRIES):
+        try:
+            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
