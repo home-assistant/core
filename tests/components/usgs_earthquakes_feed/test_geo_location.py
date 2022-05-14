@@ -90,7 +90,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
