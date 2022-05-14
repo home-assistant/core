@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -200,7 +199,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             # If this unique ID doesn't have a value ID, we know it is the node status
             # sensor, ping button, or config update which don't have any relevant
             # actions.
-            if not re.match(VALUE_ID_REGEX, value_id):
+            if not VALUE_ID_REGEX.match(value_id):
                 continue
             value = node.values[value_id]
             # If the value has the meterType CC specific value, we can add a reset_meter

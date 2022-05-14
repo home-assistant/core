@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import astuple, dataclass
 import logging
-import re
 from typing import Any, cast
 
 import voluptuous as vol
@@ -68,7 +67,7 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     Raises ValueError
     """
     split_unique_id = unique_id.split(".")
-    if re.match(VALUE_ID_REGEX, value_id := split_unique_id[1]):
+    if VALUE_ID_REGEX.match(value_id := split_unique_id[1]):
         return value_id
     return None
 
