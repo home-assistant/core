@@ -23,7 +23,6 @@ from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
-from isodate import parse_duration
 import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -1823,9 +1822,9 @@ def slugify(value, separator="_"):
     return slugify_util(value, separator=separator)
 
 
-def parse_iso8601_duration(value: str) -> Any:
+def parse_iso8601_duration(value: str) -> timedelta:
     """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
-    return parse_duration(value)
+    return dt_util.parse_iso8601_duration(value)
 
 
 def iif(
