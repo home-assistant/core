@@ -109,9 +109,13 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     """Get a populated schema or default."""
     return vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)): cv.string,
+            vol.Optional(
+                CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)
+            ): cv.string,
             vol.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,
-            vol.Optional(CONF_MODE, default=data.get(CONF_MODE, TRAVEL_MODE_CAR)): vol.In(TRAVEL_MODES),
+            vol.Optional(
+                CONF_MODE, default=data.get(CONF_MODE, TRAVEL_MODE_CAR)
+            ): vol.In(TRAVEL_MODES),
         }
     )
 
