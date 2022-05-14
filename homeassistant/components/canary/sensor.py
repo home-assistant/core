@@ -207,7 +207,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._state = str(self._state)
         if self._canary_type == SensorType.BATTERY and self._state != "None":
             return icon_for_battery_level(
-                battery_level=int(self._state), charging=False
+                battery_level=int(float(self._state)), charging=False
             )
         if self._canary_type == SensorType.WIFI and self._state != "None":
             self._state = float(self._state)
