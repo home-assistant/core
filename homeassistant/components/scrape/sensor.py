@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from bs4 import BeautifulSoup
-import httpx
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
@@ -33,7 +32,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -103,18 +101,12 @@ async def async_setup_entry(
     """Set up the Scrape sensor entry."""
     name: str = entry.options[CONF_NAME]
     resource: str = entry.options[CONF_RESOURCE]
-    method: str = "GET"
-    payload: str | None = None
-    headers: str | None = entry.options.get(CONF_HEADERS)
-    verify_ssl: bool = entry.options[CONF_VERIFY_SSL]
     select: str | None = entry.options.get(CONF_SELECT)
     attr: str | None = entry.options.get(CONF_ATTRIBUTE)
     index: int = int(entry.options[CONF_INDEX])
     unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
     device_class: str | None = entry.options.get(CONF_DEVICE_CLASS)
     state_class: str | None = entry.options.get(CONF_STATE_CLASS)
-    username: str | None = entry.options.get(CONF_USERNAME)
-    password: str | None = entry.options.get(CONF_PASSWORD)
     value_template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     entry_id: str = entry.entry_id
 
@@ -122,18 +114,7 @@ async def async_setup_entry(
     if value_template is not None:
         val_template = Template(value_template, hass)
 
-    auth: httpx.DigestAuth | tuple[str, str] | None = None
-    if username and password:
-        if entry.options.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-    await rest.async_update()
-
-    if rest.data is None:
-        raise ConfigEntryNotReady
+    rest = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
 
     async_add_entities(
         [
