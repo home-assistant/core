@@ -79,7 +79,7 @@ def test_from_event_to_delete_state():
 
     assert db_state.entity_id == "sensor.temperature"
     assert db_state.state == ""
-    assert db_state.last_changed == event.time_fired
+    assert db_state.last_changed is None
     assert db_state.last_updated == event.time_fired
 
 
