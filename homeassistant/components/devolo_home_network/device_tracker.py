@@ -1,6 +1,8 @@
 """Platform for device tracker integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from devolo_plc_api.device import Device
 
 from homeassistant.components.device_tracker import (
@@ -9,6 +11,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND, FREQUENCY_GIGAHERTZ
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,7 +20,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONNECTED_STATIONS, CONNECTED_WIFI_CLIENTS, DOMAIN, MAC_ADDRESS
+from .const import (
+    CONNECTED_STATIONS,
+    CONNECTED_WIFI_CLIENTS,
+    DOMAIN,
+    MAC_ADDRESS,
+    WIFI_BAND_5G,
+)
 
 
 async def async_setup_entry(
@@ -86,6 +95,31 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
         self._mac = mac
 
     @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return the attributes."""
+        attrs: dict[str, str] = {}
+        if self.coordinator.data[CONNECTED_STATIONS]:
+            station: dict[str, Any] = next(
+                (
+                    station
+                    for station in self.coordinator.data[CONNECTED_STATIONS]
+                    if station[MAC_ADDRESS] == self.mac_address
+                ),
+                {},
+            )
+            if station:
+                attrs[
+                    "band"
+                ] = f"{'5' if station['band'] == WIFI_BAND_5G else '2.5'} {FREQUENCY_GIGAHERTZ}"
+                attrs[
+                    "rx_rate"
+                ] = f"{round(station['rx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
+                attrs[
+                    "tx_rate"
+                ] = f"{round(station['tx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
+        return attrs
+
+    @property
     def icon(self) -> str:
         """Return device icon."""
         if self.is_connected:
@@ -95,12 +129,10 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return bool(
-            [
-                station
-                for station in self.coordinator.data[CONNECTED_STATIONS]
-                if station[MAC_ADDRESS] == self.mac_address
-            ]
+        return any(
+            station
+            for station in self.coordinator.data[CONNECTED_STATIONS]
+            if station[MAC_ADDRESS] == self.mac_address
         )
 
     @property

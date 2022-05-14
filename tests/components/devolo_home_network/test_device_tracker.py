@@ -8,8 +8,15 @@ from homeassistant.components.device_tracker import DOMAIN as PLATFORM
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
+    WIFI_BAND_5G,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    DATA_RATE_MEGABITS_PER_SECOND,
+    FREQUENCY_GIGAHERTZ,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.util import dt
@@ -19,17 +26,16 @@ from .const import CONNECTED_STATIONS, NO_CONNECTED_STATIONS
 
 from tests.common import async_fire_time_changed
 
-STATION = (
-    CONNECTED_STATIONS["connected_stations"][0]["mac_address"].lower().replace(":", "_")
-)
+STATION = CONNECTED_STATIONS["connected_stations"][0]
 
 
 @pytest.mark.usefixtures("mock_device")
 async def test_device_tracker(hass: HomeAssistant):
     """Test device tracker states."""
-    state_key = f"{PLATFORM}.{DOMAIN}_{STATION}"
+    state_key = (
+        f"{PLATFORM}.{DOMAIN}_{STATION['mac_address'].lower().replace(':', '_')}"
+    )
     entry = configure_integration(hass)
-
     er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -43,6 +49,18 @@ async def test_device_tracker(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_HOME
+    assert (
+        state.attributes["band"]
+        == f"{'5' if STATION['band'] == WIFI_BAND_5G else '2.5'} {FREQUENCY_GIGAHERTZ}"
+    )
+    assert (
+        state.attributes["rx_rate"]
+        == f"{round(STATION['rx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
+    )
+    assert (
+        state.attributes["tx_rate"]
+        == f"{round(STATION['tx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
+    )
 
     # Emulate state change
     with patch(
@@ -74,19 +92,24 @@ async def test_device_tracker(hass: HomeAssistant):
 @pytest.mark.usefixtures("mock_device")
 async def test_restoring_clients(hass: HomeAssistant):
     """Test restoring existing device_tracker entities."""
-    state_key = f"{PLATFORM}.{DOMAIN}_{STATION}"
+    state_key = (
+        f"{PLATFORM}.{DOMAIN}_{STATION['mac_address'].lower().replace(':', '_')}"
+    )
     entry = configure_integration(hass)
-
     er = entity_registry.async_get(hass)
     er.async_get_or_create(
         PLATFORM,
         DOMAIN,
-        STATION,
+        STATION["mac_address"],
         config_entry=entry,
     )
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_NOT_HOME
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_connected_station",
+        new=AsyncMock(return_value=NO_CONNECTED_STATIONS),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_NOT_HOME
