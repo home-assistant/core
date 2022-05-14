@@ -3,7 +3,8 @@
   "name": "Aladdin Connect",
   "documentation": "https://www.home-assistant.io/integrations/aladdin_connect",
   "requirements": ["aladdin_connect==0.4"],
-  "codeowners": [],
+  "codeowners": ["@mkmer"],
   "iot_class": "cloud_polling",
-  "loggers": ["aladdin_connect"]
+  "loggers": ["aladdin_connect"],
+  "config_flow": true
 }

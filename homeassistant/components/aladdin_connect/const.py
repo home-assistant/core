@@ -16,4 +16,5 @@ STATES_MAP: Final[dict[str, str]] = {
     "closing": STATE_CLOSING,
 }
 
+DOMAIN = "aladdin_connect"
 SUPPORTED_FEATURES: Final = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
