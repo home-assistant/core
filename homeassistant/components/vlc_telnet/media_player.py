@@ -236,11 +236,6 @@ class VlcDevice(MediaPlayerEntity):
         return self._media_title
 
     @property
-    def media_album_name(self) -> str | None:
-        """Album name of current playing media, music track only."""
-        return self._media_album_name
-
-    @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._media_artist
