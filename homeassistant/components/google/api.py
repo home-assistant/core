@@ -10,7 +10,6 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.auth import AbstractAuth
-import oauth2client
 from oauth2client.client import (
     Credentials,
     DeviceFlowInfo,
@@ -19,6 +18,7 @@ from oauth2client.client import (
     OAuth2WebServerFlow,
 )
 
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import async_track_time_interval
@@ -28,7 +28,6 @@ from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
     DEFAULT_FEATURE_ACCESS,
-    DEVICE_AUTH_IMPL,
     DOMAIN,
     FeatureAccess,
 )
@@ -44,19 +43,8 @@ class OAuthError(Exception):
     """OAuth related error."""
 
 
-class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class DeviceAuth(AuthImplementation):
     """OAuth implementation for Device Auth."""
-
-    def __init__(self, hass: HomeAssistant, client_id: str, client_secret: str) -> None:
-        """Initialize InstalledAppAuth."""
-        super().__init__(
-            hass,
-            DEVICE_AUTH_IMPL,
-            client_id,
-            client_secret,
-            oauth2client.GOOGLE_AUTH_URI,
-            oauth2client.GOOGLE_TOKEN_URI,
-        )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
