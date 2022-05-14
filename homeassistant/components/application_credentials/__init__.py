@@ -151,7 +151,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_import_client_credential(
-    hass: HomeAssistant, domain: str, credential: ClientCredential
+    hass: HomeAssistant,
+    domain: str,
+    credential: ClientCredential,
+    auth_domain: str = None,
 ) -> None:
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
@@ -161,13 +164,30 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
-        CONF_AUTH_DOMAIN: domain,
+        CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
     await storage_collection.async_import_item(item)
 
 
 class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Application Credentials local oauth2 implementation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        auth_domain: str,
+        credential: ClientCredential,
+        authorization_server: AuthorizationServer,
+    ) -> None:
+        """Initialize AuthImplementation."""
+        super().__init__(
+            hass,
+            auth_domain,
+            credential.client_id,
+            credential.client_secret,
+            authorization_server.authorize_url,
+            authorization_server.token_url,
+        )
 
     @property
     def name(self) -> str:
@@ -184,29 +204,38 @@ async def _async_provide_implementation(
     if not platform:
         return []
 
-    authorization_server = await platform.async_get_authorization_server(hass)
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     credentials = storage_collection.async_client_credentials(domain)
+    if hasattr(platform, "async_get_auth_implementation"):
+        return [
+            await platform.async_get_auth_implementation(hass, auth_domain, credential)
+            for auth_domain, credential in credentials.items()
+        ]
+    authorization_server = await platform.async_get_authorization_server(hass)
     return [
-        AuthImplementation(
-            hass,
-            auth_domain,
-            credential.client_id,
-            credential.client_secret,
-            authorization_server.authorize_url,
-            authorization_server.token_url,
-        )
+        AuthImplementation(hass, auth_domain, credential, authorization_server)
         for auth_domain, credential in credentials.items()
     ]
 
 
 class ApplicationCredentialsProtocol(Protocol):
-    """Define the format that application_credentials platforms can have."""
+    """Define the format that application_credentials platforms may have.
+
+    Most platforms typically just implement async_get_authorization_server, and
+    the default oauth implementation will be used. Otherwise a platform may
+    implement async_get_auth_implementation to give their use a custom
+    AbstractOAuth2Implementation.
+    """
 
     async def async_get_authorization_server(
         self, hass: HomeAssistant
     ) -> AuthorizationServer:
-        """Return authorization server."""
+        """Return authorization server, for the default auth implementation."""
+
+    async def async_get_auth_implementation(
+        self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
+    ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
+        """Return a custom auth implementation."""
 
 
 async def _get_platform(
@@ -227,9 +256,12 @@ async def _get_platform(
             err,
         )
         return None
-    if not hasattr(platform, "async_get_authorization_server"):
+    if not hasattr(platform, "async_get_authorization_server") and not hasattr(
+        platform, "async_get_auth_implementation"
+    ):
         raise ValueError(
-            f"Integration '{integration_domain}' platform application_credentials did not implement 'async_get_authorization_server'"
+            f"Integration '{integration_domain}' platform {DOMAIN} did not "
+            f"implement 'async_get_authorization_server' or 'async_get_auth_implementation'"
         )
     return platform
 
