@@ -55,10 +55,6 @@ SCHEMA_VERSION = 28
 
 _LOGGER = logging.getLogger(__name__)
 
-# EPOCHORDINAL is not exposed as a constant
-# https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
-EPOCHORDINAL = datetime(1970, 1, 1).toordinal()
-
 DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
@@ -639,16 +635,8 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
     Mirrors the behavior of process_timestamp_to_utc_isoformat
     except it returns the epoch time.
     """
-    if ts.tzinfo is None:
-        # Taken from
-        # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
-        return (
-            (ts.toordinal() - EPOCHORDINAL) * 86400
-            + ts.hour * 3600
-            + ts.minute * 60
-            + ts.second
-            + (ts.microsecond / 1000000)
-        )
+    if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
+        return dt_util.utc_to_timestamp(ts)
     return ts.timestamp()
 
 
