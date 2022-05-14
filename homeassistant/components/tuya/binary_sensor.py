@@ -95,7 +95,8 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
-            key=DPCode.DOORCONTACT_STATE,
+            key=DPCode.DOORCONTACT_STATE,            
+            name="Door",
             device_class=BinarySensorDeviceClass.DOOR,
         ),
         TuyaBinarySensorEntityDescription(
@@ -127,6 +128,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESSURE_STATE,
+            name="Prussure",
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
