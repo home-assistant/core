@@ -455,19 +455,18 @@ def _most_recent_state_ids_entities_subquery(
     """Query to find the most recent state id for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    most_recent_state_ids = (
-        select(func.max(States.state_id).label("max_state_id"))
-        .filter(
-            (States.last_updated >= run_start)
-            & (States.last_updated < utc_point_in_time)
-        )
-        .filter(States.entity_id.in_(entity_ids))
-        .group_by(States.entity_id)
-        .subquery()
-    )
-    return query.join(
-        most_recent_state_ids,
-        States.state_id == most_recent_state_ids.c.max_state_id,
+    return query.where(
+        States.state_id
+        == (
+            select(func.max(States.state_id).label("max_state_id"))
+            .filter(
+                (States.last_updated >= run_start)
+                & (States.last_updated < utc_point_in_time)
+            )
+            .filter(States.entity_id.in_(entity_ids))
+            .group_by(States.entity_id)
+            .subquery()
+        ).c.max_state_id
     )
 
 
@@ -512,21 +511,21 @@ def _most_recent_state_ids_subquery(
         .group_by(States.entity_id)
         .subquery()
     )
-    most_recent_state_ids = (
-        select(func.max(States.state_id).label("max_state_id"))
-        .join(
-            most_recent_states_by_date,
-            and_(
-                States.entity_id == most_recent_states_by_date.c.max_entity_id,
-                States.last_updated == most_recent_states_by_date.c.max_last_updated,
-            ),
-        )
-        .group_by(States.entity_id)
-        .subquery()
-    )
-    return query.join(
-        most_recent_state_ids,
-        States.state_id == most_recent_state_ids.c.max_state_id,
+    return query.where(
+        States.state_id
+        == (
+            select(func.max(States.state_id).label("max_state_id"))
+            .join(
+                most_recent_states_by_date,
+                and_(
+                    States.entity_id == most_recent_states_by_date.c.max_entity_id,
+                    States.last_updated
+                    == most_recent_states_by_date.c.max_last_updated,
+                ),
+            )
+            .group_by(States.entity_id)
+            .subquery()
+        ).c.max_state_id,
     )
 
 
