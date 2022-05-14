@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import astuple, dataclass
 import logging
+import re
 from typing import Any, cast
 
 import voluptuous as vol
@@ -40,6 +41,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     LOGGER,
+    VALUE_ID_REGEX,
 )
 
 
@@ -66,11 +68,9 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     Raises ValueError
     """
     split_unique_id = unique_id.split(".")
-    # If the unique ID contains a `-` in its second part, the unique ID contains
-    # a value ID and we can return it.
-    if "-" in (value_id := split_unique_id[1]):
-        return value_id
-    return None
+    if not re.match(VALUE_ID_REGEX, split_unique_id[1]):
+        return None
+    return split_unique_id[1]
 
 
 @callback
@@ -229,9 +229,13 @@ def async_get_node_from_entity_id(
     if entity_entry is None or entity_entry.platform != DOMAIN:
         raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
 
-    # Assert for mypy, safe because we know that zwave_js entities are always
-    # tied to a device
-    assert entity_entry.device_id
+    # The update entity does not have a device and is not associated with a node, so
+    # we raise to indicate that this entity is not valid
+    if entity_entry.device_id is None:
+        raise ValueError(
+            f"Entity {entity_id} is not a node specific entity so there is nothing "
+            "to target."
+        )
     return async_get_node_from_device_id(hass, entity_entry.device_id, dev_reg)
 
 

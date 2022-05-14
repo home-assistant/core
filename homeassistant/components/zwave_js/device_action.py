@@ -49,10 +49,10 @@ from .const import (
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_LOCK_USERCODE,
     SERVICE_SET_VALUE,
+    VALUE_ID_REGEX,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
-    VALUE_ID_REGEX,
     generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
@@ -198,7 +198,8 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain == SENSOR_DOMAIN:
             value_id = entry.unique_id.split(".")[1]
             # If this unique ID doesn't have a value ID, we know it is the node status
-            # sensor which doesn't have any relevant actions
+            # sensor, ping button, or config update which don't have any relevant
+            # actions.
             if not re.match(VALUE_ID_REGEX, value_id):
                 continue
             value = node.values[value_id]

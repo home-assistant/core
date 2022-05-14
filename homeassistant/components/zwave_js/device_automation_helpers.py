@@ -19,8 +19,6 @@ NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 CONF_SUBTYPE = "subtype"
 CONF_VALUE_ID = "value_id"
 
-VALUE_ID_REGEX = r"([0-9]+-[0-9]+-[0-9]+-).+"
-
 
 def get_config_parameter_value_schema(node: Node, value_id: str) -> vol.Schema | None:
     """Get the extra fields schema for a config parameter value."""

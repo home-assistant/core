@@ -1,6 +1,8 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
+VALUE_ID_REGEX = r"([0-9]+-[0-9]+-[0-9]+-).+"
+
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"

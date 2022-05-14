@@ -20,6 +20,7 @@ from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -552,6 +553,11 @@ async def async_setup_entry(  # noqa: C901
             return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
+
+        await async_setup_platform(UPDATE_DOMAIN)
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_device_configs_update_entity"
+        )
 
         # If opt in preference hasn't been specified yet, we do nothing, otherwise
         # we apply the preference
