@@ -38,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with timeout(10):
             mac = await hass.async_add_executor_job(ialarmxr.get_mac)
     except (asyncio.TimeoutError, ConnectionError) as ex:
-        _LOGGER.error("IAlarmXR error on connect: %s", ex)
         raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarmxr, mac)
