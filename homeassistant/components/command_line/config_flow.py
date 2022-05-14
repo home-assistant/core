@@ -1,92 +1,143 @@
 """The command_line config flow."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.core import callback
+
 from homeassistant.const import (
-    CONF_ATTRIBUTE,
-    CONF_AUTHENTICATION,
-    CONF_DEVICE_CLASS,
-    CONF_HEADERS,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_RESOURCE,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
-    CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
+    CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
-from homeassistant.helpers import selector
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaConfigFlowHandler,
-    SchemaFlowFormStep,
-    SchemaFlowMenuStep,
-    SchemaOptionsFlowHandler,
-)
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+
+from .const import CONF_COMMAND_TIMEOUT, DOMAIN
 from .schema import (
-    DATA_SENSOR,
-    DATA_BINARY_SENSOR,
-    DATA_COVER,
-    DATA_NOTIFY,
-    DATA_SWITCH,
-    DATA_COMMON,
-    DATA_UNIQUE_ID,
+    CONF_JSON_ATTRIBUTES,
+    DATA_SCHEMA_BINARY_SENSOR,
+    DATA_SCHEMA_COMMON,
+    DATA_SCHEMA_COVER,
+    DATA_SCHEMA_NOTIFY,
+    DATA_SCHEMA_SENSOR,
+    DATA_SCHEMA_SWITCH,
+    DATA_SCHEMA_UNIQUE_ID,
 )
 
-DATA_SCHEMA_SENSOR = vol.Schema(DATA_COMMON).extend(DATA_SENSOR)
-DATA_SCHEMA_BINARY_SENSOR = vol.Schema(DATA_COMMON).extend(DATA_BINARY_SENSOR)
-DATA_SCHEMA_COVER = vol.Schema(DATA_COMMON).extend(DATA_COVER)
-DATA_SCHEMA_NOTIFY = vol.Schema(DATA_COMMON).extend(DATA_NOTIFY)
-DATA_SCHEMA_SWITCH = vol.Schema(DATA_COMMON).extend(DATA_SWITCH)
-DATA_SCHEMA_SENSOR_OPT = vol.Schema(DATA_SENSOR)
-DATA_SCHEMA_BINARY_SENSOR_OPT = vol.Schema(DATA_BINARY_SENSOR)
-DATA_SCHEMA_COVER_OPT = vol.Schema(DATA_NOTIFY)
-DATA_SCHEMA_NOTIFY_OPT = vol.Schema(DATA_SWITCH)
-DATA_SCHEMA_SWITCH_OPT = vol.Schema(DATA_COMMON)
-
-CONFIG_MENU_OPTIONS = ["sensor", "binary_sensor", "cover", "notify", "switch"]
-
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowMenuStep(CONFIG_MENU_OPTIONS),
-    "sensor": SchemaFlowFormStep(DATA_SCHEMA_SENSOR),
-    "binary_sensor": SchemaFlowFormStep(DATA_SCHEMA_BINARY_SENSOR),
-    "cover": SchemaFlowFormStep(DATA_SCHEMA_COVER),
-    "notify": SchemaFlowFormStep(DATA_SCHEMA_NOTIFY),
-    "switch": SchemaFlowFormStep(DATA_SCHEMA_SWITCH),
-    "import": SchemaFlowFormStep(DATA_SCHEMA_SENSOR),
-}
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(DATA_SCHEMA_OPTIONS),
+TYPE_TO_DATA_SCHEMA = {
+    "sensor": DATA_SCHEMA_SENSOR,
+    "binary_sensor": DATA_SCHEMA_BINARY_SENSOR,
+    "cover": DATA_SCHEMA_COVER,
+    "notify": DATA_SCHEMA_NOTIFY,
+    "switch": DATA_SCHEMA_SWITCH,
 }
 
 
-class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Handle a config flow for Scrape."""
+class CommandLineConfigFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Command Line."""
 
-    config_flow = CONFIG_FLOW
-    options_flow = OPTIONS_FLOW
+    VERSION = 1
 
-    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
-        """Return config entry title."""
-        return options[CONF_NAME]
+    data: dict[str, Any] | None = None
 
-    def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
-        """Check for duplicate records."""
-        data: dict[str, Any] = dict(options)
-        self._async_abort_entries_match(data)
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> CommandLineOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return CommandLineOptionsFlowHandler(config_entry)
+
+    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
+        """Import a configuration from config.yaml."""
+
+        self._async_abort_entries_match(config)
+
+        self.data = {CONF_NAME: config[CONF_NAME], CONF_TYPE: config[CONF_TYPE]}
+        return await self.async_step_configure(user_input=config)
+
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            self.data = user_input
+
+            return self.async_step_configure()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=DATA_SCHEMA_COMMON,
+            errors=errors,
+        )
+
+    async def async_step_configure(
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResult:
+        """Handle the configuration."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+
+            if user_input[CONF_JSON_ATTRIBUTES] == [""]:
+                user_input[CONF_JSON_ATTRIBUTES] = None
+            user_input[CONF_COMMAND_TIMEOUT] = int(user_input[CONF_COMMAND_TIMEOUT])
+
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data={},
+                options={
+                    **self.data,
+                    **user_input,
+                },
+            )
+
+        data_schema = TYPE_TO_DATA_SCHEMA[user_input[CONF_TYPE]]
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
 
-class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
-    """Handle a config flow for Scrape."""
+class CommandLineOptionsFlowHandler(OptionsFlow):
+    """Handle a options flow for Command Line."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize Command Line options flow."""
+        self.entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage Command Line Options."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            return self.async_create_entry(
+                title="",
+                data={
+                    **self.entry.options,
+                    **user_input,
+                },
+            )
+
+        data_schema = TYPE_TO_DATA_SCHEMA[self.entry.options[CONF_TYPE]]
+        data_schema_dict = {
+            vol.Optional(
+                key, description={"suggested_value": self.entry.options.get(key)}
+            ): value
+            for key, value in data_schema.__dict__.items()
+        }
+        opt_data_schema = vol.Schema(data_schema_dict)
+        if self.entry.options.get(CONF_UNIQUE_ID):
+            opt_data_schema.extend(DATA_SCHEMA_UNIQUE_ID)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=opt_data_schema,
+            errors=errors,
+        )

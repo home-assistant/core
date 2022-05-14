@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -21,13 +22,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .sensor import CommandSensorData
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -50,40 +53,66 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
+    _LOGGER.warning(
+        # Command Line config flow added in 2022.6 and should be removed in 2022.8
+        "Configuration of the Command Line Binary Sensor platform in YAML is deprecated"
+        "and will be removed in Home Assistant 2022.8; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    name: str = config[CONF_NAME]
-    command: str = config[CONF_COMMAND]
-    payload_off: str = config[CONF_PAYLOAD_OFF]
-    payload_on: str = config[CONF_PAYLOAD_ON]
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+
+    new_config = {
+        **config,
+        CONF_VALUE_TEMPLATE: value_template.template if value_template else None,
+    }
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=new_config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Command Line Binary Sensor entry."""
+
+    name: str = entry.data[CONF_NAME]
+    command: str = entry.data[CONF_COMMAND]
+    payload_off: str = entry.data[CONF_PAYLOAD_OFF]
+    payload_on: str = entry.data[CONF_PAYLOAD_ON]
+    device_class: str | None = entry.data.get(CONF_DEVICE_CLASS)
+    value_template: Template | str | None = entry.data.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = entry.data[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = entry.data.get(CONF_UNIQUE_ID)
     if value_template is not None:
+        value_template = Template(value_template)
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_entities(
-        [
-            CommandBinarySensor(
-                data,
-                name,
-                device_class,
-                payload_on,
-                payload_off,
-                value_template,
-                unique_id,
-            )
-        ],
+    async_add_entities(
+        CommandBinarySensor(
+            data,
+            name,
+            device_class,
+            payload_on,
+            payload_off,
+            value_template,
+            unique_id,
+            entry.entry_id,
+        ),
         True,
     )
 
@@ -100,6 +129,7 @@ class CommandBinarySensor(BinarySensorEntity):
         payload_off: str,
         value_template: Template | None,
         unique_id: str | None,
+        entry_id: str,
     ) -> None:
         """Initialize the Command line binary sensor."""
         self.data = data
@@ -109,7 +139,7 @@ class CommandBinarySensor(BinarySensorEntity):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = unique_id if unique_id else entry_id
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
