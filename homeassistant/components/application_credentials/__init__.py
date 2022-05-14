@@ -260,7 +260,8 @@ async def _get_platform(
         platform, "async_get_auth_implementation"
     ):
         raise ValueError(
-            f"Integration '{integration_domain}' platform application_credentials did not implement 'async_get_authorization_server' or 'async_get_auth_implementation'"
+            f"Integration '{integration_domain}' platform {DOMAIN} did not "
+            f"implement 'async_get_authorization_server' or 'async_get_auth_implementation'"
         )
     return platform
 
