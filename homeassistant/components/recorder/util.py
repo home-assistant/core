@@ -179,7 +179,17 @@ def execute_stmt_lambda_element(
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
 ) -> Iterable[Row]:
-    """Use yield_per automatically for expectedly large queries."""
+    """Execute a StatementLambdaElement.
+
+    If the time window passed is greater than one day
+    the execution method will switch to yield_per to
+    reduce memory pressure.
+
+    It is not recommended to pass a time window
+    when selecting non-ranged rows (ie selecting
+    specific entities) since they are usually faster
+    with .all().
+    """
     executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
