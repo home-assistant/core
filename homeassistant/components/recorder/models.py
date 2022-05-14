@@ -88,6 +88,8 @@ TABLES_TO_CHECK = [
     TABLE_SCHEMA_CHANGES,
 ]
 
+LAST_UPDATED_INDEX = "ix_states_last_updated"
+ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
 
 EMPTY_JSON_OBJECT = "{}"
 
@@ -235,7 +237,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
-        Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
+        Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
