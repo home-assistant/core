@@ -10,6 +10,7 @@ from homeassistant.helpers.json import JSONEncoder
 
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
+MYSQLDB_URL_PREFIX = "mysql://"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"

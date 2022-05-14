@@ -15,6 +15,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import ciso8601
 from sqlalchemy import text
 from sqlalchemy.engine.cursor import CursorFetchStrategy
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
@@ -329,6 +330,30 @@ def _extract_version_from_server_response(
         )
     except AwesomeVersionException:
         return None
+
+
+def _datetime_or_none(value: str) -> datetime | None:
+    """Fast version of mysqldb DateTime_or_None.
+
+    https://github.com/PyMySQL/mysqlclient/blob/v2.1.0/MySQLdb/times.py#L66
+    """
+    try:
+        return ciso8601.parse_datetime(value)
+    except ValueError:
+        return None
+
+
+def build_mysqldb_conv() -> dict:
+    """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
+    # Late imports since we only call this if they are using mysqldb
+    from MySQLdb.constants import (  # pylint: disable=import-outside-toplevel,import-error
+        FIELD_TYPE,
+    )
+    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel,import-error
+        conversions,
+    )
+
+    return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
 
 
 def setup_connection_for_dialect(
