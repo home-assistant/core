@@ -101,8 +101,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_CLIENT_ID): cv.string,
-                vol.Optional(CONF_CLIENT_SECRET): cv.string,
+                vol.Required(CONF_CLIENT_ID): cv.string,
+                vol.Required(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
                 vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
                     FeatureAccess
