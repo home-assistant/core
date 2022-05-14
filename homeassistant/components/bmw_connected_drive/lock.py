@@ -63,7 +63,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
             # Optimistic state set here because it takes some time before the
             # update callback response
             self._attr_is_locked = True
-            self.async_schedule_update_ha_state()
+            self._async_write_ha_state()
         await self.vehicle.remote_services.trigger_remote_door_lock()
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -74,7 +74,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
             # Optimistic state set here because it takes some time before the
             # update callback response
             self._attr_is_locked = False
-            self.async_schedule_update_ha_state()
+            self._async_write_ha_state()
         await self.vehicle.remote_services.trigger_remote_door_unlock()
 
     @callback
