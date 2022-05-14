@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from aiobafi6 import Device, OffOnAuto
+from aiobafi6 import OffOnAuto
 
 from homeassistant import config_entries
 from homeassistant.components.fan import (
@@ -33,7 +33,7 @@ async def async_setup_entry(
     """Set up SenseME fans."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     if data.device.has_fan:
-        async_add_entities([BAFFan(data.device)])
+        async_add_entities([BAFFan(data.device, data.device.name)])
 
 
 class BAFFan(BAFEntity, FanEntity):
@@ -41,11 +41,7 @@ class BAFFan(BAFEntity, FanEntity):
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
     _attr_preset_modes = [PRESET_MODE_AUTO]
-
-    def __init__(self, device: Device) -> None:
-        """Initialize the entity."""
-        super().__init__(device, device.name)
-        self._attr_speed_count = SPEED_COUNT
+    _attr_speed_count = SPEED_COUNT
 
     @callback
     def _async_update_attrs(self) -> None:

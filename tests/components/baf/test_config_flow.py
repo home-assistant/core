@@ -137,3 +137,22 @@ async def test_zeroconf_updates_existing_ip(hass):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
+
+
+async def test_zeroconf_rejects_ipv6(hass):
+    """Test zeroconf discovery rejects ipv6."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="fd00::b27c:63bb:cc85:4ea0",
+            addresses=["fd00::b27c:63bb:cc85:4ea0"],
+            hostname="mock_hostname",
+            name="testfan",
+            port=None,
+            properties={"name": "My Fan", "model": "Haiku", "uuid": "1234"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipv6_not_supported"

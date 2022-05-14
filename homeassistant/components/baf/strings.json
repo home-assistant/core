@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "data": {
-          "ip_address": "IP Address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       },
       "discovery_confirm": {
@@ -12,6 +12,7 @@
       }
     },
     "abort": {
+      "ipv6_not_supported": "IPv6 is not supported.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
