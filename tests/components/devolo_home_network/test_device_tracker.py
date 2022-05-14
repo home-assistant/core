@@ -24,9 +24,9 @@ STATION = (
 )
 
 
-@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
-async def test_device_tracker_home(hass: HomeAssistant):
-    """Test device being home."""
+@pytest.mark.usefixtures("mock_device")
+async def test_device_tracker(hass: HomeAssistant):
+    """Test device tracker states."""
     state_key = f"{PLATFORM}.{DOMAIN}_{STATION}"
     entry = configure_integration(hass)
 
@@ -71,9 +71,9 @@ async def test_device_tracker_home(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
+@pytest.mark.usefixtures("mock_device")
 async def test_restoring_clients(hass: HomeAssistant):
-    """Test restoring existing device_tracker entities if not detected on startup."""
+    """Test restoring existing device_tracker entities."""
     state_key = f"{PLATFORM}.{DOMAIN}_{STATION}"
     entry = configure_integration(hass)
 
