@@ -68,9 +68,9 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     Raises ValueError
     """
     split_unique_id = unique_id.split(".")
-    if not re.match(VALUE_ID_REGEX, value_id := split_unique_id[1]):
-        return None
-    return value_id
+    if re.match(VALUE_ID_REGEX, value_id := split_unique_id[1]):
+        return value_id
+    return None
 
 
 @callback
