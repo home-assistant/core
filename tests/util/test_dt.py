@@ -106,6 +106,12 @@ def test_utc_from_timestamp():
     )
 
 
+def test_timestamp_to_utc():
+    """Test we can convert a utc datetime to a timestamp."""
+    utc_now = dt_util.utcnow()
+    assert dt_util.utc_to_timestamp(utc_now) == utc_now.timestamp()
+
+
 def test_as_timestamp():
     """Test as_timestamp method."""
     ts = 1462401234
