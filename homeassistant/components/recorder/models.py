@@ -246,7 +246,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     event_id = Column(
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_changed = Column(DATETIME_TYPE)
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
@@ -287,12 +287,16 @@ class States(Base):  # type: ignore[misc,valid-type]
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_changed = event.time_fired
             dbstate.last_updated = event.time_fired
+            dbstate.last_changed = None
+            return dbstate
+
+        dbstate.state = state.state
+        dbstate.last_updated = state.last_updated
+        if state.last_updated == state.last_changed:
+            dbstate.last_changed = None
         else:
-            dbstate.state = state.state
             dbstate.last_changed = state.last_changed
-            dbstate.last_updated = state.last_updated
 
         return dbstate
 
@@ -304,21 +308,27 @@ class States(Base):  # type: ignore[misc,valid-type]
             parent_id=self.context_parent_id,
         )
         try:
-            return State(
-                self.entity_id,
-                self.state,
-                # Join the state_attributes table on attributes_id to get the attributes
-                # for newer states
-                json.loads(self.attributes) if self.attributes else {},
-                process_timestamp(self.last_changed),
-                process_timestamp(self.last_updated),
-                context=context,
-                validate_entity_id=validate_entity_id,
-            )
+            attrs = json.loads(self.attributes) if self.attributes else {}
         except ValueError:
             # When json.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+        if self.last_changed is None or self.last_changed == self.last_updated:
+            last_changed = last_updated = process_timestamp(self.last_updated)
+        else:
+            last_updated = process_timestamp(self.last_updated)
+            last_changed = process_timestamp(self.last_changed)
+        return State(
+            self.entity_id,
+            self.state,
+            # Join the state_attributes table on attributes_id to get the attributes
+            # for newer states
+            attrs,
+            last_changed,
+            last_updated,
+            context=context,
+            validate_entity_id=validate_entity_id,
+        )
 
 
 class StateAttributes(Base):  # type: ignore[misc,valid-type]
@@ -696,7 +706,10 @@ class LazyState(State):
     def last_changed(self) -> datetime:  # type: ignore[override]
         """Last changed datetime."""
         if self._last_changed is None:
-            self._last_changed = process_timestamp(self._row.last_changed)
+            if (last_changed := self._row.last_changed) is not None:
+                self._last_changed = process_timestamp(last_changed)
+            else:
+                self._last_changed = self.last_updated
         return self._last_changed
 
     @last_changed.setter
@@ -708,10 +721,7 @@ class LazyState(State):
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Last updated datetime."""
         if self._last_updated is None:
-            if (last_updated := self._row.last_updated) is not None:
-                self._last_updated = process_timestamp(last_updated)
-            else:
-                self._last_updated = self.last_changed
+            self._last_updated = process_timestamp(self._row.last_updated)
         return self._last_updated
 
     @last_updated.setter
@@ -727,24 +737,24 @@ class LazyState(State):
         To be used for JSON serialization.
         """
         if self._last_changed is None and self._last_updated is None:
-            last_changed_isoformat = process_timestamp_to_utc_isoformat(
-                self._row.last_changed
+            last_updated_isoformat = process_timestamp_to_utc_isoformat(
+                self._row.last_updated
             )
             if (
-                self._row.last_updated is None
+                self._row.last_changed is None
                 or self._row.last_changed == self._row.last_updated
             ):
-                last_updated_isoformat = last_changed_isoformat
+                last_changed_isoformat = last_updated_isoformat
             else:
-                last_updated_isoformat = process_timestamp_to_utc_isoformat(
-                    self._row.last_updated
+                last_changed_isoformat = process_timestamp_to_utc_isoformat(
+                    self._row.last_changed
                 )
         else:
-            last_changed_isoformat = self.last_changed.isoformat()
+            last_updated_isoformat = self.last_updated.isoformat()
             if self.last_changed == self.last_updated:
-                last_updated_isoformat = last_changed_isoformat
+                last_changed_isoformat = last_updated_isoformat
             else:
-                last_updated_isoformat = self.last_updated.isoformat()
+                last_changed_isoformat = self.last_changed.isoformat()
         return {
             "entity_id": self.entity_id,
             "state": self.state,
@@ -789,13 +799,13 @@ def row_to_compressed_state(
     if start_time:
         last_changed = last_updated = start_time.timestamp()
     else:
-        row_changed_changed: datetime = row.last_changed
+        row_last_updated: datetime = row.last_updated
         if (
-            not (row_last_updated := row.last_updated)
+            not (row_changed_changed := row.last_changed)
             or row_last_updated == row_changed_changed
         ):
             last_changed = last_updated = process_datetime_to_timestamp(
-                row_changed_changed
+                row_last_updated
             )
         else:
             last_changed = process_datetime_to_timestamp(row_changed_changed)

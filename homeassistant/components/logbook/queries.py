@@ -278,7 +278,9 @@ def _legacy_select_events_context_id(
             NOT_CONTEXT_ONLY,
         )
         .outerjoin(States, (Events.event_id == States.event_id))
-        .where(States.last_updated == States.last_changed)
+        .where(
+            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+        )
         .where(_not_continuous_entity_matcher())
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -310,7 +312,7 @@ def _select_states(start_day: dt, end_day: dt) -> Select:
                 "event_type"
             ),
             literal(value=None, type_=sqlalchemy.Text).label("event_data"),
-            States.last_changed.label("time_fired"),
+            States.last_updated.label("time_fired"),
             States.context_id.label("context_id"),
             States.context_user_id.label("context_user_id"),
             States.context_parent_id.label("context_parent_id"),
@@ -322,7 +324,9 @@ def _select_states(start_day: dt, end_day: dt) -> Select:
         .outerjoin(old_state, (States.old_state_id == old_state.state_id))
         .where(_missing_state_matcher(old_state))
         .where(_not_continuous_entity_matcher())
-        .where(States.last_updated == States.last_changed)
+        .where(
+            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+        )
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
