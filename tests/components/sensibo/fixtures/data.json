@@ -61,7 +61,7 @@
       "firmwareType": "esp8266ex",
       "productModel": "skyv2",
       "configGroup": "stable",
-      "currentlyAvailableFirmwareVersion": "SKY30046",
+      "currentlyAvailableFirmwareVersion": "SKY30048",
       "cleanFiltersNotificationEnabled": false,
       "shouldShowFilterCleaningNotification": false,
       "isGeofenceOnExitEnabled": false,
