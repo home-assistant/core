@@ -146,16 +146,17 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_api_key, user_input[CONF_API_KEY]
                 )
-                self._config = user_input
-                return self.async_show_menu(
-                    step_id="origin_menu",
-                    menu_options=["origin_coordinates", "origin_entity"],
-                )
             except InvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             except HEREError as error:
                 _LOGGER.exception("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
+            if not errors:
+                self._config = user_input
+                return self.async_show_menu(
+                    step_id="origin_menu",
+                    menu_options=["origin_coordinates", "origin_entity"],
+                )
         return self.async_show_form(
             step_id="user", data_schema=get_user_step_schema(user_input), errors=errors
         )
