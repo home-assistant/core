@@ -32,12 +32,13 @@ async def validate_input(
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+    account = MyBMWAccount(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        get_region_from_name(data[CONF_REGION]),
+    )
+
     try:
-        account = MyBMWAccount(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            get_region_from_name(data[CONF_REGION]),
-        )
         await account.get_vehicles()
     except HTTPError as ex:
         raise CannotConnect from ex

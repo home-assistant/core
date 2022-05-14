@@ -49,20 +49,22 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data from BMW."""
+        old_refresh_token = self.account.refresh_token
+
         try:
-            old_refresh_token = self.account.refresh_token
             async with async_timeout.timeout(15):
                 await self.account.get_vehicles()
-            if self.account.refresh_token != old_refresh_token:
-                self.hass.config_entries.async_update_entry(
-                    self._entry,
-                    data={
-                        **self._entry.data,
-                        CONF_REFRESH_TOKEN: self.account.refresh_token,
-                    },
-                )
         except HTTPError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        if self.account.refresh_token != old_refresh_token:
+            self.hass.config_entries.async_update_entry(
+                self._entry,
+                data={
+                    **self._entry.data,
+                    CONF_REFRESH_TOKEN: self.account.refresh_token,
+                },
+            )
 
     def notify_listeners(self) -> None:
         """Notify all listeners to refresh HA state machine."""
