@@ -111,13 +111,17 @@ QUERY_STATES_NO_LAST_CHANGED = [
 
 
 def _execute_decider(
-    query: Query, start_time: datetime, end_time: datetime | None = None
+    session: Session,
+    stmt: StatementLambdaElement,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
 ) -> Iterable[Row]:
     """Use yield_per automatically for expectedly large queries."""
-    yield_per = (
-        None if ((end_time or dt_util.utcnow()) - start_time).days <= 1 else 1024
-    )
-    return execute(query, yield_per=yield_per)
+    # TODO: add retries here
+    executed = session.execute(stmt)
+    if not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1:
+        return executed.all()  # type: ignore[no-any-return,return-value]
+    return executed.yield_per(1024)  # type: ignore[no-any-return,return-value]
 
 
 def lambda_stmt_and_join_attributes(
@@ -218,7 +222,7 @@ def _significant_states_stmt(
         hass, no_attributes, include_last_changed=True
     )
 
-    if entity_ids is not None and len(entity_ids) == 1:
+    if entity_ids and len(entity_ids) == 1:
         if (
             significant_changes_only
             and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
@@ -244,7 +248,7 @@ def _significant_states_stmt(
             )
         )
 
-    if entity_ids is not None:
+    if entity_ids:
         stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
     else:
         stmt += _ignore_domains_filter
@@ -252,7 +256,7 @@ def _significant_states_stmt(
             filters.bake(stmt)
 
     stmt += lambda q: q.filter(States.last_updated > start_time)
-    if end_time is not None:
+    if end_time:
         stmt += lambda q: q.filter(States.last_updated < end_time)
 
     if join_attributes:
@@ -297,7 +301,7 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = _execute_decider(stmt(session), start_time, end_time)
+    states = _execute_decider(session, stmt, start_time, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -345,6 +349,36 @@ def _state_changed_during_period_stmt(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None,
+    no_attributes: bool,
+    descending: bool,
+    limit: int | None,
+) -> StatementLambdaElement:
+    stmt, join_attributes = lambda_stmt_and_join_attributes(
+        hass, no_attributes, include_last_changed=False
+    )
+    stmt += lambda q: q.filter(
+        ((States.last_changed == States.last_updated) | States.last_changed.is_(None))
+        & (States.last_updated > start_time)
+    )
+    if end_time:
+        stmt += lambda q: q.filter(States.last_updated < end_time)
+    if join_attributes:
+        stmt += lambda q: q.outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
+    if descending:
+        stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
+    else:
+        stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
+    if limit:
+        stmt += lambda q: q.limit(limit)
+    return stmt
+
+
+def _state_changed_during_period_with_entity_id_stmt(
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None,
     entity_id: str | None,
     no_attributes: bool,
     descending: bool,
@@ -357,10 +391,9 @@ def _state_changed_during_period_stmt(
         ((States.last_changed == States.last_updated) | States.last_changed.is_(None))
         & (States.last_updated > start_time)
     )
-    if end_time is not None:
+    if end_time:
         stmt += lambda q: q.filter(States.last_updated < end_time)
-    if entity_id is not None:
-        stmt += lambda q: q.filter_by(entity_id)
+    stmt += lambda q: q.filter_by(entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -385,18 +418,30 @@ def state_changes_during_period(
     include_start_time_state: bool = True,
 ) -> MutableMapping[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
-    with session_scope(hass=hass) as session:
-        stmt = _state_changed_during_period_stmt(
-            hass,
-            start_time,
-            end_time,
-            entity_id.lower(),
-            no_attributes,
-            descending,
-            limit,
-        )
+    entity_id = entity_id.lower() if entity_id is not None else None
 
-        states = _execute_decider(stmt(session), start_time, end_time)
+    with session_scope(hass=hass) as session:
+        if entity_id:
+            stmt = _state_changed_during_period_with_entity_id_stmt(
+                hass,
+                start_time,
+                end_time,
+                entity_id,
+                no_attributes,
+                descending,
+                limit,
+            )
+        else:
+            stmt = _state_changed_during_period_stmt(
+                hass,
+                start_time,
+                end_time,
+                no_attributes,
+                descending,
+                limit,
+            )
+
+        states = _execute_decider(session, stmt, start_time, end_time)
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
@@ -421,8 +466,7 @@ def _get_last_state_changes_stmt(
     stmt += lambda q: q.filter(
         (States.last_changed == States.last_updated) | States.last_changed.is_(None)
     )
-    if entity_id is not None:
-        stmt += lambda q: q.filter_by(entity_id)
+    stmt += lambda q: q.filter_by(entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -438,10 +482,11 @@ def get_last_state_changes(
 ) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
+    entity_id = entity_id.lower() if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
-        stmt = _get_last_state_changes_stmt(hass, number_of_states, entity_id.lower())
-        states = list(execute(stmt(session)))
+        stmt = _get_last_state_changes_stmt(hass, number_of_states, entity_id)
+        states = list(_execute_decider(session, stmt))
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
@@ -574,10 +619,11 @@ def _get_rows_with_session(
 ) -> list[Row]:
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
-        return execute(
+        return _execute_decider(
+            session,
             _get_single_entity_states_stmt(
                 hass, utc_point_in_time, entity_ids[0], no_attributes
-            )
+            ),
         )
 
     if run is None:
@@ -598,7 +644,7 @@ def _get_rows_with_session(
             hass, run.start, utc_point_in_time, filters, no_attributes
         )
 
-    return execute(stmt(session))
+    return _execute_decider(session, stmt)
 
 
 def _get_single_entity_states_stmt(
