@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
-from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.driver import CheckConfigUpdates, Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
@@ -549,8 +549,11 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
-
-        yield client
+        with patch(
+            "zwave_js_server.model.driver.Driver.async_check_for_config_updates",
+            return_value=CheckConfigUpdates({"updateAvailable": False}),
+        ):
+            yield client
 
 
 @pytest.fixture(name="controller_node")
