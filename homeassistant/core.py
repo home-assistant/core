@@ -1365,10 +1365,10 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        if context is None:
-            context = Context()
-
         now = dt_util.utcnow()
+
+        if context is None:
+            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
 
         state = State(
             entity_id,
