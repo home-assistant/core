@@ -22,6 +22,7 @@ from homeassistant.components.google import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import (
@@ -238,8 +239,8 @@ async def test_load_application_credentials(
     mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test finding a calendar from the API."""
-
+    """Test loading an application credentials and a config entry."""
+    assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
     )

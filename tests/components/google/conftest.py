@@ -305,9 +305,3 @@ def component_setup(hass: HomeAssistant, config: dict[str, Any]) -> ComponentSet
         return result
 
     return _setup_func
-
-
-@pytest.fixture(autouse=True)
-async def setup_application_credentials(hass: HomeAssistant) -> None:
-    """Initialize application crenditials platform, part of default_config."""
-    assert await async_setup_component(hass, "application_credentials", {})
