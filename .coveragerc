@@ -1020,10 +1020,6 @@ omit =
     homeassistant/components/senseme/fan.py
     homeassistant/components/senseme/light.py
     homeassistant/components/senseme/switch.py
-    homeassistant/components/sensibo/number.py
-    homeassistant/components/sensibo/select.py
-    homeassistant/components/sensibo/sensor.py
-    homeassistant/components/sensibo/update.py
     homeassistant/components/senz/__init__.py
     homeassistant/components/senz/api.py
     homeassistant/components/senz/climate.py
