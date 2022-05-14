@@ -204,35 +204,31 @@ def _significant_states_stmt(
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Query the database for significant state changes."""
+    stmt, join_attributes = lambda_stmt_and_join_attributes(
+        schema_version, no_attributes, include_last_changed=not significant_changes_only
+    )
     if (
         entity_ids
         and len(entity_ids) == 1
         and significant_changes_only
         and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
     ):
-        stmt, join_attributes = lambda_stmt_and_join_attributes(
-            schema_version, no_attributes, include_last_changed=False
-        )
         stmt += lambda q: q.filter(
             (States.last_changed == States.last_updated) | States.last_changed.is_(None)
         )
-    else:
-        stmt, join_attributes = lambda_stmt_and_join_attributes(
-            schema_version, no_attributes, include_last_changed=True
-        )
-        if significant_changes_only:
-            stmt += lambda q: q.filter(
-                or_(
-                    *[
-                        States.entity_id.like(entity_domain)
-                        for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
-                    ],
-                    (
-                        (States.last_changed == States.last_updated)
-                        | States.last_changed.is_(None)
-                    ),
-                )
+    elif significant_changes_only:
+        stmt += lambda q: q.filter(
+            or_(
+                *[
+                    States.entity_id.like(entity_domain)
+                    for entity_domain in SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE
+                ],
+                (
+                    (States.last_changed == States.last_updated)
+                    | States.last_changed.is_(None)
+                ),
             )
+        )
 
     if entity_ids:
         stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
