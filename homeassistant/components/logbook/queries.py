@@ -130,7 +130,7 @@ def _select_entities_context_ids_sub_query(
             _select_events_context_id_subquery(start_day, end_day, event_types).where(
                 _apply_event_entity_id_matchers(entity_ids)
             ),
-            select(States.context_id)
+            _apply_entities_hints(select(States.context_id))
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
         ).c.context_id
@@ -196,7 +196,7 @@ def _select_entity_context_ids_sub_query(
                 Events.event_data.like(entity_id_like)
                 | EventData.shared_data.like(entity_id_like)
             ),
-            select(States.context_id)
+            _apply_entities_hints(select(States.context_id))
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id == entity_id),
         ).c.context_id
