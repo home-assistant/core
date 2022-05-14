@@ -152,3 +152,6 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
+
+LOG_EVENT = "Event: entity_id:%s, attributes:%s"
+LOG_INFLUX_JSON = "Influx data: %s"

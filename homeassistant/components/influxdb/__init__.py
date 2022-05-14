@@ -87,6 +87,8 @@ from .const import (
     INFLUX_CONF_TAGS,
     INFLUX_CONF_TIME,
     INFLUX_CONF_VALUE,
+    LOG_EVENT,
+    LOG_INFLUX_JSON,
     QUERY_ERROR,
     QUEUE_BACKLOG_SECONDS,
     RE_DECIMAL,
@@ -216,6 +218,8 @@ def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
     def event_to_json(event: dict) -> str:
         """Convert event into json in format Influx expects."""
         state = event.data.get(EVENT_NEW_STATE)
+        if state:
+            _LOGGER.debug(LOG_EVENT, state.entity_id, state.attributes)
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
@@ -312,6 +316,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
                         del json[INFLUX_CONF_FIELDS][key]
 
         json[INFLUX_CONF_TAGS].update(tags)
+        _LOGGER.debug(LOG_INFLUX_JSON, json)
 
         return json
 
