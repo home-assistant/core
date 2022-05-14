@@ -182,7 +182,7 @@ def execute_stmt_lambda_element(
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
         try:
-            return executed.all() if use_all else executed.yield_per(1024)  # type: ignore[no-any-return]
+            return executed.all() if use_all else executed.yield_per(4096)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
