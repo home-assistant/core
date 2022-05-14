@@ -300,9 +300,6 @@ def get_significant_states_with_session(
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
-    assert not (
-        minimal_response and not significant_changes_only
-    ), "significant_changes_only=False makes no sense when minimal_response=True"
     states = _query_significant_states_with_session(
         hass,
         session,

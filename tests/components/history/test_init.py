@@ -1117,7 +1117,7 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
             "start_time": now.isoformat(),
             "entity_ids": ["sensor.test"],
             "include_start_time_state": True,
-            "significant_changes_only": True,
+            "significant_changes_only": False,
             "no_attributes": True,
             "minimal_response": True,
         }
@@ -1315,7 +1315,7 @@ async def test_history_during_period_significant_domain(
             "start_time": now.isoformat(),
             "entity_ids": ["climate.test"],
             "include_start_time_state": True,
-            "significant_changes_only": True,
+            "significant_changes_only": False,
             "no_attributes": True,
             "minimal_response": True,
         }
