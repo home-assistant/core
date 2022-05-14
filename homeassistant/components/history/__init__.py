@@ -12,6 +12,7 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 from sqlalchemy.ext.baked import BakedQuery
 from sqlalchemy.orm import Query
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
@@ -457,7 +458,7 @@ class Filters:
             or self.included_entity_globs
         )
 
-    def bake(self, baked_query: BakedQuery) -> None:
+    def bake(self, baked_query: BakedQuery | StatementLambdaElement) -> None:
         """Update a baked query.
 
         Works the same as apply on a baked_query.

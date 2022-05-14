@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -18,7 +18,9 @@ from awesomeversion import (
 import ciso8601
 from sqlalchemy import text
 from sqlalchemy.engine.cursor import CursorFetchStrategy
+from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.ext.baked import Result
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from typing_extensions import Concatenate, ParamSpec
@@ -119,8 +121,11 @@ def commit(session: Session, work: Any) -> bool:
 
 
 def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list:
+    qry: Query | Result,
+    to_native: bool = False,
+    validate_entity_ids: bool = True,
+    yield_per: int | None = None,
+) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -137,6 +142,8 @@ def execute(
                     )
                     if row is not None
                 ]
+            # elif yield_per and not isinstance(qry, Result):
+            #    result = qry.yield_per(yield_per)
             else:
                 result = qry.all()
 
