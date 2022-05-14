@@ -90,6 +90,9 @@ aio_geojson_geonetnz_volcano==0.6
 # homeassistant.components.nsw_rural_fire_service_feed
 aio_geojson_nsw_rfs_incidents==0.4
 
+# homeassistant.components.usgs_earthquakes_feed
+aio_geojson_usgs_earthquakes==0.1
+
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
 
@@ -493,9 +496,6 @@ gcal-sync==0.7.1
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
-
-# homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.6
 
 # homeassistant.components.aprs
 geopy==2.1.0
