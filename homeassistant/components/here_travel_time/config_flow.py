@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from herepy import InvalidCredentialsError, RouteMode, RoutingApi
+from herepy import HEREError, InvalidCredentialsError, RouteMode, RoutingApi
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -155,7 +155,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except InvalidCredentialsError:
                 errors["base"] = "invalid_auth"
-            except Exception as error:  # pylint: disable=broad-except
+            except HEREError as error:
                 _LOGGER.exception("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
         return self.async_show_form(
