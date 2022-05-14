@@ -23,6 +23,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.ext.baked import Result
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
@@ -124,7 +125,6 @@ def execute(
     qry: Query | Result,
     to_native: bool = False,
     validate_entity_ids: bool = True,
-    yield_per: int | None = None,
 ) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
@@ -142,8 +142,6 @@ def execute(
                     )
                     if row is not None
                 ]
-            # elif yield_per and not isinstance(qry, Result):
-            #    result = qry.yield_per(yield_per)
             else:
                 result = qry.all()
 
@@ -171,6 +169,27 @@ def execute(
             time.sleep(QUERY_RETRY_WAIT)
 
     assert False  # unreachable
+
+
+def execute_stmt_lambda_element(
+    session: Session,
+    stmt: StatementLambdaElement,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+) -> Iterable[Row]:
+    """Use yield_per automatically for expectedly large queries."""
+    executed = session.execute(stmt)
+    use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
+    for tryno in range(0, RETRIES):
+        try:
+            return executed.all() if use_all else executed.yield_per(1024)  # type: ignore[no-any-return]
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+            if tryno == RETRIES - 1:
+                raise
+            time.sleep(QUERY_RETRY_WAIT)
+
+    assert False  # unreaqchable
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:

@@ -34,7 +34,7 @@ from .models import (
     process_timestamp_to_utc_isoformat,
     row_to_compressed_state,
 )
-from .util import execute, session_scope
+from .util import execute_stmt_lambda_element, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -108,20 +108,6 @@ QUERY_STATES_NO_LAST_CHANGED = [
     States.attributes,
     StateAttributes.shared_attrs,
 ]
-
-
-def _execute_decider(
-    session: Session,
-    stmt: StatementLambdaElement,
-    start_time: datetime | None = None,
-    end_time: datetime | None = None,
-) -> Iterable[Row]:
-    """Use yield_per automatically for expectedly large queries."""
-    # TODO: add retries here
-    executed = session.execute(stmt)
-    if not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1:
-        return executed.all()  # type: ignore[no-any-return,return-value]
-    return executed.yield_per(1024)  # type: ignore[no-any-return,return-value]
 
 
 def lambda_stmt_and_join_attributes(
@@ -301,7 +287,7 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = _execute_decider(session, stmt, start_time, end_time)
+    states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -393,7 +379,7 @@ def _state_changed_during_period_with_entity_id_stmt(
     )
     if end_time:
         stmt += lambda q: q.filter(States.last_updated < end_time)
-    stmt += lambda q: q.filter_by(entity_id)
+    stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -441,7 +427,7 @@ def state_changes_during_period(
                 limit,
             )
 
-        states = _execute_decider(session, stmt, start_time, end_time)
+        states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
@@ -465,8 +451,7 @@ def _get_last_state_changes_stmt(
     )
     stmt += lambda q: q.filter(
         (States.last_changed == States.last_updated) | States.last_changed.is_(None)
-    )
-    stmt += lambda q: q.filter_by(entity_id)
+    ).filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -486,7 +471,7 @@ def get_last_state_changes(
 
     with session_scope(hass=hass) as session:
         stmt = _get_last_state_changes_stmt(hass, number_of_states, entity_id)
-        states = list(_execute_decider(session, stmt))
+        states = list(execute_stmt_lambda_element(session, stmt))
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
@@ -512,7 +497,7 @@ def _most_recent_state_ids_entities_subquery(
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
     most_recent_state_ids = (
-        query.session.query(func.max(States.state_id).label("max_state_id"))
+        select(func.max(States.state_id).label("max_state_id"))
         .filter(
             (States.last_updated >= run_start)
             & (States.last_updated < utc_point_in_time)
@@ -616,10 +601,10 @@ def _get_rows_with_session(
     run: RecorderRuns | None = None,
     filters: Any | None = None,
     no_attributes: bool = False,
-) -> list[Row]:
+) -> Iterable[Row]:
     """Return the states at a specific point in time."""
     if entity_ids and len(entity_ids) == 1:
-        return _execute_decider(
+        return execute_stmt_lambda_element(
             session,
             _get_single_entity_states_stmt(
                 hass, utc_point_in_time, entity_ids[0], no_attributes
@@ -644,7 +629,7 @@ def _get_rows_with_session(
             hass, run.start, utc_point_in_time, filters, no_attributes
         )
 
-    return _execute_decider(session, stmt)
+    return execute_stmt_lambda_element(session, stmt)
 
 
 def _get_single_entity_states_stmt(
