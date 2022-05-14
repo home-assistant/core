@@ -201,7 +201,7 @@ def execute_stmt_lambda_element(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreaqchable
+    assert False  # unreachable
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
