@@ -29,7 +29,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     client = hass.data[DOMAIN][config_entry.entry_id].client
 
-    data = {}
+    data: dict[str, Any] = {}
     data["client"] = {
         "auto_bypass_low_battery": client.auto_bypass_low_battery,
         "module_flags": client._module_flags,
@@ -45,8 +45,8 @@ async def async_get_config_entry_diagnostics(
         "features": client._user._features,
     }
 
-    data["locations"] = {}
-    for location_id, location in client.locations.items():
+    data["locations"] = []
+    for location in client.locations.values():
         new_location = {
             "location_id": location.location_id,
             "name": location.location_name,
@@ -59,8 +59,8 @@ async def async_get_config_entry_diagnostics(
             "arming_state": location.arming_state,
         }
 
-        new_location["devices"] = {}
-        for device_id, device in location.devices.items():
+        new_location["devices"] = []
+        for device in location.devices.values():
             new_device = {
                 "device_id": device.deviceid,
                 "name": device.name,
@@ -70,10 +70,10 @@ async def async_get_config_entry_diagnostics(
                 "serial_text": device.serial_text,
                 "flags": device.flags,
             }
-            new_location["devices"][device_id] = new_device
+            new_location["devices"].append(new_device)
 
-        new_location["partitions"] = {}
-        for partition_id, partition in location.partitions.items():
+        new_location["partitions"] = []
+        for partition in location.partitions.values():
             new_partition = {
                 "partition_id": partition.partitionid,
                 "name": partition.name,
@@ -85,10 +85,10 @@ async def async_get_config_entry_diagnostics(
                 "is_night_stay_enabled": partition.is_night_stay_enabled,
                 "exit_delay_timer": partition.exit_delay_timer,
             }
-            new_location["partitions"][partition_id] = new_partition
+            new_location["partitions"].append(new_partition)
 
-        new_location["zones"] = {}
-        for zone_id, zone in location.zones.items():
+        new_location["zones"] = []
+        for zone in location.zones.values():
             new_zone = {
                 "zone_id": zone.zoneid,
                 "description": zone.description,
@@ -106,8 +106,8 @@ async def async_get_config_entry_diagnostics(
                 "chime_state": zone.chime_state,
                 "device_type": zone.device_type,
             }
-            new_location["zones"][zone_id] = new_zone
+            new_location["zones"].append(new_zone)
 
-        data["locations"][location_id] = new_location
+        data["locations"].append(new_location)
 
     return async_redact_data(data, TO_REDACT)
