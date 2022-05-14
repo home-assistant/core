@@ -2,7 +2,7 @@
 
 from homeassistant.components.diagnostics import REDACTED
 
-from .common import DEVICE_INFO_BASIC_1, LOCATION_ID, init_integration
+from .common import LOCATION_ID, init_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
@@ -13,8 +13,20 @@ async def test_entry_diagnostics(hass, hass_client):
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    location = result["locations"][LOCATION_ID]
+    client = result["client"]
+    assert client["invalid_credentials"] is False
+
+    user = result["user"]
+    assert user["master"] is False
+
+    location = result["locations"][0]
     assert location["location_id"] == LOCATION_ID
 
-    device = location["devices"][DEVICE_INFO_BASIC_1["DeviceID"]]
+    device = location["devices"][0]
     assert device["serial_number"] == REDACTED
+
+    partition = location["partitions"][0]
+    assert partition["name"] == "Test1"
+
+    zone = location["zones"][0]
+    assert zone["zone_id"] == "1"
