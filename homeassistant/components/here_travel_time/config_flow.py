@@ -107,14 +107,11 @@ def validate_api_key(api_key: str) -> None:
 
 def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     """Get a populated schema or default."""
-    name = DEFAULT_NAME if data.get(CONF_NAME) is None else data.get(CONF_NAME)
-    mode = TRAVEL_MODE_CAR if data.get(CONF_MODE) is None else data.get(CONF_MODE)
-
     return vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=name): cv.string,
+            vol.Optional(CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)): cv.string,
             vol.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,
-            vol.Optional(CONF_MODE, default=mode): vol.In(TRAVEL_MODES),
+            vol.Optional(CONF_MODE, default=data.get(CONF_MODE, TRAVEL_MODE_CAR)): vol.In(TRAVEL_MODES),
         }
     )
 
