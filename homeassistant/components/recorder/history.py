@@ -110,8 +110,12 @@ QUERY_STATES_NO_LAST_CHANGED = [
 ]
 
 
+def _schema_version(hass: HomeAssistant) -> int:
+    return recorder.get_instance(hass).schema_version
+
+
 def lambda_stmt_and_join_attributes(
-    hass: HomeAssistant, no_attributes: bool, include_last_changed: bool = True
+    schema_version: int, no_attributes: bool, include_last_changed: bool = True
 ) -> tuple[Any, bool]:
     """Return the lambda_stmt and if StateAttributes should be joined.
 
@@ -131,7 +135,7 @@ def lambda_stmt_and_join_attributes(
     # If we in the process of migrating schema we do
     # not want to join the state_attributes table as we
     # do not know if it will be there yet
-    if recorder.get_instance(hass).schema_version < 25:
+    if schema_version < 25:
         if include_last_changed:
             return (
                 lambda_stmt(lambda: select(*QUERY_STATES_PRE_SCHEMA_25)),
@@ -195,7 +199,7 @@ def _ignore_domains_filter(query: Query) -> Query:
 
 
 def _significant_states_stmt(
-    hass: HomeAssistant,
+    schema_version: int,
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str] | None,
@@ -205,7 +209,7 @@ def _significant_states_stmt(
 ) -> StatementLambdaElement:
     """Query the database for significant state changes."""
     stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=True
+        schema_version, no_attributes, include_last_changed=True
     )
 
     if entity_ids and len(entity_ids) == 1:
@@ -214,7 +218,7 @@ def _significant_states_stmt(
             and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
         ):
             stmt, join_attributes = lambda_stmt_and_join_attributes(
-                hass, no_attributes, include_last_changed=False
+                schema_version, no_attributes, include_last_changed=False
             )
             stmt += lambda q: q.filter(
                 (States.last_changed == States.last_updated)
@@ -282,7 +286,7 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     stmt = _significant_states_stmt(
-        hass,
+        _schema_version(hass),
         start_time,
         end_time,
         entity_ids,
@@ -335,7 +339,7 @@ def get_full_significant_states_with_session(
 
 
 def _state_changed_during_period_stmt(
-    hass: HomeAssistant,
+    schema_version: int,
     start_time: datetime,
     end_time: datetime | None,
     entity_id: str | None,
@@ -344,7 +348,7 @@ def _state_changed_during_period_stmt(
     limit: int | None,
 ) -> StatementLambdaElement:
     stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=False
+        schema_version, no_attributes, include_last_changed=False
     )
     stmt += lambda q: q.filter(
         ((States.last_changed == States.last_updated) | States.last_changed.is_(None))
@@ -381,7 +385,7 @@ def state_changes_during_period(
 
     with session_scope(hass=hass) as session:
         stmt = _state_changed_during_period_stmt(
-            hass,
+            _schema_version(hass),
             start_time,
             end_time,
             entity_id,
@@ -406,10 +410,10 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    hass: HomeAssistant, number_of_states: int, entity_id: str
+    schema_version: int, number_of_states: int, entity_id: str
 ) -> StatementLambdaElement:
     stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, False, include_last_changed=False
+        schema_version, False, include_last_changed=False
     )
     stmt += lambda q: q.filter(
         (States.last_changed == States.last_updated) | States.last_changed.is_(None)
@@ -432,7 +436,9 @@ def get_last_state_changes(
     entity_id = entity_id.lower() if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
-        stmt = _get_last_state_changes_stmt(hass, number_of_states, entity_id)
+        stmt = _get_last_state_changes_stmt(
+            _schema_version(hass), number_of_states, entity_id
+        )
         states = list(execute_stmt_lambda_element(session, stmt))
         entity_ids = [entity_id] if entity_id is not None else None
 
@@ -450,7 +456,7 @@ def get_last_state_changes(
 
 
 def _get_states_for_entites_stmt(
-    hass: HomeAssistant,
+    schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
     entity_ids: list[str],
@@ -458,7 +464,7 @@ def _get_states_for_entites_stmt(
 ) -> StatementLambdaElement:
     """Baked query to get states for specific entities."""
     stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=True
+        schema_version, no_attributes, include_last_changed=True
     )
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
@@ -483,7 +489,7 @@ def _get_states_for_entites_stmt(
 
 
 def _get_states_for_all_stmt(
-    hass: HomeAssistant,
+    schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
     filters: Any | None,
@@ -491,7 +497,7 @@ def _get_states_for_all_stmt(
 ) -> StatementLambdaElement:
     """Baked query to get states for all entities."""
     stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=True
+        schema_version, no_attributes, include_last_changed=True
     )
     # We did not get an include-list of entities, query all states in the inner
     # query, then filter out unwanted domains as well as applying the custom filter.
@@ -547,11 +553,12 @@ def _get_rows_with_session(
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
+    schema_version = _schema_version(hass)
     if entity_ids and len(entity_ids) == 1:
         return execute_stmt_lambda_element(
             session,
             _get_single_entity_states_stmt(
-                hass, utc_point_in_time, entity_ids[0], no_attributes
+                schema_version, utc_point_in_time, entity_ids[0], no_attributes
             ),
         )
 
@@ -566,18 +573,18 @@ def _get_rows_with_session(
     # since the last recorder run started.
     if entity_ids:
         stmt = _get_states_for_entites_stmt(
-            hass, run.start, utc_point_in_time, entity_ids, no_attributes
+            schema_version, run.start, utc_point_in_time, entity_ids, no_attributes
         )
     else:
         stmt = _get_states_for_all_stmt(
-            hass, run.start, utc_point_in_time, filters, no_attributes
+            schema_version, run.start, utc_point_in_time, filters, no_attributes
         )
 
     return execute_stmt_lambda_element(session, stmt)
 
 
 def _get_single_entity_states_stmt(
-    hass: HomeAssistant,
+    schema_version: int,
     utc_point_in_time: datetime,
     entity_id: str,
     no_attributes: bool = False,
@@ -585,7 +592,7 @@ def _get_single_entity_states_stmt(
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     stmt, join_attributes = lambda_stmt_and_join_attributes(
-        hass, no_attributes, include_last_changed=True
+        schema_version, no_attributes, include_last_changed=True
     )
     stmt += lambda q: q.filter(
         States.last_updated < utc_point_in_time,
