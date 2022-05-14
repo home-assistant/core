@@ -1,6 +1,10 @@
 """The Geocaching integration."""
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -11,10 +15,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import GeocachingFlowHandler
 from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
-from .oauth import GeocachingOAuth2Implementation
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -36,13 +38,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    GeocachingFlowHandler.async_register_implementation(
+    await async_import_client_credential(
         hass,
-        GeocachingOAuth2Implementation(
-            hass,
-            client_id=config[DOMAIN][CONF_CLIENT_ID],
-            client_secret=config[DOMAIN][CONF_CLIENT_SECRET],
-            name="Geocaching",
+        DOMAIN,
+        ClientCredential(
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
         ),
     )
 
