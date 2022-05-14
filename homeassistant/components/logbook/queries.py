@@ -249,10 +249,18 @@ def _all_stmt(
         )
     elif entity_filter is not None:
         stmt += lambda s: s.union_all(
-            _select_states(start_day, end_day).where(entity_filter)
+            _select_states(start_day, end_day)
+            .with_hint(
+                States, "USE INDEX (ix_states_last_updated)", dialect_name="mysql"
+            )
+            .where(entity_filter)
         )
     else:
-        stmt += lambda s: s.union_all(_select_states(start_day, end_day))
+        stmt += lambda s: s.union_all(
+            _select_states(start_day, end_day).with_hint(
+                States, "USE INDEX (ix_states_last_updated)", dialect_name="mysql"
+            )
+        )
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 
