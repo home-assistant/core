@@ -23,9 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 def validate_path(hass: HomeAssistant, path: str) -> str:
     """Validate path."""
     get_path = pathlib.Path(path)
-    exist = get_path.exists()
-    is_file = get_path.is_file()
-    if not exist or not is_file:
+    if not get_path.exists() or not get_path.is_file():
         _LOGGER.error("Can not access file %s", path)
         raise NotValidError
 

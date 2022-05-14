@@ -13,12 +13,7 @@ from .const import PLATFORMS
 
 def check_path(path: pathlib.Path) -> bool:
     """Check path."""
-    exists = path.exists()
-    is_file = path.is_file()
-
-    if exists and is_file:
-        return True
-    return False
+    return path.exists() and path.is_file()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
