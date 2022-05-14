@@ -10,6 +10,10 @@ import requests
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CREDENTIALS,
@@ -19,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -27,7 +31,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import config_flow
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
 from .util import (
@@ -76,15 +79,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     if CONF_CLIENT_ID in config[DOMAIN]:
-        config_flow.SpotifyFlowHandler.async_register_implementation(
+        await async_import_client_credential(
             hass,
-            config_entry_oauth2_flow.LocalOAuth2Implementation(
-                hass,
-                DOMAIN,
+            DOMAIN,
+            ClientCredential(
                 config[DOMAIN][CONF_CLIENT_ID],
                 config[DOMAIN][CONF_CLIENT_SECRET],
-                "https://accounts.spotify.com/authorize",
-                "https://accounts.spotify.com/api/token",
             ),
         )
 
