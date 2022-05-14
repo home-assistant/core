@@ -40,6 +40,7 @@ from .const import (
     SONOS_VANISHED,
     UPNP_ST,
 )
+from .exception import SonosUpdateError
 from .favorites import SonosFavorites
 from .speaker import SonosSpeaker
 
@@ -264,18 +265,10 @@ class SonosDiscoveryManager:
                 self._create_visible_speakers(ip_addr)
             elif not known_speaker.available:
                 try:
-                    known_speaker.soco.renderingControl.GetVolume(
-                        [("InstanceID", 0), ("Channel", "Master")], timeout=1
-                    )
-                except OSError:
+                    known_speaker.ping()
+                except SonosUpdateError:
                     _LOGGER.debug(
                         "Manual poll to %s failed, keeping unavailable", ip_addr
-                    )
-                else:
-                    dispatcher_send(
-                        self.hass,
-                        f"{SONOS_SPEAKER_ACTIVITY}-{known_speaker.uid}",
-                        "manual rediscovery",
                     )
 
         self.data.hosts_heartbeat = call_later(
