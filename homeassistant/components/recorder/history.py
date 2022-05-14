@@ -585,15 +585,18 @@ def _get_single_entity_states_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
-    stmt += lambda q: q.filter(
-        States.last_updated < utc_point_in_time,
-        States.entity_id == entity_id,
+    stmt += (
+        lambda q: q.filter(
+            States.last_updated < utc_point_in_time,
+            States.entity_id == entity_id,
+        )
+        .order_by(States.last_updated.desc())
+        .limit(1)
     )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt += lambda q: q.order_by(States.last_updated.desc()).limit(1)
     return stmt
 
 
