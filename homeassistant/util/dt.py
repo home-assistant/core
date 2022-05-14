@@ -322,8 +322,8 @@ def find_next_time_expression_time(
             now += dt.timedelta(seconds=1)
             continue
 
-        now_is_ambiguous = _datetime_ambiguous(now)
-        result_is_ambiguous = _datetime_ambiguous(result)
+        if not _datetime_ambiguous(now):
+            return result
 
         # When leaving DST and clocks are turned backward.
         # Then there are wall clock times that are ambiguous i.e. exist with DST and without DST
@@ -331,7 +331,7 @@ def find_next_time_expression_time(
         # in a day.
         # Example: on 2021.10.31 02:00:00 in CET timezone clocks are turned backward an hour
 
-        if now_is_ambiguous and result_is_ambiguous:
+        if _datetime_ambiguous(result):
             # `now` and `result` are both ambiguous, so the next match happens
             # _within_ the current fold.
 
@@ -340,7 +340,7 @@ def find_next_time_expression_time(
             #  2. 2021.10.31 02:00:00+01:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
             return result.replace(fold=now.fold)
 
-        if now_is_ambiguous and now.fold == 0 and not result_is_ambiguous:
+        if now.fold == 0:
             # `now` is in the first fold, but result is not ambiguous (meaning it no longer matches
             # within the fold).
             # -> Check if result matches in the next fold. If so, emit that match
