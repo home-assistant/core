@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ipv6_address
 
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
@@ -48,6 +49,8 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         properties = discovery_info.properties
         ip_address = discovery_info.host
+        if is_ipv6_address(ip_address):
+            return self.async_abort(reason="ipv6_not_supported")
         uuid = properties["uuid"]
         model = properties["model"]
         name = properties["name"]
