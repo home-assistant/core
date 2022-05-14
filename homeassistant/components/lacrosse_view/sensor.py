@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 
 @dataclass
@@ -118,12 +118,10 @@ class LaCrosseViewSensor(
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
             "name": sensor.name.split(" ")[0],
-            "manufacturer": "LaCrosse Technologies",
+            "manufacturer": "LaCrosse Technology",
             "model": sensor.model,
             "via_device": (DOMAIN, sensor.location.id),
         }
-
-        LOGGER.debug(self._attr_device_info)
 
     @property
     def native_value(self) -> int:
