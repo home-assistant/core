@@ -204,17 +204,15 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        self._state = str(self._state)
-        if self._canary_type == SensorType.BATTERY and self._state != "None":
+        self._state = None if self._state is None else str(self._state)
+        if self._canary_type == SensorType.BATTERY and self._state is not None:
             return icon_for_battery_level(
                 battery_level=int(float(self._state)), charging=False
             )
-        if self._canary_type == SensorType.WIFI and self._state != "None":
-            self._state = float(self._state)
-            return icon_for_wifi_level(wifi_level=self._state)
-        if self._canary_type == SensorType.AIR_QUALITY and self._state != "None":
-            self._state = float(str(self._state))
-            return icon_for_air_quality_level(air_quality_level=self._state)
+        if self._canary_type == SensorType.WIFI and self._state is not None:
+            return icon_for_wifi_level(wifi_level=float(self._state))
+        if self._canary_type == SensorType.AIR_QUALITY and self._state is not None:
+            return icon_for_air_quality_level(air_quality_level=float(self._state))
 
         return self._icon
 
@@ -224,7 +222,8 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         try:
             readings = self.coordinator.data[DATA_TYPE_READING][self._device_id]
         except KeyError:
-            readings = None
+            self._state = None
+            return
 
         value = next(
             (
