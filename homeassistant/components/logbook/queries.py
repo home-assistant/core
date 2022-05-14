@@ -87,7 +87,7 @@ def statement_for_request(
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids:
-        entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
+        entity_filter = filters.entity_filter() if filters else None
         return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
 
     # Multiple entities: logbook sends everything for the timeframe for the entities
@@ -274,7 +274,9 @@ def _legacy_select_events_context_id(
             NOT_CONTEXT_ONLY,
         )
         .outerjoin(States, (Events.event_id == States.event_id))
-        .where(States.last_updated == States.last_changed)
+        .where(
+            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+        )
         .where(_not_continuous_entity_matcher())
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -358,7 +360,9 @@ def _apply_states_filters(query: Query, start_day: dt, end_day: dt) -> Query:
         .outerjoin(OLD_STATE, (States.old_state_id == OLD_STATE.state_id))
         .where(_missing_state_matcher())
         .where(_not_continuous_entity_matcher())
-        .where(States.last_updated == States.last_changed)
+        .where(
+            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+        )
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
