@@ -921,8 +921,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
-/homeassistant/components/slack/ @bachya
-/tests/components/slack/ @bachya
+/homeassistant/components/slack/ @bachya @tkdrob
+/tests/components/slack/ @bachya @tkdrob
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
