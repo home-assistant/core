@@ -795,6 +795,8 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     async_setup_recorder_instance: SetupRecorderInstanceT,
 ):
     """Test getting states when last_changed is null."""
+    await async_setup_recorder_instance(hass, {})
+
     now = dt_util.utcnow()
     hass.states.async_set("sensor.one", "on", {"attr": "original"})
     state0 = hass.states.get("sensor.one")

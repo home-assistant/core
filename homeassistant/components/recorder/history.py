@@ -300,6 +300,9 @@ def get_significant_states_with_session(
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
+    assert not (
+        minimal_response and not significant_changes_only
+    ), "significant_changes_only=False makes no sense when minimal_response=True"
     states = _query_significant_states_with_session(
         hass,
         session,
@@ -737,6 +740,11 @@ def _sorted_states_to_dict(
             ent_results.append(
                 {
                     attr_state: state,
+                    #
+                    # minimal_response only makes sense with last_updated == last_updated
+                    #
+                    # We use last_updated for for last_changed since its the same
+                    #
                     attr_last_changed: _process_timestamp(row.last_updated),
                 }
             )
