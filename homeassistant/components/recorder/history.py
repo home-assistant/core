@@ -153,10 +153,6 @@ def lambda_stmt_and_join_attributes(
     return lambda_stmt(lambda: select(*QUERY_STATES_NO_LAST_CHANGED)), True
 
 
-def async_setup(hass: HomeAssistant) -> None:
-    """Set up the history hooks."""
-
-
 def get_significant_states(
     hass: HomeAssistant,
     start_time: datetime,
