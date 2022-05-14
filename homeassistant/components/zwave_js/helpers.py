@@ -95,6 +95,7 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(client: ZwaveClient) -> None:
     """Enable statistics on the driver."""
     await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
+    await client.driver.async_enable_error_reporting()
 
 
 @callback

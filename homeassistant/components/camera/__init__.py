@@ -103,7 +103,7 @@ class CameraEntityFeature(IntEnum):
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
 
-RTSP_PREFIXES = {"rtsp://", "rtsps://"}
+RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"

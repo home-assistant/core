@@ -97,6 +97,7 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
+homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
 homeassistant.components.greeneye_monitor.*

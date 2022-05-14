@@ -35,6 +35,8 @@ from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
 
+PARALLEL_UPDATES = 0
+
 LOGGER = logging.getLogger(__name__)
 
 
