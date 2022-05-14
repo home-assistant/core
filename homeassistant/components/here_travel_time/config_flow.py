@@ -125,7 +125,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _config: dict[str, Any] | None
+    _config: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -167,7 +167,6 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure origin by using gps coordinates."""
         if user_input is not None:
-            assert self._config is not None
             self._config[
                 CONF_ORIGIN
             ] = f"{user_input[CONF_ORIGIN]['latitude']},{user_input[CONF_ORIGIN]['longitude']}"
@@ -185,7 +184,6 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure origin by using an entity."""
         if user_input is not None:
-            assert self._config is not None
             self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
             return self.async_show_menu(
                 step_id="destination_menu",
@@ -201,9 +199,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Configure destination by using gps coordinates."""
-        user_input = user_input or {}
-        if user_input:
-            assert self._config is not None
+        if user_input is not None:
             self._config[
                 CONF_DESTINATION
             ] = f"{user_input[CONF_DESTINATION]['latitude']},{user_input[CONF_DESTINATION]['longitude']}"
@@ -223,7 +219,6 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure destination by using an entity."""
         if user_input is not None:
-            assert self._config is not None
             self._config[CONF_DESTINATION_ENTITY_ID] = user_input[
                 CONF_DESTINATION_ENTITY_ID
             ]
