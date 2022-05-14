@@ -1,10 +1,22 @@
 """Tests for the config flow."""
 from homeassistant.components.dsmr_reader.const import DOMAIN
-from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 from tests.common import MockConfigEntry
+
+
+async def test_import_step(hass: HomeAssistant):
+    """Test the import step."""
+    # configure bogus mqtt service to pass validation
+    hass.services.async_register("mqtt", "publish", None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "DSMR Reader"
 
 
 async def test_initial_user_step(hass: HomeAssistant):

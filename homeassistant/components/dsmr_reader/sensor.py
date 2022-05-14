@@ -5,9 +5,8 @@ import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import SOURCE_PLATFORM_CONFIG
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
@@ -29,17 +28,13 @@ async def async_setup_platform(
         "DSMR Reader yaml config is now deprecated and has been imported. "
         "Please remove it from your config"
     )
-    current_entries = hass.config_entries.async_entries(domain=DOMAIN)
-    if not current_entries:
-        await hass.config_entries.async_add(
-            ConfigEntry(
-                version=1,
-                domain=DOMAIN,
-                title="DSMR Reader",
-                data={},
-                source=SOURCE_PLATFORM_CONFIG,
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
+    )
 
 
 async def async_setup_entry(

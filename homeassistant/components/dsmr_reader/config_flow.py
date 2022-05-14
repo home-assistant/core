@@ -16,6 +16,11 @@ class DsmrReaderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Import from configuration.yaml and create config entry."""
+        # There's no configuration supported for this integration, so we need to hardcode the user input here
+        return await self.async_step_user(user_input={})
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
