@@ -24,7 +24,7 @@ from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import call_shell_with_timeout, check_output_or_log
+from .util import call_shell_with_timeout, check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
