@@ -142,8 +142,6 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         user_input = user_input or {}
         if user_input:
-            if self.source == config_entries.SOURCE_IMPORT:
-                return await self.async_import(user_input)
             try:
                 await self.hass.async_add_executor_job(
                     validate_api_key, user_input[CONF_API_KEY]
@@ -230,9 +228,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
-    async_step_import = async_step_user
-
-    async def async_import(
+    async def async_step_import(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Import from configuration.yaml."""
