@@ -28,7 +28,7 @@
                     "headers": "Headers to use for the web request",
                     "index": "Defines which of the elements returned by the CSS selector to use",
                     "resource": "The URL to the website that contains the value",
-                    "select": "Defines the HTML tag to search for",
+                    "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
                     "state_class": "The state_class of the sensor",
                     "value_template": "Defines a template to get the state of the sensor",
                     "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
@@ -62,7 +62,7 @@
                     "headers": "Headers to use for the web request",
                     "index": "Defines which of the elements returned by the CSS selector to use",
                     "resource": "The URL to the website that contains the value",
-                    "select": "Defines the HTML tag to search for",
+                    "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
                     "state_class": "The state_class of the sensor",
                     "value_template": "Defines a template to get the state of the sensor",
                     "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
