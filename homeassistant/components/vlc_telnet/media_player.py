@@ -101,7 +101,6 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc = vlc
         self._available = available
         self._volume_bkp = 0.0
-        self._media_album_name: str | None = None
         self._media_artist: str | None = None
         self._media_title: str | None = None
         config_entry_id = config_entry.entry_id
@@ -163,7 +162,7 @@ class VlcDevice(MediaPlayerEntity):
         data = info.data
         LOGGER.debug("Info data: %s", data)
 
-        self._media_album_name = data.get("data", {}).get("album")
+        self._attr_media_album_name = data.get("data", {}).get("album")
         self._media_artist = data.get("data", {}).get("artist")
         self._media_title = data.get("data", {}).get("title")
         now_playing = data.get("data", {}).get("now_playing")
