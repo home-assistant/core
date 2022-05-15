@@ -487,7 +487,7 @@ def _get_states_for_all_stmt(
     schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
-    filters: Any | None,
+    filters: Filters | None,
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Baked query to get states for all entities."""
