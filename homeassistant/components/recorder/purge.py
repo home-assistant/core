@@ -132,8 +132,9 @@ def _purge_states_and_attributes_ids(
     """
     has_remaining_state_ids_to_purge = True
     # There are more states relative to attributes_ids so
-    # we purge enough state ids to try to generate a full
-    # size batch of them that will be around MAX_ROWS_TO_PURGE
+    # we purge enough state_ids to try to generate a full
+    # size batch of attributes_ids that will be around the size
+    # MAX_ROWS_TO_PURGE
     attributes_ids_batch: set[int] = set()
     for _ in range(states_batch_size):
         state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
@@ -166,8 +167,9 @@ def _purge_events_and_data_ids(
     """
     has_remaining_event_ids_to_purge = True
     # There are more events relative to data_ids so
-    # we purge enough state ids to try to generate a full
-    # size batch of them that will be around MAX_ROWS_TO_PURGE
+    # we purge enough event_ids to try to generate a full
+    # size batch of data_ids that will be around the size
+    # MAX_ROWS_TO_PURGE
     data_ids_batch: set[int] = set()
     for _ in range(events_batch_size):
         event_ids, data_ids = _select_event_data_ids_to_purge(session, purge_before)
