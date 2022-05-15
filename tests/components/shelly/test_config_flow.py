@@ -228,6 +228,7 @@ async def test_form_errors_get_info(hass, error):
 @pytest.mark.parametrize("error", [(KeyError, "firmware_not_fully_provisioned")])
 async def test_form_missing_key_get_info(hass, error):
     """Test we handle missing key."""
+    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -244,7 +245,7 @@ async def test_form_missing_key_get_info(hass, error):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": error}
+    assert result2["errors"] == {"base": base_error}
 
 
 @pytest.mark.parametrize(
