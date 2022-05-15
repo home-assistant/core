@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime as dt
-from typing import Any
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query, aliased
+from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.history import Filters
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
     LAST_UPDATED_INDEX,
@@ -236,7 +236,7 @@ def _all_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    entity_filter: Any | None = None,
+    entity_filter: ClauseList | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -410,7 +410,7 @@ def _continuous_domain_matcher() -> sqlalchemy.or_:
     ).self_group()
 
 
-def _not_uom_attributes_matcher() -> Any:
+def _not_uom_attributes_matcher() -> ClauseList:
     """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE

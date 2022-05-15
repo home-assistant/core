@@ -24,6 +24,7 @@ from homeassistant.components.websocket_api.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
+from .filters import Filters
 from .models import (
     LazyState,
     RecorderRuns,
@@ -158,7 +159,7 @@ def get_significant_states(
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
-    filters: Any | None = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     minimal_response: bool = False,
@@ -199,7 +200,7 @@ def _significant_states_stmt(
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str] | None,
-    filters: Any,
+    filters: Filters | None,
     significant_changes_only: bool,
     no_attributes: bool,
 ) -> StatementLambdaElement:
@@ -256,7 +257,7 @@ def get_significant_states_with_session(
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
-    filters: Any = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     minimal_response: bool = False,
@@ -307,7 +308,7 @@ def get_full_significant_states_with_session(
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
-    filters: Any = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     no_attributes: bool = False,
@@ -486,7 +487,7 @@ def _get_states_for_all_stmt(
     schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
-    filters: Any | None,
+    filters: Filters | None,
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Baked query to get states for all entities."""
@@ -542,7 +543,7 @@ def _get_rows_with_session(
     utc_point_in_time: datetime,
     entity_ids: list[str] | None = None,
     run: RecorderRuns | None = None,
-    filters: Any | None = None,
+    filters: Filters | None = None,
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
@@ -608,7 +609,7 @@ def _sorted_states_to_dict(
     states: Iterable[Row],
     start_time: datetime,
     entity_ids: list[str] | None,
-    filters: Any = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,

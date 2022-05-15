@@ -11,7 +11,7 @@ from pytest import approx
 from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
@@ -186,9 +186,7 @@ def test_get_significant_states_exclude_domain(hass_history):
     config = history.CONFIG_SCHEMA(
         {
             ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_EXCLUDE: {history.CONF_DOMAINS: ["media_player"]}
-            },
+            history.DOMAIN: {CONF_EXCLUDE: {CONF_DOMAINS: ["media_player"]}},
         }
     )
     check_significant_states(hass, zero, four, states, config)
@@ -207,9 +205,7 @@ def test_get_significant_states_exclude_entity(hass_history):
     config = history.CONFIG_SCHEMA(
         {
             ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_EXCLUDE: {history.CONF_ENTITIES: ["media_player.test"]}
-            },
+            history.DOMAIN: {CONF_EXCLUDE: {CONF_ENTITIES: ["media_player.test"]}},
         }
     )
     check_significant_states(hass, zero, four, states, config)
@@ -230,9 +226,9 @@ def test_get_significant_states_exclude(hass_history):
         {
             ha.DOMAIN: {},
             history.DOMAIN: {
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ["thermostat"],
-                    history.CONF_ENTITIES: ["media_player.test"],
+                CONF_EXCLUDE: {
+                    CONF_DOMAINS: ["thermostat"],
+                    CONF_ENTITIES: ["media_player.test"],
                 }
             },
         }
@@ -257,10 +253,8 @@ def test_get_significant_states_exclude_include_entity(hass_history):
         {
             ha.DOMAIN: {},
             history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_ENTITIES: ["media_player.test", "thermostat.test"]
-                },
-                history.CONF_EXCLUDE: {history.CONF_DOMAINS: ["thermostat"]},
+                CONF_INCLUDE: {CONF_ENTITIES: ["media_player.test", "thermostat.test"]},
+                CONF_EXCLUDE: {CONF_DOMAINS: ["thermostat"]},
             },
         }
     )
@@ -282,9 +276,7 @@ def test_get_significant_states_include_domain(hass_history):
     config = history.CONFIG_SCHEMA(
         {
             ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {history.CONF_DOMAINS: ["thermostat", "script"]}
-            },
+            history.DOMAIN: {CONF_INCLUDE: {CONF_DOMAINS: ["thermostat", "script"]}},
         }
     )
     check_significant_states(hass, zero, four, states, config)
@@ -306,9 +298,7 @@ def test_get_significant_states_include_entity(hass_history):
     config = history.CONFIG_SCHEMA(
         {
             ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {history.CONF_ENTITIES: ["media_player.test"]}
-            },
+            history.DOMAIN: {CONF_INCLUDE: {CONF_ENTITIES: ["media_player.test"]}},
         }
     )
     check_significant_states(hass, zero, four, states, config)
@@ -330,9 +320,9 @@ def test_get_significant_states_include(hass_history):
         {
             ha.DOMAIN: {},
             history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ["thermostat"],
-                    history.CONF_ENTITIES: ["media_player.test"],
+                CONF_INCLUDE: {
+                    CONF_DOMAINS: ["thermostat"],
+                    CONF_ENTITIES: ["media_player.test"],
                 }
             },
         }
@@ -359,8 +349,8 @@ def test_get_significant_states_include_exclude_domain(hass_history):
         {
             ha.DOMAIN: {},
             history.DOMAIN: {
-                history.CONF_INCLUDE: {history.CONF_DOMAINS: ["media_player"]},
-                history.CONF_EXCLUDE: {history.CONF_DOMAINS: ["media_player"]},
+                CONF_INCLUDE: {CONF_DOMAINS: ["media_player"]},
+                CONF_EXCLUDE: {CONF_DOMAINS: ["media_player"]},
             },
         }
     )
@@ -386,8 +376,8 @@ def test_get_significant_states_include_exclude_entity(hass_history):
         {
             ha.DOMAIN: {},
             history.DOMAIN: {
-                history.CONF_INCLUDE: {history.CONF_ENTITIES: ["media_player.test"]},
-                history.CONF_EXCLUDE: {history.CONF_ENTITIES: ["media_player.test"]},
+                CONF_INCLUDE: {CONF_ENTITIES: ["media_player.test"]},
+                CONF_EXCLUDE: {CONF_ENTITIES: ["media_player.test"]},
             },
         }
     )
@@ -410,13 +400,13 @@ def test_get_significant_states_include_exclude(hass_history):
         {
             ha.DOMAIN: {},
             history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ["media_player"],
-                    history.CONF_ENTITIES: ["thermostat.test"],
+                CONF_INCLUDE: {
+                    CONF_DOMAINS: ["media_player"],
+                    CONF_ENTITIES: ["thermostat.test"],
                 },
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ["thermostat"],
-                    history.CONF_ENTITIES: ["media_player.test"],
+                CONF_EXCLUDE: {
+                    CONF_DOMAINS: ["thermostat"],
+                    CONF_ENTITIES: ["media_player.test"],
                 },
             },
         }
@@ -503,14 +493,14 @@ def test_get_significant_states_only(hass_history):
 def check_significant_states(hass, zero, four, states, config):
     """Check if significant states are retrieved."""
     filters = history.Filters()
-    exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)
+    exclude = config[history.DOMAIN].get(CONF_EXCLUDE)
     if exclude:
-        filters.excluded_entities = exclude.get(history.CONF_ENTITIES, [])
-        filters.excluded_domains = exclude.get(history.CONF_DOMAINS, [])
-    include = config[history.DOMAIN].get(history.CONF_INCLUDE)
+        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
+        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
+    include = config[history.DOMAIN].get(CONF_INCLUDE)
     if include:
-        filters.included_entities = include.get(history.CONF_ENTITIES, [])
-        filters.included_domains = include.get(history.CONF_DOMAINS, [])
+        filters.included_entities = include.get(CONF_ENTITIES, [])
+        filters.included_domains = include.get(CONF_DOMAINS, [])
 
     hist = get_significant_states(hass, zero, four, filters=filters)
     assert states == hist
@@ -1491,7 +1481,7 @@ async def test_history_during_period_with_use_include_order(
         {
             history.DOMAIN: {
                 history.CONF_ORDER: True,
-                history.CONF_INCLUDE: {
+                CONF_INCLUDE: {
                     CONF_ENTITIES: sort_order,
                     CONF_DOMAINS: ["sensor"],
                 },
