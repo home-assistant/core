@@ -17,12 +17,12 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.history import (
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.filter import (
     Filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
