@@ -436,7 +436,7 @@ bravia-tv==1.0.11
 broadlink==0.18.1
 
 # homeassistant.components.brother
-brother==1.2.0
+brother==1.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1829,7 +1829,7 @@ pysmarty==0.8
 pysml==0.0.7
 
 # homeassistant.components.snmp
-pysnmplib==5.0.10
+pysnmp==4.4.12
 
 # homeassistant.components.soma
 pysoma==0.0.10
