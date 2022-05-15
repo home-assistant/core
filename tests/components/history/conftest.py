@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import history
+from homeassistant.components.recorder import filters
 from homeassistant.setup import setup_component
 
 
@@ -13,13 +14,13 @@ def hass_history(hass_recorder):
     config = history.CONFIG_SCHEMA(
         {
             history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ["media_player"],
-                    history.CONF_ENTITIES: ["thermostat.test"],
+                filters.CONF_INCLUDE: {
+                    filters.CONF_DOMAINS: ["media_player"],
+                    filters.CONF_ENTITIES: ["thermostat.test"],
                 },
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ["thermostat"],
-                    history.CONF_ENTITIES: ["media_player.test"],
+                filters.CONF_EXCLUDE: {
+                    filters.CONF_DOMAINS: ["thermostat"],
+                    filters.CONF_ENTITIES: ["media_player.test"],
                 },
             }
         }

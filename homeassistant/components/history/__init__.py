@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.components.recorder.filter import (
+from homeassistant.components.recorder.filters import (
     Filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )

@@ -12,8 +12,8 @@ from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.history import Filters
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
     LAST_UPDATED_INDEX,
