@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import datetime as dt
 
 import sqlalchemy
-from sqlalchemy import JSON, lambda_stmt, select, type_coerce, union_all
+from sqlalchemy import JSON, Text, lambda_stmt, select, type_coerce, union_all
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
@@ -33,8 +33,18 @@ UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
-SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON(none_as_null=True))
-OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSON(none_as_null=True))
+
+JSON_VARIENT_CAST = Text().with_variant(
+    type_=JSON(none_as_null=True), dialect_name="postgresql"
+)
+
+SHARED_ATTRS_JSON = type_coerce(
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+OLD_FORMAT_ATTRS_JSON = type_coerce(
+    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+
 
 PSUEDO_EVENT_STATE_CHANGED = None
 # Since we don't store event_types and None
