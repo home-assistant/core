@@ -102,6 +102,11 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
+JSON_VARIENT_CAST = (
+    Text()
+    .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
+    .with_variant(mysql.LONGTEXT, "mysql")
+)
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")

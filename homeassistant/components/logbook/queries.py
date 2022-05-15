@@ -16,6 +16,7 @@ from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
+    JSON_VARIENT_CAST,
     LAST_UPDATED_INDEX,
     EventData,
     Events,
@@ -33,8 +34,15 @@ UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
-SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON(none_as_null=True))
-OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSON(none_as_null=True))
+
+
+SHARED_ATTRS_JSON = type_coerce(
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+OLD_FORMAT_ATTRS_JSON = type_coerce(
+    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+
 
 PSUEDO_EVENT_STATE_CHANGED = None
 # Since we don't store event_types and None
