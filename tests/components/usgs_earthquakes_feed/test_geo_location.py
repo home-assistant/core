@@ -3,6 +3,7 @@ import datetime
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeed
+from freezegun import freeze_time
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -113,7 +114,7 @@ async def test_setup(hass):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = (
