@@ -43,14 +43,17 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
-                vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
+                    vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
