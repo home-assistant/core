@@ -466,9 +466,6 @@ dynalite_devices==0.1.46
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
 
-# homeassistant.components.electrasmart
-pyelectra==1.1.0
-
 # homeassistant.components.elgato
 elgato==3.0.0
 
@@ -1082,6 +1079,9 @@ pyefergy==22.1.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.3.0
+
+# homeassistant.components.electrasmart
+pyelectra==1.1.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
