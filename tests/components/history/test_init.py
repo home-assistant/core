@@ -1133,11 +1133,12 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {}
     assert isinstance(sensor_test_history[0]["lu"], float)
-    assert isinstance(sensor_test_history[0]["lc"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
     assert "a" not in sensor_test_history[1]
     assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[2]["s"] == "on"
     assert sensor_test_history[2]["a"] == {}
@@ -1163,10 +1164,11 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {"any": "attr"}
     assert isinstance(sensor_test_history[0]["lu"], float)
-    assert isinstance(sensor_test_history[0]["lc"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
     assert sensor_test_history[1]["a"] == {"any": "attr"}
 
     assert sensor_test_history[4]["s"] == "on"
@@ -1193,10 +1195,11 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {"any": "attr"}
     assert isinstance(sensor_test_history[0]["lu"], float)
-    assert isinstance(sensor_test_history[0]["lc"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
     assert sensor_test_history[1]["a"] == {"any": "attr"}
 
     assert sensor_test_history[2]["s"] == "on"
@@ -1331,11 +1334,11 @@ async def test_history_during_period_significant_domain(
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {}
     assert isinstance(sensor_test_history[0]["lu"], float)
-    assert isinstance(sensor_test_history[0]["lc"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
     assert "a" in sensor_test_history[1]
     assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[4]["s"] == "on"
     assert sensor_test_history[4]["a"] == {}
@@ -1361,10 +1364,11 @@ async def test_history_during_period_significant_domain(
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {"temperature": "1"}
     assert isinstance(sensor_test_history[0]["lu"], float)
-    assert isinstance(sensor_test_history[0]["lc"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
     assert sensor_test_history[1]["a"] == {"temperature": "2"}
 
     assert sensor_test_history[4]["s"] == "on"
@@ -1391,10 +1395,11 @@ async def test_history_during_period_significant_domain(
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {"temperature": "1"}
     assert isinstance(sensor_test_history[0]["lu"], float)
-    assert isinstance(sensor_test_history[0]["lc"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[1]["s"] == "off"
-    assert isinstance(sensor_test_history[1]["lc"], float)
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
     assert sensor_test_history[1]["a"] == {"temperature": "2"}
 
     assert sensor_test_history[2]["s"] == "off"
@@ -1429,7 +1434,7 @@ async def test_history_during_period_significant_domain(
     assert sensor_test_history[0]["s"] == "on"
     assert sensor_test_history[0]["a"] == {"temperature": "5"}
     assert sensor_test_history[0]["lu"] == later.timestamp()
-    assert sensor_test_history[0]["lc"] == later.timestamp()
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
 
 async def test_history_during_period_bad_start_time(
