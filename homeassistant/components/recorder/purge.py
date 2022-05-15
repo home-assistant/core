@@ -84,7 +84,6 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         remaining_state_ids = True
-        remaining_event_ids = True
         # There are more states relative to attributes_ids so
         # we purge enough state ids to try to generate a full
         # size batch of them that will be around MAX_ROWS_TO_PURGE
@@ -104,6 +103,7 @@ def purge_old_data(
         ):
             _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
 
+        remaining_event_ids = True
         # There are more events relative to data_ids so
         # we purge enough state ids to try to generate a full
         # size batch of them that will be around MAX_ROWS_TO_PURGE
