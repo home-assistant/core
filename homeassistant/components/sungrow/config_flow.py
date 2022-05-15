@@ -32,11 +32,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     port = data.get("port", 502)
     client = Client(sungrow_register.regmap, data["host"], port)
 
-    if not client:
-        raise CannotConnect
-
     client.load_register()
-    if not client.inverter["4990 ~ 4999 - Serial number"]:
+    if "4990 ~ 4999 - Serial number" not in client.inverter:
         raise InvalidAuth
 
     # If you cannot connect:
