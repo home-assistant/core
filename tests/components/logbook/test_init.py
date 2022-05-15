@@ -30,7 +30,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
@@ -327,7 +326,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = EVENT_STATE_CHANGED
+    row.event_type = logbook.PSUEDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
