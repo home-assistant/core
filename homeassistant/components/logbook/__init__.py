@@ -40,7 +40,6 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
     Context,
@@ -423,7 +422,7 @@ def _humanify(
         ):
             continue
 
-        if event_type == EVENT_STATE_CHANGED:
+        if event_type == PSUEDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
             # Skip continuous sensors
