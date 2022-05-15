@@ -425,7 +425,7 @@ def _humanify(
         ):
             continue
 
-        if event_type == PSUEDO_EVENT_STATE_CHANGED:
+        if event_type is PSUEDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
             # Skip continuous sensors
@@ -742,8 +742,6 @@ class EntityNameCache:
             friendly_name := current_state.attributes.get(ATTR_FRIENDLY_NAME)
         ):
             self._names[entity_id] = friendly_name
-        elif extracted_name := row.friendly_name:
-            self._names[entity_id] = extracted_name
         else:
             return split_entity_id(entity_id)[1].replace("_", " ")
 

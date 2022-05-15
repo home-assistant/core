@@ -336,6 +336,10 @@ def _select_states() -> Select:
     """Generate a states select that formats the states table as event rows."""
     return select(
         literal(value=None, type_=sqlalchemy.Text).label("event_id"),
+        # We use PSUEDO_EVENT_STATE_CHANGED aka None for
+        # state_changed events since it takes up less
+        # space in the response and every row has to be
+        # marked with the event_type
         literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
             "event_type"
         ),
