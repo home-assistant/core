@@ -4,19 +4,18 @@ from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from aiohttp.test_utils import TestClient
+import pytest
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.geocaching.const import (
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
 )
-from homeassistant.config_entries import (
-    DEFAULT_DISCOVERY_UNIQUE_ID,
-    SOURCE_INTEGRATION_DISCOVERY,
-    SOURCE_REAUTH,
-    SOURCE_USER,
-)
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_EXTERNAL_STEP
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -30,17 +29,14 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
 
 
-async def setup_geocaching_component(hass: HomeAssistant) -> bool:
-    """Set up the Geocaching component."""
-    return await async_setup_component(
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
         hass,
         DOMAIN,
-        {
-            DOMAIN: {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-            },
-        },
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
 
@@ -53,15 +49,6 @@ async def test_full_flow(
     mock_setup_entry: MagicMock,
 ) -> None:
     """Check full flow."""
-    assert await setup_geocaching_component(hass)
-
-    # Ensure integration is discovered when manual implementation is configured
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert "context" in flows[0]
-    assert flows[0]["context"]["source"] == SOURCE_INTEGRATION_DISCOVERY
-    assert flows[0]["context"]["unique_id"] == DEFAULT_DISCOVERY_UNIQUE_ID
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -113,9 +100,9 @@ async def test_existing_entry(
     mock_geocaching_config_flow: MagicMock,
     mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
+    setup_credentials: None,
 ) -> None:
     """Check existing entry."""
-    assert await setup_geocaching_component(hass)
     mock_config_entry.add_to_hass(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -161,7 +148,6 @@ async def test_oauth_error(
     mock_setup_entry: MagicMock,
 ) -> None:
     """Check if aborted when oauth error occurs."""
-    assert await setup_geocaching_component(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -213,7 +199,6 @@ async def test_reauthentication(
 ) -> None:
     """Test Geocaching reauthentication."""
     mock_config_entry.add_to_hass(hass)
-    assert await setup_geocaching_component(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}

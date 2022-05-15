@@ -1,71 +1,17 @@
 """The Geocaching integration."""
-import logging
 
-import voluptuous as vol
-
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = [Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Geocaching component."""
-    if DOMAIN not in config:
-        return True
-
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-    _LOGGER.warning(
-        "Configuration of Geocaching integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing OAuth "
-        "Application Credentials have been imported into the UI "
-        "automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
-
-    # When manual configuration is done, discover the integration.
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_INTEGRATION_DISCOVERY}
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
