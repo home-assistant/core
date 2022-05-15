@@ -162,6 +162,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except aioshelly.exceptions.JSONRPCError:
                 errors["base"] = "cannot_connect"
+            except KeyError:
+                errors["base"] = "firmware_not_fully_provisioned"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -221,6 +223,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.device_info = await validate_input(self.hass, self.host, self.info, {})
+        except KeyError:
+            return self.async_abort(reason="firmware_not_fully_provisioned")
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
