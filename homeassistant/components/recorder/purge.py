@@ -42,8 +42,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-STATES_BATCHES_PER_PURGE = 1
-EVENTS_BATCHES_PER_PURGE = 1
+STATES_BATCHES_PER_PURGE = 20
+EVENTS_BATCHES_PER_PURGE = 10
 
 
 def take(take_num: int, iterable: Iterable) -> list[Any]:
@@ -67,9 +67,9 @@ def purge_old_data(
     instance: Recorder,
     purge_before: datetime,
     repack: bool,
+    apply_filter: bool = False,
     events_batch_size: int = EVENTS_BATCHES_PER_PURGE,
     states_batch_size: int = STATES_BATCHES_PER_PURGE,
-    apply_filter: bool = False,
 ) -> bool:
     """Purge events and states older than purge_before.
 
