@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from requests import ConnectionError as ConnErr
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.publibike import (
     BATTERY_LIMIT,
     DOMAIN,
@@ -12,8 +12,13 @@ from homeassistant.components.publibike import (
     STATION_ID,
 )
 
+from tests.common import MockConfigEntry
+
 TEST_CONF = {
     STATION_ID: 123,
+}
+
+TEST_OPTIONS = {
     BATTERY_LIMIT: 99,
     LATITUDE: 1.0,
     LONGITUDE: 1.0,
@@ -44,12 +49,7 @@ async def test_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "PubliBike"
-    assert result2["data"] == {
-        "station_id": 123,
-        "battery_limit": 99,
-        "latitude": 1.0,
-        "longitude": 1.0,
-    }
+    assert result2["data"] == {"station_id": 123}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -126,3 +126,30 @@ async def test_form_unknown_error(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.publibike.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        configured = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=TEST_OPTIONS
+        )
+
+        assert configured["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {
+            "battery_limit": 99,
+            "latitude": 1.0,
+            "longitude": 1.0,
+        }

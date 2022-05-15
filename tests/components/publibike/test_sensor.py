@@ -13,9 +13,9 @@ from tests.common import MockConfigEntry
 from tests.components.publibike.mocks import _get_mock_bike
 
 
-async def _assert_states(hass):
+async def _assert_states(hass, exp_bikes):
     state = hass.states.get("sensor.test_station_e_bikes")
-    assert state.state == "1"
+    assert state.state == str(exp_bikes)
     expected_attributes = {
         "All E-bikes": 2,
         "friendly_name": "test_station - E-bikes",
@@ -35,10 +35,7 @@ async def test_sensors_with_station_id(hass):
     """Test creation of the sensors given station ID."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            STATION_ID: 123,
-            BATTERY_LIMIT: 99,
-        },
+        data={STATION_ID: 123},
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -50,14 +47,15 @@ async def test_sensors_with_station_id(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await _assert_states(hass)
+    await _assert_states(hass, exp_bikes=2)
 
 
 async def test_sensors_with_location(hass):
     """Test creation of the sensors given coordinates."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
+        data={},
+        options={
             BATTERY_LIMIT: 99,
             LATITUDE: 1.0,
             LONGITUDE: 2.0,
@@ -73,16 +71,15 @@ async def test_sensors_with_location(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await _assert_states(hass)
+    await _assert_states(hass, exp_bikes=1)
 
 
 async def test_sensors_without_location(hass):
     """Test creation of the sensors using default coordinates."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            BATTERY_LIMIT: 99,
-        },
+        data={},
+        options={BATTERY_LIMIT: 99},
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -94,4 +91,4 @@ async def test_sensors_without_location(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await _assert_states(hass)
+    await _assert_states(hass, exp_bikes=1)

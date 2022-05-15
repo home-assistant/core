@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
+from ...core import callback
 from .const import (
     BATTERY_LIMIT,
     BATTERY_LIMIT_DEFAULT,
@@ -25,20 +26,23 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(BATTERY_LIMIT, default=BATTERY_LIMIT_DEFAULT): vol.All(
-            cv.positive_int, vol.Range(1, 100)
-        ),
         vol.Optional(STATION_ID): cv.positive_int,
-        vol.Optional(LATITUDE): cv.latitude,
-        vol.Optional(LONGITUDE): cv.longitude,
     }
 )
 
 
 class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for PubliBike integration."""
+    """Handle a config_old flow for PubliBike integration."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Get the options flow for this handler."""
+        return PubliBikeOptionsFlowHandler(config_entry)
 
     async def _is_valid_station_id(self, _id) -> bool:
         publi_bike = PubliBike()
@@ -78,4 +82,32 @@ class PubliBikeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+
+class PubliBikeOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a PubliBike options flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(self, user_input=None) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(BATTERY_LIMIT, default=BATTERY_LIMIT_DEFAULT): vol.All(
+                        cv.positive_int, vol.Range(1, 100)
+                    ),
+                    vol.Optional(LATITUDE): cv.latitude,
+                    vol.Optional(LONGITUDE): cv.longitude,
+                }
+            ),
         )

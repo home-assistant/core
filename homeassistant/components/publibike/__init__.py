@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     BATTERY_LIMIT,
+    BATTERY_LIMIT_DEFAULT,
     DOMAIN,
     LATITUDE,
     LONGITUDE,
@@ -26,8 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up PubliBike integration from a config entry."""
-
+    """Set up PubliBike integration from a config_old entry."""
     publi_bike = PubliBike()
 
     station_id = entry.data.get(STATION_ID)
@@ -35,30 +35,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         all_stations = await hass.async_add_executor_job(publi_bike.getStations)
         station = [s for s in all_stations if s.stationId == station_id][0]
     else:
-        lat = (
-            entry.data[LATITUDE]
-            if LATITUDE in entry.data.keys()
-            else hass.config.latitude
+        location = Location(
+            latitude=entry.options.get(LATITUDE, hass.config.latitude),
+            longitude=entry.options.get(LONGITUDE, hass.config.longitude),
         )
-        lon = (
-            entry.data[LONGITUDE]
-            if LONGITUDE in entry.data.keys()
-            else hass.config.longitude
-        )
-        location = Location(latitude=lat, longitude=lon)
         station = await hass.async_add_executor_job(
             publi_bike.findNearestStationTo, location
         )
 
     coordinator = PubliBikeDataUpdateCoordinator(
-        hass, station, entry.data[BATTERY_LIMIT]
+        hass, station, entry.options.get(BATTERY_LIMIT, BATTERY_LIMIT_DEFAULT)
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {"coordinator": coordinator})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
+
+
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Handle options update for the PubliBike integration."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 class PubliBikeDataUpdateCoordinator(DataUpdateCoordinator):
