@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from sqlalchemy import not_, or_
-from sqlalchemy.ext.baked import BakedQuery
 from sqlalchemy.sql.elements import ClauseList
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
@@ -59,16 +58,6 @@ class Filters:
             or self.included_domains
             or self.included_entity_globs
         )
-
-    def bake(self, baked_query: BakedQuery) -> BakedQuery:
-        """Update a baked query.
-
-        Works the same as apply on a baked_query.
-        """
-        if not self.has_config:
-            return
-
-        baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self) -> ClauseList:
         """Generate the entity filter query."""
