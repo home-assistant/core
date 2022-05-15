@@ -68,27 +68,29 @@ async def _async_migrate_data(
             if device is not None:
                 break
 
-        if device is not None:
-            new_unique_id = f"{device.id}_reboot"
-            _LOGGER.debug(
-                "Migrating entity %s (old unique_id: %s, new unique_id: %s)",
+        if device is None:
+            continue
+
+        new_unique_id = f"{device.id}_reboot"
+        _LOGGER.debug(
+            "Migrating entity %s (old unique_id: %s, new unique_id: %s)",
+            button.entity_id,
+            button.unique_id,
+            new_unique_id,
+        )
+        try:
+            registry.async_update_entity(
+                button.entity_id, new_unique_id=new_unique_id
+            )
+        except ValueError:
+            _LOGGER.warning(
+                "Could not migrate entity %s (old unique_id: %s, new unique_id: %s)",
                 button.entity_id,
                 button.unique_id,
                 new_unique_id,
             )
-            try:
-                registry.async_update_entity(
-                    button.entity_id, new_unique_id=new_unique_id
-                )
-            except ValueError:
-                _LOGGER.warning(
-                    "Could not migrate entity %s (old unique_id: %s, new unique_id: %s)",
-                    button.entity_id,
-                    button.unique_id,
-                    new_unique_id,
-                )
-            else:
-                count += 1
+        else:
+            count += 1
 
     if count < len(to_migrate):
         _LOGGER.warning("Failed to migate %s reboot buttons", len(to_migrate) - count)
