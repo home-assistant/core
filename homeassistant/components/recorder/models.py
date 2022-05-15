@@ -798,23 +798,21 @@ def row_to_compressed_state(
     start_time: datetime | None = None,
 ) -> dict[str, Any]:
     """Convert a database row to a compressed state."""
-    if start_time:
-        last_changed = last_updated = start_time.timestamp()
-    else:
-        row_last_updated: datetime = row.last_updated
-        if (
-            not (row_changed_changed := row.last_changed)
-            or row_last_updated == row_changed_changed
-        ):
-            last_changed = last_updated = process_datetime_to_timestamp(
-                row_last_updated
-            )
-        else:
-            last_changed = process_datetime_to_timestamp(row_changed_changed)
-            last_updated = process_datetime_to_timestamp(row_last_updated)
-    return {
+    comp_state = {
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
-        COMPRESSED_STATE_LAST_CHANGED: last_changed,
-        COMPRESSED_STATE_LAST_UPDATED: last_updated,
     }
+    if start_time:
+        comp_state[COMPRESSED_STATE_LAST_UPDATED] = start_time.timestamp()
+    else:
+        row_last_updated: datetime = row.last_updated
+        comp_state[COMPRESSED_STATE_LAST_UPDATED] = process_datetime_to_timestamp(
+            row_last_updated
+        )
+        if (
+            row_changed_changed := row.last_changed
+        ) and row_last_updated != row_changed_changed:
+            comp_state[COMPRESSED_STATE_LAST_CHANGED] = process_datetime_to_timestamp(
+                row_changed_changed
+            )
+    return comp_state
