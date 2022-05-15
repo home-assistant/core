@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ):
                 async_dispatcher_send(
                     hass,
-                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{cam_id}",
+                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{entry.entry_id}_{cam_id}",
                     cam_data_new.live_view.rtsp,
                 )
 
