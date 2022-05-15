@@ -232,7 +232,7 @@ def _significant_states_stmt(
 
     if entity_ids:
         stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
-    else:
+    elif entity_filter:
         stmt += lambda q: q.filter(entity_filter)
 
     stmt += lambda q: q.filter(States.last_updated > start_time)
