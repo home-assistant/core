@@ -117,7 +117,7 @@ def _schema_version(hass: HomeAssistant) -> int:
 
 def lambda_stmt_and_join_attributes(
     schema_version: int, no_attributes: bool, include_last_changed: bool = True
-) -> tuple[Any, bool]:
+) -> tuple[StatementLambdaElement, bool]:
     """Return the lambda_stmt and if StateAttributes should be joined.
 
     Because these are lambda_stmt the values inside the lambdas need

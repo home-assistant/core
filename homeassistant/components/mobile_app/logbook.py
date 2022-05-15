@@ -8,11 +8,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN
 
-IOS_EVENT_FINISHED_LAUNCHING = "ios.finished_launching"
-IOS_EVENT_ENTERED_BACKGROUND = "ios.entered_background"
-IOS_EVENT_BECAME_ACTIVE = "ios.became_active"
-IOS_EVENT_NOTIFICATION_ACTION_FIRED = "ios.notification_action_fired"
-IOS_EVENT_ACTION_FIRED = "ios.action_fired"
 IOS_EVENT_ZONE_ENTERED = "ios.zone_entered"
 IOS_EVENT_ZONE_EXITED = "ios.zone_exited"
 
