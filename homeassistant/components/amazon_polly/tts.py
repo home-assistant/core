@@ -158,7 +158,13 @@ class AmazonPollyProvider(tts.Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
-        return [CONF_VOICE]
+        return [
+            CONF_VOICE,
+            CONF_ENGINE,
+            CONF_OUTPUT_FORMAT,
+            CONF_SAMPLE_RATE,
+            CONF_TEXT_TYPE,
+        ]
 
     def get_tts_audio(
         self,
