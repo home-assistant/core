@@ -443,7 +443,7 @@ def _humanify(
                 LOGBOOK_ENTRY_STATE: row.state,
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
-            if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
+            if icon := row.icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
             context_augmenter.augment(data, row, context_id)
@@ -735,7 +735,7 @@ class EntityNameCache:
             friendly_name := current_state.attributes.get(ATTR_FRIENDLY_NAME)
         ):
             self._names[entity_id] = friendly_name
-        elif extracted_name := _row_attributes_extract(row, FRIENDLY_NAME_JSON_EXTRACT):
+        elif extracted_name := row.friendly_name:
             self._names[entity_id] = extracted_name
         else:
             return split_entity_id(entity_id)[1].replace("_", " ")
