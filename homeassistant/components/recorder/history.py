@@ -284,7 +284,9 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
+    states = execute_stmt_lambda_element(
+        session, stmt, None if entity_ids else start_time, end_time
+    )
     return _sorted_states_to_dict(
         hass,
         session,
@@ -383,7 +385,9 @@ def state_changes_during_period(
             descending,
             limit,
         )
-        states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
+        states = execute_stmt_lambda_element(
+            session, stmt, None if entity_id else start_time, end_time
+        )
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
