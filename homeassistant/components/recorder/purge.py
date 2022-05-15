@@ -83,44 +83,12 @@ def purge_old_data(
 
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-        remaining_state_ids = True
-        # There are more states relative to attributes_ids so
-        # we purge enough state ids to try to generate a full
-        # size batch of them that will be around MAX_ROWS_TO_PURGE
-        attributes_ids_batch: set[int] = set()
-        for _ in range(states_batch_size):
-            state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
-                session, purge_before
-            )
-            if not state_ids:
-                remaining_state_ids = False
-                break
-            _purge_state_ids(instance, session, state_ids)
-            attributes_ids_batch = attributes_ids_batch | attributes_ids
-
-        if unused_attribute_ids_set := _select_unused_attributes_ids(
-            session, attributes_ids_batch, using_sqlite
-        ):
-            _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
-
-        remaining_event_ids = True
-        # There are more events relative to data_ids so
-        # we purge enough state ids to try to generate a full
-        # size batch of them that will be around MAX_ROWS_TO_PURGE
-        data_ids_batch: set[int] = set()
-        for _ in range(events_batch_size):
-            event_ids, data_ids = _select_event_data_ids_to_purge(session, purge_before)
-            if not event_ids:
-                remaining_event_ids = False
-                break
-            _purge_event_ids(session, event_ids)
-            data_ids_batch = data_ids_batch | data_ids
-
-        if unused_data_ids_set := _select_unused_event_data_ids(
-            session, data_ids_batch, using_sqlite
-        ):
-            _purge_batch_data_ids(instance, session, unused_data_ids_set)
-
+        remaining_state_ids = _purge_states_and_attributes_ids(
+            instance, session, states_batch_size, purge_before, using_sqlite
+        )
+        remaining_event_ids = _purge_events_and_data_ids(
+            instance, session, events_batch_size, purge_before, using_sqlite
+        )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
@@ -149,6 +117,72 @@ def purge_old_data(
     if repack:
         repack_database(instance)
     return True
+
+
+def _purge_states_and_attributes_ids(
+    instance: Recorder,
+    session: Session,
+    states_batch_size: int,
+    purge_before: datetime,
+    using_sqlite: bool,
+) -> bool:
+    """Purge states and linked attributes id in a batch.
+
+    Returns true if there are more states to purge.
+    """
+    remaining_state_ids = True
+    # There are more states relative to attributes_ids so
+    # we purge enough state ids to try to generate a full
+    # size batch of them that will be around MAX_ROWS_TO_PURGE
+    attributes_ids_batch: set[int] = set()
+    for _ in range(states_batch_size):
+        state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
+            session, purge_before
+        )
+        if not state_ids:
+            remaining_state_ids = False
+            break
+        _purge_state_ids(instance, session, state_ids)
+        attributes_ids_batch = attributes_ids_batch | attributes_ids
+
+    if unused_attribute_ids_set := _select_unused_attributes_ids(
+        session, attributes_ids_batch, using_sqlite
+    ):
+        _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
+
+    return remaining_state_ids
+
+
+def _purge_events_and_data_ids(
+    instance: Recorder,
+    session: Session,
+    events_batch_size: int,
+    purge_before: datetime,
+    using_sqlite: bool,
+) -> bool:
+    """Purge states and linked attributes id in a batch.
+
+    Returns true if there are more states to purge.
+    """
+    remaining_event_ids = True
+    # There are more events relative to data_ids so
+    # we purge enough state ids to try to generate a full
+    # size batch of them that will be around MAX_ROWS_TO_PURGE
+    data_ids_batch: set[int] = set()
+    for _ in range(events_batch_size):
+        event_ids, data_ids = _select_event_data_ids_to_purge(session, purge_before)
+        if not event_ids:
+            remaining_event_ids = False
+            break
+        _purge_event_ids(session, event_ids)
+        data_ids_batch = data_ids_batch | data_ids
+
+    if unused_data_ids_set := _select_unused_event_data_ids(
+        session, data_ids_batch, using_sqlite
+    ):
+        _purge_batch_data_ids(instance, session, unused_data_ids_set)
+
+    return remaining_event_ids
 
 
 def _select_state_attributes_ids_to_purge(
