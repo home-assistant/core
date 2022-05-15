@@ -12,7 +12,7 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
 )
-from homeassistant.components.stream.const import (
+from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     RTSP_TRANSPORTS,
