@@ -3,18 +3,20 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime as dt
-from typing import Any
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import Query, aliased
+from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.history import Filters
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
+    ENTITY_ID_LAST_UPDATED_INDEX,
+    LAST_UPDATED_INDEX,
     EventData,
     Events,
     StateAttributes,
@@ -30,6 +32,8 @@ CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
 
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
+
+OLD_STATE = aliased(States, name="old_state")
 
 
 EVENT_COLUMNS = (
@@ -83,7 +87,7 @@ def statement_for_request(
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids:
-        entity_filter = filters.entity_filter() if filters else None  # type: ignore[no-untyped-call]
+        entity_filter = filters.entity_filter() if filters else None
         return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
 
     # Multiple entities: logbook sends everything for the timeframe for the entities
@@ -126,7 +130,7 @@ def _select_entities_context_ids_sub_query(
             _select_events_context_id_subquery(start_day, end_day, event_types).where(
                 _apply_event_entity_id_matchers(entity_ids)
             ),
-            select(States.context_id)
+            _apply_entities_hints(select(States.context_id))
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
         ).c.context_id
@@ -156,7 +160,7 @@ def _entities_stmt(
     )
     stmt = stmt.add_criteria(
         lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
-            _select_states(start_day, end_day).where(States.entity_id.in_(entity_ids)),
+            _states_query_for_entity_ids(start_day, end_day, entity_ids),
             _select_events_context_only().where(
                 Events.context_id.in_(
                     _select_entities_context_ids_sub_query(
@@ -192,7 +196,7 @@ def _select_entity_context_ids_sub_query(
                 Events.event_data.like(entity_id_like)
                 | EventData.shared_data.like(entity_id_like)
             ),
-            select(States.context_id)
+            _apply_entities_hints(select(States.context_id))
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id == entity_id),
         ).c.context_id
@@ -214,7 +218,7 @@ def _single_entity_stmt(
             | EventData.shared_data.like(entity_id_like)
         )
         .union_all(
-            _select_states(start_day, end_day).where(States.entity_id == entity_id),
+            _states_query_for_entity_id(start_day, end_day, entity_id),
             _select_events_context_only().where(
                 Events.context_id.in_(
                     _select_entity_context_ids_sub_query(
@@ -232,7 +236,7 @@ def _all_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    entity_filter: Any | None = None,
+    entity_filter: ClauseList | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -244,15 +248,15 @@ def _all_stmt(
         # are gone from the database remove the
         # _legacy_select_events_context_id()
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _select_states(start_day, end_day).where(States.context_id == context_id),
+            _states_query_for_context_id(start_day, end_day, context_id),
             _legacy_select_events_context_id(start_day, end_day, context_id),
         )
     elif entity_filter is not None:
         stmt += lambda s: s.union_all(
-            _select_states(start_day, end_day).where(entity_filter)
+            _states_query_for_all(start_day, end_day).where(entity_filter)
         )
     else:
-        stmt += lambda s: s.union_all(_select_states(start_day, end_day))
+        stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 
@@ -270,7 +274,9 @@ def _legacy_select_events_context_id(
             NOT_CONTEXT_ONLY,
         )
         .outerjoin(States, (Events.event_id == States.event_id))
-        .where(States.last_updated == States.last_changed)
+        .where(
+            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+        )
         .where(_not_continuous_entity_matcher())
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -292,42 +298,84 @@ def _select_events_without_states(
     )
 
 
-def _select_states(start_day: dt, end_day: dt) -> Select:
+def _states_query_for_context_id(start_day: dt, end_day: dt, context_id: str) -> Query:
+    return _apply_states_filters(_select_states(), start_day, end_day).where(
+        States.context_id == context_id
+    )
+
+
+def _states_query_for_entity_id(start_day: dt, end_day: dt, entity_id: str) -> Query:
+    return _apply_states_filters(
+        _apply_entities_hints(_select_states()), start_day, end_day
+    ).where(States.entity_id == entity_id)
+
+
+def _states_query_for_entity_ids(
+    start_day: dt, end_day: dt, entity_ids: list[str]
+) -> Query:
+    return _apply_states_filters(
+        _apply_entities_hints(_select_states()), start_day, end_day
+    ).where(States.entity_id.in_(entity_ids))
+
+
+def _states_query_for_all(start_day: dt, end_day: dt) -> Query:
+    return _apply_states_filters(_apply_all_hints(_select_states()), start_day, end_day)
+
+
+def _select_states() -> Select:
     """Generate a states select that formats the states table as event rows."""
-    old_state = aliased(States, name="old_state")
+    return select(
+        literal(value=None, type_=sqlalchemy.Text).label("event_id"),
+        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
+        literal(value=None, type_=sqlalchemy.Text).label("event_data"),
+        States.last_updated.label("time_fired"),
+        States.context_id.label("context_id"),
+        States.context_user_id.label("context_user_id"),
+        States.context_parent_id.label("context_parent_id"),
+        literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
+        *STATE_COLUMNS,
+        NOT_CONTEXT_ONLY,
+    )
+
+
+def _apply_all_hints(query: Query) -> Query:
+    """Force mysql to use the right index on large selects."""
+    return query.with_hint(
+        States, f"FORCE INDEX ({LAST_UPDATED_INDEX})", dialect_name="mysql"
+    )
+
+
+def _apply_entities_hints(query: Query) -> Query:
+    """Force mysql to use the right index on large selects."""
+    return query.with_hint(
+        States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX})", dialect_name="mysql"
+    )
+
+
+def _apply_states_filters(query: Query, start_day: dt, end_day: dt) -> Query:
     return (
-        select(
-            literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-            literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
-                "event_type"
-            ),
-            literal(value=None, type_=sqlalchemy.Text).label("event_data"),
-            States.last_changed.label("time_fired"),
-            States.context_id.label("context_id"),
-            States.context_user_id.label("context_user_id"),
-            States.context_parent_id.label("context_parent_id"),
-            literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
-            *STATE_COLUMNS,
-            NOT_CONTEXT_ONLY,
+        query.filter(
+            (States.last_updated > start_day) & (States.last_updated < end_day)
         )
-        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-        .outerjoin(old_state, (States.old_state_id == old_state.state_id))
-        .where(_missing_state_matcher(old_state))
+        .outerjoin(OLD_STATE, (States.old_state_id == OLD_STATE.state_id))
+        .where(_missing_state_matcher())
         .where(_not_continuous_entity_matcher())
-        .where(States.last_updated == States.last_changed)
+        .where(
+            (States.last_updated == States.last_changed) | States.last_changed.is_(None)
+        )
         .outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     )
 
 
-def _missing_state_matcher(old_state: States) -> sqlalchemy.and_:
+def _missing_state_matcher() -> sqlalchemy.and_:
     # The below removes state change events that do not have
     # and old_state or the old_state is missing (newly added entities)
     # or the new_state is missing (removed entities)
     return sqlalchemy.and_(
-        old_state.state_id.isnot(None),
-        (States.state != old_state.state),
+        OLD_STATE.state_id.isnot(None),
+        (States.state != OLD_STATE.state),
         States.state.isnot(None),
     )
 
@@ -362,7 +410,7 @@ def _continuous_domain_matcher() -> sqlalchemy.or_:
     ).self_group()
 
 
-def _not_uom_attributes_matcher() -> Any:
+def _not_uom_attributes_matcher() -> ClauseList:
     """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE

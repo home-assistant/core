@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata",
+            "cannot_connect": "Impossibile connettersi",
+            "max_regions": "\u00c8 possibile configurare al massimo 5 regioni",
+            "rate_limit": "Troppe richieste",
+            "timeout": "Tempo scaduto per stabile la connessione.",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Chiave API"
+                    "api_key": "Chiave API",
+                    "region": "Regione"
                 },
-                "description": "Imposta l'integrazione di Ukraine Alarm. Per generare una chiave API vai su {api_url}"
+                "description": "Scegli lo stato da monitorare"
             }
         }
     }

@@ -17,6 +17,7 @@
             },
             "user": {
                 "data": {
+                    "port": "Puerto",
                     "type": "Tipo de conexi\u00f3n"
                 },
                 "title": "Configurar 1 cable"

@@ -749,7 +749,7 @@ async def test_temp_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
 
 async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -775,7 +775,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
 
 async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -855,7 +855,7 @@ async def test_temp_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
 
 async def test_temp_change_ac_trigger_on_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -881,7 +881,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough_2(hass, setup_comp_5):
 
 async def test_temp_change_ac_trigger_off_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -969,7 +969,7 @@ async def test_temp_change_heater_trigger_on_not_long_enough(hass, setup_comp_6)
 
 async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
     """Test if temperature change turn heater on after min cycle."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -986,7 +986,7 @@ async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
 
 async def test_temp_change_heater_trigger_off_long_enough(hass, setup_comp_6):
     """Test if temperature change turn heater off after min cycle."""
-    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
+    fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):

@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "max_regions": "Mo\u017cna skonfigurowa\u0107 maksymalnie 5 region\u00f3w",
+            "rate_limit": "Zbyt wiele \u017c\u0105da\u0144",
+            "timeout": "Limit czasu na nawi\u0105zanie po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Klucz API"
+                    "api_key": "Klucz API",
+                    "region": "Region"
                 },
-                "description": "Skonfiguruj integracj\u0119 Alarmy w Ukrainie. Aby wygenerowa\u0107 klucz API, przejd\u017a do {api_url}."
+                "description": "Wybierz rejon do monitorowania"
             }
         }
     }

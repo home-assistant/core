@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "max_regions": "Seadistada saab kuni 5 piirkonda",
+            "rate_limit": "Liiga palju taotlusi",
+            "timeout": "\u00dchenduse ajal\u00f5pp",
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API v\u00f5ti"
+                    "api_key": "API v\u00f5ti",
+                    "region": "Piirkond"
                 },
-                "description": "Loo Ukraina h\u00e4ire integreerimine. API-v\u00f5tme loomiseks ava {api_url}"
+                "description": "Vali j\u00e4lgitav oblast"
             }
         }
     }
