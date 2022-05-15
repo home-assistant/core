@@ -155,14 +155,17 @@ def _select_state_attributes_ids_to_purge(
     session: Session, purge_before: datetime
 ) -> tuple[set[int], set[int]]:
     """Return sets of state and attribute ids to purge."""
-    states = session.execute(find_states_to_purge(purge_before)).all()
-    _LOGGER.debug("Selected %s state ids to remove", len(states))
     state_ids = set()
     attributes_ids = set()
-    for state in states:
+    for state in session.execute(find_states_to_purge(purge_before)).all():
         state_ids.add(state.state_id)
         if state.attributes_id:
             attributes_ids.add(state.attributes_id)
+    _LOGGER.debug(
+        "Selected %s state ids and %s attributes_ids to remove",
+        len(state_ids),
+        len(attributes_ids),
+    )
     return state_ids, attributes_ids
 
 
@@ -170,14 +173,15 @@ def _select_event_data_ids_to_purge(
     session: Session, purge_before: datetime
 ) -> tuple[set[int], set[int]]:
     """Return sets of event and data ids to purge."""
-    events = session.execute(find_events_to_purge(purge_before)).all()
-    _LOGGER.debug("Selected %s event ids to remove", len(events))
     event_ids = set()
     data_ids = set()
-    for event in events:
+    for event in session.execute(find_events_to_purge(purge_before)).all():
         event_ids.add(event.event_id)
         if event.data_id:
             data_ids.add(event.data_id)
+    _LOGGER.debug(
+        "Selected %s event ids and %s data_ids to remove", len(event_ids), len(data_ids)
+    )
     return event_ids, data_ids
 
 
