@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import Any
 
 import aiohttp
@@ -38,6 +39,8 @@ from .util import (
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -86,6 +89,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 config[DOMAIN][CONF_CLIENT_ID],
                 config[DOMAIN][CONF_CLIENT_SECRET],
             ),
+        )
+        _LOGGER.warning(
+            "Configuration of Spotify integration in YAML is deprecated and "
+            "will be removed in a future release; Your existing OAuth "
+            "Application Credentials have been imported into the UI "
+            "automatically and can be safely removed from your "
+            "configuration.yaml file"
         )
 
     return True
