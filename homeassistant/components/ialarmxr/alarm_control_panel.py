@@ -40,7 +40,6 @@ class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
         self.coordinator: IAlarmXRDataUpdateCoordinator = coordinator
         self._attr_unique_id = coordinator.mac
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.mac)},
             manufacturer="Antifurto365 - Meian",
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, coordinator.mac)},
