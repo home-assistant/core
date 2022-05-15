@@ -176,13 +176,26 @@ class AmazonPollyProvider(tts.Provider):
             _LOGGER.error("%s does not support the %s language", voice_id, language)
             return None, None
 
+        engine = options.get(CONF_ENGINE, None)
+        output_format = options.get(CONF_OUTPUT_FORMAT, None)
+        sample_rate = options.get(CONF_SAMPLE_RATE, None)
+        text_type = options.get(CONF_TEXT_TYPE, None)
+        if not bool(engine):
+            engine = self.config[CONF_ENGINE]
+        if not bool(output_format):
+            output_format = self.config[CONF_OUTPUT_FORMAT]
+        if not bool(sample_rate):
+            sample_rate = self.config[CONF_SAMPLE_RATE]
+        if not bool(text_type):
+            text_type = self.config[CONF_TEXT_TYPE]
+
         _LOGGER.debug("Requesting TTS file for text: %s", message)
         resp = self.client.synthesize_speech(
-            Engine=self.config[CONF_ENGINE],
-            OutputFormat=self.config[CONF_OUTPUT_FORMAT],
-            SampleRate=self.config[CONF_SAMPLE_RATE],
+            Engine=engine,
+            OutputFormat=output_format,
+            SampleRate=sample_rate,
             Text=message,
-            TextType=self.config[CONF_TEXT_TYPE],
+            TextType=text_type,
             VoiceId=voice_id,
         )
 
