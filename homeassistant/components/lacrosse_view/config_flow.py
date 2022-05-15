@@ -34,7 +34,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[Loca
         if not await api.login(data["username"], data["password"]):
             raise InvalidAuth
 
-        locations = await api.get_locations()
+        locations: list[Location] = await api.get_locations()
         if not locations:
             raise NoLocations(
                 "No locations found for account {}".format(data["username"])

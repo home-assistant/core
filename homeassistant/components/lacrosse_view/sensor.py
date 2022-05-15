@@ -60,9 +60,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]["coordinator"]
     sensors: list[Sensor] = coordinator.data
 
     sensor_list = []
@@ -85,9 +85,9 @@ async def async_setup_entry(
                         != sensor.name  # If the name is the same as the field, don't include it.
                         else sub(r"(?<!^)(?=[A-Z])", " ", field),
                         state_class=SensorStateClass.MEASUREMENT,
-                        value_fn=lambda sensor, field: sensor.data[field]["values"][-1][
-                            "s"
-                        ],
+                        value_fn=lambda sensor, field: int(
+                            sensor.data[field]["values"][-1]["s"]
+                        ),
                         native_unit_of_measurement=UNIT_LIST.get(
                             sensor.data[field]["unit"], None
                         ),
