@@ -62,14 +62,17 @@ from .webhook import async_handle_webhook
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -97,6 +100,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
         ),
+    )
+    _LOGGER.warning(
+        "Configuration of Netatmo integration in YAML is deprecated and "
+        "will be removed in a future release; Your existing configuration "
+        "(including OAuth Application Credentials) have been imported into "
+        "the UI automatically and can be safely removed from your "
+        "configuration.yaml file"
     )
 
     return True
