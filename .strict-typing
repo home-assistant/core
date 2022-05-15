@@ -141,6 +141,7 @@ homeassistant.components.jewish_calendar.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
