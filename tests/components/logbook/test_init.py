@@ -338,6 +338,8 @@ def create_state_changed_event_from_old_new(
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]
     row.context_only = False
     row.context_id = None
+    row.friendly_name = None
+    row.icon = None
     row.context_user_id = None
     row.context_parent_id = None
     row.old_state_id = old_state and 1
