@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .utils import get_ialarmxr_mac
+from .utils import async_get_ialarmxr_mac
 
 _LOGGER: Logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def _async_get_device_formatted_mac(
     """Return iAlarmXR mac address."""
 
     ialarmxr = IAlarmXR(username, password, host, port)
-    return await get_ialarmxr_mac(hass, ialarmxr)
+    return await async_get_ialarmxr_mac(hass, ialarmxr)
 
 
 class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
