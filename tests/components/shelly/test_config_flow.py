@@ -244,7 +244,7 @@ async def test_form_missing_key_get_info(hass, error):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
+    assert result2["errors"] == {"base": error}
 
 
 @pytest.mark.parametrize(
