@@ -11,7 +11,7 @@ async def test_form(hass):
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "details"}
+        DOMAIN, context={"source": "user"}
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -46,7 +46,7 @@ async def test_form(hass):
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "details"}
+        DOMAIN, context={"source": "user"}
     )
 
     with patch(
@@ -80,7 +80,7 @@ async def test_form_already_configured(hass):
     mock_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "details"}
+        DOMAIN, context={"source": "user"}
     )
 
     with patch(

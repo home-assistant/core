@@ -11,7 +11,6 @@
             "details": {
                 "data": {
                     "host": "Host",
-                    "name": "Name",
                     "port": "Port"
                 },
                 "description": "Enter your Connection details.",
