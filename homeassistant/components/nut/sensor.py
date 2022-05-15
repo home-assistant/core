@@ -85,15 +85,15 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info.update(data.device_info)
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return entity state from ups."""
-        status = self.coordinator.data
+        status: dict[str, str] = self.coordinator.data
         if self.entity_description.key == KEY_STATUS_DISPLAY:
             return _format_display_state(status)
         return status.get(self.entity_description.key)
 
 
-def _format_display_state(status):
+def _format_display_state(status: dict[str, str]) -> str:
     """Return UPS display state."""
     try:
         return " ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())

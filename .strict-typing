@@ -165,6 +165,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
+homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
