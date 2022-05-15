@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import format_mac
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_ialarmxr_mac(hass: core.HomeAssistant, ialarmxr: IAlarmXR) -> str:
+async def async_get_ialarmxr_mac(hass: core.HomeAssistant, ialarmxr: IAlarmXR) -> str:
     """Retrieve iAlarmXR MAC address."""
     _LOGGER.debug("Retrieving ialarmxr mac address")
 
