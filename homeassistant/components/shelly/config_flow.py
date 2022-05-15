@@ -224,7 +224,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             self.device_info = await validate_input(self.hass, self.host, self.info, {})
         except KeyError:
-            return self.async_abort(reason="firmware_not_fully_provisioned")
+            LOGGER.debug("Shelly host %s firmware not fully provisioned", self.host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
@@ -235,18 +235,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.device_info["title"],
-                data={
-                    "host": self.host,
-                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                    "model": self.device_info["model"],
-                    "gen": self.device_info["gen"],
-                },
-            )
-
-        self._set_confirm_only()
+        try:
+            if user_input is not None:
+                return self.async_create_entry(
+                    title=self.device_info["title"],
+                    data={
+                        "host": self.host,
+                        CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
+                        "model": self.device_info["model"],
+                        "gen": self.device_info["gen"],
+                    },
+                )
+        except KeyError:
+            errors["base"] = "firmware_not_fully_provisioned"
+        else:
+            self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
