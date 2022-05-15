@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from sqlalchemy import not_, or_
 from sqlalchemy.ext.baked import BakedQuery
-from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
@@ -48,13 +47,6 @@ class Filters:
         self.included_entities: list[str] = []
         self.included_domains: list[str] = []
         self.included_entity_globs: list[str] = []
-
-    def apply(self, query: Query) -> Query:
-        """Apply the entity filter."""
-        if not self.has_config:
-            return query
-
-        return query.filter(self.entity_filter())
 
     @property
     def has_config(self) -> bool:
