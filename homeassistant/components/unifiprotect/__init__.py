@@ -79,9 +79,7 @@ async def _async_migrate_data(
             new_unique_id,
         )
         try:
-            registry.async_update_entity(
-                button.entity_id, new_unique_id=new_unique_id
-            )
+            registry.async_update_entity(button.entity_id, new_unique_id=new_unique_id)
         except ValueError:
             _LOGGER.warning(
                 "Could not migrate entity %s (old unique_id: %s, new unique_id: %s)",
