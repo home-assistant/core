@@ -27,7 +27,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _get_device_formatted_mac(
+async def _async_get_device_formatted_mac(
     hass: core.HomeAssistant, username: str, password: str, host: str, port: int
 ) -> str:
     """Return iAlarmXR mac address."""
