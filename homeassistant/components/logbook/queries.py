@@ -34,6 +34,7 @@ UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
 SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON(none_as_null=True))
+OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSON(none_as_null=True))
 
 PSUEDO_EVENT_STATE_CHANGED = None
 # Since we don't store event_types and None
@@ -58,6 +59,7 @@ STATE_COLUMNS = (
     States.state.label("state"),
     States.entity_id.label("entity_id"),
     SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
+    OLD_FORMAT_ATTRS_JSON["icon"].as_string().label("old_format_icon"),
 )
 
 
@@ -66,6 +68,7 @@ EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
 )
 
 

@@ -444,7 +444,7 @@ def _humanify(
             }
             if include_entity_name:
                 data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id, row)
-            if icon := row.icon:
+            if icon := row.icon or row.old_format_icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
             context_augmenter.augment(data, row, context_id, include_entity_name)
