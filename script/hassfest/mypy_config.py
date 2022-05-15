@@ -200,6 +200,7 @@ IGNORED_MODULES: Final[list[str]] = [
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
     "homeassistant.components.diagnostics.*",
+    "homeassistant.components.stream.*",
 }
 
 HEADER: Final = """
