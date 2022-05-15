@@ -11,6 +11,7 @@ from sqlalchemy.orm.session import Session
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE, SupportedDialect
 from homeassistant.components.recorder.models import (
+    EventData,
     Events,
     RecorderRuns,
     StateAttributes,
@@ -76,7 +77,13 @@ async def test_purge_old_states(
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
         # run purge_old_data()
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            states_batch_size=1,
+            events_batch_size=1,
+            repack=False,
+        )
         assert not finished
         assert states.count() == 2
         assert state_attributes.count() == 1
@@ -96,7 +103,13 @@ async def test_purge_old_states(
 
         # run purge_old_data again
         purge_before = dt_util.utcnow()
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            states_batch_size=1,
+            events_batch_size=1,
+            repack=False,
+        )
         assert not finished
         assert states.count() == 0
         assert state_attributes.count() == 0
@@ -223,12 +236,24 @@ async def test_purge_old_events(
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
         # run purge_old_data()
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+            events_batch_size=1,
+            states_batch_size=1,
+        )
         assert not finished
         assert events.count() == 2
 
         # we should only have 2 events left
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+            events_batch_size=1,
+            states_batch_size=1,
+        )
         assert finished
         assert events.count() == 2
 
@@ -249,10 +274,22 @@ async def test_purge_old_recorder_runs(
         purge_before = dt_util.utcnow()
 
         # run purge_old_data()
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+            events_batch_size=1,
+            states_batch_size=1,
+        )
         assert not finished
 
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+            events_batch_size=1,
+            states_batch_size=1,
+        )
         assert finished
         assert recorder_runs.count() == 1
 
@@ -1271,7 +1308,7 @@ async def _add_test_states(hass: HomeAssistant):
             await set_state("test.recorder2", state, attributes=attributes)
 
 
-async def _add_test_events(hass: HomeAssistant):
+async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
     """Add a few events for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
@@ -1282,25 +1319,26 @@ async def _add_test_events(hass: HomeAssistant):
     await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
-        for event_id in range(6):
-            if event_id < 2:
-                timestamp = eleven_days_ago
-                event_type = "EVENT_TEST_AUTOPURGE"
-            elif event_id < 4:
-                timestamp = five_days_ago
-                event_type = "EVENT_TEST_PURGE"
-            else:
-                timestamp = utcnow
-                event_type = "EVENT_TEST"
+        for _ in range(iterations):
+            for event_id in range(6):
+                if event_id < 2:
+                    timestamp = eleven_days_ago
+                    event_type = "EVENT_TEST_AUTOPURGE"
+                elif event_id < 4:
+                    timestamp = five_days_ago
+                    event_type = "EVENT_TEST_PURGE"
+                else:
+                    timestamp = utcnow
+                    event_type = "EVENT_TEST"
 
-            session.add(
-                Events(
-                    event_type=event_type,
-                    event_data=json.dumps(event_data),
-                    origin="LOCAL",
-                    time_fired=timestamp,
+                session.add(
+                    Events(
+                        event_type=event_type,
+                        event_data=json.dumps(event_data),
+                        origin="LOCAL",
+                        time_fired=timestamp,
+                    )
                 )
-            )
 
 
 async def _add_test_statistics(hass: HomeAssistant):
@@ -1416,3 +1454,56 @@ def _add_state_and_state_changed_event(
             time_fired=timestamp,
         )
     )
+
+
+async def test_purge_many_old_events(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test deleting old events."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_events(hass, MAX_ROWS_TO_PURGE)
+
+    with session_scope(hass=hass) as session:
+        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+        event_datas = session.query(EventData)
+        assert events.count() == MAX_ROWS_TO_PURGE * 6
+        assert event_datas.count() == 5
+
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+
+        # run purge_old_data()
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+            states_batch_size=3,
+            events_batch_size=3,
+        )
+        assert not finished
+        assert events.count() == MAX_ROWS_TO_PURGE * 3
+        assert event_datas.count() == 5
+
+        # we should only have 2 groups of events left
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+            states_batch_size=3,
+            events_batch_size=3,
+        )
+        assert finished
+        assert events.count() == MAX_ROWS_TO_PURGE * 2
+        assert event_datas.count() == 5
+
+        # we should now purge everything
+        finished = purge_old_data(
+            instance,
+            dt_util.utcnow(),
+            repack=False,
+            states_batch_size=20,
+            events_batch_size=20,
+        )
+        assert finished
+        assert events.count() == 0
+        assert event_datas.count() == 0
