@@ -68,7 +68,7 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "IAlarmXRGenericException with message: [ %s ]",
                     ialarmxr_exception.message,
                 )
-                errors["base"] = "ialarmxr_generic_exception"
+                errors["base"] = "unknown"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
