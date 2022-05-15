@@ -42,15 +42,13 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-# Note that the batch size for states may
-# never exceed the batch size for events
-# since we could end up deleting an event
-# that was still linked to the a state
-# by the old event_id linkage if we delete
-# more events than states.
 
+# Until we get rid of all the rows that are linked by event_id
+# we need to keep the batch sizes the same to handle databases
+# that do not have a on delete cascade setup correctly on the
+# FOREIGN KEY CONSTRAINT
 DEFAULT_STATES_BATCHES_PER_PURGE = 9  # We expect ~90% de-dupe rate
-DEFAULT_EVENTS_BATCHES_PER_PURGE = 8  # We expect ~80% de-dupe rate
+DEFAULT_EVENTS_BATCHES_PER_PURGE = 9  # We expect ~90% de-dupe rate
 
 
 def take(take_num: int, iterable: Iterable) -> list[Any]:
