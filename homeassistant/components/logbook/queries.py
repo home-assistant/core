@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from typing import Any
 
 import sqlalchemy
-from sqlalchemy import lambda_stmt, select, union_all
+from sqlalchemy import JSON, lambda_stmt, select, type_coerce, union_all
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -34,6 +34,7 @@ UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
+SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON(none_as_null=True))
 
 
 EVENT_COLUMNS = (
@@ -50,17 +51,19 @@ STATE_COLUMNS = (
     States.state_id.label("state_id"),
     States.state.label("state"),
     States.entity_id.label("entity_id"),
-    States.attributes.label("attributes"),
-    StateAttributes.shared_attrs.label("shared_attrs"),
+    SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
+    SHARED_ATTRS_JSON["friendly_name"].as_string().label("friendly_name"),
 )
+
 
 EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-    literal(value=None, type_=sqlalchemy.Text).label("attributes"),
-    literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
+    literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("friendly_name"),
 )
+
 
 EVENT_ROWS_NO_STATES = (
     *EVENT_COLUMNS,
