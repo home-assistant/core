@@ -44,10 +44,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # Until we get rid of all the rows that are linked by event_id
-# we need to keep the batch sizes the same to handle databases
-# that do not have a on delete cascade setup correctly on the
-# FOREIGN KEY CONSTRAINT
-DEFAULT_STATES_BATCHES_PER_PURGE = 9  # We expect ~90% de-dupe rate
+# we need to keep the state batch size smaller than the events
+# to ensure we do not delete an event row that is still connected
+# to a states row and get a foreign key constraint failure.
+DEFAULT_STATES_BATCHES_PER_PURGE = 7  # We expect ~90% de-dupe rate
 DEFAULT_EVENTS_BATCHES_PER_PURGE = 9  # We expect ~90% de-dupe rate
 
 
