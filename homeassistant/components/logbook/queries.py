@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from typing import Any
 
 import sqlalchemy
-from sqlalchemy import JSON, lambda_stmt, select, type_coerce, union_all
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -23,6 +23,7 @@ from homeassistant.components.recorder.models import (
     States,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import EVENT_STATE_CHANGED
 
 ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 
@@ -33,15 +34,7 @@ UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
-SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON(none_as_null=True))
 
-PSUEDO_EVENT_STATE_CHANGED = None
-# Since we don't store event_types and None
-# and we don't store state_changed in events
-# we use a NULL for state_changed events
-# when we synthesize them from the states table
-# since it avoids another column being sent
-# in the payload
 
 EVENT_COLUMNS = (
     Events.event_id.label("event_id"),
@@ -57,19 +50,17 @@ STATE_COLUMNS = (
     States.state_id.label("state_id"),
     States.state.label("state"),
     States.entity_id.label("entity_id"),
-    SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
-    SHARED_ATTRS_JSON["friendly_name"].as_string().label("friendly_name"),
+    States.attributes.label("attributes"),
+    StateAttributes.shared_attrs.label("shared_attrs"),
 )
-
 
 EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-    literal(value=None, type_=sqlalchemy.String).label("icon"),
-    literal(value=None, type_=sqlalchemy.String).label("friendly_name"),
+    literal(value=None, type_=sqlalchemy.Text).label("attributes"),
+    literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
 )
-
 
 EVENT_ROWS_NO_STATES = (
     *EVENT_COLUMNS,
@@ -335,9 +326,7 @@ def _select_states() -> Select:
     """Generate a states select that formats the states table as event rows."""
     return select(
         literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-        literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
-            "event_type"
-        ),
+        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
         literal(value=None, type_=sqlalchemy.Text).label("event_data"),
         States.last_updated.label("time_fired"),
         States.context_id.label("context_id"),
