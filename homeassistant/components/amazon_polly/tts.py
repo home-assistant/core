@@ -94,7 +94,7 @@ def get_engine(
         CONF_CONFIG: botocore.client.Config(
             connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
             read_timeout=AWS_CONF_READ_TIMEOUT,
-            max_pool_connection=AWS_CONF_MAX_POOL_CONNECTIONS,
+            max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
         ),
     }
 
