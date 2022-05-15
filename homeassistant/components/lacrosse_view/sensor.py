@@ -72,6 +72,7 @@ async def async_setup_entry(
                 "No permission to read sensor %s, are you sure you're signed into the right account?",
                 sensor.name,
             )
+            continue
         for field in sensor.sensor_field_names:
             sensor_list.append(
                 LaCrosseViewSensor(
