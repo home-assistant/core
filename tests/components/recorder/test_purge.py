@@ -76,7 +76,13 @@ async def test_purge_old_states(
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
         # run purge_old_data()
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            states_batch_size=1,
+            events_batch_size=1,
+            repack=False,
+        )
         assert not finished
         assert states.count() == 2
         assert state_attributes.count() == 1
@@ -96,7 +102,13 @@ async def test_purge_old_states(
 
         # run purge_old_data again
         purge_before = dt_util.utcnow()
-        finished = purge_old_data(instance, purge_before, repack=False)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            states_batch_size=1,
+            events_batch_size=1,
+            repack=False,
+        )
         assert not finished
         assert states.count() == 0
         assert state_attributes.count() == 0
