@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -67,6 +67,11 @@ async def async_setup_entry(
 
     sensor_list = []
     for i, sensor in enumerate(sensors):
+        if not sensor.permissions.get("read"):
+            LOGGER.warning(
+                "No permission to read sensor %s, are you sure you're signed into the right account?",
+                sensor.name,
+            )
         for field in sensor.sensor_field_names:
             sensor_list.append(
                 LaCrosseViewSensor(

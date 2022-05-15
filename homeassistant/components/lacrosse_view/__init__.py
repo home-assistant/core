@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if hass.data[DOMAIN][entry.entry_id][
             "last_update"
         ] < datetime.utcnow() - timedelta(
-            hours=1
+            minutes=59
         ):  # Get new token
             hass.data[DOMAIN][entry.entry_id]["last_update"] = datetime.utcnow()
             await api.login(entry.data["username"], entry.data["password"])
