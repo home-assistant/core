@@ -130,7 +130,7 @@ def _purge_states_and_attributes_ids(
 
     Returns true if there are more states to purge.
     """
-    remaining_state_ids = True
+    has_remaining_state_ids_to_purge = True
     # There are more states relative to attributes_ids so
     # we purge enough state ids to try to generate a full
     # size batch of them that will be around MAX_ROWS_TO_PURGE
@@ -140,7 +140,7 @@ def _purge_states_and_attributes_ids(
             session, purge_before
         )
         if not state_ids:
-            remaining_state_ids = False
+            has_remaining_state_ids_to_purge = False
             break
         _purge_state_ids(instance, session, state_ids)
         attributes_ids_batch = attributes_ids_batch | attributes_ids
@@ -150,7 +150,7 @@ def _purge_states_and_attributes_ids(
     ):
         _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
 
-    return remaining_state_ids
+    return has_remaining_state_ids_to_purge
 
 
 def _purge_events_and_data_ids(
@@ -164,7 +164,7 @@ def _purge_events_and_data_ids(
 
     Returns true if there are more states to purge.
     """
-    remaining_event_ids = True
+    has_remaining_event_ids_to_purge = True
     # There are more events relative to data_ids so
     # we purge enough state ids to try to generate a full
     # size batch of them that will be around MAX_ROWS_TO_PURGE
@@ -172,7 +172,7 @@ def _purge_events_and_data_ids(
     for _ in range(events_batch_size):
         event_ids, data_ids = _select_event_data_ids_to_purge(session, purge_before)
         if not event_ids:
-            remaining_event_ids = False
+            has_remaining_event_ids_to_purge = False
             break
         _purge_event_ids(session, event_ids)
         data_ids_batch = data_ids_batch | data_ids
@@ -182,7 +182,7 @@ def _purge_events_and_data_ids(
     ):
         _purge_batch_data_ids(instance, session, unused_data_ids_set)
 
-    return remaining_event_ids
+    return has_remaining_event_ids_to_purge
 
 
 def _select_state_attributes_ids_to_purge(
