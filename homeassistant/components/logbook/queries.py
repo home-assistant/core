@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import datetime as dt
 
 import sqlalchemy
-from sqlalchemy import JSON, Text, lambda_stmt, select, type_coerce, union_all
+from sqlalchemy import JSON, lambda_stmt, select, type_coerce, union_all
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
@@ -16,6 +16,7 @@ from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
+    JSON_VARIENT_CAST,
     LAST_UPDATED_INDEX,
     EventData,
     Events,
@@ -34,9 +35,6 @@ UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
 
-JSON_VARIENT_CAST = Text().with_variant(
-    type_=JSON(none_as_null=True), dialect_name="postgresql"
-)
 
 SHARED_ATTRS_JSON = type_coerce(
     StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
