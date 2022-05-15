@@ -58,7 +58,7 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 # If we are able to get the MAC address, we are able to establish
                 # a connection to the device.
-                mac = await _get_device_formatted_mac(
+                mac = await _async_get_device_formatted_mac(
                     self.hass, username, password, host, port
                 )
             except ConnectionError:
