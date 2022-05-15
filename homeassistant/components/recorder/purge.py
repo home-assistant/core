@@ -83,10 +83,10 @@ def purge_old_data(
 
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-        remaining_state_ids = _purge_states_and_attributes_ids(
+        has_remaining_state_ids_to_purge = _purge_states_and_attributes_ids(
             instance, session, states_batch_size, purge_before, using_sqlite
         )
-        remaining_event_ids = _purge_events_and_data_ids(
+        has_remaining_event_ids_to_purge = _purge_events_and_data_ids(
             instance, session, events_batch_size, purge_before, using_sqlite
         )
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
@@ -100,8 +100,8 @@ def purge_old_data(
             _purge_short_term_statistics(session, short_term_statistics)
 
         if (
-            remaining_state_ids
-            or remaining_event_ids
+            has_remaining_state_ids_to_purge
+            or has_remaining_event_ids_to_purge
             or statistics_runs
             or short_term_statistics
         ):
