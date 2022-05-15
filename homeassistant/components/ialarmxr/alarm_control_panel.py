@@ -47,7 +47,7 @@ class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self.coordinator.state
 
