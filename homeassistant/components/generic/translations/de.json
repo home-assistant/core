@@ -79,8 +79,12 @@
                     "rtsp_transport": "RTSP-Transportprotokoll",
                     "still_image_url": "Standbild-URL (z.B. http://...)",
                     "stream_source": "Stream-Quell-URL (z.B. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Wanduhr als Zeitstempel verwenden",
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Diese Option kann Segmentierungs- oder Absturzprobleme beheben, die durch fehlerhafte Zeitstempel-Implementierungen auf einigen Kameras entstehen"
                 }
             }
         }
