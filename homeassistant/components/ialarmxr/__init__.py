@@ -21,7 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, IALARMXR_TO_HASS
-from .utils import get_ialarmxr_mac
+from .utils import async_get_ialarmxr_mac
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
 _LOGGER = logging.getLogger(__name__)
