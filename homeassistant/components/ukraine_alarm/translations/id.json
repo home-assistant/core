@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokasi sudah dikonfigurasi"
+            "already_configured": "Lokasi sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "max_regions": "Maksimal 5 wilayah dapat dikonfigurasi",
+            "rate_limit": "Terlalu banyak permintaan",
+            "timeout": "Tenggang waktu membuat koneksi habis",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Kunci API"
+                    "api_key": "Kunci API",
+                    "region": "Wilayah"
                 },
-                "description": "Siapkan integrasi Alarm Ukraina. Untuk membuat kunci API, buka {api_url}"
+                "description": "Pilih negara bagian untuk dipantau"
             }
         }
     }

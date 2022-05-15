@@ -79,8 +79,12 @@
                     "rtsp_transport": "RTSP transportprotokoll",
                     "still_image_url": "Stillbilde-URL (f.eks. http://...)",
                     "stream_source": "Str\u00f8mkilde-URL (f.eks. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Bruk veggklokke som tidsstempler",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Dette alternativet kan korrigere segmenterings- eller krasjproblemer som oppst\u00e5r fra buggy-tidsstempelimplementeringer p\u00e5 enkelte kameraer"
                 }
             }
         }

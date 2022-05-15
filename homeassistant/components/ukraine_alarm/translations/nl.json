@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd."
+            "already_configured": "Locatie is al geconfigureerd.",
+            "cannot_connect": "Kan geen verbinding maken",
+            "max_regions": "Er kunnen maximaal 5 regio's worden geconfigureerd",
+            "rate_limit": "Te veel verzoeken",
+            "timeout": "Time-out bij het maken van verbinding",
+            "unknown": "Onverwachte fout"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-sleutel"
+                    "api_key": "API-sleutel",
+                    "region": "Regio"
                 },
-                "description": "Stel de Oekra\u00efne Alarm integratie in. Om een API sleutel te genereren ga naar {api_url}"
+                "description": "Kies staat om te monitoren"
             }
         }
     }
