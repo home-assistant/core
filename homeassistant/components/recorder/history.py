@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import literal
 
 from homeassistant.components import recorder
 from homeassistant.components.websocket_api.const import (
-    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import HomeAssistant, State, split_entity_id
@@ -662,12 +662,12 @@ def _sorted_states_to_dict(
         _process_timestamp: Callable[
             [datetime], float | str
         ] = process_datetime_to_timestamp
-        attr_last_changed = COMPRESSED_STATE_LAST_CHANGED
+        attr_time = COMPRESSED_STATE_LAST_UPDATED
         attr_state = COMPRESSED_STATE_STATE
     else:
         state_class = LazyState  # type: ignore[assignment]
         _process_timestamp = process_timestamp_to_utc_isoformat
-        attr_last_changed = LAST_CHANGED_KEY
+        attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
 
     result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
@@ -742,7 +742,7 @@ def _sorted_states_to_dict(
                     #
                     # We use last_updated for for last_changed since its the same
                     #
-                    attr_last_changed: _process_timestamp(row.last_updated),
+                    attr_time: _process_timestamp(row.last_updated),
                 }
             )
             prev_state = state
