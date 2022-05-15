@@ -199,7 +199,7 @@ def _significant_states_stmt(
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str] | None,
-    entity_filter: Any,
+    filters: Any,
     significant_changes_only: bool,
     no_attributes: bool,
 ) -> StatementLambdaElement:
@@ -232,8 +232,11 @@ def _significant_states_stmt(
 
     if entity_ids:
         stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
-    elif entity_filter:
-        stmt += lambda q: q.filter(entity_filter)
+    else:
+        stmt += _ignore_domains_filter
+        if filters and filters.has_config:
+            entity_filter = filters.entity_filter()
+            stmt += lambda q: q.filter(entity_filter)
 
     stmt += lambda q: q.filter(States.last_updated > start_time)
     if end_time:
@@ -272,21 +275,16 @@ def get_significant_states_with_session(
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
-    entity_filter = None
-    if not entity_ids and filters and filters.has_config:
-        entity_filter = filters.entity_filter()
     stmt = _significant_states_stmt(
         _schema_version(hass),
         start_time,
         end_time,
         entity_ids,
-        entity_filter,
+        filters,
         significant_changes_only,
         no_attributes,
     )
-    states = execute_stmt_lambda_element(
-        session, stmt, None if entity_ids else start_time, end_time
-    )
+    states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -385,9 +383,7 @@ def state_changes_during_period(
             descending,
             limit,
         )
-        states = execute_stmt_lambda_element(
-            session, stmt, None if entity_id else start_time, end_time
-        )
+        states = execute_stmt_lambda_element(session, stmt, start_time, end_time)
         entity_ids = [entity_id] if entity_id is not None else None
 
         return cast(
@@ -486,7 +482,7 @@ def _get_states_for_all_stmt(
     schema_version: int,
     run_start: datetime,
     utc_point_in_time: datetime,
-    entity_filter: Any | None,
+    filters: Any | None,
     no_attributes: bool,
 ) -> StatementLambdaElement:
     """Baked query to get states for all entities."""
@@ -526,7 +522,8 @@ def _get_states_for_all_stmt(
         ).c.max_state_id,
     )
     stmt += _ignore_domains_filter
-    if entity_filter:
+    if filters and filters.has_config:
+        entity_filter = filters.entity_filter()
         stmt += lambda q: q.filter(entity_filter)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
@@ -568,11 +565,8 @@ def _get_rows_with_session(
             schema_version, run.start, utc_point_in_time, entity_ids, no_attributes
         )
     else:
-        entity_filter = (
-            filters.entity_filter() if filters and filters.has_config else None
-        )
         stmt = _get_states_for_all_stmt(
-            schema_version, run.start, utc_point_in_time, entity_filter, no_attributes
+            schema_version, run.start, utc_point_in_time, filters, no_attributes
         )
 
     return execute_stmt_lambda_element(session, stmt)
@@ -589,18 +583,15 @@ def _get_single_entity_states_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
-    stmt += (
-        lambda q: q.filter(
-            States.last_updated < utc_point_in_time,
-            States.entity_id == entity_id,
-        )
-        .order_by(States.last_updated.desc())
-        .limit(1)
+    stmt += lambda q: q.filter(
+        States.last_updated < utc_point_in_time,
+        States.entity_id == entity_id,
     )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
+    stmt += lambda q: q.order_by(States.last_updated.desc()).limit(1)
     return stmt
 
 
