@@ -476,6 +476,7 @@ def _should_retry() -> bool:
 STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
+        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
     }
 )
 
