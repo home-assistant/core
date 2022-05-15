@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def keep_alive(now: datetime) -> None:
         """Keep alive task."""
         _LOGGER.debug("Keep alive")
-        await spa.spa_configured()
+        await spa.send_mod_ident_req()
 
     entry.async_on_unload(
         async_track_time_interval(hass, keep_alive, KEEP_ALIVE_INTERVAL)
