@@ -90,6 +90,8 @@ class LegacyDemoCalendar(CalendarEventDevice):
                 ).isoformat()
             },
             "summary": "Future Event",
+            "description": "Future Description",
+            "location": "Future Location",
         }
 
     @property
