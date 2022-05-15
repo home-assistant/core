@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with timeout(10):
-            ialarmxr_mac = await get_ialarmxr_mac(hass, ialarmxr)
+            ialarmxr_mac = await async_get_ialarmxr_mac(hass, ialarmxr)
     except (asyncio.TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
