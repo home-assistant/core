@@ -200,7 +200,7 @@ def _significant_states_stmt(
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str] | None,
-    filters: Filters,
+    filters: Filters | None,
     significant_changes_only: bool,
     no_attributes: bool,
 ) -> StatementLambdaElement:
