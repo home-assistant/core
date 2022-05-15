@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -30,10 +31,12 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CommandLineNotificationService:
+) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
-    command: str = config[CONF_COMMAND]
-    timeout: int = config[CONF_COMMAND_TIMEOUT]
+    if TYPE_CHECKING:
+        assert discovery_info
+    command: str = discovery_info[CONF_COMMAND]
+    timeout: int = discovery_info[CONF_COMMAND_TIMEOUT]
 
     return CommandLineNotificationService(command, timeout)
 

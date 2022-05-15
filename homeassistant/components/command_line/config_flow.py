@@ -78,11 +78,8 @@ class CommandLineConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
 
             json_attr_list: list[str] | None = user_input.get(CONF_JSON_ATTRIBUTES)
-            if json_attr_list:
-                if "" in json_attr_list:
-                    json_attr_list.remove("")
-                if json_attr_list == [""]:
-                    json_attr_list = None
+            if json_attr_list in ([""], []):
+                json_attr_list = None
                 user_input[CONF_JSON_ATTRIBUTES] = json_attr_list
             user_input[CONF_COMMAND_TIMEOUT] = int(user_input[CONF_COMMAND_TIMEOUT])
 
@@ -101,10 +98,7 @@ class CommandLineConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        if self.data is None:
-            platform = user_input[CONF_PLATFORM]
-        else:
-            platform = self.data[CONF_PLATFORM]
+        platform = self.data[CONF_PLATFORM]
         data_schema = PLATFORM_TO_DATA_SCHEMA[platform]
         return self.async_show_form(
             step_id="final",
@@ -127,6 +121,10 @@ class CommandLineOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input:
+            json_attr_list: list[str] | None = user_input.get(CONF_JSON_ATTRIBUTES)
+            if json_attr_list in ([""], []):
+                json_attr_list = None
+                user_input[CONF_JSON_ATTRIBUTES] = json_attr_list
             user_input[CONF_COMMAND_TIMEOUT] = int(user_input[CONF_COMMAND_TIMEOUT])
             return self.async_create_entry(
                 title="",

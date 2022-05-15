@@ -1,37 +1,18 @@
 """The tests for the Command line sensor platform."""
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
 from homeassistant import setup
+from homeassistant.components.command_line.const import CONF_COMMAND_TIMEOUT
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
-
-async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
-    """Set up a test command line sensor entity."""
-    assert await setup.async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: [
-                {
-                    "platform": "template",
-                    "sensors": {
-                        "template_sensor": {
-                            "value_template": "template_value",
-                        }
-                    },
-                },
-                {"platform": "command_line", "name": "Test", **config_dict},
-            ]
-        },
-    )
-    await hass.async_block_till_done()
+from . import setup_test_entities
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -39,8 +20,11 @@ async def test_setup(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo 5",
             "unit_of_measurement": "in",
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -55,9 +39,12 @@ async def test_template(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo 50",
             "unit_of_measurement": "in",
             "value_template": "{{ value | multiply(0.1) }}",
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -71,7 +58,10 @@ async def test_template_render(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo {{ states.sensor.template_sensor.state }}",
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -83,13 +73,16 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.util.subprocess.check_output",
         return_value=b"Works\n",
     ) as check_output:
         await setup_test_entities(
             hass,
             {
+                CONF_PLATFORM: "sensor",
+                CONF_NAME: "Test",
                 "command": 'echo "{{ states.sensor.template_sensor.state }}" "3 4"',
+                CONF_COMMAND_TIMEOUT: 15,
             },
         )
 
@@ -108,7 +101,10 @@ async def test_bad_template_render(
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo {{ this template doesn't parse",
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
 
@@ -120,7 +116,10 @@ async def test_bad_command(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "asdfasdf",
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -144,9 +143,12 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
                 \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
             "json_attributes": ["key", "another_key", "key_three"],
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -164,8 +166,11 @@ async def test_update_with_json_attrs_no_data(
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo",
             "json_attributes": ["key"],
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -182,8 +187,11 @@ async def test_update_with_json_attrs_not_dict(
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo [1, 2, 3]",
             "json_attributes": ["key"],
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -200,8 +208,11 @@ async def test_update_with_json_attrs_bad_json(
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": "echo This is text rather than JSON data.",
             "json_attributes": ["key"],
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -218,9 +229,12 @@ async def test_update_with_missing_json_attrs(
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
                 \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
             "json_attributes": ["key", "another_key", "key_three", "missing_key"],
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -239,9 +253,12 @@ async def test_update_with_unnecessary_json_attrs(
     await setup_test_entities(
         hass,
         {
+            CONF_PLATFORM: "sensor",
+            CONF_NAME: "Test",
             "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
                 \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
             "json_attributes": ["key", "another_key"],
+            CONF_COMMAND_TIMEOUT: 15,
         },
     )
     entity_state = hass.states.get("sensor.test")
@@ -278,7 +295,7 @@ async def test_unique_id(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     ent_reg = entity_registry.async_get(hass)
 

@@ -68,6 +68,10 @@ async def async_setup_platform(
 
     devices: dict[str, Any] = config.get(CONF_COVERS, {})
 
+    if devices == {}:
+        _LOGGER.error("No covers to import")
+        return
+
     for device_name, device_config in devices.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
@@ -78,7 +82,7 @@ async def async_setup_platform(
             CONF_COMMAND_CLOSE: device_config[CONF_COMMAND_CLOSE],
             CONF_COMMAND_STOP: device_config[CONF_COMMAND_STOP],
             CONF_COMMAND_STATE: device_config.get(CONF_COMMAND_STATE),
-            CONF_VALUE_TEMPLATE: template_value,
+            CONF_VALUE_TEMPLATE: template_value if value_template else None,
             CONF_COMMAND_TIMEOUT: device_config[CONF_COMMAND_TIMEOUT],
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_PLATFORM: Platform.COVER,
@@ -100,14 +104,14 @@ async def async_setup_entry(
     command_open = entry.options[CONF_COMMAND_OPEN]
     command_close = entry.options[CONF_COMMAND_CLOSE]
     command_stop = entry.options[CONF_COMMAND_STOP]
-    command_state = entry.options[CONF_COMMAND_STATE]
-    value_template = entry.options[CONF_VALUE_TEMPLATE]
+    command_state = entry.options.get(CONF_COMMAND_STATE)
+    value_template = entry.options.get(CONF_VALUE_TEMPLATE)
     name = entry.options[CONF_NAME]
     command_timeout = entry.options[CONF_COMMAND_TIMEOUT]
-    unique_id = entry.options[CONF_UNIQUE_ID]
+    unique_id = entry.options.get(CONF_UNIQUE_ID)
     if value_template is not None:
-        value_template = Template(value_template)
-        value_template.hass = hass
+        template_value = Template(value_template)
+        template_value.hass = hass
 
     async_add_entities(
         [
@@ -117,7 +121,7 @@ async def async_setup_entry(
                 command_close,
                 command_stop,
                 command_state,
-                value_template,
+                template_value if value_template else None,
                 command_timeout,
                 unique_id,
                 entry.entry_id,

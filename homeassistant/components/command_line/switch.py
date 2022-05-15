@@ -13,12 +13,9 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_COMMAND_CLOSE,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
-    CONF_COMMAND_STOP,
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
@@ -75,6 +72,10 @@ async def async_setup_platform(
 
     devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
 
+    if devices == {}:
+        _LOGGER.error("No switches to import")
+        return
+
     for object_id, device_config in devices.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
@@ -86,12 +87,11 @@ async def async_setup_platform(
         new_config = {
             CONF_OBJECT_ID: object_id,
             CONF_NAME: device_config.get(CONF_FRIENDLY_NAME, object_id),
-            CONF_COMMAND_OPEN: device_config[CONF_COMMAND_OPEN],
-            CONF_COMMAND_CLOSE: device_config[CONF_COMMAND_CLOSE],
-            CONF_COMMAND_STOP: device_config[CONF_COMMAND_STOP],
+            CONF_COMMAND_OFF: device_config[CONF_COMMAND_OFF],
+            CONF_COMMAND_ON: device_config[CONF_COMMAND_ON],
             CONF_COMMAND_STATE: device_config.get(CONF_COMMAND_STATE),
-            CONF_ICON_TEMPLATE: template_icon,
-            CONF_VALUE_TEMPLATE: template_value,
+            CONF_ICON_TEMPLATE: template_icon if icon_template else None,
+            CONF_VALUE_TEMPLATE: template_value if value_template else None,
             CONF_COMMAND_TIMEOUT: device_config[CONF_COMMAND_TIMEOUT],
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_PLATFORM: Platform.SWITCH,
@@ -134,8 +134,8 @@ async def async_setup_entry(
                 command_on,
                 command_off,
                 command_state,
-                template_icon,
-                template_value,
+                template_icon if icon_template else None,
+                template_value if value_template else None,
                 command_timeout,
                 unique_id,
                 entry.entry_id,

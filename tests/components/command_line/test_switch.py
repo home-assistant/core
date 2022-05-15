@@ -5,15 +5,20 @@ import json
 import os
 import subprocess
 import tempfile
-from typing import Any
 from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
 from homeassistant import setup
+from homeassistant.components.command_line.const import (
+    CONF_COMMAND_TIMEOUT,
+    CONF_OBJECT_ID,
+)
 from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_NAME,
+    CONF_PLATFORM,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -23,36 +28,33 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 
+from . import setup_test_entity
+
 from tests.common import async_fire_time_changed
-
-
-async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
-    """Set up a test command line switch entity."""
-    assert await setup.async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: [
-                {"platform": "command_line", "switches": config_dict},
-            ]
-        },
-    )
-    await hass.async_block_till_done()
 
 
 async def test_state_none(hass: HomeAssistant) -> None:
     """Test with none state."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
-        await setup_test_entity(
+        assert await setup.async_setup_component(
             hass,
+            DOMAIN,
             {
-                "test": {
-                    "command_on": f"echo 1 > {path}",
-                    "command_off": f"echo 0 > {path}",
-                }
+                DOMAIN: [
+                    {
+                        "platform": "command_line",
+                        "switches": {
+                            "test": {
+                                "command_on": f"echo 1 > {path}",
+                                "command_off": f"echo 0 > {path}",
+                            }
+                        },
+                    },
+                ]
             },
         )
+        await hass.async_block_till_done()
 
         entity_state = hass.states.get("switch.test")
         assert entity_state
@@ -85,18 +87,27 @@ async def test_state_value(hass: HomeAssistant) -> None:
     """Test with state value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
-        await setup_test_entity(
+        assert await setup.async_setup_component(
             hass,
+            DOMAIN,
             {
-                "test": {
-                    "command_state": f"cat {path}",
-                    "command_on": f"echo 1 > {path}",
-                    "command_off": f"echo 0 > {path}",
-                    "value_template": '{{ value=="1" }}',
-                    "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
-                }
+                DOMAIN: [
+                    {
+                        "platform": "command_line",
+                        "switches": {
+                            "test": {
+                                "command_state": f"cat {path}",
+                                "command_on": f"echo 1 > {path}",
+                                "command_off": f"echo 0 > {path}",
+                                "value_template": '{{ value=="1" }}',
+                                "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
+                            }
+                        },
+                    },
+                ]
             },
         )
+        await hass.async_block_till_done()
 
         entity_state = hass.states.get("switch.test")
         assert entity_state
@@ -137,13 +148,15 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         await setup_test_entity(
             hass,
             {
-                "test": {
-                    "command_state": f"cat {path}",
-                    "command_on": f"echo '{oncmd}' > {path}",
-                    "command_off": f"echo '{offcmd}' > {path}",
-                    "value_template": '{{ value_json.status=="ok" }}',
-                    "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
-                }
+                CONF_OBJECT_ID: "test",
+                CONF_PLATFORM: "switch",
+                CONF_NAME: "Test",
+                CONF_COMMAND_TIMEOUT: 15,
+                "command_state": f"cat {path}",
+                "command_on": f"echo '{oncmd}' > {path}",
+                "command_off": f"echo '{offcmd}' > {path}",
+                "value_template": '{{ value_json.status=="ok" }}',
+                "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
             },
         )
 
@@ -183,11 +196,13 @@ async def test_state_code(hass: HomeAssistant) -> None:
         await setup_test_entity(
             hass,
             {
-                "test": {
-                    "command_state": f"cat {path}",
-                    "command_on": f"echo 1 > {path}",
-                    "command_off": f"echo 0 > {path}",
-                }
+                CONF_OBJECT_ID: "test",
+                CONF_PLATFORM: "switch",
+                CONF_NAME: "Test",
+                CONF_COMMAND_TIMEOUT: 15,
+                "command_state": f"cat {path}",
+                "command_on": f"echo 1 > {path}",
+                "command_off": f"echo 0 > {path}",
             },
         )
 
@@ -226,10 +241,12 @@ async def test_assumed_state_should_be_true_if_command_state_is_none(
     await setup_test_entity(
         hass,
         {
-            "test": {
-                "command_on": "echo 'on command'",
-                "command_off": "echo 'off command'",
-            }
+            CONF_OBJECT_ID: "test",
+            CONF_PLATFORM: "switch",
+            CONF_NAME: "Test",
+            CONF_COMMAND_TIMEOUT: 15,
+            "command_on": "echo 'on command'",
+            "command_off": "echo 'off command'",
         },
     )
     entity_state = hass.states.get("switch.test")
@@ -245,11 +262,13 @@ async def test_assumed_state_should_absent_if_command_state_present(
     await setup_test_entity(
         hass,
         {
-            "test": {
-                "command_on": "echo 'on command'",
-                "command_off": "echo 'off command'",
-                "command_state": "cat {}",
-            }
+            CONF_OBJECT_ID: "test",
+            CONF_PLATFORM: "switch",
+            CONF_NAME: "Test",
+            CONF_COMMAND_TIMEOUT: 15,
+            "command_on": "echo 'on command'",
+            "command_off": "echo 'off command'",
+            "command_state": "cat {}",
         },
     )
     entity_state = hass.states.get("switch.test")
@@ -262,11 +281,13 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
     await setup_test_entity(
         hass,
         {
-            "test": {
-                "command_on": "echo 'on command'",
-                "command_off": "echo 'off command'",
-                "friendly_name": "Test friendly name!",
-            }
+            CONF_OBJECT_ID: "test",
+            CONF_PLATFORM: "switch",
+            CONF_NAME: "Test",
+            CONF_COMMAND_TIMEOUT: 15,
+            "command_on": "echo 'on command'",
+            "command_off": "echo 'off command'",
+            "friendly_name": "Test friendly name!",
         },
     )
 
@@ -282,11 +303,13 @@ async def test_switch_command_state_fail(
     await setup_test_entity(
         hass,
         {
-            "test": {
-                "command_on": "exit 0",
-                "command_off": "exit 0'",
-                "command_state": "echo 1",
-            }
+            CONF_OBJECT_ID: "test",
+            CONF_PLATFORM: "switch",
+            CONF_NAME: "Test",
+            CONF_COMMAND_TIMEOUT: 15,
+            "command_on": "exit 0",
+            "command_off": "exit 0'",
+            "command_state": "echo 1",
         },
     )
 
@@ -318,7 +341,7 @@ async def test_switch_command_state_code_exceptions(
     """Test that switch state code exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.util.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -327,11 +350,13 @@ async def test_switch_command_state_code_exceptions(
         await setup_test_entity(
             hass,
             {
-                "test": {
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
-                }
+                CONF_OBJECT_ID: "test",
+                CONF_PLATFORM: "switch",
+                CONF_NAME: "Test",
+                CONF_COMMAND_TIMEOUT: 15,
+                "command_on": "exit 0",
+                "command_off": "exit 0'",
+                "command_state": "echo 1",
             },
         )
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
@@ -351,7 +376,7 @@ async def test_switch_command_state_value_exceptions(
     """Test that switch state value exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.util.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -360,12 +385,14 @@ async def test_switch_command_state_value_exceptions(
         await setup_test_entity(
             hass,
             {
-                "test": {
-                    "command_on": "exit 0",
-                    "command_off": "exit 0'",
-                    "command_state": "echo 1",
-                    "value_template": '{{ value=="1" }}',
-                }
+                CONF_OBJECT_ID: "test",
+                CONF_PLATFORM: "switch",
+                CONF_NAME: "Test",
+                CONF_COMMAND_TIMEOUT: 15,
+                "command_on": "exit 0",
+                "command_off": "exit 0'",
+                "command_state": "echo 1",
+                "value_template": '{{ value=="1" }}',
             },
         )
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
@@ -382,34 +409,56 @@ async def test_switch_command_state_value_exceptions(
 async def test_no_switches(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test with no switches."""
 
-    await setup_test_entity(hass, {})
-    assert "No switches" in caplog.text
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "platform": "command_line",
+                    "switches": {},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert "No switches to import" in caplog.text
 
 
 async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option and if it only creates one switch per id."""
-    await setup_test_entity(
+    await setup.async_setup_component(
         hass,
+        DOMAIN,
         {
-            "unique": {
-                "command_on": "echo on",
-                "command_off": "echo off",
-                "unique_id": "unique",
-            },
-            "not_unique_1": {
-                "command_on": "echo on",
-                "command_off": "echo off",
-                "unique_id": "not-so-unique-anymore",
-            },
-            "not_unique_2": {
-                "command_on": "echo on",
-                "command_off": "echo off",
-                "unique_id": "not-so-unique-anymore",
-            },
+            DOMAIN: [
+                {
+                    "platform": "command_line",
+                    "switches": {
+                        "unique": {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "unique",
+                        },
+                        "not_unique_1": {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                        "not_unique_2": {
+                            "command_on": "echo on",
+                            "command_off": "echo off",
+                            "unique_id": "not-so-unique-anymore",
+                        },
+                    },
+                },
+            ]
         },
     )
+    await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
 
     ent_reg = entity_registry.async_get(hass)
 

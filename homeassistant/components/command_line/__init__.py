@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     platform = [entry.options[CONF_PLATFORM]]
 
     if platform == [Platform.NOTIFY]:
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.options
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,

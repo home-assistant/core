@@ -4,39 +4,37 @@ from __future__ import annotations
 import os
 import subprocess
 import tempfile
-from typing import Any
 from unittest.mock import patch
 
 from pytest import LogCaptureFixture
 
 from homeassistant import setup
+from homeassistant.components.command_line.const import CONF_COMMAND_TIMEOUT
 from homeassistant.components.notify import DOMAIN
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 
+from . import setup_test_entity
 
-async def setup_test_service(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
-    """Set up a test command line notify service."""
+
+async def test_setup(hass: HomeAssistant) -> None:
+    """Test sensor setup."""
     assert await setup.async_setup_component(
         hass,
         DOMAIN,
         {
             DOMAIN: [
-                {"platform": "command_line", "name": "Test", **config_dict},
+                {"platform": "command_line", "name": "Test", "command": "exit 0"},
             ]
         },
     )
     await hass.async_block_till_done()
-
-
-async def test_setup(hass: HomeAssistant) -> None:
-    """Test sensor setup."""
-    await setup_test_service(hass, {"command": "exit 0"})
     assert hass.services.has_service(DOMAIN, "test")
 
 
 async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing configuration."""
-    await setup_test_service(hass, {})
+    await setup_test_entity(hass, {})
     assert not hass.services.has_service(DOMAIN, "test")
 
 
@@ -45,9 +43,12 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
     with tempfile.TemporaryDirectory() as tempdirname:
         filename = os.path.join(tempdirname, "message.txt")
         message = "one, two, testing, testing"
-        await setup_test_service(
+        await setup_test_entity(
             hass,
             {
+                CONF_PLATFORM: "notify",
+                CONF_NAME: "Test",
+                CONF_COMMAND_TIMEOUT: 15,
                 "command": f"cat > {filename}",
             },
         )
@@ -66,9 +67,12 @@ async def test_error_for_none_zero_exit_code(
     caplog: LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test if an error is logged for non zero exit codes."""
-    await setup_test_service(
+    await setup_test_entity(
         hass,
         {
+            CONF_PLATFORM: "notify",
+            CONF_NAME: "Test",
+            CONF_COMMAND_TIMEOUT: 15,
             "command": "exit 1",
         },
     )
@@ -82,9 +86,11 @@ async def test_error_for_none_zero_exit_code(
 
 async def test_timeout(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test blocking is not forever."""
-    await setup_test_service(
+    await setup_test_entity(
         hass,
         {
+            CONF_PLATFORM: "notify",
+            CONF_NAME: "Test",
             "command": "sleep 10000",
             "command_timeout": 0.0000001,
         },
@@ -101,7 +107,7 @@ async def test_subprocess_exceptions(
     """Test that notify subprocess exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.notify.subprocess.Popen"
+        "homeassistant.components.command_line.util.subprocess.Popen"
     ) as check_output:
         check_output.return_value.__enter__ = check_output
         check_output.return_value.communicate.side_effect = [
@@ -110,7 +116,15 @@ async def test_subprocess_exceptions(
             subprocess.SubprocessError(),
         ]
 
-        await setup_test_service(hass, {"command": "exit 0"})
+        await setup_test_entity(
+            hass,
+            {
+                CONF_PLATFORM: "notify",
+                CONF_NAME: "Test",
+                CONF_COMMAND_TIMEOUT: 15,
+                "command": "exit 0",
+            },
+        )
         assert await hass.services.async_call(
             DOMAIN, "test", {"message": "error"}, blocking=True
         )
