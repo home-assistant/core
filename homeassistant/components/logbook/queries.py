@@ -23,7 +23,6 @@ from homeassistant.components.recorder.models import (
     States,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import EVENT_STATE_CHANGED
 
 ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 
@@ -36,6 +35,13 @@ UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 OLD_STATE = aliased(States, name="old_state")
 SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON(none_as_null=True))
 
+PSUEDO_EVENT_STATE_CHANGED = None
+# Since we don't store event_types and None
+# and we don't store state_changed in events
+# we use a NULL for state_changed events
+# when we synthesize them from the states table
+# since it avoids another column being sent
+# in the payload
 
 EVENT_COLUMNS = (
     Events.event_id.label("event_id"),
@@ -329,7 +335,9 @@ def _select_states() -> Select:
     """Generate a states select that formats the states table as event rows."""
     return select(
         literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
+        literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
+            "event_type"
+        ),
         literal(value=None, type_=sqlalchemy.Text).label("event_data"),
         States.last_updated.label("time_fired"),
         States.context_id.label("context_id"),

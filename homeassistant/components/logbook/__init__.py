@@ -65,7 +65,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .queries import statement_for_request
+from .queries import PSUEDO_EVENT_STATE_CHANGED, statement_for_request
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -417,7 +417,7 @@ def _humanify(
             continue
         event_type = row.event_type
         if event_type == EVENT_CALL_SERVICE or (
-            event_type != EVENT_STATE_CHANGED
+            event_type is not PSUEDO_EVENT_STATE_CHANGED
             and entities_filter is not None
             and not _keep_row(row, event_type)
         ):
