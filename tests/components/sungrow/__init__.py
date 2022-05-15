@@ -54,3 +54,21 @@ inverter_data = {
     "5146 - Negative voltage to ground": 0.0,
     "5148 - Grid frequency": 49.95,
 }
+
+
+class MockClient(dict):
+    """Mocked client."""
+
+    inverter = inverter_data
+
+    def load_register() -> None:
+        """Do nothing."""
+
+
+class MockClientNoConnection(dict):
+    """Mocked client with empty result."""
+
+    inverter = {}
+
+    def load_register() -> None:
+        """Do nothing."""

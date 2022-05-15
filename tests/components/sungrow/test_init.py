@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import create_entry, inverter_data
+from . import MockClient, create_entry, inverter_data
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -68,3 +68,12 @@ async def test_device_data_not_available(hass: HomeAssistant) -> None:
         await hass.data[DOMAIN][entry.entry_id].async_refresh()
 
     mock_client.assert_called_once()
+
+
+async def test_data_update(hass: HomeAssistant) -> None:
+    """Test the update call."""
+    with patch("homeassistant.components.sungrow.Client", return_value=MockClient):
+        entry = create_entry(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.data[DOMAIN][entry.entry_id].async_refresh()

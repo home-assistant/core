@@ -1,11 +1,19 @@
 """Test the Sungrow Solar Energy config flow."""
 from unittest.mock import patch
 
+from typing_extensions import assert_never
+
 from homeassistant import config_entries
-from homeassistant.components.sungrow.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.sungrow.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+    validate_input,
+)
 from homeassistant.components.sungrow.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+
+from . import MockClient, MockClientNoConnection
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -134,3 +142,26 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_validate_input_invalid_auth(hass: HomeAssistant) -> None:
+    """Test Input validation with invalid auth."""
+    with patch(
+        "homeassistant.components.sungrow.config_flow.Client",
+        return_value=MockClientNoConnection,
+    ):
+        try:
+            result = await validate_input(hass, {"host": None})
+            assert_never(result)
+        except InvalidAuth as e:
+            assert e
+
+
+async def test_validate_input(hass: HomeAssistant) -> None:
+    """Test Input validation with valid auth."""
+    with patch(
+        "homeassistant.components.sungrow.config_flow.Client", return_value=MockClient
+    ):
+        result2 = await validate_input(hass, {"host": "1.1.1.1"})
+
+    assert result2["title"] == "Sungrow A1234567890"
