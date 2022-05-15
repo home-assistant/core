@@ -1,4 +1,6 @@
 """The Geocaching integration."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -17,6 +19,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -45,6 +49,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
         ),
+    )
+    _LOGGER.warning(
+        "Configuration of Geocaching integration in YAML is deprecated and "
+        "will be removed in a future release; Your existing OAuth "
+        "Application Credentials have been imported into the UI "
+        "automatically and can be safely removed from your "
+        "configuration.yaml file"
     )
 
     # When manual configuration is done, discover the integration.
