@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Standort ist bereits konfiguriert"
+            "already_configured": "Standort ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "max_regions": "Es k\u00f6nnen maximal 5 Regionen konfiguriert werden",
+            "rate_limit": "Zu viele Anfragen",
+            "timeout": "Zeit\u00fcberschreitung beim Verbindungsaufbau",
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-Schl\u00fcssel"
+                    "api_key": "API-Schl\u00fcssel",
+                    "region": "Region"
                 },
-                "description": "Richte die Ukraine Alarm-Integration ein. Um einen API-Schl\u00fcssel zu generieren, gehe zu {api_url}"
+                "description": "Zu \u00fcberwachendes Bundesland ausw\u00e4hlen"
             }
         }
     }

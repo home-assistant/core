@@ -323,12 +323,12 @@ async def test_option_flow(hass):
         result["flow_id"],
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
-            config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+            config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
-        config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+        config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
     }

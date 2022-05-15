@@ -18,12 +18,13 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.websocket_api.const import (
-    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
+from .filters import Filters
 from .models import (
     LazyState,
     RecorderRuns,
@@ -158,7 +159,7 @@ def get_significant_states(
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
-    filters: Any | None = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     minimal_response: bool = False,
@@ -256,7 +257,7 @@ def get_significant_states_with_session(
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
-    filters: Any = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     minimal_response: bool = False,
@@ -307,7 +308,7 @@ def get_full_significant_states_with_session(
     start_time: datetime,
     end_time: datetime | None = None,
     entity_ids: list[str] | None = None,
-    filters: Any = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     no_attributes: bool = False,
@@ -542,7 +543,7 @@ def _get_rows_with_session(
     utc_point_in_time: datetime,
     entity_ids: list[str] | None = None,
     run: RecorderRuns | None = None,
-    filters: Any | None = None,
+    filters: Filters | None = None,
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
@@ -608,7 +609,7 @@ def _sorted_states_to_dict(
     states: Iterable[Row],
     start_time: datetime,
     entity_ids: list[str] | None,
-    filters: Any = None,
+    filters: Filters | None = None,
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
@@ -630,12 +631,12 @@ def _sorted_states_to_dict(
         _process_timestamp: Callable[
             [datetime], float | str
         ] = process_datetime_to_timestamp
-        attr_last_changed = COMPRESSED_STATE_LAST_CHANGED
+        attr_time = COMPRESSED_STATE_LAST_UPDATED
         attr_state = COMPRESSED_STATE_STATE
     else:
         state_class = LazyState  # type: ignore[assignment]
         _process_timestamp = process_timestamp_to_utc_isoformat
-        attr_last_changed = LAST_CHANGED_KEY
+        attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
 
     result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
@@ -710,7 +711,7 @@ def _sorted_states_to_dict(
                     #
                     # We use last_updated for for last_changed since its the same
                     #
-                    attr_last_changed: _process_timestamp(row.last_updated),
+                    attr_time: _process_timestamp(row.last_updated),
                 }
             )
             prev_state = state

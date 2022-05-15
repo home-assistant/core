@@ -79,8 +79,12 @@
                     "rtsp_transport": "Protocol de transport RTSP",
                     "still_image_url": "URL d'imatge fixa (p. ex. http://...)",
                     "stream_source": "URL origen del flux (p. ex. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Utilitza el rellotge de paret com a marca de temps",
                     "username": "Nom d'usuari",
                     "verify_ssl": "Verifica el certificat SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Aquesta opci\u00f3 pot corregir problemes de segmentaci\u00f3 o bloqueig en algunes c\u00e0meres derivats d'implementacions de marca de temps amb errors"
                 }
             }
         }

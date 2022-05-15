@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime as dt
-from typing import Any
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query, aliased
+from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.history import Filters
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
     LAST_UPDATED_INDEX,
@@ -160,7 +160,7 @@ def _entities_stmt(
     )
     stmt = stmt.add_criteria(
         lambda s: s.where(_apply_event_entity_id_matchers(entity_ids)).union_all(
-            _states_query_for_entitiy_ids(start_day, end_day, entity_ids),
+            _states_query_for_entity_ids(start_day, end_day, entity_ids),
             _select_events_context_only().where(
                 Events.context_id.in_(
                     _select_entities_context_ids_sub_query(
@@ -218,7 +218,7 @@ def _single_entity_stmt(
             | EventData.shared_data.like(entity_id_like)
         )
         .union_all(
-            _states_query_for_entitiy_id(start_day, end_day, entity_id),
+            _states_query_for_entity_id(start_day, end_day, entity_id),
             _select_events_context_only().where(
                 Events.context_id.in_(
                     _select_entity_context_ids_sub_query(
@@ -236,7 +236,7 @@ def _all_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    entity_filter: Any | None = None,
+    entity_filter: ClauseList | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -304,13 +304,13 @@ def _states_query_for_context_id(start_day: dt, end_day: dt, context_id: str) ->
     )
 
 
-def _states_query_for_entitiy_id(start_day: dt, end_day: dt, entity_id: str) -> Query:
+def _states_query_for_entity_id(start_day: dt, end_day: dt, entity_id: str) -> Query:
     return _apply_states_filters(
         _apply_entities_hints(_select_states()), start_day, end_day
     ).where(States.entity_id == entity_id)
 
 
-def _states_query_for_entitiy_ids(
+def _states_query_for_entity_ids(
     start_day: dt, end_day: dt, entity_ids: list[str]
 ) -> Query:
     return _apply_states_filters(
@@ -410,7 +410,7 @@ def _continuous_domain_matcher() -> sqlalchemy.or_:
     ).self_group()
 
 
-def _not_uom_attributes_matcher() -> Any:
+def _not_uom_attributes_matcher() -> ClauseList:
     """Prefilter ATTR_UNIT_OF_MEASUREMENT as its much faster in sql."""
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE
