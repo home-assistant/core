@@ -36,26 +36,31 @@ BINARY_SENSOR_TYPES: tuple[StarlineBinarySensorEntityDescription, ...] = (
         key="hbrake",
         name_="Hand Brake",
         device_class=BinarySensorDeviceClass.POWER,
+        icon="mdi:car-brake-parking",
     ),
     StarlineBinarySensorEntityDescription(
         key="hood",
         name_="Hood",
         device_class=BinarySensorDeviceClass.DOOR,
+        icon="mdi:car",
     ),
     StarlineBinarySensorEntityDescription(
         key="trunk",
         name_="Trunk",
         device_class=BinarySensorDeviceClass.DOOR,
+        icon="mdi:car-back",
     ),
     StarlineBinarySensorEntityDescription(
         key="alarm",
         name_="Alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        icon="mdi:alarm-light-outline",
     ),
     StarlineBinarySensorEntityDescription(
         key="door",
         name_="Doors",
         device_class=BinarySensorDeviceClass.LOCK,
+        icon="mdi:car-door",
     ),
 )
 

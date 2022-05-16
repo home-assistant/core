@@ -1462,7 +1462,7 @@ sqlalchemy==1.4.36
 srpenergy==1.3.6
 
 # homeassistant.components.starline
-starline==0.1.5
+starline==0.2.0
 
 # homeassistant.components.statsd
 statsd==3.2.1

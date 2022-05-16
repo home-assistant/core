@@ -12,6 +12,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.LOCK,
     Platform.SWITCH,
+    Platform.BUTTON,
 ]
 
 CONF_APP_ID = "app_id"
@@ -20,8 +21,6 @@ CONF_MFA_CODE = "mfa_code"
 CONF_CAPTCHA_CODE = "captcha_code"
 
 DEFAULT_SCAN_INTERVAL = 180  # in seconds
-CONF_SCAN_OBD_INTERVAL = "scan_obd_interval"
-DEFAULT_SCAN_OBD_INTERVAL = 10800  # 3 hours in seconds
 
 ERROR_AUTH_APP = "error_auth_app"
 ERROR_AUTH_USER = "error_auth_user"
@@ -34,4 +33,3 @@ DATA_EXPIRES = "expires"
 
 SERVICE_UPDATE_STATE = "update_state"
 SERVICE_SET_SCAN_INTERVAL = "set_scan_interval"
-SERVICE_SET_SCAN_OBD_INTERVAL = "set_scan_obd_interval"

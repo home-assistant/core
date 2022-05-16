@@ -14,12 +14,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the StarLine lock."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
-    entities = []
-    for device in account.api.devices.values():
-        if device.support_state:
-            lock = StarlineLock(account, device)
-            if lock.is_locked is not None:
-                entities.append(lock)
+    entities = [
+        lock
+        for device in account.api.devices.values()
+        if (lock := StarlineLock(account, device)).is_locked is not None
+    ]
     async_add_entities(entities)
 
 

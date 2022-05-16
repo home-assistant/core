@@ -49,10 +49,10 @@ SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
         icon_off="mdi:access-point-network-off",
     ),
     StarlineSwitchEntityDescription(
-        key="poke",
-        name_="Horn",
-        icon_on="mdi:bullhorn-outline",
-        icon_off="mdi:bullhorn-outline",
+        key="valet",
+        name_="Service Mode",
+        icon_on="mdi:wrench-clock",
+        icon_off="mdi:car-wrench",
     ),
 )
 
@@ -65,7 +65,6 @@ async def async_setup_entry(
     entities = [
         switch
         for device in account.api.devices.values()
-        if device.support_state
         for description in SWITCH_TYPES
         if (switch := StarlineSwitch(account, device, description)).is_on is not None
     ]
@@ -116,8 +115,6 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return True if entity is on."""
-        if self._key == "poke":
-            return False
         return self._device.car_state.get(self._key)
 
     def turn_on(self, **kwargs):
@@ -126,6 +123,4 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        if self._key == "poke":
-            return
         self._account.api.set_car_state(self._device.device_id, self._key, False)

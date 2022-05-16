@@ -61,6 +61,7 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
         name_="Engine Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:coolant-temperature",
     ),
     StarlineSensorEntityDescription(
         key="gsm_lvl",
@@ -68,14 +69,15 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
     ),
     StarlineSensorEntityDescription(
+        key="gps_count",
+        name_="GPS Satellites",
+        icon="mdi:satellite-variant",
+        native_unit_of_measurement="",
+    ),
+    StarlineSensorEntityDescription(
         key="fuel",
         name_="Fuel Volume",
         icon="mdi:fuel",
-    ),
-    StarlineSensorEntityDescription(
-        key="errors",
-        name_="OBD Errors",
-        icon="mdi:alert-octagon",
     ),
     StarlineSensorEntityDescription(
         key="mileage",
@@ -141,12 +143,12 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             return self._device.temp_engine
         if self._key == "gsm_lvl":
             return self._device.gsm_level_percent
-        if self._key == "fuel" and self._device.fuel:
-            return self._device.fuel.get("val")
-        if self._key == "errors" and self._device.errors:
-            return self._device.errors.get("val")
+        if self._key == "gps_count":
+            return self._device.gps_count
+        if self._key == "fuel" and (self._device.fuel_percent or self._device.fuel_litres):
+            return self._device.fuel_percent or self._device.fuel_litres
         if self._key == "mileage" and self._device.mileage:
-            return self._device.mileage.get("val")
+            return self._device.mileage
         return None
 
     @property
@@ -155,11 +157,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         if self._key == "balance":
             return self._device.balance.get("currency") or "₽"
         if self._key == "fuel":
-            type_value = self._device.fuel.get("type")
-            if type_value == "percents":
-                return PERCENTAGE
-            if type_value == "litres":
-                return VOLUME_LITERS
+            return PERCENTAGE if self._device.fuel_percent else VOLUME_LITERS
         return self.entity_description.native_unit_of_measurement
 
     @property
@@ -169,6 +167,4 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             return self._account.balance_attrs(self._device)
         if self._key == "gsm_lvl":
             return self._account.gsm_attrs(self._device)
-        if self._key == "errors":
-            return self._account.errors_attrs(self._device)
         return None
