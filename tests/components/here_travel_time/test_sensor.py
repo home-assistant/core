@@ -195,6 +195,62 @@ async def test_sensor(
         )
 
 
+@pytest.mark.usefixtures("valid_response")
+async def test_circular_ref(hass: HomeAssistant, caplog):
+    """Test that a circular ref is handled."""
+    hass.states.async_set(
+        "test.first",
+        "test.second",
+    )
+    hass.states.async_set("test.second", "test.first")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_ENTITY_ID: "test.first",
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "No coordinatnes found for test.first" in caplog.text
+
+
+@pytest.mark.usefixtures("empty_attribution_response")
+async def test_no_attribution(hass: HomeAssistant):
+    """Test that an empty attribution is handled."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test").attributes.get(ATTR_ATTRIBUTION) is None
+
+
 async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
     """Test that origin/destination supplied by entities works."""
     utcnow = dt_util.utcnow()
