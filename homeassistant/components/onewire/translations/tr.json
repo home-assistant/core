@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Sunucu",
+                    "port": "Port",
                     "type": "Ba\u011flant\u0131 t\u00fcr\u00fc"
                 },
-                "title": "1-Wire'\u0131 kurun"
+                "title": "Sunucu ayr\u0131nt\u0131lar\u0131n\u0131 ayarla"
             }
         }
     },

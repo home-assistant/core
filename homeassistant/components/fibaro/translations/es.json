@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "url": "URL en el format http://HOST/api/",
+                    "username": "Usuario"
+                }
+            }
+        }
+    }
+}

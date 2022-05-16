@@ -16,7 +16,7 @@
                     "host": "Host"
                 },
                 "description": "Selecciona una Roomba o Braava.",
-                "title": "Conectar autom\u00e1ticamente con el dispositivo"
+                "title": "Conexi\u00f3n autom\u00e1tica con el dispositivo"
             },
             "link": {
                 "description": "Mant\u00e9n pulsado el bot\u00f3n Inicio en {name} hasta que el dispositivo genere un sonido (aproximadamente dos segundos).",
@@ -46,7 +46,7 @@
                     "password": "Contrase\u00f1a"
                 },
                 "description": "Actualmente recuperar el BLID y la contrase\u00f1a es un proceso manual. Sigue los pasos descritos en la documentaci\u00f3n en: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Conectarse al dispositivo"
+                "title": "Conexi\u00f3n autom\u00e1tica con el dispositivo"
             }
         }
     },

@@ -15,7 +15,7 @@
                     "pin": "C\u00f3digo PIN"
                 },
                 "description": "Introduce el c\u00f3digo PIN que se muestra en el televisor Sony Bravia.\n\nSi no se muestra ning\u00fan c\u00f3digo PIN, necesitas eliminar el registro de Home Assistant de tu televisor, ve a: Configuraci\u00f3n -> Red -> Configuraci\u00f3n del dispositivo remoto -> Eliminar el dispositivo remoto.",
-                "title": "Autorizar televisor Sony Bravia"
+                "title": "Autorizaci\u00f3n del televisor Sony Bravia"
             },
             "user": {
                 "data": {
