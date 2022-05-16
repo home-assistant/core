@@ -50,7 +50,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.lights.fans.subscribe(
-            async_add_fan,
+            gateway.evaluate_add_device(async_add_fan),
             EventType.ADDED,
         )
     )
