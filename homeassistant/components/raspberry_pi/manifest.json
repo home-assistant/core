@@ -9,5 +9,5 @@
   "homekit": {},
   "dependencies": ["hardware", "hassio"],
   "codeowners": ["@home-assistant/core"],
-  "iot_class": "calculated"
+  "integration_type": "hardware"
 }
