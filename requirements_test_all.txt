@@ -415,7 +415,7 @@ discovery30303==0.2.1
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.32
+dsmr_parser==0.33
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
