@@ -1,20 +1,47 @@
 """Support for the Amazon Polly text to speech service."""
+from __future__ import annotations
+
 import logging
 import typing
 
 import boto3
 import botocore
 import voluptuous as vol
-import homeassistant.components.tts as tts
+
+from homeassistant.components import tts
 import homeassistant.const as ha_const
 import homeassistant.core as ha_core
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.typing as ha_typing
 
-from .const import * # pylint: disable=W0401
-# Meine eigenen Konstanten sollten auch überall verfüggbar sein
-# Wenn python den lokalen import zulassen würde bräuchte man das aus nicht
-
+from .const import (
+    AWS_CONF_CONNECT_TIMEOUT,
+    AWS_CONF_MAX_POOL_CONNECTIONS,
+    AWS_CONF_READ_TIMEOUT,
+    CONF_ACCESS_KEY_ID,
+    CONF_CONFIG,
+    CONF_ENGINE,
+    CONF_OUTPUT_FORMAT,
+    CONF_REGION,
+    CONF_SAMPLE_RATE,
+    CONF_SECRET_ACCESS_KEY,
+    CONF_TEXT_TYPE,
+    CONF_VOICE,
+    CONTENT_TYPE_EXTENSIONS,
+    DEFAULT_ENGINE,
+    DEFAULT_OUTPUT_FORMAT,
+    DEFAULT_REGION,
+    DEFAULT_SAMPLE_RATES,
+    DEFAULT_TEXT_TYPE,
+    DEFAULT_VOICE,
+    SUPPORTED_ENGINES,
+    SUPPORTED_OUTPUT_FORMATS,
+    SUPPORTED_REGIONS,
+    SUPPORTED_SAMPLE_RATES,
+    SUPPORTED_SAMPLE_RATES_MAP,
+    SUPPORTED_TEXT_TYPES,
+    SUPPORTED_VOICES,
+)
 
 _LOGGER: typing.Final = logging.getLogger(__name__)
 
@@ -42,9 +69,8 @@ PLATFORM_SCHEMA: typing.Final = tts.PLATFORM_SCHEMA.extend(
 def get_engine(
     hass: ha_core.HomeAssistant,
     config: ha_typing.ConfigType,
-    discovery_info: typing.Type[ha_typing.DiscoveryInfoType].union(None) = None,
-) -> typing.Type[tts.Provider].union(None):
-        # pylint: disable=W0612,W0613 #Argumente sind von Home Assitant vorgegeben
+    discovery_info: ha_typing.DiscoveryInfoType | None = None,
+) -> tts.Provider | None:
     """Set up Amazon Polly speech component."""
     output_format = config[CONF_OUTPUT_FORMAT]
     sample_rate = config.get(CONF_SAMPLE_RATE, DEFAULT_SAMPLE_RATES[output_format])
@@ -56,21 +82,20 @@ def get_engine(
 
     config[CONF_SAMPLE_RATE] = sample_rate
 
-    profile: typing.Type[str].union(None) = config.get(ha_const.CONF_PROFILE_NAME)
+    profile: str | None = config.get(ha_const.CONF_PROFILE_NAME)
 
     if bool(profile):
         boto3.setup_default_session(profile_name=profile)
-
 
     aws_config = {
         CONF_REGION: config[CONF_REGION],
         CONF_ACCESS_KEY_ID: config.get(CONF_ACCESS_KEY_ID),
         CONF_SECRET_ACCESS_KEY: config.get(CONF_SECRET_ACCESS_KEY),
         CONF_CONFIG: botocore.client.Config(
-            connect_timeout = AWS_CONF_CONNECT_TIMEOUT,
-            read_timeut = AWS_CONF_READ_TIMEOUT,
-            max_pool_connection = AWS_CONF_MAX_POOL_CONNECTIONS
-        )
+            connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
+            read_timeout=AWS_CONF_READ_TIMEOUT,
+            max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
+        ),
     }
 
     del config[CONF_REGION]
@@ -86,13 +111,13 @@ def get_engine(
     all_voices_req = polly_client.describe_voices()
 
     for voice in all_voices_req.get("Voices", []):
-        voice_id: typing.Type[str].union(None) = voice.get("Id")
+        voice_id: str | None = voice.get("Id")
         if voice_id is None:
             continue
         all_voices[voice_id] = voice
-        language_code: typing.Type[str].union(None) = voice.get("LanguageCode")
+        language_code: str | None = voice.get("LanguageCode")
         if bool(language_code) and language_code not in supported_languages:
-            supported_languages.append(language_code)
+            supported_languages.append(str(language_code))
 
     return AmazonPollyProvider(polly_client, config, supported_languages, all_voices)
 
@@ -121,7 +146,7 @@ class AmazonPollyProvider(tts.Provider):
         return self.supported_langs
 
     @property
-    def default_language(self) -> typing.Type[str].union(None):
+    def default_language(self) -> str | None:
         """Return the default language."""
         return self.all_voices.get(self.default_voice, {}).get("LanguageCode")
 
@@ -133,13 +158,19 @@ class AmazonPollyProvider(tts.Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
-        return [CONF_VOICE]
+        return [
+            CONF_VOICE,
+            CONF_ENGINE,
+            CONF_OUTPUT_FORMAT,
+            CONF_SAMPLE_RATE,
+            CONF_TEXT_TYPE,
+        ]
 
     def get_tts_audio(
         self,
         message: str,
-        language: typing.Type[str].union(None) = None,
-        options: typing.Type[dict[str, str]].union(None) = None,
+        language: str | None = None,
+        options: dict[str, str] | None = None,
     ) -> tts.TtsAudioType:
         """Request TTS file from Polly."""
         if options is None or language is None:
@@ -151,13 +182,26 @@ class AmazonPollyProvider(tts.Provider):
             _LOGGER.error("%s does not support the %s language", voice_id, language)
             return None, None
 
+        engine = options.get(CONF_ENGINE, None)
+        output_format = options.get(CONF_OUTPUT_FORMAT, None)
+        sample_rate = options.get(CONF_SAMPLE_RATE, None)
+        text_type = options.get(CONF_TEXT_TYPE, None)
+        if not bool(engine):
+            engine = self.config[CONF_ENGINE]
+        if not bool(output_format):
+            output_format = self.config[CONF_OUTPUT_FORMAT]
+        if not bool(sample_rate):
+            sample_rate = self.config[CONF_SAMPLE_RATE]
+        if not bool(text_type):
+            text_type = self.config[CONF_TEXT_TYPE]
+
         _LOGGER.debug("Requesting TTS file for text: %s", message)
         resp = self.client.synthesize_speech(
-            Engine=self.config[CONF_ENGINE],
-            OutputFormat=self.config[CONF_OUTPUT_FORMAT],
-            SampleRate=self.config[CONF_SAMPLE_RATE],
+            Engine=engine,
+            OutputFormat=output_format,
+            SampleRate=sample_rate,
             Text=message,
-            TextType=self.config[CONF_TEXT_TYPE],
+            TextType=text_type,
             VoiceId=voice_id,
         )
 
