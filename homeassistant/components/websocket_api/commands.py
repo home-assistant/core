@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import json
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -55,8 +54,6 @@ def async_register_commands(
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
-    async_reg(hass, handle_integration_log_level)
-    async_reg(hass, handle_integration_log_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
@@ -182,12 +179,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    await _handle_call_service(hass, connection, msg)
-
-
-async def _handle_call_service(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
     blocking = True
     # We do not support templates.
     target = msg.get("target")
@@ -316,69 +307,6 @@ async def handle_integration_setup_info(
             {"domain": integration, "seconds": timedelta.total_seconds()}
             for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
         ],
-    )
-
-
-@decorators.websocket_command({vol.Required("type"): "integration/log_info"})
-@decorators.async_response
-async def handle_integration_log_info(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle integrations logger info."""
-    connection.send_result(
-        msg["id"],
-        [
-            {
-                "domain": integration,
-                "level": logging.getLogger(
-                    f"homeassistant.components.{integration}"
-                ).getEffectiveLevel(),
-            }
-            for integration in async_get_loaded_integrations(hass)
-        ],
-    )
-
-
-@decorators.websocket_command(
-    {
-        vol.Required("type"): "integration/log_level",
-        vol.Required("integration"): str,
-        vol.Required("level"): vol.In(
-            [
-                "CRITICAL",
-                "FATAL",
-                "ERROR",
-                "WARNING",
-                "WARN",
-                "INFO",
-                "DEBUG",
-                "NOTSET",
-            ]
-        ),
-    }
-)
-@decorators.async_response
-async def handle_integration_log_level(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle setting integration log level."""
-    try:
-        integration = await async_get_integration(hass, msg["integration"])
-    except IntegrationNotFound:
-        connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
-        return
-    loggers = [f"homeassistant.components.{msg['integration']}"]
-    if integration.loggers:
-        loggers.extend(integration.loggers)
-    await _handle_call_service(
-        hass,
-        connection,
-        {
-            "id": msg["id"],
-            "domain": "logger",
-            "service": "set_level",
-            "service_data": {logger: msg["level"] for logger in loggers},
-        },
     )
 
 

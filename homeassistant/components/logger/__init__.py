@@ -7,36 +7,24 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "logger"
-
-SERVICE_SET_DEFAULT_LEVEL = "set_default_level"
-SERVICE_SET_LEVEL = "set_level"
-
-LOGSEVERITY = {
-    "CRITICAL": 50,
-    "FATAL": 50,
-    "ERROR": 40,
-    "WARNING": 30,
-    "WARN": 30,
-    "INFO": 20,
-    "DEBUG": 10,
-    "NOTSET": 0,
-}
-
-DEFAULT_LOGSEVERITY = "DEBUG"
-
-LOGGER_DEFAULT = "default"
-LOGGER_LOGS = "logs"
-LOGGER_FILTERS = "filters"
-
-ATTR_LEVEL = "level"
+from . import websocket_api
+from .const import (
+    ATTR_LEVEL,
+    DEFAULT_LOGSEVERITY,
+    DOMAIN,
+    LOGGER_DEFAULT,
+    LOGGER_FILTERS,
+    LOGGER_LOGS,
+    LOGSEVERITY,
+    SERVICE_SET_DEFAULT_LEVEL,
+    SERVICE_SET_LEVEL,
+)
+from .helpers import set_default_log_level, set_log_levels
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
 SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
 SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
-
-EVENT_LOGGING_CHANGED = "logging_changed"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -57,26 +45,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]))
 
-    @callback
-    def set_default_log_level(level):
-        """Set the default log level for components."""
-        _set_log_level(logging.getLogger(""), level)
-        hass.bus.async_fire(EVENT_LOGGING_CHANGED)
-
-    @callback
-    def set_log_levels(logpoints):
-        """Set the specified log levels."""
-        hass.data[DOMAIN].update(logpoints)
-        for key, value in logpoints.items():
-            _set_log_level(logging.getLogger(key), value)
-        hass.bus.async_fire(EVENT_LOGGING_CHANGED)
+    websocket_api.async_load_websocket_api(hass)
 
     # Set default log severity
     if DOMAIN in config:
-        set_default_log_level(config[DOMAIN].get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY))
+        set_default_log_level(
+            hass, config[DOMAIN].get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY)
+        )
 
         if LOGGER_LOGS in config[DOMAIN]:
-            set_log_levels(config[DOMAIN][LOGGER_LOGS])
+            set_log_levels(hass, config[DOMAIN][LOGGER_LOGS])
 
         if LOGGER_FILTERS in config[DOMAIN]:
             for key, value in config[DOMAIN][LOGGER_FILTERS].items():
@@ -87,9 +65,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
         if service.service == SERVICE_SET_DEFAULT_LEVEL:
-            set_default_log_level(service.data.get(ATTR_LEVEL))
+            set_default_log_level(hass, service.data.get(ATTR_LEVEL))
         else:
-            set_log_levels(service.data)
+            set_log_levels(hass, service.data)
 
     hass.services.async_register(
         DOMAIN,
@@ -106,14 +84,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-def _set_log_level(logger, level):
-    """Set the log level.
-
-    Any logger fetched before this integration is loaded will use old class.
-    """
-    getattr(logger, "orig_setLevel", logger.setLevel)(LOGSEVERITY[level])
 
 
 def _add_log_filter(logger, patterns):

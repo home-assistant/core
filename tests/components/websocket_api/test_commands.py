@@ -1,6 +1,5 @@
 """Tests for WebSocket API commands."""
 import datetime
-import logging
 from unittest.mock import ANY, patch
 
 from async_timeout import timeout
@@ -1255,56 +1254,3 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
         {"domain": "august", "seconds": 12.5},
         {"domain": "isy994", "seconds": 12.8},
     ]
-
-
-async def test_integration_log_info(hass, websocket_client, hass_admin_user):
-    """Test fetching integration log info."""
-    logging.getLogger("homeassistant.components.http").setLevel(logging.DEBUG)
-    logging.getLogger("homeassistant.components.websocket_api").setLevel(logging.DEBUG)
-
-    await websocket_client.send_json({"id": 7, "type": "integration/log_info"})
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert {"domain": "http", "level": logging.DEBUG} in msg["result"]
-    assert {"domain": "websocket_api", "level": logging.DEBUG} in msg["result"]
-
-
-async def test_integration_log_level_logger_not_loaded(
-    hass, websocket_client, hass_admin_user
-):
-    """Test setting integration log level."""
-    await websocket_client.send_json(
-        {
-            "id": 7,
-            "type": "integration/log_level",
-            "integration": "websocket_api",
-            "level": logging.DEBUG,
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-
-
-async def test_integration_log_level(hass, websocket_client, hass_admin_user):
-    """Test setting integration log level."""
-    assert await async_setup_component(hass, "logger", {})
-
-    await websocket_client.send_json(
-        {
-            "id": 7,
-            "type": "integration/log_level",
-            "integration": "websocket_api",
-            "level": "DEBUG",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
