@@ -30,21 +30,21 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_switch(_: EventType, light_id: str) -> None:
+    def async_add_switch(_: EventType, switch_id: str) -> None:
         """Add switch from deCONZ."""
-        light = gateway.api.lights.lights[light_id]
-        if light.type not in POWER_PLUGS:
+        switch = gateway.api.lights.lights[switch_id]
+        if switch.type not in POWER_PLUGS:
             return
-        async_add_entities([DeconzPowerPlug(light, gateway)])
+        async_add_entities([DeconzPowerPlug(switch, gateway)])
 
     config_entry.async_on_unload(
         gateway.api.lights.lights.subscribe(
-            async_add_switch,
+            gateway.evaluate_add_device(async_add_switch),
             EventType.ADDED,
         )
     )
-    for light_id in gateway.api.lights.lights:
-        async_add_switch(EventType.ADDED, light_id)
+    for switch_id in gateway.api.lights.lights:
+        async_add_switch(EventType.ADDED, switch_id)
 
 
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):
