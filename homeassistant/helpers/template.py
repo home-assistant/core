@@ -1552,6 +1552,11 @@ def as_datetime(value):
         return dt_util.parse_datetime(value)
 
 
+def as_timedelta(value: str) -> timedelta | None:
+    """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
+    return dt_util.parse_duration(value)
+
+
 def strptime(string, fmt, default=_SENTINEL):
     """Parse a time string to datetime."""
     try:
@@ -1822,11 +1827,6 @@ def slugify(value, separator="_"):
     return slugify_util(value, separator=separator)
 
 
-def parse_iso8601_duration(value: str) -> timedelta:
-    """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
-    return dt_util.parse_iso8601_duration(value)
-
-
 def iif(
     value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
 ) -> Any:
@@ -1929,6 +1929,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_datetime"] = as_datetime
+        self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1958,7 +1959,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
-        self.filters["parse_iso8601_duration"] = parse_iso8601_duration
         self.filters["iif"] = iif
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
@@ -1975,6 +1975,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["float"] = forgiving_float
         self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
+        self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
         self.globals["relative_time"] = relative_time
@@ -1989,7 +1990,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
-        self.globals["parse_iso8601_duration"] = parse_iso8601_duration
         self.globals["iif"] = iif
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match

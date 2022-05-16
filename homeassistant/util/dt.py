@@ -24,22 +24,47 @@ DATETIME_RE = re.compile(
     r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
 )
 
-# Copyright (c) 2021, Hugo van Kemenade and contributors
-# Copyright (c) 2009-2018, Gerhard Weis and contributors
-# Copyright (c) 2009, Gerhard Weis
+# Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
-# https://github.com/gweis/isodate/blob/master/LICENSE
+# https://github.com/django/django/blob/master/LICENSE
+STANDARD_DURATION_RE = re.compile(
+    r"^"
+    r"(?:(?P<days>-?\d+) (days?, )?)?"
+    r"(?P<sign>-?)"
+    r"((?:(?P<hours>\d+):)(?=\d+:\d+))?"
+    r"(?:(?P<minutes>\d+):)?"
+    r"(?P<seconds>\d+)"
+    r"(?:[\.,](?P<microseconds>\d{1,6})\d{0,6})?"
+    r"$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
 ISO8601_DURATION_RE = re.compile(
-    r"^(?P<sign>[+-])?"
-    r"P(?!\b)"
-    r"(?P<years>[0-9]+([,.][0-9]+)?Y)?"
-    r"(?P<months>[0-9]+([,.][0-9]+)?M)?"
-    r"(?P<weeks>[0-9]+([,.][0-9]+)?W)?"
-    r"(?P<days>[0-9]+([,.][0-9]+)?D)?"
-    r"((?P<separator>T)"
-    r"(?P<hours>[0-9]+([,.][0-9]+)?H)?"
-    r"(?P<minutes>[0-9]+([,.][0-9]+)?M)?"
-    r"(?P<seconds>[0-9]+([,.][0-9]+)?S)?)?$"
+    r"^(?P<sign>[-+]?)"
+    r"P"
+    r"(?:(?P<days>\d+([\.,]\d+)?)D)?"
+    r"(?:T"
+    r"(?:(?P<hours>\d+([\.,]\d+)?)H)?"
+    r"(?:(?P<minutes>\d+([\.,]\d+)?)M)?"
+    r"(?:(?P<seconds>\d+([\.,]\d+)?)S)?"
+    r")?"
+    r"$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+POSTGRES_INTERVAL_RE = re.compile(
+    r"^"
+    r"(?:(?P<days>-?\d+) (days? ?))?"
+    r"(?:(?P<sign>[-+])?"
+    r"(?P<hours>\d+):"
+    r"(?P<minutes>\d\d):"
+    r"(?P<seconds>\d\d)"
+    r"(?:\.(?P<microseconds>\d{1,6}))?"
+    r")?$"
 )
 
 
@@ -164,48 +189,39 @@ def parse_datetime(dt_str: str) -> dt.datetime | None:
     return dt.datetime(**kws)
 
 
-def parse_iso8601_duration(datestring: str) -> dt.timedelta:
-    """
-    Parse an ISO 8601 duration into datetime.timedelta object.
-
-    Years and months are ignored.
-
-    Leading sign is not supported.
-
-    Does not support the alternative formats
-    PYYYYMMDDThhmmss or P[YYYY]-[MM]-[DD]T[hh]:[mm]:[ss].
-    """
-    match = ISO8601_DURATION_RE.match(datestring)
-    if not match:
-        raise ValueError(
-            "Duration string is not supported by this implementation %r" % datestring
-        )
-    groups = match.groupdict()
-    for key, val in groups.items():
-        if key != "separator":
-            if val is None:
-                groups[key] = "0n"
-            if key in ("sign", "years", "months") and val is not None:
-                raise ValueError(
-                    "Sign, years and months are not supported by this implementation."
-                )
-            groups[key] = float(groups[key][:-1].replace(",", "."))
-    result = dt.timedelta(
-        days=float(groups["days"]),
-        hours=float(groups["hours"]),
-        minutes=float(groups["minutes"]),
-        seconds=float(groups["seconds"]),
-        weeks=float(groups["weeks"]),
-    )
-    return result
-
-
 def parse_date(dt_str: str) -> dt.date | None:
     """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
     except ValueError:  # If dt_str did not match our format
         return None
+
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+def parse_duration(value: str) -> dt.timedelta | None:
+    """Parse a duration string and return a datetime.timedelta.
+
+    Also supports ISO 8601 representation and PostgreSQL's day-time interval
+    format.
+    """
+    match = (
+        STANDARD_DURATION_RE.match(value)
+        or ISO8601_DURATION_RE.match(value)
+        or POSTGRES_INTERVAL_RE.match(value)
+    )
+    if match:
+        kws = match.groupdict()
+        sign = -1 if kws.pop("sign", "+") == "-" else 1
+        if kws.get("microseconds"):
+            kws["microseconds"] = kws["microseconds"].ljust(6, "0")
+        kws = {k: float(v.replace(",", ".")) for k, v in kws.items() if v is not None}
+        days = dt.timedelta(float(kws.pop("days", 0.0) or 0.0))
+        if match.re == ISO8601_DURATION_RE:
+            days *= sign
+        return days + sign * dt.timedelta(float(**kws))
+    return None
 
 
 def parse_time(time_str: str) -> dt.time | None:

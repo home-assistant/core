@@ -3270,13 +3270,16 @@ def test_urlencode(hass):
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
-def test_parse_iso8601_duration(hass: HomeAssistant) -> None:
-    """Test the parse_iso8601_duration function/filter."""
-    tpl = template.Template("{{ parse_iso8601_duration('PT10M') }}", hass)
+def test_as_timedelta(hass: HomeAssistant) -> None:
+    """Test the as_timedelta function/filter."""
+    tpl = template.Template("{{ as_timedelta('PT10M') }}", hass)
     assert tpl.async_render() == "0:10:00"
 
-    tpl = template.Template("{{ 'PT10M' | parse_iso8601_duration }}", hass)
+    tpl = template.Template("{{ 'PT10M' | as_timedelta }}", hass)
     assert tpl.async_render() == "0:10:00"
+
+    tpl = template.Template("{{ 'T10M' | as_timedelta }}", hass)
+    assert tpl.async_render() is None
 
 
 def test_iif(hass: HomeAssistant) -> None:
