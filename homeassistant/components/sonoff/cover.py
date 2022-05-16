@@ -1,108 +1,127 @@
-from homeassistant.components.cover import CoverEntity, CoverDeviceClass
+import logging
+from typing import Optional
 
-from .core.const import DOMAIN
-from .core.entity import XEntity
-from .core.ewelink import XRegistry, SIGNAL_ADD_ENTITIES
+from homeassistant.components.cover import ATTR_POSITION, ATTR_CURRENT_POSITION
+from homeassistant.const import STATE_OPENING, STATE_CLOSING
 
-PARALLEL_UPDATES = 0  # fix entity_platform parallel_updates Semaphore
+from . import DOMAIN
+from .sonoff_main import EWeLinkDevice
+from .utils import CoverEntity
 
-
-async def async_setup_entry(hass, config_entry, add_entities):
-    ewelink: XRegistry = hass.data[DOMAIN][config_entry.entry_id]
-    ewelink.dispatcher_connect(
-        SIGNAL_ADD_ENTITIES,
-        lambda x: add_entities([e for e in x if isinstance(e, CoverEntity)])
-    )
+_LOGGER = logging.getLogger(__name__)
 
 
-# noinspection PyUnresolvedReferences
-DEVICE_CLASSES = {cls.value: cls for cls in CoverDeviceClass}
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
+    if discovery_info is None:
+        return
+
+    deviceid = discovery_info['deviceid']
+    registry = hass.data[DOMAIN]
+    add_entities([EWeLinkCover(registry, deviceid)])
 
 
-# noinspection PyAbstractClass
-class XCover(XEntity, CoverEntity):
-    params = {"switch", "setclose"}
+class EWeLinkCover(CoverEntity, EWeLinkDevice):
+    """King Art - King Q4 Cover
+    switch=on - open
+    switch=off - close
+    setclose - position from 0 (open)  to 100 (closed)
+    """
+    _position = None
+    _action = None
 
-    def __init__(self, ewelink: XRegistry, device: dict):
-        XEntity.__init__(self, ewelink, device)
-        self._attr_device_class = DEVICE_CLASSES.get(
-            device.get("device_class")
-        )
+    async def async_added_to_hass(self) -> None:
+        self._init()
 
-    def set_state(self, params: dict):
-        if "sequence" in params or self.current_cover_position is None:
-            # the device has finished the action
-            # reversed position: HA closed at 0, eWeLink closed at 100
-            self._attr_current_cover_position = 100 - params["setclose"]
-            self._attr_is_closed = self._attr_current_cover_position == 0
-            self._attr_is_closing = False
-            self._attr_is_opening = False
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
 
-        elif "setclose" in params:
-            # device receive command - mode to position
-            pos = 100 - params["setclose"]
-            self._attr_is_closing = pos < self._attr_current_cover_position
-            self._attr_is_opening = pos > self._attr_current_cover_position
+        # skip any full state update except first one
+        if self._position and len(state) > 2:
+            return
 
-        elif "switch" in params:
-            # device receive command - on=open/off=close/pause=stop
-            self._attr_is_opening = params["switch"] == "on"
-            self._attr_is_closing = params["switch"] == "off"
+        if 'setclose' in state:
+            newposition = 100 - state['setclose']
+            # finished the movement (on - opening, off - closing)
+            if 'switch' in state:
+                self._action = None
+                # reversed position: HA closed at 0, eWeLink closed at 100
+                self._position = newposition
+            elif newposition > self._position:
+                self._action = STATE_OPENING
+            elif newposition < self._position:
+                self._action = STATE_CLOSING
 
-    async def async_stop_cover(self, **kwargs):
-        params = {"switch": "pause"}
-        self.set_state(params)
-        self._async_write_ha_state()
-        await self.ewelink.send(self.device, params, query_cloud=False)
+        # full open or full close command
+        elif 'switch' in state:
+            if state['switch'] == 'on':
+                self._action = STATE_OPENING
+            elif state['switch'] == 'off':
+                self._action = STATE_CLOSING
+            else:
+                self._action = None
+
+        self.schedule_update_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        return self.deviceid
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
+
+    @property
+    def state_attributes(self):
+        return {
+            **self._attrs,
+            ATTR_CURRENT_POSITION: self.current_cover_position
+        }
+
+    @property
+    def available(self) -> bool:
+        device: dict = self.registry.devices[self.deviceid]
+        return device['available']
+
+    @property
+    def current_cover_position(self):
+        return self._position
+
+    @property
+    def is_opening(self):
+        return self._action == STATE_OPENING
+
+    @property
+    def is_closing(self):
+        return self._action == STATE_CLOSING
+
+    @property
+    def is_closed(self):
+        return self._position == 0
 
     async def async_open_cover(self, **kwargs):
-        params = {"switch": "on"}
-        self.set_state(params)
-        self._async_write_ha_state()
-        await self.ewelink.send(self.device, params, query_cloud=False)
+        self._action = STATE_OPENING
+        await self.registry.send(self.deviceid, {'switch': 'on'})
 
     async def async_close_cover(self, **kwargs):
-        params = {"switch": "off"}
-        self.set_state(params)
-        self._async_write_ha_state()
-        await self.ewelink.send(self.device, params, query_cloud=False)
+        self._action = STATE_CLOSING
+        await self.registry.send(self.deviceid, {'switch': 'off'})
 
-    async def async_set_cover_position(self, position: int, **kwargs):
-        params = {"setclose": 100 - position}
-        self.set_state(params)
-        self._async_write_ha_state()
-        await self.ewelink.send(self.device, params, query_cloud=False)
+    async def async_set_cover_position(self, **kwargs):
+        newposition = kwargs.get(ATTR_POSITION)
+        if newposition > self._position:
+            self._action = STATE_OPENING
+        elif newposition < self._position:
+            self._action = STATE_CLOSING
+        self._position = newposition
 
-
-# noinspection PyAbstractClass
-class XCoverDualR3(XCover):
-    params = {"currLocation", "motorTurn"}
-
-    def set_state(self, params: dict):
-        if "currLocation" in params:
-            # 0 - closed, 100 - opened
-            self._attr_current_cover_position = params["currLocation"]
-            self._attr_is_closed = self._attr_current_cover_position == 0
-
-        if "motorTurn" in params:
-            if params["motorTurn"] == 0:  # stop
-                self._attr_is_opening = False
-                self._attr_is_closing = False
-            elif params["motorTurn"] == 1:
-                self._attr_is_opening = True
-                self._attr_is_closing = False
-            elif params["motorTurn"] == 2:
-                self._attr_is_opening = False
-                self._attr_is_closing = True
+        await self.registry.send(self.deviceid, {
+            'setclose': 100 - newposition})
 
     async def async_stop_cover(self, **kwargs):
-        await self.ewelink.send(self.device, {"motorTurn": 0})
-
-    async def async_open_cover(self, **kwargs):
-        await self.ewelink.send(self.device, {"motorTurn": 1})
-
-    async def async_close_cover(self, **kwargs):
-        await self.ewelink.send(self.device, {"motorTurn": 2})
-
-    async def async_set_cover_position(self, position: int, **kwargs):
-        await self.ewelink.send(self.device, {"location": position})
+        self._action = None
+        await self.registry.send(self.deviceid, {'switch': 'pause'})

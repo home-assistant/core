@@ -1,152 +1,190 @@
-import asyncio
+import json
+from typing import Optional
 
-from homeassistant.components.binary_sensor import BinarySensorEntity, \
-    BinarySensorDeviceClass
-from homeassistant.components.script import ATTR_LAST_TRIGGERED
-from homeassistant.const import STATE_ON
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import dt
+from homeassistant.components.binary_sensor import DEVICE_CLASS_DOOR, \
+    DEVICE_CLASS_MOTION
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_TIMEOUT, \
+    CONF_PAYLOAD_OFF
+from homeassistant.core import Event
+from homeassistant.helpers.event import async_call_later
 
-from .core.const import DOMAIN
-from .core.entity import XEntity
-from .core.ewelink import XRegistry, SIGNAL_ADD_ENTITIES
-
-PARALLEL_UPDATES = 0  # fix entity_platform parallel_updates Semaphore
+from . import DOMAIN
+from .sonoff_main import EWeLinkDevice
+from .utils import BinarySensorEntity
 
 
-async def async_setup_entry(hass, config_entry, add_entities):
-    ewelink: XRegistry = hass.data[DOMAIN][config_entry.entry_id]
-    ewelink.dispatcher_connect(
-        SIGNAL_ADD_ENTITIES, lambda x: add_entities(
-            [e for e in x if isinstance(e, BinarySensorEntity)]
-        )
-    )
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
+    if discovery_info is None:
+        return
+
+    # sonoff rf bridge sensor
+    if 'deviceid' not in discovery_info:
+        add_entities([RFBridgeSensor(discovery_info)])
+        return
+
+    deviceid = discovery_info['deviceid']
+    registry = hass.data[DOMAIN]
+
+    uiid = registry.devices[deviceid].get('uiid')
+    if uiid == 102:
+        add_entities([WiFiDoorWindowSensor(registry, deviceid)])
+    elif uiid == 2026:
+        add_entities([ZigBeeMotionSensor(registry, deviceid)])
+    elif uiid == 3026:
+        add_entities([ZigBeeDoorWindowSensor(registry, deviceid)])
+    else:
+        add_entities([EWeLinkBinarySensor(registry, deviceid)])
 
 
-# noinspection PyUnresolvedReferences
-DEVICE_CLASSES = {cls.value: cls for cls in BinarySensorDeviceClass}
+class EWeLinkBinarySensor(BinarySensorEntity, EWeLinkDevice):
+    async def async_added_to_hass(self) -> None:
+        self._init()
+
+    def _update_handler(self, state: dict, attrs: dict):
+        state = {k: json.dumps(v) for k, v in state.items()}
+        self._attrs.update(state)
+        self.schedule_update_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        return self.deviceid
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
+
+    @property
+    def state_attributes(self):
+        return self._attrs
+
+    @property
+    def supported_features(self):
+        return 0
+
+    @property
+    def is_on(self):
+        return self._is_on
 
 
-# noinspection PyAbstractClass
-class XBinarySensor(XEntity, BinarySensorEntity):
-    def __init__(self, ewelink: XRegistry, device: dict):
-        XEntity.__init__(self, ewelink, device)
-        device_class = device.get("device_class")
-        if device_class in DEVICE_CLASSES:
-            self._attr_device_class = DEVICE_CLASSES[device_class]
-
-
-# noinspection PyAbstractClass
-class XWiFiDoor(XBinarySensor):
-    params = {"switch"}
-    _attr_device_class = BinarySensorDeviceClass.DOOR
-
-    def set_state(self, params: dict):
-        self._attr_is_on = params['switch'] == 'on'
-
-    def internal_available(self) -> bool:
-        # device with buggy online status
-        return self.ewelink.cloud.online
-
-
-# noinspection PyAbstractClass
-class XZigbeeMotion(XBinarySensor):
-    params = {"motion", "online"}
-
-    _attr_device_class = BinarySensorDeviceClass.MOTION
-
-    def set_state(self, params: dict):
-        if "motion" in params:
-            self._attr_is_on = params['motion'] == 1
-        elif params.get("online") is False:
-            # Fix stuck in `on` state after bridge goes to unavailable
-            # https://github.com/AlexxIT/SonoffLAN/pull/425
-            self._attr_is_on = False
-
-
-# noinspection PyAbstractClass
-class XZigbeeDoor(XBinarySensor):
-    params = {"lock"}
-
-    _attr_device_class = BinarySensorDeviceClass.DOOR
-
-    def set_state(self, params: dict):
-        self._attr_is_on = params['lock'] == 1
-
-
-class XWater(XBinarySensor):
-    params = {"water"}
-
-    def set_state(self, params: dict):
-        self._attr_is_on = params['water'] == 1
-
-
-# noinspection PyAbstractClass
-class XRemoteSensor(BinarySensorEntity, RestoreEntity):
-    _attr_is_on = False
-    task: asyncio.Task = None
-
-    def __init__(self, ewelink: XRegistry, bridge: dict, child: dict):
-        self.ewelink = ewelink
-        self.channel = child["channel"]
-        self.timeout = child.get("timeout", 120)
-
-        self._attr_device_class = DEVICE_CLASSES.get(child.get("device_class"))
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, bridge['deviceid'])}
-        )
-        self._attr_extra_state_attributes = {}
-        self._attr_name = child["name"]
-        self._attr_unique_id = f"{bridge['deviceid']}_{self.channel}"
-
-        self.entity_id = DOMAIN + "." + self._attr_unique_id
-
-    def internal_update(self, ts: str):
-        if self.task:
-            self.task.cancel()
-
-        self._attr_extra_state_attributes = {ATTR_LAST_TRIGGERED: ts}
-        self._attr_is_on = True
-        self._async_write_ha_state()
-
-        if self.timeout:
-            self.task = asyncio.create_task(self.clear_state(self.timeout))
-
-    async def clear_state(self, delay: int):
-        await asyncio.sleep(delay)
-        self._attr_is_on = False
-        self._async_write_ha_state()
+class WiFiDoorWindowSensor(EWeLinkBinarySensor):
+    _device_class = None
 
     async def async_added_to_hass(self) -> None:
-        # restore previous sensor state
-        # if sensor has timeout - restore remaining timer and check expired
-        restore = await self.async_get_last_state()
-        if not restore:
-            return
+        device: dict = self.registry.devices[self.deviceid]
+        self._device_class = device.get('device_class', DEVICE_CLASS_DOOR)
 
-        self._attr_is_on = restore.state == STATE_ON
+        self._init()
 
-        if self.is_on and self.timeout:
-            ts = restore.attributes[ATTR_LAST_TRIGGERED]
-            left = self.timeout - (dt.utcnow() - dt.parse_datetime(ts)).seconds
-            if left > 0:
-                self.task = asyncio.create_task(self.clear_state(left))
-            else:
-                self._attr_is_on = False
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
 
-    async def async_will_remove_from_hass(self):
-        if self.task:
-            self.task.cancel()
+        if 'switch' in state:
+            self._is_on = state['switch'] == 'on'
+
+        self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        device: dict = self.registry.devices[self.deviceid]
+        return device['available']
+
+    @property
+    def device_class(self):
+        return self._device_class
 
 
-class XRemoteSensorOff:
-    def __init__(self, child: dict, sensor: XRemoteSensor):
-        self.channel = child["channel"]
-        self.name = child["name"]
-        self.sensor = sensor
+class ZigBeeDoorWindowSensor(WiFiDoorWindowSensor):
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
 
-    # noinspection PyProtectedMember
-    def internal_update(self, ts: str):
-        self.sensor._attr_is_on = False
-        self.sensor._async_write_ha_state()
+        if 'lock' in state:
+            # 1 - open, 0 - close
+            self._is_on = (state['lock'] == 1)
+
+        self.schedule_update_ha_state()
+
+
+class ZigBeeMotionSensor(EWeLinkBinarySensor):
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
+
+        if 'motion' in state:
+            self._is_on = (state['motion'] == 1)
+        else:
+            # this intend to prevents that motion detection stay locked if
+            # zigbee turn unavailable (occurs with some frequency)
+            self._is_on = False
+
+        self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        device: dict = self.registry.devices[self.deviceid]
+        return device['available']
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_MOTION
+
+
+class RFBridgeSensor(BinarySensorEntity):
+    _is_on = False
+    _unsub_turn_off = None
+
+    def __init__(self, config: dict):
+        self.payload_off = config.get(CONF_PAYLOAD_OFF)
+        self.timeout = config.get(CONF_TIMEOUT)
+        self.trigger = config.get('trigger')
+
+        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._name = config.get('name') or self.trigger
+
+    async def async_added_to_hass(self) -> None:
+        self.hass.bus.async_listen('sonoff.remote', self._update_handler)
+
+    async def _update_handler(self, event: Event):
+        if self.payload_off and event.data['name'] == self.payload_off:
+            if self._unsub_turn_off:
+                self._unsub_turn_off()
+
+            if self._is_on:
+                self._is_on = False
+                self.schedule_update_ha_state()
+
+        elif event.data['name'] == self.trigger:
+            if self._unsub_turn_off:
+                self._unsub_turn_off()
+
+            if self.timeout:
+                self._unsub_turn_off = async_call_later(
+                    self.hass, self.timeout, self._turn_off)
+
+            if not self._is_on:
+                self._is_on = True
+                self.schedule_update_ha_state()
+
+    async def _turn_off(self, now):
+        self._unsub_turn_off = None
+        self._is_on = False
+        self.async_write_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        return False
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
+
+    @property
+    def is_on(self):
+        return self._is_on
+
+    @property
+    def device_class(self):
+        return self._device_class
