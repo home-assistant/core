@@ -62,7 +62,7 @@ class Camera:
         await self.wait_event.wait()
 
 
-class EWeLinkCameras(Thread):
+class XCameras(Thread):
     """
     It's better to use `DatagramProtocol` and `create_datagram_endpoint`.
     But it don't supported in win32 with `ProactorEventLoop`.
@@ -168,5 +168,5 @@ class EWeLinkCameras(Thread):
             try:
                 data, addr = self.sock.recvfrom(1024)
                 self.datagram_received(data, addr)
-            except:
-                _LOGGER.exception("Camera read exception")
+            except Exception as e:
+                _LOGGER.error("Camera read exception", exc_info=e)
