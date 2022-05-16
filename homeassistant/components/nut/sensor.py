@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -64,6 +65,8 @@ async def async_setup_entry(
 class NUTSensor(CoordinatorEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
+    coordinator: DataUpdateCoordinator[dict[str, str]]
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -82,12 +85,12 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
         )
-        self._attr_device_info.update(data.device_info)
+        self._attr_device_info.update(cast(DeviceInfo, data.device_info))
 
     @property
     def native_value(self) -> str | None:
         """Return entity state from ups."""
-        status: dict[str, str] = self.coordinator.data
+        status = self.coordinator.data
         if self.entity_description.key == KEY_STATUS_DISPLAY:
             return _format_display_state(status)
         return status.get(self.entity_description.key)

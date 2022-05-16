@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -202,7 +201,7 @@ class PyNUTData:
         self._client = PyNUTClient(self._host, port, username, password, 5, False)
         self.ups_list: dict[str, str] | None = None
         self._status: dict[str, str] | None = None
-        self._device_info: DeviceInfo | None = None
+        self._device_info: dict[str, str] | None = None
 
     @property
     def status(self) -> dict[str, str] | None:
@@ -215,9 +214,9 @@ class PyNUTData:
         return self._alias or f"Nut-{self._host}"
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> dict[str, str]:
         """Return the device info for the ups."""
-        return self._device_info or DeviceInfo()
+        return self._device_info or {}
 
     def _get_alias(self) -> str | None:
         """Get the ups alias from NUT."""
@@ -234,7 +233,7 @@ class PyNUTData:
         self.ups_list = ups_list
         return list(ups_list)[0]
 
-    def _get_device_info(self) -> DeviceInfo | None:
+    def _get_device_info(self) -> dict[str, str] | None:
         """Get the ups device info from NUT."""
         if not self._status:
             return None
@@ -242,7 +241,7 @@ class PyNUTData:
         manufacturer = _manufacturer_from_status(self._status)
         model = _model_from_status(self._status)
         firmware = _firmware_from_status(self._status)
-        device_info = DeviceInfo()
+        device_info: dict[str, str] = {}
         if model:
             device_info[ATTR_MODEL] = model
         if manufacturer:
