@@ -261,7 +261,7 @@ SCHEMA_BASE = {
 MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
 
 # Will be removed when all platforms support a modern platform schema
-MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 # Will be removed when all platforms support a modern platform schema
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
