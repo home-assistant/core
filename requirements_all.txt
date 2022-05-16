@@ -121,6 +121,9 @@ aioasuswrt==1.4.0
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
 
+# homeassistant.components.baf
+aiobafi6==0.3.0
+
 # homeassistant.components.aws
 aiobotocore==2.1.0
 
@@ -310,7 +313,7 @@ anthemav==1.2.0
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==0.9.7
+apprise==0.9.8.3
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -433,7 +436,7 @@ bravia-tv==1.0.11
 broadlink==0.18.1
 
 # homeassistant.components.brother
-brother==1.2.0
+brother==1.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -686,7 +689,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.7.1
+gcal-sync==0.8.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1032,7 +1035,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.5
+motionblinds==0.6.7
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1829,7 +1832,7 @@ pysmarty==0.8
 pysml==0.0.7
 
 # homeassistant.components.snmp
-pysnmplib==5.0.10
+pysnmp==4.4.12
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -1996,7 +1999,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.0.2
+pyvesync==2.0.3
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
@@ -2415,7 +2418,7 @@ wallbox==0.4.4
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.7
+watchdog==2.1.8
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0

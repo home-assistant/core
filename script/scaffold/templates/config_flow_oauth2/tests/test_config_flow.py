@@ -1,17 +1,36 @@
 """Test the NEW_NAME config flow."""
+
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+@pytest.fixture
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
 
 
 async def test_full_flow(
@@ -19,17 +38,9 @@ async def test_full_flow(
     hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
+    setup_credentials,
 ) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "NEW_DOMAIN",
-        {
-            "NEW_DOMAIN": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
-    )
-
     result = await hass.config_entries.flow.async_init(
         "NEW_DOMAIN", context={"source": config_entries.SOURCE_USER}
     )

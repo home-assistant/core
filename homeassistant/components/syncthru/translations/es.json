@@ -8,7 +8,7 @@
             "syncthru_not_supported": "El dispositivo no es compatible con SyncThru",
             "unknown_state": "Estado de la impresora desconocido, verifica la URL y la conectividad de la red"
         },
-        "flow_title": "Impresora Samsung SyncThru: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

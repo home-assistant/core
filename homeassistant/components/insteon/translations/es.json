@@ -1,14 +1,19 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "No se puede conectar al m\u00f3dem Insteon",
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "not_insteon_device": "El dispositivo descubierto no es un dispositivo Insteon",
             "single_instance_allowed": "Ya esta configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
             "cannot_connect": "No se conect\u00f3 al m\u00f3dem Insteon, por favor, int\u00e9ntelo de nuevo.",
             "select_single": "Seleccione una opci\u00f3n."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Direcci\u00f3n IP",

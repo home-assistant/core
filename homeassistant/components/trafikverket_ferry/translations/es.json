@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+        },
+        "error": {
+            "incorrect_api_key": "Clave API inv\u00e1lida para la cuenta seleccionada",
+            "invalid_route": "No se pudo encontrar la ruta con la informaci\u00f3n proporcionada"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clave API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "from": "Des del puerto",
+                    "time": "Hora",
+                    "to": "Al puerto"
+                }
+            }
+        }
+    }
+}

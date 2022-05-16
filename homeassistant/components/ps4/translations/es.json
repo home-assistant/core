@@ -20,7 +20,7 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN",
+                    "code": "C\u00f3digo PIN",
                     "ip_address": "Direcci\u00f3n IP",
                     "name": "Nombre",
                     "region": "Regi\u00f3n"

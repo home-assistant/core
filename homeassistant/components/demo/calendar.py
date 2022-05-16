@@ -39,6 +39,8 @@ def calendar_data_future() -> CalendarEvent:
         start=one_hour_from_now,
         end=one_hour_from_now + datetime.timedelta(minutes=60),
         summary="Future Event",
+        description="Future Description",
+        location="Future Location",
     )
 
 
@@ -90,6 +92,8 @@ class LegacyDemoCalendar(CalendarEventDevice):
                 ).isoformat()
             },
             "summary": "Future Event",
+            "description": "Future Description",
+            "location": "Future Location",
         }
 
     @property
