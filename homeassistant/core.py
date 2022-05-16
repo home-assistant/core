@@ -573,8 +573,9 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        # cast removed here because it is almost expensive as call_soon
-        return self.async_run_hass_job(HassJob(target), *args)  # type: ignore[arg-type]
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
