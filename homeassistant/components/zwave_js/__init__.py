@@ -567,6 +567,9 @@ async def async_setup_entry(  # noqa: C901
                 )
                 await client.driver.async_install_config_update()
 
+        # We assert because we know the driver and controller exist
+        assert client.driver
+        assert client.driver.controller
         entry.async_on_unload(
             async_track_time_interval(
                 hass, async_check_for_config_updates, timedelta(days=1)
@@ -578,7 +581,6 @@ async def async_setup_entry(  # noqa: C901
         if opted_in := entry.data.get(CONF_DATA_COLLECTION_OPTED_IN):
             await async_enable_statistics(client)
         elif opted_in is False:
-            assert client.driver
             await client.driver.async_disable_statistics()
 
         # Check for nodes that no longer exist and remove them
@@ -587,8 +589,6 @@ async def async_setup_entry(  # noqa: C901
         )
 
         # We assert because we know the driver and controller exist
-        assert client.driver
-        assert client.driver.controller
         known_devices = [
             dev_reg.async_get_device({get_device_id(client, node)})
             for node in client.driver.controller.nodes.values()
