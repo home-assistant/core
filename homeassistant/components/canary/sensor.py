@@ -84,7 +84,7 @@ SENSOR_TYPES: Final[list[SensorTypeItem]] = [
         SensorType.DATE_LAST_ENTRY,
         None,
         "run-fast",
-        [CANARY_PRO, CANARY_FLEX],
+        [CANARY_PRO, CANARY_FLEX, CANARY_VIEW],
         DATA_TYPE_ENTRY,
     ),
     (
