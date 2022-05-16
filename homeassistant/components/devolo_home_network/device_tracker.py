@@ -29,6 +29,7 @@ from .const import (
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
     MAC_ADDRESS,
+    WIFI_APTYPE,
     WIFI_BANDS,
 )
 
@@ -84,11 +85,10 @@ async def async_setup_entry(
             async_add_entities(missing)
 
     if device.device and "wifi1" in device.device.features:
+        restore_entities()
         entry.async_on_unload(
             coordinators[CONNECTED_WIFI_CLIENTS].async_add_listener(new_device_callback)
         )
-        new_device_callback()
-        restore_entities()
 
 
 class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
@@ -116,6 +116,7 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
                 {},
             )
             if station:
+                attrs["wifi"] = WIFI_APTYPE.get(station["vap_type"], STATE_UNKNOWN)
                 attrs["band"] = (
                     f"{WIFI_BANDS.get(station['band'])} {FREQUENCY_GIGAHERTZ}"
                     if WIFI_BANDS.get(station["band"])

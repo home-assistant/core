@@ -21,6 +21,10 @@ CONNECTED_TO_ROUTER = "connected_to_router"
 CONNECTED_WIFI_CLIENTS = "connected_wifi_clients"
 NEIGHBORING_WIFI_NETWORKS = "neighboring_wifi_networks"
 
+WIFI_APTYPE = {
+    "WIFI_VAP_MAIN_AP": "Main",
+    "WIFI_VAP_Guest_AP": "Guest",
+}
 WIFI_BANDS = {
     "WIFI_BAND_2G": 2.4,
     "WIFI_BAND_5G": 5,

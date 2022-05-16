@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker import DOMAIN as PLATFORM
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
+    WIFI_APTYPE,
     WIFI_BANDS,
 )
 from homeassistant.const import (
@@ -38,6 +39,8 @@ async def test_device_tracker(hass: HomeAssistant):
     er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
 
     # Enable entity
     er.async_update_entity(state_key, disabled_by=None)
@@ -48,6 +51,7 @@ async def test_device_tracker(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_HOME
+    assert state.attributes["wifi"] == WIFI_APTYPE[STATION["vap_type"]]
     assert (
         state.attributes["band"]
         == f"{WIFI_BANDS[STATION['band']]} {FREQUENCY_GIGAHERTZ}"
