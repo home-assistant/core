@@ -571,6 +571,7 @@ def mock_client_fixture(controller_state, version_state, log_config_state):
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
+
         yield client
 
 
