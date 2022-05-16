@@ -156,7 +156,7 @@ class HistoryStats:
         )
         last_state_change_timestamp = start_timestamp
         elapsed = 0.0
-        changes_to_match_state = 0
+        changes_to_match_state = 1 if previous_state_matches else 0
 
         # Make calculations
         for item in self._history_current_period:
