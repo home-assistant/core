@@ -635,3 +635,8 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
+
+
+def find_legacy_row() -> StatementLambdaElement:
+    """Check if there are still states in the table with an event_id."""
+    return lambda_stmt(lambda: select(func.max(States.event_id)))

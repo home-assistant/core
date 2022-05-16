@@ -31,6 +31,7 @@ from .queries import (
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
     find_legacy_event_state_and_attributes_and_data_ids_to_purge,
+    find_legacy_row,
     find_short_term_statistics_to_purge,
     find_states_to_purge,
     find_statistics_runs_to_purge,
@@ -89,16 +90,17 @@ def purge_old_data(
 
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-        if has_legacy_rows_to_purge := _purge_legacy_format(
-            instance, session, purge_before, using_sqlite
-        ):
-            has_states_to_purge = has_states_to_purge = False
+        has_more_to_purge = False
+        if _purging_legacy_format(session):
+            has_more_to_purge &= _purge_legacy_format(
+                instance, session, purge_before, using_sqlite
+            )
         else:
             # Once we are done purging legacy rows, we use the new method
-            has_states_to_purge = _purge_states_and_attributes_ids(
+            has_more_to_purge &= _purge_states_and_attributes_ids(
                 instance, session, states_batch_size, purge_before, using_sqlite
             )
-            has_events_to_purge = _purge_events_and_data_ids(
+            has_more_to_purge &= _purge_events_and_data_ids(
                 instance, session, events_batch_size, purge_before, using_sqlite
             )
 
@@ -112,13 +114,7 @@ def purge_old_data(
         if short_term_statistics:
             _purge_short_term_statistics(session, short_term_statistics)
 
-        if (
-            has_legacy_rows_to_purge
-            or has_states_to_purge
-            or has_events_to_purge
-            or statistics_runs
-            or short_term_statistics
-        ):
+        if has_more_to_purge or statistics_runs or short_term_statistics:
             # Return false, as we might not be done yet.
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
@@ -131,6 +127,11 @@ def purge_old_data(
     if repack:
         repack_database(instance)
     return True
+
+
+def _purging_legacy_format(session: Session) -> bool:
+    """Check if there are any legacy event_id linked states rows remaining."""
+    return bool(session.execute(find_legacy_row()).scalar())
 
 
 def _purge_legacy_format(
