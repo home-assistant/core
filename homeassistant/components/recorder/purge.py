@@ -92,15 +92,21 @@ def purge_old_data(
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         has_more_to_purge = False
         if _purging_legacy_format(session):
-            has_more_to_purge &= _purge_legacy_format(
+            _LOGGER.debug(
+                "Purge running in legacy format as there are states with event_id remaining"
+            )
+            has_more_to_purge |= _purge_legacy_format(
                 instance, session, purge_before, using_sqlite
             )
         else:
+            _LOGGER.debug(
+                "Purge running in new format as there are NO states with event_id remaining"
+            )
             # Once we are done purging legacy rows, we use the new method
-            has_more_to_purge &= _purge_states_and_attributes_ids(
+            has_more_to_purge |= _purge_states_and_attributes_ids(
                 instance, session, states_batch_size, purge_before, using_sqlite
             )
-            has_more_to_purge &= _purge_events_and_data_ids(
+            has_more_to_purge |= _purge_events_and_data_ids(
                 instance, session, events_batch_size, purge_before, using_sqlite
             )
 
@@ -183,7 +189,10 @@ def _purge_states_and_attributes_ids(
         attributes_ids_batch = attributes_ids_batch | attributes_ids
 
     _purge_unused_attributes_ids(instance, session, attributes_ids_batch, using_sqlite)
-
+    _LOGGER.debug(
+        "After purging states and attributes_ids remaining=%s",
+        has_remaining_state_ids_to_purge,
+    )
     return has_remaining_state_ids_to_purge
 
 
@@ -213,7 +222,10 @@ def _purge_events_and_data_ids(
         data_ids_batch = data_ids_batch | data_ids
 
     _purge_unused_data_ids(instance, session, data_ids_batch, using_sqlite)
-
+    _LOGGER.debug(
+        "After purging event and data_ids remaining=%s",
+        has_remaining_event_ids_to_purge,
+    )
     return has_remaining_event_ids_to_purge
 
 
