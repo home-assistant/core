@@ -1,0 +1,36 @@
+{
+  "config": {
+    "error": {
+      "exists": "Esta conta já está configurada",
+      "template": "{error}"
+    },
+    "step": {
+      "user": {
+        "description": "Insira a sua [conta eWeLink](https://www.ewelink.cc/en/)",
+        "data": {
+          "username": "E-mail ou telefone (use qualquer um para o modo DIY)",
+          "password": "Senha (deixe em branco para o modo DIY)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mode": "Modo (automático é recomendado para a maioria dos usuários)",
+          "homes": "Casas (deixe desmarcado para Casa \"atual\")",
+          "debug": "Página de depuração (Configuração > Opções > Informações)"
+        }
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "version": "Versão",
+      "cloud_online": "Dispositivos de nuvem online",
+      "local_online": "Dispositivos locais online",
+      "debug": "Página de depuração"
+    }
+  }
+}

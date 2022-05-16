@@ -1,0 +1,36 @@
+{
+  "config": {
+    "error": {
+      "exists": "This account is already configured",
+      "template": "{error}"
+    },
+    "step": {
+      "user": {
+        "description": "Enter your [eWeLink account](https://www.ewelink.cc/en/) credentials",
+        "data": {
+          "username": "Email or phone (use any for DIY mode)",
+          "password": "Password (leave blank for DIY mode)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mode": "Mode (auto is recommended for most users)",
+          "homes": "Homes (leave unchecked for \"current\" Home)",
+          "debug": "Debug page (Configuration > System Health)"
+        }
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "version": "Version",
+      "cloud_online": "Cloud devices online",
+      "local_online": "Local devices online",
+      "debug": "Debug page"
+    }
+  }
+}
