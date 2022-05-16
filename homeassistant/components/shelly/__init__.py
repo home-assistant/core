@@ -812,7 +812,7 @@ class RpcPollingWrapper(update_coordinator.DataUpdateCoordinator):
             LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await self.device.update_status()
-        except OSError as err:
+        except (OSError, aioshelly.exceptions.RPCTimeout) as err:
             raise update_coordinator.UpdateFailed("Device disconnected") from err
 
     @property
