@@ -1578,7 +1578,14 @@ async def test_purge_can_mix_legacy_and_new_format(
     utcnow = dt_util.utcnow()
     eleven_days_ago = utcnow - timedelta(days=11)
     with session_scope(hass=hass) as session:
-        for event_id in range(5000000, 5000000 + MAX_ROWS_TO_PURGE * 2):
+        broken_state_no_time = States(
+            event_id=None,
+            entity_id="orphened.state",
+            last_updated=None,
+            last_changed=None,
+        )
+        session.add(broken_state_no_time)
+        for event_id in range(50000, 50000 + MAX_ROWS_TO_PURGE * 2):
             _add_state_and_state_changed_event(
                 session,
                 "sensor.excluded",
@@ -1594,7 +1601,7 @@ async def test_purge_can_mix_legacy_and_new_format(
                 session, "switch.random", "on", eleven_days_ago
             )
         states = session.query(States)
-        assert states.count() == 3996
+        assert states.count() == 3997
         purge_before = dt_util.utcnow() - timedelta(days=4)
         finished = purge_old_data(
             instance,
@@ -1602,7 +1609,7 @@ async def test_purge_can_mix_legacy_and_new_format(
             repack=False,
         )
         assert not finished
-        assert states.count() == 2998
+        assert states.count() == 2999
         purge_before = dt_util.utcnow() - timedelta(days=4)
         finished = purge_old_data(
             instance,
@@ -1610,7 +1617,7 @@ async def test_purge_can_mix_legacy_and_new_format(
             repack=False,
         )
         assert not finished
-        assert states.count() == 2000
+        assert states.count() == 2001
         # At this point we should have switched to the fast
         # method and we should be able to delete 2000 in a single
         # pass
@@ -1620,4 +1627,17 @@ async def test_purge_can_mix_legacy_and_new_format(
             repack=False,
         )
         assert finished
-        assert states.count() == 0
+        assert states.count() == 1
+        _add_state_without_event_linkage(
+            session, "switch.random", "on", eleven_days_ago
+        )
+        assert states.count() == 2
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+        )
+        assert finished
+        # The broken state without a timestamp
+        # does not prevent future purges. Its ignored.
+        assert states.count() == 1
