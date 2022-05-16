@@ -44,8 +44,7 @@
       },
       "advanced": {
         "data": {
-          "devices": "Devices (Triggers)",
-          "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
+          "devices": "Devices (Triggers)"
         },
         "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
         "title": "Advanced Configuration"
