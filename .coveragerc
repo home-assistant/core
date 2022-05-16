@@ -1508,6 +1508,7 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/intent_script/*
 
 [report]
 # Regexes for lines to exclude from consideration
