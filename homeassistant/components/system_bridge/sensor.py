@@ -245,7 +245,7 @@ async def async_setup_entry(
             SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
         )
 
-    for key, _ in coordinator.data.disk.__dict__.items():
+    for key, _ in coordinator.data.disk.dict().items():
         if "_percent" in key.lower():
             partition = key.replace("usage_", "").replace("_percent", "")
             entities.append(
@@ -274,7 +274,7 @@ async def async_setup_entry(
             )
 
     displays = []
-    for key, value in coordinator.data.display.__dict__.items():
+    for key, value in coordinator.data.display.dict().items():
         if "_name" in key:
             displays.append(
                 {
@@ -346,7 +346,7 @@ async def async_setup_entry(
         ]
 
     gpus = []
-    for key, value in coordinator.data.gpu.__dict__.items():
+    for key, value in coordinator.data.gpu.dict().items():
         if "_name" in key:
             gpus.append(
                 {
