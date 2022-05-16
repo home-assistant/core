@@ -35,7 +35,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
 from .api import async_register_api
@@ -157,7 +157,7 @@ def register_node_in_dev_reg(
         name=node.name or node.device_config.description or f"Node {node.node_id}",
         model=node.device_config.label,
         manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location if node.location else None,
+        suggested_area=node.location if node.location else UNDEFINED,
     )
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
