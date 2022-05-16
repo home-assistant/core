@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
+from datetime import datetime, timedelta
 from typing import Any
 
 from async_timeout import timeout
@@ -20,18 +21,11 @@ from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -40,6 +34,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
@@ -155,18 +150,15 @@ def register_node_in_dev_reg(
     else:
         ids = {device_id}
 
-    params = {
-        ATTR_IDENTIFIERS: ids,
-        ATTR_SW_VERSION: node.firmware_version,
-        ATTR_NAME: node.name
-        or node.device_config.description
-        or f"Node {node.node_id}",
-        ATTR_MODEL: node.device_config.label,
-        ATTR_MANUFACTURER: node.device_config.manufacturer,
-    }
-    if node.location:
-        params[ATTR_SUGGESTED_AREA] = node.location
-    device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers=ids,
+        sw_version=node.firmware_version,
+        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        model=node.device_config.label,
+        manufacturer=node.device_config.manufacturer,
+        suggested_area=node.location if node.location else None,
+    )
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
@@ -375,11 +367,15 @@ async def async_setup_entry(  # noqa: C901
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        # We assert because we know the device exists
+        # We assert because we know the device, driver, and controller exist
         assert device
+        assert client.driver
+        assert client.driver.controller
+
         raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
+
         hass.bus.async_fire(
             ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
             {
@@ -410,8 +406,10 @@ async def async_setup_entry(  # noqa: C901
             "notification"
         ]
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        # We assert because we know the device exists
+        # We assert because we know the device, driver, and controller exist
         assert device
+        assert client.driver
+        assert client.driver.controller
         event_data = {
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
@@ -474,8 +472,10 @@ async def async_setup_entry(  # noqa: C901
         disc_info = value_updates_disc_info[value.value_id]
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
-        # We assert because we know the device exists
+        # We assert because we know the device, driver, and controller exist
         assert device
+        assert client.driver
+        assert client.driver.controller
 
         unique_id = get_unique_id(client, disc_info.primary_value.value_id)
         entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
@@ -554,9 +554,23 @@ async def async_setup_entry(  # noqa: C901
 
         LOGGER.info("Connection to Zwave JS Server initialized")
 
-        await async_setup_platform(UPDATE_DOMAIN)
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_device_configs_update_entity"
+        async def async_check_for_config_updates(_: datetime) -> None:
+            """Check for new config updates."""
+            # We assert because we know the driver and controller exist
+            assert client.driver
+            assert client.driver.controller
+            check_config_updates = await client.driver.async_check_for_config_updates()
+            if check_config_updates.update_available:
+                LOGGER.info(
+                    "Updating device config files to version %s",
+                    check_config_updates.new_version,
+                )
+                await client.driver.async_install_config_update()
+
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, async_check_for_config_updates, timedelta(days=1)
+            )
         )
 
         # If opt in preference hasn't been specified yet, we do nothing, otherwise
@@ -564,12 +578,17 @@ async def async_setup_entry(  # noqa: C901
         if opted_in := entry.data.get(CONF_DATA_COLLECTION_OPTED_IN):
             await async_enable_statistics(client)
         elif opted_in is False:
+            assert client.driver
             await client.driver.async_disable_statistics()
 
         # Check for nodes that no longer exist and remove them
         stored_devices = device_registry.async_entries_for_config_entry(
             dev_reg, entry.entry_id
         )
+
+        # We assert because we know the driver and controller exist
+        assert client.driver
+        assert client.driver.controller
         known_devices = [
             dev_reg.async_get_device({get_device_id(client, node)})
             for node in client.driver.controller.nodes.values()

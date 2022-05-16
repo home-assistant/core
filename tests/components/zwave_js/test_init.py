@@ -193,7 +193,7 @@ async def test_on_node_added_not_ready(
     dev_reg = dr.async_get(hass)
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 0
     assert not dev_reg.devices
 
     node_state = deepcopy(zp3111_not_ready_state)
@@ -213,7 +213,7 @@ async def test_on_node_added_not_ready(
 
     # the only entities are the node status sensor, ping button, and device configs
     # update
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -257,7 +257,7 @@ async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integrati
 
     # the only entities are the node status sensor, ping button, and device configs
     # update
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -813,7 +813,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 30
+    assert len(entity_entries) == 29
 
     # Remove a node and reload the entry
     old_node = client.driver.controller.nodes.pop(13)
@@ -825,7 +825,7 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 18
+    assert len(entity_entries) == 17
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
 
 
