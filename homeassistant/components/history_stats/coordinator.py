@@ -16,7 +16,7 @@ from .data import HistoryStats, HistoryStatsState
 _LOGGER = logging.getLogger(__name__)
 
 
-UPDATE_INTERVAL = timedelta(minutes=1)
+UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
