@@ -31,7 +31,6 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
-    Union,
     cast,
     overload,
 )
@@ -406,8 +405,8 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
-        return self.async_add_hass_job(HassJob(target), *args)
+        # cast removed here because it is almost expensive as call_soon
+        return self.async_add_hass_job(HassJob(target), *args)  # type: ignore[arg-type]
 
     @overload
     @callback
@@ -434,17 +433,14 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task: asyncio.Future[_R]
+        # casts removed here because they were almost expensive as call_soon
         if hassjob.job_type == HassJobType.Coroutinefunction:
-            task = self.loop.create_task(
-                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
-            )
+            task = self.loop.create_task(hassjob.target(*args))  # type: ignore[arg-type]
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(cast(Callable[..., _R], hassjob.target), *args)
+            self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(
-                None, cast(Callable[..., _R], hassjob.target), *args
-            )
+            task = self.loop.run_in_executor(None, hassjob.target, *args)  # type: ignore[arg-type]
 
         # If a task is scheduled
         if self._track_task:
@@ -523,7 +519,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if hassjob.job_type == HassJobType.Callback:
-            cast(Callable[..., _R], hassjob.target)(*args)
+            hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
@@ -565,8 +561,8 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
-        return self.async_run_hass_job(HassJob(target), *args)
+        # cast removed here because it is almost expensive as call_soon
+        return self.async_run_hass_job(HassJob(target), *args)  # type: ignore[arg-type]
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
