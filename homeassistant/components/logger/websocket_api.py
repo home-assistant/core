@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import async_get_loaded_integrations
 
-from .helpers import set_log_levels
+from .const import DOMAIN, LOGSEVERITY
+from .helpers import LoggerSettings
 
 
 @callback
@@ -44,18 +45,8 @@ async def handle_integration_log_info(
     {
         vol.Required("type"): "logger/log_level",
         vol.Required("integration"): str,
-        vol.Required("level"): vol.In(
-            [
-                "CRITICAL",
-                "FATAL",
-                "ERROR",
-                "WARNING",
-                "WARN",
-                "INFO",
-                "DEBUG",
-                "NOTSET",
-            ]
-        ),
+        vol.Required("level"): vol.Any("DEFAULT", vol.In(LOGSEVERITY)),
+        vol.Required("persistence"): vol.In(["none", "once", "permanent"]),
     }
 )
 @websocket_api.async_response
@@ -64,14 +55,20 @@ async def handle_integration_log_level(
 ) -> None:
     """Handle setting integration log level."""
     try:
-        integration = await async_get_integration(hass, msg["integration"])
+        await async_get_integration(hass, msg["integration"])
     except IntegrationNotFound:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Integration not found"
         )
         return
-    loggers = [f"homeassistant.components.{msg['integration']}"]
-    if integration.loggers:
-        loggers.extend(integration.loggers)
-    set_log_levels(hass, {logger: msg["level"] for logger in loggers})
+    settings: LoggerSettings = hass.data[DOMAIN]["settings"]
+    await settings.async_update(
+        hass,
+        msg["integration"],
+        {
+            "level": msg["level"],
+            "persistence": msg["persistence"],
+            "type": "integration",
+        },
+    )
     connection.send_message(websocket_api.messages.result_message(msg["id"]))

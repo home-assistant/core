@@ -1,6 +1,7 @@
 """Tests for Logger Websocket API commands."""
 import logging
 
+from homeassistant.components.logger.const import DOMAIN
 from homeassistant.components.websocket_api import const
 from homeassistant.setup import async_setup_component
 
@@ -35,6 +36,7 @@ async def test_integration_log_level_logger_not_loaded(
             "type": "logger/log_level",
             "integration": "websocket_api",
             "level": logging.DEBUG,
+            "persistence": "none",
         }
     )
 
@@ -55,6 +57,7 @@ async def test_integration_log_level(hass, hass_ws_client, hass_admin_user):
             "type": "logger/log_level",
             "integration": "websocket_api",
             "level": "DEBUG",
+            "persistence": "none",
         }
     )
 
@@ -62,3 +65,7 @@ async def test_integration_log_level(hass, hass_ws_client, hass_admin_user):
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+
+    assert hass.data[DOMAIN]["overrides"] == {
+        "homeassistant.components.websocket_api": "DEBUG"
+    }

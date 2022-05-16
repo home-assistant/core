@@ -19,9 +19,9 @@ from .const import (
     SERVICE_SET_DEFAULT_LEVEL,
     SERVICE_SET_LEVEL,
 )
-from .helpers import set_default_log_level, set_log_levels
+from .helpers import LoggerSettings, set_default_log_level, set_log_levels
 
-_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
+_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
 
 SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
 SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
@@ -30,7 +30,9 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+                vol.Optional(
+                    LOGGER_DEFAULT, default=DEFAULT_LOGSEVERITY
+                ): _VALID_LOG_LEVEL,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
                 vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
             }
@@ -42,24 +44,27 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
-    hass.data[DOMAIN] = {}
-    logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]))
+    settings = LoggerSettings(hass, config)
+
+    hass.data[DOMAIN] = {"overrides": {}, "settings": settings}
+    logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]["overrides"]))
 
     websocket_api.async_load_websocket_api(hass)
 
-    # Set default log severity
-    if DOMAIN in config:
-        set_default_log_level(
-            hass, config[DOMAIN].get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY)
-        )
+    await settings.async_load()
 
-        if LOGGER_LOGS in config[DOMAIN]:
-            set_log_levels(hass, config[DOMAIN][LOGGER_LOGS])
+    # Set default log severity and filter
+    if DOMAIN in config:
+        set_default_log_level(hass, config[DOMAIN][LOGGER_DEFAULT])
 
         if LOGGER_FILTERS in config[DOMAIN]:
             for key, value in config[DOMAIN][LOGGER_FILTERS].items():
                 logger = logging.getLogger(key)
                 _add_log_filter(logger, value)
+
+    # Combine log levels configured in configuration.yaml with log levels set by frontend
+    combined_logs = await settings.async_get_levels(hass)
+    set_log_levels(hass, combined_logs)
 
     @callback
     def async_service_handler(service: ServiceCall) -> None:
