@@ -145,7 +145,9 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             return self._device.gsm_level_percent
         if self._key == "gps_count":
             return self._device.gps_count
-        if self._key == "fuel" and (self._device.fuel_percent or self._device.fuel_litres):
+        if self._key == "fuel" and (
+            self._device.fuel_percent or self._device.fuel_litres
+        ):
             return self._device.fuel_percent or self._device.fuel_litres
         if self._key == "mileage" and self._device.mileage:
             return self._device.mileage
