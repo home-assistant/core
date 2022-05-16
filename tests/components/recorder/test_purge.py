@@ -1585,7 +1585,8 @@ async def test_purge_can_mix_legacy_and_new_format(
             last_changed=None,
         )
         session.add(broken_state_no_time)
-        for event_id in range(50000, 50000 + MAX_ROWS_TO_PURGE * 2):
+        start_id = 50000
+        for event_id in range(start_id, start_id + 50):
             _add_state_and_state_changed_event(
                 session,
                 "sensor.excluded",
@@ -1593,15 +1594,23 @@ async def test_purge_can_mix_legacy_and_new_format(
                 eleven_days_ago,
                 event_id,
             )
-    await _add_test_events(hass, MAX_ROWS_TO_PURGE)
-    await _add_events_with_event_data(hass, MAX_ROWS_TO_PURGE)
+    await _add_test_events(hass, 50)
+    await _add_events_with_event_data(hass, 50)
     with session_scope(hass=hass) as session:
-        for _ in range(2000):
+        for _ in range(50):
             _add_state_without_event_linkage(
                 session, "switch.random", "on", eleven_days_ago
             )
-        states = session.query(States)
-        assert states.count() == 3997
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
+        )
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
+
+        assert states_with_event_id.count() == 50
+        assert states_without_event_id.count() == 51
+
         purge_before = dt_util.utcnow() - timedelta(days=4)
         finished = purge_old_data(
             instance,
@@ -1609,29 +1618,39 @@ async def test_purge_can_mix_legacy_and_new_format(
             repack=False,
         )
         assert not finished
-        assert states.count() == 2999
+        assert states_with_event_id.count() == 0
+        assert states_without_event_id.count() == 51
+        # At this point all the legacy states are gone
+        # and we switch methods
         purge_before = dt_util.utcnow() - timedelta(days=4)
         finished = purge_old_data(
             instance,
             purge_before,
             repack=False,
+            events_batch_size=1,
+            states_batch_size=1,
         )
+        # Since we only allow one iteration, we won't
+        # check if we are finished this loop similar
+        # to the legacy method
         assert not finished
-        assert states.count() == 2001
-        # At this point we should have switched to the fast
-        # method and we should be able to delete 2000 in a single
-        # pass
+        assert states_with_event_id.count() == 0
+        assert states_without_event_id.count() == 1
         finished = purge_old_data(
             instance,
             purge_before,
             repack=False,
+            events_batch_size=100,
+            states_batch_size=100,
         )
         assert finished
-        assert states.count() == 1
+        assert states_with_event_id.count() == 0
+        assert states_without_event_id.count() == 1
         _add_state_without_event_linkage(
             session, "switch.random", "on", eleven_days_ago
         )
-        assert states.count() == 2
+        assert states_with_event_id.count() == 0
+        assert states_without_event_id.count() == 2
         finished = purge_old_data(
             instance,
             purge_before,
@@ -1640,4 +1659,5 @@ async def test_purge_can_mix_legacy_and_new_format(
         assert finished
         # The broken state without a timestamp
         # does not prevent future purges. Its ignored.
-        assert states.count() == 1
+        assert states_with_event_id.count() == 0
+        assert states_without_event_id.count() == 1
