@@ -90,7 +90,7 @@ def redact_credentials(data: str) -> str:
 def create_stream(
     hass: HomeAssistant,
     stream_source: str,
-    options: dict[str, Any],
+    options: dict[str, str | bool],
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
@@ -496,7 +496,7 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
 )
 
 
-def convert_stream_options(stream_options: dict[str, Any]) -> dict[str, str]:
+def convert_stream_options(stream_options: dict[str, str | bool]) -> dict[str, str]:
     """Convert options from stream options into PyAV options."""
     pyav_options: dict[str, str] = {}
     try:
@@ -505,6 +505,7 @@ def convert_stream_options(stream_options: dict[str, Any]) -> dict[str, str]:
         raise HomeAssistantError("Invalid stream options") from exc
 
     if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
+        assert isinstance(rtsp_transport, str)
         pyav_options["rtsp_transport"] = rtsp_transport
     if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
         pyav_options["use_wallclock_as_timestamps"] = "1"
