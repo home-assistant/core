@@ -96,6 +96,7 @@ omit =
     homeassistant/components/baf/__init__.py
     homeassistant/components/baf/entity.py
     homeassistant/components/baf/fan.py
+    homeassistant/components/baf/sensor.py
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
     homeassistant/components/beewi_smartclim/sensor.py
