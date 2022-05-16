@@ -51,10 +51,12 @@ async def _async_migrate_data(
     registry = er.async_get(hass)
     to_migrate = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if entity.platform == Platform.BUTTON and "_" not in entity.unique_id:
+        if entity.domain == Platform.BUTTON and "_" not in entity.unique_id:
+            _LOGGER.debug("Button %s needs migration", entity.entity_id)
             to_migrate.append(entity)
 
     if len(to_migrate) == 0:
+        _LOGGER.debug("No entities need migration")
         return
 
     _LOGGER.info("Migrating %s reboot button entities ", len(to_migrate))
