@@ -435,16 +435,12 @@ class HomeAssistant:
         """
         task: asyncio.Future[_R]
         if hassjob.job_type == HassJobType.Coroutinefunction:
-            task = self.loop.create_task(
-                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
-            )
+            task = self.loop.create_task(hassjob.target(*args))  # type: ignore[arg-type]
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(cast(Callable[..., _R], hassjob.target), *args)
+            self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(
-                None, cast(Callable[..., _R], hassjob.target), *args
-            )
+            task = self.loop.run_in_executor(None, hassjob.target, *args)  # type: ignore[arg-type]
 
         # If a task is scheduled
         if self._track_task:
@@ -523,7 +519,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if hassjob.job_type == HassJobType.Callback:
-            cast(Callable[..., _R], hassjob.target)(*args)
+            hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
