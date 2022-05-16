@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port",
                     "type": "Type de connexion"
                 },
-                "title": "Configurer 1-Wire"
+                "title": "Renseigner les informations du serveur"
             }
         }
     },

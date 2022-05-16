@@ -52,6 +52,8 @@ from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
 
+PARALLEL_UPDATES = 0
+
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
 # report auto_changeover as auto without schedule support.

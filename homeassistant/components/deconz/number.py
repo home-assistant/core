@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pydeconz.models.event import EventType
 from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
 
 from homeassistant.components.number import (
@@ -14,7 +15,6 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,48 +62,27 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors: list[Presence] | None = None) -> None:
-        """Add number config sensor from deCONZ."""
-        entities = []
-
-        if sensors is None:
-            sensors = list(gateway.api.sensors.presence.values())
-
-        for sensor in sensors:
-
-            if sensor.type.startswith("CLIP"):
+    def async_add_sensor(_: EventType, sensor_id: str) -> None:
+        """Add sensor from deCONZ."""
+        sensor = gateway.api.sensors.presence[sensor_id]
+        if sensor.type.startswith("CLIP"):
+            return
+        for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
+            if (
+                not hasattr(sensor, description.key)
+                or description.value_fn(sensor) is None
+            ):
                 continue
-
-            known_entities = set(gateway.entities[DOMAIN])
-            for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
-
-                if (
-                    not hasattr(sensor, description.key)
-                    or description.value_fn(sensor) is None
-                ):
-                    continue
-
-                new_entity = DeconzNumber(sensor, gateway, description)
-                if new_entity.unique_id not in known_entities:
-                    entities.append(new_entity)
-
-        if entities:
-            async_add_entities(entities)
+            async_add_entities([DeconzNumber(sensor, gateway, description)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_sensor,
-            async_add_sensor,
+        gateway.api.sensors.presence.subscribe(
+            gateway.evaluate_add_device(async_add_sensor),
+            EventType.ADDED,
         )
     )
-
-    async_add_sensor(
-        [
-            gateway.api.sensors.presence[key]
-            for key in sorted(gateway.api.sensors.presence, key=int)
-        ]
-    )
+    for sensor_id in gateway.api.sensors.presence:
+        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 class DeconzNumber(DeconzDevice, NumberEntity):

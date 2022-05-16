@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Port",
                     "type": "\u00dchenduse t\u00fc\u00fcp"
                 },
-                "title": "Seadista 1-wire sidumine"
+                "title": "M\u00e4\u00e4ra serveri \u00fcksikasjad"
             }
         }
     },

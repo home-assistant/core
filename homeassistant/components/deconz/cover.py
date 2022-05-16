@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from pydeconz.models.event import EventType
 from pydeconz.models.light.cover import Cover
 
 from homeassistant.components.cover import (
@@ -15,7 +16,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
@@ -38,32 +38,19 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(lights: list[Cover] | None = None) -> None:
+    def async_add_cover(_: EventType, cover_id: str) -> None:
         """Add cover from deCONZ."""
-        entities = []
-
-        if lights is None:
-            lights = list(gateway.api.lights.covers.values())
-
-        for light in lights:
-            if (
-                isinstance(light, Cover)
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzCover(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
+        cover = gateway.api.lights.covers[cover_id]
+        async_add_entities([DeconzCover(cover, gateway)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
-            async_add_cover,
+        gateway.api.lights.covers.subscribe(
+            gateway.evaluate_add_device(async_add_cover),
+            EventType.ADDED,
         )
     )
-
-    async_add_cover()
+    for cover_id in gateway.api.lights.covers:
+        async_add_cover(EventType.ADDED, cover_id)
 
 
 class DeconzCover(DeconzDevice, CoverEntity):

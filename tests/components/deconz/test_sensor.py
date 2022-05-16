@@ -337,7 +337,7 @@ TEST_DATA = [
             "state": "5.0",
             "entity_category": None,
             "device_class": SensorDeviceClass.ILLUMINANCE,
-            "state_class": None,
+            "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
                 "on": True,
                 "dark": True,
@@ -345,6 +345,7 @@ TEST_DATA = [
                 "unit_of_measurement": "lx",
                 "device_class": "illuminance",
                 "friendly_name": "Motion sensor 4",
+                "state_class": "measurement",
             },
             "websocket_event": {"state": {"lightlevel": 1000}},
             "next_state": "1.3",

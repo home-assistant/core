@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydeconz.models.event import EventType
 from pydeconz.models.sensor.thermostat import (
     THERMOSTAT_FAN_MODE_AUTO,
     THERMOSTAT_FAN_MODE_HIGH,
@@ -91,44 +92,41 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the deCONZ climate devices.
-
-    Thermostats are based on the same device class as sensors in deCONZ.
-    """
+    """Set up the deCONZ climate devices."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_climate(sensors: list[Thermostat] | None = None) -> None:
-        """Add climate devices from deCONZ."""
-        entities: list[DeconzThermostat] = []
+    def async_add_climate(_: EventType, climate_id: str) -> None:
+        """Add climate from deCONZ."""
+        climate = gateway.api.sensors.thermostat[climate_id]
+        if not gateway.option_allow_clip_sensor and climate.type.startswith("CLIP"):
+            return
+        async_add_entities([DeconzThermostat(climate, gateway)])
 
-        if sensors is None:
-            sensors = list(gateway.api.sensors.thermostat.values())
+    config_entry.async_on_unload(
+        gateway.api.sensors.thermostat.subscribe(
+            gateway.evaluate_add_device(async_add_climate),
+            EventType.ADDED,
+        )
+    )
+    for climate_id in gateway.api.sensors.thermostat:
+        async_add_climate(EventType.ADDED, climate_id)
 
-        for sensor in sensors:
-
-            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
-                continue
-
-            if (
-                isinstance(sensor, Thermostat)
-                and sensor.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzThermostat(sensor, gateway))
-
-        if entities:
-            async_add_entities(entities)
+    @callback
+    def async_reload_clip_sensors() -> None:
+        """Load clip sensors from deCONZ."""
+        for climate_id, climate in gateway.api.sensors.thermostat.items():
+            if climate.type.startswith("CLIP"):
+                async_add_climate(EventType.ADDED, climate_id)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            gateway.signal_new_sensor,
-            async_add_climate,
+            gateway.signal_reload_clip_sensors,
+            async_reload_clip_sensors,
         )
     )
-
-    async_add_climate()
 
 
 class DeconzThermostat(DeconzDevice, ClimateEntity):

@@ -79,8 +79,12 @@
                     "rtsp_transport": "Protokol transportasi RTSP",
                     "still_image_url": "URL Gambar Diam (mis. http://...)",
                     "stream_source": "URL Sumber Streaming (mis. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Gunakan jam dinding sebagai stempel waktu",
                     "username": "Nama Pengguna",
                     "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Opsi ini dapat memperbaiki masalah segmentasi atau mogok yang timbul dari implementasi stempel waktu bermasalah pada beberapa kamera"
                 }
             }
         }

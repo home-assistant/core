@@ -38,7 +38,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE
+from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -415,8 +415,8 @@ def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
     )
     if deleted_short_term_statistics_rows:
         _LOGGER.warning(
-            "Deleted duplicated short term statistic rows, please report at "
-            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+'
+            "Deleted duplicated short term statistic rows, please report at %s",
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
         )
 
 
@@ -1342,10 +1342,13 @@ def _filter_unique_constraint_integrity_error(
         dialect_name = instance.engine.dialect.name
 
         ignore = False
-        if dialect_name == "sqlite" and "UNIQUE constraint failed" in str(err):
+        if (
+            dialect_name == SupportedDialect.SQLITE
+            and "UNIQUE constraint failed" in str(err)
+        ):
             ignore = True
         if (
-            dialect_name == "postgresql"
+            dialect_name == SupportedDialect.POSTGRESQL
             and hasattr(err.orig, "pgcode")
             and err.orig.pgcode == "23505"
         ):
@@ -1357,8 +1360,8 @@ def _filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                "Blocked attempt to insert duplicated statistic rows, please report at "
-                'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
+                "Blocked attempt to insert duplicated statistic rows, please report at %s",
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,
             )
 

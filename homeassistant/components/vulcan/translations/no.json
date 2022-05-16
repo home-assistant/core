@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Alle elever er allerede lagt til.",
             "already_configured": "Den studenten er allerede lagt til.",
+            "no_matching_entries": "Ingen samsvarende oppf\u00f8ringer funnet, vennligst bruk en annen konto eller fjern integrasjon med utdatert student..",
             "reauth_successful": "Reauth vellykket"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Logg p\u00e5 Vulcan-kontoen din ved \u00e5 bruke registreringssiden for mobilappen."
             },
             "reauth": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Logg p\u00e5 Vulcan-kontoen din ved \u00e5 bruke registreringssiden for mobilappen."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
                     "region": "Symbol",

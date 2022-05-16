@@ -2,6 +2,7 @@
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -12,13 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    CONF_RTSP_TRANSPORT,
-    CONF_SNAPSHOT_AUTH,
-    DEFAULT_ARGUMENTS,
-    DOMAIN,
-    RTSP_TRANS_PROTOCOLS,
-)
+from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
 
 
@@ -99,7 +94,7 @@ async def async_populate_options(hass, entry):
     """Populate default options for device."""
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
-        CONF_RTSP_TRANSPORT: RTSP_TRANS_PROTOCOLS[0],
+        CONF_RTSP_TRANSPORT: next(iter(RTSP_TRANSPORTS)),
     }
 
     hass.config_entries.async_update_entry(entry, options=options)
