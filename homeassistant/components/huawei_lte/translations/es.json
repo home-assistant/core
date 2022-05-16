@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Este dispositivo ya ha sido configurado",
-            "already_in_progress": "Este dispositivo ya se est\u00e1 configurando",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "not_huawei_lte": "No es un dispositivo Huawei LTE"
         },
         "error": {
@@ -15,7 +15,7 @@
             "response_error": "Error desconocido del dispositivo",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Huawei LTE: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

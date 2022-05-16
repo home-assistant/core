@@ -3,10 +3,10 @@
         "abort": {
             "all_configured": "Todos los servidores vinculados ya configurados",
             "already_configured": "Este servidor Plex ya est\u00e1 configurado",
-            "already_in_progress": "Plex se est\u00e1 configurando",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "token_request_timeout": "Tiempo de espera agotado para la obtenci\u00f3n del token",
-            "unknown": "Fall\u00f3 por razones desconocidas"
+            "unknown": "Error inesperado"
         },
         "error": {
             "faulty_credentials": "La autorizaci\u00f3n ha fallado, verifica el token",

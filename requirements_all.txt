@@ -313,7 +313,7 @@ anthemav==1.2.0
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==0.9.7
+apprise==0.9.8.3
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -2002,7 +2002,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.0.2
+pyvesync==2.0.3
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
@@ -2421,7 +2421,7 @@ wallbox==0.4.4
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.7
+watchdog==2.1.8
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0

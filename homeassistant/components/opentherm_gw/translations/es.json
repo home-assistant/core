@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "Gateway ya configurado",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
             "id_exists": "El ID del Gateway ya existe"
         },
