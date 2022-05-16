@@ -588,7 +588,6 @@ async def async_setup_entry(  # noqa: C901
             dev_reg, entry.entry_id
         )
 
-        # We assert because we know the driver and controller exist
         known_devices = [
             dev_reg.async_get_device({get_device_id(client, node)})
             for node in client.driver.controller.nodes.values()
