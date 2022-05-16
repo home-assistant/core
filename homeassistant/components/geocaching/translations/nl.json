@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
+            "oauth_error": "Ongeldige token data ontvangen.",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "create_entry": {
+            "default": "Succesvol geauthenticeerd"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
+            },
+            "reauth_confirm": {
+                "description": "De Geocaching integratie moet uw account herauthenticeren",
+                "title": "Verifieer de integratie opnieuw"
+            }
+        }
+    }
+}

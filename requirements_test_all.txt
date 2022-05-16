@@ -108,6 +108,9 @@ aioasuswrt==1.4.0
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
 
+# homeassistant.components.baf
+aiobafi6==0.3.0
+
 # homeassistant.components.aws
 aiobotocore==2.1.0
 
@@ -330,7 +333,7 @@ bravia-tv==1.0.11
 broadlink==0.18.1
 
 # homeassistant.components.brother
-brother==1.2.0
+brother==1.1.0
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -489,7 +492,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.7.1
+gcal-sync==0.8.0
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -709,7 +712,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.1.2
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.5
+motionblinds==0.6.7
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12

@@ -6,18 +6,17 @@ from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import Any, Literal, cast
+from typing import Literal, cast
 
 from aiohttp import web
-from sqlalchemy import not_, or_
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import (
-    get_instance,
-    history,
-    models as history_models,
+from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder.filters import (
+    Filters,
+    sqlalchemy_filter_from_include_exclude_conf,
 )
 from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
@@ -26,28 +25,20 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.const import JSON_DUMP
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import (
-    CONF_ENTITY_GLOBS,
-    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
-)
+from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
+HISTORY_USE_INCLUDE_ORDER = "history_use_include_order"
+
 CONF_ORDER = "use_include_order"
 
-GLOB_TO_SQL_CHARS = {
-    42: "%",  # *
-    46: "_",  # .
-}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -66,8 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[HISTORY_FILTERS] = filters = sqlalchemy_filter_from_include_exclude_conf(
         conf
     )
-
-    use_include_order = conf.get(CONF_ORDER)
+    hass.data[HISTORY_USE_INCLUDE_ORDER] = use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
@@ -176,30 +166,41 @@ def _ws_get_significant_states(
     hass: HomeAssistant,
     msg_id: int,
     start_time: dt,
-    end_time: dt | None = None,
-    entity_ids: list[str] | None = None,
-    filters: Any | None = None,
-    include_start_time_state: bool = True,
-    significant_changes_only: bool = True,
-    minimal_response: bool = False,
-    no_attributes: bool = False,
+    end_time: dt | None,
+    entity_ids: list[str] | None,
+    filters: Filters | None,
+    use_include_order: bool | None,
+    include_start_time_state: bool,
+    significant_changes_only: bool,
+    minimal_response: bool,
+    no_attributes: bool,
 ) -> str:
     """Fetch history significant_states and convert them to json in the executor."""
+    states = history.get_significant_states(
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+        filters,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+        True,
+    )
+
+    if not use_include_order or not filters:
+        return JSON_DUMP(messages.result_message(msg_id, states))
+
     return JSON_DUMP(
         messages.result_message(
             msg_id,
-            history.get_significant_states(
-                hass,
-                start_time,
-                end_time,
-                entity_ids,
-                filters,
-                include_start_time_state,
-                significant_changes_only,
-                minimal_response,
-                no_attributes,
-                True,
-            ),
+            {
+                order_entity: states.pop(order_entity)
+                for order_entity in filters.included_entities
+                if order_entity in states
+            }
+            | states,
         )
     )
 
@@ -267,6 +268,7 @@ async def ws_get_history_during_period(
             end_time,
             entity_ids,
             hass.data[HISTORY_FILTERS],
+            hass.data[HISTORY_USE_INCLUDE_ORDER],
             include_start_time_state,
             significant_changes_only,
             minimal_response,
@@ -351,20 +353,20 @@ class HistoryPeriodView(HomeAssistantView):
 
     def _sorted_significant_states_json(
         self,
-        hass,
-        start_time,
-        end_time,
-        entity_ids,
-        include_start_time_state,
-        significant_changes_only,
-        minimal_response,
-        no_attributes,
-    ):
+        hass: HomeAssistant,
+        start_time: dt,
+        end_time: dt,
+        entity_ids: list[str] | None,
+        include_start_time_state: bool,
+        significant_changes_only: bool,
+        minimal_response: bool,
+        no_attributes: bool,
+    ) -> web.Response:
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
-            result = history.get_significant_states_with_session(
+            states = history.get_significant_states_with_session(
                 hass,
                 session,
                 start_time,
@@ -377,134 +379,24 @@ class HistoryPeriodView(HomeAssistantView):
                 no_attributes,
             )
 
-        result = list(result.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
-            _LOGGER.debug("Extracted %d states in %fs", sum(map(len, result)), elapsed)
+            _LOGGER.debug(
+                "Extracted %d states in %fs", sum(map(len, states.values())), elapsed
+            )
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
-        if self.filters and self.use_include_order:
-            sorted_result = []
-            for order_entity in self.filters.included_entities:
-                for state_list in result:
-                    if state_list[0].entity_id == order_entity:
-                        sorted_result.append(state_list)
-                        result.remove(state_list)
-                        break
-            sorted_result.extend(result)
-            result = sorted_result
+        if not self.filters or not self.use_include_order:
+            return self.json(list(states.values()))
 
-        return self.json(result)
-
-
-def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
-    """Build a sql filter from config."""
-    filters = Filters()
-    if exclude := conf.get(CONF_EXCLUDE):
-        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
-        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
-        filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
-    if include := conf.get(CONF_INCLUDE):
-        filters.included_entities = include.get(CONF_ENTITIES, [])
-        filters.included_domains = include.get(CONF_DOMAINS, [])
-        filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
-
-    return filters if filters.has_config else None
-
-
-class Filters:
-    """Container for the configured include and exclude filters."""
-
-    def __init__(self) -> None:
-        """Initialise the include and exclude filters."""
-        self.excluded_entities: list[str] = []
-        self.excluded_domains: list[str] = []
-        self.excluded_entity_globs: list[str] = []
-
-        self.included_entities: list[str] = []
-        self.included_domains: list[str] = []
-        self.included_entity_globs: list[str] = []
-
-    def apply(self, query):
-        """Apply the entity filter."""
-        if not self.has_config:
-            return query
-
-        return query.filter(self.entity_filter())
-
-    @property
-    def has_config(self):
-        """Determine if there is any filter configuration."""
-        if (
-            self.excluded_entities
-            or self.excluded_domains
-            or self.excluded_entity_globs
-            or self.included_entities
-            or self.included_domains
-            or self.included_entity_globs
-        ):
-            return True
-
-        return False
-
-    def bake(self, baked_query):
-        """Update a baked query.
-
-        Works the same as apply on a baked_query.
-        """
-        if not self.has_config:
-            return
-
-        baked_query += lambda q: q.filter(self.entity_filter())
-
-    def entity_filter(self):
-        """Generate the entity filter query."""
-        includes = []
-        if self.included_domains:
-            includes.append(
-                or_(
-                    *[
-                        history_models.States.entity_id.like(f"{domain}.%")
-                        for domain in self.included_domains
-                    ]
-                ).self_group()
-            )
-        if self.included_entities:
-            includes.append(history_models.States.entity_id.in_(self.included_entities))
-        for glob in self.included_entity_globs:
-            includes.append(_glob_to_like(glob))
-
-        excludes = []
-        if self.excluded_domains:
-            excludes.append(
-                or_(
-                    *[
-                        history_models.States.entity_id.like(f"{domain}.%")
-                        for domain in self.excluded_domains
-                    ]
-                ).self_group()
-            )
-        if self.excluded_entities:
-            excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
-        for glob in self.excluded_entity_globs:
-            excludes.append(_glob_to_like(glob))
-
-        if not includes and not excludes:
-            return None
-
-        if includes and not excludes:
-            return or_(*includes)
-
-        if not includes and excludes:
-            return not_(or_(*excludes))
-
-        return or_(*includes) & not_(or_(*excludes))
-
-
-def _glob_to_like(glob_str):
-    """Translate glob to sql."""
-    return history_models.States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+        sorted_result = [
+            states.pop(order_entity)
+            for order_entity in self.filters.included_entities
+            if order_entity in states
+        ]
+        sorted_result.extend(list(states.values()))
+        return self.json(sorted_result)
 
 
 def _entities_may_have_state_changes_after(

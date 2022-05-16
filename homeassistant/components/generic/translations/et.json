@@ -79,8 +79,12 @@
                     "rtsp_transport": "RTSP transpordiprotokoll",
                     "still_image_url": "Pildi URL (nt http://...)",
                     "stream_source": "Voo allikas URL (nt rtsp://...)",
+                    "use_wallclock_as_timestamps": "Wallclocki kasutamine ajatemplitena",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "See suvand v\u00f5ib parandada segmentimis- v\u00f5i krahhiprobleeme, mis tulenevad m\u00f5ne kaamera vigastest ajatemplirakendustest"
                 }
             }
         }
