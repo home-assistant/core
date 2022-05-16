@@ -226,7 +226,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             return
 
         if self._last_image_id != self._last_event.entry_id:
-            _LOGGER.debug("last image id != last event entry id")
             self._image = None
 
         try:
