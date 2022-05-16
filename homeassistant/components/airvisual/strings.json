@@ -15,9 +15,9 @@
         "description": "Use the AirVisual cloud API to monitor a city/state/country.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "city": "City",
-          "country": "Country",
-          "state": "state"
+          "city": "[%key:common::config_flow::data::city%]",
+          "country": "[%key:common::config_flow::data::country%]",
+          "state": "[%key:common::config_flow::data::state%]"
         }
       },
       "node_pro": {
