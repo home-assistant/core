@@ -45,8 +45,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_STATES_BATCHES_PER_PURGE = 9  # We expect ~90% de-dupe rate
-DEFAULT_EVENTS_BATCHES_PER_PURGE = 9  # We expect ~90% de-dupe rate
+DEFAULT_STATES_BATCHES_PER_PURGE = 20  # We expect ~95% de-dupe rate
+DEFAULT_EVENTS_BATCHES_PER_PURGE = 15  # We expect ~92% de-dupe rate
 
 
 def take(take_num: int, iterable: Iterable) -> list[Any]:
