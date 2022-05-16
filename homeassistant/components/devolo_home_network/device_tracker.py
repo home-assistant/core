@@ -54,7 +54,7 @@ async def async_setup_entry(
 
             new_entities.append(
                 DevoloScannerEntity(
-                    coordinators[CONNECTED_WIFI_CLIENTS], station[MAC_ADDRESS]
+                    coordinators[CONNECTED_WIFI_CLIENTS], device, station[MAC_ADDRESS]
                 )
             )
             tracked.add(station[MAC_ADDRESS])
@@ -66,18 +66,19 @@ async def async_setup_entry(
         """Restore clients that are not a part of active clients list."""
         missing = []
         for entity in registry.entities.values():
+            mac_address = entity.unique_id.replace(f"{device.serial_number}_", "")
             if (
                 entity.config_entry_id == entry.entry_id
                 and entity.platform == DOMAIN
                 and entity.domain == DEVICE_TRACKER_DOMAIN
-                and entity.unique_id not in tracked
+                and mac_address not in tracked
             ):
                 missing.append(
                     DevoloScannerEntity(
-                        coordinators[CONNECTED_WIFI_CLIENTS], entity.unique_id
+                        coordinators[CONNECTED_WIFI_CLIENTS], device, mac_address
                     )
                 )
-                tracked.add(entity.unique_id)
+                tracked.add(mac_address)
 
         if missing:
             async_add_entities(missing)
@@ -93,9 +94,12 @@ async def async_setup_entry(
 class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
     """Representation of a devolo device tracker."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, mac: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: Device, mac: str
+    ) -> None:
         """Initialize entity."""
         super().__init__(coordinator)
+        self._device = device
         self._mac = mac
 
     @property
@@ -150,3 +154,8 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID of the entity."""
+        return f"{self._device.serial_number}_{self._mac}"
