@@ -1,5 +1,6 @@
 """Test the Z-Wave JS init module."""
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import call, patch
 
 import pytest
@@ -17,10 +18,11 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.util import datetime as dt_util
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="connect_timeout")
@@ -1329,3 +1331,25 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
         | {battery_level_entity, binary_cover_entity, sensor_cover_entity}
         == new_unavailable_entities
     )
+
+
+async def test_configs_file_update_available(
+    hass, client, integration, configs_update_available
+):
+    """Test device configs file update logic when update is available."""
+    client.async_send_command.return_value = {"success": True}
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "driver.install_config_update"
+
+
+async def test_configs_file_update_not_available(
+    hass, client, integration, configs_update_not_available
+):
+    """Test device configs file update logic when update is not available."""
+    client.async_send_command.return_value = {"success": True}
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
+    await hass.async_block_till_done()
+    assert len(client.async_send_command.call_args_list) == 0

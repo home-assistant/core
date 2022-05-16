@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
-from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.driver import CheckConfigUpdates, Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
@@ -164,6 +164,28 @@ def uninstall_addon_fixture():
         "homeassistant.components.zwave_js.addon.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
+
+
+@pytest.fixture(name="configs_update_available")
+def configs_update_available_fixture():
+    """Mock update available."""
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_check_for_config_updates",
+        return_value=CheckConfigUpdates(
+            {"updateAvailable": True, "newVersion": "1.0.0"}
+        ),
+    ):
+        yield
+
+
+@pytest.fixture(name="configs_update_not_available")
+def configs_update_not_available_fixture():
+    """Mock update not available."""
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_check_for_config_updates",
+        return_value=CheckConfigUpdates({"updateAvailable": False}),
+    ):
+        yield
 
 
 @pytest.fixture(name="create_backup")
