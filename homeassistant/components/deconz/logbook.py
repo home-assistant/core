@@ -136,7 +136,7 @@ def async_describe_events(
 
         return {
             "name": f"{deconz_alarm_event.device.name}",
-            "message": f"fired event '{data}'.",
+            "message": f"fired event '{data}'",
         }
 
     @callback
@@ -158,26 +158,26 @@ def async_describe_events(
         if not data:
             return {
                 "name": f"{deconz_event.device.name}",
-                "message": "fired an unknown event.",
+                "message": "fired an unknown event",
             }
 
         # No device event match
         if not action:
             return {
                 "name": f"{deconz_event.device.name}",
-                "message": f"fired event '{data}'.",
+                "message": f"fired event '{data}'",
             }
 
         # Gesture event
         if not interface:
             return {
                 "name": f"{deconz_event.device.name}",
-                "message": f"fired event '{ACTIONS[action]}'.",
+                "message": f"fired event '{ACTIONS[action]}'",
             }
 
         return {
             "name": f"{deconz_event.device.name}",
-            "message": f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired.",
+            "message": f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired",
         }
 
     async_describe_event(

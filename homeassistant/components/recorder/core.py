@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+import contextlib
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -40,7 +41,9 @@ from .const import (
     DB_WORKER_PREFIX,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
+    MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
@@ -75,6 +78,7 @@ from .tasks import (
     WaitTask,
 )
 from .util import (
+    build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
     is_second_sunday,
@@ -192,6 +196,13 @@ class Recorder(threading.Thread):
     def backlog(self) -> int:
         """Return the number of items in the recorder backlog."""
         return self._queue.qsize()
+
+    @property
+    def dialect_name(self) -> SupportedDialect | None:
+        """Return the dialect the recorder uses."""
+        with contextlib.suppress(ValueError):
+            return SupportedDialect(self.engine.dialect.name) if self.engine else None
+        return None
 
     @property
     def _using_file_sqlite(self) -> bool:
@@ -460,11 +471,6 @@ class Recorder(threading.Thread):
         self.queue_task(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def using_sqlite(self) -> bool:
-        """Return if recorder uses sqlite as the engine."""
-        return bool(self.engine and self.engine.dialect.name == "sqlite")
-
-    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self._get_session:
@@ -473,7 +479,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -939,7 +945,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -968,7 +974,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
@@ -1010,6 +1016,14 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+        elif self.db_url.startswith(MYSQLDB_URL_PREFIX):
+            # If they have configured MySQLDB but don't have
+            # the MySQLDB module installed this will throw
+            # an ImportError which we suppress here since
+            # sqlalchemy will give them a better error when
+            # it tried to import it below.
+            with contextlib.suppress(ImportError):
+                kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
         else:
             kwargs["echo"] = False
 

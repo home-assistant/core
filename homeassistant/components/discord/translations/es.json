@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+        },
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Token API"
+                },
+                "description": "Consulta la documentaci\u00f3n para obtener tu clave de bote de Discord.\n\n{url}"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token API"
+                }
+            }
+        }
+    }
+}

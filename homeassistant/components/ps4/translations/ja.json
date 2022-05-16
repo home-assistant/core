@@ -33,7 +33,7 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP\u30a2\u30c9\u30ec\u30b9(\u81ea\u52d5\u691c\u51fa\u3092\u4f7f\u7528\u3059\u308b\u5834\u5408\u306f\u7a7a\u306e\u307e\u307e\u306b\u3057\u307e\u3059)",
+                    "ip_address": "IP\u30a2\u30c9\u30ec\u30b9(\u81ea\u52d5\u691c\u51fa\u3092\u4f7f\u7528\u3059\u308b\u5834\u5408\u306f\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u307e\u3059)",
                     "mode": "\u30b3\u30f3\u30d5\u30a3\u30b0\u30e2\u30fc\u30c9"
                 },
                 "data_description": {

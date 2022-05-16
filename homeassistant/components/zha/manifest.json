@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.29.0",
+    "bellows==0.30.0",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
     "zha-quirks==0.0.73",
@@ -58,6 +58,18 @@
       "known_devices": ["Nortek HUSBZB-1"]
     },
     {
+      "vid": "0403",
+      "pid": "6015",
+      "description": "*zigate*",
+      "known_devices": ["ZiGate+"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*zigate*",
+      "known_devices": ["ZiGate"]
+    },
+    {
       "vid": "10C4",
       "pid": "8B34",
       "description": "*bv 2010/10*",
@@ -69,6 +81,10 @@
     {
       "type": "_esphomelib._tcp.local.",
       "name": "tube*"
+    },
+    {
+      "type": "_zigate-zigbee-gateway._tcp.local.",
+      "name": "*zigate*"
     }
   ],
   "after_dependencies": ["usb", "zeroconf"],

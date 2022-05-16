@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -15,25 +15,25 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import ciso8601
 from sqlalchemy import text
 from sqlalchemy.engine.cursor import CursorFetchStrategy
+from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.ext.baked import Result
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
 from .models import (
-    ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
-    TABLE_STATISTICS,
-    TABLE_STATISTICS_META,
-    TABLE_STATISTICS_RUNS,
-    TABLE_STATISTICS_SHORT_TERM,
+    TABLES_TO_CHECK,
     RecorderRuns,
     process_timestamp,
 )
@@ -49,6 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
+DEFAULT_YIELD_STATES_ROWS = 32768
 
 MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SIMPLEVER)
@@ -122,8 +123,10 @@ def commit(session: Session, work: Any) -> bool:
 
 
 def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list:
+    qry: Query | Result,
+    to_native: bool = False,
+    validate_entity_ids: bool = True,
+) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -166,7 +169,39 @@ def execute(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreachable
+    assert False  # unreachable # pragma: no cover
+
+
+def execute_stmt_lambda_element(
+    session: Session,
+    stmt: StatementLambdaElement,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+    yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
+) -> Iterable[Row]:
+    """Execute a StatementLambdaElement.
+
+    If the time window passed is greater than one day
+    the execution method will switch to yield_per to
+    reduce memory pressure.
+
+    It is not recommended to pass a time window
+    when selecting non-ranged rows (ie selecting
+    specific entities) since they are usually faster
+    with .all().
+    """
+    executed = session.execute(stmt)
+    use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
+    for tryno in range(0, RETRIES):
+        try:
+            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
+        except SQLAlchemyError as err:
+            _LOGGER.error("Error executing query: %s", err)
+            if tryno == RETRIES - 1:
+                raise
+            time.sleep(QUERY_RETRY_WAIT)
+
+    assert False  # unreachable # pragma: no cover
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
@@ -213,15 +248,7 @@ def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
 def basic_sanity_check(cursor: CursorFetchStrategy) -> bool:
     """Check tables to make sure select does not fail."""
 
-    for table in ALL_TABLES:
-        # The statistics tables may not be present in old databases
-        if table in [
-            TABLE_STATISTICS,
-            TABLE_STATISTICS_META,
-            TABLE_STATISTICS_RUNS,
-            TABLE_STATISTICS_SHORT_TERM,
-        ]:
-            continue
+    for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
         else:
@@ -343,6 +370,30 @@ def _extract_version_from_server_response(
         return None
 
 
+def _datetime_or_none(value: str) -> datetime | None:
+    """Fast version of mysqldb DateTime_or_None.
+
+    https://github.com/PyMySQL/mysqlclient/blob/v2.1.0/MySQLdb/times.py#L66
+    """
+    try:
+        return ciso8601.parse_datetime(value)
+    except ValueError:
+        return None
+
+
+def build_mysqldb_conv() -> dict:
+    """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
+    # Late imports since we only call this if they are using mysqldb
+    from MySQLdb.constants import (  # pylint: disable=import-outside-toplevel,import-error
+        FIELD_TYPE,
+    )
+    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel,import-error
+        conversions,
+    )
+
+    return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
+
+
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
@@ -353,7 +404,7 @@ def setup_connection_for_dialect(
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
     # never needs to be setup again.
-    if dialect_name == "sqlite":
+    if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -381,7 +432,7 @@ def setup_connection_for_dialect(
         # enable support for foreign keys
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
-    elif dialect_name == "mysql":
+    elif dialect_name == SupportedDialect.MYSQL:
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -408,7 +459,7 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
-    elif dialect_name == "postgresql":
+    elif dialect_name == SupportedDialect.POSTGRESQL:
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -455,7 +506,7 @@ def retryable_database_job(
             except OperationalError as err:
                 assert instance.engine is not None
                 if (
-                    instance.engine.dialect.name == "mysql"
+                    instance.engine.dialect.name == SupportedDialect.MYSQL
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
                 ):
                     _LOGGER.info(
@@ -481,7 +532,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
     These cleanups will happen nightly or after any purge.
     """
     assert instance.engine is not None
-    if instance.engine.dialect.name == "sqlite":
+    if instance.engine.dialect.name == SupportedDialect.SQLITE:
         # Execute sqlite to create a wal checkpoint and free up disk space
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:

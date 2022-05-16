@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Port",
                     "type": "Connection type"
                 },
-                "title": "Set up 1-Wire"
+                "title": "Set server details"
             }
         }
     },

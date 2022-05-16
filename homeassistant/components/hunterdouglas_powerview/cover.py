@@ -1,4 +1,5 @@
 """Support for hunter douglas shades."""
+from abc import abstractmethod
 import asyncio
 from contextlib import suppress
 import logging
@@ -8,12 +9,14 @@ from aiopvapi.resources.shade import (
     ATTR_POSKIND1,
     MAX_POSITION,
     MIN_POSITION,
+    Silhouette,
     factory as PvShade,
 )
 import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -49,6 +52,12 @@ PARALLEL_UPDATES = 1
 
 RESYNC_DELAY = 60
 
+POSKIND_NONE = 0
+POSKIND_PRIMARY = 1
+POSKIND_SECONDARY = 2
+POSKIND_VANE = 3
+POSKIND_ERROR = 4
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -82,24 +91,39 @@ async def async_setup_entry(
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
-            PowerViewShade(
+            create_powerview_shade_entity(
                 coordinator, device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
 
 
-def hd_position_to_hass(hd_position):
+def create_powerview_shade_entity(
+    coordinator, device_info, room_name, shade, name_before_refresh
+):
+    """Create a PowerViewShade entity."""
+
+    if isinstance(shade, Silhouette):
+        return PowerViewShadeSilhouette(
+            coordinator, device_info, room_name, shade, name_before_refresh
+        )
+
+    return PowerViewShade(
+        coordinator, device_info, room_name, shade, name_before_refresh
+    )
+
+
+def hd_position_to_hass(hd_position, max_val):
     """Convert hunter douglas position to hass position."""
-    return round((hd_position / MAX_POSITION) * 100)
+    return round((hd_position / max_val) * 100)
 
 
-def hass_position_to_hd(hass_position):
+def hass_position_to_hd(hass_position, max_val):
     """Convert hass position to hunter douglas position."""
-    return int(hass_position / 100 * MAX_POSITION)
+    return int(hass_position / 100 * max_val)
 
 
-class PowerViewShade(ShadeEntity, CoverEntity):
+class PowerViewShadeBase(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
     # The hub frequently reports stale states
@@ -113,12 +137,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._is_closing = False
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
-        self._current_cover_position = MIN_POSITION
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-        )
+        self._current_hd_cover_position = MIN_POSITION
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
@@ -131,7 +150,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._current_cover_position == MIN_POSITION
+        return self._current_hd_cover_position == MIN_POSITION
 
     @property
     def is_opening(self):
@@ -146,7 +165,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self._current_cover_position)
+        return hd_position_to_hass(self._current_hd_cover_position, MAX_POSITION)
 
     @property
     def device_class(self):
@@ -181,14 +200,18 @@ class PowerViewShade(ShadeEntity, CoverEntity):
 
     async def _async_move(self, target_hass_position):
         """Move the shade to a position."""
-        current_hass_position = hd_position_to_hass(self._current_cover_position)
+        current_hass_position = hd_position_to_hass(
+            self._current_hd_cover_position, MAX_POSITION
+        )
         steps_to_move = abs(current_hass_position - target_hass_position)
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(
             await self._shade.move(
                 {
-                    ATTR_POSITION1: hass_position_to_hd(target_hass_position),
-                    ATTR_POSKIND1: 1,
+                    ATTR_POSITION1: hass_position_to_hd(
+                        target_hass_position, MAX_POSITION
+                    ),
+                    ATTR_POSKIND1: POSKIND_PRIMARY,
                 }
             )
         )
@@ -218,10 +241,14 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         """Update the current cover position from the data."""
         _LOGGER.debug("Raw data update: %s", self._shade.raw_data)
         position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
-        if ATTR_POSITION1 in position_data:
-            self._current_cover_position = int(position_data[ATTR_POSITION1])
+        self._async_process_updated_position_data(position_data)
         self._is_opening = False
         self._is_closing = False
+
+    @callback
+    @abstractmethod
+    def _async_process_updated_position_data(self, position_data):
+        """Process position data."""
 
     @callback
     def _async_cancel_scheduled_transition_update(self):
@@ -299,3 +326,108 @@ class PowerViewShade(ShadeEntity, CoverEntity):
             return
         self._async_process_new_shade_data(self.coordinator.data[self._shade.id])
         self.async_write_ha_state()
+
+
+class PowerViewShade(PowerViewShadeBase):
+    """Represent a standard shade."""
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
+    @callback
+    def _async_process_updated_position_data(self, position_data):
+        """Process position data."""
+        if ATTR_POSITION1 in position_data:
+            self._current_hd_cover_position = int(position_data[ATTR_POSITION1])
+
+
+class PowerViewShadeWithTilt(PowerViewShade):
+    """Representation of a PowerView shade with tilt capabilities."""
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    _max_tilt = MAX_POSITION
+    _tilt_steps = 10
+
+    def __init__(self, coordinator, device_info, room_name, shade, name):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_current_cover_tilt_position = 0
+
+    async def async_open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        current_hass_position = hd_position_to_hass(
+            self._current_hd_cover_position, MAX_POSITION
+        )
+        steps_to_move = current_hass_position + self._tilt_steps
+        self._async_schedule_update_for_transition(steps_to_move)
+        self._async_update_from_command(await self._shade.tilt_open())
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        current_hass_position = hd_position_to_hass(
+            self._current_hd_cover_position, MAX_POSITION
+        )
+        steps_to_move = current_hass_position + self._tilt_steps
+        self._async_schedule_update_for_transition(steps_to_move)
+        self._async_update_from_command(await self._shade.tilt_close())
+
+    async def async_set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        target_hass_tilt_position = kwargs[ATTR_TILT_POSITION]
+        current_hass_position = hd_position_to_hass(
+            self._current_hd_cover_position, MAX_POSITION
+        )
+        steps_to_move = current_hass_position + self._tilt_steps
+
+        self._async_schedule_update_for_transition(steps_to_move)
+        self._async_update_from_command(
+            await self._shade.move(
+                {
+                    ATTR_POSITION1: hass_position_to_hd(
+                        target_hass_tilt_position, self._max_tilt
+                    ),
+                    ATTR_POSKIND1: POSKIND_VANE,
+                }
+            )
+        )
+
+    async def async_stop_cover_tilt(self, **kwargs):
+        """Stop the cover tilting."""
+        # Cancel any previous updates
+        await self.async_stop_cover()
+
+    @callback
+    def _async_process_updated_position_data(self, position_data):
+        """Process position data."""
+        if ATTR_POSKIND1 not in position_data:
+            return
+        if int(position_data[ATTR_POSKIND1]) == POSKIND_PRIMARY:
+            self._current_hd_cover_position = int(position_data[ATTR_POSITION1])
+            self._attr_current_cover_tilt_position = 0
+        if int(position_data[ATTR_POSKIND1]) == POSKIND_VANE:
+            self._current_hd_cover_position = MIN_POSITION
+            self._attr_current_cover_tilt_position = hd_position_to_hass(
+                int(position_data[ATTR_POSITION1]), self._max_tilt
+            )
+
+
+class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
+    """Representation of a Silhouette PowerView shade."""
+
+    def __init__(self, coordinator, device_info, room_name, shade, name):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._max_tilt = 32767
+        self._tilt_steps = 4

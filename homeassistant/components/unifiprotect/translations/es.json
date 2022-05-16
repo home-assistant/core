@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "discovery_started": "Se ha iniciado el descubrimiento"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -10,6 +11,12 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "username": "Usuario",
+                    "verify_ssl": "Verifica el certificado SSL"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "IP/Host del servidor UniFi Protect",

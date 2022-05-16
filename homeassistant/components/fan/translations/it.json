@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "Attiva/disattiva {entity_name}",
             "turn_off": "Spegnere {entity_name}",
             "turn_on": "Accendere {entity_name}"
         },

@@ -34,6 +34,8 @@ from .const import (
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
+PARALLEL_UPDATES = 0
+
 LOGGER = logging.getLogger(__name__)
 
 STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
