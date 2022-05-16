@@ -95,7 +95,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.lights.lights.subscribe(
-            async_add_light,
+            gateway.evaluate_add_device(async_add_light),
             EventType.ADDED,
         )
     )
