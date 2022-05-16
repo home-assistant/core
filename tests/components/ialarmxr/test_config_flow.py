@@ -1,4 +1,5 @@
 """Test the Antifurto365 iAlarmXR config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -23,8 +24,14 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["handler"] == "ialarmxr"
+    assert result["data_schema"].schema.get("host") == str
+    assert result["data_schema"].schema.get("port") == int
+    assert result["data_schema"].schema.get("password") == str
+    assert result["data_schema"].schema.get("username") == str
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_status",
