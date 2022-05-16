@@ -81,7 +81,10 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM),
 )
 
-PLATFORM_SCHEMA_MODERN = vol.All(MQTT_LIGHT_SCHEMA_SCHEMA, validate_mqtt_light_modern)
+PLATFORM_SCHEMA_MODERN = vol.All(
+    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+    validate_mqtt_light_modern,
+)
 
 
 async def async_setup_platform(

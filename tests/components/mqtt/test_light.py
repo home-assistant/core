@@ -347,6 +347,7 @@ async def test_legacy_controlling_state_via_topic(hass, mqtt_mock):
     """Test the controlling of the state via topic for legacy light (white_value)."""
     config = {
         light.DOMAIN: {
+            "platform": "mqtt",
             "name": "test",
             "state_topic": "test_light_rgb/status",
             "command_topic": "test_light_rgb/set",
