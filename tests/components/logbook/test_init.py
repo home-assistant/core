@@ -30,7 +30,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
@@ -327,7 +326,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = EVENT_STATE_CHANGED
+    row.event_type = logbook.PSUEDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
@@ -338,6 +337,9 @@ def create_state_changed_event_from_old_new(
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]
     row.context_only = False
     row.context_id = None
+    row.friendly_name = None
+    row.icon = None
+    row.old_format_icon = None
     row.context_user_id = None
     row.context_parent_id = None
     row.old_state_id = old_state and 1
@@ -719,7 +721,7 @@ async def test_logbook_entity_no_longer_in_state_machine(
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
-    assert json_dict[0]["name"] == "Alarm Control Panel"
+    assert json_dict[0]["name"] == "area 001"
 
 
 async def test_filter_continuous_sensor_values(
