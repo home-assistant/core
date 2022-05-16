@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
-import homeassistant.components.aladdin_connect.cover as cover
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -255,8 +254,17 @@ async def test_yaml_import(hass: HomeAssistant, caplog: pytest.LogCaptureFixture
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
         return_value=[DEVICE_CONFIG_CLOSED],
     ):
-        # await async_setup_component(hass, DOMAIN, YAML_CONFIG)
-        await cover.async_setup_platform(hass, YAML_CONFIG, None)
+        await async_setup_component(
+            hass,
+            COVER_DOMAIN,
+            {
+                COVER_DOMAIN: {
+                    "platform": DOMAIN,
+                    "username": "test-user",
+                    "password": "test-password",
+                }
+            },
+        )
         await hass.async_block_till_done()
     assert hass.config_entries.async_entries(DOMAIN)
     assert "Configuring Aladdin Connect through yaml is deprecated" in caplog.text
