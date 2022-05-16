@@ -55,14 +55,14 @@ async def test_put_event_on_queue_with_managed_client_with_error_KustoServiceErr
     # pylint: disable=protected-access
     """Test listening to events from Hass. and writing to ADX with managed client with error KustoServiceError."""
 
+    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
+        KustoServiceError("test")
+    )
+
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL])
-    )
-
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
-        KustoServiceError("test")
     )
 
     await hass.async_block_till_done()
@@ -184,6 +184,9 @@ async def test_unload_entry(
 
 async def test_failed_test_connection_KustoServiceError(hass, mock_execute_query):
     """Test Error when no getting proper connection with KustoServiceError."""
+
+    mock_execute_query.side_effect = KustoServiceError("test")
+
     entry = MockConfigEntry(
         domain=azure_data_explorer.DOMAIN,
         data=BASE_CONFIG_FULL,
@@ -191,7 +194,7 @@ async def test_failed_test_connection_KustoServiceError(hass, mock_execute_query
         options=BASIC_OPTIONS,
     )
     entry.add_to_hass(hass)
-    mock_execute_query.side_effect = KustoServiceError("test")
+
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_ERROR
 

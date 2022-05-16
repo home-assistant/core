@@ -58,13 +58,9 @@ class AzureDataExplorerClient:
         if (
             self.use_queued_ingestion is True
         ):  # Queded is the only option supported on free tear of ADX
-            self.client = QueuedIngestClient(kcsb)
+            self.write_client = QueuedIngestClient(kcsb)
         else:
-            self.client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb)
-
-        kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
-            self.cluster_query_uri, client_id, client_secret, authority_id
-        )
+            self.write_client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb)
 
         self.query_client = KustoClient(kcsb)
 
@@ -85,6 +81,6 @@ class AzureDataExplorerClient:
         bytes_stream = io.StringIO(adx_events)
         stream_descriptor = StreamDescriptor(bytes_stream)
 
-        self.client.ingest_from_stream(
+        self.write_client.ingest_from_stream(
             stream_descriptor, ingestion_properties=self.ingestion_properties
         )

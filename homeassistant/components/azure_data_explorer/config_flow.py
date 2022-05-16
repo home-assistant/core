@@ -41,7 +41,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Azure Data Explorer."""
 
     VERSION = 1

@@ -24,7 +24,6 @@ from homeassistant.util.dt import utcnow
 from .client import AzureDataExplorerClient
 from .const import (
     CONF_FILTER,
-    CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
     DATA_FILTER,
     DATA_HUB,
@@ -126,7 +125,7 @@ class AzureDataExplorer:
         )
 
         self._send_interval = self._entry.options[CONF_SEND_INTERVAL]
-        self._max_delay = self._entry.options.get(CONF_MAX_DELAY, DEFAULT_MAX_DELAY)
+        self._max_delay = DEFAULT_MAX_DELAY
 
         self._shutdown = False
         self._queue: asyncio.PriorityQueue[
@@ -196,7 +195,7 @@ class AzureDataExplorer:
                 "Dropped %d old events, consider filtering messages", dropped
             )
 
-        if len(adx_events) > 0:
+        if adx_events:
 
             event_string = "".join(adx_events)
 
@@ -221,12 +220,12 @@ class AzureDataExplorer:
     ) -> tuple[str | None, int]:
         """Parse event by checking if it needs to be sent, and format it."""
 
-        if not state:
+        if state is None:
             self._shutdown = True
             return None, dropped
         if state.state in FILTER_STATES or not self._entities_filter(state.entity_id):
             return None, dropped
-        if (utcnow() - time_fired).seconds > self._max_delay + self._send_interval:
+        if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
         json_string = bytes(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
         json_dictionary = json.loads(json_string)
