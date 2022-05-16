@@ -199,8 +199,11 @@ IGNORED_MODULES: Final[list[str]] = [
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
+    "homeassistant.components.application_credentials.*",
     "homeassistant.components.diagnostics.*",
+    "homeassistant.components.spotify.*",
     "homeassistant.components.stream.*",
+    "homeassistant.components.update.*",
 }
 
 HEADER: Final = """
