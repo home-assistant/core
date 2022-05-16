@@ -19,7 +19,7 @@ class HistoryStatsState:
     """The current stats of the history stats."""
 
     hours_matched: float | None
-    changes_to_match_state: int | None
+    match_count: int | None
     period: tuple[datetime.datetime, datetime.datetime]
 
 
@@ -121,14 +121,12 @@ class HistoryStats:
             self._state = HistoryStatsState(None, None, self._period)
             return self._state
 
-        hours_matched, changes_to_match_state = self._async_compute_hours_and_changes(
+        hours_matched, match_count = self._async_compute_hours_and_changes(
             now_timestamp,
             current_period_start_timestamp,
             current_period_end_timestamp,
         )
-        self._state = HistoryStatsState(
-            hours_matched, changes_to_match_state, self._period
-        )
+        self._state = HistoryStatsState(hours_matched, match_count, self._period)
         return self._state
 
     def _update_from_database(
@@ -156,7 +154,7 @@ class HistoryStats:
         )
         last_state_change_timestamp = start_timestamp
         elapsed = 0.0
-        changes_to_match_state = 0
+        match_count = 1 if previous_state_matches else 0
 
         # Make calculations
         for item in self._history_current_period:
@@ -166,7 +164,7 @@ class HistoryStats:
             if previous_state_matches:
                 elapsed += state_change_timestamp - last_state_change_timestamp
             elif current_state_matches:
-                changes_to_match_state += 1
+                match_count += 1
 
             previous_state_matches = current_state_matches
             last_state_change_timestamp = state_change_timestamp
@@ -178,4 +176,4 @@ class HistoryStats:
 
         # Save value in hours
         hours_matched = elapsed / 3600
-        return hours_matched, changes_to_match_state
+        return hours_matched, match_count
