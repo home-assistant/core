@@ -1294,7 +1294,7 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
         remove_platform=False,
     )
     assert (
-        "Invalid keyword 'platform' found, please remove it from your configuration"
+        "voluptuous.error.MultipleInvalid: extra keys not allowed @ data['platform']"
         in caplog.text
     )
 
