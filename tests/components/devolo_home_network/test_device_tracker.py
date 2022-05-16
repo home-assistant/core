@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import DOMAIN as PLATFORM
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
-    WIFI_BAND_5G,
+    WIFI_BANDS,
 )
 from homeassistant.const import (
     DATA_RATE_MEGABITS_PER_SECOND,
@@ -51,7 +51,7 @@ async def test_device_tracker(hass: HomeAssistant):
     assert state.state == STATE_HOME
     assert (
         state.attributes["band"]
-        == f"{'5' if STATION['band'] == WIFI_BAND_5G else '2.5'} {FREQUENCY_GIGAHERTZ}"
+        == f"{WIFI_BANDS[STATION['band']]} {FREQUENCY_GIGAHERTZ}"
     )
     assert (
         state.attributes["rx_rate"]

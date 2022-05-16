@@ -11,7 +11,11 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND, FREQUENCY_GIGAHERTZ
+from homeassistant.const import (
+    DATA_RATE_MEGABITS_PER_SECOND,
+    FREQUENCY_GIGAHERTZ,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,7 +29,7 @@ from .const import (
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
     MAC_ADDRESS,
-    WIFI_BAND_5G,
+    WIFI_BANDS,
 )
 
 
@@ -108,9 +112,11 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
                 {},
             )
             if station:
-                attrs[
-                    "band"
-                ] = f"{'5' if station['band'] == WIFI_BAND_5G else '2.5'} {FREQUENCY_GIGAHERTZ}"
+                attrs["band"] = (
+                    f"{WIFI_BANDS.get(station['band'])} {FREQUENCY_GIGAHERTZ}"
+                    if WIFI_BANDS.get(station["band"])
+                    else STATE_UNKNOWN
+                )
                 attrs[
                     "rx_rate"
                 ] = f"{round(station['rx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
