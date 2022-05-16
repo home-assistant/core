@@ -176,35 +176,26 @@ async def test_cover_operation(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.open_door",
         return_value=True,
-    ):
-        await hass.services.async_call(
-            "cover", "open_cover", {"entity_id": "cover.home"}, blocking=True
-        )
-
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.close_door",
-        return_value=True,
-    ):
-        await hass.services.async_call(
-            "cover", "close_cover", {"entity_id": "cover.home"}, blocking=True
-        )
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=[DEVICE_CONFIG_CLOSED],
-    ):
-        await hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
-        )
-    assert hass.states.get("cover.home").state == STATE_CLOSED
-
-    with patch(
+    ), patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
         return_value=[DEVICE_CONFIG_OPEN],
     ):
         await hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "cover.home"}, blocking=True
+            "cover", "open_cover", {"entity_id": "cover.home"}, blocking=True
         )
     assert hass.states.get("cover.home").state == STATE_OPEN
+
+    with patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.close_door",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
+        return_value=[DEVICE_CONFIG_CLOSED],
+    ):
+        await hass.services.async_call(
+            "cover", "close_cover", {"entity_id": "cover.home"}, blocking=True
+        )
+    assert hass.states.get("cover.home").state == STATE_CLOSED
 
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
