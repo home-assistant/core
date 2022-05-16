@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Zariadenie je u\u017e nakonfigurovan\u00e9",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
@@ -10,6 +11,11 @@
             "link": {
                 "data": {
                     "port": "Port"
+                }
+            },
+            "reauth": {
+                "data": {
+                    "password": "Heslo"
                 }
             },
             "user": {

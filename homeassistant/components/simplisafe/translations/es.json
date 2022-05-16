@@ -6,10 +6,14 @@
             "wrong_account": "Las credenciales de usuario proporcionadas no coinciden con esta cuenta de SimpliSafe."
         },
         "error": {
+            "2fa_timed_out": "Se ha agotado el tiempo de espera m\u00e1ximo durante la autenticaci\u00f3n de dos factores",
             "identifier_exists": "Cuenta ya registrada",
             "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
             "still_awaiting_mfa": "Esperando todav\u00eda el clic en el correo electr\u00f3nico de MFA",
             "unknown": "Error inesperado"
+        },
+        "progress": {
+            "email_2fa": "Mira el correo electr\u00f3nico donde deber\u00edas encontrar el enlace de verificaci\u00f3n de Simplisafe."
         },
         "step": {
             "mfa": {
@@ -19,8 +23,14 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Tu token de acceso ha expirado o ha sido revocado. Introduce tu contrase\u00f1a para volver a vincular tu cuenta.",
-                "title": "Volver a vincular la Cuenta SimpliSafe"
+                "description": "Vuelve a introducir la contrase\u00f1a de {username}",
+                "title": "Reautenticaci\u00f3n de la integraci\u00f3n"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "C\u00f3digo"
+                },
+                "description": "Introduce el c\u00f3digo de autenticaci\u00f3n de dos factores enviado por SMS."
             },
             "user": {
                 "data": {

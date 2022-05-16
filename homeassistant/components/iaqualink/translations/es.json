@@ -13,8 +13,8 @@
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
                 },
-                "description": "Por favor, introduzca el nombre de usuario y la contrase\u00f1a de su cuenta de iAqualink.",
-                "title": "Con\u00e9ctese a iAqualink"
+                "description": "Introduce el nombre de usuario y contrase\u00f1a de tu cuenta de iAqualink.",
+                "title": "Conexi\u00f3n con iAqualink"
             }
         }
     }
