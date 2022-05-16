@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "BSB-Lan: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

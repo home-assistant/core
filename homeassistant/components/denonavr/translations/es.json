@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Error detectando un Receptor AVR Denon en Red"
         },
-        "flow_title": "Receptor AVR Denon en Red: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Por favor confirma la adici\u00f3n del receptor",
