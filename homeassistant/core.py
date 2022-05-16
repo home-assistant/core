@@ -406,6 +406,10 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
@@ -435,7 +439,10 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task: asyncio.Future[_R]
-        # casts removed here because they were almost expensive as call_soon
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 hassjob.target = cast(
@@ -528,6 +535,10 @@ class HomeAssistant:
         hassjob: HassJob
         args: parameters for method to call.
         """
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -573,6 +584,10 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
             target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
