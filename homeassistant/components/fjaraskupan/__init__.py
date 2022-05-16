@@ -32,7 +32,6 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 
-_DATA_TIMEOUT = timedelta(seconds=120)
 _LOGGER = logging.getLogger(__name__)
 
 
