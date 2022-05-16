@@ -22,22 +22,25 @@ from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
     PLATFORM_SCHEMA_BASIC,
+    PLATFORM_SCHEMA_MODERN_BASIC,
     async_setup_entity_basic,
 )
 from .schema_json import (
     DISCOVERY_SCHEMA_JSON,
     PLATFORM_SCHEMA_JSON,
+    PLATFORM_SCHEMA_MODERN_JSON,
     async_setup_entity_json,
 )
 from .schema_template import (
     DISCOVERY_SCHEMA_TEMPLATE,
+    PLATFORM_SCHEMA_MODERN_TEMPLATE,
     PLATFORM_SCHEMA_TEMPLATE,
     async_setup_entity_template,
 )
 
 
 def validate_mqtt_light_discovery(value):
-    """Validate MQTT light schema."""
+    """Validate MQTT light schema for."""
     schemas = {
         "basic": DISCOVERY_SCHEMA_BASIC,
         "json": DISCOVERY_SCHEMA_JSON,
@@ -56,16 +59,29 @@ def validate_mqtt_light(value):
     return schemas[value[CONF_SCHEMA]](value)
 
 
+def validate_mqtt_light_modern(value):
+    """Validate MQTT light schema."""
+    schemas = {
+        "basic": PLATFORM_SCHEMA_MODERN_BASIC,
+        "json": PLATFORM_SCHEMA_MODERN_JSON,
+        "template": PLATFORM_SCHEMA_MODERN_TEMPLATE,
+    }
+    return schemas[value[CONF_SCHEMA]](value)
+
+
 DISCOVERY_SCHEMA = vol.All(
     MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light_discovery,
-    cv.deprecated(CONF_PLATFORM),  # Deprecated in HA Core 2022.6
 )
 
-
+# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
-    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_light
+    cv.PLATFORM_SCHEMA.extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema, extra=vol.ALLOW_EXTRA),
+    validate_mqtt_light,
+    cv.deprecated(CONF_PLATFORM),
 )
+
+PLATFORM_SCHEMA_MODERN = vol.All(MQTT_LIGHT_SCHEMA_SCHEMA, validate_mqtt_light_modern)
 
 
 async def async_setup_platform(
@@ -89,7 +105,7 @@ async def async_setup_entry(
     """Set up MQTT light through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
     for config in await async_get_platform_config_from_yaml(
-        hass, light.DOMAIN, PLATFORM_SCHEMA
+        hass, light.DOMAIN, PLATFORM_SCHEMA_MODERN
     ):
         await _async_setup_entity(hass, async_add_entities, config, config_entry)
     # setup for discovery

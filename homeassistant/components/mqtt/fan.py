@@ -124,7 +124,7 @@ def valid_preset_mode_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -174,11 +174,28 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE,
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
     cv.deprecated(CONF_PLATFORM),  # Deprecated in HA Core 2022.6
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
+    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
+    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
+    # are no longer supported, support was removed in release 2021.12
+    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
+    cv.removed(CONF_PAYLOAD_LOW_SPEED),
+    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.removed(CONF_SPEED_COMMAND_TOPIC),
+    cv.removed(CONF_SPEED_LIST),
+    cv.removed(CONF_SPEED_STATE_TOPIC),
+    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+    valid_speed_range_configuration,
+    valid_preset_mode_configuration,
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -219,7 +236,7 @@ async def async_setup_entry(
     """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
     for config in await async_get_platform_config_from_yaml(
-        hass, fan.DOMAIN, PLATFORM_SCHEMA
+        hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN
     ):
         await _async_setup_entity(hass, async_add_entities, config, config_entry)
     # setup for discovery

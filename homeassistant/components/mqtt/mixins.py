@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_MODEL,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
@@ -244,20 +243,12 @@ async def async_get_platform_config_from_yaml(
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the platform read from configuration.yaml."""
 
-    def check_schema(config: dict, schema: vol.Schema) -> ConfigType:
-        """Update the platform for schema compatibility and check the schema."""
-        if CONF_PLATFORM in config:
-            error_string = f"Invalid keyword 'platform' found, please remove it from your configuration: {json.dumps(config)}"
-            raise ValueError(error_string)
-        config[CONF_PLATFORM] = DOMAIN
-        return schema(config)
-
     config_yaml: ConfigType = hass.data.get(DATA_MQTT_CONFIG, {})
     if not (platform_configs := config_yaml.get(domain)):
         return []
     errors = []
     try:
-        config = [check_schema(config, schema) for config in platform_configs]
+        config = [schema(config) for config in platform_configs]
     except (ValueError, vol.MultipleInvalid) as exc:
         errors.append(exc)
     if errors:
