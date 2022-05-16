@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.aladdin_connect.config_flow import InvalidAuth
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -56,7 +55,29 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",
-        side_effect=InvalidAuth,
+        side_effect=ValueError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -68,43 +89,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",
-        side_effect=ConnectionError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",
-        side_effect=TypeError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
         "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient.login",

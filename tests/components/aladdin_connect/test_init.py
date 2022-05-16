@@ -48,7 +48,8 @@ async def test_entry_password_fail(hass: HomeAssistant):
         return_value=False,
     ):
 
-        assert (await async_setup_component(hass, DOMAIN, entry)) is True
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 

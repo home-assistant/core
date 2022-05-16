@@ -80,9 +80,6 @@ DEVICE_CONFIG_BAD_NO_DOOR = {
 @pytest.mark.parametrize(
     "side_effect",
     [
-        (TypeError),
-        (KeyError),
-        (NameError),
         (ValueError),
     ],
 )
@@ -111,9 +108,6 @@ async def test_setup_get_doors_errors(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        (TypeError),
-        (KeyError),
-        (NameError),
         (ValueError),
     ],
 )
@@ -261,9 +255,10 @@ async def test_yaml_import(hass: HomeAssistant, caplog: pytest.LogCaptureFixture
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
         return_value=[DEVICE_CONFIG_CLOSED],
     ):
+        # await async_setup_component(hass, DOMAIN, YAML_CONFIG)
         await cover.async_setup_platform(hass, YAML_CONFIG, None)
         await hass.async_block_till_done()
-
+    assert hass.config_entries.async_entries(DOMAIN)
     assert "Configuring Aladdin Connect through yaml is deprecated" in caplog.text
 
     assert hass.config_entries.async_entries(DOMAIN)

@@ -66,7 +66,7 @@ async def async_setup_entry(
     try:
         doors = await hass.async_add_executor_job(acc.get_doors)
 
-    except (TypeError, KeyError, NameError, ValueError) as ex:
+    except ValueError as ex:
         _LOGGER.error("%s", ex)
         raise ConfigEntryNotReady from ex
 

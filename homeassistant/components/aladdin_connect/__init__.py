@@ -24,8 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         if not await hass.async_add_executor_job(acc.login):
             raise ConfigEntryAuthFailed("Incorrect Password")
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
+    except ValueError as ex:
         raise ConfigEntryNotReady from ex
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -35,4 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

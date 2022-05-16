@@ -35,11 +35,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         login = await hass.async_add_executor_job(acc.login)
-    except (TypeError, KeyError, NameError, ValueError) as ex:
+    except ValueError as ex:
         raise ConnectionError from ex
-    else:
-        if not login:
-            raise InvalidAuth
+
+    if not login:
+        raise InvalidAuth
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
