@@ -17,6 +17,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN, CONF_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -98,7 +99,9 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         entries = self.hass.config_entries.async_entries(current[CONF_DOMAIN])
         for entry in entries:
             if entry.data.get("auth_implementation") == item_id:
-                raise ValueError("Cannot delete credential in use by an integration")
+                raise HomeAssistantError(
+                    f"Cannot delete credential in use by integration {entry.domain}"
+                )
 
         await super().async_delete_item(item_id)
 
