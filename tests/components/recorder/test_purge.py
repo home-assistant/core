@@ -1341,6 +1341,44 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
                 )
 
 
+async def _add_events_with_event_data(hass: HomeAssistant, iterations: int = 1):
+    """Add a few events with linked event_data for testing."""
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        for _ in range(iterations):
+            for event_id in range(6):
+                if event_id < 2:
+                    timestamp = eleven_days_ago
+                    event_type = "EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"
+                    shared_data = '{"type":{"EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"}'
+                elif event_id < 4:
+                    timestamp = five_days_ago
+                    event_type = "EVENT_TEST_PURGE_WITH_EVENT_DATA"
+                    shared_data = '{"type":{"EVENT_TEST_PURGE_WITH_EVENT_DATA"}'
+                else:
+                    timestamp = utcnow
+                    event_type = "EVENT_TEST_WITH_EVENT_DATA"
+                    shared_data = '{"type":{"EVENT_TEST_WITH_EVENT_DATA"}'
+
+                event_data = EventData(hash=1234, shared_data=shared_data)
+
+                session.add(
+                    Events(
+                        event_type=event_type,
+                        origin="LOCAL",
+                        time_fired=timestamp,
+                        event_data_rel=event_data,
+                    )
+                )
+
+
 async def _add_test_statistics(hass: HomeAssistant):
     """Add multiple statistics to the db for testing."""
     utcnow = dt_util.utcnow()
@@ -1420,6 +1458,29 @@ async def _add_test_statistics_runs(hass: HomeAssistant):
                     start=timestamp,
                 )
             )
+
+
+def _add_state_without_event_linkage(
+    session: Session,
+    entity_id: str,
+    state: str,
+    timestamp: datetime,
+):
+    state_attrs = StateAttributes(
+        hash=1234, shared_attrs=json.dumps({entity_id: entity_id})
+    )
+    session.add(state_attrs)
+    session.add(
+        States(
+            entity_id=entity_id,
+            state=state,
+            attributes=None,
+            last_changed=timestamp,
+            last_updated=timestamp,
+            event_id=None,
+            state_attributes=state_attrs,
+        )
+    )
 
 
 def _add_state_and_state_changed_event(
@@ -1507,3 +1568,56 @@ async def test_purge_many_old_events(
         assert finished
         assert events.count() == 0
         assert event_datas.count() == 0
+
+
+async def test_purge_can_mix_legacy_and_new_format(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test purging with legacy a new events."""
+    instance = await async_setup_recorder_instance(hass)
+    utcnow = dt_util.utcnow()
+    eleven_days_ago = utcnow - timedelta(days=11)
+    with session_scope(hass=hass) as session:
+        for event_id in range(5000000, 5000000 + MAX_ROWS_TO_PURGE * 2):
+            _add_state_and_state_changed_event(
+                session,
+                "sensor.excluded",
+                "purgeme",
+                eleven_days_ago,
+                event_id,
+            )
+    await _add_test_events(hass, MAX_ROWS_TO_PURGE)
+    await _add_events_with_event_data(hass, MAX_ROWS_TO_PURGE)
+    with session_scope(hass=hass) as session:
+        for _ in range(2000):
+            _add_state_without_event_linkage(
+                session, "switch.random", "on", eleven_days_ago
+            )
+        states = session.query(States)
+        assert states.count() == 3996
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+        )
+        assert not finished
+        assert states.count() == 2998
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+        )
+        assert not finished
+        assert states.count() == 2000
+        # At this point we should have switched to the fast
+        # method and we should be able to delete 2000 in a single
+        # pass
+        finished = purge_old_data(
+            instance,
+            purge_before,
+            repack=False,
+        )
+        assert finished
+        assert states.count() == 0
