@@ -196,12 +196,13 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             # or device_class.
             update_state = False
 
-            unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit is not None:
-                new_unit_of_measurement = self._unit_template.format(unit)
-                if self._unit_of_measurement != new_unit_of_measurement:
-                    self._unit_of_measurement = new_unit_of_measurement
-                    update_state = True
+            if new_state.attributes:
+                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                if unit is not None:
+                    new_unit_of_measurement = self._unit_template.format(unit)
+                    if self._unit_of_measurement != new_unit_of_measurement:
+                        self._unit_of_measurement = new_unit_of_measurement
+                        update_state = True
 
             if (
                 self.device_class is None
