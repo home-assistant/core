@@ -15,7 +15,7 @@
                     "ssl": "Utiliza un certificado SSL",
                     "username": "Usuario (Opcional)"
                 },
-                "description": "Host predeterminado: {host}\nPuerto predeterminado: {port}\nNombre de usuario predeterminado: {username}",
+                "description": "Host predeterminado: {host} \nNombre de usuario predeterminado: {username}",
                 "title": "Netgear"
             }
         }
