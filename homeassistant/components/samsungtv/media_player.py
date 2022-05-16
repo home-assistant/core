@@ -307,7 +307,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def _async_resubscribe_dmr(self) -> None:
         assert self._dmr_device
-        with contextlib.suppress(UpnpConnectionError):
+        with contextlib.suppress(UpnpConnectionError, UpnpResponseError):
             await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
 
     async def _async_shutdown_dmr(self) -> None:
