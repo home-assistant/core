@@ -24,10 +24,12 @@ class HERERoutingData(TypedDict):
 class HERETravelTimeConfig:
     """Configuration for HereTravelTimeDataUpdateCoordinator."""
 
-    origin: str | None
-    destination: str | None
-    origin_entity_id: str | None
+    destination_latitude: float | None
+    destination_longitude: float | None
     destination_entity_id: str | None
+    origin_latitude: float | None
+    origin_longitude: float | None
+    origin_entity_id: str | None
     travel_mode: str
     route_mode: str
     units: str

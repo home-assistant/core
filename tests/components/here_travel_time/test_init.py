@@ -3,8 +3,10 @@
 import pytest
 
 from homeassistant.components.here_travel_time.const import (
-    CONF_DESTINATION,
-    CONF_ORIGIN,
+    CONF_DESTINATION_LATITUDE,
+    CONF_DESTINATION_LONGITUDE,
+    CONF_ORIGIN_LATITUDE,
+    CONF_ORIGIN_LONGITUDE,
     DOMAIN,
     TRAVEL_MODE_CAR,
 )
@@ -29,8 +31,10 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="0123456789",
         data={
-            CONF_ORIGIN: f"{CAR_ORIGIN_LATITUDE},{CAR_ORIGIN_LONGITUDE}",
-            CONF_DESTINATION: f"{CAR_DESTINATION_LATITUDE},{CAR_DESTINATION_LONGITUDE}",
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_CAR,
             CONF_NAME: "test",

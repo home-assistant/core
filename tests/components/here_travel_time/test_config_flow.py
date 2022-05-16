@@ -10,8 +10,6 @@ from homeassistant.components.here_travel_time.const import (
     ARRIVAL_TIME,
     CONF_ARRIVAL,
     CONF_DEPARTURE,
-    CONF_DESTINATION,
-    CONF_ORIGIN,
     CONF_ROUTE_MODE,
     CONF_TIME,
     CONF_TIME_TYPE,
@@ -252,8 +250,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="0123456789",
         data={
-            CONF_ORIGIN: f"{CAR_ORIGIN_LATITUDE},{CAR_ORIGIN_LONGITUDE}",
-            CONF_DESTINATION: f"{CAR_DESTINATION_LATITUDE},{CAR_DESTINATION_LONGITUDE}",
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_CAR,
             CONF_NAME: "test",
@@ -334,8 +334,10 @@ async def test_options_flow_arrival_time(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="0123456789",
         data={
-            CONF_ORIGIN: f"{CAR_ORIGIN_LATITUDE},{CAR_ORIGIN_LONGITUDE}",
-            CONF_DESTINATION: f"{CAR_DESTINATION_LATITUDE},{CAR_DESTINATION_LONGITUDE}",
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_PUBLIC_TIME_TABLE,
             CONF_NAME: "test",
@@ -427,8 +429,10 @@ async def test_import_flow_coordinates(hass: HomeAssistant) -> None:
     assert entry.data == {
         CONF_NAME: "test_name",
         CONF_API_KEY: CONF_API_KEY,
-        CONF_ORIGIN: f"{CAR_ORIGIN_LATITUDE},{CAR_ORIGIN_LONGITUDE}",
-        CONF_DESTINATION: f"{CAR_DESTINATION_LATITUDE},{CAR_DESTINATION_LONGITUDE}",
+        CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
+        CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
+        CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
+        CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
         CONF_MODE: TRAVEL_MODE_CAR,
     }
     assert entry.options == {

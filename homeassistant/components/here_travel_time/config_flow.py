@@ -18,8 +18,6 @@ from .const import (
     ARRIVAL_TIME,
     CONF_ARRIVAL,
     CONF_DEPARTURE,
-    CONF_DESTINATION,
-    CONF_ORIGIN,
     CONF_ROUTE_MODE,
     CONF_TIME,
     CONF_TIME_TYPE,
@@ -63,10 +61,12 @@ def is_dupe_import(
     ):
         return False
 
-    # Check origin
+    # Check origin/destination
     for key in (
-        CONF_DESTINATION,
-        CONF_ORIGIN,
+        CONF_DESTINATION_LATITUDE,
+        CONF_DESTINATION_LONGITUDE,
+        CONF_ORIGIN_LATITUDE,
+        CONF_ORIGIN_LONGITUDE,
         CONF_DESTINATION_ENTITY_ID,
         CONF_ORIGIN_ENTITY_ID,
     ):
@@ -166,16 +166,13 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure origin by using gps coordinates."""
         if user_input is not None:
-            self._config[
-                CONF_ORIGIN
-            ] = f"{user_input[CONF_ORIGIN]['latitude']},{user_input[CONF_ORIGIN]['longitude']}"
+            self._config[CONF_ORIGIN_LATITUDE] = user_input["origin"]["latitude"]
+            self._config[CONF_ORIGIN_LONGITUDE] = user_input["origin"]["longitude"]
             return self.async_show_menu(
                 step_id="destination_menu",
                 menu_options=["destination_coordinates", "destination_entity"],
             )
-        schema = vol.Schema(
-            {CONF_ORIGIN: selector({LocationSelector.selector_type: {}})}
-        )
+        schema = vol.Schema({"origin": selector({LocationSelector.selector_type: {}})})
         return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
 
     async def async_step_origin_entity(
@@ -199,14 +196,17 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure destination by using gps coordinates."""
         if user_input is not None:
-            self._config[
-                CONF_DESTINATION
-            ] = f"{user_input[CONF_DESTINATION]['latitude']},{user_input[CONF_DESTINATION]['longitude']}"
+            self._config[CONF_DESTINATION_LATITUDE] = user_input["destination"][
+                "latitude"
+            ]
+            self._config[CONF_DESTINATION_LONGITUDE] = user_input["destination"][
+                "longitude"
+            ]
             return self.async_create_entry(
                 title=self._config[CONF_NAME], data=self._config
             )
         schema = vol.Schema(
-            {CONF_DESTINATION: selector({LocationSelector.selector_type: {}})}
+            {"destination": selector({LocationSelector.selector_type: {}})}
         )
         return self.async_show_form(
             step_id="destination_coordinates", data_schema=schema
@@ -252,16 +252,18 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Transform platform schema input to new model."""
         options: dict[str, Any] = {}
         if user_input.get(CONF_ORIGIN_LATITUDE) is not None:
-            user_input[
-                CONF_ORIGIN
-            ] = f"{user_input.pop(CONF_ORIGIN_LATITUDE)},{user_input.pop(CONF_ORIGIN_LONGITUDE)}"
+            user_input[CONF_ORIGIN_LATITUDE] = user_input.pop(CONF_ORIGIN_LATITUDE)
+            user_input[CONF_ORIGIN_LONGITUDE] = user_input.pop(CONF_ORIGIN_LONGITUDE)
         else:
             user_input[CONF_ORIGIN_ENTITY_ID] = user_input.pop(CONF_ORIGIN_ENTITY_ID)
 
         if user_input.get(CONF_DESTINATION_LATITUDE) is not None:
-            user_input[
-                CONF_DESTINATION
-            ] = f"{user_input.pop(CONF_DESTINATION_LATITUDE)},{user_input.pop(CONF_DESTINATION_LONGITUDE)}"
+            user_input[CONF_DESTINATION_LATITUDE] = user_input.pop(
+                CONF_DESTINATION_LATITUDE
+            )
+            user_input[CONF_DESTINATION_LONGITUDE] = user_input.pop(
+                CONF_DESTINATION_LONGITUDE
+            )
         else:
             user_input[CONF_DESTINATION_ENTITY_ID] = user_input.pop(
                 CONF_DESTINATION_ENTITY_ID
