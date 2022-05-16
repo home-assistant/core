@@ -2355,7 +2355,7 @@ uEagle==0.0.2
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.2
+unifi-discovery==1.1.3
 
 # homeassistant.components.unifiled
 unifiled==0.11
