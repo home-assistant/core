@@ -166,4 +166,4 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         elif self._type == CONF_TYPE_RATIO:
             self._attr_native_value = pretty_ratio(state.hours_matched, state.period)
         elif self._type == CONF_TYPE_COUNT:
-            self._attr_native_value = state.changes_to_match_state
+            self._attr_native_value = state.match_count
