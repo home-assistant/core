@@ -583,7 +583,6 @@ def find_events_to_purge(purge_before: datetime) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(Events.event_id, Events.data_id)
         .filter(Events.time_fired < purge_before)
-        .filter(Events.data_id.is_not(None))  # new format only
         .limit(MAX_ROWS_TO_PURGE)
     )
 
@@ -593,7 +592,6 @@ def find_states_to_purge(purge_before: datetime) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(States.state_id, States.attributes_id)
         .filter(States.last_updated < purge_before)
-        .filter(States.event_id.is_(None))  # new format only
         .limit(MAX_ROWS_TO_PURGE)
     )
 
