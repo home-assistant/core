@@ -76,15 +76,7 @@ DEVICE_CONFIG_BAD_NO_DOOR = {
 }
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        (ValueError),
-    ],
-)
-async def test_setup_get_doors_errors(
-    hass: HomeAssistant, side_effect: Exception
-) -> None:
+async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
     """Test component setup Get Doors Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -97,20 +89,14 @@ async def test_setup_get_doors_errors(
         return_value=True,
     ), patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        side_effect=side_effect,
+        side_effect=ValueError,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        (ValueError),
-    ],
-)
-async def test_setup_login_error(hass: HomeAssistant, side_effect: Exception) -> None:
+async def test_setup_login_error(hass: HomeAssistant) -> None:
     """Test component setup Login Errors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -120,7 +106,7 @@ async def test_setup_login_error(hass: HomeAssistant, side_effect: Exception) ->
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        side_effect=side_effect,
+        side_effect=ValueError,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()

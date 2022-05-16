@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -68,8 +68,7 @@ async def async_setup_entry(
 
     except ValueError as ex:
         _LOGGER.error("%s", ex)
-        raise ConfigEntryNotReady from ex
-
+        raise PlatformNotReady from ex
     async_add_entities(
         (AladdinDevice(acc, door) for door in doors),
         update_before_add=True,
