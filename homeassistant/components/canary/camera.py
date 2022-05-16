@@ -219,13 +219,11 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             return
 
         if self._last_image_id != self._last_event.entry_id:
-            _LOGGER.debug("last image id != last event entry id")
             self._image = None
 
         try:
             self._image_url = self._last_event.thumbnails[0].image_url
         except IndexError:
-            _LOGGER.debug("setting image url to none")
             self._image_url = None
 
     async def _set_last_event(self) -> None:
