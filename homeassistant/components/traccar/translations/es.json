@@ -5,12 +5,12 @@
             "webhook_not_internet_accessible": "Tu instancia de Home Assistant debe estar accesible desde Internet para recibir mensajes webhook."
         },
         "create_entry": {
-            "default": "Para enviar eventos a Home Assistant, necesitar\u00e1 configurar la funci\u00f3n de webhook en Traccar.\n\nUtilice la siguiente url: ``{webhook_url}``\n\nConsulte la [documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
+            "default": "Para enviar eventos a Home Assistant, tendr\u00e1s que configurar la opci\u00f3n webhook de Traccar.\n\nUtilice la siguiente url: `{webhook_url}`\n\nConsulte la [documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
         },
         "step": {
             "user": {
-                "description": "\u00bfEst\u00e1 seguro de querer configurar Traccar?",
-                "title": "Configurar Traccar"
+                "description": "\u00bfEst\u00e1s seguro de que quieres configurar Traccar?",
+                "title": "Configura Traccar"
             }
         }
     }

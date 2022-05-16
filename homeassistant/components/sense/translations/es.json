@@ -12,7 +12,8 @@
             "reauth_validate": {
                 "data": {
                     "password": "Contrase\u00f1a"
-                }
+                },
+                "description": "La integraci\u00f3n Sense debe volver a autenticar la cuenta {email}."
             },
             "user": {
                 "data": {

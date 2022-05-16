@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import datetime as dt
 
 import sqlalchemy
-from sqlalchemy import lambda_stmt, select, union_all
+from sqlalchemy import JSON, lambda_stmt, select, type_coerce, union_all
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
@@ -16,6 +16,7 @@ from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
+    JSON_VARIENT_CAST,
     LAST_UPDATED_INDEX,
     EventData,
     Events,
@@ -23,7 +24,6 @@ from homeassistant.components.recorder.models import (
     States,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import EVENT_STATE_CHANGED
 
 ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 
@@ -35,6 +35,22 @@ UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
 
+
+SHARED_ATTRS_JSON = type_coerce(
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+OLD_FORMAT_ATTRS_JSON = type_coerce(
+    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+
+
+PSUEDO_EVENT_STATE_CHANGED = None
+# Since we don't store event_types and None
+# and we don't store state_changed in events
+# we use a NULL for state_changed events
+# when we synthesize them from the states table
+# since it avoids another column being sent
+# in the payload
 
 EVENT_COLUMNS = (
     Events.event_id.label("event_id"),
@@ -50,17 +66,19 @@ STATE_COLUMNS = (
     States.state_id.label("state_id"),
     States.state.label("state"),
     States.entity_id.label("entity_id"),
-    States.attributes.label("attributes"),
-    StateAttributes.shared_attrs.label("shared_attrs"),
+    SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
+    OLD_FORMAT_ATTRS_JSON["icon"].as_string().label("old_format_icon"),
 )
+
 
 EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
-    literal(value=None, type_=sqlalchemy.Text).label("attributes"),
-    literal(value=None, type_=sqlalchemy.Text).label("shared_attrs"),
+    literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
 )
+
 
 EVENT_ROWS_NO_STATES = (
     *EVENT_COLUMNS,
@@ -326,7 +344,13 @@ def _select_states() -> Select:
     """Generate a states select that formats the states table as event rows."""
     return select(
         literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-        literal(value=EVENT_STATE_CHANGED, type_=sqlalchemy.String).label("event_type"),
+        # We use PSUEDO_EVENT_STATE_CHANGED aka None for
+        # state_changed events since it takes up less
+        # space in the response and every row has to be
+        # marked with the event_type
+        literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
+            "event_type"
+        ),
         literal(value=None, type_=sqlalchemy.Text).label("event_data"),
         States.last_updated.label("time_fired"),
         States.context_id.label("context_id"),

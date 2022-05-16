@@ -16,7 +16,7 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.stream.const import (
+from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     RTSP_TRANSPORTS,
