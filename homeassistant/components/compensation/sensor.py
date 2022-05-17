@@ -76,13 +76,8 @@ async def async_setup_platform(
         unit_of_measurement = unit_of_measurement or get_value(ATTR_UNIT_OF_MEASUREMENT)
         device_class = device_class or get_value(ATTR_DEVICE_CLASS)
 
-    if conf.get(CONF_HIDE_SOURCE):
-        registry = er.async_get(hass)
-        source_entity = registry.async_get(source)
-        if source_entity and not source_entity.hidden:
-            registry.async_update_entity(
-                source, hidden_by=er.RegistryEntryHider.INTEGRATION
-            )
+    if conf.get(CONF_HIDE_SOURCE) and source_entity and not source_entity.hidden:
+        ent_reg.async_update_entity(source, hidden_by=er.RegistryEntryHider.INTEGRATION)
 
     async_add_entities(
         [
