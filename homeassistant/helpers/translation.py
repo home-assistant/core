@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
@@ -286,7 +286,7 @@ async def async_get_translations(
     hass: HomeAssistant,
     language: str,
     category: str,
-    integrations: set[str] | None = None,
+    integrations: Iterable[str] | None = None,
     config_flow: bool | None = None,
 ) -> dict[str, Any]:
     """Return all backend translations.
@@ -298,7 +298,7 @@ async def async_get_translations(
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
     if integrations is not None:
-        components = integrations
+        components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category == "state":

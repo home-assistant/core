@@ -448,16 +448,16 @@ async def test_get_translations_for_integrations(hass, ws_client):
     """Test get_translations for integrations command."""
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integrations, config_flow: {
+        side_effect=lambda hass, lang, category, integration, config_flow: {
             "lang": lang,
-            "integrations": integrations,
+            "integration": integration,
         },
     ):
         await ws_client.send_json(
             {
                 "id": 5,
                 "type": "frontend/get_translations",
-                "integrations": ["frontend", "http"],
+                "integration": ["frontend", "http"],
                 "language": "nl",
                 "category": "lang",
             }
@@ -467,7 +467,7 @@ async def test_get_translations_for_integrations(hass, ws_client):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert set(msg["result"]["resources"]["integrations"]) == {"frontend", "http"}
+    assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
 
 
 async def test_get_translations_for_single_integration(hass, ws_client):
