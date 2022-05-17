@@ -30,6 +30,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGBOOK_ENTRY,
     STATE_OFF,
     STATE_ON,
 )
@@ -92,12 +93,15 @@ async def test_service_call_create_logbook_entry(hass_):
     # Our service call will unblock when the event listeners have been
     # scheduled. This means that they may not have been processed yet.
     await async_wait_recording_done(hass_)
+    ent_reg = er.async_get(hass_)
 
     events = list(
         logbook._get_events(
             hass_,
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
+            (EVENT_LOGBOOK_ENTRY,),
+            ent_reg,
         )
     )
     assert len(events) == 2
@@ -131,12 +135,15 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorde
         },
     )
     await async_wait_recording_done(hass)
+    ent_reg = er.async_get(hass)
 
     events = list(
         logbook._get_events(
             hass,
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
+            (EVENT_LOGBOOK_ENTRY,),
+            ent_reg,
         )
     )
     assert len(events) == 1
