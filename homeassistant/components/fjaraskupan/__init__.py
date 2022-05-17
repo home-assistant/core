@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Coordinator(DataUpdateCoordinator[State]):
-    """Update coordinator for for each device."""
+    """Update coordinator for each device."""
 
     def __init__(
         self, hass: HomeAssistant, device: Device, device_info: DeviceInfo
