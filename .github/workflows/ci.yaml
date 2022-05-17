@@ -783,7 +783,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Run pytest (fully)
         if: needs.changes.outputs.test_full_suite == 'true'
-        timeout-minutes: 45
+        timeout-minutes: 60
         run: |
           . venv/bin/activate
           python --version
