@@ -191,18 +191,22 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
 
+            if (
+                new_state is None
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            ):
+                return
+
             # We may want to update our state before an early return,
             # based on the source sensor's unit_of_measurement
             # or device_class.
-            update_state = False
-
-            if new_state.attributes:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                if unit is not None:
-                    new_unit_of_measurement = self._unit_template.format(unit)
-                    if self._unit_of_measurement != new_unit_of_measurement:
-                        self._unit_of_measurement = new_unit_of_measurement
-                        update_state = True
+            update_state = False            
+            unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit is not None:
+                new_unit_of_measurement = self._unit_template.format(unit)
+                if self._unit_of_measurement != new_unit_of_measurement:
+                    self._unit_of_measurement = new_unit_of_measurement
+                    update_state = True
 
             if (
                 self.device_class is None
@@ -217,12 +221,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
             if (
                 old_state is None
-                or new_state is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
-
+                
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
