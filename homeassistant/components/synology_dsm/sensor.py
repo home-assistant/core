@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_DISKS,
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
-    DATA_TERABYTES,
+    DATA_TEBIBYTES,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -189,7 +189,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_size_total",
         name="Total Size",
-        native_unit_of_measurement=DATA_TERABYTES,
+        native_unit_of_measurement=DATA_TEBIBYTES,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -198,7 +198,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         api_key=SynoStorage.API_KEY,
         key="volume_size_used",
         name="Used Space",
-        native_unit_of_measurement=DATA_TERABYTES,
+        native_unit_of_measurement=DATA_TEBIBYTES,
         icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -389,7 +389,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
             return None
 
         # Data (disk space)
-        if self.native_unit_of_measurement == DATA_TERABYTES:
+        if self.native_unit_of_measurement == DATA_TEBIBYTES:
             return round(attr / 1024.0**4, 2)
 
         return attr
