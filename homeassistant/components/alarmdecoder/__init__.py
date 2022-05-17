@@ -15,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -81,23 +82,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def handle_message(sender, message):
         """Handle message from AlarmDecoder."""
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_PANEL_MESSAGE, message)
+        dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
 
     def handle_rfx_message(sender, message):
         """Handle RFX message from AlarmDecoder."""
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_RFX_MESSAGE, message)
+        dispatcher_send(hass, SIGNAL_RFX_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
         """Handle zone fault from AlarmDecoder."""
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_ZONE_FAULT, zone)
+        dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
 
     def zone_restore_callback(sender, zone):
         """Handle zone restore from AlarmDecoder."""
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_ZONE_RESTORE, zone)
+        dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
 
     def handle_rel_message(sender, message):
         """Handle relay or zone expander message from AlarmDecoder."""
-        hass.helpers.dispatcher.dispatcher_send(SIGNAL_REL_MESSAGE, message)
+        dispatcher_send(hass, SIGNAL_REL_MESSAGE, message)
 
     baud = ad_connection.get(CONF_DEVICE_BAUD)
     if protocol == PROTOCOL_SOCKET:

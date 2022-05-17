@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud.const import DISPATCHER_REMOTE_UPDATE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 
@@ -29,14 +30,14 @@ async def test_remote_connection_sensor(hass):
     with patch("homeassistant.components.cloud.binary_sensor.WAIT_UNTIL_CHANGE", 0):
         cloud.remote.is_connected = False
         cloud.remote.certificate = object()
-        hass.helpers.dispatcher.async_dispatcher_send(DISPATCHER_REMOTE_UPDATE, {})
+        async_dispatcher_send(hass, DISPATCHER_REMOTE_UPDATE, {})
         await hass.async_block_till_done()
 
         state = hass.states.get("binary_sensor.remote_ui")
         assert state.state == "off"
 
         cloud.remote.is_connected = True
-        hass.helpers.dispatcher.async_dispatcher_send(DISPATCHER_REMOTE_UPDATE, {})
+        async_dispatcher_send(hass, DISPATCHER_REMOTE_UPDATE, {})
         await hass.async_block_till_done()
 
         state = hass.states.get("binary_sensor.remote_ui")
