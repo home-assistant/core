@@ -88,16 +88,12 @@ async def test_migrate_transient_devices(
     )
 
     assert (
-        len(
-            hass.helpers.entity_registry.async_entries_for_device(
-                entity_registry, device_id=plexweb_device.id
-            )
-        )
+        len(er.async_entries_for_device(entity_registry, device_id=plexweb_device.id))
         == 1
     )
     assert (
         len(
-            hass.helpers.entity_registry.async_entries_for_device(
+            er.async_entries_for_device(
                 entity_registry, device_id=non_plexweb_device.id
             )
         )
@@ -113,16 +109,12 @@ async def test_migrate_transient_devices(
     )
 
     assert (
-        len(
-            hass.helpers.entity_registry.async_entries_for_device(
-                entity_registry, device_id=plexweb_device.id
-            )
-        )
+        len(er.async_entries_for_device(entity_registry, device_id=plexweb_device.id))
         == 0
     )
     assert (
         len(
-            hass.helpers.entity_registry.async_entries_for_device(
+            er.async_entries_for_device(
                 entity_registry, device_id=non_plexweb_device.id
             )
         )
@@ -130,7 +122,7 @@ async def test_migrate_transient_devices(
     )
     assert (
         len(
-            hass.helpers.entity_registry.async_entries_for_device(
+            er.async_entries_for_device(
                 entity_registry, device_id=plex_service_device.id
             )
         )
