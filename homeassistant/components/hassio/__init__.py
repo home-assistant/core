@@ -41,6 +41,7 @@ from homeassistant.helpers.device_registry import (
     async_get_registry,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.loader import bind_hass
@@ -519,7 +520,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     if not await hassio.is_connected():
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
 
