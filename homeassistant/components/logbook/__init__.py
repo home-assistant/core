@@ -600,12 +600,16 @@ def _get_events(
         #
         return query.yield_per(1024)  # type: ignore[no-any-return]
 
-    json_quoted_entity_ids = None
+    json_quotable_entity_ids = None
     if entity_ids:
-        json_quoted_entity_ids = [f'"{entity_id}"' for entity_id in entity_ids]
-    json_quoted_device_ids = None
+        # Must not be the same object as entity_ids
+        # since sqlalchemy caches on the object
+        json_quotable_entity_ids = list(entity_ids)
+    json_quotable_device_ids = None
     if device_ids:
-        json_quoted_device_ids = [f'"{device_id}"' for device_id in device_ids]
+        # Must not be the same object as device_ids
+        # since sqlalchemy caches on the object
+        json_quotable_device_ids = list(device_ids)
 
     stmt = statement_for_request(
         start_day,
@@ -613,9 +617,9 @@ def _get_events(
         event_types,
         context_event_types,
         entity_ids,
-        json_quoted_entity_ids,
+        json_quotable_entity_ids,
         device_ids,
-        json_quoted_device_ids,
+        json_quotable_device_ids,
         filters,
         context_id,
     )
