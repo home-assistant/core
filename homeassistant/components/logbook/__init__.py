@@ -755,12 +755,6 @@ def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
     return result.group(1) if result else None
 
 
-def _row_attributes_extract(row: Row, extractor: re.Pattern) -> str | None:
-    """Extract from attributes row."""
-    result = extractor.search(row.shared_attrs or row.attributes or "")
-    return result.group(1) if result else None
-
-
 def _row_time_fired_isoformat(row: Row) -> str:
     """Convert the row timed_fired to isoformat."""
     return process_timestamp_to_utc_isoformat(row.time_fired or dt_util.utcnow())
