@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.stream import CONF_USE_WALLCLOCK_AS_TIMESTAMPS
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_INTEGRATION_DISCOVERY,
@@ -186,6 +187,7 @@ class EzvizCamera(EzvizEntity, Camera):
         """Initialize a Ezviz security camera."""
         super().__init__(coordinator, serial)
         Camera.__init__(self)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
         self._username = camera_username
         self._password = camera_password
         self._rtsp_stream = camera_rtsp_stream
