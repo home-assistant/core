@@ -2442,7 +2442,7 @@ async def test_get_events_bad_end_time(hass, hass_ws_client, recorder_mock):
 
 
 async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
-    """Test logbook get_events."""
+    """Test logbook get_events for device ids."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[

@@ -226,25 +226,14 @@ def _async_determine_event_types(
     if not entity_ids and not device_ids:
         return (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
     config_entry_ids: set[str] = set()
-    if entity_ids:
-        ent_reg = er.async_get(hass)
-        for entity_id in entity_ids:
-            if (
-                reg_entry := ent_reg.async_get(entity_id)
-            ) and reg_entry.config_entry_id:
-                config_entry_ids.add(reg_entry.config_entry_id)
-    if device_ids:
-        dev_reg = dr.async_get(hass)
-        for device_id in device_ids:
-            if (device := dev_reg.async_get(device_id)) and device.config_entries:
-                config_entry_ids |= device.config_entries
-    intrested_domains: set[str] = set()
-    for entry_id in config_entry_ids:
-        if entry := hass.config_entries.async_get_entry(entry_id):
-            intrested_domains.add(entry.domain)
-    # script and automation events
     intrested_event_types: set[str] = set()
+
     if entity_ids:
+        #
+        # Home Assistant doesn't allow firing events from
+        # entities (at least in code review)
+        # so we have a limited list to check
+        #
         # automations and scripts can refer to entities
         # but they do not have a config entry so we need
         # to add them.
@@ -253,9 +242,22 @@ def _async_determine_event_types(
         # manual logbook entries.
         #
         intrested_event_types |= ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY
-    for external_event, domain_call in external_events.items():
-        if domain_call[0] in intrested_domains:
-            intrested_event_types.add(external_event)
+
+    if device_ids:
+        dev_reg = dr.async_get(hass)
+        for device_id in device_ids:
+            if (device := dev_reg.async_get(device_id)) and device.config_entries:
+                config_entry_ids |= device.config_entries
+        intrested_domains: set[str] = set()
+        for entry_id in config_entry_ids:
+            if entry := hass.config_entries.async_get_entry(entry_id):
+                intrested_domains.add(entry.domain)
+        # script and automation events
+
+        for external_event, domain_call in external_events.items():
+            if domain_call[0] in intrested_domains:
+                intrested_event_types.add(external_event)
+
     return tuple(
         event_type
         for event_type in (EVENT_LOGBOOK_ENTRY, *external_events)
