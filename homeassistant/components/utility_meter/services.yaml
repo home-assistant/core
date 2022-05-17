@@ -5,7 +5,7 @@ reset:
   description: Resets all counters of a utility meter.
   target:
     entity:
-      domain: select
+      domain: sensor
 
 next_tariff:
   name: Next Tariff
