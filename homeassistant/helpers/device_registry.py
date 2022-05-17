@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissin
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
-from . import area_registry as ar, storage
+from . import storage
 from .debounce import Debouncer
 from .frame import report
 from .typing import UNDEFINED, UndefinedType
@@ -420,6 +420,10 @@ class DeviceRegistry:
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from . import area_registry as ar
+
         old = self.devices[device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
