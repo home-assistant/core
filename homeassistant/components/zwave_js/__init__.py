@@ -554,11 +554,10 @@ async def async_setup_entry(  # noqa: C901
 
         LOGGER.info("Connection to Zwave JS Server initialized")
 
-        async def async_check_for_config_updates(_: datetime) -> None:
+        async def async_check_for_config_updates(_: datetime | None = None) -> None:
             """Check for new config updates."""
             # We assert because we know the driver and controller exist
             assert client.driver
-            assert client.driver.controller
             check_config_updates = await client.driver.async_check_for_config_updates()
             if check_config_updates.update_available:
                 LOGGER.info(
@@ -570,6 +569,7 @@ async def async_setup_entry(  # noqa: C901
         # We assert because we know the driver and controller exist
         assert client.driver
         assert client.driver.controller
+        await async_check_for_config_updates()
         entry.async_on_unload(
             async_track_time_interval(
                 hass, async_check_for_config_updates, timedelta(days=1)

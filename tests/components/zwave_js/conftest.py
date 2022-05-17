@@ -811,7 +811,7 @@ def nortek_thermostat_removed_event_fixture(client):
 
 
 @pytest.fixture(name="integration")
-async def integration_fixture(hass, client):
+async def integration_fixture(hass, client, configs_update_not_available):
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)

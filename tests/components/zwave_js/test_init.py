@@ -1338,7 +1338,9 @@ async def test_configs_file_update_available(
     client.async_send_command.return_value = {"success": True}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
     await hass.async_block_till_done()
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "driver.install_config_update"
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "driver.install_config_update"
 
