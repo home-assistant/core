@@ -7,12 +7,12 @@ from unittest.mock import AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries as core_ce, config_entry_flow, data_entry_flow
+from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
