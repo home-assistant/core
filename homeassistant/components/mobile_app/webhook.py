@@ -353,8 +353,8 @@ async def webhook_render_template(hass, config_entry, data):
 )
 async def webhook_update_location(hass, config_entry, data):
     """Handle an update location webhook."""
-    hass.helpers.dispatcher.async_dispatcher_send(
-        SIGNAL_LOCATION_UPDATE.format(config_entry.entry_id), data
+    async_dispatcher_send(
+        hass, SIGNAL_LOCATION_UPDATE.format(config_entry.entry_id), data
     )
     return empty_okay_response()
 
