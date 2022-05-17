@@ -12,6 +12,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
+from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "area_registry"
@@ -47,9 +48,7 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
-        )
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
@@ -176,7 +175,7 @@ class AreaRegistry:
 
         areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
-        if data is not None:
+        if isinstance(data, dict):
             for area in data["areas"]:
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
