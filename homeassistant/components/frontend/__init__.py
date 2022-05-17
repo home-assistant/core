@@ -667,7 +667,7 @@ def websocket_get_themes(
         "type": "frontend/get_translations",
         vol.Required("language"): str,
         vol.Required("category"): str,
-        vol.Optional("integration"): str,
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
         vol.Optional("config_flow"): bool,
     }
 )

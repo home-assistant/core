@@ -106,7 +106,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.sensors.thermostat.subscribe(
-            async_add_climate,
+            gateway.evaluate_add_device(async_add_climate),
             EventType.ADDED,
         )
     )
@@ -115,7 +115,7 @@ async def async_setup_entry(
 
     @callback
     def async_reload_clip_sensors() -> None:
-        """Load clip climate sensors from deCONZ."""
+        """Load clip sensors from deCONZ."""
         for climate_id, climate in gateway.api.sensors.thermostat.items():
             if climate.type.startswith("CLIP"):
                 async_add_climate(EventType.ADDED, climate_id)

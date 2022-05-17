@@ -15,6 +15,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.translation import async_get_translations
 
 from .const import (
     DEFAULT_AREAS,
@@ -147,8 +148,8 @@ class UserOnboardingView(_BaseOnboardingView):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
-            translations = await hass.helpers.translation.async_get_translations(
-                data["language"], "area", DOMAIN
+            translations = await async_get_translations(
+                hass, data["language"], "area", {DOMAIN}
             )
 
             area_registry = await hass.helpers.area_registry.async_get_registry()
