@@ -117,7 +117,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=BinarySensorDeviceClass.SMOKE,
             on_value="alarm",
         ),
-        TAMPER_BINARY_SENSOR
+        TAMPER_BINARY_SENSOR,
     ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
