@@ -50,11 +50,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import InvalidEntityFormatError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     EntityFilter,
@@ -100,11 +96,8 @@ LOGBOOK_ENTRY_STATE = "state"
 LOGBOOK_ENTRY_WHEN = "when"
 
 ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
-ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY = {
-    EVENT_LOGBOOK_ENTRY,
-    EVENT_AUTOMATION_TRIGGERED,
-    EVENT_SCRIPT_STARTED,
-}
+
+SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -216,62 +209,12 @@ async def _process_logbook_platform(
     platform.async_describe_events(hass, _async_describe_event)
 
 
-def _async_determine_event_types(
-    hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
-) -> tuple[str, ...]:
-    """Reduce the event types based on the entity ids and device ids."""
-    external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-    ] = hass.data.get(DOMAIN, {})
-    if not entity_ids and not device_ids:
-        return (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
-    config_entry_ids: set[str] = set()
-    intrested_event_types: set[str] = set()
-
-    if entity_ids:
-        #
-        # Home Assistant doesn't allow firing events from
-        # entities (at least in code review)
-        # so we have a limited list to check
-        #
-        # automations and scripts can refer to entities
-        # but they do not have a config entry so we need
-        # to add them.
-        #
-        # We also allow entity_ids to be recorded via
-        # manual logbook entries.
-        #
-        intrested_event_types |= ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY
-
-    if device_ids:
-        dev_reg = dr.async_get(hass)
-        for device_id in device_ids:
-            if (device := dev_reg.async_get(device_id)) and device.config_entries:
-                config_entry_ids |= device.config_entries
-        intrested_domains: set[str] = set()
-        for entry_id in config_entry_ids:
-            if entry := hass.config_entries.async_get_entry(entry_id):
-                intrested_domains.add(entry.domain)
-        for external_event, domain_call in external_events.items():
-            if domain_call[0] in intrested_domains:
-                intrested_event_types.add(external_event)
-
-    return tuple(
-        event_type
-        for event_type in (EVENT_LOGBOOK_ENTRY, *external_events)
-        if event_type in intrested_event_types
-    )
-
-
 def _ws_formatted_get_events(
     hass: HomeAssistant,
     msg_id: int,
     start_day: dt,
     end_day: dt,
-    event_types: tuple[str, ...],
-    ent_reg: er.EntityRegistry,
     entity_ids: list[str] | None = None,
-    device_ids: list[str] | None = None,
     filters: Filters | None = None,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
     context_id: str | None = None,
@@ -284,10 +227,7 @@ def _ws_formatted_get_events(
                 hass,
                 start_day,
                 end_day,
-                event_types,
-                ent_reg,
                 entity_ids,
-                device_ids,
                 filters,
                 entities_filter,
                 context_id,
@@ -304,7 +244,6 @@ def _ws_formatted_get_events(
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("entity_ids"): [str],
-        vol.Optional("device_ids"): [str],
         vol.Optional("context_id"): str,
     }
 )
@@ -335,11 +274,8 @@ async def ws_get_events(
         connection.send_result(msg["id"], {})
         return
 
-    device_ids = msg.get("device_ids")
     entity_ids = msg.get("entity_ids")
     context_id = msg.get("context_id")
-    event_types = _async_determine_event_types(hass, entity_ids, device_ids)
-    ent_reg = er.async_get(hass)
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
@@ -348,10 +284,7 @@ async def ws_get_events(
             msg["id"],
             start_time,
             end_time,
-            event_types,
-            ent_reg,
             entity_ids,
-            device_ids,
             hass.data[LOGBOOK_FILTERS],
             hass.data[LOGBOOK_ENTITIES_FILTER],
             context_id,
@@ -421,9 +354,6 @@ class LogbookView(HomeAssistantView):
                 "Can't combine entity with context_id", HTTPStatus.BAD_REQUEST
             )
 
-        event_types = _async_determine_event_types(hass, entity_ids, None)
-        ent_reg = er.async_get(hass)
-
         def json_events() -> web.Response:
             """Fetch events and generate JSON."""
             return self.json(
@@ -431,10 +361,7 @@ class LogbookView(HomeAssistantView):
                     hass,
                     start_day,
                     end_day,
-                    event_types,
-                    ent_reg,
                     entity_ids,
-                    None,
                     self.filters,
                     self.entities_filter,
                     context_id,
@@ -556,10 +483,7 @@ def _get_events(
     hass: HomeAssistant,
     start_day: dt,
     end_day: dt,
-    event_types: tuple[str, ...],
-    ent_reg: er.EntityRegistry,
     entity_ids: list[str] | None = None,
-    device_ids: list[str] | None = None,
     filters: Filters | None = None,
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
     context_id: str | None = None,
@@ -568,13 +492,17 @@ def _get_events(
 ) -> list[dict[str, Any]]:
     """Get events for a period of time."""
     assert not (
-        context_id and (entity_ids or device_ids)
-    ), "can't pass in both context_id and (entity_ids or device_ids)"
+        entity_ids and context_id
+    ), "can't pass in both entity_ids and context_id"
+
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ] = hass.data.get(DOMAIN, {})
+    event_types = (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
     format_time = _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
     entity_name_cache = EntityNameCache(hass)
+    ent_reg = er.async_get(hass)
+
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
 
@@ -596,27 +524,8 @@ def _get_events(
         #
         return query.yield_per(1024)  # type: ignore[no-any-return]
 
-    json_quotable_entity_ids = None
-    if entity_ids:
-        # Must not be the same object as entity_ids
-        # since sqlalchemy caches on the object
-        json_quotable_entity_ids = list(entity_ids)
-    json_quotable_device_ids = None
-    if device_ids:
-        # Must not be the same object as device_ids
-        # since sqlalchemy caches on the object
-        json_quotable_device_ids = list(device_ids)
-
     stmt = statement_for_request(
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-        device_ids,
-        json_quotable_device_ids,
-        filters,
-        context_id,
+        start_day, end_day, event_types, entity_ids, filters, context_id
     )
     if _LOGGER.isEnabledFor(logging.DEBUG):
         _LOGGER.debug(
@@ -752,6 +661,12 @@ def _rows_match(row: Row, other_row: Row) -> bool:
 def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
     """Extract from event_data row."""
     result = extractor.search(row.shared_data or row.event_data or "")
+    return result.group(1) if result else None
+
+
+def _row_attributes_extract(row: Row, extractor: re.Pattern) -> str | None:
+    """Extract from attributes row."""
+    result = extractor.search(row.shared_attrs or row.attributes or "")
     return result.group(1) if result else None
 
 
