@@ -44,30 +44,17 @@ class Coordinator(DataUpdateCoordinator[State]):
         """Initialize the coordinator."""
         self.device = device
         self.device_info = device_info
-        self._refresh_was_scheduled = False
 
         super().__init__(
             hass, _LOGGER, name="Fjäråskupan", update_interval=timedelta(seconds=120)
         )
 
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-    ) -> None:
-        self._refresh_was_scheduled = scheduled
-        await super()._async_refresh(
-            log_failures=log_failures,
-            raise_on_auth_failed=raise_on_auth_failed,
-            scheduled=scheduled,
-        )
+    async def _async_update_scheduled(self) -> State:
+        """Handle an scheduled update request."""
+        raise UpdateFailed("No data received within schedule.")
 
     async def _async_update_data(self) -> State:
         """Handle an explicit update request."""
-        if self._refresh_was_scheduled:
-            raise UpdateFailed("No data received within schedule.")
-
         await self.device.update()
         return self.device.state
 

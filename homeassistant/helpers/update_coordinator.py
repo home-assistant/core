@@ -149,6 +149,10 @@ class DataUpdateCoordinator(Generic[_T]):
             raise NotImplementedError("Update method not implemented")
         return await self.update_method()
 
+    async def _async_update_scheduled(self) -> _T:
+        """Fetch the latest data from the source (a scheduled request)."""
+        return await self._async_update_data()
+
     async def async_config_entry_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup.
 
@@ -188,7 +192,10 @@ class DataUpdateCoordinator(Generic[_T]):
         auth_failed = False
 
         try:
-            self.data = await self._async_update_data()
+            if scheduled:
+                self.data = await self._async_update_scheduled()
+            else:
+                self.data = await self._async_update_data()
 
         except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
