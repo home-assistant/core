@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries as core_ce, data_entry_flow
+from homeassistant import config_entries as core_ce, config_entry_flow, data_entry_flow
 from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
@@ -68,9 +68,7 @@ async def test_get_entries(hass, client, clear_handlers):
             """Return options flow support for this handler."""
             return True
 
-    hass.helpers.config_entry_flow.register_discovery_flow(
-        "comp2", "Comp 2", lambda: None
-    )
+    config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
     entry = MockConfigEntry(
         domain="comp1",

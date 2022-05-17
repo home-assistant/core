@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissin
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
-from . import storage
+from . import area_registry as ar, storage
 from .debounce import Debouncer
 from .frame import report
 from .typing import UNDEFINED, UndefinedType
@@ -442,13 +442,13 @@ class DeviceRegistry:
             disabled_by = DeviceEntryDisabler(disabled_by)
 
         if (
-            suggested_area not in (UNDEFINED, None, "")
+            suggested_area is not None
+            and suggested_area is not UNDEFINED
+            and suggested_area != ""
             and area_id is UNDEFINED
             and old.area_id is None
         ):
-            area = self.hass.helpers.area_registry.async_get(
-                self.hass
-            ).async_get_or_create(suggested_area)
+            area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
         if (
