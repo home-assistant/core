@@ -42,7 +42,11 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
@@ -145,7 +149,7 @@ class SignalUpdateCallback:
         if not (events := event_message.resource_update_events):
             return
         _LOGGER.debug("Event Update %s", events.keys())
-        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self._hass)
         device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
