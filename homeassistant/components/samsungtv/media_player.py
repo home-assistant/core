@@ -308,8 +308,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def _async_resubscribe_dmr(self) -> None:
         assert self._dmr_device
-        with contextlib.suppress(UpnpCommunicationError):
+        try:
             await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+        except UpnpCommunicationError as err:
+            LOGGER.debug("Device rejected re-subscription: %r", err)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
