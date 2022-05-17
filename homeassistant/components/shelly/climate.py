@@ -50,14 +50,13 @@ async def async_setup_entry(
     ][BLOCK]
 
     if wrapper.device.initialized:
-        await async_setup_climate_entities(async_add_entities, wrapper)
+        async_setup_climate_entities(async_add_entities, wrapper)
     else:
-        await async_restore_climate_entities(
-            hass, config_entry, async_add_entities, wrapper
-        )
+        async_restore_climate_entities(hass, config_entry, async_add_entities, wrapper)
 
 
-async def async_setup_climate_entities(
+@callback
+def async_setup_climate_entities(
     async_add_entities: AddEntitiesCallback,
     wrapper: BlockDeviceWrapper,
 ) -> None:
@@ -79,7 +78,8 @@ async def async_setup_climate_entities(
         async_add_entities([BlockSleepingClimate(wrapper, sensor_block, device_block)])
 
 
-async def async_restore_climate_entities(
+@callback
+def async_restore_climate_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
