@@ -86,14 +86,12 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class NUTSensor(CoordinatorEntity, SensorEntity):
+class NUTSensor(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]], SensorEntity):
     """Representation of a sensor entity for NUT status values."""
-
-    coordinator: DataUpdateCoordinator[dict[str, str]]
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, str]],
         sensor_description: SensorEntityDescription,
         data: PyNUTData,
         unique_id: str,

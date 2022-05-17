@@ -1,6 +1,7 @@
 """Config flow for Network UPS Tools (NUT) integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -69,7 +70,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"ups_list": nut_data.ups_list, "available_resources": status}
 
 
-def _format_host_port_alias(user_input: dict[str, Any]) -> str:
+def _format_host_port_alias(user_input: Mapping[str, Any]) -> str:
     """Format a host, port, and alias so it can be used for comparison or display."""
     host = user_input[CONF_HOST]
     port = user_input[CONF_PORT]
@@ -157,7 +158,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
     def _host_port_alias_already_configured(self, user_input: dict[str, Any]) -> bool:
         """See if we already have a nut entry matching user input configured."""
         existing_host_port_aliases = {
-            _format_host_port_alias(dict(entry.data))
+            _format_host_port_alias(entry.data)
             for entry in self._async_current_entries()
             if CONF_HOST in entry.data
         }
