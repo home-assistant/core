@@ -75,10 +75,6 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
-EXTERNAL_EVENTS_WITHOUT_CONFIG_ENTRY = {
-    EVENT_SCRIPT_STARTED,
-    EVENT_AUTOMATION_TRIGGERED,
-}
 
 DOMAIN = "logbook"
 
@@ -104,8 +100,11 @@ LOGBOOK_ENTRY_STATE = "state"
 LOGBOOK_ENTRY_WHEN = "when"
 
 ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED = {EVENT_LOGBOOK_ENTRY, EVENT_CALL_SERVICE}
-
-SCRIPT_AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
+ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY = {
+    EVENT_LOGBOOK_ENTRY,
+    EVENT_AUTOMATION_TRIGGERED,
+    EVENT_SCRIPT_STARTED,
+}
 
 LOG_MESSAGE_SCHEMA = vol.Schema(
     {
@@ -248,8 +247,12 @@ def _async_determine_event_types(
     if entity_ids:
         # automations and scripts can refer to entities
         # but they do not have a config entry so we need
-        # to add them
-        intrested_event_types |= SCRIPT_AUTOMATION_EVENTS
+        # to add them.
+        #
+        # We also allow entity_ids to be recorded via
+        # manual logbook entries.
+        #
+        intrested_event_types |= ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY
     for external_event, domain_call in external_events.items():
         if domain_call[0] in intrested_domains:
             intrested_event_types.add(external_event)
