@@ -23,7 +23,11 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .climate import STATE_NETATMO_AWAY, STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE
@@ -74,8 +78,13 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
+
+    if not device:
+        raise InvalidDeviceAutomationConfig(
+            f"Trigger invalid, device with ID {config[CONF_DEVICE_ID]} not found"
+        )
 
     trigger = config[CONF_TYPE]
 
@@ -94,11 +103,14 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List device triggers for Netatmo devices."""
     registry = entity_registry.async_get(hass)
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     triggers = []
 
     for entry in entity_registry.async_entries_for_device(registry, device_id):
-        device = device_registry.async_get(device_id)
+        if (
+            device := device_registry.async_get(device_id)
+        ) is None or device.model is None:
+            continue
 
         for trigger in DEVICES.get(device.model, []):
             if trigger in SUBTYPES:
@@ -134,7 +146,7 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     if not device:

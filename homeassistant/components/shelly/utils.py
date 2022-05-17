@@ -30,7 +30,8 @@ from .const import (
 )
 
 
-async def async_remove_shelly_entity(
+@callback
+def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""

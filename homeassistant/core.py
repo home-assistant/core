@@ -1890,11 +1890,19 @@ class Config:
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
+        store = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
 
-        if not (data := await store.async_load()):
+        if not (data := await store.async_load()) or not isinstance(data, dict):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1926,6 +1934,10 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -1938,7 +1950,11 @@ class Config:
             "currency": self.currency,
         }
 
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        store = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
         await store.async_save(data)
