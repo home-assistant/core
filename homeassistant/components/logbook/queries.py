@@ -19,6 +19,7 @@ from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
     JSON_VARIENT_CAST,
+    JSONB_VARIENT_CAST,
     LAST_UPDATED_INDEX,
     EventData,
     Events,
@@ -26,8 +27,6 @@ from homeassistant.components.recorder.models import (
     States,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-
-ENTITY_ID_JSON_TEMPLATE = '%"entity_id":"{}"%'
 
 CONTINUOUS_DOMAINS = {PROXIMITY_DOMAIN, SENSOR_DOMAIN}
 CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
@@ -52,10 +51,10 @@ class JSONLiteral(JSON):  # type: ignore[misc]
 
 
 EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSON_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
 )
 OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSON_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
 )
 
 SHARED_ATTRS_JSON = type_coerce(
