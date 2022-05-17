@@ -258,7 +258,7 @@ def _async_determine_event_types(
             intrested_event_types.add(external_event)
     return tuple(
         event_type
-        for event_type in (*EVENT_LOGBOOK_ENTRY, *external_events)
+        for event_type in (EVENT_LOGBOOK_ENTRY, *external_events)
         if event_type in intrested_event_types
     )
 
