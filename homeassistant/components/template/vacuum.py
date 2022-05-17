@@ -194,6 +194,8 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         if self._battery_level_template:
             self._attr_supported_features |= VacuumEntityFeature.BATTERY
 
+        self._attr_supported_features |= VacuumEntityFeature.STATUS
+
         # List of valid fan speeds
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
