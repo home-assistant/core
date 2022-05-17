@@ -18,25 +18,6 @@ def laundrify_setup_entry_fixture():
         yield mock_setup_entry
 
 
-@pytest.fixture(name="laundrify_api_mock", autouse=True)
-def climacell_config_entry_update_fixture():
-    """Mock valid laundrify API responses."""
-    with patch(
-        "laundrify_aio.LaundrifyAPI.exchange_auth_code",
-        return_value=VALID_ACCESS_TOKEN,
-    ), patch(
-        "laundrify_aio.LaundrifyAPI.get_account_id",
-        return_value=VALID_ACCOUNT_ID,
-    ), patch(
-        "laundrify_aio.LaundrifyAPI.validate_token",
-        return_value=True,
-    ), patch(
-        "laundrify_aio.LaundrifyAPI.get_machines",
-        return_value=json.loads(load_fixture("laundrify/machines.json")),
-    ) as get_machines_mock:
-        yield get_machines_mock
-
-
 @pytest.fixture(name="laundrify_exchange_code")
 def laundrify_exchange_code_fixture():
     """Mock laundrify exchange_auth_code function."""
@@ -55,3 +36,16 @@ def laundrify_validate_token_fixture():
         return_value=True,
     ) as validate_token_mock:
         yield validate_token_mock
+
+
+@pytest.fixture(name="laundrify_api_mock", autouse=True)
+def laundrify_api_fixture(laundrify_exchange_code, laundrify_validate_token):
+    """Mock valid laundrify API responses."""
+    with patch(
+        "laundrify_aio.LaundrifyAPI.get_account_id",
+        return_value=VALID_ACCOUNT_ID,
+    ), patch(
+        "laundrify_aio.LaundrifyAPI.get_machines",
+        return_value=json.loads(load_fixture("laundrify/machines.json")),
+    ) as get_machines_mock:
+        yield get_machines_mock
