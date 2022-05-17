@@ -317,7 +317,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         dev_reg.async_clear_config_entry(config_entry.entry_id)
 
         en_reg = await hass.helpers.entity_registry.async_get_registry()
-        en_reg.async_clear_config_entry(config_entry)
+        en_reg.async_clear_config_entry(config_entry.entry_id)
 
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
