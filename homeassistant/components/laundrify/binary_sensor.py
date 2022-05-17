@@ -62,7 +62,10 @@ class LaundrifyPowerPlug(
     @property
     def available(self) -> bool:
         """Check if the device is available."""
-        return self.unique_id in self.coordinator.data
+        return (
+            self.unique_id in self.coordinator.data
+            and self.coordinator.last_update_success
+        )
 
     @property
     def name(self) -> str:
