@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import POWER_PLUGS
@@ -30,33 +30,21 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_switch(lights: list[Light] | None = None) -> None:
+    def async_add_switch(_: EventType, switch_id: str) -> None:
         """Add switch from deCONZ."""
-        entities = []
-
-        if lights is None:
-            lights = list(gateway.api.lights.lights.values())
-
-        for light in lights:
-
-            if (
-                light.type in POWER_PLUGS
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzPowerPlug(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
+        switch = gateway.api.lights.lights[switch_id]
+        if switch.type not in POWER_PLUGS:
+            return
+        async_add_entities([DeconzPowerPlug(switch, gateway)])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
-            async_add_switch,
+        gateway.api.lights.lights.subscribe(
+            gateway.evaluate_add_device(async_add_switch),
+            EventType.ADDED,
         )
     )
-
-    async_add_switch()
+    for switch_id in gateway.api.lights.lights:
+        async_add_switch(EventType.ADDED, switch_id)
 
 
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):

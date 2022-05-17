@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "No se pudo determinar ning\u00fan identificador \u00fanico v\u00e1lido del dispositivo",
             "single_instance_allowed": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
@@ -18,7 +19,7 @@
                     "mode": "Modo",
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
-                    "port": "Puerto",
+                    "port": "Puerto (d\u00e9jalo vac\u00edo por el predeterminado del protocolo)",
                     "protocol": "Protocolo de comunicaci\u00f3n a utilizar",
                     "ssh_key": "Ruta de acceso a su archivo de clave SSH (en lugar de la contrase\u00f1a)",
                     "username": "Nombre de usuario"

@@ -35,6 +35,8 @@ from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplat
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_SPEED_RANGE = (1, 99)  # off is not included
 
 ATTR_FAN_STATE = "fan_state"

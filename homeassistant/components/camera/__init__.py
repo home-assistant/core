@@ -29,8 +29,12 @@ from homeassistant.components.media_player.const import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.stream import Stream, create_stream
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
+from homeassistant.components.stream import (
+    FORMAT_CONTENT_TYPE,
+    OUTPUT_FORMATS,
+    Stream,
+    create_stream,
+)
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -103,7 +107,7 @@ class CameraEntityFeature(IntEnum):
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
 
-RTSP_PREFIXES = {"rtsp://", "rtsps://"}
+RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
@@ -450,7 +454,7 @@ class Camera(Entity):
     def __init__(self) -> None:
         """Initialize a camera."""
         self.stream: Stream | None = None
-        self.stream_options: dict[str, str] = {}
+        self.stream_options: dict[str, str | bool] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False

@@ -41,7 +41,7 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Humidifier devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     conditions = await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device

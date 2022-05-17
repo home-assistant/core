@@ -144,6 +144,7 @@ async def async_refresh_devices_service(gateway: DeconzGateway) -> None:
     """Refresh available devices from deCONZ."""
     gateway.ignore_state_updates = True
     await gateway.api.refresh_state()
+    gateway.load_ignored_devices()
     gateway.ignore_state_updates = False
 
     for resource_type in gateway.deconz_resource_type_to_signal_new_device:

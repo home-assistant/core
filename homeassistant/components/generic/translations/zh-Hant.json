@@ -79,8 +79,12 @@
                     "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a",
                     "still_image_url": "\u975c\u614b\u5f71\u50cf URL\uff08\u4f8b\u5982 http://...\uff09",
                     "stream_source": "\u4e32\u6d41\u4f86\u6e90 URL\uff08\u4f8b\u5982 rtsp://...\uff09",
+                    "use_wallclock_as_timestamps": "\u4f7f\u7528\u639b\u9418\u4f5c\u70ba\u6642\u9593\u6233",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "\u6b64\u9078\u9805\u53ef\u80fd\u4fee\u6b63\u67d0\u4fee\u93e1\u982d\u4e0a\u932f\u8aa4\u7684\u6642\u9593\u6233\u5c0e\u81f4\u7684\u5206\u6bb5\u6216\u7576\u6a5f\u554f\u984c"
                 }
             }
         }

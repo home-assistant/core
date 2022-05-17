@@ -563,7 +563,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
         if not entity_registry.async_get_entity_id(
             entity_type, DOMAIN, unique_store_key
         ):
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Refusing to update %s non-registered sensor: %s",
                 device_name,
                 unique_store_key,

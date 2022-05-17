@@ -15,7 +15,6 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_ACTIONS,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
@@ -529,21 +528,23 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
-            if payload in CURRENT_HVAC_ACTIONS:
-                self._action = payload
-                self.async_write_ha_state()
-            elif not payload or payload == PAYLOAD_NONE:
+            if not payload or payload == PAYLOAD_NONE:
                 _LOGGER.debug(
                     "Invalid %s action: %s, ignoring",
-                    CURRENT_HVAC_ACTIONS,
+                    [e.value for e in HVACAction],
                     payload,
                 )
-            else:
+                return
+            try:
+                self._action = HVACAction(payload)
+            except ValueError:
                 _LOGGER.warning(
                     "Invalid %s action: %s",
-                    CURRENT_HVAC_ACTIONS,
+                    [e.value for e in HVACAction],
                     payload,
                 )
+                return
+            self.async_write_ha_state()
 
         add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 

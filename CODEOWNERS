@@ -50,6 +50,8 @@ build.json @home-assistant/supervisor
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airzone/ @Noltari
 /tests/components/airzone/ @Noltari
+/homeassistant/components/aladdin_connect/ @mkmer
+/tests/components/aladdin_connect/ @mkmer
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core
@@ -118,6 +120,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
+/homeassistant/components/baf/ @bdraco @jfroy
+/tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1
 /tests/components/balboa/ @garbled1
 /homeassistant/components/beewi_smartclim/ @alemuro
@@ -374,6 +378,8 @@ build.json @home-assistant/supervisor
 /tests/components/geo_location/ @home-assistant/core
 /homeassistant/components/geo_rss_events/ @exxamalte
 /tests/components/geo_rss_events/ @exxamalte
+/homeassistant/components/geocaching/ @Sholofly @reinder83
+/tests/components/geocaching/ @Sholofly @reinder83
 /homeassistant/components/geonetnz_quakes/ @exxamalte
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
@@ -915,8 +921,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
-/homeassistant/components/slack/ @bachya
-/tests/components/slack/ @bachya
+/homeassistant/components/slack/ @bachya @tkdrob
+/tests/components/slack/ @bachya @tkdrob
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
@@ -1195,6 +1201,8 @@ build.json @home-assistant/supervisor
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
+/homeassistant/components/yolink/ @YoSmart-Inc
+/tests/components/yolink/ @YoSmart-Inc
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/zengge/ @emontnemery

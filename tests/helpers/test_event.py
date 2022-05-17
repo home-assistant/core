@@ -1026,7 +1026,7 @@ async def test_track_template_result_none(hass):
 
     template_condition = Template("{{state_attr('sensor.test', 'battery')}}", hass)
     template_condition_var = Template(
-        "{{(state_attr('sensor.test', 'battery')|int) + test }}", hass
+        "{{(state_attr('sensor.test', 'battery')|int(default=0)) + test }}", hass
     )
 
     def specific_run_callback(event, updates):

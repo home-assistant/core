@@ -9,6 +9,7 @@ from logging import getLogger
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import models
@@ -303,11 +304,9 @@ class AuthStore:
 
     async def _async_load_task(self) -> None:
         """Load the users."""
-        [ent_reg, dev_reg, data] = await asyncio.gather(
-            self.hass.helpers.entity_registry.async_get_registry(),
-            self.hass.helpers.device_registry.async_get_registry(),
-            self._store.async_load(),
-        )
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+        data = await self._store.async_load()
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time

@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Muestra archivos multimedia incompatibles mientras navega",
                     "callback_url_override": "URL de devoluci\u00f3n de llamada del detector de eventos",
                     "listen_port": "Puerto de escucha de eventos (aleatorio si no se establece)",
                     "poll_availability": "Sondeo para la disponibilidad del dispositivo"

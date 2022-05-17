@@ -79,8 +79,12 @@
                     "rtsp_transport": "Protok\u00f3\u0142 transportowy RTSP",
                     "still_image_url": "Adres URL obrazu nieruchomego (np. http://...)",
                     "stream_source": "Adres URL strumienia (np. rtsp://...)",
+                    "use_wallclock_as_timestamps": "U\u017cyj wallclock jako znacznika czasu",
                     "username": "Nazwa u\u017cytkownika",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Ta opcja mo\u017ce rozwi\u0105za\u0107 problemy z segmentacj\u0105 lub awariami wynikaj\u0105ce z wadliwych implementacji znacznik\u00f3w czasu w niekt\u00f3rych kamerach."
                 }
             }
         }

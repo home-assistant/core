@@ -85,7 +85,7 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
 
     assert events[0]["name"] == "Keypad"
     assert events[0]["domain"] == "deconz"
-    assert events[0]["message"] == "fired event 'armed_away'."
+    assert events[0]["message"] == "fired event 'armed_away'"
 
 
 async def test_humanifying_deconz_event(hass, aioclient_mock):
@@ -214,20 +214,20 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
 
     assert events[0]["name"] == "Switch 1"
     assert events[0]["domain"] == "deconz"
-    assert events[0]["message"] == "fired event '2000'."
+    assert events[0]["message"] == "fired event '2000'"
 
     assert events[1]["name"] == "Hue remote"
     assert events[1]["domain"] == "deconz"
-    assert events[1]["message"] == "'Long press' event for 'Dim up' was fired."
+    assert events[1]["message"] == "'Long press' event for 'Dim up' was fired"
 
     assert events[2]["name"] == "Xiaomi cube"
     assert events[2]["domain"] == "deconz"
-    assert events[2]["message"] == "fired event 'Shake'."
+    assert events[2]["message"] == "fired event 'Shake'"
 
     assert events[3]["name"] == "Xiaomi cube"
     assert events[3]["domain"] == "deconz"
-    assert events[3]["message"] == "fired event 'unsupported_gesture'."
+    assert events[3]["message"] == "fired event 'unsupported_gesture'"
 
     assert events[4]["name"] == "Faulty event"
     assert events[4]["domain"] == "deconz"
-    assert events[4]["message"] == "fired an unknown event."
+    assert events[4]["message"] == "fired an unknown event"

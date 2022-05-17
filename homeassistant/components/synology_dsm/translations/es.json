@@ -10,7 +10,7 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "missing_data": "Faltan datos: por favor, vuelva a intentarlo m\u00e1s tarde o pruebe con otra configuraci\u00f3n",
             "otp_failed": "La autenticaci\u00f3n de dos pasos fall\u00f3, vuelva a intentar con un nuevo c\u00f3digo de acceso",
-            "unknown": "Error desconocido: por favor, consulta logs para obtener m\u00e1s detalles"
+            "unknown": "Error inesperado"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -64,6 +64,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutos entre escaneos",
+                    "snap_profile_type": "Calidad de las fotos de la c\u00e1mara (0:alta, 1:media, 2:baja)",
                     "timeout": "Tiempo de espera (segundos)"
                 }
             }

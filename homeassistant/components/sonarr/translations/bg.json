@@ -17,6 +17,7 @@
             "user": {
                 "data": {
                     "api_key": "API \u043a\u043b\u044e\u0447",
+                    "base_path": "\u041f\u044a\u0442 \u0434\u043e API",
                     "host": "\u0425\u043e\u0441\u0442",
                     "port": "\u041f\u043e\u0440\u0442",
                     "url": "URL"

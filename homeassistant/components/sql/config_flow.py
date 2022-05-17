@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
@@ -44,23 +44,22 @@ def validate_sql_select(value: str) -> str | None:
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
     """Validate SQL query."""
-    try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
-    except SQLAlchemyError as error:
-        raise error
 
+    engine = sqlalchemy.create_engine(db_url, future=True)
+    sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
     sess: scoped_session = sessmaker()
 
     try:
-        result: Result = sess.execute(query)
-        for res in result.mappings():
-            data = res[column]
-            _LOGGER.debug("Return value from query: %s", data)
+        result: Result = sess.execute(sqlalchemy.text(query))
     except SQLAlchemyError as error:
+        _LOGGER.debug("Execution error %s", error)
         if sess:
             sess.close()
         raise ValueError(error) from error
+
+    for res in result.mappings():
+        data = res[column]
+        _LOGGER.debug("Return value from query: %s", data)
 
     if sess:
         sess.close()
@@ -72,9 +71,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
     VERSION = 1
-
-    entry: config_entries.ConfigEntry
-    hass: HomeAssistant
 
     @staticmethod
     @callback
