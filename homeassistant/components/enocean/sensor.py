@@ -46,10 +46,17 @@ SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 
 @dataclass
-class EnOceanSensorEntityDescription(SensorEntityDescription):
-    """Sensor description for EnOcean sensors with additional unique id."""
+class EnOceanSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
 
-    unique_id: Callable[[list[int]], str | None] = lambda _: None
+    unique_id: Callable[[list[int]], str | None]
+
+
+@dataclass
+class EnOceanSensorEntityDescription(
+    SensorEntityDescription, EnOceanSensorEntityDescriptionMixin
+):
+    """Describes EnOcean sensor entity."""
 
 
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
