@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud.const import DISPATCHER_REMOTE_UPDATE
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
@@ -14,9 +15,7 @@ async def test_remote_connection_sensor(hass):
     assert hass.states.get("binary_sensor.remote_ui") is None
 
     # Fake connection/discovery
-    await hass.helpers.discovery.async_load_platform(
-        "binary_sensor", "cloud", {}, {"cloud": {}}
-    )
+    await async_load_platform(hass, "binary_sensor", "cloud", {}, {"cloud": {}})
 
     # Mock test env
     cloud = hass.data["cloud"] = Mock()
