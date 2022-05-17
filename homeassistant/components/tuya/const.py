@@ -123,7 +123,6 @@ class WorkMode(StrEnum):
 class DPType(StrEnum):
     """Data point types."""
 
-    BITMAP = "Bitmap"
     BOOLEAN = "Boolean"
     ENUM = "Enum"
     INTEGER = "Integer"

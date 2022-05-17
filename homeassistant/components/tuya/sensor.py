@@ -317,11 +317,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=TuyaDeviceClass.STATUS,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.FAULT,
-            name="Fault",
-            icon="mdi:alert",
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.REMAIN_TIME,
             name="Remaining Time",
             native_unit_of_measurement=TIME_MINUTES,
@@ -989,7 +984,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         """Return the value reported by the sensor."""
         # Only continue if data type is known
         if self._type not in (
-            DPType.BITMAP,
             DPType.INTEGER,
             DPType.STRING,
             DPType.ENUM,
