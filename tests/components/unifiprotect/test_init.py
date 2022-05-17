@@ -218,10 +218,12 @@ async def test_migrate_reboot_button(
     assert mock_entry.api.update.called
     assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
 
+    assert registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device_2") is None
     light = registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device")
     assert light is not None
     assert light.unique_id == f"{light1.id}_reboot"
 
+    assert registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device_2") is None
     light = registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device")
     assert light is not None
     assert light.unique_id == f"{light2.id}_reboot"
