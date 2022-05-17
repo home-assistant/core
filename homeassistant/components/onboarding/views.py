@@ -149,7 +149,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Create default areas using the users supplied language.
             translations = await async_get_translations(
-                data["language"], "area", {DOMAIN}
+                hass, data["language"], "area", {DOMAIN}
             )
 
             area_registry = await hass.helpers.area_registry.async_get_registry()
