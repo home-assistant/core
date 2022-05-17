@@ -667,8 +667,7 @@ def websocket_get_themes(
         "type": "frontend/get_translations",
         vol.Required("language"): str,
         vol.Required("category"): str,
-        vol.Optional("integration"): str,
-        vol.Optional("integrations"): [str],
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
         vol.Optional("config_flow"): bool,
     }
 )
@@ -677,17 +676,11 @@ async def websocket_get_translations(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
     """Handle get translations command."""
-    integrations = None
-    if "integration" in msg:
-        integrations = {msg["integration"]}
-    elif "integrations" in msg:
-        integrations = set(msg["integrations"])
-
     resources = await async_get_translations(
         hass,
         msg["language"],
         msg["category"],
-        integrations,
+        msg.get("integration"),
         msg.get("config_flow"),
     )
     connection.send_message(
