@@ -2,7 +2,10 @@
 
 from withings_api import AbstractWithingsApi, WithingsAuth
 
-from homeassistant.components.application_credentials import ClientCredential
+from homeassistant.components.application_credentials import (
+    AuthorizationServer,
+    ClientCredential,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -17,8 +20,9 @@ async def async_get_auth_implementation(
     return WithingsLocalOAuth2Implementation(
         hass,
         DOMAIN,
-        credential.client_id,
-        credential.client_secret,
-        f"{WithingsAuth.URL}/oauth2_user/authorize2",
-        f"{AbstractWithingsApi.URL}/v2/oauth2",
+        credential,
+        authorization_server=AuthorizationServer(
+            authorize_url=f"{WithingsAuth.URL}/oauth2_user/authorize2",
+            token_url=f"{AbstractWithingsApi.URL}/v2/oauth2",
+        ),
     )
