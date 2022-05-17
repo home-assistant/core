@@ -10,27 +10,24 @@ from homeassistant.components import climate
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
-    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_ACTIONS,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
+    SWING_OFF,
+    SWING_ON,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -43,7 +40,6 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -272,12 +268,12 @@ _PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
         vol.Optional(
             CONF_MODE_LIST,
             default=[
-                HVAC_MODE_AUTO,
-                HVAC_MODE_OFF,
-                HVAC_MODE_COOL,
-                HVAC_MODE_HEAT,
-                HVAC_MODE_DRY,
-                HVAC_MODE_FAN_ONLY,
+                HVACMode.AUTO,
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
             ],
         ): cv.ensure_list,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
@@ -309,7 +305,7 @@ _PLATFORM_SCHEMA_BASE = SCHEMA_BASE.extend(
         vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(
-            CONF_SWING_MODE_LIST, default=[STATE_ON, HVAC_MODE_OFF]
+            CONF_SWING_MODE_LIST, default=[SWING_ON, SWING_OFF]
         ): cv.ensure_list,
         vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -460,9 +456,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._current_fan_mode = FAN_LOW
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
-            self._current_swing_mode = HVAC_MODE_OFF
+            self._current_swing_mode = SWING_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
-            self._current_operation = HVAC_MODE_OFF
+            self._current_operation = HVACMode.OFF
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
             self._preset_modes = config[CONF_PRESET_MODES_LIST]
@@ -532,21 +528,23 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
-            if payload in CURRENT_HVAC_ACTIONS:
-                self._action = payload
-                self.async_write_ha_state()
-            elif not payload or payload == PAYLOAD_NONE:
+            if not payload or payload == PAYLOAD_NONE:
                 _LOGGER.debug(
                     "Invalid %s action: %s, ignoring",
-                    CURRENT_HVAC_ACTIONS,
+                    [e.value for e in HVACAction],
                     payload,
                 )
-            else:
+                return
+            try:
+                self._action = HVACAction(payload)
+            except ValueError:
                 _LOGGER.warning(
                     "Invalid %s action: %s",
-                    CURRENT_HVAC_ACTIONS,
+                    [e.value for e in HVACAction],
                     payload,
                 )
+                return
+            self.async_write_ha_state()
 
         add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 
@@ -773,17 +771,17 @@ class MqttClimate(MqttEntity, ClimateEntity):
         return self._target_temp_high
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         return self._action
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         return self._current_operation
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return self._config[CONF_MODE_LIST]
 
@@ -859,7 +857,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 setattr(self, attr, temp)
 
             # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
-            if self._send_if_off or self._current_operation != HVAC_MODE_OFF:
+            if self._send_if_off or self._current_operation != HVACMode.OFF:
                 payload = self._command_templates[cmnd_template](temp)
                 await self._publish(cmnd_topic, payload)
 
@@ -899,7 +897,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
         # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
-        if self._send_if_off or self._current_operation != HVAC_MODE_OFF:
+        if self._send_if_off or self._current_operation != HVACMode.OFF:
             payload = self._command_templates[CONF_SWING_MODE_COMMAND_TEMPLATE](
                 swing_mode
             )
@@ -912,7 +910,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
-        if self._send_if_off or self._current_operation != HVAC_MODE_OFF:
+        if self._send_if_off or self._current_operation != HVACMode.OFF:
             payload = self._command_templates[CONF_FAN_MODE_COMMAND_TEMPLATE](fan_mode)
             await self._publish(CONF_FAN_MODE_COMMAND_TOPIC, payload)
 
@@ -922,7 +920,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set new operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._publish(
                 CONF_POWER_COMMAND_TOPIC, self._config[CONF_PAYLOAD_OFF]
             )

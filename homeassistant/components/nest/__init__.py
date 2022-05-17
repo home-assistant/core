@@ -42,7 +42,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
@@ -266,7 +266,7 @@ class NestEventViewBase(HomeAssistantView, ABC):
     ) -> web.StreamResponse:
         """Start a GET request."""
         user = request[KEY_HASS_USER]
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_device(entity_registry, device_id):
             if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
                 raise Unauthorized(entity_id=entry.entity_id)

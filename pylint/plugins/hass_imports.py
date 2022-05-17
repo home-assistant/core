@@ -69,6 +69,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.components.climate.const": [
         ObsoleteImportMatch(
+            reason="replaced by HVACAction enum",
+            constant=re.compile(r"^CURRENT_HVAC_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
             reason="replaced by ClimateEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),

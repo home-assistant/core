@@ -1,4 +1,6 @@
 """Test selectors."""
+from enum import Enum
+
 import pytest
 import voluptuous as vol
 
@@ -52,6 +54,8 @@ def _test_selector(
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    # We do not allow enums in the config, as they cannot serialize
+    assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
     # Use selector in schema and validate
     vol_schema = vol.Schema({"selection": selector_instance})
@@ -347,7 +351,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections):
     (
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
-        ({"multiline": False}, (), ()),
+        ({"multiline": False, "type": "email"}, (), ()),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections):
@@ -398,7 +402,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             (0, None, ["red"]),
         ),
         (
-            {"options": [], "custom_value": True, "multiple": True},
+            {"options": [], "custom_value": True, "multiple": True, "mode": "list"},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
         ),

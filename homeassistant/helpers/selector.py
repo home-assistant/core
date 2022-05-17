@@ -73,11 +73,7 @@ class Selector:
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
-        return {"selector": {self.selector_type: self.serialize_config()}}
-
-    def serialize_config(self) -> Any:
-        """Serialize config."""
-        return self.config
+        return {"selector": {self.selector_type: self.config}}
 
 
 SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -617,8 +613,8 @@ class NumberSelector(Selector):
                     vol.Coerce(float), vol.Range(min=1e-3)
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.Coerce(
-                    NumberSelectorMode
+                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                    vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
             }
         ),
@@ -628,13 +624,6 @@ class NumberSelector(Selector):
     def __init__(self, config: NumberSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
-
-    def serialize_config(self) -> Any:
-        """Serialize the selector config."""
-        return {
-            **self.config,
-            "mode": self.config["mode"].value,
-        }
 
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
@@ -715,7 +704,9 @@ class SelectSelector(Selector):
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.Coerce(SelectSelectorMode),
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
         }
     )
 
@@ -838,7 +829,9 @@ class TextSelector(Selector):
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.Coerce(TextSelectorType),
+            vol.Optional("type"): vol.All(
+                vol.Coerce(TextSelectorType), lambda val: val.value
+            ),
         }
     )
 

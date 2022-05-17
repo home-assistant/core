@@ -14,7 +14,7 @@
             "unknown": "Errore imprevisto"
         },
         "progress": {
-            "email_2fa": "Digita il codice di autenticazione a due fattori\n inviato tramite email."
+            "email_2fa": "Verifica la presenza nella tua email di un collegamento di verifica da Simplisafe."
         },
         "step": {
             "mfa": {

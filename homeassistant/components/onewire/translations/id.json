@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Port",
                     "type": "Jenis koneksi"
                 },
-                "title": "Siapkan 1-Wire"
+                "title": "Setel detail server"
             }
         }
     },

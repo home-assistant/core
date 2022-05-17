@@ -21,10 +21,10 @@
             "no_usable_service": "Se encontr\u00f3 un dispositivo, pero no se pudo identificar ninguna manera de establecer una conexi\u00f3n con \u00e9l. Si sigues viendo este mensaje, intenta especificar su direcci\u00f3n IP o reiniciar el Apple TV.",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name} ({type})",
         "step": {
             "confirm": {
-                "description": "Est\u00e1s a punto de a\u00f1adir el Apple TV con nombre `{name}` a Home Assistant.\n\n**Para completar el proceso, puede que tengas que introducir varios c\u00f3digos PIN.**\n\nTen en cuenta que *no* podr\u00e1s apagar tu Apple TV con esta integraci\u00f3n. \u00a1S\u00f3lo se apagar\u00e1 el reproductor de medios de Home Assistant!",
+                "description": "Est\u00e1s a punto de a\u00f1adir `{name}` con el tipo `{type}` en Home Assistant.\n\n**Para completar el proceso, puede que tengas que introducir varios c\u00f3digos PIN.**\n\nTen en cuenta que *no* podr\u00e1s apagar tu Apple TV con esta integraci\u00f3n. \u00a1S\u00f3lo se apagar\u00e1 el reproductor de medios de Home Assistant!",
                 "title": "Confirma la adici\u00f3n del Apple TV"
             },
             "pair_no_pin": {
@@ -47,7 +47,7 @@
                 "title": "No es posible el emparejamiento"
             },
             "reconfigure": {
-                "description": "Este Apple TV est\u00e1 experimentando algunos problemas de conexi\u00f3n y debe ser reconfigurado.",
+                "description": "Vuelve a configurar este dispositivo para restablecer su funcionamiento.",
                 "title": "Reconfiguraci\u00f3n del dispositivo"
             },
             "service_problem": {

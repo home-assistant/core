@@ -64,15 +64,15 @@ class Switch(ZhaEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        result = await self._on_off_channel.on()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+        result = await self._on_off_channel.turn_on()
+        if not result:
             return
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        result = await self._on_off_channel.off()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+        result = await self._on_off_channel.turn_off()
+        if not result:
             return
         self.async_write_ha_state()
 

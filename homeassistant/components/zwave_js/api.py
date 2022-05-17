@@ -1848,9 +1848,17 @@ async def websocket_subscribe_firmware_update_status(
     connection.subscriptions[msg["id"]] = async_cleanup
 
     progress = node.firmware_update_progress
-    connection.send_result(
-        msg[ID], _get_firmware_update_progress_dict(progress) if progress else None
-    )
+    connection.send_result(msg[ID])
+    if progress:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "firmware update progress",
+                    **_get_firmware_update_progress_dict(progress),
+                },
+            )
+        )
 
 
 class FirmwareUploadView(HomeAssistantView):
@@ -2011,8 +2019,16 @@ async def websocket_subscribe_controller_statistics(
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    connection.send_result(
-        msg[ID], _get_controller_statistics_dict(controller.statistics)
+    connection.send_result(msg[ID])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "statistics updated",
+                "source": "controller",
+                **_get_controller_statistics_dict(controller.statistics),
+            },
+        )
     )
 
 
@@ -2069,7 +2085,18 @@ async def websocket_subscribe_node_statistics(
     msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("statistics updated", forward_stats)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    connection.send_result(msg[ID], _get_node_statistics_dict(node.statistics))
+    connection.send_result(msg[ID])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "statistics updated",
+                "source": "node",
+                "nodeId": node.node_id,
+                **_get_node_statistics_dict(node.statistics),
+            },
+        )
+    )
 
 
 @websocket_api.require_admin

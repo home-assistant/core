@@ -104,13 +104,13 @@
                 },
                 "description": "Met groepen kunt u een nieuwe entiteit cre\u00ebren die meerdere entiteiten van hetzelfde type vertegenwoordigt.",
                 "menu_options": {
-                    "binary_sensor": "Binaire sensorgroep",
+                    "binary_sensor": "Binaire-sensorgroep",
                     "cover": "Rolluikgroep",
                     "fan": "Ventilatorgroep",
                     "light": "Lichtgroep",
-                    "lock": "Groep vergrendelen",
+                    "lock": "Slotgroep",
                     "media_player": "Mediaspelergroep",
-                    "switch": "Groep wisselen"
+                    "switch": "Schakelaargroep"
                 },
                 "title": "Groep toevoegen"
             }

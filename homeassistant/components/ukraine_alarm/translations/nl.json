@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd.",
+            "cannot_connect": "Kan geen verbinding maken",
+            "max_regions": "Er kunnen maximaal 5 regio's worden geconfigureerd",
+            "rate_limit": "Te veel verzoeken",
+            "timeout": "Time-out bij het maken van verbinding",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_api_key": "Ongeldige API-sleutel",
+            "timeout": "Time-out bij het maken van verbinding",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Regio"
+                },
+                "description": "Als u niet alleen de staat en het district wilt volgen, kiest u de specifieke gemeenschap ervan"
+            },
+            "district": {
+                "data": {
+                    "region": "Regio"
+                },
+                "description": "Als u niet alleen de staat wilt controleren, kies dan het specifieke district"
+            },
+            "state": {
+                "data": {
+                    "region": "Regio"
+                },
+                "description": "Kies staat om te monitoren"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "region": "Regio"
+                },
+                "description": "Kies staat om te monitoren"
+            }
+        }
+    }
+}

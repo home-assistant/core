@@ -359,15 +359,19 @@ def handle_get_config(
     connection.send_result(msg["id"], hass.config.as_dict())
 
 
-@decorators.websocket_command({vol.Required("type"): "manifest/list"})
+@decorators.websocket_command(
+    {vol.Required("type"): "manifest/list", vol.Optional("integrations"): [str]}
+)
 @decorators.async_response
 async def handle_manifest_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    loaded_integrations = async_get_loaded_integrations(hass)
+    wanted_integrations = msg.get("integrations")
+    if wanted_integrations is None:
+        wanted_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in loaded_integrations)
+        *(async_get_integration(hass, domain) for domain in wanted_integrations)
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]

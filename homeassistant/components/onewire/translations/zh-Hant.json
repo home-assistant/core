@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0",
                     "type": "\u9023\u7dda\u985e\u5225"
                 },
-                "title": "\u8a2d\u5b9a 1-Wire"
+                "title": "\u8a2d\u5b9a\u4f3a\u670d\u5668\u8a73\u7d30\u8cc7\u8a0a"
             }
         }
     },

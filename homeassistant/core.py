@@ -406,7 +406,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -434,17 +439,25 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task: asyncio.Future[_R]
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Coroutinefunction:
-            task = self.loop.create_task(
-                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(
+                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
+                )
+            task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(cast(Callable[..., _R], hassjob.target), *args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(
-                None, cast(Callable[..., _R], hassjob.target), *args
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         # If a task is scheduled
         if self._track_task:
@@ -522,8 +535,14 @@ class HomeAssistant:
         hassjob: HassJob
         args: parameters for method to call.
         """
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Callback:
-            cast(Callable[..., _R], hassjob.target)(*args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
@@ -565,7 +584,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -734,7 +758,9 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context()
+        self.context: Context = context or Context(
+            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+        )
 
     def __hash__(self) -> int:
         """Make hashable."""
@@ -1363,10 +1389,10 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        if context is None:
-            context = Context()
-
         now = dt_util.utcnow()
+
+        if context is None:
+            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
 
         state = State(
             entity_id,

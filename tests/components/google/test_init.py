@@ -10,6 +10,10 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.google import (
     DOMAIN,
     SERVICE_ADD_EVENT,
@@ -18,6 +22,7 @@ from homeassistant.components.google import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .conftest import (
@@ -210,6 +215,35 @@ async def test_found_calendar_from_api(
     setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test finding a calendar from the API."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    state = hass.states.get(TEST_API_ENTITY)
+    assert state
+    assert state.name == TEST_API_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # No yaml config loaded that overwrites the entity name
+    assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+@pytest.mark.parametrize("calendars_config,google_config", [([], {})])
+async def test_load_application_credentials(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test loading an application credentials and a config entry."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
+    )
 
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})

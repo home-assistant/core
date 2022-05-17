@@ -340,3 +340,36 @@ async def test_sensor_datetime(
     assert entity.attributes["device_class"] == device_class
     assert entity.domain == "sensor"
     assert entity.state == state_value
+
+
+async def test_default_disabling_entity(hass, create_registrations, webhook_client):
+    """Test that sensors can be disabled by default upon registration."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "type": "sensor",
+                "unique_id": "battery_state",
+                "default_disabled": True,
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    json = await reg_resp.json()
+    assert json == {"success": True}
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is None
+
+    assert (
+        er.async_get(hass).async_get("sensor.test_1_battery_state").disabled_by
+        == er.RegistryEntryDisabler.INTEGRATION
+    )
