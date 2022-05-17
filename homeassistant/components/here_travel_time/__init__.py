@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt
 
 from .const import (
-    ARRIVAL_TIME,
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
     ATTR_DISTANCE,
@@ -33,6 +32,8 @@ from .const import (
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
+    CONF_ARRIVAL_TIME,
+    CONF_DEPARTURE_TIME,
     CONF_DESTINATION_ENTITY_ID,
     CONF_DESTINATION_LATITUDE,
     CONF_DESTINATION_LONGITUDE,
@@ -40,11 +41,8 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
-    CONF_TIME,
-    CONF_TIME_TYPE,
     CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
-    DEPARTURE_TIME,
     DOMAIN,
     NO_ROUTE_ERROR_MESSAGE,
     ROUTE_MODE_FASTEST,
@@ -65,13 +63,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     setup_options(hass, config_entry)
 
     arrival = (
-        dt.parse_time(config_entry.options[CONF_TIME])
-        if config_entry.options[CONF_TIME_TYPE] == ARRIVAL_TIME
+        dt.parse_time(config_entry.options[CONF_ARRIVAL_TIME])
+        if config_entry.options[CONF_ARRIVAL_TIME] is not None
         else None
     )
     departure = (
-        dt.parse_time(config_entry.options[CONF_TIME])
-        if config_entry.options[CONF_TIME_TYPE] == DEPARTURE_TIME
+        dt.parse_time(config_entry.options[CONF_DEPARTURE_TIME])
+        if config_entry.options[CONF_DEPARTURE_TIME] is not None
         else None
     )
 
@@ -108,9 +106,9 @@ def setup_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
             options={
                 CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
                 CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-                CONF_TIME_TYPE: DEPARTURE_TIME,
+                CONF_ARRIVAL_TIME: None,
+                CONF_DEPARTURE_TIME: None,
                 CONF_UNIT_SYSTEM: hass.config.units.name,
-                CONF_TIME: None,
             },
         )
 

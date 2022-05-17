@@ -21,12 +21,6 @@ CONF_ARRIVAL = "arrival"
 CONF_DEPARTURE = "departure"
 CONF_ARRIVAL_TIME = "arrival_time"
 CONF_DEPARTURE_TIME = "departure_time"
-CONF_TIME_TYPE = "time_type"
-CONF_TIME = "time"
-
-ARRIVAL_TIME = "Arrival Time"
-DEPARTURE_TIME = "Departure Time"
-TIME_TYPES = [ARRIVAL_TIME, DEPARTURE_TIME]
 
 DEFAULT_NAME = "HERE Travel Time"
 

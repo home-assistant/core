@@ -12,22 +12,24 @@ from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME, CONF_UNIT_SY
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import EntitySelector, LocationSelector, selector
+from homeassistant.helpers.selector import (
+    EntitySelector,
+    LocationSelector,
+    TimeSelector,
+    selector,
+)
 
 from .const import (
-    ARRIVAL_TIME,
     CONF_ARRIVAL,
+    CONF_ARRIVAL_TIME,
     CONF_DEPARTURE,
+    CONF_DEPARTURE_TIME,
     CONF_ROUTE_MODE,
-    CONF_TIME,
-    CONF_TIME_TYPE,
     CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
-    DEPARTURE_TIME,
     DOMAIN,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
-    TIME_TYPES,
     TRAFFIC_MODE_DISABLED,
     TRAFFIC_MODE_ENABLED,
     TRAFFIC_MODES,
@@ -78,8 +80,8 @@ def is_dupe_import(
         CONF_TRAFFIC_MODE,
         CONF_UNIT_SYSTEM,
         CONF_ROUTE_MODE,
-        CONF_TIME_TYPE,
-        CONF_TIME,
+        CONF_ARRIVAL_TIME,
+        CONF_DEPARTURE_TIME,
     ):
         if options.get(key) != entry.options.get(key):
             return False
@@ -278,20 +280,16 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         options[CONF_UNIT_SYSTEM] = user_input.pop(
             CONF_UNIT_SYSTEM, self.hass.config.units.name
         )
-        options[CONF_TIME_TYPE] = (
-            ARRIVAL_TIME if CONF_ARRIVAL in user_input else DEPARTURE_TIME
-        )
-        options[CONF_TIME] = None
-        if (arrival_time := user_input.pop(CONF_ARRIVAL, None)) is not None:
-            options[CONF_TIME] = arrival_time
-        if (departure_time := user_input.pop(CONF_DEPARTURE, None)) is not None:
-            options[CONF_TIME] = departure_time
+        options[CONF_ARRIVAL_TIME] = user_input.pop(CONF_ARRIVAL, None)
+        options[CONF_DEPARTURE_TIME] = user_input.pop(CONF_DEPARTURE, None)
 
         return user_input, options
 
 
 class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
     """Handle HERE Travel Time options."""
+
+    _config: dict[str, Any] = {}
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize HERE Travel Time options flow."""
@@ -301,26 +299,17 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the HERE Travel Time options."""
-        errors = {}
-
-        def convert_time(user_input: dict[str, Any]) -> None:
-            """Validate time since cv.time cannot be used in schema or stored in entity config."""
-            if user_input[CONF_TIME] != "":
-                try:
-                    cv.time(user_input[CONF_TIME])
-                except vol.Invalid:
-                    errors["base"] = "invalid_time"
-            else:
-                user_input[CONF_TIME] = None
-
         if user_input is not None:
-            convert_time(user_input)
-            if not errors:
-                return self.async_create_entry(title="", data=user_input)
-
-        default_time = self.config_entry.options.get(CONF_TIME, "")
-        if default_time is None:  # Convert None to empty string so cv.string passes
-            default_time = ""
+            self._config = user_input
+            if self.config_entry.data[CONF_MODE] == TRAVEL_MODE_PUBLIC_TIME_TABLE:
+                return self.async_show_menu(
+                    step_id="time_menu",
+                    menu_options=["departure_time", "arrival_time", "no_time"],
+                )
+            return self.async_show_menu(
+                step_id="time_menu",
+                menu_options=["departure_time", "no_time"],
+            )
 
         options = {
             vol.Optional(
@@ -341,18 +330,40 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
                     CONF_UNIT_SYSTEM, self.hass.config.units.name
                 ),
             ): vol.In(UNITS),
-            vol.Optional(CONF_TIME, default=default_time): cv.string,
         }
-        # Arrival is only allowed for publicTransportTimeTable
-        if self.config_entry.data[CONF_MODE] == TRAVEL_MODE_PUBLIC_TIME_TABLE:
-            options[vol.Optional(CONF_TIME_TYPE, default=DEPARTURE_TIME)] = vol.In(
-                TIME_TYPES
-            )
-        else:
-            options[vol.Optional(CONF_TIME_TYPE, default=DEPARTURE_TIME)] = vol.In(
-                [DEPARTURE_TIME]
-            )
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+
+    async def async_step_no_time(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Create Options Entry."""
+        return self.async_create_entry(title="", data=self._config)
+
+    async def async_step_arrival_time(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure arrival time."""
+        if user_input is not None:
+            self._config[CONF_ARRIVAL_TIME] = user_input[CONF_ARRIVAL_TIME]
+            return self.async_create_entry(title="", data=self._config)
+
+        options = {"arrival_time": selector({TimeSelector.selector_type: {}})}
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options), errors=errors
+            step_id="arrival_time", data_schema=vol.Schema(options)
+        )
+
+    async def async_step_departure_time(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure departure time."""
+        if user_input is not None:
+            self._config[CONF_DEPARTURE_TIME] = user_input[CONF_DEPARTURE_TIME]
+            return self.async_create_entry(title="", data=self._config)
+
+        options = {"departure_time": selector({TimeSelector.selector_type: {}})}
+
+        return self.async_show_form(
+            step_id="departure_time", data_schema=vol.Schema(options)
         )

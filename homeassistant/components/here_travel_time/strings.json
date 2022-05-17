@@ -54,15 +54,29 @@
         "data": {
           "traffic_mode": "Traffic Mode",
           "route_mode": "Route Mode",
-          "time_type": "Time Type",
-          "time": "Time",
           "unit_system": "Unit system"
-        },
-        "description": "You can optionally specify either a Departure Time or Arrival Time. You can enter a 24 hour time string like `08:00:00`."
+        }
+      },
+      "time_menu": {
+        "title": "Choose Time Type",
+        "menu_options": {
+          "departure_time": "Configure a departure time",
+          "arrival_time": "Configure an arrival time",
+          "no_time": "Do not configure a time"
+        }
+      },
+      "departure_time": {
+        "title": "Choose Departure Time",
+        "data": {
+          "departure_time": "Departure Time"
+        }
+      },
+      "arrival_time": {
+        "title": "Choose Arrival Time",
+        "data": {
+          "arrival_time": "Arrival Time"
+        }
       }
-    },
-    "error": {
-      "invalid_time": "Invalid time"
     }
   }
 }

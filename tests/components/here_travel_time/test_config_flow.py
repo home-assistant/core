@@ -7,14 +7,12 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.here_travel_time.const import (
-    ARRIVAL_TIME,
     CONF_ARRIVAL,
+    CONF_ARRIVAL_TIME,
     CONF_DEPARTURE,
+    CONF_DEPARTURE_TIME,
     CONF_ROUTE_MODE,
-    CONF_TIME,
-    CONF_TIME_TYPE,
     CONF_TRAFFIC_MODE,
-    DEPARTURE_TIME,
     DOMAIN,
     ROUTE_MODE_FASTEST,
     TRAFFIC_MODE_ENABLED,
@@ -66,6 +64,37 @@ async def user_step_result_fixture(hass: HomeAssistant) -> data_entry_flow.FlowR
     )
     await hass.async_block_till_done()
     yield user_step_result
+
+
+@pytest.fixture(name="option_init_result")
+async def option_init_result_fixture(hass: HomeAssistant) -> data_entry_flow.FlowResult:
+    """Provide the result of a completed options init step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={
+            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+        },
+    )
+    yield result
 
 
 @pytest.fixture(name="origin_step_result")
@@ -270,94 +299,66 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    # Empty time
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_TIME_TYPE: DEPARTURE_TIME,
-            CONF_TIME: "",
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert entry.options == {
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TIME_TYPE: DEPARTURE_TIME,
-        CONF_TIME: None,
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-    }
-
-    # Valid time
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_TIME_TYPE: DEPARTURE_TIME,
-            CONF_TIME: "08:00:00",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert entry.options == {
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TIME_TYPE: DEPARTURE_TIME,
-        CONF_TIME: "08:00:00",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-    }
-
-    # Invalid time
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_TIME_TYPE: DEPARTURE_TIME,
-            CONF_TIME: "invalid",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_time"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_options_flow_arrival_time(hass: HomeAssistant) -> None:
+async def test_options_flow_arrival_time_step(
+    hass: HomeAssistant, option_init_result: data_entry_flow.FlowResult
+) -> None:
     """Test the options flow arrival time type."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="0123456789",
-        data={
-            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
-            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
-            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
-            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
-            CONF_API_KEY: API_KEY,
-            CONF_MODE: TRAVEL_MODE_PUBLIC_TIME_TABLE,
-            CONF_NAME: "test",
-        },
+    menu_result = await hass.config_entries.options.async_configure(
+        option_init_result["flow_id"], {"next_step_id": "arrival_time"}
     )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
+    assert menu_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    time_selector_result = await hass.config_entries.options.async_configure(
+        option_init_result["flow_id"],
         user_input={
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_TIME_TYPE: ARRIVAL_TIME,
-            CONF_TIME: "",
+            "arrival_time": "08:00:00",
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert time_selector_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("valid_response")
+async def test_options_flow_departure_time_step(
+    hass: HomeAssistant, option_init_result: data_entry_flow.FlowResult
+) -> None:
+    """Test the options flow departure time type."""
+    menu_result = await hass.config_entries.options.async_configure(
+        option_init_result["flow_id"], {"next_step_id": "departure_time"}
+    )
+    assert menu_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    time_selector_result = await hass.config_entries.options.async_configure(
+        option_init_result["flow_id"],
+        user_input={
+            "departure_time": "08:00:00",
+        },
+    )
+
+    assert time_selector_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("valid_response")
+async def test_options_flow_no_time_step(
+    hass: HomeAssistant, option_init_result: data_entry_flow.FlowResult
+) -> None:
+    """Test the options flow arrival time type."""
+    menu_result = await hass.config_entries.options.async_configure(
+        option_init_result["flow_id"], {"next_step_id": "no_time"}
+    )
+
+    assert menu_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -395,8 +396,8 @@ async def test_import_flow_entity_id(hass: HomeAssistant) -> None:
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        CONF_TIME_TYPE: DEPARTURE_TIME,
-        CONF_TIME: "08:00:00",
+        CONF_DEPARTURE_TIME: "08:00:00",
+        CONF_ARRIVAL_TIME: None,
     }
 
 
@@ -439,8 +440,8 @@ async def test_import_flow_coordinates(hass: HomeAssistant) -> None:
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        CONF_TIME_TYPE: ARRIVAL_TIME,
-        CONF_TIME: "08:00:00",
+        CONF_DEPARTURE_TIME: None,
+        CONF_ARRIVAL_TIME: "08:00:00",
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
     }
 
