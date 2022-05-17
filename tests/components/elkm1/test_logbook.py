@@ -31,8 +31,6 @@ async def test_humanify_elkm1_keypad_event(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
-
     (event1, event2) = mock_humanify(
         hass,
         [
