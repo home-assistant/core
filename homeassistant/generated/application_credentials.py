@@ -10,5 +10,6 @@ APPLICATION_CREDENTIALS = [
     "google",
     "netatmo",
     "spotify",
-    "xbox"
+    "xbox",
+    "yolink"
 ]
