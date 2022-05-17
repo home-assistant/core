@@ -96,7 +96,9 @@ def statement_for_request(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
+    context_event_types: tuple[str, ...],
     entity_ids: list[str] | None = None,
+    device_ids: list[str] | None = None,
     filters: Filters | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
@@ -114,12 +116,16 @@ def statement_for_request(
     # like matching which means part of the query has to be built each
     # time when the entity_ids are not in the cache
     if len(entity_ids) > 1:
-        return _entities_stmt(start_day, end_day, event_types, entity_ids)
+        return _entities_stmt(
+            start_day, end_day, event_types, context_event_types, entity_ids
+        )
 
     # Single entity: logbook sends everything for the timeframe for the entity
     entity_id = entity_ids[0]
     entity_like = ENTITY_ID_JSON_TEMPLATE.format(entity_id)
-    return _single_entity_stmt(start_day, end_day, event_types, entity_id, entity_like)
+    return _single_entity_stmt(
+        start_day, end_day, event_types, context_event_types, entity_id, entity_like
+    )
 
 
 def _select_events_context_id_subquery(
@@ -139,15 +145,15 @@ def _select_events_context_id_subquery(
 def _select_entities_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
-    event_types: tuple[str, ...],
+    context_event_types: tuple[str, ...],
     entity_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple entities."""
     return select(
         union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types).where(
-                _apply_event_entity_id_matchers(entity_ids)
-            ),
+            _select_events_context_id_subquery(
+                start_day, end_day, context_event_types
+            ).where(_apply_event_entity_id_matchers(entity_ids)),
             _apply_entities_hints(select(States.context_id))
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
@@ -170,6 +176,7 @@ def _entities_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
+    context_event_types: tuple[str, ...],
     entity_ids: list[str],
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
@@ -184,7 +191,7 @@ def _entities_stmt(
                     _select_entities_context_ids_sub_query(
                         start_day,
                         end_day,
-                        event_types,
+                        context_event_types,
                         entity_ids,
                     )
                 )
@@ -203,14 +210,16 @@ def _entities_stmt(
 def _select_entity_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
-    event_types: tuple[str, ...],
+    context_event_types: tuple[str, ...],
     entity_id: str,
     entity_id_like: str,
 ) -> Select:
     """Generate a subquery to find context ids for a single entity."""
     return select(
         union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types).where(
+            _select_events_context_id_subquery(
+                start_day, end_day, context_event_types
+            ).where(
                 Events.event_data.like(entity_id_like)
                 | EventData.shared_data.like(entity_id_like)
             ),
@@ -225,6 +234,7 @@ def _single_entity_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
+    context_event_types: tuple[str, ...],
     entity_id: str,
     entity_id_like: str,
 ) -> StatementLambdaElement:
@@ -240,7 +250,11 @@ def _single_entity_stmt(
             _select_events_context_only().where(
                 Events.context_id.in_(
                     _select_entity_context_ids_sub_query(
-                        start_day, end_day, event_types, entity_id, entity_id_like
+                        start_day,
+                        end_day,
+                        context_event_types,
+                        entity_id,
+                        entity_id_like,
                     )
                 )
             ),
