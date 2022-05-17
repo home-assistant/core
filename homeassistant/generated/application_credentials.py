@@ -11,6 +11,7 @@ APPLICATION_CREDENTIALS = [
     "home_connect",
     "netatmo",
     "spotify",
+    "withings",
     "xbox",
     "yolink"
 ]
