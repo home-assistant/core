@@ -8,6 +8,9 @@ To update, run python3 -m script.hassfest
 APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
+    "home_connect",
+    "netatmo",
     "spotify",
-    "xbox"
+    "xbox",
+    "yolink"
 ]

@@ -16,7 +16,7 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_SUBSCRIBER, DOMAIN
@@ -35,9 +35,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str | None:
     """Get the nest API device_id from the HomeAssistant device_id."""
-    device_registry: DeviceRegistry = (
-        await hass.helpers.device_registry.async_get_registry()
-    )
+    device_registry = dr.async_get(hass)
     if device := device_registry.async_get(device_id):
         for (domain, unique_id) in device.identifiers:
             if domain == DOMAIN:

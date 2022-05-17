@@ -18,7 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
 
@@ -140,7 +143,7 @@ async def async_connect_mqtt(hass, component):
             return
 
         message["topic"] = msg.topic
-        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
+        async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
     await mqtt.async_subscribe(hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
@@ -179,7 +182,7 @@ async def handle_webhook(hass, webhook_id, request):
             # Keep it as a 200 response so the incorrect packet is discarded
             return json_response([])
 
-    hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
+    async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
     response = []
 
