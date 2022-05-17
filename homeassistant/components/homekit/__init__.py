@@ -46,7 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry, entity_registry, instance_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
@@ -726,7 +726,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
-        uuid = await self.hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(self.hass)
         await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
