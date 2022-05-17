@@ -467,9 +467,7 @@ async def test_get_translations_for_integrations(hass, ws_client):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {
-        "resources": {"lang": "nl", "integrations": ["frontend", "http"]}
-    }
+    assert set(msg["result"]["resources"]["integrations"]) == {"frontend", "http"}
 
 
 async def test_get_translations_for_single_integration(hass, ws_client):
