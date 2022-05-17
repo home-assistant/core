@@ -24,12 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import (
-    EVENT_DEVICE_REGISTRY_UPDATED,
-    DeviceEntry,
-    DeviceRegistry,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -174,9 +169,7 @@ async def async_setup_internal(hass, entry: ConfigEntry):
     devices = _get_device_lookup(config[CONF_DEVICES])
     pt2262_devices: list[str] = []
 
-    device_registry: DeviceRegistry = (
-        await hass.helpers.device_registry.async_get_registry()
-    )
+    device_registry = dr.async_get(hass)
 
     # Declare the Handle event
     @callback
@@ -268,7 +261,7 @@ async def async_setup_internal(hass, entry: ConfigEntry):
             _remove_device(device_id)
 
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
+        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
     )
 
     def _shutdown_rfxtrx(event):
@@ -448,7 +441,7 @@ def get_device_tuple_from_identifiers(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove config entry from a device.
 
