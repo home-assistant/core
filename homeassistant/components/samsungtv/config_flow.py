@@ -167,6 +167,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         updates = {CONF_HOST: self._host}
         if self._mac:
             updates[CONF_MAC] = self._mac
+        if self._model:
+            updates[CONF_MODEL] = self._model
         if self._ssdp_rendering_control_location:
             updates[
                 CONF_SSDP_RENDERING_CONTROL_LOCATION
@@ -380,10 +382,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             != self._ssdp_main_tv_agent_location
         )
         update_mac = self._mac and not data.get(CONF_MAC)
+        update_model = self._model and not data.get(CONF_MODEL)
         if (
             update_ssdp_rendering_control_location
             or update_ssdp_main_tv_agent_location
             or update_mac
+            or update_model
         ):
             if update_ssdp_rendering_control_location:
                 data[
@@ -395,6 +399,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ] = self._ssdp_main_tv_agent_location
             if update_mac:
                 data[CONF_MAC] = self._mac
+            if update_model:
+                data[CONF_MODEL] = self._model
             entry_kw_args["data"] = data
         if not entry_kw_args:
             return None
