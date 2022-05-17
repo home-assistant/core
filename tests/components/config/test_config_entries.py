@@ -12,7 +12,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -68,9 +68,7 @@ async def test_get_entries(hass, client, clear_handlers):
             """Return options flow support for this handler."""
             return True
 
-    hass.helpers.config_entry_flow.register_discovery_flow(
-        "comp2", "Comp 2", lambda: None
-    )
+    config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
     entry = MockConfigEntry(
         domain="comp1",

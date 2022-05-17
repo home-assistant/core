@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -267,15 +268,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        await hass.helpers.discovery.async_load_platform(
-            Platform.BINARY_SENSOR, DOMAIN, {}, config
-        )
-        await hass.helpers.discovery.async_load_platform(
-            Platform.STT, DOMAIN, {}, config
-        )
-        await hass.helpers.discovery.async_load_platform(
-            Platform.TTS, DOMAIN, {}, config
-        )
+        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
 
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
