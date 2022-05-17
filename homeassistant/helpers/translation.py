@@ -286,7 +286,7 @@ async def async_get_translations(
     hass: HomeAssistant,
     language: str,
     category: str,
-    integration: str | None = None,
+    integrations: set[str] | None = None,
     config_flow: bool | None = None,
 ) -> dict[str, Any]:
     """Return all backend translations.
@@ -297,8 +297,8 @@ async def async_get_translations(
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
-    if integration is not None:
-        components = {integration}
+    if integrations is not None:
+        components = integrations
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category == "state":
@@ -310,7 +310,10 @@ async def async_get_translations(
         }
 
     async with lock:
-        cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
+        if TRANSLATION_FLATTEN_CACHE in hass.data:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+        else:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
         cached = await cache.async_fetch(language, category, components)
 
     return dict(ChainMap(*cached))
