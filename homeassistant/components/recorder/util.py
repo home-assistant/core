@@ -426,8 +426,18 @@ def setup_connection_for_dialect(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
 
-        # approximately 8MiB of memory
-        execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
+        # The upper bound on the cache size is approximately 16MiB of memory
+        execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
+
+        #
+        # Enable FULL synchronous if they have a commit interval of 0
+        # or NORMAL if they do not.
+        #
+        # https://sqlite.org/pragma.html#pragma_synchronous
+        # The synchronous=NORMAL setting is a good choice for most applications running in WAL mode.
+        #
+        synchronous = "NORMAL" if instance.commit_interval else "FULL"
+        execute_on_connection(dbapi_connection, f"PRAGMA synchronous={synchronous}")
 
         # enable support for foreign keys
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
