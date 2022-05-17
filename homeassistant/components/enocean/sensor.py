@@ -49,7 +49,7 @@ SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 class EnOceanSensorEntityDescription(SensorEntityDescription):
     """Sensor description for EnOcean sensors with additional unique id."""
 
-    unique_id: Callable[[list[int]], str | None] = None  # type: ignore[assignment]
+    unique_id: Callable[[list[int]], str | None] = lambda _: None
 
 
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
