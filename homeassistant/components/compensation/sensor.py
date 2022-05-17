@@ -5,20 +5,30 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .const import (
+    ATTR_COEFFICIENTS,
+    ATTR_SOURCE,
+    ATTR_SOURCE_ATTRIBUTE,
+    ATTR_SOURCE_VALUE,
     CONF_COMPENSATION,
+    CONF_HIDE_SOURCE,
     CONF_POLYNOMIAL,
     CONF_PRECISION,
     DATA_COMPENSATION,
@@ -26,10 +36,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_COEFFICIENTS = "coefficients"
-ATTR_SOURCE = "source"
-ATTR_SOURCE_ATTRIBUTE = "source_attribute"
 
 
 async def async_setup_platform(
@@ -48,8 +54,36 @@ async def async_setup_platform(
     source = conf[CONF_SOURCE]
     attribute = conf.get(CONF_ATTRIBUTE)
     name = f"{DEFAULT_NAME} {source}"
-    if attribute is not None:
+    if attribute:
         name = f"{name} {attribute}"
+    name = conf.get(CONF_NAME) or name
+
+    unit_of_measurement = conf.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class = conf.get(CONF_DEVICE_CLASS)
+
+    ent_reg = entity_registry.async_get(hass)
+    source_entity = ent_reg.async_get(source)
+    source_state = hass.states.get(source)
+
+    if not (attribute := conf.get(CONF_ATTRIBUTE)):
+
+        def get_value(attr: str):
+            if source_state and (unit := source_state.attributes.get(attr)):
+                return unit
+            if source_entity and (unit := getattr(source_entity, attr)):
+                return unit
+            return None
+
+        unit_of_measurement = unit_of_measurement or get_value(ATTR_UNIT_OF_MEASUREMENT)
+        device_class = device_class or get_value(ATTR_DEVICE_CLASS)
+
+    if conf.get(CONF_HIDE_SOURCE):
+        registry = entity_registry.async_get(hass)
+        source_entity = registry.async_get(source)
+        if source_entity and not source_entity.hidden:
+            registry.async_update_entity(
+                source, hidden_by=RegistryEntryHider.INTEGRATION
+            )
 
     async_add_entities(
         [
@@ -60,7 +94,8 @@ async def async_setup_platform(
                 attribute,
                 conf[CONF_PRECISION],
                 conf[CONF_POLYNOMIAL],
-                conf.get(CONF_UNIT_OF_MEASUREMENT),
+                unit_of_measurement,
+                device_class,
             )
         ]
     )
@@ -71,26 +106,37 @@ class CompensationSensor(SensorEntity):
 
     def __init__(
         self,
-        unique_id,
-        name,
-        source,
-        attribute,
-        precision,
+        unique_id: str,
+        name: str,
+        source: str,
+        attribute: str | None,
+        precision: int,
         polynomial,
-        unit_of_measurement,
-    ):
+        unit_of_measurement: str,
+        device_class: str,
+    ) -> None:
         """Initialize the Compensation sensor."""
         self._source_entity_id = source
         self._precision = precision
         self._source_attribute = attribute
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._poly = polynomial
-        self._coefficients = polynomial.coefficients.tolist()
-        self._state = None
-        self._unique_id = unique_id
-        self._name = name
+        self._attr_unique_id = unique_id
+        self._attr_name = name
+        self._attr_should_poll = False
+        self._attr_device_class = device_class
 
-    async def async_added_to_hass(self):
+        attrs = {
+            ATTR_SOURCE_VALUE: None,
+            ATTR_SOURCE: source,
+            ATTR_SOURCE_ATTRIBUTE: attribute,
+            ATTR_COEFFICIENTS: polynomial.coef.tolist(),
+        }
+        self._attr_extra_state_attributes = {
+            k: v for k, v in attrs.items() if v or k == ATTR_SOURCE_VALUE
+        }
+
+    async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(
@@ -100,64 +146,31 @@ class CompensationSensor(SensorEntity):
             )
         )
 
-    @property
-    def unique_id(self):
-        """Return the unique id of this sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        ret = {
-            ATTR_SOURCE: self._source_entity_id,
-            ATTR_COEFFICIENTS: self._coefficients,
-        }
-        if self._source_attribute:
-            ret[ATTR_SOURCE_ATTRIBUTE] = self._source_attribute
-        return ret
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
     @callback
-    def _async_compensation_sensor_state_listener(self, event):
+    def _async_compensation_sensor_state_listener(self, event: EventType) -> None:
         """Handle sensor state changes."""
         if (new_state := event.data.get("new_state")) is None:
             return
 
-        if self._unit_of_measurement is None and self._source_attribute is None:
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
+        if not self._source_attribute:
+            if self._attr_native_unit_of_measurement is None:
+                self._attr_native_unit_of_measurement = new_state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
+            if self._attr_device_class is None:
+                self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         try:
-            if self._source_attribute:
-                value = float(new_state.attributes.get(self._source_attribute))
-            else:
-                value = (
-                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
-                )
-            self._state = round(self._poly(value), self._precision)
-
+            source_value = (
+                float(new_state.attributes.get(self._source_attribute))
+                if self._source_attribute
+                else float(new_state.state)
+                if new_state.state != STATE_UNKNOWN
+                else None
+            )
+            native_value = round(self._poly(source_value), self._precision)
         except (ValueError, TypeError):
-            self._state = None
+            source_value = native_value = None
             if self._source_attribute:
                 _LOGGER.warning(
                     "%s attribute %s is not numerical",
@@ -166,5 +179,8 @@ class CompensationSensor(SensorEntity):
                 )
             else:
                 _LOGGER.warning("%s state is not numerical", self._source_entity_id)
+
+        self._attr_extra_state_attributes[ATTR_SOURCE_VALUE] = source_value
+        self._attr_native_value = native_value
 
         self.async_write_ha_state()

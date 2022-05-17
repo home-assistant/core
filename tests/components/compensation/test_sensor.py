@@ -1,14 +1,24 @@
 """The tests for the integration sensor platform."""
 
-from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
+from homeassistant.components.compensation.const import (
+    ATTR_SOURCE,
+    ATTR_SOURCE_ATTRIBUTE,
+    ATTR_SOURCE_VALUE,
+    CONF_PRECISION,
+    DOMAIN,
+)
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 
@@ -41,8 +51,17 @@ async def test_linear_state(hass):
     state = hass.states.get(expected_entity_id)
     assert state is not None
 
+    ent_reg = entity_registry.async_get(hass)
+    registry_entry = ent_reg.async_get(expected_entity_id)
+
+    # Entity is not registered when unique_id is not configured
+    assert registry_entry is None
+
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
+    assert state.attributes.get(ATTR_SOURCE) == entity_id
+    assert state.attributes.get(ATTR_SOURCE_ATTRIBUTE) is None
+    assert state.attributes.get(ATTR_SOURCE_VALUE) == 4
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "a"
 
     coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
@@ -86,6 +105,8 @@ async def test_linear_state_from_attribute(hass):
 
     state = hass.states.get(expected_entity_id)
     assert state is not None
+
+    assert state.name == "Compensation sensor.uncompensated value"
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
@@ -145,27 +166,6 @@ async def test_quadratic_state(hass):
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 3.327
 
 
-async def test_numpy_errors(hass, caplog):
-    """Tests bad polyfits."""
-    config = {
-        "compensation": {
-            "test": {
-                "source": "sensor.uncompensated",
-                "data_points": [
-                    [0.0, 1.0],
-                    [0.0, 1.0],
-                ],
-            },
-        }
-    }
-    await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert "invalid value encountered in true_divide" in caplog.text
-
-
 async def test_datapoints_greater_than_degree(hass, caplog):
     """Tests 3 bad data points."""
     config = {
@@ -217,3 +217,70 @@ async def test_new_state_is_none(hass):
     )
 
     assert last_changed == hass.states.get(expected_entity_id).last_changed
+
+
+async def test_config_overrides(hass: HomeAssistant):
+    """Test configuration overrides."""
+    config = {
+        "compensation": {
+            "test": {
+                "name": "Some Sensor",
+                "unique_id": "my_unique_id",
+                "source": "sensor.uncompensated",
+                "data_points": [
+                    [1.0, 2.0],
+                    [2.0, 3.0],
+                ],
+                "precision": 2,
+                "device_class": "gas",
+            }
+        }
+    }
+    expected_entity_id = "sensor.some_sensor"
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(expected_entity_id)
+    assert state is not None
+
+    assert state.name == "Some Sensor"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+
+    ent_reg = entity_registry.async_get(hass)
+    registry_entry = ent_reg.async_get(expected_entity_id)
+
+    assert registry_entry is not None
+    assert registry_entry.unique_id == "my_unique_id"
+
+
+async def test_hide_source(hass):
+    """Test hiding source sensor."""
+    config = {
+        "compensation": {
+            "test": {
+                "source": None,
+                "data_points": [
+                    [1.0, 2.0],
+                    [2.0, 3.0],
+                ],
+                "precision": 2,
+                "hide_source": "yes",
+            }
+        }
+    }
+
+    registry = entity_registry.async_get(hass)
+    source = registry.async_get_or_create(SENSOR_DOMAIN, "test", "sensor.uncompensated")
+    config[DOMAIN]["test"]["source"] = source.entity_id
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    source = registry.async_get(source.entity_id)
+    assert source.hidden_by == RegistryEntryHider.INTEGRATION
