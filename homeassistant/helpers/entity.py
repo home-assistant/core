@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
+from collections.abc import Coroutine, Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -27,7 +27,6 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_DEFAULT_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -45,13 +44,18 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+from homeassistant.util import dt as dt_util
 
 from . import entity_registry as er
 from .device_registry import DeviceEntryType
+from .entity_id import async_generate_entity_id as id_generator
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
+
+# quick and dirty hack to resolve circular import issue
+# without breaking existing code
+async_generate_entity_id = id_generator
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -79,32 +83,6 @@ def generate_entity_id(
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     return async_generate_entity_id(entity_id_format, name, current_ids, hass)
-
-
-@callback
-def async_generate_entity_id(
-    entity_id_format: str,
-    name: str | None,
-    current_ids: Iterable[str] | None = None,
-    hass: HomeAssistant | None = None,
-) -> str:
-    """Generate a unique entity ID based on given entity IDs or used IDs."""
-    name = (name or DEVICE_DEFAULT_NAME).lower()
-    preferred_string = entity_id_format.format(slugify(name))
-
-    if current_ids is not None:
-        return ensure_unique_string(preferred_string, current_ids)
-
-    if hass is None:
-        raise ValueError("Missing required parameter current_ids or hass")
-
-    test_string = preferred_string
-    tries = 1
-    while not hass.states.async_available(test_string):
-        tries += 1
-        test_string = f"{preferred_string}_{tries}"
-
-    return test_string
 
 
 def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> Any | None:
