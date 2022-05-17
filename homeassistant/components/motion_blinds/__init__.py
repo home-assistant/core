@@ -26,6 +26,7 @@ from .const import (
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     KEY_SETUP_LOCK,
+    KEY_UNSUB_STOP,
     KEY_VERSION,
     MANUFACTURER,
     PLATFORMS,
@@ -149,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unsub = hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, stop_motion_multicast
             )
-            entry.async_on_unload(unsub)
+            hass.data[DOMAIN][KEY_UNSUB_STOP] = unsub
 
     # Connect to motion gateway
     multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
@@ -219,8 +220,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if len(hass.data[DOMAIN]) == 2:
+    if len(hass.data[DOMAIN]) == 3:
         # No motion gateways left, stop Motion multicast
+        unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
+        unsub_stop()
         _LOGGER.debug("Shutting down Motion Listener")
         multicast = hass.data[DOMAIN].pop(KEY_MULTICAST_LISTENER)
         multicast.Stop_listen()
