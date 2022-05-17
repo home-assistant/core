@@ -600,13 +600,22 @@ def _get_events(
         #
         return query.yield_per(1024)  # type: ignore[no-any-return]
 
+    json_quoted_entity_ids = None
+    if entity_ids:
+        json_quoted_entity_ids = [f'"{entity_id}"' for entity_id in entity_ids]
+    json_quoted_device_ids = None
+    if device_ids:
+        json_quoted_device_ids = [f'"{device_id}"' for device_id in device_ids]
+
     stmt = statement_for_request(
         start_day,
         end_day,
         event_types,
         context_event_types,
         entity_ids,
+        json_quoted_entity_ids,
         device_ids,
+        json_quoted_device_ids,
         filters,
         context_id,
     )
