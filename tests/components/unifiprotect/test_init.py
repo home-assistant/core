@@ -1,14 +1,17 @@
 """Test the UniFi Protect setup flow."""
+# pylint: disable=protected-access
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
 from pyunifiprotect import NotAuthorized, NvrError
-from pyunifiprotect.data import NVR
+from pyunifiprotect.data import NVR, Light
 
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import _patch_discovery
 from .conftest import MockBootstrap, MockEntityFixture
@@ -175,3 +178,103 @@ async def test_setup_starts_discovery(
         assert mock_entry.entry.state == ConfigEntryState.LOADED
         await hass.async_block_till_done()
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+
+
+async def test_migrate_reboot_button(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
+):
+    """Test migrating unique ID of reboot button."""
+
+    light1 = mock_light.copy()
+    light1._api = mock_entry.api
+    light1.name = "Test Light 1"
+    light1.id = "lightid1"
+
+    light2 = mock_light.copy()
+    light2._api = mock_entry.api
+    light2.name = "Test Light 2"
+    light2.id = "lightid2"
+    mock_entry.api.bootstrap.lights = {
+        light1.id: light1,
+        light2.id: light2,
+    }
+    mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        Platform.BUTTON, Platform.BUTTON, light1.id, config_entry=mock_entry.entry
+    )
+    registry.async_get_or_create(
+        Platform.BUTTON,
+        Platform.BUTTON,
+        f"{light2.id}_reboot",
+        config_entry=mock_entry.entry,
+    )
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.entry.state == ConfigEntryState.LOADED
+    assert mock_entry.api.update.called
+    assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
+
+    assert registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device_2") is None
+    light = registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device")
+    assert light is not None
+    assert light.unique_id == f"{light1.id}_reboot"
+
+    assert registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device_2") is None
+    light = registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device")
+    assert light is not None
+    assert light.unique_id == f"{light2.id}_reboot"
+
+    buttons = []
+    for entity in er.async_entries_for_config_entry(
+        registry, mock_entry.entry.entry_id
+    ):
+        if entity.platform == Platform.BUTTON.value:
+            buttons.append(entity)
+    assert len(buttons) == 2
+
+
+async def test_migrate_reboot_button_fail(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
+):
+    """Test migrating unique ID of reboot button."""
+
+    light1 = mock_light.copy()
+    light1._api = mock_entry.api
+    light1.name = "Test Light 1"
+    light1.id = "lightid1"
+
+    mock_entry.api.bootstrap.lights = {
+        light1.id: light1,
+    }
+    mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        Platform.BUTTON,
+        Platform.BUTTON,
+        light1.id,
+        config_entry=mock_entry.entry,
+        suggested_object_id=light1.name,
+    )
+    registry.async_get_or_create(
+        Platform.BUTTON,
+        Platform.BUTTON,
+        f"{light1.id}_reboot",
+        config_entry=mock_entry.entry,
+        suggested_object_id=light1.name,
+    )
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.entry.state == ConfigEntryState.LOADED
+    assert mock_entry.api.update.called
+    assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
+
+    light = registry.async_get(f"{Platform.BUTTON}.test_light_1")
+    assert light is not None
+    assert light.unique_id == f"{light1.id}"
