@@ -49,7 +49,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self._on_state = False
         self._on_state2 = False
         self.channel = channel
-        self._attr_unique_id = f"{combine_hex(dev_id)}-switch"
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
 
     @property
     def is_on(self):
