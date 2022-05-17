@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "ipv6_not_supported": "\u4e0d\u652f\u63f4 IPv6\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{name} - {model} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} - {model} ({ip_address})\uff1f"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP \u4f4d\u5740"
+                }
+            }
+        }
+    }
+}

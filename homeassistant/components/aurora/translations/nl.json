@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "threshold": "Drempel (%)"
+                    "threshold": "Drempelwaarde (%)"
                 }
             }
         }
