@@ -16,9 +16,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
@@ -61,7 +60,7 @@ async def async_setup_platform(
     unit_of_measurement = conf.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = conf.get(CONF_DEVICE_CLASS)
 
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     source_entity = ent_reg.async_get(source)
     source_state = hass.states.get(source)
 
@@ -78,11 +77,11 @@ async def async_setup_platform(
         device_class = device_class or get_value(ATTR_DEVICE_CLASS)
 
     if conf.get(CONF_HIDE_SOURCE):
-        registry = entity_registry.async_get(hass)
+        registry = er.async_get(hass)
         source_entity = registry.async_get(source)
         if source_entity and not source_entity.hidden:
             registry.async_update_entity(
-                source, hidden_by=RegistryEntryHider.INTEGRATION
+                source, hidden_by=er.RegistryEntryHider.INTEGRATION
             )
 
     async_add_entities(
