@@ -264,6 +264,7 @@ async def test_abort_if_oauth_rejected(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "user_rejected_authorize"
+    assert result["description_placeholders"] == {"error": "access_denied"}
 
 
 async def test_step_discovery(hass, flow_handler, local_impl):
