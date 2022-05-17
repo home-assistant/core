@@ -791,7 +791,7 @@ def verify_domain_control(
                     user_id=call.context.user_id,
                 )
 
-            reg = await hass.helpers.entity_registry.async_get_registry()
+            reg = entity_registry.async_get(hass)
 
             authorized = False
 

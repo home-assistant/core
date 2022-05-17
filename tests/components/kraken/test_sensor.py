@@ -11,6 +11,7 @@ from homeassistant.components.kraken.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 import homeassistant.util.dt as dt_util
 
@@ -52,7 +53,7 @@ async def test_sensor(hass):
         )
         entry.add_to_hass(hass)
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
 
         # Pre-create registry entries for disabled by default sensors
         registry.async_get_or_create(

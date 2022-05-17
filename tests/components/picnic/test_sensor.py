@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt
 
@@ -97,9 +98,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         """Set up things to be run when tests are started."""
         self.hass = await async_test_home_assistant(None)
-        self.entity_registry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        self.entity_registry = er.async_get(self.hass)
 
         # Patch the api client
         self.picnic_patcher = patch("homeassistant.components.picnic.PicnicAPI")
