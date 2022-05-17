@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_PLATFORM,
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -53,6 +52,7 @@ from .mixins import (
     async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    validate_modern_schema,
 )
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
@@ -179,7 +179,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
-    cv.deprecated(CONF_PLATFORM),  # Deprecated in HA Core 2022.6
+    validate_modern_schema(fan.DOMAIN),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(

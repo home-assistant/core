@@ -1,5 +1,6 @@
 """The tests for the MQTT component."""
 import asyncio
+import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -2467,3 +2468,23 @@ async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     assert len(mqtt_connected_calls) == 2
     assert mqtt_connected_calls[0] is True
     assert mqtt_connected_calls[1] is False
+
+
+async def test_one_deprecation_warning_per_platform(hass, mqtt_mock, caplog):
+    """Test a deprecation warning is is logged once per platform."""
+    platform = "light"
+    config = {"platform": "mqtt", "command_topic": "test-topic"}
+    config1 = copy.deepcopy(config)
+    config1["name"] = "test1"
+    config2 = copy.deepcopy(config)
+    config2["name"] = "test2"
+    await async_setup_component(hass, platform, {platform: [config1, config2]})
+    await hass.async_block_till_done()
+    count = 0
+    for record in caplog.records:
+        if record.levelname == "WARNING" and (
+            f"Manual configured MQTT item found at platform key '{platform}'"
+            in record.message
+        ):
+            count += 1
+    assert count == 1

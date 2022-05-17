@@ -224,6 +224,27 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 )
 
 
+def validate_modern_schema(domain: str) -> Callable:
+    """Warn once when a legacy platform schema is used."""
+    warned = set()
+
+    def validator(config: ConfigType) -> ConfigType:
+        """Return a validator."""
+        nonlocal warned
+
+        if domain in warned:
+            return config
+
+        _LOGGER.warning(
+            "Manual configured MQTT item found at platform key '%s'. Manual MQTT item configurations have been moved to the integration key",
+            domain,
+        )
+        warned.add(domain)
+        return config
+
+    return validator
+
+
 class SetupEntity(Protocol):
     """Protocol type for async_setup_entities."""
 
