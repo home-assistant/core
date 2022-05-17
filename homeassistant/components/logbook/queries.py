@@ -121,7 +121,6 @@ def statement_for_request(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    context_event_types: tuple[str, ...],
     entity_ids: list[str] | None = None,
     json_quotable_entity_ids: list[str] | None = None,
     device_ids: list[str] | None = None,
@@ -149,7 +148,6 @@ def statement_for_request(
         start_day,
         end_day,
         event_types,
-        context_event_types,
         entity_ids,
         json_quotable_entity_ids,
         device_ids,
@@ -174,16 +172,16 @@ def _select_events_context_id_subquery(
 def _select_entities_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
-    context_event_types: tuple[str, ...],
+    event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quotable_entity_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple entities."""
     return select(
         union_all(
-            _select_events_context_id_subquery(
-                start_day, end_day, context_event_types
-            ).where(_apply_event_entity_id_matchers(json_quotable_entity_ids)),
+            _select_events_context_id_subquery(start_day, end_day, event_types).where(
+                _apply_event_entity_id_matchers(json_quotable_entity_ids)
+            ),
             _apply_entities_hints(select(States.context_id))
             .filter((States.last_updated > start_day) & (States.last_updated < end_day))
             .where(States.entity_id.in_(entity_ids)),
@@ -194,15 +192,15 @@ def _select_entities_context_ids_sub_query(
 def _select_device_id_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
-    context_event_types: tuple[str, ...],
+    event_types: tuple[str, ...],
     json_quotable_device_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple devices."""
     return select(
         union_all(
-            _select_events_context_id_subquery(
-                start_day, end_day, context_event_types
-            ).where(_apply_event_device_id_matchers(json_quotable_device_ids)),
+            _select_events_context_id_subquery(start_day, end_day, event_types).where(
+                _apply_event_device_id_matchers(json_quotable_device_ids)
+            ),
         ).c.context_id
     )
 
@@ -210,7 +208,7 @@ def _select_device_id_context_ids_sub_query(
 def _select_entities_device_id_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
-    context_event_types: tuple[str, ...],
+    event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quotable_entity_ids: list[str],
     json_quotable_device_ids: list[str],
@@ -218,9 +216,7 @@ def _select_entities_device_id_context_ids_sub_query(
     """Generate a subquery to find context ids for multiple entities and multiple devices."""
     return select(
         union_all(
-            _select_events_context_id_subquery(
-                start_day, end_day, context_event_types
-            ).where(
+            _select_events_context_id_subquery(start_day, end_day, event_types).where(
                 _apply_event_entity_id_device_id_matchers(
                     json_quotable_entity_ids, json_quotable_device_ids
                 )
@@ -247,7 +243,6 @@ def _entities_devices_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    context_event_types: tuple[str, ...],
     entity_ids: list[str] | None,
     json_quotable_entity_ids: list[str] | None,
     device_ids: list[str] | None,
@@ -271,7 +266,7 @@ def _entities_devices_stmt(
                     _select_entities_device_id_context_ids_sub_query(
                         start_day,
                         end_day,
-                        context_event_types,
+                        event_types,
                         entity_ids,
                         json_quotable_entity_ids,
                         json_quotable_device_ids,
@@ -290,7 +285,7 @@ def _entities_devices_stmt(
                     _select_entities_context_ids_sub_query(
                         start_day,
                         end_day,
-                        context_event_types,
+                        event_types,
                         entity_ids,
                         json_quotable_entity_ids,
                     )
@@ -307,7 +302,7 @@ def _entities_devices_stmt(
                     _select_device_id_context_ids_sub_query(
                         start_day,
                         end_day,
-                        context_event_types,
+                        event_types,
                         json_quotable_device_ids,
                     )
                 )

@@ -575,13 +575,6 @@ def _get_events(
     ] = hass.data.get(DOMAIN, {})
     format_time = _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
     entity_name_cache = EntityNameCache(hass)
-
-    # We limit the query to event_types for the
-    # entities/devices but search a broader context_event_types
-    # for the context ids which doesn't do the more
-    # expensive JSON matching to find device_ids
-    context_event_types = (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
-
     if entity_ids is not None:
         entities_filter = generate_filter([], entity_ids, [], [])
 
@@ -618,7 +611,6 @@ def _get_events(
         start_day,
         end_day,
         event_types,
-        context_event_types,
         entity_ids,
         json_quotable_entity_ids,
         device_ids,
