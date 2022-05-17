@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Alle Sch\u00fcler wurden bereits hinzugef\u00fcgt.",
             "already_configured": "Dieser Sch\u00fcler wurde bereits hinzugef\u00fcgt.",
+            "no_matching_entries": "Keine \u00fcbereinstimmenden Eintr\u00e4ge gefunden, bitte verwende ein anderes Konto oder entferne die Integration mit veraltetem Sch\u00fcler.",
             "reauth_successful": "Reauth erfolgreich"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Melde dich bei deinem Vulcan-Konto \u00fcber die Registrierungsseite der mobilen App an."
             },
             "reauth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Melde dich bei deinem Vulcan-Konto \u00fcber die Registrierungsseite der mobilen App an."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
                     "region": "Symbol",

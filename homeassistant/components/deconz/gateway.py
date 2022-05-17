@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
@@ -10,6 +11,7 @@ import async_timeout
 from pydeconz import DeconzSession, errors
 from pydeconz.models import ResourceGroup
 from pydeconz.models.alarm_system import AlarmSystem as DeconzAlarmSystem
+from pydeconz.models.event import EventType
 from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.light import LightBase as DeconzLight
 from pydeconz.models.sensor import SensorBase as DeconzSensor
@@ -63,6 +65,7 @@ class DeconzGateway:
 
         self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
         self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
+        self.signal_reload_clip_sensors = f"deconz_reload_clip_{config_entry.entry_id}"
 
         self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
         self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
@@ -75,9 +78,13 @@ class DeconzGateway:
         self.deconz_ids: dict[str, str] = {}
         self.entities: dict[str, set[str]] = {}
         self.events: list[DeconzAlarmEvent | DeconzEvent] = []
+        self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
 
         self._option_allow_deconz_groups = self.config_entry.options.get(
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
+        )
+        self.option_allow_new_devices = self.config_entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
         )
 
     @property
@@ -111,12 +118,31 @@ class DeconzGateway:
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
         )
 
-    @property
-    def option_allow_new_devices(self) -> bool:
-        """Allow automatic adding of new devices."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
-        )
+    @callback
+    def evaluate_add_device(
+        self, add_device_callback: Callable[[EventType, str], None]
+    ) -> Callable[[EventType, str], None]:
+        """Wrap add_device_callback to check allow_new_devices option."""
+
+        def async_add_device(event: EventType, device_id: str) -> None:
+            """Add device or add it to ignored_devices set.
+
+            If ignore_state_updates is True means device_refresh service is used.
+            Device_refresh is expected to load new devices.
+            """
+            if not self.option_allow_new_devices and not self.ignore_state_updates:
+                self.ignored_devices.add((add_device_callback, device_id))
+                return
+            add_device_callback(event, device_id)
+
+        return async_add_device
+
+    @callback
+    def load_ignored_devices(self) -> None:
+        """Load previously ignored devices."""
+        for add_entities, device_id in self.ignored_devices:
+            add_entities(EventType.ADDED, device_id)
+        self.ignored_devices.clear()
 
     # Callbacks
 
@@ -212,6 +238,7 @@ class DeconzGateway:
 
         if self.option_allow_clip_sensor:
             self.async_add_device_callback(ResourceGroup.SENSOR.value)
+            async_dispatcher_send(self.hass, self.signal_reload_clip_sensors)
 
         else:
             deconz_ids += [
@@ -227,6 +254,14 @@ class DeconzGateway:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
         self._option_allow_deconz_groups = self.option_allow_deconz_groups
+
+        option_allow_new_devices = self.config_entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+        )
+        if option_allow_new_devices and not self.option_allow_new_devices:
+            self.load_ignored_devices()
+
+        self.option_allow_new_devices = option_allow_new_devices
 
         entity_registry = er.async_get(self.hass)
 

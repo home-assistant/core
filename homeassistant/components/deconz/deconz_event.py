@@ -66,14 +66,14 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
 
     gateway.config_entry.async_on_unload(
         gateway.api.sensors.ancillary_control.subscribe(
-            async_add_sensor,
+            gateway.evaluate_add_device(async_add_sensor),
             EventType.ADDED,
         )
     )
 
     gateway.config_entry.async_on_unload(
         gateway.api.sensors.switch.subscribe(
-            async_add_sensor,
+            gateway.evaluate_add_device(async_add_sensor),
             EventType.ADDED,
         )
     )

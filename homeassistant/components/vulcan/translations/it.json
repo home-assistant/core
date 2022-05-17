@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Tutti gli studenti sono gi\u00e0 stati aggiunti.",
             "already_configured": "Quello studente \u00e8 gi\u00e0 stato aggiunto.",
+            "no_matching_entries": "Nessuna voce corrispondente trovata, utilizza un account diverso o rimuovi l'integrazione con lo studente obsoleto.",
             "reauth_successful": "Nuova autenticazione avvenuta"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Accedi al tuo account Vulcan utilizzando la pagina di registrazione dell'applicazione mobile."
             },
             "reauth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "Simbolo",
+                    "token": "Token"
+                },
+                "description": "Accedi al tuo account Vulcan utilizzando la pagina di registrazione dell'applicazione mobile."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
                     "region": "Simbolo",

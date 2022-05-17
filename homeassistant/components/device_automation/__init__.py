@@ -26,7 +26,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import IntegrationNotFound, bind_hass
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
@@ -212,7 +212,6 @@ async def _async_get_device_automations_from_domain(
     )
 
 
-@bind_hass
 async def async_get_device_automations(
     hass: HomeAssistant,
     automation_type: DeviceAutomationType,

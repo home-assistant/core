@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Mostrar m\u00eddia incompat\u00edvel ao navegar",
                     "callback_url_override": "URL de retorno do ouvinte de eventos",
                     "listen_port": "Porta do ouvinte de eventos (aleat\u00f3rio se n\u00e3o estiver definido)",
                     "poll_availability": "Pesquisa de disponibilidade do dispositivo"

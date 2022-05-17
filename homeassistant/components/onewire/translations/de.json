@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Port",
                     "type": "Verbindungstyp"
                 },
-                "title": "1-Wire einrichten"
+                "title": "Serverdetails festlegen"
             }
         }
     },

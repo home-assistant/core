@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "All students have already been added.",
             "already_configured": "That student has already been added.",
+            "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student..",
             "reauth_successful": "Reauth successful"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Login to your Vulcan Account using mobile app registration page."
             },
             "reauth": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Login to your Vulcan Account using mobile app registration page."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
                     "region": "Symbol",

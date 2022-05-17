@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "K\u00f5ik \u00f5pilased on juba lisatud.",
             "already_configured": "See \u00f5pilane on juba lisatud.",
+            "no_matching_entries": "Sobivaid kirjeid ei leitud, kasuta teist kontot v\u00f5i eemalda muudetud \u00f5pilasega sidumine...",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Logi Vulcani kontole sisse mobiilirakenduse registreerimislehe kaudu."
             },
             "reauth": {
+                "data": {
+                    "pin": "PIN kood",
+                    "region": "S\u00fcmbol",
+                    "token": "Token"
+                },
+                "description": "Logi Vulcani kontole sisse mobiilirakenduse registreerimislehe kaudu."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "PIN kood",
                     "region": "S\u00fcmbol",

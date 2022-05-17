@@ -176,8 +176,6 @@ class MeaterProbeTemperature(
 ):
     """Meater Temperature Sensor Entity."""
 
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
     entity_description: MeaterSensorEntityDescription
 
     def __init__(

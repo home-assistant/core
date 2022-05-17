@@ -2,14 +2,17 @@
 from datetime import datetime, timedelta
 import os
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.engine.result import ChunkedIteratorResult
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import util
+from homeassistant.components.recorder import history, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.components.recorder.util import (
@@ -24,6 +27,7 @@ from homeassistant.util import dt as dt_util
 from .common import corrupt_db_file, run_information_with_session
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
+from tests.components.recorder.common import wait_recording_done
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -510,8 +514,10 @@ def test_basic_sanity_check(hass_recorder):
 def test_combined_checks(hass_recorder, caplog):
     """Run Checks on the open database."""
     hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    instance.db_retry_wait = 0
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    cursor = instance.engine.raw_connection().cursor()
 
     assert util.run_checks_on_open_db("fake_db_path", cursor) is None
     assert "could not validate that the sqlite3 database" in caplog.text
@@ -597,8 +603,12 @@ def test_periodic_db_cleanups(hass_recorder):
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
+@patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    skip_check_loop,
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
 ):
     """Test database write lock."""
     from sqlalchemy.exc import OperationalError
@@ -637,3 +647,71 @@ def test_is_second_sunday():
     assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
 
     assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
+
+
+def test_build_mysqldb_conv():
+    """Test building the MySQLdb connect conv param."""
+    mock_converters = Mock(conversions={"original": "preserved"})
+    mock_constants = Mock(FIELD_TYPE=Mock(DATETIME="DATETIME"))
+    with patch.dict(
+        "sys.modules",
+        **{"MySQLdb.constants": mock_constants, "MySQLdb.converters": mock_converters},
+    ):
+        conv = util.build_mysqldb_conv()
+
+    assert conv["original"] == "preserved"
+    assert conv["DATETIME"]("INVALID") is None
+    assert conv["DATETIME"]("2022-05-13T22:33:12.741") == datetime(
+        2022, 5, 13, 22, 33, 12, 741000, tzinfo=None
+    )
+
+
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+def test_execute_stmt_lambda_element(hass_recorder):
+    """Test executing with execute_stmt_lambda_element."""
+    hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    hass.states.set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    wait_recording_done(hass)
+    now = dt_util.utcnow()
+    tomorrow = now + timedelta(days=1)
+    one_week_from_now = now + timedelta(days=7)
+
+    class MockExecutor:
+        def __init__(self, stmt):
+            assert isinstance(stmt, StatementLambdaElement)
+            self.calls = 0
+
+        def all(self):
+            self.calls += 1
+            if self.calls == 2:
+                return ["mock_row"]
+            raise SQLAlchemyError
+
+    with session_scope(hass=hass) as session:
+        # No time window, we always get a list
+        stmt = history._get_single_entity_states_stmt(
+            instance.schema_version, dt_util.utcnow(), "sensor.on", False
+        )
+        rows = util.execute_stmt_lambda_element(session, stmt)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].entity_id == new_state.entity_id
+
+        # Time window >= 2 days, we get a ChunkedIteratorResult
+        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
+        assert isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.entity_id == new_state.entity_id
+
+        # Time window < 2 days, we get a list
+        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].entity_id == new_state.entity_id
+
+        with patch.object(session, "execute", MockExecutor):
+            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+            assert rows == ["mock_row"]

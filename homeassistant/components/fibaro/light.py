@@ -23,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
 
+PARALLEL_UPDATES = 2
+
 
 def scaleto255(value: int | None) -> int:
     """Scale the input value from 0-100 to 0-255."""
@@ -112,6 +114,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             self.set_level(scaleto99(self._attr_brightness))
+            return
 
         if ATTR_RGB_COLOR in kwargs:
             # Update based on parameters
@@ -185,6 +188,6 @@ class FibaroLight(FibaroDevice, LightEntity):
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
 
             if self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = tuple(*rgbw_list[:3])
+                self._attr_rgb_color = tuple(rgbw_list[:3])
             else:
                 self._attr_rgbw_color = tuple(rgbw_list)

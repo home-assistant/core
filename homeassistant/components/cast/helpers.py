@@ -237,12 +237,14 @@ def _is_url(url):
     return all([result.scheme, result.netloc])
 
 
-async def _fetch_playlist(hass, url):
+async def _fetch_playlist(hass, url, supported_content_types):
     """Fetch a playlist from the given url."""
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
         async with session.get(url, timeout=5) as resp:
             charset = resp.charset or "utf-8"
+            if resp.content_type in supported_content_types:
+                raise PlaylistSupported
             try:
                 playlist_data = (await resp.content.read(64 * 1024)).decode(charset)
             except ValueError as err:
@@ -260,7 +262,16 @@ async def parse_m3u(hass, url):
 
     Based on https://github.com/dvndrsn/M3uParser/blob/master/m3uparser.py
     """
-    m3u_data = await _fetch_playlist(hass, url)
+    # From Mozilla gecko source: https://github.com/mozilla/gecko-dev/blob/c4c1adbae87bf2d128c39832d72498550ee1b4b8/dom/media/DecoderTraits.cpp#L47-L52
+    hls_content_types = (
+        # https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
+        "application/vnd.apple.mpegurl",
+        # Some sites serve these as the informal HLS m3u type.
+        "application/x-mpegurl",
+        "audio/mpegurl",
+        "audio/x-mpegurl",
+    )
+    m3u_data = await _fetch_playlist(hass, url, hls_content_types)
     m3u_lines = m3u_data.splitlines()
 
     playlist = []
@@ -301,7 +312,7 @@ async def parse_pls(hass, url):
 
     Based on https://github.com/mariob/plsparser/blob/master/src/plsparser.py
     """
-    pls_data = await _fetch_playlist(hass, url)
+    pls_data = await _fetch_playlist(hass, url, ())
 
     pls_parser = configparser.ConfigParser()
     try:

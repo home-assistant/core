@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Mostra fitxers multim\u00e8dia incompatibles mentre navegui",
                     "callback_url_override": "URL de crida de l'oient d'esdeveniments",
                     "listen_port": "Port de l'oient d'esdeveniments (aleatori si no es defineix)",
                     "poll_availability": "Sondeja per saber la disponibilitat del dispositiu"

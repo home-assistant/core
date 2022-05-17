@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any, cast
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
+from homeassistant.components.recorder import get_instance, statistics
 from homeassistant.components.recorder.models import RecorderRuns
+from homeassistant.components.recorder.tasks import StatisticsTask
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -17,6 +19,13 @@ from tests.common import async_fire_time_changed, fire_time_changed
 from tests.components.recorder import models_schema_0
 
 DEFAULT_PURGE_TASKS = 3
+
+
+def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
+    """Trigger an adhoc statistics run."""
+    if not (start := kwargs.get("start")):
+        start = statistics.get_start_time()
+    get_instance(hass).queue_task(StatisticsTask(start))
 
 
 def wait_recording_done(hass: HomeAssistant) -> None:

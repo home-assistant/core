@@ -10,16 +10,16 @@
         "step": {
             "hassio_confirm": {
                 "description": "\u00bfDesea configurar Home Assistant para conectarse al AdGuard Home proporcionado por el complemento Supervisor: {addon} ?",
-                "title": "AdGuard Home a trav\u00e9s del complemento Supervisor"
+                "title": "AdGuard Home v\u00eda complemento de Home Assistant"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "ssl": "AdGuard Home utiliza un certificado SSL",
+                    "ssl": "Utiliza un certificado SSL",
                     "username": "Usuario",
-                    "verify_ssl": "AdGuard Home utiliza un certificado apropiado"
+                    "verify_ssl": "Verificar certificado SSL"
                 },
                 "description": "Configure su instancia de AdGuard Home para permitir la supervisi\u00f3n y el control."
             }

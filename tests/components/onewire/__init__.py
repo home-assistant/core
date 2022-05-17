@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 
 from pyownet.protocol import ProtocolError
 
-from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_IDENTIFIERS,
@@ -29,7 +28,6 @@ from .const import (
     ATTR_UNIQUE_ID,
     FIXED_ATTRIBUTES,
     MOCK_OWPROXY_DEVICES,
-    MOCK_SYSBUS_DEVICES,
 )
 
 
@@ -181,30 +179,3 @@ def _setup_owproxy_mock_device_reads(
     device_sensors = mock_device.get(platform, [])
     for expected_sensor in device_sensors:
         sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
-
-
-def setup_sysbus_mock_devices(
-    platform: str, device_ids: list[str]
-) -> tuple[list[str], list[Any]]:
-    """Set up mock for sysbus."""
-    glob_result = []
-    read_side_effect = []
-
-    for device_id in device_ids:
-        mock_device = MOCK_SYSBUS_DEVICES[device_id]
-
-        # Setup directory listing
-        glob_result += [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
-
-        # Setup sub-device reads
-        device_sensors = mock_device.get(platform, [])
-        for expected_sensor in device_sensors:
-            if isinstance(expected_sensor[ATTR_INJECT_READS], list):
-                read_side_effect += expected_sensor[ATTR_INJECT_READS]
-            else:
-                read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
-
-    # Ensure enough read side effect
-    read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
-
-    return (glob_result, read_side_effect)

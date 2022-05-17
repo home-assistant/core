@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "T\u00fcm \u00f6\u011frenciler zaten eklendi.",
             "already_configured": "Bu \u00f6\u011frenci zaten eklendi.",
+            "no_matching_entries": "E\u015fle\u015fen giri\u015f bulunamad\u0131, l\u00fctfen farkl\u0131 bir hesap kullan\u0131n veya eski \u00f6\u011frenci ile entegrasyonu kald\u0131r\u0131n..",
             "reauth_successful": "Yeniden yetkilendirme ba\u015far\u0131l\u0131"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Mobil uygulama kay\u0131t sayfas\u0131n\u0131 kullanarak Vulcan Hesab\u0131n\u0131za giri\u015f yap\u0131n."
             },
             "reauth": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "Sembol",
+                    "token": "Anahtar"
+                },
+                "description": "Mobil uygulama kay\u0131t sayfas\u0131n\u0131 kullanarak Vulcan Hesab\u0131n\u0131za giri\u015f yap\u0131n."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
                     "region": "Sembol",

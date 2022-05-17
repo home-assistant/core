@@ -47,7 +47,7 @@
                     "knxkeys_password": "La password per decifrare il file `.knxkeys`"
                 },
                 "data_description": {
-                    "knxkeys_filename": "Il file dovrebbe essere trovato nella tua cartella di configurazione in `.storage/knx/`.\n Nel sistema operativo Home Assistant questo sarebbe `/config/.storage/knx/`\n Esempio: `mio_progetto.knxkeys`",
+                    "knxkeys_filename": "Il file dovrebbe essere trovato nella tua cartella di configurazione in `.storage/knx/`.\n Nel Sistema Operativo di Home Assistant questo sarebbe `/config/.storage/knx/`\n Esempio: `mio_progetto.knxkeys`",
                     "knxkeys_password": "Questo \u00e8 stato impostato durante l'esportazione del file da ETS."
                 },
                 "description": "Inserisci le informazioni per il tuo file `.knxkeys`."

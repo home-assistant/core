@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Todos os alunos j\u00e1 foram adicionados.",
             "already_configured": "Esse aluno j\u00e1 foi adicionado.",
+            "no_matching_entries": "Nenhuma entrada correspondente encontrada, use uma conta diferente ou remova a integra\u00e7\u00e3o com o aluno desatualizado.",
             "reauth_successful": "Autentica\u00e7\u00e3o bem-sucedida"
         },
         "error": {
@@ -36,6 +37,14 @@
                     "token": "Token"
                 },
                 "description": "Fa\u00e7a login na sua conta Vulcan usando a p\u00e1gina de registro do aplicativo m\u00f3vel."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "C\u00f3digo PIN",
+                    "region": "S\u00edmbolo",
+                    "token": "Token"
+                },
+                "description": "Fa\u00e7a login na sua conta Vulcan usando a p\u00e1gina de registro do aplicativo."
             },
             "select_saved_credentials": {
                 "data": {

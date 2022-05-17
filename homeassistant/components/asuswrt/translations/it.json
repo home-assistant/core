@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Impossibile determinare un ID univoco valido per il dispositivo",
+            "no_unique_id": "Un dispositivo senza un ID univoco valido \u00e8 gi\u00e0 configurato. La configurazione di pi\u00f9 istanze non \u00e8 possibile",
+            "not_unique_id_exist": "Un dispositivo senza un ID univoco valido \u00e8 gi\u00e0 configurato. La configurazione di pi\u00f9 istanze non \u00e8 possibile",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {

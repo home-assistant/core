@@ -7,5 +7,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "device_selection": {
+                "data": {
+                    "device_selection": "V\u00e4lj enheter att konfigurera"
+                }
+            }
+        }
     }
 }

@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Inkompatibilis m\u00e9dia megjelen\u00edt\u00e9se b\u00f6ng\u00e9sz\u00e9s k\u00f6zben",
                     "callback_url_override": "Esem\u00e9nyfigyel\u0151 visszah\u00edv\u00e1si URL (callback)",
                     "listen_port": "Esem\u00e9nyfigyel\u0151 port (v\u00e9letlenszer\u0171, ha nincs be\u00e1ll\u00edtva)",
                     "poll_availability": "Eszk\u00f6z el\u00e9r\u00e9s\u00e9nek tesztel\u00e9se lek\u00e9rdez\u00e9ssel"

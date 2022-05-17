@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Hora de inicio de la ejecuci\u00f3n actual",
+            "estimated_db_size": "Mida estimada de la base de datos (MiB)"
+        }
+    }
+}

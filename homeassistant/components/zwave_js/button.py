@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 from .helpers import get_device_id, get_valueless_base_unique_id
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

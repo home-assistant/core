@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "invalid_path": "Directory non trovata."
+            "invalid_path": "Cartella non trovata."
         },
         "step": {
             "owserver": {
@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Porta",
                     "type": "Tipo di connessione"
                 },
-                "title": "Configurazione 1-Wire"
+                "title": "Imposta i dettagli del server"
             }
         }
     },

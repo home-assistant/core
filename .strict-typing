@@ -43,6 +43,7 @@ homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
+homeassistant.components.airzone.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
@@ -54,6 +55,7 @@ homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
 homeassistant.components.automation.*
 homeassistant.components.backup.*
+homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -96,6 +98,7 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
+homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
 homeassistant.components.greeneye_monitor.*
@@ -162,6 +165,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
+homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
@@ -174,6 +178,7 @@ homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.pvoutput.*
 homeassistant.components.pure_energie.*
+homeassistant.components.qnap_qsw.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*

@@ -30,13 +30,13 @@
                     "access_secret": "Tuya IoT Access Secret",
                     "country_code": "C\u00f3digo de pais de tu cuenta (por ejemplo, 1 para USA o 86 para China)",
                     "password": "Contrase\u00f1a",
-                    "platform": "La aplicaci\u00f3n en la cual registraste tu cuenta",
+                    "platform": "La aplicaci\u00f3n donde se registra tu cuenta",
                     "region": "Regi\u00f3n",
                     "tuya_project_type": "Tipo de proyecto en la nube de Tuya",
                     "username": "Usuario"
                 },
-                "description": "Introduce tu credencial Tuya.",
-                "title": "Tuya"
+                "description": "Introduce tus credencial de Tuya",
+                "title": "Integraci\u00f3n Tuya"
             }
         }
     },
