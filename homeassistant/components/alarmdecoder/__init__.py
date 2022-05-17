@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -65,8 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(controller.open, baud)
         except NoDeviceError:
             _LOGGER.debug("Failed to connect. Retrying in 5 seconds")
-            hass.helpers.event.async_track_point_in_time(
-                open_connection, dt_util.utcnow() + timedelta(seconds=5)
+            async_track_point_in_time(
+                hass, open_connection, dt_util.utcnow() + timedelta(seconds=5)
             )
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")

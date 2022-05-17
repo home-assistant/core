@@ -33,7 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -259,8 +259,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    hass.helpers.event.async_track_time_interval(
-        broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
+    async_track_time_interval(
+        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     setup_service_functions(hass, broker)
