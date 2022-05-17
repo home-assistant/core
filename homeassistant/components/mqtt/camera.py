@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
-from .. import mqtt
+from .config import MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
 from .mixins import (
@@ -28,6 +28,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .util import valid_subscribe_topic
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -40,10 +41,10 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Required(CONF_TOPIC): valid_subscribe_topic,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
