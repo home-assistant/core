@@ -252,8 +252,6 @@ def _async_determine_event_types(
         for entry_id in config_entry_ids:
             if entry := hass.config_entries.async_get_entry(entry_id):
                 intrested_domains.add(entry.domain)
-        # script and automation events
-
         for external_event, domain_call in external_events.items():
             if domain_call[0] in intrested_domains:
                 intrested_event_types.add(external_event)
