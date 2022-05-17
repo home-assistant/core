@@ -106,29 +106,8 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.SHOCK_STATE}_vibration",
-            dpcode=DPCode.SHOCK_STATE,
-            name="Vibration",
-            device_class=BinarySensorDeviceClass.VIBRATION,
-            on_value="vibration",
-        ),
-        TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.SHOCK_STATE}_drop",
-            dpcode=DPCode.SHOCK_STATE,
-            name="Drop",
-            icon="mdi:icon=package-down",
-            on_value="drop",
-        ),
-        TuyaBinarySensorEntityDescription(
-            key=f"{DPCode.SHOCK_STATE}_tilt",
-            dpcode=DPCode.SHOCK_STATE,
-            name="Tilt",
-            icon="mdi:spirit-level",
-            on_value="tilt",
-        ),
-        TuyaBinarySensorEntityDescription(
             key=DPCode.PRESSURE_STATE,
-            name="Prussure",
+            name="Pressure",
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
