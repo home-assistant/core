@@ -19,6 +19,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.service import entity_service_call
 
 from .const import (
     _LOGGER,
@@ -373,8 +374,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     )
 
     async def _async_send_raw_node_command(call: ServiceCall) -> None:
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_send_raw_node_command", call
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_send_raw_node_command", call
         )
 
     hass.services.async_register(
@@ -385,8 +386,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     )
 
     async def _async_send_node_command(call: ServiceCall) -> None:
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_send_node_command", call
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_send_node_command", call
         )
 
     hass.services.async_register(
@@ -397,8 +398,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     )
 
     async def _async_get_zwave_parameter(call: ServiceCall) -> None:
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_get_zwave_parameter", call
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_get_zwave_parameter", call
         )
 
     hass.services.async_register(
@@ -409,8 +410,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     )
 
     async def _async_set_zwave_parameter(call: ServiceCall) -> None:
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_set_zwave_parameter", call
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_set_zwave_parameter", call
         )
 
     hass.services.async_register(
@@ -421,8 +422,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     )
 
     async def _async_rename_node(call: ServiceCall) -> None:
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_rename_node", call
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_rename_node", call
         )
 
     hass.services.async_register(

@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
@@ -250,11 +251,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif service.service == SERVICE_REMOTE_DISCONNECT:
             await prefs.async_update(remote_enabled=False)
 
-    hass.helpers.service.async_register_admin_service(
-        DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler
-    )
-    hass.helpers.service.async_register_admin_service(
-        DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
+    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
     loaded = False
