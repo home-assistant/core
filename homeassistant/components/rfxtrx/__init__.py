@@ -30,7 +30,10 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -214,7 +217,7 @@ async def async_setup_internal(hass, entry: ConfigEntry):
             event_data[ATTR_DEVICE_ID] = device_entry.id
 
         # Callback to HA registered components.
-        hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
+        async_dispatcher_send(hass, SIGNAL_EVENT, event, device_id)
 
         # Signal event to any other listeners
         hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
