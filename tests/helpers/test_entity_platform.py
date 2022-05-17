@@ -332,6 +332,25 @@ async def test_parallel_updates_sync_platform(hass):
     assert entity.parallel_updates._value == 1
 
 
+async def test_parallel_updates_no_update_method(hass):
+    """Test platform parallel_updates default set to 0."""
+    platform = MockPlatform()
+
+    mock_entity_platform(hass, "test_domain.platform", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+
+    entity = MockEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is None
+
+
 async def test_parallel_updates_sync_platform_with_constant(hass):
     """Test sync platform can set parallel_updates limit."""
     platform = MockPlatform()
