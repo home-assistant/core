@@ -64,8 +64,8 @@ from .const import (
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
-    ATTR_SENSOR_DEFAULT_DISABLED,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_DISABLED,
     ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
@@ -439,6 +439,11 @@ def _gen_unique_id(webhook_id, sensor_unique_id):
     return f"{webhook_id}_{sensor_unique_id}"
 
 
+def _extract_sensor_unique_id(webhook_id, unique_id):
+    """Return a unique sensor ID."""
+    return unique_id[len(webhook_id) + 1 :]
+
+
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
     vol.All(
@@ -457,7 +462,7 @@ def _gen_unique_id(webhook_id, sensor_unique_id):
             vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
             vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
-            vol.Optional(ATTR_SENSOR_DEFAULT_DISABLED): bool,
+            vol.Optional(ATTR_SENSOR_DISABLED): bool,
         },
         _validate_state_class_sensor,
     )
@@ -489,6 +494,15 @@ async def webhook_register_sensor(hass, config_entry, data):
             new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
         ) != entry.original_name:
             changes["original_name"] = new_name
+
+        if (
+            should_be_disabled := data.get(ATTR_SENSOR_DISABLED)
+        ) is None or should_be_disabled == entry.disabled:
+            pass
+        elif should_be_disabled:
+            changes["disabled_by"] = er.RegistryEntryDisabler.INTEGRATION
+        else:
+            changes["disabled_by"] = None
 
         for ent_reg_key, data_key in (
             ("device_class", ATTR_SENSOR_DEVICE_CLASS),
@@ -551,6 +565,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
+    entity_registry = er.async_get(hass)
 
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
@@ -559,9 +574,10 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         unique_store_key = _gen_unique_id(config_entry.data[CONF_WEBHOOK_ID], unique_id)
 
-        entity_registry = er.async_get(hass)
-        if not entity_registry.async_get_entity_id(
-            entity_type, DOMAIN, unique_store_key
+        if not (
+            entity_id := entity_registry.async_get_entity_id(
+                entity_type, DOMAIN, unique_store_key
+            )
         ):
             _LOGGER.debug(
                 "Refusing to update %s non-registered sensor: %s",
@@ -601,6 +617,12 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         resp[unique_id] = {"success": True}
 
+        # Check if disabled
+        entry = entity_registry.async_get(entity_id)
+
+        if entry.disabled_by:
+            resp[unique_id]["is_disabled"] = True
+
     return webhook_response(resp, registration=config_entry.data)
 
 
@@ -636,6 +658,21 @@ async def webhook_get_config(hass, config_entry, data):
 
     with suppress(hass.components.cloud.CloudNotAvailable):
         resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    entities = {}
+    for entry in er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry.entry_id
+    ):
+        if entry.domain in ("binary_sensor", "sensor"):
+            unique_id = _extract_sensor_unique_id(webhook_id, entry.unique_id)
+        else:
+            unique_id = entry.unique_id
+
+        entities[unique_id] = {"disabled": entry.disabled}
+
+    resp["entities"] = entities
 
     return webhook_response(resp, registration=config_entry.data)
 
