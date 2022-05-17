@@ -271,7 +271,7 @@ async def ws_get_events(
         return
 
     if start_time > utc_now:
-        connection.send_result(msg["id"], {})
+        connection.send_result(msg["id"], [])
         return
 
     entity_ids = msg.get("entity_ids")
