@@ -103,11 +103,7 @@ DISCOVERY_SCHEMA_TEMPLATE = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
-PLATFORM_SCHEMA_MODERN_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
-)
+PLATFORM_SCHEMA_MODERN_TEMPLATE = _PLATFORM_SCHEMA_BASE
 
 
 async def async_setup_entity_template(

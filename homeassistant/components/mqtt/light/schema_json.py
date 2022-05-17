@@ -162,8 +162,6 @@ DISCOVERY_SCHEMA_JSON = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )

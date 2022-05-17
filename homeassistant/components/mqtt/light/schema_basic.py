@@ -241,16 +241,7 @@ DISCOVERY_SCHEMA_BASIC = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
-PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
-    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.deprecated(CONF_WHITE_VALUE_SCALE),
-    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
-)
+PLATFORM_SCHEMA_MODERN_BASIC = _PLATFORM_SCHEMA_BASE
 
 
 async def async_setup_entity_basic(
