@@ -136,7 +136,7 @@ def statement_for_request(
         return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
 
     # sqlalchemy caches object quoting, the
-    # json quotable ones much be a different
+    # json quotable ones must be a different
     # object from the non-json ones to prevent
     # sqlalchemy from quoting them incorrectly
     assert not device_ids or (device_ids is not json_quotable_device_ids)
@@ -381,12 +381,6 @@ def _states_query_for_context_id(start_day: dt, end_day: dt, context_id: str) ->
     return _apply_states_filters(_select_states(), start_day, end_day).where(
         States.context_id == context_id
     )
-
-
-def _states_query_for_entity_id(start_day: dt, end_day: dt, entity_id: str) -> Query:
-    return _apply_states_filters(
-        _apply_entities_hints(_select_states()), start_day, end_day
-    ).where(States.entity_id == entity_id)
 
 
 def _states_query_for_entity_ids(
