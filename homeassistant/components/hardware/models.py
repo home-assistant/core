@@ -1,12 +1,14 @@
 """Models for Hardware."""
 from __future__ import annotations
 
-from typing import Protocol, TypedDict
+from dataclasses import dataclass
+from typing import Protocol
 
 from homeassistant.core import HomeAssistant, callback
 
 
-class HardwareInfo(TypedDict):
+@dataclass
+class HardwareInfo:
     """Board info type."""
 
     image: str | None

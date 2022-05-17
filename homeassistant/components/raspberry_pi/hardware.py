@@ -29,9 +29,9 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
     if not board.startswith("rpi"):
         raise HomeAssistantError
 
-    return {
-        "image": "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
-        "name": BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
-        "url": "https://theuselessweb.com/",
-        "type": "board",
-    }
+    return HardwareInfo(
+        image="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
+        name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
+        url="https://theuselessweb.com/",
+        type="board",
+    )

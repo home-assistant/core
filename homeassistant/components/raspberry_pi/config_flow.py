@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN
 
 
-class RadioBrowserConfigFlow(ConfigFlow, domain=DOMAIN):
+class RaspberryPiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Raspberry Pi."""
 
     VERSION = 1
