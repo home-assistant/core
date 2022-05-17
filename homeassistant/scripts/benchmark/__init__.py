@@ -15,6 +15,10 @@ from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
+from homeassistant.helpers.event import (
+    async_track_state_change,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.json import JSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -134,9 +138,7 @@ async def state_changed_helper(hass):
             event.set()
 
     for idx in range(1000):
-        hass.helpers.event.async_track_state_change(
-            f"{entity_id}{idx}", listener, "off", "on"
-        )
+        async_track_state_change(hass, f"{entity_id}{idx}", listener, "off", "on")
     event_data = {
         "entity_id": f"{entity_id}0",
         "old_state": core.State(entity_id, "off"),
@@ -166,8 +168,8 @@ async def state_changed_event_helper(hass):
         nonlocal count
         count += 1
 
-    hass.helpers.event.async_track_state_change_event(
-        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    async_track_state_change_event(
+        hass, [f"{entity_id}{idx}" for idx in range(1000)], listener
     )
 
     event_data = {
@@ -201,8 +203,8 @@ async def state_changed_event_filter_helper(hass):
         nonlocal count
         count += 1
 
-    hass.helpers.event.async_track_state_change_event(
-        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    async_track_state_change_event(
+        hass, [f"{entity_id}{idx}" for idx in range(1000)], listener
     )
 
     event_data = {
