@@ -1467,6 +1467,12 @@ omit =
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
+    homeassistant/components/yolink/__init__.py
+    homeassistant/components/yolink/api.py
+    homeassistant/components/yolink/const.py
+    homeassistant/components/yolink/coordinator.py
+    homeassistant/components/yolink/entity.py
+    homeassistant/components/yolink/sensor.py
     homeassistant/components/youless/__init__.py
     homeassistant/components/youless/const.py
     homeassistant/components/youless/sensor.py
