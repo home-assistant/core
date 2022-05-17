@@ -413,6 +413,7 @@ FLOWS = {
         "yale_smart_alarm",
         "yamaha_musiccast",
         "yeelight",
+        "yolink",
         "youless",
         "zerproc",
         "zha",

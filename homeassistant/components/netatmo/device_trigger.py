@@ -93,7 +93,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Netatmo devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     device_registry = await hass.helpers.device_registry.async_get_registry()
     triggers = []
 

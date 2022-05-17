@@ -560,7 +560,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.32
+dsmr_parser==0.33
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.5
@@ -2481,6 +2481,9 @@ yeelight==0.7.10
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
+
+# homeassistant.components.yolink
+yolink-api==0.0.5
 
 # homeassistant.components.youless
 youless-api==0.16

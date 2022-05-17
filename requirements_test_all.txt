@@ -415,7 +415,7 @@ discovery30303==0.2.1
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.32
+dsmr_parser==0.33
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -1633,6 +1633,9 @@ yalexs==1.1.25
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
+
+# homeassistant.components.yolink
+yolink-api==0.0.5
 
 # homeassistant.components.youless
 youless-api==0.16
