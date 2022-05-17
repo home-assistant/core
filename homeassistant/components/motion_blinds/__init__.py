@@ -220,7 +220,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if len(hass.data[DOMAIN]) == 3:
+    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         # No motion gateways left, stop Motion multicast
         unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
         unsub_stop()
