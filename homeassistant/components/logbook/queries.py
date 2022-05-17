@@ -383,12 +383,6 @@ def _states_query_for_context_id(start_day: dt, end_day: dt, context_id: str) ->
     )
 
 
-def _states_query_for_entity_id(start_day: dt, end_day: dt, entity_id: str) -> Query:
-    return _apply_states_filters(
-        _apply_entities_hints(_select_states()), start_day, end_day
-    ).where(States.entity_id == entity_id)
-
-
 def _states_query_for_entity_ids(
     start_day: dt, end_day: dt, entity_ids: list[str]
 ) -> Query:
