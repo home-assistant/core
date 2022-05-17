@@ -5,6 +5,7 @@ import collections
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
+from typing import Callable
 from unittest.mock import Mock, patch
 
 import pytest
@@ -35,7 +36,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import device_registry, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
@@ -43,7 +45,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import MockRow, mock_humanify
 
-from tests.common import async_capture_events, mock_platform
+from tests.common import MockConfigEntry, async_capture_events, mock_platform
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
@@ -2437,3 +2439,137 @@ async def test_get_events_bad_end_time(hass, hass_ws_client, recorder_mock):
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_end_time"
+
+
+async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
+    """Test logbook get_events."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+
+    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+    entry.add_to_hass(hass)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="device name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Game Room",
+    )
+
+    class MockLogbookPlatform:
+        """Mock a logbook platform."""
+
+        @ha.callback
+        def async_describe_events(
+            hass: HomeAssistant,
+            async_describe_event: Callable[
+                [str, str, Callable[[Event], dict[str, str]]], None
+            ],
+        ) -> None:
+            """Describe logbook events."""
+
+            @ha.callback
+            def async_describe_test_event(event: Event) -> dict[str, str]:
+                """Describe mock logbook event."""
+                return {
+                    "name": "device name",
+                    "message": "is on fire",
+                }
+
+            async_describe_event("test", "mock_event", async_describe_test_event)
+
+    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire("mock_event", {"device_id": device.id})
+
+    hass.states.async_set("light.kitchen", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 100})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 200})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 300})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen", STATE_ON, {"brightness": 400})
+    await hass.async_block_till_done()
+    context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+
+    hass.states.async_set("light.kitchen", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "device_ids": [device.id],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+
+    results = response["result"]
+    assert len(results) == 1
+    assert results[0]["name"] == "device name"
+    assert results[0]["message"] == "is on fire"
+    assert isinstance(results[0]["when"], float)
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "entity_ids": ["light.kitchen"],
+            "device_ids": [device.id],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+
+    results = response["result"]
+    assert results[0]["entity_id"] == "light.kitchen"
+    assert results[0]["state"] == "on"
+    assert results[1]["entity_id"] == "light.kitchen"
+    assert results[1]["state"] == "off"
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 3
+
+    results = response["result"]
+    assert len(results) == 4
+    assert results[0]["message"] == "started"
+    assert results[1]["name"] == "device name"
+    assert results[1]["message"] == "is on fire"
+    assert isinstance(results[1]["when"], float)
+    assert results[2]["entity_id"] == "light.kitchen"
+    assert results[2]["state"] == "on"
+    assert isinstance(results[2]["when"], float)
+    assert results[3]["entity_id"] == "light.kitchen"
+    assert results[3]["state"] == "off"
+    assert isinstance(results[3]["when"], float)
