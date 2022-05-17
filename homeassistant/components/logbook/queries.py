@@ -136,7 +136,7 @@ def statement_for_request(
         return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
 
     # sqlalchemy caches object quoting, the
-    # json quotable ones much be a different
+    # json quotable ones must be a different
     # object from the non-json ones to prevent
     # sqlalchemy from quoting them incorrectly
     assert not device_ids or (device_ids is not json_quotable_device_ids)
