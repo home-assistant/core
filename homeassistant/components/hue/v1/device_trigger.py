@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
@@ -160,7 +161,8 @@ async def async_attach_trigger(bridge, device_entry, config, action, automation_
     )
 
 
-async def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
+@callback
+def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
     """Return device triggers for device on `v1` bridge.
 
     Make sure device is a supported remote model.
