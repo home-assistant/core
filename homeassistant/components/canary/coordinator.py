@@ -45,10 +45,9 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
             locations_by_id[location_id] = location
 
             for device in location.devices:
-                if device.is_online:
-                    readings_by_device_id[
-                        device.device_id
-                    ] = self.canary.get_latest_readings(device.device_id)
+                readings_by_device_id[
+                    device.device_id
+                ] = self.canary.get_latest_readings(device.device_id)
 
             entries_by_device_id = self._group_entries_by_device(location, location_id)
 
