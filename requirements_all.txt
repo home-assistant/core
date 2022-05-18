@@ -144,7 +144,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.8.2
+aioesphomeapi==10.9.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
