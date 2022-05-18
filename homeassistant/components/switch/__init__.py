@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -13,9 +14,10 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -68,9 +70,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    @callback
+    def async_turn_off_filter(
+        hass: HomeAssistant,
+        context: Context | None,
+        entity_id: str,
+        state: str,
+        attr: dict[str, Any],
+    ) -> Context | None:
+        """Filter state changes attributed to a turn_off call."""
+        if state != STATE_OFF:
+            return None
+        return context
+
+    @callback
+    def async_turn_on_filter(
+        hass: HomeAssistant,
+        context: Context | None,
+        entity_id: str,
+        state: str,
+        attr: dict[str, Any],
+    ) -> Context | None:
+        """Filter state changes attributed to a turn_on call."""
+        if state != STATE_ON:
+            return None
+        return context
+
+    @callback
+    def async_toggle_filter(
+        hass: HomeAssistant,
+        context: Context | None,
+        entity_id: str,
+        state: str,
+        attr: dict[str, Any],
+    ) -> Context | None:
+        """Filter state changes attributed to a turn_off call."""
+        old_state = hass.states.get(entity_id)
+        if not old_state:
+            return None
+        if old_state.state == STATE_OFF and state == STATE_ON:
+            return context
+        if old_state.state == STATE_ON and state == STATE_OFF:
+            return context
+        return None
+
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, {}, "async_turn_off", context_filter=async_turn_off_filter
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, {}, "async_turn_on", context_filter=async_turn_on_filter
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, {}, "async_toggle", context_filter=async_toggle_filter
+    )
 
     return True
 

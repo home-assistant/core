@@ -194,6 +194,7 @@ class EntityComponent:
         schema: dict[str, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
+        context_filter: entity.ContextFilter | None = None,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
@@ -202,7 +203,12 @@ class EntityComponent:
         async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
             await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
+                self.hass,
+                self._platforms.values(),
+                func,
+                call,
+                required_features,
+                context_filter,
             )
 
         self.hass.services.async_register(self.domain, name, handle_service, schema)

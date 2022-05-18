@@ -49,6 +49,7 @@ from . import (
     entity_registry,
     template,
 )
+from .entity import ContextFilter
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
@@ -549,6 +550,7 @@ async def entity_service_call(  # noqa: C901
     func: str | Callable[..., Any],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
+    context_filter: ContextFilter | None = None,
 ) -> None:
     """Handle an entity service call.
 
@@ -679,7 +681,9 @@ async def entity_service_call(  # noqa: C901
         [
             asyncio.create_task(
                 entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
+                    _handle_entity_call(
+                        hass, entity, func, data, call.context, context_filter
+                    )
                 )
             )
             for entity in entities
@@ -713,9 +717,10 @@ async def _handle_entity_call(
     func: str | Callable[..., Any],
     data: dict | ServiceCall,
     context: Context,
+    context_filter: ContextFilter | None = None,
 ) -> None:
     """Handle calling service method."""
-    entity.async_set_context(context)
+    entity.async_set_context(context, context_filter)
     _current_entity.set(entity.entity_id)
 
     if isinstance(func, str):
