@@ -16,6 +16,7 @@ from async_upnp_client.exceptions import (
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
+    UpnpXmlContentError,
 )
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
@@ -271,11 +272,12 @@ class SamsungTVDevice(MediaPlayerEntity):
             # NETWORK,NONE
             upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
-            with contextlib.suppress(UpnpConnectionError, UpnpResponseError):
+            try:
                 upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
-            if not upnp_device:
+            except (UpnpConnectionError, UpnpResponseError, UpnpXmlContentError) as err:
+                LOGGER.debug("Unable to create Upnp DMR device: %r", err, exc_info=True)
                 return
             _, event_ip = await async_get_local_ip(
                 self._ssdp_rendering_control_location, self.hass.loop
