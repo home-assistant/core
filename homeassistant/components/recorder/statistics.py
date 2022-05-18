@@ -440,7 +440,10 @@ def _compile_hourly_statistics_summary_mean_stmt(
 def _compile_hourly_statistics_summary_sum_legacy_stmt(
     start_time: datetime, end_time: datetime
 ) -> StatementLambdaElement:
-    """Generate the legacy sum statement for hourly statistics."""
+    """Generate the legacy sum statement for hourly statistics.
+
+    This is used for databases not supporting row number.
+    """
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SUMMARY_SUM_LEGACY))
     stmt += (
         lambda q: q.filter(StatisticsShortTerm.start >= start_time)
