@@ -123,6 +123,10 @@ EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
+class UnsupportedDialect(Exception):
+    """The dialect or its version is not supported."""
+
+
 class Events(Base):  # type: ignore[misc,valid-type]
     """Event history data."""
 
