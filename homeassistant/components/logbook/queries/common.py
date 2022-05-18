@@ -1,26 +1,22 @@
 """Queries for logbook."""
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from datetime import datetime as dt
 import json
 from typing import Any
 
 import sqlalchemy
-from sqlalchemy import JSON, Column, lambda_stmt, select, type_coerce, union_all
+from sqlalchemy import JSON, select, type_coerce
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
-from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
-    ENTITY_ID_LAST_UPDATED_INDEX,
     JSON_VARIENT_CAST,
     JSONB_VARIENT_CAST,
-    LAST_UPDATED_INDEX,
     EventData,
     Events,
     StateAttributes,
@@ -64,9 +60,6 @@ OLD_FORMAT_ATTRS_JSON = type_coerce(
     States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
 )
 
-ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
-OLD_ENTITY_ID_IN_EVENT: Column = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
-DEVICE_ID_IN_EVENT: Column = EVENT_DATA_JSON["device_id"]
 
 PSUEDO_EVENT_STATE_CHANGED = None
 # Since we don't store event_types and None
@@ -140,65 +133,7 @@ CONTEXT_ONLY = literal("1").label("context_only")
 NOT_CONTEXT_ONLY = literal(None).label("context_only")
 
 
-def statement_for_request(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str] | None = None,
-    json_quotable_entity_ids: list[str] | None = None,
-    device_ids: list[str] | None = None,
-    json_quotable_device_ids: list[str] | None = None,
-    filters: Filters | None = None,
-    context_id: str | None = None,
-) -> StatementLambdaElement:
-    """Generate the logbook statement for a logbook request."""
-
-    # No entities: logbook sends everything for the timeframe
-    # limited by the context_id and the yaml configured filter
-    if not entity_ids and not device_ids:
-        entity_filter = filters.entity_filter() if filters else None
-        return _all_stmt(start_day, end_day, event_types, entity_filter, context_id)
-
-    # sqlalchemy caches object quoting, the
-    # json quotable ones must be a different
-    # object from the non-json ones to prevent
-    # sqlalchemy from quoting them incorrectly
-    assert not device_ids or (device_ids is not json_quotable_device_ids)
-    assert not entity_ids or (entity_ids is not json_quotable_entity_ids)
-
-    # Multiple entities: logbook sends everything for the timeframe for the entities and devices
-    if entity_ids and device_ids:
-        assert json_quotable_entity_ids is not None
-        assert json_quotable_device_ids is not None
-        return _entities_devices_stmt(
-            start_day,
-            end_day,
-            event_types,
-            entity_ids,
-            json_quotable_entity_ids,
-            json_quotable_device_ids,
-        )
-
-    if entity_ids:
-        assert json_quotable_entity_ids is not None
-        return _entities_stmt(
-            start_day,
-            end_day,
-            event_types,
-            entity_ids,
-            json_quotable_entity_ids,
-        )
-
-    assert json_quotable_device_ids is not None
-    return _devices_stmt(
-        start_day,
-        end_day,
-        event_types,
-        json_quotable_device_ids,
-    )
-
-
-def _select_events_context_id_subquery(
+def select_events_context_id_subquery(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
@@ -212,66 +147,7 @@ def _select_events_context_id_subquery(
     )
 
 
-def _select_entities_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str],
-    json_quotable_entity_ids: list[str],
-) -> Select:
-    """Generate a subquery to find context ids for multiple entities."""
-    return select(
-        union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types).where(
-                _apply_event_entity_id_matchers(json_quotable_entity_ids)
-            ),
-            _apply_entities_hints(select(States.context_id))
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
-        ).c.context_id
-    )
-
-
-def _select_device_id_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str],
-) -> Select:
-    """Generate a subquery to find context ids for multiple devices."""
-    return select(
-        union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types).where(
-                _apply_event_device_id_matchers(json_quotable_device_ids)
-            ),
-        ).c.context_id
-    )
-
-
-def _select_entities_device_id_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str],
-    json_quotable_entity_ids: list[str],
-    json_quotable_device_ids: list[str],
-) -> Select:
-    """Generate a subquery to find context ids for multiple entities and multiple devices."""
-    return select(
-        union_all(
-            _select_events_context_id_subquery(start_day, end_day, event_types).where(
-                _apply_event_entity_id_device_id_matchers(
-                    json_quotable_entity_ids, json_quotable_device_ids
-                )
-            ),
-            _apply_entities_hints(select(States.context_id))
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
-        ).c.context_id
-    )
-
-
-def _select_events_context_only() -> Select:
+def select_events_context_only() -> Select:
     """Generate an events query that mark them as for context_only.
 
     By marking them as context_only we know they are only for
@@ -282,7 +158,7 @@ def _select_events_context_only() -> Select:
     )
 
 
-def _select_states_context_only() -> Select:
+def select_states_context_only() -> Select:
     """Generate an states query that mark them as for context_only.
 
     By marking them as context_only we know they are only for
@@ -293,181 +169,28 @@ def _select_states_context_only() -> Select:
     )
 
 
-def _apply_entities_context_union(
-    query: Query,
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str],
-    json_quotable_entity_ids: list[str],
-) -> StatementLambdaElement:
-    """Generate a CTE to find the entity and device context ids and a query to find linked row."""
-    entities_cte = _select_entities_context_ids_sub_query(
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-    ).cte()
-    return query.union_all(
-        _states_query_for_entity_ids(start_day, end_day, entity_ids),
-        _select_events_context_only().where(Events.context_id.in_(entities_cte)),
-        _select_states_context_only()
-        .where(States.entity_id.not_in(entity_ids))
-        .where(States.context_id.in_(entities_cte)),
+def select_events_without_states(
+    start_day: dt, end_day: dt, event_types: tuple[str, ...]
+) -> Select:
+    """Generate an events select that does not join states."""
+    return (
+        select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
+        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
+        .where(Events.event_type.in_(event_types))
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
 
 
-def _entities_stmt(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str],
-    json_quotable_entity_ids: list[str],
-) -> StatementLambdaElement:
-    """Generate a logbook query for multiple entities."""
-    stmt = lambda_stmt(
-        lambda: _select_events_without_states(start_day, end_day, event_types)
-    )
-    assert json_quotable_entity_ids is not None
-    stmt += lambda s: _apply_entities_context_union(
-        s.where(_apply_event_entity_id_matchers(json_quotable_entity_ids)),
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-    ).order_by(Events.time_fired)
-    return stmt
-
-
-def _apply_entities_devices_context_union(
-    query: Query,
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str],
-    json_quotable_entity_ids: list[str],
-    json_quotable_device_ids: list[str],
-) -> StatementLambdaElement:
-    devices_entities_cte = _select_entities_device_id_context_ids_sub_query(
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-        json_quotable_device_ids,
-    ).cte()
-    return query.union_all(
-        _states_query_for_entity_ids(start_day, end_day, entity_ids),
-        _select_events_context_only().where(
-            Events.context_id.in_(devices_entities_cte)
-        ),
-        _select_states_context_only()
-        .where(States.entity_id.not_in(entity_ids))
-        .where(States.context_id.in_(devices_entities_cte)),
+def select_states() -> Select:
+    """Generate a states select that formats the states table as event rows."""
+    return select(
+        *EVENT_COLUMNS_FOR_STATE_SELECT,
+        *STATE_COLUMNS,
+        NOT_CONTEXT_ONLY,
     )
 
 
-def _entities_devices_stmt(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_ids: list[str],
-    json_quotable_entity_ids: list[str],
-    json_quotable_device_ids: list[str],
-) -> StatementLambdaElement:
-    """Generate a logbook query for multiple entities."""
-    stmt = lambda_stmt(
-        lambda: _select_events_without_states(start_day, end_day, event_types)
-    )
-    stmt += lambda s: _apply_entities_devices_context_union(
-        s.where(
-            _apply_event_entity_id_device_id_matchers(
-                json_quotable_entity_ids, json_quotable_device_ids
-            )
-        ),
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-        json_quotable_device_ids,
-    ).order_by(Events.time_fired)
-    return stmt
-
-
-def _apply_devices_context_union(
-    query: Query,
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str],
-) -> StatementLambdaElement:
-    """Generate a CTE to find the device context ids and a query to find linked row."""
-    devices_cte = _select_device_id_context_ids_sub_query(
-        start_day,
-        end_day,
-        event_types,
-        json_quotable_device_ids,
-    ).cte()
-    return query.union_all(
-        _select_events_context_only().where(Events.context_id.in_(devices_cte)),
-        _select_states_context_only().where(States.context_id.in_(devices_cte)),
-    )
-
-
-def _devices_stmt(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str] | None,
-) -> StatementLambdaElement:
-    """Generate a logbook query for multiple entities."""
-    stmt = lambda_stmt(
-        lambda: _select_events_without_states(start_day, end_day, event_types)
-    )
-    assert json_quotable_device_ids is not None
-    stmt += lambda s: _apply_devices_context_union(
-        s.where(_apply_event_device_id_matchers(json_quotable_device_ids)),
-        start_day,
-        end_day,
-        event_types,
-        json_quotable_device_ids,
-    ).order_by(Events.time_fired)
-    return stmt
-
-
-def _all_stmt(
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    entity_filter: ClauseList | None = None,
-    context_id: str | None = None,
-) -> StatementLambdaElement:
-    """Generate a logbook query for all entities."""
-    stmt = lambda_stmt(
-        lambda: _select_events_without_states(start_day, end_day, event_types)
-    )
-    if context_id is not None:
-        # Once all the old `state_changed` events
-        # are gone from the database remove the
-        # _legacy_select_events_context_id()
-        stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _states_query_for_context_id(start_day, end_day, context_id),
-            _legacy_select_events_context_id(start_day, end_day, context_id),
-        )
-    elif entity_filter is not None:
-        stmt += lambda s: s.union_all(
-            _states_query_for_all(start_day, end_day).where(entity_filter)
-        )
-    else:
-        stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
-    stmt += lambda s: s.order_by(Events.time_fired)
-    return stmt
-
-
-def _legacy_select_events_context_id(
+def legacy_select_events_context_id(
     start_day: dt, end_day: dt, context_id: str
 ) -> Select:
     """Generate a legacy events context id select that also joins states."""
@@ -492,60 +215,13 @@ def _legacy_select_events_context_id(
     )
 
 
-def _select_events_without_states(
-    start_day: dt, end_day: dt, event_types: tuple[str, ...]
-) -> Select:
-    """Generate an events select that does not join states."""
-    return (
-        select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
-        .where((Events.time_fired > start_day) & (Events.time_fired < end_day))
-        .where(Events.event_type.in_(event_types))
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
-    )
+def apply_states_filters(query: Query, start_day: dt, end_day: dt) -> Query:
+    """Filter states by time range.
 
-
-def _states_query_for_context_id(start_day: dt, end_day: dt, context_id: str) -> Query:
-    return _apply_states_filters(_select_states(), start_day, end_day).where(
-        States.context_id == context_id
-    )
-
-
-def _states_query_for_entity_ids(
-    start_day: dt, end_day: dt, entity_ids: list[str]
-) -> Query:
-    return _apply_states_filters(
-        _apply_entities_hints(_select_states()), start_day, end_day
-    ).where(States.entity_id.in_(entity_ids))
-
-
-def _states_query_for_all(start_day: dt, end_day: dt) -> Query:
-    return _apply_states_filters(_apply_all_hints(_select_states()), start_day, end_day)
-
-
-def _select_states() -> Select:
-    """Generate a states select that formats the states table as event rows."""
-    return select(
-        *EVENT_COLUMNS_FOR_STATE_SELECT,
-        *STATE_COLUMNS,
-        NOT_CONTEXT_ONLY,
-    )
-
-
-def _apply_all_hints(query: Query) -> Query:
-    """Force mysql to use the right index on large selects."""
-    return query.with_hint(
-        States, f"FORCE INDEX ({LAST_UPDATED_INDEX})", dialect_name="mysql"
-    )
-
-
-def _apply_entities_hints(query: Query) -> Query:
-    """Force mysql to use the right index on large selects."""
-    return query.with_hint(
-        States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX})", dialect_name="mysql"
-    )
-
-
-def _apply_states_filters(query: Query, start_day: dt, end_day: dt) -> Query:
+    Filters states that do not have an old state or new state (added / removed)
+    Filters states that are in a continuous domain with a UOM.
+    Filters states that do not have matching last_updated and last_changed.
+    """
     return (
         query.filter(
             (States.last_updated > start_day) & (States.last_updated < end_day)
@@ -608,28 +284,3 @@ def _not_uom_attributes_matcher() -> ClauseList:
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE
     ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
-
-
-def _apply_event_entity_id_device_id_matchers(
-    json_quotable_entity_ids: Iterable[str], json_quotable_device_ids: Iterable[str]
-) -> sqlalchemy.or_:
-    """Create matchers for the device_id and entity_id in the event_data."""
-    return _apply_event_entity_id_matchers(
-        json_quotable_entity_ids
-    ) | _apply_event_device_id_matchers(json_quotable_device_ids)
-
-
-def _apply_event_entity_id_matchers(
-    json_quotable_entity_ids: Iterable[str],
-) -> sqlalchemy.or_:
-    """Create matchers for the entity_id in the event_data."""
-    return ENTITY_ID_IN_EVENT.in_(
-        json_quotable_entity_ids
-    ) | OLD_ENTITY_ID_IN_EVENT.in_(json_quotable_entity_ids)
-
-
-def _apply_event_device_id_matchers(
-    json_quotable_device_ids: Iterable[str],
-) -> ClauseList:
-    """Create matchers for the device_ids in the event_data."""
-    return DEVICE_ID_IN_EVENT.in_(json_quotable_device_ids)
