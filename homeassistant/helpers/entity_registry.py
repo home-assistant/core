@@ -995,7 +995,7 @@ async def async_migrate_entries(
     entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
     """Migrator of unique IDs."""
-    ent_reg = await async_get_registry(hass)
+    ent_reg = async_get(hass)
 
     for entry in ent_reg.entities.values():
         if entry.config_entry_id != config_entry_id:
