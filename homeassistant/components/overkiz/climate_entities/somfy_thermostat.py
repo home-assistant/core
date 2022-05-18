@@ -49,10 +49,10 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
 }
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 TARGET_TEMP_TO_OVERKIZ = {
-    PRESET_HOME: "somfythermostat:AtHomeTargetTemperatureState",
-    PRESET_AWAY: "somfythermostat:AwayModeTargetTemperatureState",
-    PRESET_FREEZE: "somfythermostat:FreezeModeTargetTemperatureState",
-    PRESET_NIGHT: "somfythermostat:SleepingModeTargetTemperatureState",
+    PRESET_HOME: OverkizState.SOMFY_THERMOSTAT_AT_HOME_TARGET_TEMPERATURE,
+    PRESET_AWAY: OverkizState.SOMFY_THERMOSTAT_AWAY_MODE_TARGET_TEMPERATURE,
+    PRESET_FREEZE: OverkizState.SOMFY_THERMOSTAT_FREEZE_MODE_TARGET_TEMPERATURE,
+    PRESET_NIGHT: OverkizState.SOMFY_THERMOSTAT_SLEEPING_MODE_TARGET_TEMPERATURE,
 }
 
 
