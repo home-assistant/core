@@ -61,7 +61,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        SynoDSMCamera(api, coordinator, camera_id, entry.entry_id)
+        SynoDSMCamera(api, coordinator, camera_id)
         for camera_id in coordinator.data["cameras"]
     )
 
@@ -78,7 +78,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         api: SynoApi,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]],
         camera_id: str,
-        entry_id: str,
     ) -> None:
         """Initialize a Synology camera."""
         description = SynologyDSMCameraEntityDescription(
@@ -92,7 +91,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         self.snapshot_quality = api._entry.options.get(
             CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
         )
-        self.config_entry_id = entry_id
         super().__init__(api, coordinator, description)
         Camera.__init__(self)
 
@@ -108,7 +106,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             identifiers={
                 (
                     DOMAIN,
-                    f"{self._api.information.serial}_{self.config_entry_id}_{self.camera_data.id}",
+                    f"{self._api.information.serial}_{self.camera_data.id}",
                 )
             },
             name=self.camera_data.name,
@@ -143,10 +141,12 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
                 _LOGGER.debug("Update stream URL for camera %s", self.camera_data.name)
                 self.stream.update_source(url)
 
+        assert self.platform
+        assert self.platform.config_entry
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.camera_data.id}",
+                f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.platform.config_entry.entry_id}_{self.camera_data.id}",
                 _handle_signal,
             )
         )
