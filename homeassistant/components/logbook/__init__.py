@@ -40,7 +40,6 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
     Context,
@@ -65,14 +64,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .queries import statement_for_request
+from .queries import PSUEDO_EVENT_STATE_CHANGED, statement_for_request
 
 _LOGGER = logging.getLogger(__name__)
 
-FRIENDLY_NAME_JSON_EXTRACT = re.compile('"friendly_name": ?"([^"]+)"')
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
-ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 DOMAIN = "logbook"
@@ -235,6 +232,7 @@ def _ws_formatted_get_events(
                 entities_filter,
                 context_id,
                 True,
+                False,
             ),
         )
     )
@@ -368,6 +366,7 @@ class LogbookView(HomeAssistantView):
                     self.entities_filter,
                     context_id,
                     False,
+                    True,
                 )
             )
 
@@ -385,6 +384,7 @@ def _humanify(
     ],
     entity_name_cache: EntityNameCache,
     format_time: Callable[[Row], Any],
+    include_entity_name: bool = True,
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
@@ -419,13 +419,13 @@ def _humanify(
             continue
         event_type = row.event_type
         if event_type == EVENT_CALL_SERVICE or (
-            event_type != EVENT_STATE_CHANGED
+            event_type is not PSUEDO_EVENT_STATE_CHANGED
             and entities_filter is not None
             and not _keep_row(row, event_type)
         ):
             continue
 
-        if event_type == EVENT_STATE_CHANGED:
+        if event_type is PSUEDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
             # Skip continuous sensors
@@ -439,14 +439,15 @@ def _humanify(
 
             data = {
                 LOGBOOK_ENTRY_WHEN: format_time(row),
-                LOGBOOK_ENTRY_NAME: entity_name_cache.get(entity_id, row),
                 LOGBOOK_ENTRY_STATE: row.state,
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
-            if icon := _row_attributes_extract(row, ICON_JSON_EXTRACT):
+            if include_entity_name:
+                data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id, row)
+            if icon := row.icon or row.old_format_icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id, include_entity_name)
             yield data
 
         elif event_type in external_events:
@@ -454,7 +455,7 @@ def _humanify(
             data = describe_event(event_cache.get(row))
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id, include_entity_name)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -474,7 +475,7 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id, include_entity_name)
             yield data
 
 
@@ -487,6 +488,7 @@ def _get_events(
     entities_filter: EntityFilter | Callable[[str], bool] | None = None,
     context_id: str | None = None,
     timestamp: bool = False,
+    include_entity_name: bool = True,
 ) -> list[dict[str, Any]]:
     """Get events for a period of time."""
     assert not (
@@ -540,6 +542,7 @@ def _get_events(
                 external_events,
                 entity_name_cache,
                 format_time,
+                include_entity_name,
             )
         )
 
@@ -562,7 +565,9 @@ class ContextAugmenter:
         self.external_events = external_events
         self.event_cache = event_cache
 
-    def augment(self, data: dict[str, Any], row: Row, context_id: str) -> None:
+    def augment(
+        self, data: dict[str, Any], row: Row, context_id: str, include_entity_name: bool
+    ) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
@@ -589,9 +594,10 @@ class ContextAugmenter:
         # State change
         if context_entity_id := context_row.entity_id:
             data[CONTEXT_ENTITY_ID] = context_entity_id
-            data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
-                context_entity_id, context_row
-            )
+            if include_entity_name:
+                data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
+                    context_entity_id, context_row
+                )
             data[CONTEXT_EVENT_TYPE] = event_type
             return
 
@@ -619,9 +625,10 @@ class ContextAugmenter:
         if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
             return
         data[CONTEXT_ENTITY_ID] = attr_entity_id
-        data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
-            attr_entity_id, context_row
-        )
+        if include_entity_name:
+            data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
+                attr_entity_id, context_row
+            )
 
 
 def _is_sensor_continuous(ent_reg: er.EntityRegistry, entity_id: str) -> bool:
@@ -735,8 +742,6 @@ class EntityNameCache:
             friendly_name := current_state.attributes.get(ATTR_FRIENDLY_NAME)
         ):
             self._names[entity_id] = friendly_name
-        elif extracted_name := _row_attributes_extract(row, FRIENDLY_NAME_JSON_EXTRACT):
-            self._names[entity_id] = extracted_name
         else:
             return split_entity_id(entity_id)[1].replace("_", " ")
 
