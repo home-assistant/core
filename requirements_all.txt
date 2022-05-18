@@ -436,7 +436,7 @@ bravia-tv==1.0.11
 broadlink==0.18.1
 
 # homeassistant.components.brother
-brother==1.2.0
+brother==1.1.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1829,7 +1829,7 @@ pysmarty==0.8
 pysml==0.0.7
 
 # homeassistant.components.snmp
-pysnmplib==5.0.10
+pysnmp==4.4.12
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -1981,7 +1981,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.4.1
+pyunifiprotect==3.5.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1996,7 +1996,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.0.2
+pyvesync==2.0.3
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
