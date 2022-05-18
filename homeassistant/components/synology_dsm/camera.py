@@ -16,7 +16,8 @@ from homeassistant.components.camera import (
     CameraEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -27,6 +28,7 @@ from .const import (
     COORDINATOR_CAMERAS,
     DEFAULT_SNAPSHOT_QUALITY,
     DOMAIN,
+    SIGNAL_CAMERA_SOURCE_CHANGED,
     SYNO_API,
 )
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
@@ -130,6 +132,29 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         """Return the camera motion detection status."""
         return self.camera_data.is_motion_detection_enabled  # type: ignore[no-any-return]
 
+    def _listen_source_updates(self) -> None:
+        """Listen for camera source changed events."""
+
+        @callback
+        def _handle_signal(url: str) -> None:
+            if self.stream:
+                _LOGGER.debug("Update stream URL for camera %s", self.camera_data.name)
+                self.stream.update_source(url)
+
+        assert self.platform
+        assert self.platform.config_entry
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.platform.config_entry.entry_id}_{self.camera_data.id}",
+                _handle_signal,
+            )
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to signal."""
+        self._listen_source_updates()
+
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -162,6 +187,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         )
         if not self.available:
             return None
+
         return self.camera_data.live_view.rtsp  # type: ignore[no-any-return]
 
     def enable_motion_detection(self) -> None:
