@@ -41,9 +41,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device conditions for Media player devices."""
     registry = entity_registry.async_get(hass)
     conditions = []

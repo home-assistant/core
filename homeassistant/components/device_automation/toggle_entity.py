@@ -217,7 +217,7 @@ async def async_get_actions(
     return _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
 
 
-async def async_get_conditions(
+def async_get_conditions(
     hass: HomeAssistant, device_id: str, domain: str
 ) -> list[dict[str, str]]:
     """List device conditions."""

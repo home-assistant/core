@@ -136,9 +136,7 @@ CONDITION_SCHEMA = vol.All(
 )
 
 
-async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device conditions."""
     conditions: list[dict[str, str]] = []
     entity_registry = er.async_get(hass)

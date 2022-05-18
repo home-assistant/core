@@ -41,9 +41,7 @@ PRESET_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
 CONDITION_SCHEMA = vol.Any(HVAC_MODE_CONDITION, PRESET_MODE_CONDITION)
 
 
-async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device conditions for Climate devices."""
     registry = entity_registry.async_get(hass)
     conditions = []

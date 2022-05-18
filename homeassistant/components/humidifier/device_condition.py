@@ -37,12 +37,10 @@ MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
 CONDITION_SCHEMA = vol.Any(TOGGLE_CONDITION, MODE_CONDITION)
 
 
-async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device conditions for Humidifier devices."""
     registry = entity_registry.async_get(hass)
-    conditions = await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
+    conditions = toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
