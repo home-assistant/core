@@ -224,7 +224,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 )
 
 
-def validate_modern_schema(domain: str) -> Callable:
+def warn_for_legacy_schema(domain: str) -> Callable:
     """Warn once when a legacy platform schema is used."""
     warned = set()
 

@@ -16,7 +16,7 @@ from ..mixins import (
     async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
-    validate_modern_schema,
+    warn_for_legacy_schema,
 )
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
@@ -78,7 +78,7 @@ DISCOVERY_SCHEMA = vol.All(
 PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light,
-    validate_modern_schema(light.DOMAIN),
+    warn_for_legacy_schema(light.DOMAIN),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(

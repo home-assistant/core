@@ -52,7 +52,7 @@ from .mixins import (
     async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
-    validate_modern_schema,
+    warn_for_legacy_schema,
 )
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
@@ -179,7 +179,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
-    validate_modern_schema(fan.DOMAIN),
+    warn_for_legacy_schema(fan.DOMAIN),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(
