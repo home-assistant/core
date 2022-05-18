@@ -16,6 +16,7 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -60,7 +61,9 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     """Representation of Somfy Smart Thermostat."""
 
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
     _attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     # Both min and max temp values have been retrieved from the Somfy Application.
