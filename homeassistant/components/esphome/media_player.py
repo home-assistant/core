@@ -1,6 +1,8 @@
 """Support for ESPHome media players."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioesphomeapi import (
     MediaPlayerCommand,
     MediaPlayerEntityState,
@@ -94,7 +96,9 @@ class EsphomeMediaPlayer(
             flags |= MediaPlayerEntityFeature.VOLUME_MUTE
         return flags
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play command with media url to the media player."""
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
