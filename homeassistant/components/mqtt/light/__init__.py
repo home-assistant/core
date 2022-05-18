@@ -105,7 +105,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT light through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT lights configured under the light platform key (deprecated)."""
     # load and initialize platform config from configuration.yaml
     for config in await async_get_platform_config_from_yaml(
         hass, light.DOMAIN, PLATFORM_SCHEMA_MODERN
