@@ -81,9 +81,7 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers.
 
     Make sure the device supports device automations and

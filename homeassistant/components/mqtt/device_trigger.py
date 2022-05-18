@@ -283,7 +283,7 @@ async def async_setup_trigger(
 
 async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None:
     """Handle Mqtt removed from a device."""
-    triggers = await async_get_triggers(hass, device_id)
+    triggers = async_get_triggers(hass, device_id)
     for trig in triggers:
         device_trigger: Trigger = hass.data[DEVICE_TRIGGERS].pop(
             trig[CONF_DISCOVERY_ID]
@@ -295,9 +295,7 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
             debug_info.remove_trigger_discovery_data(hass, discovery_hash)
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
     triggers: list[dict[str, str]] = []
 

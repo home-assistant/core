@@ -224,11 +224,11 @@ def async_get_conditions(
     return _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 
 
-async def async_get_triggers(
+def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
 ) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers = await entity.async_get_triggers(hass, device_id, domain)
+    triggers = entity.async_get_triggers(hass, device_id, domain)
     triggers.extend(_async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain))
     return triggers
 
@@ -244,12 +244,12 @@ def async_get_condition_capabilities(
     }
 
 
-async def async_get_trigger_capabilities(
+def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in [CONF_TURNED_ON, CONF_TURNED_OFF]:
-        return await entity.async_get_trigger_capabilities(hass, config)
+        return entity.async_get_trigger_capabilities(hass, config)
 
     return {
         "extra_fields": vol.Schema(

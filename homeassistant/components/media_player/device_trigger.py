@@ -51,12 +51,10 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for Media player entities."""
     registry = entity_registry.async_get(hass)
-    triggers = await entity.async_get_triggers(hass, device_id, DOMAIN)
+    triggers = entity.async_get_triggers(hass, device_id, DOMAIN)
 
     # Get all the integration entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -78,12 +76,12 @@ async def async_get_triggers(
     return triggers
 
 
-async def async_get_trigger_capabilities(
+def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in TRIGGER_TYPES:
-        return await entity.async_get_trigger_capabilities(hass, config)
+        return entity.async_get_trigger_capabilities(hass, config)
     return {
         "extra_fields": vol.Schema(
             {vol.Optional(CONF_FOR): cv.positive_time_period_dict}

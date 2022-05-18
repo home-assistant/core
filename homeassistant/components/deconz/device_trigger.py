@@ -697,7 +697,7 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(
+def async_get_triggers(
     hass: HomeAssistant,
     device_id: str,
 ) -> list[dict[str, str]]:

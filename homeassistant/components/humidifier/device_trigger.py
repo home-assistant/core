@@ -55,12 +55,10 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for Humidifier devices."""
     registry = entity_registry.async_get(hass)
-    triggers = await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
+    triggers = toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -114,7 +112,7 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_trigger_capabilities(
+def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
@@ -132,4 +130,4 @@ async def async_get_trigger_capabilities(
                 }
             )
         }
-    return await toggle_entity.async_get_trigger_capabilities(hass, config)
+    return toggle_entity.async_get_trigger_capabilities(hass, config)

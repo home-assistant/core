@@ -106,9 +106,7 @@ async def async_validate_trigger_config(
     )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for Shelly devices."""
     triggers: list[dict[str, str]] = []
 

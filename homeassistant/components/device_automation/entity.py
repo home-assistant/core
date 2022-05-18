@@ -87,14 +87,14 @@ def _async_get_automations(
     return automations
 
 
-async def async_get_triggers(
+def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
 ) -> list[dict[str, str]]:
     """List device triggers."""
     return _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 
 
-async def async_get_trigger_capabilities(
+def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""

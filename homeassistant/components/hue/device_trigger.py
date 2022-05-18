@@ -85,9 +85,7 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, Any]]:
     """Get device triggers for given (hass) device id."""
     if DOMAIN not in hass.data:
         return []
