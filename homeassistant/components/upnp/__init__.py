@@ -113,8 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await asyncio.wait_for(device_discovered_event.wait(), timeout=10)
     except asyncio.TimeoutError as err:
-        LOGGER.debug("Device not discovered: %s", usn)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
         cancel_discovered_callback()
 
@@ -125,10 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device = await Device.async_create_device(hass, location)
     except UpnpConnectionError as err:
-        LOGGER.debug(
-            "Error connecting to device at location: %s, err: %s", location, err
-        )
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Error connecting to device at location: {location}, err: {err}"
+        ) from err
 
     # Track the original UDN such that existing sensors do not change their unique_id.
     if CONFIG_ENTRY_ORIGINAL_UDN not in entry.data:
@@ -265,11 +263,6 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
                 self.device.async_get_traffic_data(),
                 self.device.async_get_status(),
             )
-
-            return {
-                **update_values[0],
-                **update_values[1],
-            }
         except UpnpCommunicationError as exception:
             LOGGER.debug(
                 "Caught exception when updating device: %s, exception: %s",
@@ -279,6 +272,11 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"Unable to communicate with IGD at: {self.device.device_url}"
             ) from exception
+
+        return {
+            **update_values[0],
+            **update_values[1],
+        }
 
 
 class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):

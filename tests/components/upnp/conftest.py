@@ -101,10 +101,6 @@ class MockUpnpDevice:
         """Get the unique id."""
         return self.usn
 
-    def reinit(self, new_upnp_device: UpnpDevice) -> None:
-        """Reinitialize."""
-        self.device_url = new_upnp_device.device_url
-
 
 class MockIgdDevice:
     """Mock async_upnp_client IgdDevice."""

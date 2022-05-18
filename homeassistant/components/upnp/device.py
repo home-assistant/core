@@ -66,7 +66,8 @@ class Device:
         self.hass = hass
         self._igd_device = igd_device
         self.coordinator: DataUpdateCoordinator | None = None
-        self._mac_address: str | None = None
+        self.mac_address: str | None = None
+        self.original_udn: str | None = None
 
     @classmethod
     async def async_create_device(
@@ -80,26 +81,6 @@ class Device:
         device = cls(hass, igd_device)
 
         return device
-
-    @property
-    def mac_address(self) -> str | None:
-        """Get the mac address."""
-        return self._mac_address
-
-    @mac_address.setter
-    def mac_address(self, mac_address: str) -> None:
-        """Set the mac address."""
-        self._mac_address = mac_address
-
-    @property
-    def original_udn(self) -> str | None:
-        """Get the mac address."""
-        return self._original_udn
-
-    @original_udn.setter
-    def original_udn(self, original_udn: str) -> None:
-        """Set the original UDN."""
-        self._original_udn = original_udn
 
     @property
     def udn(self) -> str:
