@@ -94,7 +94,7 @@ class EsphomeMediaPlayer(
             flags |= MediaPlayerEntityFeature.VOLUME_MUTE
         return flags
 
-    async def async_play_media(self, media_type, media_id, **kwargs) -> None:
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Send the play command with media url to the media player."""
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
@@ -108,7 +108,7 @@ class EsphomeMediaPlayer(
         )
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self, media_content_type: str | None = None, media_content_id: str | None = None
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
@@ -117,7 +117,7 @@ class EsphomeMediaPlayer(
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 
-    async def async_set_volume_level(self, volume) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._client.media_player_command(
             self._static_info.key,
