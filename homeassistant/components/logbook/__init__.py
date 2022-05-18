@@ -249,12 +249,12 @@ def _async_determine_event_types(
         for device_id in device_ids:
             if (device := dev_reg.async_get(device_id)) and device.config_entries:
                 config_entry_ids |= device.config_entries
-        intrested_domains: set[str] = set()
+        interested_domains: set[str] = set()
         for entry_id in config_entry_ids:
             if entry := hass.config_entries.async_get_entry(entry_id):
-                intrested_domains.add(entry.domain)
+                interested_domains.add(entry.domain)
         for external_event, domain_call in external_events.items():
-            if domain_call[0] in intrested_domains:
+            if domain_call[0] in interested_domains:
                 intrested_event_types.add(external_event)
 
     return tuple(
