@@ -720,7 +720,9 @@ async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
-    report("uses deprecated `async_get_registry` to access device registry, use async_get instead")
+    report(
+        "uses deprecated `async_get_registry` to access device registry, use async_get instead"
+    )
     return async_get(hass)
 
 
