@@ -68,7 +68,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from .queries import PSUEDO_EVENT_STATE_CHANGED, statement_for_request
+from .queries import statement_for_request
+from .queries.common import PSUEDO_EVENT_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
