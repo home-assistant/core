@@ -66,6 +66,7 @@ class KNXCover(KnxEntity, CoverEntity):
                 group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
                 travel_time_down=config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
                 travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
+                invert_updown=config[CoverSchema.CONF_INVERT_UPDOWN],
                 invert_position=config[CoverSchema.CONF_INVERT_POSITION],
                 invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
             )
