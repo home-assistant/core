@@ -1368,6 +1368,7 @@ async def test_upnp_not_available(
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
     assert await hass.services.async_call(
@@ -1385,6 +1386,7 @@ async def test_upnp_missing_service(
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
     assert await hass.services.async_call(
