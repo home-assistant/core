@@ -211,7 +211,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml (deprecated)."""
+    """Set up MQTT fans configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, fan.DOMAIN, config, async_add_entities, _async_setup_entity
