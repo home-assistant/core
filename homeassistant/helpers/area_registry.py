@@ -227,7 +227,7 @@ async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
-    report("uses deprecated `async_get_registry` to access area registry")
+    report("uses deprecated `async_get_registry` to access area registry, use async_get instead")
     return async_get(hass)
 
 
