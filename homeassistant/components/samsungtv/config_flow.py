@@ -414,7 +414,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return entry
 
-    async def _async_start_discovery_with_mac_address(self) -> None:
+    @callback
+    def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
         assert self._host is not None
         if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
@@ -491,7 +492,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
         self._mac = discovery_info.macaddress
         self._host = discovery_info.ip
-        await self._async_start_discovery_with_mac_address()
+        self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
@@ -503,7 +504,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
         self._mac = format_mac(discovery_info.properties["deviceid"])
         self._host = discovery_info.host
-        await self._async_start_discovery_with_mac_address()
+        self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
