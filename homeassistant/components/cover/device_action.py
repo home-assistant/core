@@ -59,9 +59,7 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 ACTION_SCHEMA = vol.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device actions for Cover devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -101,7 +99,7 @@ async def async_get_actions(
     return actions
 
 
-async def async_get_action_capabilities(
+def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""

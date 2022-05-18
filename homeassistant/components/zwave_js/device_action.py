@@ -141,9 +141,7 @@ ACTION_SCHEMA = vol.Any(
 )
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
     registry = entity_registry.async_get(hass)
     actions: list[dict] = []
@@ -274,7 +272,7 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(
+def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""

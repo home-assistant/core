@@ -27,8 +27,6 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device actions."""
-    return await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
+    return toggle_entity.async_get_actions(hass, device_id, DOMAIN)

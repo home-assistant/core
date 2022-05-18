@@ -53,9 +53,7 @@ ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device actions for Alarm control panel devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -118,7 +116,7 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(
+def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""

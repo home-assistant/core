@@ -210,7 +210,7 @@ def _async_get_automations(
     return automations
 
 
-async def async_get_actions(
+def async_get_actions(
     hass: HomeAssistant, device_id: str, domain: str
 ) -> list[dict[str, str]]:
     """List device actions."""

@@ -24,9 +24,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device actions for Mobile App devices."""
     webhook_id = webhook_id_from_device_id(hass, device_id)
 
@@ -77,7 +75,7 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(
+def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""

@@ -87,11 +87,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device actions."""
-    actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
+    actions = toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
     entity_registry = er.async_get(hass)
 
@@ -122,7 +120,7 @@ async def async_get_actions(
     return actions
 
 
-async def async_get_action_capabilities(
+def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""

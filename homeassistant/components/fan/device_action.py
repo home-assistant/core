@@ -13,11 +13,9 @@ from . import DOMAIN
 ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device actions for Fan devices."""
-    return await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
+    return toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
 
 async def async_call_action_from_config(
