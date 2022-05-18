@@ -1,4 +1,6 @@
 """Test the Antifurto365 iAlarmXR init."""
+import asyncio
+from datetime import timedelta
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -7,8 +9,9 @@ import pytest
 from homeassistant.components.ialarmxr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="ialarmxr_api")
@@ -66,3 +69,29 @@ async def test_unload_entry(hass, ialarmxr_api, mock_config_entry):
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_not_ready_connection_error(hass, ialarmxr_api, mock_config_entry):
+    """Test setup failed because we can't connect to the alarm system."""
+    ialarmxr_api.return_value.get_status = Mock(side_effect=ConnectionError)
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_not_ready_timeout(hass, ialarmxr_api, mock_config_entry):
+    """Test setup failed because we can't connect to the alarm system."""
+    ialarmxr_api.return_value.get_status = Mock(side_effect=asyncio.TimeoutError)
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
