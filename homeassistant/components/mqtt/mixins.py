@@ -9,6 +9,7 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
+from homeassistant.config import async_log_exception
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -264,20 +265,26 @@ class SetupEntity(Protocol):
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant, domain: str, schema: vol.Schema
 ) -> list[ConfigType]:
-    """Return a list of validated configurations for the platform read from configuration.yaml."""
+    """Return a list of validated configurations for the domain read from configuration.yaml."""
+
+    def async_validate_config(
+        hass: HomeAssistant,
+        config: list[ConfigType],
+    ) -> list[ConfigType]:
+        """Validate config."""
+        validated_config = []
+        for config_item in config:
+            try:
+                validated_config.append(schema(config_item))
+            except vol.MultipleInvalid as err:
+                async_log_exception(err, domain, config_item, hass)
+
+        return validated_config
 
     config_yaml: ConfigType = hass.data.get(DATA_MQTT_CONFIG, {})
     if not (platform_configs := config_yaml.get(domain)):
         return []
-    errors = []
-    try:
-        config = [schema(config) for config in platform_configs]
-    except (ValueError, vol.MultipleInvalid) as exc:
-        errors.append(exc)
-    if errors:
-        raise vol.MultipleInvalid(errors)
-
-    return config
+    return async_validate_config(hass, platform_configs)
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
