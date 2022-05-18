@@ -28,15 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     board = entry.data[CONF_BOARD]
 
-    # Operating system changed the name from "intel-nuc" to "generic-x86-64"
-    if board == "Intel NUC":
-        entry.data[CONF_BOARD] = "Generic x86-64"
-        hass.config_entries.async_update_entry(entry, data=entry.data)
-
     if board not in BOARD_MAP:
-        _LOGGER.warning(
-            f"Board {board} is (no longer) valid. Please remove the version integration {entry.title}."
+        _LOGGER.error(
+            f'Board {board} is (no longer) valid. Removing Version integration "{entry.title}".'
         )
+        await hass.config_entries.async_remove(entry.entry_id)
         return False
 
     coordinator = VersionDataUpdateCoordinator(
