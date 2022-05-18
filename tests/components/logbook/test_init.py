@@ -2400,6 +2400,7 @@ async def test_get_events_future_start_time(hass, hass_ws_client, recorder_mock)
     assert response["id"] == 1
 
     results = response["result"]
+    assert isinstance(results, list)
     assert len(results) == 0
 
 
