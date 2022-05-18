@@ -139,7 +139,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             if user_input.get(INPUT_ENTRY_CLEAR_OPTIONS):
                 # Reset all options
                 self.options = {}
-                return await self._update_options()
+                return self._async_update_options()
 
             selected_devices: list[str] = (
                 user_input.get(INPUT_ENTRY_DEVICE_SELECTION) or []
@@ -181,7 +181,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             self._update_device_options(user_input)
             if self.devices_to_configure:
                 return await self.async_step_configure_device(user_input=None)
-            return await self._update_options()
+            return self._async_update_options()
 
         self.current_device, description = self.devices_to_configure.popitem()
         data_schema = vol.Schema(
@@ -201,7 +201,8 @@ class OnewireOptionsFlowHandler(OptionsFlow):
             description_placeholders={"sensor_id": self.current_device},
         )
 
-    async def _update_options(self) -> FlowResult:
+    @callback
+    def _async_update_options(self) -> FlowResult:
         """Update config entry options."""
         return self.async_create_entry(title="", data=self.options)
 
