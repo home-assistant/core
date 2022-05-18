@@ -104,6 +104,16 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
             self._state = attr_value
 
 
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_htnnfasr",},
+    stop_on_match_group="tuya_manufacturer",
+)
+class FrostLock(BinarySensor, id_suffix="frost lock"):
+    SENSOR_ATTR = "frost_lock"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
+
+
 @MULTI_MATCH(channel_names=CHANNEL_ACCELEROMETER)
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""

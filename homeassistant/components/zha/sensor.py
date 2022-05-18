@@ -34,7 +34,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
-    Platform,
+    Platform, TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -179,6 +179,18 @@ class Sensor(ZhaEntity, SensorEntity):
                 float(value * self._multiplier) / self._divisor, self._decimals
             )
         return round(float(value * self._multiplier) / self._divisor)
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_htnnfasr",},
+    stop_on_match_group="tuya_manufacturer",
+)
+class TimeLeft(Sensor, id_suffix="time left"):
+    SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    # _decimals: int = 0
+    _unit = TIME_MINUTES
 
 
 @MULTI_MATCH(

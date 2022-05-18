@@ -6,6 +6,9 @@ import functools
 import logging
 from typing import Any
 
+import zigpy.exceptions
+from zigpy.zcl.foundation import Status
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -103,3 +106,31 @@ class ZHAIdentifyButton(ZHAButton):
         """Return the arguments to use in the command."""
 
         return [DEFAULT_DURATION]
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_htnnfasr",},
+    stop_on_match_group="tuya_manufacturer",
+)
+class FrostLockResetButton(ZHAButton, id_suffix="reset frost lock"):
+    """Defines a ZHA identify button."""
+
+    _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.RESTART
+    _attr_entity_category = EntityCategory.CONFIG
+
+    async def async_press(self) -> None:
+        try:
+            result = await self._channel.cluster.write_attributes({"frost_lock_reset": 0})
+        except zigpy.exceptions.ZigbeeException as ex:
+            self.error("Could not set value: %s", ex)
+            return
+        if not isinstance(result, Exception) and all(
+            record.status == Status.SUCCESS for record in result[0]
+        ):
+            self.async_write_ha_state()
+
+    def get_args(self) -> list[Any]:
+        """Return the arguments to use in the command."""
+
+        return [0]
