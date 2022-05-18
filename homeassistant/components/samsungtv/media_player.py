@@ -12,6 +12,7 @@ from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import (
     UpnpActionResponseError,
+    UpnpCommunicationError,
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
@@ -309,8 +310,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def _async_resubscribe_dmr(self) -> None:
         assert self._dmr_device
-        with contextlib.suppress(UpnpConnectionError):
+        try:
             await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+        except UpnpCommunicationError as err:
+            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
