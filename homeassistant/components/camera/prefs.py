@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, PREF_PRELOAD_STREAM
@@ -35,12 +36,14 @@ class CameraPreferences:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize camera prefs."""
         self._hass = hass
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._prefs: dict[str, dict[str, bool]] | None = None
 
     async def async_initialize(self) -> None:
         """Finish initializing the preferences."""
-        if (prefs := await self._store.async_load()) is None:
+        if (prefs := await self._store.async_load()) is None or not isinstance(
+            prefs, dict
+        ):
             prefs = {}
 
         self._prefs = prefs

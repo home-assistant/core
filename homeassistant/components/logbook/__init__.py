@@ -232,8 +232,7 @@ def _async_determine_event_types(
     if entity_ids:
         #
         # Home Assistant doesn't allow firing events from
-        # entities (at least in code review)
-        # so we have a limited list to check
+        # entities so we have a limited list to check
         #
         # automations and scripts can refer to entities
         # but they do not have a config entry so we need
