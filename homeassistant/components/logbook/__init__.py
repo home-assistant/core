@@ -332,7 +332,7 @@ async def ws_get_events(
         return
 
     if start_time > utc_now:
-        connection.send_result(msg["id"], {})
+        connection.send_result(msg["id"], [])
         return
 
     device_ids = msg.get("device_ids")
@@ -466,7 +466,11 @@ def _humanify(
     context_lookup: dict[str | None, Row | None] = {None: None}
     event_cache = EventCache(event_data_cache)
     context_augmenter = ContextAugmenter(
-        context_lookup, entity_name_cache, external_events, event_cache
+        context_lookup,
+        entity_name_cache,
+        external_events,
+        event_cache,
+        include_entity_name,
     )
 
     def _keep_row(row: Row, event_type: str) -> bool:
@@ -520,7 +524,7 @@ def _humanify(
             if icon := row.icon or row.old_format_icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, row, context_id, include_entity_name)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
         elif event_type in external_events:
@@ -528,7 +532,7 @@ def _humanify(
             data = describe_event(event_cache.get(row))
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row, context_id, include_entity_name)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -548,7 +552,7 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, row, context_id, include_entity_name)
+            context_augmenter.augment(data, row, context_id)
             yield data
 
 
@@ -649,16 +653,16 @@ class ContextAugmenter:
             str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
         ],
         event_cache: EventCache,
+        include_entity_name: bool,
     ) -> None:
         """Init the augmenter."""
         self.context_lookup = context_lookup
         self.entity_name_cache = entity_name_cache
         self.external_events = external_events
         self.event_cache = event_cache
+        self.include_entity_name = include_entity_name
 
-    def augment(
-        self, data: dict[str, Any], row: Row, context_id: str, include_entity_name: bool
-    ) -> None:
+    def augment(self, data: dict[str, Any], row: Row, context_id: str) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
@@ -685,7 +689,7 @@ class ContextAugmenter:
         # State change
         if context_entity_id := context_row.entity_id:
             data[CONTEXT_ENTITY_ID] = context_entity_id
-            if include_entity_name:
+            if self.include_entity_name:
                 data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                     context_entity_id, context_row
                 )
@@ -716,7 +720,7 @@ class ContextAugmenter:
         if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
             return
         data[CONTEXT_ENTITY_ID] = attr_entity_id
-        if include_entity_name:
+        if self.include_entity_name:
             data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                 attr_entity_id, context_row
             )
