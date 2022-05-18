@@ -622,11 +622,11 @@ def _get_events(
         filters,
         context_id,
     )
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "Literal statement: %s",
-            stmt.compile(compile_kwargs={"literal_binds": True}),
-        )
+    # if _LOGGER.isEnabledFor(logging.DEBUG):
+    # _LOGGER.debug(
+    #    "Literal statement: %s",
+    #    stmt.compile(compile_kwargs={"literal_binds": True}),
+    # )
 
     with session_scope(hass=hass) as session:
         return list(
