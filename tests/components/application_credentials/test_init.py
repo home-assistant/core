@@ -13,14 +13,18 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
-    CONF_DISPLAY_NAME,
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DOMAIN,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -35,7 +39,7 @@ AUTHORIZE_URL = "https://example.com/auth"
 TOKEN_URL = "https://example.com/oauth2/v4/token"
 REFRESH_TOKEN = "mock-refresh-token"
 ACCESS_TOKEN = "mock-access-token"
-DISPLAY_NAME = "Display Name"
+NAME = "Name"
 
 TEST_DOMAIN = "fake_integration"
 
@@ -673,10 +677,10 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
         }
 
 
-async def test_display_name(
+async def test_name(
     hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
 ):
-    """Test a credential with a display name set."""
+    """Test a credential with a name set."""
     client = await ws_client()
     result = await client.cmd_result(
         "create",
@@ -684,14 +688,14 @@ async def test_display_name(
             CONF_DOMAIN: TEST_DOMAIN,
             CONF_CLIENT_ID: CLIENT_ID,
             CONF_CLIENT_SECRET: CLIENT_SECRET,
-            CONF_DISPLAY_NAME: DISPLAY_NAME,
+            CONF_NAME: NAME,
         },
     )
     assert result == {
         CONF_DOMAIN: TEST_DOMAIN,
         CONF_CLIENT_ID: CLIENT_ID,
         CONF_CLIENT_SECRET: CLIENT_SECRET,
-        CONF_DISPLAY_NAME: DISPLAY_NAME,
+        CONF_NAME: NAME,
         "id": ID,
     }
 
@@ -701,7 +705,7 @@ async def test_display_name(
             CONF_DOMAIN: TEST_DOMAIN,
             CONF_CLIENT_ID: CLIENT_ID,
             CONF_CLIENT_SECRET: CLIENT_SECRET,
-            CONF_DISPLAY_NAME: DISPLAY_NAME,
+            CONF_NAME: NAME,
             "id": ID,
         }
     ]
@@ -710,7 +714,7 @@ async def test_display_name(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
-    oauth_fixture.title = DISPLAY_NAME
+    oauth_fixture.title = NAME
     result = await oauth_fixture.complete_external_step(result)
     assert (
         result["data"].get("auth_implementation") == "fake_integration_some_client_id"
