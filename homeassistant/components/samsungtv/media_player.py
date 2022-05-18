@@ -276,7 +276,7 @@ class SamsungTVDevice(MediaPlayerEntity):
                     self._ssdp_rendering_control_location
                 )
             except (UpnpConnectionError, UpnpResponseError, UpnpXmlContentError) as err:
-                LOGGER.debug("Unable to create Upnp DMR device: %r", err)
+                LOGGER.debug("Unable to create Upnp DMR device: %r", err, exc_info=True)
                 return
             _, event_ip = await async_get_local_ip(
                 self._ssdp_rendering_control_location, self.hass.loop
