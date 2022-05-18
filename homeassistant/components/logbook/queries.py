@@ -308,7 +308,7 @@ def _entities_devices_stmt(
                 )
             ),
             _select_states_context_only()
-            .where(States.state_id.not_in(entity_ids))
+            .where(States.entity_id.not_in(entity_ids))
             .where(
                 States.context_id.in_(
                     _select_entities_device_id_context_ids_sub_query(
@@ -340,7 +340,7 @@ def _entities_devices_stmt(
                 )
             ),
             _select_states_context_only()
-            .where(States.state_id.not_in(entity_ids))
+            .where(States.entity_id.not_in(entity_ids))
             .where(
                 States.context_id.in_(
                     _select_entities_context_ids_sub_query(
