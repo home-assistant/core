@@ -225,13 +225,21 @@ async def test_form_errors_get_info(hass, error):
     assert result2["errors"] == {"base": base_error}
 
 
+<<<<<<< HEAD
 async def test_form_missing_model_key(hass):
     """Test we handle missing Shelly model key."""
+=======
+@pytest.mark.parametrize("error", [(KeyError, "firmware_not_fully_provisioned")])
+async def test_form_missing_key_get_info(hass, error):
+    """Test we handle missing key."""
+    exc, base_error = error
+>>>>>>> a3bd911ce3 (Warn user if "model" key is missing from Shelly firmware (#71612))
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
         "aioshelly.common.get_info",
+<<<<<<< HEAD
         return_value={"mac": "test-mac", "auth": False, "gen": "2"},
     ), patch(
         "aioshelly.rpc_device.RpcDevice.create",
@@ -242,6 +250,12 @@ async def test_form_missing_model_key(hass):
                 shutdown=AsyncMock(),
             )
         ),
+=======
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": "2"},
+    ), patch(
+        "homeassistant.components.shelly.config_flow.validate_input",
+        side_effect=KeyError,
+>>>>>>> a3bd911ce3 (Warn user if "model" key is missing from Shelly firmware (#71612))
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -249,6 +263,7 @@ async def test_form_missing_model_key(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+<<<<<<< HEAD
     assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
@@ -320,6 +335,9 @@ async def test_form_missing_model_key_zeroconf(hass, caplog):
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
+=======
+    assert result2["errors"] == {"base": base_error}
+>>>>>>> a3bd911ce3 (Warn user if "model" key is missing from Shelly firmware (#71612))
 
 
 @pytest.mark.parametrize(

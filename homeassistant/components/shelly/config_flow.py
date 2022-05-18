@@ -121,6 +121,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
+                except KeyError:
+                    errors["base"] = "firmware_not_fully_provisioned"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
@@ -164,6 +166,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except aioshelly.exceptions.JSONRPCError:
                 errors["base"] = "cannot_connect"
+            except KeyError:
+                errors["base"] = "firmware_not_fully_provisioned"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -225,6 +229,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.device_info = await validate_input(self.hass, self.host, self.info, {})
+        except KeyError:
+            LOGGER.debug("Shelly host %s firmware not fully provisioned", self.host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
@@ -235,12 +241,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
+<<<<<<< HEAD
 
         if not self.device_info["model"]:
             errors["base"] = "firmware_not_fully_provisioned"
             model = "Shelly"
         else:
             model = get_model_name(self.info)
+=======
+        try:
+>>>>>>> a3bd911ce3 (Warn user if "model" key is missing from Shelly firmware (#71612))
             if user_input is not None:
                 return self.async_create_entry(
                     title=self.device_info["title"],
@@ -251,6 +261,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "gen": self.device_info["gen"],
                     },
                 )
+<<<<<<< HEAD
+=======
+        except KeyError:
+            errors["base"] = "firmware_not_fully_provisioned"
+        else:
+>>>>>>> a3bd911ce3 (Warn user if "model" key is missing from Shelly firmware (#71612))
             self._set_confirm_only()
 
         return self.async_show_form(
