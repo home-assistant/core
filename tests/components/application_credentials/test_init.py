@@ -34,6 +34,7 @@ from tests.common import mock_platform
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
 DEVELOPER_CREDENTIAL = ClientCredential(CLIENT_ID, CLIENT_SECRET)
+NAMED_CREDENTIAL = ClientCredential(CLIENT_ID, CLIENT_SECRET, "Name")
 ID = "fake_integration_some_client_id"
 AUTHORIZE_URL = "https://example.com/auth"
 TOKEN_URL = "https://example.com/oauth2/v4/token"
@@ -382,6 +383,28 @@ async def test_import_duplicate_credentials(
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
             CONF_AUTH_DOMAIN: TEST_DOMAIN,
+        }
+    ]
+
+
+@pytest.mark.parametrize("config_credential", [NAMED_CREDENTIAL])
+async def test_import_named_credential(
+    ws_client: ClientFixture,
+    config_credential: ClientCredential,
+    import_config_credential: Any,
+):
+    """Test websocket list command for an imported credential."""
+    client = await ws_client()
+
+    # Imported creds returned from websocket
+    assert await client.cmd_result("list") == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            "id": ID,
+            CONF_AUTH_DOMAIN: TEST_DOMAIN,
+            CONF_NAME: NAME,
         }
     ]
 
