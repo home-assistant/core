@@ -94,6 +94,30 @@ STATE_COLUMNS = (
     OLD_FORMAT_ATTRS_JSON["icon"].as_string().label("old_format_icon"),
 )
 
+STATE_CONTEXT_ONLY_COLUMNS = (
+    States.state_id.label("state_id"),
+    States.state.label("state"),
+    States.entity_id.label("entity_id"),
+    literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
+)
+
+EVENT_COLUMNS_FOR_STATE_SELECT = [
+    literal(value=None, type_=sqlalchemy.Text).label("event_id"),
+    # We use PSUEDO_EVENT_STATE_CHANGED aka None for
+    # state_changed events since it takes up less
+    # space in the response and every row has to be
+    # marked with the event_type
+    literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
+        "event_type"
+    ),
+    literal(value=None, type_=sqlalchemy.Text).label("event_data"),
+    States.last_updated.label("time_fired"),
+    States.context_id.label("context_id"),
+    States.context_user_id.label("context_user_id"),
+    States.context_parent_id.label("context_parent_id"),
+    literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
+]
 
 EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state_id"),
@@ -238,6 +262,17 @@ def _select_events_context_only() -> Select:
     )
 
 
+def _select_states_context_only() -> Select:
+    """Generate an states query that mark them as for context_only.
+
+    By marking them as context_only we know they are only for
+    linking context ids and we can avoid processing them.
+    """
+    return select(
+        *EVENT_COLUMNS_FOR_STATE_SELECT, *STATE_CONTEXT_ONLY_COLUMNS, CONTEXT_ONLY
+    )
+
+
 def _entities_devices_stmt(
     start_day: dt,
     end_day: dt,
@@ -269,7 +304,21 @@ def _entities_devices_stmt(
                         entity_ids,
                         json_quotable_entity_ids,
                         json_quotable_device_ids,
-                    )
+                    ).subquery()
+                )
+            ),
+            _select_states_context_only()
+            .where(States.state_id.not_in(entity_ids))
+            .where(
+                States.context_id.in_(
+                    _select_entities_device_id_context_ids_sub_query(
+                        start_day,
+                        end_day,
+                        event_types,
+                        entity_ids,
+                        json_quotable_entity_ids,
+                        json_quotable_device_ids,
+                    ).subquery()
                 )
             ),
         )
@@ -287,7 +336,20 @@ def _entities_devices_stmt(
                         event_types,
                         entity_ids,
                         json_quotable_entity_ids,
-                    )
+                    ).subquery()
+                )
+            ),
+            _select_states_context_only()
+            .where(States.state_id.not_in(entity_ids))
+            .where(
+                States.context_id.in_(
+                    _select_entities_context_ids_sub_query(
+                        start_day,
+                        end_day,
+                        event_types,
+                        entity_ids,
+                        json_quotable_entity_ids,
+                    ).subquery()
                 )
             ),
         )
@@ -303,9 +365,19 @@ def _entities_devices_stmt(
                         end_day,
                         event_types,
                         json_quotable_device_ids,
-                    )
+                    ).subquery()
                 )
-            )
+            ),
+            _select_states_context_only().where(
+                States.context_id.in_(
+                    _select_device_id_context_ids_sub_query(
+                        start_day,
+                        end_day,
+                        event_types,
+                        json_quotable_device_ids,
+                    ).subquery()
+                )
+            ),
         )
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
@@ -398,20 +470,7 @@ def _states_query_for_all(start_day: dt, end_day: dt) -> Query:
 def _select_states() -> Select:
     """Generate a states select that formats the states table as event rows."""
     return select(
-        literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-        # We use PSUEDO_EVENT_STATE_CHANGED aka None for
-        # state_changed events since it takes up less
-        # space in the response and every row has to be
-        # marked with the event_type
-        literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
-            "event_type"
-        ),
-        literal(value=None, type_=sqlalchemy.Text).label("event_data"),
-        States.last_updated.label("time_fired"),
-        States.context_id.label("context_id"),
-        States.context_user_id.label("context_user_id"),
-        States.context_parent_id.label("context_parent_id"),
-        literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
+        *EVENT_COLUMNS_FOR_STATE_SELECT,
         *STATE_COLUMNS,
         NOT_CONTEXT_ONLY,
     )
