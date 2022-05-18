@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -220,7 +220,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1: 
         # No motion gateways left, stop Motion multicast
         unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
         unsub_stop()
