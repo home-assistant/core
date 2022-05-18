@@ -1,4 +1,4 @@
-"""outsurced implementation of async_generate id to resolve circular import issue."""
+"""outsourced from entity to resolve circurlar imports issue."""
 from __future__ import annotations
 
 from collections.abc import Iterable

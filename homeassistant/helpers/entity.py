@@ -53,8 +53,8 @@ from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
 
-# quick and dirty hack to resolve circular import issue
-# without breaking existing code
+# quick and dirty hack to solve circular imports issue
+# without breaking existing code.
 async_generate_entity_id = id_generator
 
 _LOGGER = logging.getLogger(__name__)
