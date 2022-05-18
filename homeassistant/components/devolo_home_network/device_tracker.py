@@ -42,7 +42,7 @@ async def async_setup_entry(
     coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id][
         "coordinators"
     ]
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     tracked = set()
 
     @callback
