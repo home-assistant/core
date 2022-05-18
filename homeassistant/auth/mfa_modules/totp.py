@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.storage import Store
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -76,8 +77,8 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._users: dict[str, str] | None = None
-        self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._user_store = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._init_lock = asyncio.Lock()
 
@@ -92,7 +93,9 @@ class TotpAuthModule(MultiFactorAuthModule):
             if self._users is not None:
                 return
 
-            if (data := await self._user_store.async_load()) is None:
+            if (data := await self._user_store.async_load()) is None or not isinstance(
+                data, dict
+            ):
                 data = {STORAGE_USERS: {}}
 
             self._users = data.get(STORAGE_USERS, {})

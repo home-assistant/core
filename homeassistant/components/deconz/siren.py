@@ -37,7 +37,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.lights.sirens.subscribe(
-            async_add_siren,
+            gateway.evaluate_add_device(async_add_siren),
             EventType.ADDED,
         )
     )

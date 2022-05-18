@@ -225,6 +225,29 @@ async def test_form_errors_get_info(hass, error):
     assert result2["errors"] == {"base": base_error}
 
 
+@pytest.mark.parametrize("error", [(KeyError, "firmware_not_fully_provisioned")])
+async def test_form_missing_key_get_info(hass, error):
+    """Test we handle missing key."""
+    exc, base_error = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": "2"},
+    ), patch(
+        "homeassistant.components.shelly.config_flow.validate_input",
+        side_effect=KeyError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": base_error}
+
+
 @pytest.mark.parametrize(
     "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
 )

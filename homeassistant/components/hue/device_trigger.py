@@ -99,5 +99,5 @@ async def async_get_triggers(hass: "HomeAssistant", device_id: str):
         bridge: HueBridge = hass.data[DOMAIN][conf_entry_id]
 
         if bridge.api_version == 1:
-            return await async_get_triggers_v1(bridge, device_entry)
-        return await async_get_triggers_v2(bridge, device_entry)
+            return async_get_triggers_v1(bridge, device_entry)
+        return async_get_triggers_v2(bridge, device_entry)

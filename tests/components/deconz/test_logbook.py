@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
@@ -56,7 +57,7 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     keypad_event_id = slugify(data["sensors"]["1"]["name"])
     keypad_serial = data["sensors"]["1"]["uniqueid"].split("-", 1)[0]
@@ -127,7 +128,7 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     switch_event_id = slugify(data["sensors"]["1"]["name"])
     switch_serial = data["sensors"]["1"]["uniqueid"].split("-", 1)[0]

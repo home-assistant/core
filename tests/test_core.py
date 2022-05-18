@@ -1055,13 +1055,7 @@ def test_config_is_allowed_external_url():
 
 async def test_event_on_update(hass):
     """Test that event is fired on update."""
-    events = []
-
-    @ha.callback
-    def callback(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
 
     assert hass.config.latitude != 12
 
@@ -1141,13 +1135,7 @@ async def test_service_executed_with_subservices(hass):
 
 async def test_service_call_event_contains_original_data(hass):
     """Test that service call event contains original data."""
-    events = []
-
-    @ha.callback
-    def callback(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, callback)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(
         hass, "test", "service", vol.Schema({"number": vol.Coerce(int)})
@@ -1787,14 +1775,7 @@ def _ulid_timestamp(ulid: str) -> int:
 
 async def test_state_change_events_context_id_match_state_time(hass):
     """Test last_updated, timed_fired, and the ulid all have the same time."""
-    events = []
-
-    @ha.callback
-    def _event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
-
+    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
@@ -1808,14 +1789,7 @@ async def test_state_change_events_context_id_match_state_time(hass):
 
 async def test_state_firing_event_matches_context_id_ulid_time(hass):
     """Test timed_fired and the ulid have the same time."""
-    events = []
-
-    @ha.callback
-    def _event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _event_listener)
-
+    events = async_capture_events(hass, EVENT_HOMEASSISTANT_STARTED)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 

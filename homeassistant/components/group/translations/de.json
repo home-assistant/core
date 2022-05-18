@@ -108,9 +108,9 @@
                     "cover": "Abdeckung-Gruppe",
                     "fan": "L\u00fcfter-Gruppe",
                     "light": "Licht-Gruppe",
-                    "lock": "Gruppe sperren",
+                    "lock": "Schloss-Gruppe",
                     "media_player": "Media-Player-Gruppe",
-                    "switch": "Gruppe wechseln"
+                    "switch": "Schalter-Gruppe"
                 },
                 "title": "Gruppe hinzuf\u00fcgen"
             }

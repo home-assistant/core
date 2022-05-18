@@ -21,6 +21,7 @@ from homeassistant.components.stream import (
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     RTSP_TRANSPORTS,
     SOURCE_TIMEOUT,
+    convert_stream_options,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
@@ -202,21 +203,23 @@ async def async_test_stream(hass, info) -> dict[str, str]:
         # homeassistant.components.stream.__init__.py:create_stream()
         # It may be possible & better to call create_stream() directly.
         stream_options: dict[str, bool | str] = {}
-        if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-            stream_options = {
-                "rtsp_flags": "prefer_tcp",
-                "stimeout": "5000000",
-            }
         if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
             stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
         if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
             stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+        pyav_options = convert_stream_options(stream_options)
+        if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
+            pyav_options = {
+                "rtsp_flags": "prefer_tcp",
+                "stimeout": "5000000",
+                **pyav_options,
+            }
         _LOGGER.debug("Attempting to open stream %s", stream_source)
         container = await hass.async_add_executor_job(
             partial(
                 av.open,
                 stream_source,
-                options=stream_options,
+                options=pyav_options,
                 timeout=SOURCE_TIMEOUT,
             )
         )
@@ -369,7 +372,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                        self.config_entry.options.get(
+                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                        ),
                     ),
                 }
                 return self.async_create_entry(

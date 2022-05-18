@@ -137,7 +137,7 @@ class BAFSwitch(BAFEntity, SwitchEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_is_on = self.entity_description.value_fn(Device)
+        self._attr_is_on = self.entity_description.value_fn(self._device)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
