@@ -311,7 +311,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         try:
             await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
         except UpnpCommunicationError as err:
-            LOGGER.debug("Device rejected re-subscription: %r", err)
+            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
