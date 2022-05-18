@@ -21,6 +21,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_track_entity_registry_updated_event,
     async_track_point_in_time,
     async_track_point_in_utc_time,
     async_track_same_state,
@@ -4230,12 +4231,10 @@ async def test_track_point_in_utc_time_cancel(hass):
         with pytest.raises(TypeError):
             track_point_in_utc_time("nothass", run_callback, utc_now)
 
-        unsub1 = hass.helpers.event.track_point_in_utc_time(
-            run_callback, utc_now + timedelta(seconds=0.1)
+        unsub1 = track_point_in_utc_time(
+            hass, run_callback, utc_now + timedelta(seconds=0.1)
         )
-        hass.helpers.event.track_point_in_utc_time(
-            run_callback, utc_now + timedelta(seconds=0.1)
-        )
+        track_point_in_utc_time(hass, run_callback, utc_now + timedelta(seconds=0.1))
 
         unsub1()
 
@@ -4262,12 +4261,10 @@ async def test_async_track_point_in_time_cancel(hass):
     utc_now = dt_util.utcnow()
     hst_now = utc_now.astimezone(hst_tz)
 
-    unsub1 = hass.helpers.event.async_track_point_in_time(
-        run_callback, hst_now + timedelta(seconds=0.1)
+    unsub1 = async_track_point_in_time(
+        hass, run_callback, hst_now + timedelta(seconds=0.1)
     )
-    hass.helpers.event.async_track_point_in_time(
-        run_callback, hst_now + timedelta(seconds=0.1)
-    )
+    async_track_point_in_time(hass, run_callback, hst_now + timedelta(seconds=0.1))
 
     unsub1()
 
@@ -4292,11 +4289,9 @@ async def test_async_track_entity_registry_updated_event(hass):
     def run_callback(event):
         event_data.append(event.data)
 
-    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, run_callback
-    )
-    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        new_entity_id, run_callback
+    unsub1 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
+    unsub2 = async_track_entity_registry_updated_event(
+        hass, new_entity_id, run_callback
     )
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
@@ -4362,12 +4357,10 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
     def failing_callback(event):
         raise ValueError
 
-    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, failing_callback
+    unsub1 = async_track_entity_registry_updated_event(
+        hass, entity_id, failing_callback
     )
-    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, run_callback
-    )
+    unsub2 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
     )
@@ -4380,11 +4373,11 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
 
 async def test_async_track_entity_registry_updated_event_with_empty_list(hass):
     """Test async_track_entity_registry_updated_event passing an empty list of entities."""
-    unsub_single = hass.helpers.event.async_track_entity_registry_updated_event(
-        [], ha.callback(lambda event: None)
+    unsub_single = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
     )
-    unsub_single2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        [], ha.callback(lambda event: None)
+    unsub_single2 = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
     )
 
     unsub_single2()
