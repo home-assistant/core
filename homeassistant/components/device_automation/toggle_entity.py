@@ -180,7 +180,7 @@ async def async_attach_trigger(
     )
 
 
-async def _async_get_automations(
+def _async_get_automations(
     hass: HomeAssistant,
     device_id: str,
     automation_templates: list[dict[str, str]],
@@ -214,14 +214,14 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str, domain: str
 ) -> list[dict[str, str]]:
     """List device actions."""
-    return await _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
+    return _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
 
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str, domain: str
 ) -> list[dict[str, str]]:
     """List device conditions."""
-    return await _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
+    return _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 
 
 async def async_get_triggers(
@@ -229,9 +229,7 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers."""
     triggers = await entity.async_get_triggers(hass, device_id, domain)
-    triggers.extend(
-        await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
-    )
+    triggers.extend(_async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain))
     return triggers
 
 
