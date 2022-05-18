@@ -56,6 +56,7 @@ from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticsRuns,
+    UnsupportedDialect,
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
@@ -179,7 +180,6 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
-        self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
@@ -606,6 +606,8 @@ class Recorder(threading.Thread):
             try:
                 self._setup_connection()
                 return migration.get_schema_version(self.get_session)
+            except UnsupportedDialect:
+                break
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
