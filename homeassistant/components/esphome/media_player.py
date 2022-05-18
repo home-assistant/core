@@ -69,15 +69,11 @@ class EsphomeMediaPlayer(
     @property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
-        if not self._static_info.supports_mute:
-            return False
         return self._state.muted
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if not self._static_info.supports_volume:
-            return None
         return self._state.volume
 
     @property
@@ -87,13 +83,11 @@ class EsphomeMediaPlayer(
             MediaPlayerEntityFeature.PLAY_MEDIA
             | MediaPlayerEntityFeature.BROWSE_MEDIA
             | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_MUTE
         )
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
-        if self._static_info.supports_volume:
-            flags |= MediaPlayerEntityFeature.VOLUME_SET
-        if self._static_info.supports_mute:
-            flags |= MediaPlayerEntityFeature.VOLUME_MUTE
         return flags
 
     async def async_play_media(
