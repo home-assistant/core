@@ -63,20 +63,20 @@ def devices_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str] | None,
+    json_quotable_device_ids: list[str],
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple devices."""
     stmt = lambda_stmt(
-        lambda: select_events_without_states(start_day, end_day, event_types)
+        lambda: _apply_devices_context_union(
+            select_events_without_states(start_day, end_day, event_types).where(
+                apply_event_device_id_matchers(json_quotable_device_ids)
+            ),
+            start_day,
+            end_day,
+            event_types,
+            json_quotable_device_ids,
+        ).order_by(Events.time_fired)
     )
-    assert json_quotable_device_ids is not None
-    stmt += lambda s: _apply_devices_context_union(
-        s.where(apply_event_device_id_matchers(json_quotable_device_ids)),
-        start_day,
-        end_day,
-        event_types,
-        json_quotable_device_ids,
-    ).order_by(Events.time_fired)
     return stmt
 
 

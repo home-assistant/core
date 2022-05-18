@@ -84,19 +84,19 @@ def entities_stmt(
     json_quotable_entity_ids: list[str],
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
-    stmt = lambda_stmt(
-        lambda: select_events_without_states(start_day, end_day, event_types)
-    )
     assert json_quotable_entity_ids is not None
-    stmt += lambda s: _apply_entities_context_union(
-        s.where(apply_event_entity_id_matchers(json_quotable_entity_ids)),
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-    ).order_by(Events.time_fired)
-    return stmt
+    return lambda_stmt(
+        lambda: _apply_entities_context_union(
+            select_events_without_states(start_day, end_day, event_types).where(
+                apply_event_entity_id_matchers(json_quotable_entity_ids)
+            ),
+            start_day,
+            end_day,
+            event_types,
+            entity_ids,
+            json_quotable_entity_ids,
+        ).order_by(Events.time_fired)
+    )
 
 
 def states_query_for_entity_ids(

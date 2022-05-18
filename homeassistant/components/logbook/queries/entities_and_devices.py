@@ -85,21 +85,20 @@ def entities_devices_stmt(
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
     stmt = lambda_stmt(
-        lambda: select_events_without_states(start_day, end_day, event_types)
+        lambda: _apply_entities_devices_context_union(
+            select_events_without_states(start_day, end_day, event_types).where(
+                _apply_event_entity_id_device_id_matchers(
+                    json_quotable_entity_ids, json_quotable_device_ids
+                )
+            ),
+            start_day,
+            end_day,
+            event_types,
+            entity_ids,
+            json_quotable_entity_ids,
+            json_quotable_device_ids,
+        ).order_by(Events.time_fired)
     )
-    stmt += lambda s: _apply_entities_devices_context_union(
-        s.where(
-            _apply_event_entity_id_device_id_matchers(
-                json_quotable_entity_ids, json_quotable_device_ids
-            )
-        ),
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quotable_entity_ids,
-        json_quotable_device_ids,
-    ).order_by(Events.time_fired)
     return stmt
 
 
