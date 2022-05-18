@@ -561,7 +561,7 @@ async def cleanup_device_registry(
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
-        and not await device_trigger.async_get_triggers(hass, device_id)
+        and not device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_update_device(
