@@ -8,12 +8,20 @@ from homeassistant.core import HomeAssistant, callback
 
 
 @dataclass
-class HardwareInfo:
+class BoardInfo:
     """Board info type."""
 
-    image: str | None
+    manufacturer: str
+    model: str | None
+    revision: str | None
+
+
+@dataclass
+class HardwareInfo:
+    """Hardware info type."""
+
     name: str | None
-    type: str
+    board: BoardInfo | None
     url: str | None
 
 

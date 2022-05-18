@@ -1,10 +1,12 @@
 """The Raspberry Pi hardware platform."""
 from __future__ import annotations
 
-from homeassistant.components.hardware.models import HardwareInfo
+from homeassistant.components.hardware.models import BoardInfo, HardwareInfo
 from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
 
 BOARD_NAMES = {
     "rpi": "Raspberry Pi",
@@ -15,6 +17,17 @@ BOARD_NAMES = {
     "rpi3-64": "Raspberry Pi 3",
     "rpi4": "Raspberry Pi 4 (32-bit)",
     "rpi4-64": "Raspberry Pi 4",
+}
+
+MODELS = {
+    "rpi": "1",
+    "rpi0": "zero",
+    "rpi0-w": "zero_w",
+    "rpi2": "2",
+    "rpi3": "3",
+    "rpi3-64": "3",
+    "rpi4": "4",
+    "rpi4-64": "4",
 }
 
 
@@ -30,8 +43,7 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
         raise HomeAssistantError
 
     return HardwareInfo(
-        image="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
+        board=BoardInfo(manufacturer=DOMAIN, model=MODELS.get(board), revision=None),
         name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
         url="https://theuselessweb.com/",
-        type="board",
     )

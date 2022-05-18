@@ -24,9 +24,12 @@ async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["result"] == {
         "hardware": [
             {
-                "image": "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
+                "board": {
+                    "manufacturer": "raspberry_pi",
+                    "model": "1",
+                    "revision": None,
+                },
                 "name": "Raspberry Pi",
-                "type": "board",
                 "url": "https://theuselessweb.com/",
             }
         ]
