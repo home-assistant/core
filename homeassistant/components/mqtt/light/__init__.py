@@ -74,7 +74,7 @@ DISCOVERY_SCHEMA = vol.All(
     validate_mqtt_light_discovery,
 )
 
-# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
+# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light,
