@@ -354,3 +354,12 @@ class LutronCasetaDevice(Entity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
+
+
+class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
+    """A lutron_caseta entity that can update by syncing data from the bridge."""
+
+    async def async_update(self):
+        """Update when forcing a refresh of the device."""
+        self._device = self._smartbridge.get_device_by_id(self.device_id)
+        _LOGGER.debug(self._device)
