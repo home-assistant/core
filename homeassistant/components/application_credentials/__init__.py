@@ -39,12 +39,14 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
 CONF_AUTH_DOMAIN = "auth_domain"
+CONF_DISPLAY_NAME = "display_name"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
+    vol.Optional(CONF_DISPLAY_NAME): cv.string,
 }
 UPDATE_FIELDS: dict = {}  # Not supported
 
@@ -55,6 +57,7 @@ class ClientCredential:
 
     client_id: str
     client_secret: str
+    display_name: str | None = None
 
 
 @dataclass
@@ -122,7 +125,9 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
                 item[CONF_AUTH_DOMAIN] if CONF_AUTH_DOMAIN in item else item[CONF_ID]
             )
             credentials[auth_domain] = ClientCredential(
-                item[CONF_CLIENT_ID], item[CONF_CLIENT_SECRET]
+                client_id=item[CONF_CLIENT_ID],
+                client_secret=item[CONF_CLIENT_SECRET],
+                display_name=item.get(CONF_DISPLAY_NAME),
             )
         return credentials
 
@@ -169,6 +174,8 @@ async def async_import_client_credential(
         CONF_CLIENT_SECRET: credential.client_secret,
         CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
+    if credential.display_name:
+        item[CONF_DISPLAY_NAME] = credential.display_name
     await storage_collection.async_import_item(item)
 
 
@@ -191,11 +198,12 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
             authorization_server.authorize_url,
             authorization_server.token_url,
         )
+        self._display_name = credential.display_name
 
     @property
     def name(self) -> str:
         """Name of the implementation."""
-        return self.client_id
+        return self._display_name or self.client_id
 
 
 async def _async_provide_implementation(

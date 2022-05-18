@@ -13,6 +13,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
+    CONF_DISPLAY_NAME,
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
@@ -34,6 +35,7 @@ AUTHORIZE_URL = "https://example.com/auth"
 TOKEN_URL = "https://example.com/oauth2/v4/token"
 REFRESH_TOKEN = "mock-refresh-token"
 ACCESS_TOKEN = "mock-access-token"
+DISPLAY_NAME = "Display Name"
 
 TEST_DOMAIN = "fake_integration"
 
@@ -118,6 +120,7 @@ class OAuthFixture:
         self.hass_client = hass_client
         self.aioclient_mock = aioclient_mock
         self.client_id = CLIENT_ID
+        self.title = CLIENT_ID
 
     async def complete_external_step(
         self, result: data_entry_flow.FlowResult
@@ -152,7 +155,7 @@ class OAuthFixture:
 
         result = await self.hass.config_entries.flow.async_configure(result["flow_id"])
         assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result.get("title") == self.client_id
+        assert result.get("title") == self.title
         assert "data" in result
         assert "token" in result["data"]
         return result
@@ -487,6 +490,7 @@ async def test_config_flow_multiple_entries(
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     oauth_fixture.client_id = CLIENT_ID + "2"
+    oauth_fixture.title = CLIENT_ID + "2"
     result = await oauth_fixture.complete_external_step(result)
     assert (
         result["data"].get("auth_implementation") == "fake_integration_some_client_id2"
@@ -667,3 +671,47 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
         assert await client.cmd_result("config") == {
             "domains": ["example1", "example2"]
         }
+
+
+async def test_display_name(
+    hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
+):
+    """Test a credential with a display name set."""
+    client = await ws_client()
+    result = await client.cmd_result(
+        "create",
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            CONF_DISPLAY_NAME: DISPLAY_NAME,
+        },
+    )
+    assert result == {
+        CONF_DOMAIN: TEST_DOMAIN,
+        CONF_CLIENT_ID: CLIENT_ID,
+        CONF_CLIENT_SECRET: CLIENT_SECRET,
+        CONF_DISPLAY_NAME: DISPLAY_NAME,
+        "id": ID,
+    }
+
+    result = await client.cmd_result("list")
+    assert result == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            CONF_DISPLAY_NAME: DISPLAY_NAME,
+            "id": ID,
+        }
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    oauth_fixture.title = DISPLAY_NAME
+    result = await oauth_fixture.complete_external_step(result)
+    assert (
+        result["data"].get("auth_implementation") == "fake_integration_some_client_id"
+    )
