@@ -189,7 +189,10 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 )
 
 PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
-    {vol.Optional(component.value): cv.ensure_list for component in PLATFORMS}
+    {
+        vol.Optional(Platform.FAN.value): cv.ensure_list,
+        vol.Optional(Platform.LIGHT.value): cv.ensure_list,
+    }
 )
 
 CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
