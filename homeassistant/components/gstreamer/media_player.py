@@ -94,14 +94,14 @@ class GstreamerDevice(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
-        if media_type != MEDIA_TYPE_MUSIC:
-            _LOGGER.error("Invalid media type")
-            return
-
         # Handle media_source
         if media_source.is_media_source_id(media_id):
             sourced_media = await media_source.async_resolve_media(self.hass, media_id)
             media_id = sourced_media.url
+
+        elif media_type != MEDIA_TYPE_MUSIC:
+            _LOGGER.error("Invalid media type")
+            return
 
         media_id = async_process_play_media_url(self.hass, media_id)
 
