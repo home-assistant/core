@@ -24,7 +24,6 @@ class IntellifireSwitchRequiredKeysMixin:
     on_fn: Callable[[IntellifireControlAsync], Awaitable]
     off_fn: Callable[[IntellifireControlAsync], Awaitable]
     value_fn: Callable[[IntellifirePollData], bool]
-    data_field: str
 
 
 @dataclass
@@ -45,7 +44,6 @@ INTELLIFIRE_SWITCHES: tuple[IntellifireSwitchEntityDescription, ...] = (
             fireplace=control_api.default_fireplace
         ),
         value_fn=lambda data: data.is_on,
-        data_field="is_on",
     ),
     IntellifireSwitchEntityDescription(
         key="pilot",
@@ -58,7 +56,6 @@ INTELLIFIRE_SWITCHES: tuple[IntellifireSwitchEntityDescription, ...] = (
             fireplace=control_api.default_fireplace
         ),
         value_fn=lambda data: data.pilot_on,
-        data_field="pilot_on",
     ),
 )
 
