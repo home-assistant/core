@@ -406,7 +406,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -434,17 +439,25 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task: asyncio.Future[_R]
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Coroutinefunction:
-            task = self.loop.create_task(
-                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(
+                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
+                )
+            task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(cast(Callable[..., _R], hassjob.target), *args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(
-                None, cast(Callable[..., _R], hassjob.target), *args
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         # If a task is scheduled
         if self._track_task:
@@ -522,8 +535,14 @@ class HomeAssistant:
         hassjob: HassJob
         args: parameters for method to call.
         """
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Callback:
-            cast(Callable[..., _R], hassjob.target)(*args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
@@ -565,7 +584,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -1871,11 +1895,19 @@ class Config:
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
+        store = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
 
-        if not (data := await store.async_load()):
+        if not (data := await store.async_load()) or not isinstance(data, dict):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1907,6 +1939,10 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -1919,7 +1955,11 @@ class Config:
             "currency": self.currency,
         }
 
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        store = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
         await store.async_save(data)

@@ -3,36 +3,36 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from homeassistant.components.application_credentials import (
+    AuthImplementation,
+    AuthorizationServer,
+    ClientCredential,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, ENVIRONMENT, ENVIRONMENT_URLS
+from .const import ENVIRONMENT, ENVIRONMENT_URLS
 
 
-class GeocachingOAuth2Implementation(
-    config_entry_oauth2_flow.LocalOAuth2Implementation
-):
+class GeocachingOAuth2Implementation(AuthImplementation):
     """Local OAuth2 implementation for Geocaching."""
 
     def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, name: str
+        self,
+        hass: HomeAssistant,
+        auth_domain: str,
+        credential: ClientCredential,
     ) -> None:
         """Local Geocaching Oauth Implementation."""
-        self._name = name
         super().__init__(
             hass=hass,
-            client_id=client_id,
-            client_secret=client_secret,
-            domain=DOMAIN,
-            authorize_url=ENVIRONMENT_URLS[ENVIRONMENT]["authorize_url"],
-            token_url=ENVIRONMENT_URLS[ENVIRONMENT]["token_url"],
+            auth_domain=auth_domain,
+            credential=credential,
+            authorization_server=AuthorizationServer(
+                authorize_url=ENVIRONMENT_URLS[ENVIRONMENT]["authorize_url"],
+                token_url=ENVIRONMENT_URLS[ENVIRONMENT]["token_url"],
+            ),
         )
-
-    @property
-    def name(self) -> str:
-        """Name of the implementation."""
-        return f"{self._name}"
 
     @property
     def extra_authorize_data(self) -> dict:

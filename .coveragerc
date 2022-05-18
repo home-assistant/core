@@ -96,6 +96,8 @@ omit =
     homeassistant/components/baf/__init__.py
     homeassistant/components/baf/entity.py
     homeassistant/components/baf/fan.py
+    homeassistant/components/baf/sensor.py
+    homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -313,6 +315,7 @@ omit =
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/lock.py
+    homeassistant/components/esphome/media_player.py
     homeassistant/components/esphome/number.py
     homeassistant/components/esphome/select.py
     homeassistant/components/esphome/sensor.py
@@ -548,6 +551,7 @@ omit =
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/intellifire/sensor.py
+    homeassistant/components/intellifire/switch.py
     homeassistant/components/intellifire/entity.py
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
@@ -1467,6 +1471,12 @@ omit =
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
+    homeassistant/components/yolink/__init__.py
+    homeassistant/components/yolink/api.py
+    homeassistant/components/yolink/const.py
+    homeassistant/components/yolink/coordinator.py
+    homeassistant/components/yolink/entity.py
+    homeassistant/components/yolink/sensor.py
     homeassistant/components/youless/__init__.py
     homeassistant/components/youless/const.py
     homeassistant/components/youless/sensor.py

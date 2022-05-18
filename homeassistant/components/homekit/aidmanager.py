@@ -17,7 +17,7 @@ import random
 from fnvhash import fnv1a_32
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from .util import get_aid_storage_filename_for_entry_id
@@ -34,7 +34,7 @@ AID_MIN = 2
 AID_MAX = 18446744073709551615
 
 
-def get_system_unique_id(entity: RegistryEntry) -> str:
+def get_system_unique_id(entity: er.RegistryEntry) -> str:
     """Determine the system wide unique_id for an entity."""
     return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
 
@@ -74,13 +74,11 @@ class AccessoryAidStorage:
         self.allocated_aids: set[int] = set()
         self._entry_id = entry_id
         self.store: Store | None = None
-        self._entity_registry: EntityRegistry | None = None
+        self._entity_registry: er.EntityRegistry | None = None
 
     async def async_initialize(self) -> None:
         """Load the latest AID data."""
-        self._entity_registry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        self._entity_registry = er.async_get(self.hass)
         aidstore = get_aid_storage_filename_for_entry_id(self._entry_id)
         self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 

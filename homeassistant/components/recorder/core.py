@@ -56,6 +56,7 @@ from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticsRuns,
+    UnsupportedDialect,
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
@@ -606,6 +607,8 @@ class Recorder(threading.Thread):
             try:
                 self._setup_connection()
                 return migration.get_schema_version(self.get_session)
+            except UnsupportedDialect:
+                break
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
@@ -847,15 +850,14 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         self._commits_without_expire += 1
 
+        self.event_session.commit()
         if self._pending_expunge:
-            self.event_session.flush()
             for dbstate in self._pending_expunge:
                 # Expunge the state so its not expired
                 # until we use it later for dbstate.old_state
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
-        self.event_session.commit()
 
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
