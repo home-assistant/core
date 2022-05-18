@@ -49,11 +49,10 @@ from . import (
     entity_registry,
     template,
 )
-from .entity import ContextFilter
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
-    from .entity import Entity
+    from .entity import ContextFilter, Entity
     from .entity_platform import EntityPlatform
 
 
