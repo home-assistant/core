@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import Any, Final, Literal, Protocol, TypedDict, final
 
 import voluptuous as vol
 
@@ -62,6 +62,36 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+
+
+class ContextFilter(Protocol):
+    """Protocol type for context filters."""
+
+    @callback
+    def __call__(
+        self,
+        hass: HomeAssistant,
+        entity_id: str,
+        state: str,
+        attr: dict[str, Any],
+    ) -> bool:
+        """Define context filter type."""
+
+
+def state_filter(wanted_state: str) -> ContextFilter:
+    """Return a context filter which is True for a given state."""
+
+    @callback
+    def async_state_filter(
+        hass: HomeAssistant,
+        entity_id: str,
+        state: str,
+        attr: dict[str, Any],
+    ) -> bool:
+        """Filter state changes attributed to a turn_off call."""
+        return state == wanted_state
+
+    return async_state_filter
 
 
 @callback
@@ -276,6 +306,7 @@ class Entity(ABC):
 
     # Context
     _context: Context | None = None
+    _context_filter: ContextFilter | None = None
     _context_set: datetime | None = None
 
     # If entity is added to an entity platform
@@ -675,10 +706,19 @@ class Entity(ABC):
             and dt_util.utcnow() - self._context_set > self.context_recent_time
         ):
             self._context = None
+            self._context_filter = None
             self._context_set = None
 
+        context = self._context
+        if (
+            context
+            and self._context_filter
+            # pylint: disable-next=not-callable
+            and not self._context_filter(self.hass, self.entity_id, state, attr)
+        ):
+            context = None
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, self._context
+            self.entity_id, state, attr, self.force_update, context
         )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:

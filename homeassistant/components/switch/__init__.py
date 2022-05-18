@@ -13,14 +13,19 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity import (
+    ToggleEntity,
+    ToggleEntityDescription,
+    state_filter,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -68,9 +73,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    async def async_handle_switch_off_service(
+        switch: SwitchEntity, call: ServiceCall
+    ) -> None:
+        """Handle turning off a light."""
+        # pylint: disable-next=protected-access
+        switch._context_filter = state_filter(STATE_OFF)
+        await switch.async_turn_off(**call.data["params"])
+
+    async def async_handle_switch_on_service(
+        switch: SwitchEntity, call: ServiceCall
+    ) -> None:
+        """Handle turning off a light."""
+        # pylint: disable-next=protected-access
+        switch._context_filter = state_filter(STATE_ON)
+        await switch.async_turn_on(**call.data["params"])
+
+    async def async_handle_toggle_service(
+        switch: SwitchEntity, call: ServiceCall
+    ) -> None:
+        """Handle toggling a light."""
+        if switch.is_on:
+            await async_handle_switch_off_service(switch, call)
+        else:
+            await async_handle_switch_on_service(switch, call)
+
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, {}, async_handle_switch_off_service
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, {}, async_handle_switch_on_service
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, {}, async_handle_toggle_service
+    )
 
     return True
 
