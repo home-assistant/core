@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+from dataclasses import asdict
 
 import voluptuous as vol
 
@@ -41,6 +42,6 @@ async def ws_info(
     for platform in hardware_platform.values():
         if hasattr(platform, "async_info"):
             with contextlib.suppress(HomeAssistantError):
-                hardware_info.append(platform.async_info(hass))
+                hardware_info.append(asdict(platform.async_info(hass)))
 
     connection.send_result(msg["id"], {"hardware": hardware_info})
