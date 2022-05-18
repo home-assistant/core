@@ -24,7 +24,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up BAF fan switches."""
+    """Set up BAF fan auto comfort."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     if data.device.has_fan:
         async_add_entities(
