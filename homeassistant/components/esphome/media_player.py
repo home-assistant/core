@@ -57,7 +57,6 @@ class EsphomeMediaPlayer(
 ):
     """A media player implementation for esphome."""
 
-    # _attr_should_poll = False
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     @property
