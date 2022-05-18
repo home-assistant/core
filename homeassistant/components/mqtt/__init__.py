@@ -54,7 +54,6 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -418,20 +417,6 @@ class MqttServiceInfo(BaseServiceInfo):
     retain: bool
     subscribed_topic: str
     timestamp: dt.datetime
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        return getattr(self, name)
 
 
 def publish(

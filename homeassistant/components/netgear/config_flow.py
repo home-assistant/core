@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ipv4_address
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -128,6 +129,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if hostname := device_url.hostname:
             hostname = cast(str, hostname)
             updated_data[CONF_HOST] = hostname
+
+        if not is_ipv4_address(str(hostname)):
+            return self.async_abort(reason="not_ipv4_address")
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 

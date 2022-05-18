@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u0418\u043c\u0435"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "\u0418\u043c\u0435"
+                }
+            },
+            "options": {
+                "data": {
+                    "name": "\u0418\u043c\u0435"
+                }
+            }
+        }
+    }
+}

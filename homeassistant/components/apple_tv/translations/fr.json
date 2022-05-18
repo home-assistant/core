@@ -9,6 +9,7 @@
             "device_not_found": "L'appareil n'a pas \u00e9t\u00e9 trouv\u00e9 lors de la d\u00e9couverte, veuillez r\u00e9essayer de l'ajouter.",
             "inconsistent_device": "Les protocoles attendus n'ont pas \u00e9t\u00e9 trouv\u00e9s lors de la d\u00e9couverte. Cela indique normalement un probl\u00e8me avec le DNS multicast (Zeroconf). Veuillez r\u00e9essayer d'ajouter l'appareil.",
             "invalid_config": "La configuration de cet appareil est incompl\u00e8te. Veuillez r\u00e9essayer de l'ajouter.",
+            "ipv6_not_supported": "IPv6 n'est pas pris en charge.",
             "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
             "setup_failed": "\u00c9chec de la configuration de l'appareil.",

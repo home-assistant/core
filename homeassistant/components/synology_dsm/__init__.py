@@ -22,12 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import (
-    DeviceEntry,
-    async_get_registry as get_dev_reg,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -59,8 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Synology DSM sensors."""
 
     # Migrate device indentifiers
-    dev_reg = await get_dev_reg(hass)
-    devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
+    dev_reg = dr.async_get(hass)
+    devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(
         dev_reg, entry.entry_id
     )
     for device in devices:

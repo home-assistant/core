@@ -207,8 +207,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             return
 
         _LOGGER.error(
-            "Received invalid alarm panel state: %s. Expected: %s",
+            "Received invalid alarm panel state: %s for entity %s. Expected: %s",
             result,
+            self.entity_id,
             ", ".join(_VALID_STATES),
         )
         self._state = None
@@ -229,7 +230,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._state = state
             optimistic_set = True
 
-        await script.async_run({ATTR_CODE: code}, context=self._context)
+        await self.async_run_script(
+            script, run_variables={ATTR_CODE: code}, context=self._context
+        )
 
         if optimistic_set:
             self.async_write_ha_state()

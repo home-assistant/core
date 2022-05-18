@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "Ya est\u00e1 configurada una pasarela con el mismo nombre o puerto."
+            "port_name_in_use": "Ya existe un enlace o accesorio configurado con ese nombre o puerto."
         },
         "step": {
             "pairing": {
                 "description": "Para completar el emparejamiento, sigue las instrucciones en \"Notificaciones\" en \"Emparejamiento HomeKit\".",
-                "title": "Vincular pasarela Homekit"
+                "title": "Vinculaci\u00f3n HomeKit"
             },
             "user": {
                 "data": {
@@ -19,6 +19,11 @@
     },
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entidad"
+                }
+            },
             "advanced": {
                 "data": {
                     "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
@@ -38,23 +43,21 @@
             "exclude": {
                 "data": {
                     "entities": "Entidades"
-                }
-            },
-            "include_exclude": {
-                "data": {
-                    "entities": "Entidades",
-                    "mode": "Modo"
                 },
-                "description": "Selecciona las entidades que deseas exponer. En el modo de accesorio, solo se expone una \u00fanica entidad. En el modo de inclusi\u00f3n de puente, todas las entidades del dominio se expondr\u00e1n a menos que se seleccionen entidades espec\u00edficas. En el modo de exclusi\u00f3n de puentes, todas las entidades del dominio se expondr\u00e1n excepto las entidades excluidas.",
-                "title": "Seleccionar entidades para exponer"
+                "title": "Selecciona las entidades a excluir"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entidades"
+                }
             },
             "init": {
                 "data": {
-                    "include_domains": "Dominios para incluir",
-                    "mode": "Modo"
+                    "domains": "Dominios a incluir",
+                    "mode": "Mode de HomeKit"
                 },
                 "description": "Las entidades de los \"Dominios que se van a incluir\" se establecer\u00e1n en HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
-                "title": "Seleccione los dominios que desea establecer un puente."
+                "title": "Selecciona el modo y dominios."
             },
             "yaml": {
                 "description": "Esta entrada se controla a trav\u00e9s de YAML",

@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port",
                     "type": "Type de connexion"
                 },
-                "title": "Configurer 1-Wire"
+                "title": "Renseigner les informations du serveur"
             }
         }
     },
@@ -29,7 +31,8 @@
         },
         "step": {
             "ack_no_options": {
-                "description": "Il n'y a pas d'option pour l'impl\u00e9mentation de SysBus"
+                "description": "Il n'y a pas d'option pour l'impl\u00e9mentation de SysBus",
+                "title": "Options de bus syst\u00e8me OneWire"
             },
             "configure_device": {
                 "data": {

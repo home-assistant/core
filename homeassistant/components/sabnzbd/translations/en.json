@@ -9,11 +9,9 @@
                 "data": {
                     "api_key": "API Key",
                     "name": "Name",
-                    "url": "URL",
-                    "path": "Path"
-                },
-                "description": "If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/sabnzbd/",
-                "title": "Sabnzbd"
+                    "path": "Path",
+                    "url": "URL"
+                }
             }
         }
     }

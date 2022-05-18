@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Gagal terhubung",
+            "not_insteon_device": "Perangkat yang ditemukan bukan perangkat Insteon",
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "select_single": "Pilih satu opsi."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Ingin menyiapkan {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Alamat IP",

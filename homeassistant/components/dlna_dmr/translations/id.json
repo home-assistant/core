@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Tampilkan media yang tidak kompatibel saat menjelajah",
                     "callback_url_override": "URL panggilan balik pendengar peristiwa",
                     "listen_port": "Port pendengar peristiwa (acak jika tidak diatur)",
                     "poll_availability": "Polling untuk ketersediaan perangkat"

@@ -10,8 +10,9 @@
                     "lights": "Vera, Home Assistant'ta \u0131\u015f\u0131k gibi davranmak i\u00e7in cihaz kimliklerini de\u011fi\u015ftirir.",
                     "vera_controller_url": "Denetleyici URL'si"
                 },
-                "description": "A\u015fa\u011f\u0131da bir Vera denetleyici URL'si sa\u011flay\u0131n. \u015eu \u015fekilde g\u00f6r\u00fcnmelidir: http://192.168.1.161:3480.",
-                "title": "Vera denetleyicisini kurun"
+                "data_description": {
+                    "vera_controller_url": "\u015eu \u015fekilde g\u00f6r\u00fcnmelidir: http://192.168.1.161:3480"
+                }
             }
         }
     },

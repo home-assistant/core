@@ -15,7 +15,7 @@
                     "longitude": "Bujur",
                     "name": "Nama"
                 },
-                "description": "Siapkan integrasi kualitas udara Airly. Untuk membuat kunci API, buka https://developer.airly.eu/register",
+                "description": "Untuk membuat kunci API, buka https://developer.airly.eu/register",
                 "title": "Airly"
             }
         }

@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "La integraci\u00f3n de Sonarr necesita volver a autenticarse manualmente con la API de Sonarr alojada en: {host}",
-                "title": "Volver a autenticarse con Sonarr"
+                "title": "Reautenticaci\u00f3n de la integraci\u00f3n"
             },
             "user": {
                 "data": {

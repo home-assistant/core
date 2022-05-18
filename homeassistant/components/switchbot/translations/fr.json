@@ -29,7 +29,7 @@
                     "retry_count": "Nombre de nouvelles tentatives",
                     "retry_timeout": "D\u00e9lai d'attente entre les tentatives",
                     "scan_timeout": "Dur\u00e9e de la recherche de donn\u00e9es publicitaires",
-                    "update_time": "Dur\u00e9e (en secondes) entre deux mises \u00e0 jour"
+                    "update_time": "Intervalle de temps entre deux mises \u00e0 jour (en secondes)"
                 }
             }
         }

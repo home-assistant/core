@@ -9,7 +9,7 @@
             "discovery_error": "Gagal menemukan Motion Gateway",
             "invalid_interface": "Antarmuka jaringan tidak valid"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

@@ -50,6 +50,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         """Initialize Alpha2 ClimateEntity."""
         super().__init__(coordinator)
         self.heat_area_id = heat_area_id
+        self._attr_unique_id = heat_area_id
 
     @property
     def name(self) -> str:

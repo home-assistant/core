@@ -14,10 +14,25 @@ from homeassistant.components.cast.helpers import (
 from tests.common import load_fixture
 
 
-async def test_hls_playlist_supported(hass, aioclient_mock):
+@pytest.mark.parametrize(
+    "url,fixture,content_type",
+    (
+        (
+            "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+            "bbc_radio_fourfm.m3u8",
+            None,
+        ),
+        (
+            "https://rthkaudio2-lh.akamaihd.net/i/radio2_1@355865/master.m3u8",
+            "rthkaudio2.m3u8",
+            "application/vnd.apple.mpegurl",
+        ),
+    ),
+)
+async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, content_type):
     """Test playlist parsing of HLS playlist."""
-    url = "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8"
-    aioclient_mock.get(url, text=load_fixture("bbc_radio_fourfm.m3u8", "cast"))
+    headers = {"content-type": content_type}
+    aioclient_mock.get(url, text=load_fixture(fixture, "cast"), headers=headers)
     with pytest.raises(PlaylistSupported):
         await parse_playlist(hass, url)
 

@@ -764,11 +764,9 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 # use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORY_SYSTEM: Final = "system"
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_SYSTEM,
 ]
 
 # The ID of the Home Assistant Media Player Cast App

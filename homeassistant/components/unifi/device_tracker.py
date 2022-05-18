@@ -107,10 +107,10 @@ def add_client_entities(controller, async_add_entities, clients):
     trackers = []
 
     for mac in clients:
-        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE]:
+        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE] or not (
+            client := controller.api.clients.get(mac)
+        ):
             continue
-
-        client = controller.api.clients[mac]
 
         if mac not in controller.wireless_clients:
             if not controller.option_track_wired_clients:
@@ -428,6 +428,16 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             attributes["upgradable"] = self.device.upgradable
 
         return attributes
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.device.ip
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.device.mac
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

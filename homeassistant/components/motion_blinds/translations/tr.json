@@ -9,7 +9,7 @@
             "discovery_error": "Motion Gateway bulunamad\u0131",
             "invalid_interface": "Ge\u00e7ersiz a\u011f aray\u00fcz\u00fc"
         },
-        "flow_title": "Hareketli Panjurlar",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

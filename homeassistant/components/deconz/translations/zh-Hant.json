@@ -9,6 +9,7 @@
             "updated_instance": "\u4f7f\u7528\u65b0\u4e3b\u6a5f\u7aef\u4f4d\u5740\u66f4\u65b0 deCONZ \u88dd\u7f6e"
         },
         "error": {
+            "linking_not_possible": "\u7121\u6cd5\u8207\u8def\u7531\u5668\u9023\u7dda",
             "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"
         },
         "flow_title": "{host}",

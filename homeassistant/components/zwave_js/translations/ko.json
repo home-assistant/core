@@ -51,5 +51,12 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "set_config_parameter": "\uad6c\uc131 \ub9e4\uac1c\ubcc0\uc218 {subtype} \uc758 \uac12 \uc124\uc815",
+            "set_lock_usercode": "{entity_name} \uc5d0 \uc0ac\uc6a9\uc790 \ucf54\ub4dc \uc124\uc815",
+            "set_value": "Z-Wave Value\uc758 \uc124\uc815\uac12"
+        }
+    },
     "title": "Z-Wave JS"
 }

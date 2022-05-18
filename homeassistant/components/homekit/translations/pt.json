@@ -23,16 +23,8 @@
             "cameras": {
                 "title": "Selecione o codec de v\u00eddeo da c\u00e2mera."
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Entidades",
-                    "mode": "Modo"
-                },
-                "title": "Selecione as entidades a serem expostas"
-            },
             "init": {
                 "data": {
-                    "include_domains": "Dom\u00ednios a incluir",
                     "mode": "Modo"
                 },
                 "title": "Selecione os dom\u00ednios a serem expostos."

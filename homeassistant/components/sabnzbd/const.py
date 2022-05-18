@@ -5,8 +5,8 @@ DOMAIN = "sabnzbd"
 DATA_SABNZBD = "sabnzbd"
 
 ATTR_SPEED = "speed"
-BASE_URL_FORMAT = "{}://{}:{}/"
-CONFIG_FILE = "sabnzbd.conf"
+ATTR_API_KEY = "api_key"
+
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "SABnzbd"
 DEFAULT_PORT = 8080
@@ -22,4 +22,5 @@ SERVICE_SET_SPEED = "set_speed"
 SIGNAL_SABNZBD_UPDATED = "sabnzbd_updated"
 
 KEY_API = "api"
+KEY_API_DATA = "api_data"
 KEY_NAME = "name"

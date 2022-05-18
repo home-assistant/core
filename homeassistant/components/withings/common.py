@@ -27,6 +27,7 @@ from withings_api.common import (
     query_measure_groups,
 )
 
+from homeassistant.components import webhook
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -40,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AUTH_CALLBACK_PATH,
     AbstractOAuth2Implementation,
@@ -48,7 +49,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
@@ -917,9 +917,7 @@ async def async_get_entity_id(
     hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
 ) -> str | None:
     """Get an entity id for a user's attribute."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry = er.async_get(hass)
     unique_id = get_attribute_unique_id(attribute, user_id)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -1046,7 +1044,9 @@ async def async_get_data_manager(
             config_entry.data["token"]["userid"],
             WebhookConfig(
                 id=config_entry.data[CONF_WEBHOOK_ID],
-                url=config_entry.data[const.CONF_WEBHOOK_URL],
+                url=webhook.async_generate_url(
+                    hass, config_entry.data[CONF_WEBHOOK_ID]
+                ),
                 enabled=config_entry.data[const.CONF_USE_WEBHOOK],
             ),
         )

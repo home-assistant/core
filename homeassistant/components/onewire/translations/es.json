@@ -17,9 +17,34 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Puerto",
                     "type": "Tipo de conexi\u00f3n"
                 },
                 "title": "Configurar 1 cable"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Seleccionar los dispositivos a configurar"
+        },
+        "step": {
+            "ack_no_options": {
+                "title": "Opciones SysBus de OneWire"
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Precisi\u00f3n del sensor"
+                },
+                "description": "Selecciona la precisi\u00f3n del sensor {sensor_id}"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Borra todas las configuraciones de dispositivo"
+                },
+                "description": "Seleccione los pasos de configuraci\u00f3n a procesar",
+                "title": "Opciones de dispositivo OneWire"
             }
         }
     }

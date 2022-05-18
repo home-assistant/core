@@ -28,7 +28,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.game_icons: dict = {}
+        self.game_icons: dict[int, str] = {}
         self.player_interface: INTMethod = None
         self.user_interface: INTMethod = None
         steam.api.key.set(self.config_entry.data[CONF_API_KEY])
@@ -36,7 +36,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
     def _update(self) -> dict[str, dict[str, str | int]]:
         """Fetch data from API endpoint."""
         accounts = self.config_entry.options[CONF_ACCOUNTS]
-        _ids = [k for k in accounts if accounts[k]["enabled"]]
+        _ids = list(accounts)
         if not self.user_interface or not self.player_interface:
             self.user_interface = steam.api.interface("ISteamUser")
             self.player_interface = steam.api.interface("IPlayerService")
@@ -46,7 +46,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
                     steamid=_id, include_appinfo=1
                 )["response"]
                 self.game_icons = self.game_icons | {
-                    game["appid"]: game["img_icon_url"] for game in res.get("games", {})
+                    game["appid"]: game["img_icon_url"] for game in res.get("games", [])
                 }
         response = self.user_interface.GetPlayerSummaries(steamids=_ids)
         players = {
@@ -56,8 +56,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
         }
         for k in players:
             data = self.player_interface.GetSteamLevel(steamid=players[k]["steamid"])
-            data = data["response"]
-            players[k]["level"] = data["player_level"]
+            players[k]["level"] = data["response"]["player_level"]
         return players
 
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:

@@ -1306,3 +1306,198 @@ async def test_measure_from_end_going_backwards(hass, recorder_mock):
     assert hass.states.get("sensor.sensor2").state == "0.83"
     assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "83.3"
+
+
+async def test_measure_cet(hass, recorder_mock):
+    """Test the history statistics sensor measure with a non-UTC timezone."""
+    hass.config.set_time_zone("Europe/Berlin")
+    start_time = dt_util.utcnow() - timedelta(minutes=60)
+    t0 = start_time + timedelta(minutes=20)
+    t1 = t0 + timedelta(minutes=10)
+    t2 = t1 + timedelta(minutes=10)
+
+    # Start     t0        t1        t2        End
+    # |--20min--|--20min--|--10min--|--10min--|
+    # |---off---|---on----|---off---|---on----|
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.test_id": [
+                ha.State("binary_sensor.test_id", "on", last_changed=t0),
+                ha.State("binary_sensor.test_id", "off", last_changed=t1),
+                ha.State("binary_sensor.test_id", "on", last_changed=t2),
+            ]
+        }
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor1",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor2",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor3",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "count",
+                },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor4",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "ratio",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        for i in range(1, 5):
+            await async_update_entity(hass, f"sensor.sensor{i}")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.83"
+    assert hass.states.get("sensor.sensor2").state == "0.83"
+    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor4").state == "83.3"
+
+
+@pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
+async def test_end_time_with_microseconds_zeroed(time_zone, hass, recorder_mock):
+    """Test the history statistics sensor that has the end time microseconds zeroed out."""
+    hass.config.set_time_zone(time_zone)
+    start_of_today = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_time = start_of_today + timedelta(minutes=60)
+    t0 = start_time + timedelta(minutes=20)
+    t1 = t0 + timedelta(minutes=10)
+    t2 = t1 + timedelta(minutes=10)
+    time_200 = start_of_today + timedelta(hours=2)
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.heatpump_compressor_state": [
+                ha.State(
+                    "binary_sensor.heatpump_compressor_state", "on", last_changed=t0
+                ),
+                ha.State(
+                    "binary_sensor.heatpump_compressor_state",
+                    "off",
+                    last_changed=t1,
+                ),
+                ha.State(
+                    "binary_sensor.heatpump_compressor_state", "on", last_changed=t2
+                ),
+            ]
+        }
+
+    with freeze_time(time_200), patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.heatpump_compressor_state",
+                        "name": "heatpump_compressor_today",
+                        "state": "on",
+                        "start": "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}",
+                        "end": "{{ now().replace(microsecond=0) }}",
+                        "type": "time",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.heatpump_compressor_today")
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        async_fire_time_changed(hass, time_200)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        await hass.async_block_till_done()
+
+    time_400 = start_of_today + timedelta(hours=4)
+    with freeze_time(time_400):
+        async_fire_time_changed(hass, time_400)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "on")
+        await hass.async_block_till_done()
+    time_600 = start_of_today + timedelta(hours=6)
+    with freeze_time(time_600):
+        async_fire_time_changed(hass, time_600)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "3.83"
+
+    rolled_to_next_day = start_of_today + timedelta(days=1)
+    assert rolled_to_next_day.hour == 0
+    assert rolled_to_next_day.minute == 0
+    assert rolled_to_next_day.second == 0
+    assert rolled_to_next_day.microsecond == 0
+
+    with freeze_time(rolled_to_next_day):
+        async_fire_time_changed(hass, rolled_to_next_day)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "0.0"
+
+    rolled_to_next_day_plus_12 = start_of_today + timedelta(
+        days=1, hours=12, microseconds=0
+    )
+    with freeze_time(rolled_to_next_day_plus_12):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_12)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "12.0"
+
+    rolled_to_next_day_plus_14 = start_of_today + timedelta(
+        days=1, hours=14, microseconds=0
+    )
+    with freeze_time(rolled_to_next_day_plus_14):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_14)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "14.0"
+
+    rolled_to_next_day_plus_16_860000 = start_of_today + timedelta(
+        days=1, hours=16, microseconds=860000
+    )
+    with freeze_time(rolled_to_next_day_plus_16_860000):
+        hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        async_fire_time_changed(hass, rolled_to_next_day_plus_16_860000)
+        await hass.async_block_till_done()
+
+    rolled_to_next_day_plus_18 = start_of_today + timedelta(days=1, hours=18)
+    with freeze_time(rolled_to_next_day_plus_18):
+        async_fire_time_changed(hass, rolled_to_next_day_plus_18)
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.heatpump_compressor_today").state == "16.0"

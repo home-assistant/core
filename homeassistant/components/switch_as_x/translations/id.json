@@ -1,14 +1,20 @@
 {
     "config": {
         "step": {
-            "init": {
+            "config": {
+                "user": {
+                    "entity_id": "Entitas saklar"
+                }
+            },
+            "user": {
                 "data": {
-                    "entity_id": "Entitas saklar",
-                    "target_domain": "Jenis"
+                    "entity_id": "Sakelar",
+                    "target_domain": "Tipe Baru"
                 },
-                "title": "Jadikan saklar sebagai\u2026"
+                "description": "Pilih sakelar yang ingin Anda tampilkan di Home Assistant sebagai lampu, penutup, atau apa pun. Sakelar asli akan disembunyikan.",
+                "title": "Ubah jenis perangkat sakelar"
             }
         }
     },
-    "title": "Saklar sebagai X"
+    "title": "Ubah jenis perangkat sakelar"
 }

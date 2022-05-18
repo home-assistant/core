@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "ignore_ip6_link_local": "L'enlla\u00e7 amb adreces IPv6 locals no est\u00e0 perm\u00e8s",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {

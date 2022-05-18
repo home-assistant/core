@@ -49,7 +49,7 @@ def async_describe_events(
 
         return {
             "name": "Shelly",
-            "message": f"'{click_type}' click event for {input_name} Input was fired.",
+            "message": f"'{click_type}' click event for {input_name} Input was fired",
         }
 
     async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_shelly_click_event)

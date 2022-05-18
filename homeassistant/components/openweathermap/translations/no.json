@@ -15,9 +15,9 @@
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",
                     "mode": "Modus",
-                    "name": "Navn p\u00e5 integrasjon"
+                    "name": "Navn"
                 },
-                "description": "Sett opp OpenWeatherMap-integrasjon. For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://openweathermap.org/appid",
+                "description": "For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

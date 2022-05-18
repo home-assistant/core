@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Poka\u017c niezgodne multimedia podczas przegl\u0105dania",
                     "callback_url_override": "Adres Callback URL dla detektora zdarze\u0144",
                     "listen_port": "Port detektora zdarze\u0144 (losowy, je\u015bli nie jest ustawiony)",
                     "poll_availability": "Sondowanie na dost\u0119pno\u015b\u0107 urz\u0105dze\u0144"

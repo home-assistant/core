@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van",
+            "ignore_ip6_link_local": "Az IPv6-kapcsolat helyi c\u00edme nem t\u00e1mogatott.",
             "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt"
         },
         "error": {

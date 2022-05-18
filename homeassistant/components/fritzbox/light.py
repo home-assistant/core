@@ -118,7 +118,14 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         return color.color_temperature_kelvin_to_mired(kelvin)
 
     @property
-    def supported_color_modes(self) -> set:
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self.device.color_mode == COLOR_MODE:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return SUPPORTED_COLOR_MODES
 

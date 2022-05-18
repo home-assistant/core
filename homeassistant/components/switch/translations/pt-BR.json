@@ -3,9 +3,9 @@
         "step": {
             "init": {
                 "data": {
-                    "entity_id": "Entidade de switch"
+                    "entity_id": "Entidade de interruptor"
                 },
-                "description": "Selecione o switch para o interruptor de luz."
+                "description": "Selecione o interruptor para a l\u00e2mpada."
             }
         }
     },

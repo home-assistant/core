@@ -18,7 +18,7 @@
                     "scan_interval": "Intervalle de balayage (secondes)",
                     "username": "Courriel"
                 },
-                "description": "Configurer l'int\u00e9gration ViCare. Pour g\u00e9n\u00e9rer une cl\u00e9 API se rendre sur https://developer.viessmann.com",
+                "description": "Configurer l'int\u00e9gration ViCare. Pour g\u00e9n\u00e9rer une cl\u00e9 d'API, rendez-vous sur https://developer.viessmann.com",
                 "title": "{name}"
             }
         }

@@ -9,7 +9,7 @@
             "discovery_error": "Kan geen Motion Gateway vinden",
             "invalid_interface": "Ongeldige netwerkinterface"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

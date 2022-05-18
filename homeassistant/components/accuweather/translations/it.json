@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
+        "create_entry": {
+            "default": "Alcuni sensori non sono abilitati per impostazione predefinita. Puoi abilitarli nel registro delle entit\u00e0 dopo la configurazione dell'integrazione.\nLe previsioni del tempo non sono abilitate per impostazione predefinita. Puoi abilitarlo nelle opzioni di integrazione."
+        },
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_api_key": "Chiave API non valida",

@@ -9,7 +9,7 @@
             "discovery_error": "Impossible de d\u00e9couvrir une Motion Gateway",
             "invalid_interface": "Interface r\u00e9seau non valide"
         },
-        "flow_title": "Stores de mouvement",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

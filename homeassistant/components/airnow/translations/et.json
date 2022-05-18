@@ -17,7 +17,7 @@
                     "longitude": "Pikkuskraad",
                     "radius": "Jaama raadius (miilid; valikuline)"
                 },
-                "description": "Seadista AirNow \u00f5hukvaliteedi sidumine. API-v\u00f5tme loomiseks mine aadressile https://docs.airnowapi.org/account/request/",
+                "description": "API-v\u00f5tme loomiseks mine aadressile https://docs.airnowapi.org/account/request/",
                 "title": ""
             }
         }

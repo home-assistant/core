@@ -251,8 +251,9 @@ class TemplateFan(TemplateEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        await self._on_script.async_run(
-            {
+        await self.async_run_script(
+            self._on_script,
+            run_variables={
                 ATTR_PERCENTAGE: percentage,
                 ATTR_PRESET_MODE: preset_mode,
             },
@@ -267,7 +268,7 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self._off_script.async_run(context=self._context)
+        await self.async_run_script(self._off_script, context=self._context)
         self._state = STATE_OFF
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -277,16 +278,19 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_mode = None
 
         if self._set_percentage_script:
-            await self._set_percentage_script.async_run(
-                {ATTR_PERCENTAGE: self._percentage}, context=self._context
+            await self.async_run_script(
+                self._set_percentage_script,
+                run_variables={ATTR_PERCENTAGE: self._percentage},
+                context=self._context,
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         if self.preset_modes and preset_mode not in self.preset_modes:
             _LOGGER.error(
-                "Received invalid preset_mode: %s. Expected: %s",
+                "Received invalid preset_mode: %s for entity %s. Expected: %s",
                 preset_mode,
+                self.entity_id,
                 self.preset_modes,
             )
             return
@@ -296,8 +300,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._percentage = None
 
         if self._set_preset_mode_script:
-            await self._set_preset_mode_script.async_run(
-                {ATTR_PRESET_MODE: self._preset_mode}, context=self._context
+            await self.async_run_script(
+                self._set_preset_mode_script,
+                run_variables={ATTR_PRESET_MODE: self._preset_mode},
+                context=self._context,
             )
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -306,8 +312,10 @@ class TemplateFan(TemplateEntity, FanEntity):
             return
 
         self._oscillating = oscillating
-        await self._set_oscillating_script.async_run(
-            {ATTR_OSCILLATING: oscillating}, context=self._context
+        await self.async_run_script(
+            self._set_oscillating_script,
+            run_variables={ATTR_OSCILLATING: self.oscillating},
+            context=self._context,
         )
 
     async def async_set_direction(self, direction: str) -> None:
@@ -317,13 +325,16 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         if direction in _VALID_DIRECTIONS:
             self._direction = direction
-            await self._set_direction_script.async_run(
-                {ATTR_DIRECTION: direction}, context=self._context
+            await self.async_run_script(
+                self._set_direction_script,
+                run_variables={ATTR_DIRECTION: direction},
+                context=self._context,
             )
         else:
             _LOGGER.error(
-                "Received invalid direction: %s. Expected: %s",
+                "Received invalid direction: %s for entity %s. Expected: %s",
                 direction,
+                self.entity_id,
                 ", ".join(_VALID_DIRECTIONS),
             )
 
@@ -341,8 +352,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid fan is_on state: %s. Expected: %s",
+                "Received invalid fan is_on state: %s for entity %s. Expected: %s",
                 result,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             self._state = None
@@ -390,7 +402,11 @@ class TemplateFan(TemplateEntity, FanEntity):
         try:
             percentage = int(float(percentage))
         except ValueError:
-            _LOGGER.error("Received invalid percentage: %s", percentage)
+            _LOGGER.error(
+                "Received invalid percentage: %s for entity %s",
+                percentage,
+                self.entity_id,
+            )
             self._percentage = 0
             self._preset_mode = None
             return
@@ -399,7 +415,11 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._percentage = percentage
             self._preset_mode = None
         else:
-            _LOGGER.error("Received invalid percentage: %s", percentage)
+            _LOGGER.error(
+                "Received invalid percentage: %s for entity %s",
+                percentage,
+                self.entity_id,
+            )
             self._percentage = 0
             self._preset_mode = None
 
@@ -416,8 +436,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._preset_mode = None
         else:
             _LOGGER.error(
-                "Received invalid preset_mode: %s. Expected: %s",
+                "Received invalid preset_mode: %s for entity %s. Expected: %s",
                 preset_mode,
+                self.entity_id,
                 self.preset_mode,
             )
             self._percentage = None
@@ -434,8 +455,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False",
+                "Received invalid oscillating: %s for entity %s. Expected: True/False",
                 oscillating,
+                self.entity_id,
             )
             self._oscillating = None
 
@@ -448,8 +470,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._direction = None
         else:
             _LOGGER.error(
-                "Received invalid direction: %s. Expected: %s",
+                "Received invalid direction: %s for entity %s. Expected: %s",
                 direction,
+                self.entity_id,
                 ", ".join(_VALID_DIRECTIONS),
             )
             self._direction = None

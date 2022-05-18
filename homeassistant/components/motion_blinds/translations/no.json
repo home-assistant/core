@@ -9,7 +9,7 @@
             "discovery_error": "Kunne ikke oppdage en Motion Gateway",
             "invalid_interface": "Ugyldig nettverksgrensesnitt"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ( {ip_address} )",
         "step": {
             "connect": {
                 "data": {

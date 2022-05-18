@@ -38,9 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_AIRCLEANER_MODE,
     ATTR_DEHUMIDIFY_SETPOINT,
-    ATTR_DEHUMIDIFY_SUPPORTED,
     ATTR_HUMIDIFY_SETPOINT,
-    ATTR_HUMIDIFY_SUPPORTED,
     ATTR_RUN_MODE,
     ATTR_ZONE_STATUS,
     DOMAIN,
@@ -355,13 +353,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         if not self._has_relative_humidity:
             return data
-
-        data.update(
-            {
-                ATTR_DEHUMIDIFY_SUPPORTED: self._has_dehumidify_support,
-                ATTR_HUMIDIFY_SUPPORTED: self._has_humidify_support,
-            }
-        )
 
         if self._has_dehumidify_support:
             dehumdify_setpoint = percent_conv(

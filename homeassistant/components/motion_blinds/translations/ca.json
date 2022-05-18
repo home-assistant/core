@@ -9,7 +9,7 @@
             "discovery_error": "No s'ha pogut descobrir cap Motion Gateway",
             "invalid_interface": "Interf\u00edcie de xarxa no v\u00e0lida"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

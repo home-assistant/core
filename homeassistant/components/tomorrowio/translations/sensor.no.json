@@ -1,0 +1,27 @@
+{
+    "state": {
+        "tomorrowio__health_concern": {
+            "good": "Bra",
+            "hazardous": "Farlig",
+            "moderate": "Moderat",
+            "unhealthy": "Usunt",
+            "unhealthy_for_sensitive_groups": "Usunt for sensitive grupper",
+            "very_unhealthy": "Veldig usunt"
+        },
+        "tomorrowio__pollen_index": {
+            "high": "H\u00f8y",
+            "low": "Lav",
+            "medium": "Medium",
+            "none": "Ingen",
+            "very_high": "Veldig h\u00f8y",
+            "very_low": "Veldig lav"
+        },
+        "tomorrowio__precipitation_type": {
+            "freezing_rain": "Underkj\u00f8lt regn",
+            "ice_pellets": "Is tapper",
+            "none": "Ingen",
+            "rain": "Regn",
+            "snow": "Sn\u00f8"
+        }
+    }
+}

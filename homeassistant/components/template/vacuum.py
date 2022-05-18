@@ -204,42 +204,42 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
     async def async_start(self):
         """Start or resume the cleaning task."""
-        await self._start_script.async_run(context=self._context)
+        await self.async_run_script(self._start_script, context=self._context)
 
     async def async_pause(self):
         """Pause the cleaning task."""
         if self._pause_script is None:
             return
 
-        await self._pause_script.async_run(context=self._context)
+        await self.async_run_script(self._pause_script, context=self._context)
 
     async def async_stop(self, **kwargs):
         """Stop the cleaning task."""
         if self._stop_script is None:
             return
 
-        await self._stop_script.async_run(context=self._context)
+        await self.async_run_script(self._stop_script, context=self._context)
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
         if self._return_to_base_script is None:
             return
 
-        await self._return_to_base_script.async_run(context=self._context)
+        await self.async_run_script(self._return_to_base_script, context=self._context)
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self._clean_spot_script is None:
             return
 
-        await self._clean_spot_script.async_run(context=self._context)
+        await self.async_run_script(self._clean_spot_script, context=self._context)
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum cleaner."""
         if self._locate_script is None:
             return
 
-        await self._locate_script.async_run(context=self._context)
+        await self.async_run_script(self._locate_script, context=self._context)
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
@@ -248,13 +248,16 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
 
         if fan_speed in self._attr_fan_speed_list:
             self._attr_fan_speed = fan_speed
-            await self._set_fan_speed_script.async_run(
-                {ATTR_FAN_SPEED: fan_speed}, context=self._context
+            await self.async_run_script(
+                self._set_fan_speed_script,
+                run_variables={ATTR_FAN_SPEED: fan_speed},
+                context=self._context,
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
+                self.entity_id,
                 self._attr_fan_speed_list,
             )
 
@@ -298,8 +301,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid vacuum state: %s. Expected: %s",
+                "Received invalid vacuum state: %s for entity %s. Expected: %s",
                 result,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             self._state = None
@@ -312,7 +316,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 raise ValueError
         except ValueError:
             _LOGGER.error(
-                "Received invalid battery level: %s. Expected: 0-100", battery_level
+                "Received invalid battery level: %s for entity %s. Expected: 0-100",
+                battery_level,
+                self.entity_id,
             )
             self._attr_battery_level = None
             return
@@ -333,8 +339,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._attr_fan_speed = None
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
+                self.entity_id,
                 self._attr_fan_speed_list,
             )
             self._attr_fan_speed = None

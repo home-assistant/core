@@ -9,6 +9,7 @@
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {
+            "linking_not_possible": "Kan geen koppeling maken met de gateway",
             "no_key": "Kon geen API-sleutel ophalen"
         },
         "flow_title": "{host}",

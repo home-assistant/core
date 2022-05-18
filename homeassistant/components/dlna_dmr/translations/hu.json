@@ -21,7 +21,7 @@
                 "description": "Kezd\u0151dhet a be\u00e1ll\u00edt\u00e1s?"
             },
             "import_turn_on": {
-                "description": "Kapcsolja be az eszk\u00f6zt, \u00e9s kattintson a K\u00fcld\u00e9s gombra a migr\u00e1ci\u00f3 folytat\u00e1s\u00e1hoz"
+                "description": "Kapcsolja be az eszk\u00f6zt, majd folytassa a migr\u00e1ci\u00f3t"
             },
             "manual": {
                 "data": {
@@ -35,7 +35,7 @@
                     "host": "C\u00edm",
                     "url": "URL"
                 },
-                "description": "V\u00e1lassz egy be\u00e1ll\u00edtand\u00f3 eszk\u00f6zt vagy adj meg egy URL-t",
+                "description": "V\u00e1lassza ki a konfigur\u00e1lni k\u00edv\u00e1nt eszk\u00f6zt, vagy hagyja \u00fcresen az URL-c\u00edm k\u00e9zi megad\u00e1s\u00e1hoz",
                 "title": "DLNA digit\u00e1lis m\u00e9dia renderel\u0151"
             }
         }
@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Inkompatibilis m\u00e9dia megjelen\u00edt\u00e9se b\u00f6ng\u00e9sz\u00e9s k\u00f6zben",
                     "callback_url_override": "Esem\u00e9nyfigyel\u0151 visszah\u00edv\u00e1si URL (callback)",
                     "listen_port": "Esem\u00e9nyfigyel\u0151 port (v\u00e9letlenszer\u0171, ha nincs be\u00e1ll\u00edtva)",
                     "poll_availability": "Eszk\u00f6z el\u00e9r\u00e9s\u00e9nek tesztel\u00e9se lek\u00e9rdez\u00e9ssel"

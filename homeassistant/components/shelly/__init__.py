@@ -182,7 +182,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
-        hass.async_create_task(async_block_device_setup(hass, entry, device))
+        async_block_device_setup(hass, entry, device)
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
@@ -197,7 +197,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
-        await async_block_device_setup(hass, entry, device)
+        async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = device
@@ -208,12 +208,13 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
-        await async_block_device_setup(hass, entry, device)
+        async_block_device_setup(hass, entry, device)
 
     return True
 
 
-async def async_block_device_setup(
+@callback
+def async_block_device_setup(
     hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice
 ) -> None:
     """Set up a block based device that is online."""
@@ -812,7 +813,7 @@ class RpcPollingWrapper(update_coordinator.DataUpdateCoordinator):
             LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await self.device.update_status()
-        except OSError as err:
+        except (OSError, aioshelly.exceptions.RPCTimeout) as err:
             raise update_coordinator.UpdateFailed("Device disconnected") from err
 
     @property

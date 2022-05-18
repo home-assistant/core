@@ -9,7 +9,7 @@
             "discovery_error": "Motion-Gateway konnte nicht gefunden werden",
             "invalid_interface": "Ung\u00fcltige Netzwerkschnittstelle"
         },
-        "flow_title": "Jalousien",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

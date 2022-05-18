@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pysabnzbd import SabnzbdApiException
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sabnzbd import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
@@ -15,8 +15,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_URL,
 )
-
-from tests.common import MockConfigEntry
+from homeassistant.data_entry_flow import RESULT_TYPE_FORM
 
 VALID_CONFIG = {
     CONF_NAME: "Sabnzbd",
@@ -37,21 +36,34 @@ VALID_CONFIG_OLD = {
 
 async def test_create_entry(hass):
     """Test that the user step works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
         return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=VALID_CONFIG,
+    ), patch(
+        "homeassistant.components.sabnzbd.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
         )
+        await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "edc3eee7330e"
-        assert result["data"][CONF_NAME] == "Sabnzbd"
-        assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"
-        assert result["data"][CONF_PATH] == ""
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["title"] == "edc3eee7330e"
+        assert result2["data"] == {
+            CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
+            CONF_NAME: "Sabnzbd",
+            CONF_PATH: "",
+            CONF_URL: "http://localhost:8080",
+        }
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_auth_error(hass):
@@ -69,34 +81,12 @@ async def test_auth_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_integration_already_exists(hass):
-    """Test we only allow a single config flow."""
-    with patch(
-        "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
-        return_value=True,
-    ):
-        MockConfigEntry(
-            domain=DOMAIN,
-            unique_id="123456",
-            data=VALID_CONFIG,
-        ).add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=VALID_CONFIG,
-        )
-
-        assert result["type"] == "create_entry"
-
-
 async def test_import_flow(hass) -> None:
     """Test the import configuration flow."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},

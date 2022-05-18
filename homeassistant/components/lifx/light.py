@@ -29,14 +29,11 @@ from homeassistant.components.light import (
     COLOR_GROUP,
     DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -419,6 +416,8 @@ class LIFXManager:
             if color_resp is None or version_resp is None:
                 _LOGGER.error("Failed to connect to %s", bulb.ip_addr)
                 bulb.registered = False
+                if bulb.mac_addr in self.discoveries_inflight:
+                    self.discoveries_inflight.pop(bulb.mac_addr)
             else:
                 bulb.timeout = MESSAGE_TIMEOUT
                 bulb.retry_count = MESSAGE_RETRIES
@@ -506,6 +505,8 @@ def convert_16_to_8(value):
 class LIFXLight(LightEntity):
     """Representation of a LIFX light."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+
     def __init__(self, bulb, effects_conductor):
         """Initialize the light."""
         self.bulb = bulb
@@ -577,15 +578,17 @@ class LIFXLight(LightEntity):
         return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        support = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_EFFECT
-
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
         bulb_features = lifx_features(self.bulb)
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
-            support |= SUPPORT_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
+        return ColorMode.BRIGHTNESS
 
-        return support
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     @property
     def brightness(self):
@@ -735,11 +738,17 @@ class LIFXColor(LIFXLight):
     """Representation of a color LIFX light."""
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        support = super().supported_features
-        support |= SUPPORT_COLOR
-        return support
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        sat = self.bulb.color[1]
+        if sat:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {ColorMode.COLOR_TEMP, ColorMode.HS}
 
     @property
     def effect_list(self):

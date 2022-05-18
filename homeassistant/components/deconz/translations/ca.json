@@ -9,6 +9,7 @@
             "updated_instance": "S'ha actualitzat la inst\u00e0ncia de deCONZ amb una nova adre\u00e7a"
         },
         "error": {
+            "linking_not_possible": "No s'ha pogut enlla\u00e7ar amb la passarel\u00b7la",
             "no_key": "No s'ha pogut obtenir una clau API"
         },
         "flow_title": "{host}",

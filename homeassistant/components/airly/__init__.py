@@ -15,9 +15,8 @@ from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -82,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # identifiers in device_info should use tuple[str, str] type, but latitude and
     # longitude are float, so we convert old device entries to use correct types
     # We used to use a str 3-tuple here sometime, convert that to a 2-tuple too.
-    device_registry = await async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, latitude, longitude)
     for old_ids in (
         (DOMAIN, latitude, longitude),
@@ -114,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Remove air_quality entities from registry if they exist
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     unique_id = f"{coordinator.latitude}-{coordinator.longitude}"
     if entity_id := ent_reg.async_get_entity_id(
         AIR_QUALITY_PLATFORM, DOMAIN, unique_id

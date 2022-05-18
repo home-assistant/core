@@ -1,14 +1,20 @@
 {
     "config": {
         "step": {
-            "init": {
+            "config": {
+                "user": {
+                    "entity_id": "Cambia entit\u00e0"
+                }
+            },
+            "user": {
                 "data": {
-                    "entity_id": "Cambia entit\u00e0",
-                    "target_domain": "Tipo"
+                    "entity_id": "Interruttore",
+                    "target_domain": "Nuovo tipo"
                 },
-                "title": "Rendi un interruttore un..."
+                "description": "Scegli un interruttore che vuoi mostrare in Home Assistant come luce, copertura o qualsiasi altra cosa. L'interruttore originale sar\u00e0 nascosto.",
+                "title": "Cambia tipo di dispositivo dell'interruttore"
             }
         }
     },
-    "title": "Interruttore come X"
+    "title": "Cambia il tipo di dispositivo di un interruttore"
 }

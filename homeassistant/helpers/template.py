@@ -850,7 +850,8 @@ class TemplateStateFromEntityId(TemplateStateBase):
     @property
     def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
         state = self._hass.states.get(self._entity_id)
-        assert state
+        if not state:
+            state = State(self._entity_id, STATE_UNKNOWN)
         return state
 
     def __repr__(self) -> str:
@@ -1324,21 +1325,12 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def warn_no_default(function, value, default):
+def raise_no_default(function, value):
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
-    _LOGGER.warning(
-        (
-            "Template warning: '%s' got invalid input '%s' when %s template '%s' "
-            "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2022.1"
-        ),
-        function,
-        value,
-        action,
-        template,
-        function,
-        default,
+    raise ValueError(
+        f"Template error: {function} got invalid input '{value}' when {action} template '{template}' "
+        "but no default was specified"
     )
 
 
@@ -1360,8 +1352,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     except (ValueError, TypeError):
         # If value can't be converted to float
         if default is _SENTINEL:
-            warn_no_default("round", value, value)
-            return value
+            raise_no_default("round", value)
         return default
 
 
@@ -1372,20 +1363,25 @@ def multiply(value, amount, default=_SENTINEL):
     except (ValueError, TypeError):
         # If value can't be converted to float
         if default is _SENTINEL:
-            warn_no_default("multiply", value, value)
-            return value
+            raise_no_default("multiply", value)
         return default
 
 
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
-        return math.log(float(value), float(base))
+        value_float = float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("log", value, value)
-            return value
+            raise_no_default("log", value)
         return default
+    try:
+        base_float = float(base)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("log", base)
+        return default
+    return math.log(value_float, base_float)
 
 
 def sine(value, default=_SENTINEL):
@@ -1394,8 +1390,7 @@ def sine(value, default=_SENTINEL):
         return math.sin(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("sin", value, value)
-            return value
+            raise_no_default("sin", value)
         return default
 
 
@@ -1405,8 +1400,7 @@ def cosine(value, default=_SENTINEL):
         return math.cos(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("cos", value, value)
-            return value
+            raise_no_default("cos", value)
         return default
 
 
@@ -1416,8 +1410,7 @@ def tangent(value, default=_SENTINEL):
         return math.tan(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("tan", value, value)
-            return value
+            raise_no_default("tan", value)
         return default
 
 
@@ -1427,8 +1420,7 @@ def arc_sine(value, default=_SENTINEL):
         return math.asin(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("asin", value, value)
-            return value
+            raise_no_default("asin", value)
         return default
 
 
@@ -1438,8 +1430,7 @@ def arc_cosine(value, default=_SENTINEL):
         return math.acos(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("acos", value, value)
-            return value
+            raise_no_default("acos", value)
         return default
 
 
@@ -1449,8 +1440,7 @@ def arc_tangent(value, default=_SENTINEL):
         return math.atan(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("atan", value, value)
-            return value
+            raise_no_default("atan", value)
         return default
 
 
@@ -1473,8 +1463,7 @@ def arc_tangent2(*args, default=_SENTINEL):
         return math.atan2(float(args[0]), float(args[1]))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("atan2", args, args)
-            return args
+            raise_no_default("atan2", args)
         return default
 
 
@@ -1484,8 +1473,7 @@ def square_root(value, default=_SENTINEL):
         return math.sqrt(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("sqrt", value, value)
-            return value
+            raise_no_default("sqrt", value)
         return default
 
 
@@ -1501,8 +1489,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_custom", value, value)
-            return value
+            raise_no_default("timestamp_custom", value)
         return default
 
 
@@ -1513,8 +1500,7 @@ def timestamp_local(value, default=_SENTINEL):
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_local", value, value)
-            return value
+            raise_no_default("timestamp_local", value)
         return default
 
 
@@ -1525,8 +1511,7 @@ def timestamp_utc(value, default=_SENTINEL):
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_utc", value, value)
-            return value
+            raise_no_default("timestamp_utc", value)
         return default
 
 
@@ -1536,8 +1521,7 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return dt_util.as_timestamp(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("as_timestamp", value, None)
-            return None
+            raise_no_default("as_timestamp", value)
         return default
 
 
@@ -1557,8 +1541,7 @@ def strptime(string, fmt, default=_SENTINEL):
         return datetime.strptime(string, fmt)
     except (ValueError, AttributeError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("strptime", string, string)
-            return string
+            raise_no_default("strptime", string)
         return default
 
 
@@ -1617,8 +1600,7 @@ def forgiving_float(value, default=_SENTINEL):
         return float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("float", value, value)
-            return value
+            raise_no_default("float", value)
         return default
 
 
@@ -1628,26 +1610,23 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("float", value, 0)
-            return 0
+            raise_no_default("float", value)
         return default
 
 
 def forgiving_int(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and warn if it fails."""
+    """Try to convert value to an int, and raise if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
-        warn_no_default("int", value, value)
-        return value
+        raise_no_default("int", value)
     return result
 
 
 def forgiving_int_filter(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and warn if it fails."""
+    """Try to convert value to an int, and raise if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
-        warn_no_default("int", value, 0)
-        return 0
+        raise_no_default("int", value)
     return result
 
 

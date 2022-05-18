@@ -25,6 +25,9 @@
                     "name": "Nom",
                     "region": "R\u00e9gion"
                 },
+                "data_description": {
+                    "code": "Acc\u00e9dez aux \u00ab\u00a0Param\u00e8tres\u00a0\u00bb sur votre console PlayStation\u00a04, puis acc\u00e9dez \u00e0 \u00ab\u00a0Param\u00e8tres de connexion de l'application mobile\u00a0\u00bb et s\u00e9lectionnez \u00ab\u00a0Ajouter un appareil\u00a0\u00bb afin d'obtenir le code PIN."
+                },
                 "description": "Saisissez les informations de votre PlayStation\u00a04. Pour le Code PIN, acc\u00e9dez aux \u00ab\u00a0Param\u00e8tres\u00a0\u00bb sur votre console PlayStation\u00a04, puis acc\u00e9dez \u00e0 \u00ab\u00a0Param\u00e8tres de connexion de l'application mobile\u00a0\u00bb et s\u00e9lectionnez \u00ab\u00a0Ajouter un appareil\u00a0\u00bb. Entrez le Code PIN affich\u00e9. Consultez la [documentation](https://www.home-assistant.io/components/ps4/) pour plus d'informations.",
                 "title": "PlayStation 4"
             },
@@ -32,6 +35,9 @@
                 "data": {
                     "ip_address": "Adresse IP (laissez vide si vous utilisez la d\u00e9couverte automatique).",
                     "mode": "Mode de configuration"
+                },
+                "data_description": {
+                    "ip_address": "Laissez le champ vide si vous s\u00e9lectionnez la d\u00e9couverte automatique."
                 },
                 "description": "S\u00e9lectionnez le mode de configuration. Le champ Adresse IP peut \u00eatre laiss\u00e9 vide si vous s\u00e9lectionnez D\u00e9couverte automatique, car les appareils seront automatiquement d\u00e9couverts.",
                 "title": "PlayStation 4"

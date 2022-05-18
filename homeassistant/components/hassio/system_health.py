@@ -30,7 +30,6 @@ async def system_health_info(hass: HomeAssistant):
         healthy = {
             "type": "failed",
             "error": "Unhealthy",
-            "more_info": "/hassio/system",
         }
 
     if supervisor_info.get("supported"):
@@ -39,7 +38,6 @@ async def system_health_info(hass: HomeAssistant):
         supported = {
             "type": "failed",
             "error": "Unsupported",
-            "more_info": "/hassio/system",
         }
 
     information = {
@@ -63,7 +61,6 @@ async def system_health_info(hass: HomeAssistant):
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,
         f"https://version.home-assistant.io/{info.get('channel')}.json",
-        "/hassio/system",
     )
 
     information["installed_addons"] = ", ".join(

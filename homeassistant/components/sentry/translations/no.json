@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
+                    "dsn": "Sentry DSN"
                 },
                 "description": "Fyll inn din Sentry DNS",
                 "title": ""

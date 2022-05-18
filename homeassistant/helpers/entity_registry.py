@@ -711,6 +711,10 @@ class EntityRegistry:
                 if not valid_entity_id(entity["entity_id"]):
                     continue
 
+                # We removed this in 2022.5. Remove this check in 2023.1.
+                if entity["entity_category"] == "system":
+                    entity["entity_category"] = None
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     area_id=entity["area_id"],
                     capabilities=entity["capabilities"],
@@ -991,7 +995,7 @@ async def async_migrate_entries(
     entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
     """Migrator of unique IDs."""
-    ent_reg = await async_get_registry(hass)
+    ent_reg = async_get(hass)
 
     for entry in ent_reg.entities.values():
         if entry.config_entry_id != config_entry_id:

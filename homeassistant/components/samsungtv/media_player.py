@@ -12,9 +12,11 @@ from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import (
     UpnpActionResponseError,
+    UpnpCommunicationError,
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
+    UpnpXmlContentError,
 )
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
@@ -270,11 +272,12 @@ class SamsungTVDevice(MediaPlayerEntity):
             # NETWORK,NONE
             upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
-            with contextlib.suppress(UpnpConnectionError, UpnpResponseError):
+            try:
                 upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
-            if not upnp_device:
+            except (UpnpConnectionError, UpnpResponseError, UpnpXmlContentError) as err:
+                LOGGER.debug("Unable to create Upnp DMR device: %r", err, exc_info=True)
                 return
             _, event_ip = await async_get_local_ip(
                 self._ssdp_rendering_control_location, self.hass.loop
@@ -307,8 +310,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def _async_resubscribe_dmr(self) -> None:
         assert self._dmr_device
-        with contextlib.suppress(UpnpConnectionError):
+        try:
             await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+        except UpnpCommunicationError as err:
+            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""

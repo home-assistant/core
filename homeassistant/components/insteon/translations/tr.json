@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "not_insteon_device": "Ke\u015ffedilen cihaz bir Insteon cihaz\u0131 de\u011fil",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "select_single": "Bir se\u00e7enek belirleyin."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP Adresi",

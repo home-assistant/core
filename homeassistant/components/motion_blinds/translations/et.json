@@ -9,7 +9,7 @@
             "discovery_error": "Motion Gateway avastamine nurjus",
             "invalid_interface": "Sobimatu v\u00f5rguliides"
         },
-        "flow_title": "",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

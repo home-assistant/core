@@ -100,8 +100,8 @@ class SlimProtoPlayer(MediaPlayerEntity):
             name=self.player.name,
             hw_version=self.player.firmware,
         )
-        # PiCore player has web interface
-        if "-pCP" in self.player.firmware:
+        # PiCore + SqueezeESP32 player has web interface
+        if "-pCP" in self.player.firmware or self.player.device_model == "SqueezeESP32":
             self._attr_device_info[
                 "configuration_url"
             ] = f"http://{self.player.device_address}"
@@ -118,7 +118,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
                     EventType.PLAYER_CONNECTED,
                     EventType.PLAYER_DISCONNECTED,
                     EventType.PLAYER_NAME_RECEIVED,
-                    EventType.PLAYER_RPC_EVENT,
+                    EventType.PLAYER_CLI_EVENT,
                 ),
                 player_filter=self.player.player_id,
             )
@@ -205,7 +205,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         if event.type == EventType.PLAYER_CONNECTED:
             # player reconnected, update our player object
             self.player = self.slimserver.get_player(event.player_id)
-        if event.type == EventType.PLAYER_RPC_EVENT:
+        if event.type == EventType.PLAYER_CLI_EVENT:
             # rpc event from player such as a button press,
             # forward on the eventbus for others to handle
             dev_id = self.registry_entry.device_id if self.registry_entry else None

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Use https://steamid.io to find your Steam account ID",
+        "description": "Use {account_id_url} to find your Steam account ID",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "account": "Steam account ID"
@@ -10,7 +10,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: https://steamcommunity.com/dev/apikey"
+        "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: {api_key_url}"
       }
     },
     "error": {

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Failed to connect",
+            "not_insteon_device": "Discovered device not an Insteon device",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {

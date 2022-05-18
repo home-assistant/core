@@ -36,6 +36,7 @@ SUPPORTED_IOT_CLASSES = [
 NO_IOT_CLASS = [
     *{platform.value for platform in Platform},
     "api",
+    "application_credentials",
     "auth",
     "automation",
     "blueprint",

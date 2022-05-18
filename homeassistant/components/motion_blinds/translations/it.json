@@ -9,7 +9,7 @@
             "discovery_error": "Impossibile rilevare un Motion Gateway",
             "invalid_interface": "Interfaccia di rete non valida"
         },
-        "flow_title": "Tende Motion",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

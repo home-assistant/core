@@ -9,7 +9,7 @@
             "discovery_error": "\u641c\u7d22 Motion \u9598\u9053\u5668\u5931\u6557",
             "invalid_interface": "\u7db2\u8def\u4ecb\u9762\u7121\u6548"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

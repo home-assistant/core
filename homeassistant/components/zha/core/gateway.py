@@ -25,18 +25,9 @@ from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import (
-    CONNECTION_ZIGBEE,
-    DeviceRegistry,
-    async_get_registry as get_dev_reg,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    async_entries_for_device,
-    async_get_registry as get_ent_reg,
-)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -129,8 +120,8 @@ class ZHAGateway:
 
     # -- Set in async_initialize --
     zha_storage: ZhaStorage
-    ha_device_registry: DeviceRegistry
-    ha_entity_registry: EntityRegistry
+    ha_device_registry: dr.DeviceRegistry
+    ha_entity_registry: er.EntityRegistry
     application_controller: ControllerApplication
     radio_description: str
 
@@ -161,8 +152,8 @@ class ZHAGateway:
         discovery.GROUP_PROBE.initialize(self._hass)
 
         self.zha_storage = await async_get_registry(self._hass)
-        self.ha_device_registry = await get_dev_reg(self._hass)
-        self.ha_entity_registry = await get_ent_reg(self._hass)
+        self.ha_device_registry = dr.async_get(self._hass)
+        self.ha_entity_registry = er.async_get(self._hass)
 
         radio_type = self.config_entry.data[CONF_RADIO_TYPE]
 
@@ -240,14 +231,14 @@ class ZHAGateway:
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
 
-        _LOGGER.warning("Loading all devices")
+        _LOGGER.debug("Loading all devices")
         await asyncio.gather(
             *(dev.async_initialize(from_cache=True) for dev in self.devices.values())
         )
 
         async def fetch_updated_state() -> None:
             """Fetch updated state for mains powered devices."""
-            _LOGGER.warning("Fetching current state for mains powered devices")
+            _LOGGER.debug("Fetching current state for mains powered devices")
             await asyncio.gather(
                 *(
                     dev.async_initialize(from_cache=False)
@@ -437,7 +428,7 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
-        all_group_entity_entries = async_entries_for_device(
+        all_group_entity_entries = er.async_entries_for_device(
             self.ha_entity_registry,
             self.coordinator_zha_device.device_id,
             include_disabled_entities=True,
@@ -528,7 +519,7 @@ class ZHAGateway:
             self._devices[zigpy_device.ieee] = zha_device
             device_registry_device = self.ha_device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
+                connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
                 name=zha_device.name,
                 manufacturer=zha_device.manufacturer,

@@ -9,6 +9,7 @@
             "device_not_found": "Cihaz ke\u015fif s\u0131ras\u0131nda bulunamad\u0131, l\u00fctfen tekrar eklemeyi deneyin.",
             "inconsistent_device": "Ke\u015fif s\u0131ras\u0131nda beklenen protokoller bulunamad\u0131. Bu normalde \u00e7ok noktaya yay\u0131n DNS (Zeroconf) ile ilgili bir sorunu g\u00f6sterir. L\u00fctfen cihaz\u0131 tekrar eklemeyi deneyin.",
             "invalid_config": "Bu ayg\u0131t\u0131n yap\u0131land\u0131rmas\u0131 tamamlanmad\u0131. L\u00fctfen tekrar eklemeyi deneyin.",
+            "ipv6_not_supported": "IPv6 desteklenmiyor.",
             "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
             "setup_failed": "Cihaz kurulumu ba\u015far\u0131s\u0131z.",

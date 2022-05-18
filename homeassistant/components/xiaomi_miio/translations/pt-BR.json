@@ -25,7 +25,7 @@
                     "cloud_username": "Usu\u00e1rio da Cloud",
                     "manual": "Configurar manualmente (n\u00e3o recomendado)"
                 },
-                "description": "Fa\u00e7a login na Cloud Xiaomi Miio, consulte https://www.openhab.org/addons/bindings/miio/#country-servers para o servidor em cloud usar.",
+                "description": "Coloque o login da Cloud Xiaomi Miio e consulte https://www.openhab.org/addons/bindings/miio/#country-servers para saber qual servidor cloud usar.",
                 "title": "Conecte-se a um dispositivo Xiaomi Miio ou Xiaomi Gateway"
             },
             "connect": {

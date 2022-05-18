@@ -9,6 +9,7 @@
             "updated_instance": "Instans deCONZ yang diperbarui dengan alamat host baru"
         },
         "error": {
+            "linking_not_possible": "Tidak dapat terhubung dengan gateway",
             "no_key": "Tidak bisa mendapatkan kunci API"
         },
         "flow_title": "{host}",

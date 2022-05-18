@@ -26,6 +26,7 @@
         "step": {
             "configure_addon": {
                 "data": {
+                    "network_key": "Network Key",
                     "s0_legacy_key": "S0 Key (Legacy)",
                     "s2_access_control_key": "S2 Access Control Key",
                     "s2_authenticated_key": "S2 Authenticated Key",
@@ -116,6 +117,7 @@
                 "data": {
                     "emulate_hardware": "Emulate Hardware",
                     "log_level": "Log level",
+                    "network_key": "Network Key",
                     "s0_legacy_key": "S0 Key (Legacy)",
                     "s2_access_control_key": "S2 Access Control Key",
                     "s2_authenticated_key": "S2 Authenticated Key",
@@ -144,5 +146,6 @@
                 "title": "The Z-Wave JS add-on is starting."
             }
         }
-    }
+    },
+    "title": "Z-Wave JS"
 }

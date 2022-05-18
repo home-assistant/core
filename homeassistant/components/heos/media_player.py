@@ -1,11 +1,14 @@
 """Denon HEOS Media Player."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
 import logging
 from operator import ior
+from typing import Any
 
 from pyheos import HeosError, const as heos_const
+from typing_extensions import ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -41,6 +44,8 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
+
+_P = ParamSpec("_P")
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -80,12 +85,16 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-def log_command_error(command: str):
+def log_command_error(
+    command: str,
+) -> Callable[[Callable[_P, Awaitable[Any]]], Callable[_P, Coroutine[Any, Any, None]]]:
     """Return decorator that logs command failure."""
 
-    def decorator(func):
+    def decorator(
+        func: Callable[_P, Awaitable[Any]]
+    ) -> Callable[_P, Coroutine[Any, Any, None]]:
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
                 await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
