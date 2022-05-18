@@ -304,7 +304,7 @@ def _entities_devices_stmt(
                         entity_ids,
                         json_quotable_entity_ids,
                         json_quotable_device_ids,
-                    )
+                    ).subquery()
                 )
             ),
             _select_states_context_only()
@@ -318,7 +318,7 @@ def _entities_devices_stmt(
                         entity_ids,
                         json_quotable_entity_ids,
                         json_quotable_device_ids,
-                    )
+                    ).subquery()
                 )
             ),
         )
@@ -336,7 +336,7 @@ def _entities_devices_stmt(
                         event_types,
                         entity_ids,
                         json_quotable_entity_ids,
-                    )
+                    ).subquery()
                 )
             ),
             _select_states_context_only()
@@ -349,7 +349,7 @@ def _entities_devices_stmt(
                         event_types,
                         entity_ids,
                         json_quotable_entity_ids,
-                    )
+                    ).subquery()
                 )
             ),
         )
@@ -365,7 +365,7 @@ def _entities_devices_stmt(
                         end_day,
                         event_types,
                         json_quotable_device_ids,
-                    )
+                    ).subquery()
                 )
             ),
             _select_states_context_only().where(
@@ -375,7 +375,7 @@ def _entities_devices_stmt(
                         end_day,
                         event_types,
                         json_quotable_device_ids,
-                    )
+                    ).subquery()
                 )
             ),
         )
