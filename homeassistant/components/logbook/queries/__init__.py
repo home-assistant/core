@@ -18,9 +18,7 @@ def statement_for_request(
     end_day: dt,
     event_types: tuple[str, ...],
     entity_ids: list[str] | None = None,
-    json_quotable_entity_ids: list[str] | None = None,
     device_ids: list[str] | None = None,
-    json_quotable_device_ids: list[str] | None = None,
     filters: Filters | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
@@ -36,13 +34,11 @@ def statement_for_request(
     # json quotable ones must be a different
     # object from the non-json ones to prevent
     # sqlalchemy from quoting them incorrectly
-    assert not device_ids or (device_ids is not json_quotable_device_ids)
-    assert not entity_ids or (entity_ids is not json_quotable_entity_ids)
 
-    # Multiple entities: logbook sends everything for the timeframe for the entities and devices
+    # entities and devices: logbook sends everything for the timeframe for the entities and devices
     if entity_ids and device_ids:
-        assert json_quotable_entity_ids is not None
-        assert json_quotable_device_ids is not None
+        json_quotable_entity_ids = list(entity_ids)
+        json_quotable_device_ids = list(device_ids)
         return entities_devices_stmt(
             start_day,
             end_day,
@@ -52,8 +48,9 @@ def statement_for_request(
             json_quotable_device_ids,
         )
 
+    # entities: logbook sends everything for the timeframe for the entities
     if entity_ids:
-        assert json_quotable_entity_ids is not None
+        json_quotable_entity_ids = list(entity_ids)
         return entities_stmt(
             start_day,
             end_day,
@@ -62,7 +59,9 @@ def statement_for_request(
             json_quotable_entity_ids,
         )
 
-    assert json_quotable_device_ids is not None
+    # devices: logbook sends everything for the timeframe for the devices
+    assert device_ids is not None
+    json_quotable_device_ids = list(device_ids)
     return devices_stmt(
         start_day,
         end_day,
