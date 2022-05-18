@@ -67,8 +67,9 @@ async def async_setup_entry(
         doors = await hass.async_add_executor_job(acc.get_doors)
 
     except ValueError as ex:
-        _LOGGER.error("%s", ex)
-        raise PlatformNotReady from ex
+        raise PlatformNotReady(
+            f"Error from Aladdin Connect getting doors: {ex}"
+        ) from ex
     async_add_entities(
         (AladdinDevice(acc, door) for door in doors),
         update_before_add=True,

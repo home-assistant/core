@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not await hass.async_add_executor_job(acc.login):
             raise ConfigEntryAuthFailed("Incorrect Password")
     except ValueError as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"Error from Aladdin Connect: {ex}") from ex
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
