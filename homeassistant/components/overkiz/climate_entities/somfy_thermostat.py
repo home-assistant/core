@@ -7,14 +7,13 @@ from pyoverkiz.enums import OverkizCommand, OverkizState
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_HOME,
     PRESET_NONE,
     ClimateEntityFeature,
+    HVACAction,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -88,10 +87,10 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     def hvac_action(self) -> str:
         """Return the current running hvac operation if supported."""
         if not self.current_temperature or not self.target_temperature:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         if self.current_temperature < self.target_temperature:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str:
@@ -100,7 +99,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
             state_key = OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
-        
+
         return OVERKIZ_TO_PRESET_MODES[
             cast(
                 str,
