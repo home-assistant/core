@@ -26,9 +26,13 @@ from .conftest import (
     ids_from_device_description,
 )
 
-CAMERA_SWITCHES_NO_FACE = [d for d in CAMERA_SWITCHES if d.name != "Detections: Face"]
+CAMERA_SWITCHES_BASIC = [
+    d
+    for d in CAMERA_SWITCHES
+    if d.name != "Detections: Face" and d.name != "Detections: Package"
+]
 CAMERA_SWITCHES_NO_EXTRA = [
-    d for d in CAMERA_SWITCHES_NO_FACE if d.name not in ("High FPS", "Privacy Mode")
+    d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
 ]
 
 
@@ -253,7 +257,7 @@ async def test_switch_setup_camera_all(
 
     entity_registry = er.async_get(hass)
 
-    for description in CAMERA_SWITCHES_NO_FACE:
+    for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = ids_from_device_description(
             Platform.SWITCH, camera, description
         )

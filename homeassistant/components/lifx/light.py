@@ -419,6 +419,8 @@ class LIFXManager:
             if color_resp is None or version_resp is None:
                 _LOGGER.error("Failed to connect to %s", bulb.ip_addr)
                 bulb.registered = False
+                if bulb.mac_addr in self.discoveries_inflight:
+                    self.discoveries_inflight.pop(bulb.mac_addr)
             else:
                 bulb.timeout = MESSAGE_TIMEOUT
                 bulb.retry_count = MESSAGE_RETRIES
