@@ -195,7 +195,7 @@ def async_condition_from_config(
 
 
 @callback
-async def async_get_condition_capabilities(
+def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List condition capabilities."""

@@ -83,7 +83,7 @@ def async_condition_from_config(
     return test_is_state
 
 
-async def async_get_condition_capabilities(
+def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List condition capabilities."""
@@ -104,4 +104,4 @@ async def async_get_condition_capabilities(
 
         return {"extra_fields": vol.Schema(fields)}
 
-    return await toggle_entity.async_get_condition_capabilities(hass, config)
+    return toggle_entity.async_get_condition_capabilities(hass, config)

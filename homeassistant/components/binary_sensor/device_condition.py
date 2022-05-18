@@ -317,7 +317,7 @@ def async_condition_from_config(
     return condition.state_from_config(state_config)
 
 
-async def async_get_condition_capabilities(
+def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List condition capabilities."""

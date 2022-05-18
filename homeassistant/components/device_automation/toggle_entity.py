@@ -233,7 +233,7 @@ async def async_get_triggers(
     return triggers
 
 
-async def async_get_condition_capabilities(
+def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List condition capabilities."""
