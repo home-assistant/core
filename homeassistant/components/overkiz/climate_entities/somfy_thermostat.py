@@ -63,6 +63,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
     _attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
+    # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0
 
