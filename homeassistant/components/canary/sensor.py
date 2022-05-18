@@ -219,11 +219,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     # @property
     def reading(self) -> None:
         """Return the device sensor reading."""
-        try:
-            readings = self.coordinator.data[DATA_TYPE_READING][self._device_id]
-        except KeyError:
-            self._state = None
-            return
+        readings = self.coordinator.data[DATA_TYPE_READING][self._device_id]
 
         value = next(
             (
@@ -241,10 +237,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     # @property
     def entry(self) -> None:
         """Return the state of the entry sensor."""
-        try:
-            entry = self.coordinator.data[DATA_TYPE_ENTRY][self._device_id]
-        except KeyError:
-            entry = None
+        entry = self.coordinator.data[DATA_TYPE_ENTRY][self._device_id]
 
         if entry is not None:
             if self._canary_type == SensorType.ENTRIES_CAPTURED_TODAY:
