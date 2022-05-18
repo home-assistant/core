@@ -174,7 +174,7 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
+# Configuring MQTT Fans under the fan platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_speed_range_configuration,
