@@ -154,7 +154,10 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     async def async_added_to_hass(self) -> None:
         """Subscribe to signal."""
         self._listen_source_updates()
+<<<<<<< HEAD
         await super().async_added_to_hass()
+=======
+>>>>>>> 5deb78a0dd (Refresh camera stream source of Synology DSM connected cameras (#70938))
 
     def camera_image(
         self, width: int | None = None, height: int | None = None

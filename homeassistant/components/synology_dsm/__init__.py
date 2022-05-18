@@ -22,7 +22,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+<<<<<<< HEAD
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+=======
+from homeassistant.helpers import device_registry
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    async_get_registry as get_dev_reg,
+)
+>>>>>>> 5deb78a0dd (Refresh camera stream source of Synology DSM connected cameras (#70938))
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
