@@ -11,8 +11,12 @@ MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 =======
 MINOR_VERSION: Final = 5
+<<<<<<< HEAD
 PATCH_VERSION: Final = "4"
 >>>>>>> c9543d8665 (Bumped version to 2022.5.4)
+=======
+PATCH_VERSION: Final = "5"
+>>>>>>> 1b107f6845 (Bumped version to 2022.5.5)
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
