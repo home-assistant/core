@@ -45,6 +45,7 @@ from homeassistant.util.yaml import load_yaml
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -819,6 +820,7 @@ async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
+    report("uses deprecated `async_get_registry` to access entity registry")
     return async_get(hass)
 
 

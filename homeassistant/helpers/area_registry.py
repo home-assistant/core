@@ -12,6 +12,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
+from .frame import report
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -226,6 +227,7 @@ async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
+    report("uses deprecated `async_get_registry` to access area registry")
     return async_get(hass)
 
 
