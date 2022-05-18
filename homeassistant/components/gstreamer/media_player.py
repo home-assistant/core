@@ -6,10 +6,15 @@ import logging
 from gsp import GstreamerPlayer
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
@@ -58,6 +63,7 @@ class GstreamerDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
     def __init__(self, player, name):
@@ -86,12 +92,20 @@ class GstreamerDevice(MediaPlayerEntity):
         """Set the volume level."""
         self._player.volume = volume
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
         if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error("Invalid media type")
             return
-        self._player.queue(media_id)
+
+        # Handle media_source
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = sourced_media.url
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        await self.hass.async_add_executor_job(self._player.queue, media_id)
 
     def media_play(self):
         """Play."""
@@ -149,3 +163,13 @@ class GstreamerDevice(MediaPlayerEntity):
     def media_album_name(self):
         """Media album."""
         return self._album
+
+    async def async_browse_media(
+        self, media_content_type=None, media_content_id=None
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
