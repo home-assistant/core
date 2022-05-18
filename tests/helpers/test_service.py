@@ -900,7 +900,7 @@ async def test_domain_control_unknown(hass, mock_entities):
         calls.append(call)
 
     with patch(
-        "homeassistant.helpers.entity_registry.async_get_registry",
+        "homeassistant.helpers.entity_registry.async_get",
         return_value=Mock(entities=mock_entities),
     ):
         protected_mock_service = service.verify_domain_control(hass, "test_domain")(
