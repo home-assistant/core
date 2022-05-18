@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from datetime import datetime
-from itertools import zip_longest
+from functools import partial
+from itertools import islice, zip_longest
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
@@ -29,6 +30,8 @@ from .queries import (
     disconnect_states_rows,
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
+    find_legacy_event_state_and_attributes_and_data_ids_to_purge,
+    find_legacy_row,
     find_short_term_statistics_to_purge,
     find_states_to_purge,
     find_statistics_runs_to_purge,
@@ -42,9 +45,34 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+DEFAULT_STATES_BATCHES_PER_PURGE = 20  # We expect ~95% de-dupe rate
+DEFAULT_EVENTS_BATCHES_PER_PURGE = 15  # We expect ~92% de-dupe rate
+
+
+def take(take_num: int, iterable: Iterable) -> list[Any]:
+    """Return first n items of the iterable as a list.
+
+    From itertools recipes
+    """
+    return list(islice(iterable, take_num))
+
+
+def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
+    """Break *iterable* into lists of length *n*.
+
+    From more-itertools
+    """
+    return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
 @retryable_database_job("purge")
 def purge_old_data(
-    instance: Recorder, purge_before: datetime, repack: bool, apply_filter: bool = False
+    instance: Recorder,
+    purge_before: datetime,
+    repack: bool,
+    apply_filter: bool = False,
+    events_batch_size: int = DEFAULT_EVENTS_BATCHES_PER_PURGE,
+    states_batch_size: int = DEFAULT_STATES_BATCHES_PER_PURGE,
 ) -> bool:
     """Purge events and states older than purge_before.
 
@@ -58,40 +86,37 @@ def purge_old_data(
 
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
-        (
-            event_ids,
-            state_ids,
-            attributes_ids,
-            data_ids,
-        ) = _select_event_state_attributes_ids_data_ids_to_purge(session, purge_before)
+        has_more_to_purge = False
+        if _purging_legacy_format(session):
+            _LOGGER.debug(
+                "Purge running in legacy format as there are states with event_id remaining"
+            )
+            has_more_to_purge |= _purge_legacy_format(
+                instance, session, purge_before, using_sqlite
+            )
+        else:
+            _LOGGER.debug(
+                "Purge running in new format as there are NO states with event_id remaining"
+            )
+            # Once we are done purging legacy rows, we use the new method
+            has_more_to_purge |= _purge_states_and_attributes_ids(
+                instance, session, states_batch_size, purge_before, using_sqlite
+            )
+            has_more_to_purge |= _purge_events_and_data_ids(
+                instance, session, events_batch_size, purge_before, using_sqlite
+            )
+
         statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
         short_term_statistics = _select_short_term_statistics_to_purge(
             session, purge_before
         )
-
-        if state_ids:
-            _purge_state_ids(instance, session, state_ids)
-
-        if unused_attribute_ids_set := _select_unused_attributes_ids(
-            session, attributes_ids, using_sqlite
-        ):
-            _purge_attributes_ids(instance, session, unused_attribute_ids_set)
-
-        if event_ids:
-            _purge_event_ids(session, event_ids)
-
-        if unused_data_ids_set := _select_unused_event_data_ids(
-            session, data_ids, using_sqlite
-        ):
-            _purge_event_data_ids(instance, session, unused_data_ids_set)
-
         if statistics_runs:
             _purge_statistics_runs(session, statistics_runs)
 
         if short_term_statistics:
             _purge_short_term_statistics(session, short_term_statistics)
 
-        if state_ids or event_ids or statistics_runs or short_term_statistics:
+        if has_more_to_purge or statistics_runs or short_term_statistics:
             # Return false, as we might not be done yet.
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
@@ -106,27 +131,132 @@ def purge_old_data(
     return True
 
 
-def _select_event_state_attributes_ids_data_ids_to_purge(
+def _purging_legacy_format(session: Session) -> bool:
+    """Check if there are any legacy event_id linked states rows remaining."""
+    return bool(session.execute(find_legacy_row()).scalar())
+
+
+def _purge_legacy_format(
+    instance: Recorder, session: Session, purge_before: datetime, using_sqlite: bool
+) -> bool:
+    """Purge rows that are still linked by the event_ids."""
+    (
+        event_ids,
+        state_ids,
+        attributes_ids,
+        data_ids,
+    ) = _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
+        session, purge_before
+    )
+    if state_ids:
+        _purge_state_ids(instance, session, state_ids)
+    _purge_unused_attributes_ids(instance, session, attributes_ids, using_sqlite)
+    if event_ids:
+        _purge_event_ids(session, event_ids)
+    _purge_unused_data_ids(instance, session, data_ids, using_sqlite)
+    return bool(event_ids or state_ids or attributes_ids or data_ids)
+
+
+def _purge_states_and_attributes_ids(
+    instance: Recorder,
+    session: Session,
+    states_batch_size: int,
+    purge_before: datetime,
+    using_sqlite: bool,
+) -> bool:
+    """Purge states and linked attributes id in a batch.
+
+    Returns true if there are more states to purge.
+    """
+    has_remaining_state_ids_to_purge = True
+    # There are more states relative to attributes_ids so
+    # we purge enough state_ids to try to generate a full
+    # size batch of attributes_ids that will be around the size
+    # MAX_ROWS_TO_PURGE
+    attributes_ids_batch: set[int] = set()
+    for _ in range(states_batch_size):
+        state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
+            session, purge_before
+        )
+        if not state_ids:
+            has_remaining_state_ids_to_purge = False
+            break
+        _purge_state_ids(instance, session, state_ids)
+        attributes_ids_batch = attributes_ids_batch | attributes_ids
+
+    _purge_unused_attributes_ids(instance, session, attributes_ids_batch, using_sqlite)
+    _LOGGER.debug(
+        "After purging states and attributes_ids remaining=%s",
+        has_remaining_state_ids_to_purge,
+    )
+    return has_remaining_state_ids_to_purge
+
+
+def _purge_events_and_data_ids(
+    instance: Recorder,
+    session: Session,
+    events_batch_size: int,
+    purge_before: datetime,
+    using_sqlite: bool,
+) -> bool:
+    """Purge states and linked attributes id in a batch.
+
+    Returns true if there are more states to purge.
+    """
+    has_remaining_event_ids_to_purge = True
+    # There are more events relative to data_ids so
+    # we purge enough event_ids to try to generate a full
+    # size batch of data_ids that will be around the size
+    # MAX_ROWS_TO_PURGE
+    data_ids_batch: set[int] = set()
+    for _ in range(events_batch_size):
+        event_ids, data_ids = _select_event_data_ids_to_purge(session, purge_before)
+        if not event_ids:
+            has_remaining_event_ids_to_purge = False
+            break
+        _purge_event_ids(session, event_ids)
+        data_ids_batch = data_ids_batch | data_ids
+
+    _purge_unused_data_ids(instance, session, data_ids_batch, using_sqlite)
+    _LOGGER.debug(
+        "After purging event and data_ids remaining=%s",
+        has_remaining_event_ids_to_purge,
+    )
+    return has_remaining_event_ids_to_purge
+
+
+def _select_state_attributes_ids_to_purge(
     session: Session, purge_before: datetime
-) -> tuple[set[int], set[int], set[int], set[int]]:
-    """Return a list of event, state, and attribute ids to purge."""
-    events = session.execute(find_events_to_purge(purge_before)).all()
-    _LOGGER.debug("Selected %s event ids to remove", len(events))
-    states = session.execute(find_states_to_purge(purge_before)).all()
-    _LOGGER.debug("Selected %s state ids to remove", len(states))
-    event_ids = set()
+) -> tuple[set[int], set[int]]:
+    """Return sets of state and attribute ids to purge."""
     state_ids = set()
     attributes_ids = set()
-    data_ids = set()
-    for event in events:
-        event_ids.add(event.event_id)
-        if event.data_id:
-            data_ids.add(event.data_id)
-    for state in states:
+    for state in session.execute(find_states_to_purge(purge_before)).all():
         state_ids.add(state.state_id)
         if state.attributes_id:
             attributes_ids.add(state.attributes_id)
-    return event_ids, state_ids, attributes_ids, data_ids
+    _LOGGER.debug(
+        "Selected %s state ids and %s attributes_ids to remove",
+        len(state_ids),
+        len(attributes_ids),
+    )
+    return state_ids, attributes_ids
+
+
+def _select_event_data_ids_to_purge(
+    session: Session, purge_before: datetime
+) -> tuple[set[int], set[int]]:
+    """Return sets of event and data ids to purge."""
+    event_ids = set()
+    data_ids = set()
+    for event in session.execute(find_events_to_purge(purge_before)).all():
+        event_ids.add(event.event_id)
+        if event.data_id:
+            data_ids.add(event.data_id)
+    _LOGGER.debug(
+        "Selected %s event ids and %s data_ids to remove", len(event_ids), len(data_ids)
+    )
+    return event_ids, data_ids
 
 
 def _select_unused_attributes_ids(
@@ -197,6 +327,18 @@ def _select_unused_attributes_ids(
     return to_remove
 
 
+def _purge_unused_attributes_ids(
+    instance: Recorder,
+    session: Session,
+    attributes_ids_batch: set[int],
+    using_sqlite: bool,
+) -> None:
+    if unused_attribute_ids_set := _select_unused_attributes_ids(
+        session, attributes_ids_batch, using_sqlite
+    ):
+        _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
+
+
 def _select_unused_event_data_ids(
     session: Session, data_ids: set[int], using_sqlite: bool
 ) -> set[int]:
@@ -229,6 +371,16 @@ def _select_unused_event_data_ids(
     return to_remove
 
 
+def _purge_unused_data_ids(
+    instance: Recorder, session: Session, data_ids_batch: set[int], using_sqlite: bool
+) -> None:
+
+    if unused_data_ids_set := _select_unused_event_data_ids(
+        session, data_ids_batch, using_sqlite
+    ):
+        _purge_batch_data_ids(instance, session, unused_data_ids_set)
+
+
 def _select_statistics_runs_to_purge(
     session: Session, purge_before: datetime
 ) -> list[int]:
@@ -254,6 +406,34 @@ def _select_short_term_statistics_to_purge(
     ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
     return [statistic.id for statistic in statistics]
+
+
+def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
+    session: Session, purge_before: datetime
+) -> tuple[set[int], set[int], set[int], set[int]]:
+    """Return a list of event, state, and attribute ids to purge that are linked by the event_id.
+
+    We do not link these anymore since state_change events
+    do not exist in the events table anymore, however we
+    still need to be able to purge them.
+    """
+    events = session.execute(
+        find_legacy_event_state_and_attributes_and_data_ids_to_purge(purge_before)
+    ).all()
+    _LOGGER.debug("Selected %s event ids to remove", len(events))
+    event_ids = set()
+    state_ids = set()
+    attributes_ids = set()
+    data_ids = set()
+    for event in events:
+        event_ids.add(event.event_id)
+        if event.state_id:
+            state_ids.add(event.state_id)
+        if event.attributes_id:
+            attributes_ids.add(event.attributes_id)
+        if event.data_id:
+            data_ids.add(event.data_id)
+    return event_ids, state_ids, attributes_ids, data_ids
 
 
 def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) -> None:
@@ -327,24 +507,27 @@ def _evict_purged_attributes_from_attributes_cache(
         )
 
 
-def _purge_attributes_ids(
+def _purge_batch_attributes_ids(
     instance: Recorder, session: Session, attributes_ids: set[int]
 ) -> None:
-    """Delete old attributes ids."""
-    deleted_rows = session.execute(delete_states_attributes_rows(attributes_ids))
-    _LOGGER.debug("Deleted %s attribute states", deleted_rows)
+    """Delete old attributes ids in batches of MAX_ROWS_TO_PURGE."""
+    for attributes_ids_chunk in chunked(attributes_ids, MAX_ROWS_TO_PURGE):
+        deleted_rows = session.execute(
+            delete_states_attributes_rows(attributes_ids_chunk)
+        )
+        _LOGGER.debug("Deleted %s attribute states", deleted_rows)
 
     # Evict any entries in the state_attributes_ids cache referring to a purged state
     _evict_purged_attributes_from_attributes_cache(instance, attributes_ids)
 
 
-def _purge_event_data_ids(
+def _purge_batch_data_ids(
     instance: Recorder, session: Session, data_ids: set[int]
 ) -> None:
-    """Delete old event data ids."""
-
-    deleted_rows = session.execute(delete_event_data_rows(data_ids))
-    _LOGGER.debug("Deleted %s data events", deleted_rows)
+    """Delete old event data ids in batches of MAX_ROWS_TO_PURGE."""
+    for data_ids_chunk in chunked(data_ids, MAX_ROWS_TO_PURGE):
+        deleted_rows = session.execute(delete_event_data_rows(data_ids_chunk))
+        _LOGGER.debug("Deleted %s data events", deleted_rows)
 
     # Evict any entries in the event_data_ids cache referring to a purged state
     _evict_purged_data_from_data_cache(instance, data_ids)
@@ -438,7 +621,7 @@ def _purge_filtered_states(
     unused_attribute_ids_set = _select_unused_attributes_ids(
         session, {id_ for id_ in attributes_ids if id_ is not None}, using_sqlite
     )
-    _purge_attributes_ids(instance, session, unused_attribute_ids_set)
+    _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
 
 
 def _purge_filtered_events(
@@ -466,7 +649,7 @@ def _purge_filtered_events(
     if unused_data_ids_set := _select_unused_event_data_ids(
         session, set(data_ids), using_sqlite
     ):
-        _purge_event_data_ids(instance, session, unused_data_ids_set)
+        _purge_batch_data_ids(instance, session, unused_data_ids_set)
     if EVENT_STATE_CHANGED in excluded_event_types:
         session.query(StateAttributes).delete(synchronize_session=False)
         instance._state_attributes_ids = {}  # pylint: disable=protected-access

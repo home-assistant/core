@@ -7,7 +7,8 @@
             "user": {
                 "data": {
                     "show_on_map": "\u00bfMostrar en el mapa?"
-                }
+                },
+                "description": "\u00bfQuieres configurar Estaci\u00f3n Espacial Internacional (ISS)?"
             }
         }
     },

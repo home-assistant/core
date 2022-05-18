@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
                     "type": "Tipus de connexi\u00f3"
                 },
-                "title": "Configuraci\u00f3 d'1-Wire"
+                "title": "Detalls del servidor"
             }
         }
     },

@@ -9,6 +9,8 @@ from logging import getLogger
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from . import models
@@ -44,8 +46,8 @@ class AuthStore:
         self._users: dict[str, models.User] | None = None
         self._groups: dict[str, models.Group] | None = None
         self._perm_lookup: PermissionLookup | None = None
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._store = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._lock = asyncio.Lock()
 
@@ -303,11 +305,9 @@ class AuthStore:
 
     async def _async_load_task(self) -> None:
         """Load the users."""
-        [ent_reg, dev_reg, data] = await asyncio.gather(
-            self.hass.helpers.entity_registry.async_get_registry(),
-            self.hass.helpers.device_registry.async_get_registry(),
-            self._store.async_load(),
-        )
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+        data = await self._store.async_load()
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
@@ -316,7 +316,7 @@ class AuthStore:
 
         self._perm_lookup = perm_lookup = PermissionLookup(ent_reg, dev_reg)
 
-        if data is None:
+        if data is None or not isinstance(data, dict):
             self._set_defaults()
             return
 

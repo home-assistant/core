@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "round": "Presnos\u0165"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "round": "Presnos\u0165"
+                }
+            }
+        }
+    }
+}

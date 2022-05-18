@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Semua siswa telah ditambahkan.",
             "already_configured": "Siswa tersebut telah ditambahkan.",
+            "no_matching_entries": "Tidak ditemukan entri yang cocok, harap gunakan akun lain atau hapus integrasi dengan siswa yang ketinggalan zaman..",
             "reauth_successful": "Otorisasi ulang berhasil"
         },
         "error": {
@@ -30,6 +31,14 @@
                 "description": "Masuk ke Akun Vulcan Anda menggunakan halaman pendaftaran aplikasi seluler."
             },
             "reauth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "Simbol",
+                    "token": "Token"
+                },
+                "description": "Masuk ke Akun Vulcan Anda menggunakan halaman pendaftaran aplikasi seluler."
+            },
+            "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
                     "region": "Simbol",

@@ -12,7 +12,7 @@ from homeassistant.components.automation import (
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from . import PhilipsTVDataUpdateCoordinator
@@ -53,7 +53,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
     trigger_data = automation_info["trigger_data"]
-    registry: DeviceRegistry = await async_get_registry(hass)
+    registry: dr.DeviceRegistry = dr.async_get(hass)
     if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
         variables = {
             "trigger": {

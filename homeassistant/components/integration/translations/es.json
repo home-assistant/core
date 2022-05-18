@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "M\u00e9todo de integraci\u00f3n",
+                    "round": "Precisi\u00f3n",
+                    "source": "Sensor de entrada",
+                    "unit_prefix": "Prefijo m\u00e9trico",
+                    "unit_time": "Unidad de tiempo"
+                },
+                "data_description": {
+                    "round": "Controla el n\u00famero de d\u00edgitos decimales en la salida.",
+                    "unit_prefix": "La salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico seleccionado.",
+                    "unit_time": "La salida se escalar\u00e1 seg\u00fan la unidad de tiempo seleccionada."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "Precisi\u00f3n"
+                },
+                "data_description": {
+                    "round": "Controla el n\u00famero de d\u00edgitos decimales en la salida."
+                }
+            },
+            "options": {
+                "description": "La precisi\u00f3n controla el n\u00famero de d\u00edgitos decimales en la salida."
+            }
+        }
+    },
+    "title": "Integraci\u00f3n - Sensor integral de suma de Riemann"
+}

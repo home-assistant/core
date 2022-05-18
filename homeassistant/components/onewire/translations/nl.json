@@ -17,9 +17,11 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Poort",
                     "type": "Verbindingstype"
                 },
-                "title": "Stel 1-Wire in"
+                "title": "Serverdetails instellen"
             }
         }
     },

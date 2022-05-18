@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Location is already configured"
+            "already_configured": "Location is already configured",
+            "cannot_connect": "Failed to connect",
+            "max_regions": "Max 5 regions can be configured",
+            "rate_limit": "Too much requests",
+            "timeout": "Timeout establishing connection",
+            "unknown": "Unexpected error"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Key"
+                    "api_key": "API Key",
+                    "region": "Region"
                 },
-                "description": "Set up the Ukraine Alarm integration. To generate an API key go to {api_url}"
+                "description": "Choose state to monitor"
             }
         }
     }

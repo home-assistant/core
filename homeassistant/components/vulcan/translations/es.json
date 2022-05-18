@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ya se ha a\u00f1adido a este alumno.",
+            "reauth_successful": "Re-autenticaci\u00f3n exitosa"
+        },
+        "error": {
+            "expired_token": "Token caducado, genera un nuevo token",
+            "invalid_symbol": "S\u00edmbolo inv\u00e1lido",
+            "invalid_token": "Token inv\u00e1lido"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "reauth": {
+                "data": {
+                    "pin": "PIN",
+                    "region": "S\u00edmbolo",
+                    "token": "Token"
+                },
+                "description": "Inicia sesi\u00f3n en tu cuenta de Vulcan mediante la p\u00e1gina de registro de la aplicaci\u00f3n m\u00f3vil."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "region": "S\u00edmbolo"
+                }
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "Selecciona al alumno"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "error": "Se ha producido un error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "message_notify": "Muestra notificaciones cuando se reciba un mensaje nuevo",
+                    "scan_interval": "Intervalo de actualizaci\u00f3n (minutos)"
+                }
+            }
+        }
+    }
+}

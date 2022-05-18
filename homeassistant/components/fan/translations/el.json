@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "\u0395\u03bd\u03b1\u03bb\u03bb\u03b1\u03b3\u03ae {entity_name}",
             "turn_off": "\u0391\u03c0\u03b5\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7 {entity_name}",
             "turn_on": "\u0395\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7 {entity_name}"
         },

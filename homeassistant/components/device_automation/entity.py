@@ -12,8 +12,7 @@ from homeassistant.components.automation import (
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA
@@ -68,11 +67,11 @@ async def _async_get_automations(
 ) -> list[dict[str, str]]:
     """List device automations."""
     automations: list[dict[str, str]] = []
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == domain
     ]
 

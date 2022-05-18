@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi, pengaturan koneksi diperbarui",
+            "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "connection_error": "Gagal terhubung"
         },

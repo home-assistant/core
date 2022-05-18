@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "route_back": "\ub77c\uc6b0\ud2b8 \ubc31 / NAT \ubaa8\ub4dc"
+                }
+            }
+        }
+    }
+}

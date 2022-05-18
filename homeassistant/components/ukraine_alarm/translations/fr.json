@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "max_regions": "Un maximum de cinq r\u00e9gions peuvent \u00eatre configur\u00e9es",
+            "rate_limit": "Trop de demandes",
+            "timeout": "D\u00e9lai d'attente pour \u00e9tablir la connexion expir\u00e9",
+            "unknown": "Erreur inattendue"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -30,9 +35,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Cl\u00e9 d'API"
+                    "api_key": "Cl\u00e9 d'API",
+                    "region": "R\u00e9gion"
                 },
-                "description": "Configurez l'int\u00e9gration Ukraine Alarm. Pour g\u00e9n\u00e9rer une cl\u00e9 d'API, rendez-vous sur {api_url}"
+                "description": "Choisissez l'\u00c9tat \u00e0 surveiller"
             }
         }
     }

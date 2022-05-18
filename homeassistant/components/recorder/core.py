@@ -41,6 +41,7 @@ from .const import (
     DB_WORKER_PREFIX,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
+    MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -77,6 +78,7 @@ from .tasks import (
     WaitTask,
 )
 from .util import (
+    build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
     is_second_sunday,
@@ -845,15 +847,14 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         self._commits_without_expire += 1
 
+        self.event_session.commit()
         if self._pending_expunge:
-            self.event_session.flush()
             for dbstate in self._pending_expunge:
                 # Expunge the state so its not expired
                 # until we use it later for dbstate.old_state
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
-        self.event_session.commit()
 
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
@@ -1014,6 +1015,14 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+        elif self.db_url.startswith(MYSQLDB_URL_PREFIX):
+            # If they have configured MySQLDB but don't have
+            # the MySQLDB module installed this will throw
+            # an ImportError which we suppress here since
+            # sqlalchemy will give them a better error when
+            # it tried to import it below.
+            with contextlib.suppress(ImportError):
+                kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
         else:
             kwargs["echo"] = False
 

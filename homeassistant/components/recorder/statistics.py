@@ -415,8 +415,8 @@ def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
     )
     if deleted_short_term_statistics_rows:
         _LOGGER.warning(
-            "Deleted duplicated short term statistic rows, please report at "
-            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+'
+            "Deleted duplicated short term statistic rows, please report at %s",
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
         )
 
 
@@ -1360,8 +1360,8 @@ def _filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                "Blocked attempt to insert duplicated statistic rows, please report at "
-                'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
+                "Blocked attempt to insert duplicated statistic rows, please report at %s",
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,
             )
 

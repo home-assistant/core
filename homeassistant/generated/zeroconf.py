@@ -42,6 +42,20 @@ ZEROCONF = {
             "domain": "apple_tv"
         }
     ],
+    "_api._tcp.local.": [
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "haiku*"
+            }
+        },
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "i6*"
+            }
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
