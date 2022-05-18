@@ -8,7 +8,7 @@ import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.models import Events, States
 
@@ -33,7 +33,7 @@ def _select_entities_device_id_context_ids_sub_query(
     entity_ids: list[str],
     json_quotable_entity_ids: list[str],
     json_quotable_device_ids: list[str],
-) -> Select:
+) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple entities and multiple devices."""
     return select(
         union_all(
@@ -57,8 +57,8 @@ def _apply_entities_devices_context_union(
     entity_ids: list[str],
     json_quotable_entity_ids: list[str],
     json_quotable_device_ids: list[str],
-) -> StatementLambdaElement:
-    devices_entities_cte = _select_entities_device_id_context_ids_sub_query(
+) -> CompoundSelect:
+    devices_entities_cte: CTE = _select_entities_device_id_context_ids_sub_query(
         start_day,
         end_day,
         event_types,
@@ -68,10 +68,12 @@ def _apply_entities_devices_context_union(
     ).cte()
     return query.union_all(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
-        select_events_context_only().where(Events.context_id.in_(devices_entities_cte)),
+        select_events_context_only().where(
+            Events.context_id.in_(devices_entities_cte.select())
+        ),
         select_states_context_only()
         .where(States.entity_id.not_in(entity_ids))
-        .where(States.context_id.in_(devices_entities_cte)),
+        .where(States.context_id.in_(devices_entities_cte.select())),
     )
 
 
