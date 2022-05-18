@@ -250,24 +250,6 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
                     self._state = None
 
     @property
-    def entry(self) -> str | datetime | int | None:
-        """Return the state of the entry sensor."""
-        try:
-            entry = self.coordinator.data[DATA_TYPE_ENTRY][self._device_id]
-        except KeyError:
-            entry = None
-
-        if entry is not None:
-            if self._canary_type == SensorType.ENTRIES_CAPTURED_TODAY:
-                self._state = len(entry)
-            if self._canary_type == SensorType.DATE_LAST_ENTRY:
-                try:
-                    last_entry_date = entry[0].start_time
-                    self._state = cast(datetime, last_entry_date)
-                except IndexError:
-                    self._state = None
-
-    @property
     def native_value(self) -> float | str | datetime | int | None:
         """Return the state of the sensor."""
         if self._canary_data_type == DATA_TYPE_READING:
