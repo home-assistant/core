@@ -52,6 +52,7 @@ NO_IOT_CLASS = [
     "downloader",
     "ffmpeg",
     "frontend",
+    "hardware",
     "history",
     "homeassistant",
     "image",
