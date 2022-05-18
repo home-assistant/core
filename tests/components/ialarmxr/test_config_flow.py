@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pyialarmxr import IAlarmXRGenericException
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ialarmxr.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -90,6 +92,24 @@ async def test_form_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
+async def test_form_cannot_connect_throwing_iAlarmXRGenericException(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        side_effect=IAlarmXRGenericException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_already_exists(hass):
     """Test that a flow with an existing host aborts."""
     entry = MockConfigEntry(
@@ -114,3 +134,16 @@ async def test_form_already_exists(hass):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_flow_user_step_no_input(hass):
+    """Test appropriate error when no input is provided."""
+    _result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        _result["flow_id"], user_input=None
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["errors"] == {}
