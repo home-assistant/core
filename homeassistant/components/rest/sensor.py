@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
-from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH
+from .const import ATTR_RAW, CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, CONF_RAW_ATTR
 from .entity import RestEntity
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 
@@ -78,6 +78,7 @@ async def async_setup_platform(
     json_attrs_path = conf.get(CONF_JSON_ATTRS_PATH)
     value_template = conf.get(CONF_VALUE_TEMPLATE)
     force_update = conf.get(CONF_FORCE_UPDATE)
+    raw_attr = conf.get(CONF_RAW_ATTR)
     resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
 
     if value_template is not None:
@@ -94,6 +95,7 @@ async def async_setup_platform(
                 state_class,
                 value_template,
                 json_attrs,
+                raw_attr,
                 force_update,
                 resource_template,
                 json_attrs_path,
@@ -115,6 +117,7 @@ class RestSensor(RestEntity, SensorEntity):
         state_class,
         value_template,
         json_attrs,
+        raw_attr,
         force_update,
         resource_template,
         json_attrs_path,
@@ -125,6 +128,7 @@ class RestSensor(RestEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self._json_attrs = json_attrs
+        self._raw_attr = raw_attr
         self._attributes = None
         self._json_attrs_path = json_attrs_path
 
@@ -193,6 +197,12 @@ class RestSensor(RestEntity, SensorEntity):
 
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
+
+        if self._raw_attr:
+            if not self._attributes:
+                self._attributes = {}
+            # Add the raw API response as an attribute
+            self._attributes[ATTR_RAW] = json.loads(value)
 
         if value is not None and self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(

@@ -38,8 +38,10 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_RAW_ATTR,
     DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_FORCE_UPDATE,
+    DEFAULT_INCLUDE_RAW_ATTR,
     DEFAULT_METHOD,
     DEFAULT_SENSOR_NAME,
     DEFAULT_VERIFY_SSL,
@@ -73,6 +75,7 @@ SENSOR_SCHEMA = {
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_RAW_ATTR, default=DEFAULT_INCLUDE_RAW_ATTR): cv.boolean,
 }
 
 BINARY_SENSOR_SCHEMA = {
