@@ -236,7 +236,9 @@ def validate_modern_schema(domain: str) -> Callable:
             return config
 
         _LOGGER.warning(
-            "Manual configured MQTT item found at platform key '%s'. Manual MQTT item configurations have been moved to the integration key",
+            "Manually configured MQTT item(s) found under platform key '%s'. Manually configured MQTT item configurations have been moved to the integration key, please move the configuration of MQTT %s to mqtt->%s",
+            domain,
+            domain,
             domain,
         )
         warned.add(domain)
