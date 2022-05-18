@@ -1295,7 +1295,7 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
         remove_platform=False,
     )
     assert (
-        "voluptuous.error.MultipleInvalid: extra keys not allowed @ data['platform']"
+        "Invalid config for [light]: [platform] is an invalid option for [light]. Check: light->platform. (See ?, line ?)"
         in caplog.text
     )
 
@@ -1313,7 +1313,7 @@ async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
         remove_platform=False,
     )
     assert (
-        "voluptuous.error.MultipleInvalid: required key not provided @ data['command_topic']"
+        "Invalid config for [light]: required key not provided @ data['command_topic']. Got None. (See ?, line ?)"
         in caplog.text
     )
 
@@ -2483,7 +2483,7 @@ async def test_one_deprecation_warning_per_platform(hass, mqtt_mock, caplog):
     count = 0
     for record in caplog.records:
         if record.levelname == "WARNING" and (
-            f"Manual configured MQTT item found at platform key '{platform}'"
+            f"Manually configured MQTT item(s) found under platform key '{platform}'"
             in record.message
         ):
             count += 1
