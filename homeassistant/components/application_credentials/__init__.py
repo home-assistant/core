@@ -45,6 +45,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
 CONF_AUTH_DOMAIN = "auth_domain"
+DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
@@ -179,8 +180,7 @@ async def async_import_client_credential(
         CONF_CLIENT_SECRET: credential.client_secret,
         CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
-    if credential.name:
-        item[CONF_NAME] = credential.name
+    item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
     await storage_collection.async_import_item(item)
 
 

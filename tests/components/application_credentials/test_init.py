@@ -13,6 +13,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
+    DEFAULT_IMPORT_NAME,
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
@@ -356,6 +357,7 @@ async def test_websocket_import_config(
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
             CONF_AUTH_DOMAIN: TEST_DOMAIN,
+            CONF_NAME: DEFAULT_IMPORT_NAME,
         }
     ]
 
@@ -383,6 +385,7 @@ async def test_import_duplicate_credentials(
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
             CONF_AUTH_DOMAIN: TEST_DOMAIN,
+            CONF_NAME: DEFAULT_IMPORT_NAME,
         }
     ]
 
@@ -563,6 +566,7 @@ async def test_config_flow_with_config_credential(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
@@ -684,6 +688,7 @@ async def test_platform_with_auth_implementation(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
