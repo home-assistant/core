@@ -1313,7 +1313,8 @@ async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
         remove_platform=False,
     )
     assert (
-        "Invalid config for [light]: required key not provided @ data['command_topic']. Got None. (See ?, line ?)"
+        "Invalid config for [light]: required key not provided @ data['command_topic']."
+        " Got None. (See ?, line ?)"
         in caplog.text
     )
 
