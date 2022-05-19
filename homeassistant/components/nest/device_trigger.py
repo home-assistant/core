@@ -1,8 +1,6 @@
 """Provides device automations for Nest."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -66,7 +64,7 @@ async def async_get_device_trigger_types(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for a Nest device."""
     nest_device_id = async_get_nest_device_id(hass, device_id)
     if not nest_device_id:
