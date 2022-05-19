@@ -1698,48 +1698,16 @@ async def help_test_setup_manual_entity_from_yaml(
     tmp_path,
     platform,
     config,
-    assert_entity_exists=True,
-    remove_platform=True,
 ):
-    """Test setup from yaml through configuration entry.
-
-    This helper has some optional parameters.
-    With the default settings a manual MQTT item will be setup with
-    the new config schema under the `mqtt->platform->[manual_config]` key.
-    A `platform` key will be removed from the config if the new schema is used
-    and `remove_platform` is set, this way we can share the PLATFORM_SCHEMA.
-    - `assert_entity_exists` adds a check to assert an entity with name platform.test exists.
-    - `remove_platform` mocks the forwarding og the entry setup to the platforms.
-    - `legacy_schema` uses the deprecated config schema to setup the manual MQTT item.
-    """
-    configs = []
-    if config:
-        yaml_config = copy.deepcopy(config)
-        if assert_entity_exists:
-            yaml_config["name"] = "test"
-        if remove_platform:
-            del yaml_config["platform"]
-        configs.append(yaml_config)
-    config_structure = {mqtt.DOMAIN: {platform: configs}}
-    # Remove platform key from the config since this is not valid here
-    new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(config_structure)
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
+    """Help to test setup from yaml through configuration entry."""
+    config_structure = {mqtt.DOMAIN: {platform: config}}
 
     await async_setup_component(hass, mqtt.DOMAIN, config_structure)
     # Mock config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
 
-    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file), patch(
-        "paho.mqtt.client.Client"
-    ) as mock_client:
+    with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 0
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    if not assert_entity_exists:
-        return
-
-    assert hass.states.get(f"{platform}.test") is not None

@@ -2483,7 +2483,7 @@ async def test_one_deprecation_warning_per_platform(hass, mqtt_mock, caplog):
     count = 0
     for record in caplog.records:
         if record.levelname == "WARNING" and (
-            f"Manually configured MQTT item(s) found under platform key '{platform}'"
+            f"Manually configured MQTT {platform}(s) found under platform key '{platform}'"
             in record.message
         ):
             count += 1

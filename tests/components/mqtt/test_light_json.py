@@ -2044,7 +2044,10 @@ async def test_encoding_subscribable_topics(
 async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
     """Test setup manual configured MQTT entity."""
     platform = light.DOMAIN
-    config = DEFAULT_CONFIG[platform]
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
     await help_test_setup_manual_entity_from_yaml(
         hass, caplog, tmp_path, platform, config
     )
+    assert hass.states.get(f"{platform}.test") is not None

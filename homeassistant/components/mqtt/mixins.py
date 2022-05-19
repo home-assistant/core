@@ -237,7 +237,8 @@ def warn_for_legacy_schema(domain: str) -> Callable:
             return config
 
         _LOGGER.warning(
-            "Manually configured MQTT item(s) found under platform key '%s'. Manually configured MQTT item configurations have been moved to the integration key, please move the configuration of MQTT %s to mqtt->%s",
+            "Manually configured MQTT %s(s) found under platform key '%s', "
+            "please move to the mqtt integration key, see https://www.home-assistant.io/integrations/%s.mqtt/",
             domain,
             domain,
             domain,
