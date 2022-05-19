@@ -349,7 +349,8 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity, RestoreEntity
         await super().async_added_to_hass()
         if self.coordinator.data is None:
             state = await self.async_get_last_state()
-            self._value = state.state
+            if state is not None:
+                self._value = state.state
 
     @callback
     def async_update_device(self) -> None:
