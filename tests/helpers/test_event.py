@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
+from freezegun import freeze_time
 import jinja2
 import pytest
 
@@ -20,6 +21,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_track_entity_registry_updated_event,
     async_track_point_in_time,
     async_track_point_in_utc_time,
     async_track_same_state,
@@ -1025,7 +1027,7 @@ async def test_track_template_result_none(hass):
 
     template_condition = Template("{{state_attr('sensor.test', 'battery')}}", hass)
     template_condition_var = Template(
-        "{{(state_attr('sensor.test', 'battery')|int) + test }}", hass
+        "{{(state_attr('sensor.test', 'battery')|int(default=0)) + test }}", hass
     )
 
     def specific_run_callback(event, updates):
@@ -1982,6 +1984,69 @@ async def test_track_template_result_and_conditional(hass):
     assert specific_runs[2] == "on"
 
 
+async def test_track_template_result_and_conditional_upper_case(hass):
+    """Test tracking template with an and conditional with an upper case template."""
+    specific_runs = []
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "off")
+    template_str = '{% if states.light.A.state == "on" and states.light.B.state == "on" %}on{% else %}off{% endif %}'
+
+    template = Template(template_str, hass)
+
+    def specific_run_callback(event, updates):
+        specific_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template, None)], specific_run_callback
+    )
+    await hass.async_block_till_done()
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a"},
+        "time": False,
+    }
+
+    hass.states.async_set("light.b", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    hass.states.async_set("light.a", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+    assert specific_runs[0] == "on"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a", "light.b"},
+        "time": False,
+    }
+
+    hass.states.async_set("light.b", "off")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+    assert specific_runs[1] == "off"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a", "light.b"},
+        "time": False,
+    }
+
+    hass.states.async_set("light.a", "off")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    hass.states.async_set("light.b", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    hass.states.async_set("light.a", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+    assert specific_runs[2] == "on"
+
+
 async def test_track_template_result_iterator(hass):
     """Test tracking template."""
     iterator_runs = []
@@ -2186,7 +2251,7 @@ async def test_track_template_rate_limit(hass):
     assert refresh_runs == [0]
     info.async_refresh()
     assert refresh_runs == [0, 1]
-    hass.states.async_set("sensor.two", "any")
+    hass.states.async_set("sensor.TWO", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
@@ -2199,7 +2264,7 @@ async def test_track_template_rate_limit(hass):
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
-    hass.states.async_set("sensor.four", "any")
+    hass.states.async_set("sensor.fOuR", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
@@ -2384,7 +2449,7 @@ async def test_track_template_rate_limit_super_3(hass):
     await hass.async_block_till_done()
 
     assert refresh_runs == []
-    hass.states.async_set("sensor.one", "any")
+    hass.states.async_set("sensor.ONE", "any")
     await hass.async_block_till_done()
     assert refresh_runs == []
     info.async_refresh()
@@ -2407,7 +2472,7 @@ async def test_track_template_rate_limit_super_3(hass):
     hass.states.async_set("sensor.four", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2]
-    hass.states.async_set("sensor.five", "any")
+    hass.states.async_set("sensor.FIVE", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
@@ -2452,7 +2517,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     await hass.async_block_till_done()
 
     assert refresh_runs == [0]
-    hass.states.async_set("sensor.one", "any")
+    hass.states.async_set("sensor.oNe", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0]
     info.async_refresh()
@@ -2481,7 +2546,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
         "time": False,
     }
     assert refresh_runs == [0, 1, 2]
-    hass.states.async_set("sensor.three", "any")
+    hass.states.async_set("sensor.Three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
     hass.states.async_set("sensor.four", "any")
@@ -2508,7 +2573,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
         "time": False,
     }
     assert refresh_runs == [0, 1, 2, 4]
-    hass.states.async_set("sensor.five", "any")
+    hass.states.async_set("sensor.Five", "any")
     await hass.async_block_till_done()
     # Rate limit hit and the all listener is shut off
     assert info.listeners == {
@@ -3260,7 +3325,7 @@ async def test_track_time_interval(hass):
     assert len(specific_runs) == 2
 
 
-async def test_track_sunrise(hass, legacy_patchable_time):
+async def test_track_sunrise(hass):
     """Test track the sunrise."""
     latitude = 32.87336
     longitude = 117.22743
@@ -3291,42 +3356,46 @@ async def test_track_sunrise(hass, legacy_patchable_time):
 
     # Track sunrise
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub2 = async_track_sunrise(
             hass, callback(lambda: offset_runs.append(1)), offset
         )
 
     # run tests
-    async_fire_time_changed(hass, next_rising - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising - offset):
+        async_fire_time_changed(hass, next_rising - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
-async def test_track_sunrise_update_location(hass, legacy_patchable_time):
+async def test_track_sunrise_update_location(hass):
     """Test track the sunrise."""
     # Setup sun component
     hass.config.latitude = 32.87336
@@ -3354,16 +3423,17 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
 
     # Track sunrise
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
 
     # Move!
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
@@ -3373,10 +3443,11 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
     )
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    # Did not increase
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        # Did not increase
+        assert len(runs) == 1
 
     # Get next sunrise
     mod = -1
@@ -3388,13 +3459,14 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
             break
         mod += 1
 
-    # Mimic sunrise at new location
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 2
+    with freeze_time(next_rising):
+        # Mimic sunrise at new location
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 2
 
 
-async def test_track_sunset(hass, legacy_patchable_time):
+async def test_track_sunset(hass):
     """Test track the sunset."""
     latitude = 32.87336
     longitude = 117.22743
@@ -3423,39 +3495,43 @@ async def test_track_sunset(hass, legacy_patchable_time):
 
     # Track sunset
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub = async_track_sunset(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub2 = async_track_sunset(
             hass, callback(lambda: offset_runs.append(1)), offset
         )
 
     # Run tests
-    async_fire_time_changed(hass, next_setting - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting - offset):
+        async_fire_time_changed(hass, next_setting - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting):
+        async_fire_time_changed(hass, next_setting)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
 async def test_async_track_time_change(hass):
@@ -4155,12 +4231,10 @@ async def test_track_point_in_utc_time_cancel(hass):
         with pytest.raises(TypeError):
             track_point_in_utc_time("nothass", run_callback, utc_now)
 
-        unsub1 = hass.helpers.event.track_point_in_utc_time(
-            run_callback, utc_now + timedelta(seconds=0.1)
+        unsub1 = track_point_in_utc_time(
+            hass, run_callback, utc_now + timedelta(seconds=0.1)
         )
-        hass.helpers.event.track_point_in_utc_time(
-            run_callback, utc_now + timedelta(seconds=0.1)
-        )
+        track_point_in_utc_time(hass, run_callback, utc_now + timedelta(seconds=0.1))
 
         unsub1()
 
@@ -4187,12 +4261,10 @@ async def test_async_track_point_in_time_cancel(hass):
     utc_now = dt_util.utcnow()
     hst_now = utc_now.astimezone(hst_tz)
 
-    unsub1 = hass.helpers.event.async_track_point_in_time(
-        run_callback, hst_now + timedelta(seconds=0.1)
+    unsub1 = async_track_point_in_time(
+        hass, run_callback, hst_now + timedelta(seconds=0.1)
     )
-    hass.helpers.event.async_track_point_in_time(
-        run_callback, hst_now + timedelta(seconds=0.1)
-    )
+    async_track_point_in_time(hass, run_callback, hst_now + timedelta(seconds=0.1))
 
     unsub1()
 
@@ -4217,11 +4289,9 @@ async def test_async_track_entity_registry_updated_event(hass):
     def run_callback(event):
         event_data.append(event.data)
 
-    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, run_callback
-    )
-    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        new_entity_id, run_callback
+    unsub1 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
+    unsub2 = async_track_entity_registry_updated_event(
+        hass, new_entity_id, run_callback
     )
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
@@ -4287,12 +4357,10 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
     def failing_callback(event):
         raise ValueError
 
-    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, failing_callback
+    unsub1 = async_track_entity_registry_updated_event(
+        hass, entity_id, failing_callback
     )
-    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, run_callback
-    )
+    unsub2 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
     )
@@ -4305,11 +4373,11 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
 
 async def test_async_track_entity_registry_updated_event_with_empty_list(hass):
     """Test async_track_entity_registry_updated_event passing an empty list of entities."""
-    unsub_single = hass.helpers.event.async_track_entity_registry_updated_event(
-        [], ha.callback(lambda event: None)
+    unsub_single = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
     )
-    unsub_single2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        [], ha.callback(lambda event: None)
+    unsub_single2 = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
     )
 
     unsub_single2()

@@ -4,9 +4,9 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 from typing import Any, Generator, TypeVar
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import mock_open, patch
 
-from googleapiclient import discovery as google_discovery
+from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import Credentials, OAuth2Credentials
 import pytest
 import yaml
@@ -18,6 +18,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 ApiResult = Callable[[dict[str, Any]], None]
 ComponentSetup = Callable[[], Awaitable[bool]]
@@ -99,7 +100,7 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
 
 
 @pytest.fixture(autouse=True)
-async def mock_calendars_yaml(
+def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
 ) -> None:
@@ -126,15 +127,22 @@ class FakeStorage:
 
 
 @pytest.fixture
-async def token_scopes() -> list[str]:
+def token_scopes() -> list[str]:
     """Fixture for scopes used during test."""
     return ["https://www.googleapis.com/auth/calendar"]
 
 
 @pytest.fixture
-async def creds(token_scopes: list[str]) -> OAuth2Credentials:
+def token_expiry() -> datetime.datetime:
+    """Expiration time for credentials used in the test."""
+    return utcnow() + datetime.timedelta(days=7)
+
+
+@pytest.fixture
+def creds(
+    token_scopes: list[str], token_expiry: datetime.datetime
+) -> OAuth2Credentials:
     """Fixture that defines creds used in the test."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",
         client_id="client-id",
@@ -148,7 +156,7 @@ async def creds(token_scopes: list[str]) -> OAuth2Credentials:
 
 
 @pytest.fixture(autouse=True)
-async def storage() -> YieldFixture[FakeStorage]:
+def storage() -> YieldFixture[FakeStorage]:
     """Fixture to populate an existing token file for read on startup."""
     storage = FakeStorage()
     with patch("homeassistant.components.google.Storage", return_value=storage):
@@ -156,9 +164,17 @@ async def storage() -> YieldFixture[FakeStorage]:
 
 
 @pytest.fixture
-async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
+def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+    """Fixture for token expiration value stored in the config entry."""
+    return token_expiry.timestamp()
+
+
+@pytest.fixture
+def config_entry(
+    token_scopes: list[str],
+    config_entry_token_expiry: float,
+) -> MockConfigEntry:
     """Fixture to create a config entry for the integration."""
-    token_expiry = utcnow() + datetime.timedelta(days=7)
     return MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -168,14 +184,14 @@ async def config_entry(token_scopes: list[str]) -> MockConfigEntry:
                 "refresh_token": "REFRESH_TOKEN",
                 "scope": " ".join(token_scopes),
                 "token_type": "Bearer",
-                "expires_at": token_expiry.timestamp(),
+                "expires_at": config_entry_token_expiry,
             },
         },
     )
 
 
 @pytest.fixture
-async def mock_token_read(
+def mock_token_read(
     hass: HomeAssistant,
     creds: OAuth2Credentials,
     storage: FakeStorage,
@@ -184,22 +200,21 @@ async def mock_token_read(
     storage.put(creds)
 
 
-@pytest.fixture(autouse=True)
-def calendar_resource() -> YieldFixture[google_discovery.Resource]:
-    """Fixture to mock out the Google discovery API."""
-    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
-        yield mock
-
-
 @pytest.fixture
 def mock_events_list(
-    calendar_resource: google_discovery.Resource,
-) -> Callable[[dict[str, Any]], None]:
+    aioclient_mock: AiohttpClientMocker,
+) -> ApiResult:
     """Fixture to construct a fake event list API response."""
 
-    def _put_result(response: dict[str, Any]) -> None:
-        calendar_resource.return_value.events.return_value.list.return_value.execute.return_value = (
-            response
+    def _put_result(
+        response: dict[str, Any], calendar_id: str = None, exc: Exception = None
+    ) -> None:
+        if calendar_id is None:
+            calendar_id = CALENDAR_ID
+        aioclient_mock.get(
+            f"{API_BASE_URL}/calendars/{calendar_id}/events",
+            json=response,
+            exc=exc,
         )
         return
 
@@ -221,13 +236,15 @@ def mock_events_list_items(
 
 @pytest.fixture
 def mock_calendars_list(
-    calendar_resource: google_discovery.Resource,
+    aioclient_mock: AiohttpClientMocker,
 ) -> ApiResult:
     """Fixture to construct a fake calendar list API response."""
 
-    def _put_result(response: dict[str, Any]) -> None:
-        calendar_resource.return_value.calendarList.return_value.list.return_value.execute.return_value = (
-            response
+    def _put_result(response: dict[str, Any], exc=None) -> None:
+        aioclient_mock.get(
+            f"{API_BASE_URL}/users/me/calendarList",
+            json=response,
+            exc=exc,
         )
         return
 
@@ -236,12 +253,17 @@ def mock_calendars_list(
 
 @pytest.fixture
 def mock_insert_event(
-    calendar_resource: google_discovery.Resource,
-) -> Mock:
-    """Fixture to create a mock to capture new events added to the API."""
-    insert_mock = Mock()
-    calendar_resource.return_value.events.return_value.insert = insert_mock
-    return insert_mock
+    aioclient_mock: AiohttpClientMocker,
+) -> Callable[[..., dict[str, Any]], None]:
+    """Fixture for capturing event creation."""
+
+    def _expect_result(calendar_id: str = CALENDAR_ID) -> None:
+        aioclient_mock.post(
+            f"{API_BASE_URL}/calendars/{calendar_id}/events",
+        )
+        return
+
+    return _expect_result
 
 
 @pytest.fixture(autouse=True)
@@ -268,15 +290,13 @@ def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
 
 
 @pytest.fixture
-async def config(google_config: dict[str, Any]) -> dict[str, Any]:
+def config(google_config: dict[str, Any]) -> dict[str, Any]:
     """Fixture for overriding component config."""
-    return {DOMAIN: google_config}
+    return {DOMAIN: google_config} if google_config else {}
 
 
 @pytest.fixture
-async def component_setup(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> ComponentSetup:
+def component_setup(hass: HomeAssistant, config: dict[str, Any]) -> ComponentSetup:
     """Fixture for setting up the integration."""
 
     async def _setup_func() -> bool:

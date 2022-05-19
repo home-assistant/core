@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine, Sequence
-import contextlib
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -12,9 +11,11 @@ from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import (
     UpnpActionResponseError,
+    UpnpCommunicationError,
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
+    UpnpXmlContentError,
 )
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
@@ -24,21 +25,11 @@ from wakeonlan import send_magic_packet
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
@@ -72,15 +63,15 @@ from .const import (
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 # Since the TV will take a few seconds to go to sleep
@@ -145,9 +136,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._on_script or self._mac:
             # Add turn-on if on_script or mac is available
-            self._attr_supported_features |= SUPPORT_TURN_ON
+            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
-            self._attr_supported_features |= SUPPORT_VOLUME_SET
+            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
         self._attr_device_info = DeviceInfo(
             name=self.name,
@@ -214,13 +205,17 @@ class SamsungTVDevice(MediaPlayerEntity):
             )
 
         if self._attr_state != STATE_ON:
+            if self._dmr_device and self._dmr_device.is_subscribed:
+                await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[Coroutine[Any, Any, None]] = []
+        startup_tasks: list[Coroutine[Any, Any, Any]] = []
 
         if not self._app_list_event.is_set():
             startup_tasks.append(self._async_startup_app_list())
 
+        if self._dmr_device and not self._dmr_device.is_subscribed:
+            startup_tasks.append(self._async_resubscribe_dmr())
         if not self._dmr_device and self._ssdp_rendering_control_location:
             startup_tasks.append(self._async_startup_dmr())
 
@@ -264,22 +259,24 @@ class SamsungTVDevice(MediaPlayerEntity):
         except asyncio.TimeoutError as err:
             # No need to try again
             self._app_list_event.set()
-            LOGGER.debug(
-                "Failed to load app list from %s: %s", self._host, err.__repr__()
-            )
+            LOGGER.debug("Failed to load app list from %s: %r", self._host, err)
 
     async def _async_startup_dmr(self) -> None:
         assert self._ssdp_rendering_control_location is not None
         if self._dmr_device is None:
             session = async_get_clientsession(self.hass)
             upnp_requester = AiohttpSessionRequester(session)
-            upnp_factory = UpnpFactory(upnp_requester)
+            # Set non_strict to avoid invalid data sent by Samsung TV:
+            # Got invalid value for <UpnpStateVariable(PlaybackStorageMedium, string)>:
+            # NETWORK,NONE
+            upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
-            with contextlib.suppress(UpnpConnectionError):
+            try:
                 upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
-            if not upnp_device:
+            except (UpnpConnectionError, UpnpResponseError, UpnpXmlContentError) as err:
+                LOGGER.debug("Unable to create Upnp DMR device: %r", err, exc_info=True)
                 return
             _, event_ip = await async_get_local_ip(
                 self._ssdp_rendering_control_location, self.hass.loop
@@ -309,6 +306,13 @@ class SamsungTVDevice(MediaPlayerEntity):
                 self._upnp_server = None
                 LOGGER.debug("Error while subscribing during device connect: %r", err)
                 raise
+
+    async def _async_resubscribe_dmr(self) -> None:
+        assert self._dmr_device
+        try:
+            await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+        except UpnpCommunicationError as err:
+            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
@@ -376,9 +380,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         try:
             await dmr_device.async_set_volume_level(volume)
         except UpnpActionResponseError as err:
-            LOGGER.warning(
-                "Unable to set volume level on %s: %s", self._host, err.__repr__()
-            )
+            LOGGER.warning("Unable to set volume level on %s: %r", self._host, err)
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""

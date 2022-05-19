@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/tuya",
   "requirements": ["tuya-iot-py-sdk==0.6.6"],
   "dependencies": ["ffmpeg"],
-  "codeowners": ["@Tuya", "@zlinoliver", "@METISU", "@frenck"],
+  "codeowners": ["@Tuya", "@zlinoliver", "@frenck"],
   "config_flow": true,
   "iot_class": "cloud_push",
   "dhcp": [

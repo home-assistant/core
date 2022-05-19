@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 
 @dataclass
@@ -55,15 +56,15 @@ class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
     _attr_title = "Synology DSM"
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
         return self._api.information.version_string  # type: ignore[no-any-return]
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if not self._api.upgrade.update_available:
-            return self.current_version
+            return self.installed_version
         return self._api.upgrade.available_version  # type: ignore[no-any-return]
 
     @property

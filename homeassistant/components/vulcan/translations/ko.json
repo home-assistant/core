@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "\ud1a0\ud070"
+                },
+                "description": "\ubaa8\ubc14\uc77c \uc571\uc73c\ub85c Vulcan \uacc4\uc815\uc5d0 \ub85c\uadf8\uc778\ud569\ub2c8\ub2e4."
+            }
+        }
+    }
+}

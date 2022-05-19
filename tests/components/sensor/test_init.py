@@ -1,10 +1,11 @@
 """The test for sensor entity."""
 from datetime import date, datetime, timezone
+from decimal import Decimal
 
 import pytest
 from pytest import approx
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PRESSURE_HPA,
@@ -63,31 +64,28 @@ async def test_temperature_conversion(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
-async def test_deprecated_temperature_conversion(
-    hass, caplog, enable_custom_integrations
+@pytest.mark.parametrize("device_class", (None, SensorDeviceClass.PRESSURE))
+async def test_temperature_conversion_wrong_device_class(
+    hass, device_class, enable_custom_integrations
 ):
-    """Test warning on deprecated temperature conversion."""
+    """Test temperatures are not converted if the sensor has wrong device class."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test", native_value="0.0", native_unit_of_measurement=TEMP_FAHRENHEIT
+        name="Test",
+        native_value="0.0",
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        device_class=device_class,
     )
 
     entity0 = platform.ENTITIES["0"]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
+    # Check temperature is not converted
     state = hass.states.get(entity0.entity_id)
-    assert state.state == "-17.8"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert (
-        "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
-        "with device_class None reports a temperature in °F which will be converted to "
-        "°C. Temperature conversion for entities without correct device_class is "
-        "deprecated and will be removed from Home Assistant Core 2022.3. Please update "
-        "your configuration if device_class is manually configured, otherwise report it "
-        "to the custom component author."
-    ) in caplog.text
+    assert state.state == "0.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
 
 
 @pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
@@ -114,15 +112,6 @@ async def test_deprecated_last_reset(
 
     state = hass.states.get("sensor.test")
     assert "last_reset" not in state.attributes
-
-
-async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integrations):
-    """Test warning on deprecated unit_of_measurement."""
-    SensorEntityDescription("catsensor", unit_of_measurement="cats")
-    assert (
-        "tests.components.sensor.test_init is setting 'unit_of_measurement' on an "
-        "instance of SensorEntityDescription"
-    ) in caplog.text
 
 
 async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
@@ -239,10 +228,24 @@ RESTORE_DATA = {
             "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
         },
     },
+    "Decimal": {
+        "native_unit_of_measurement": "°F",
+        "native_value": {
+            "__type": "<class 'decimal.Decimal'>",
+            "decimal_str": "123.4",
+        },
+    },
+    "BadDecimal": {
+        "native_unit_of_measurement": "°F",
+        "native_value": {
+            "__type": "<class 'decimal.Decimal'>",
+            "decimal_str": "123f",
+        },
+    },
 }
 
 
-# None | str | int | float | date | datetime:
+# None | str | int | float | date | datetime | Decimal:
 @pytest.mark.parametrize(
     "native_value, native_value_type, expected_extra_data, device_class",
     [
@@ -256,6 +259,7 @@ RESTORE_DATA = {
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
         ),
+        (Decimal("123.4"), dict, RESTORE_DATA["Decimal"], SensorDeviceClass.ENERGY),
     ],
 )
 async def test_restore_sensor_save_state(
@@ -306,6 +310,13 @@ async def test_restore_sensor_save_state(
             SensorDeviceClass.TIMESTAMP,
             "°F",
         ),
+        (
+            Decimal("123.4"),
+            Decimal,
+            RESTORE_DATA["Decimal"],
+            SensorDeviceClass.ENERGY,
+            "°F",
+        ),
         (None, type(None), None, None, None),
         (None, type(None), {}, None, None),
         (None, type(None), {"beer": 123}, None, None),
@@ -316,6 +327,7 @@ async def test_restore_sensor_save_state(
             None,
             None,
         ),
+        (None, type(None), RESTORE_DATA["BadDecimal"], SensorDeviceClass.ENERGY, None),
     ],
 )
 async def test_restore_sensor_restore_state(

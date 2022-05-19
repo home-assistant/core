@@ -16,8 +16,9 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.components.update.const import (
-    ATTR_CURRENT_VERSION,
+    ATTR_AUTO_UPDATE,
     ATTR_IN_PROGRESS,
+    ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
@@ -38,7 +39,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
+from tests.common import MockEntityPlatform, mock_restore_cache
 
 
 class MockUpdateEntity(UpdateEntity):
@@ -50,14 +51,15 @@ async def test_update(hass: HomeAssistant) -> None:
     update = MockUpdateEntity()
     update.hass = hass
 
-    update._attr_current_version = "1.0.0"
+    update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "1.0.1"
     update._attr_release_summary = "Summary"
     update._attr_release_url = "https://example.com"
     update._attr_title = "Title"
 
     assert update.entity_category is EntityCategory.DIAGNOSTIC
-    assert update.current_version == "1.0.0"
+    assert update.entity_picture is None
+    assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
     assert update.release_url == "https://example.com"
@@ -65,7 +67,8 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.in_progress is False
     assert update.state == STATE_ON
     assert update.state_attributes == {
-        ATTR_CURRENT_VERSION: "1.0.0",
+        ATTR_AUTO_UPDATE: False,
+        ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,
         ATTR_LATEST_VERSION: "1.0.1",
         ATTR_RELEASE_SUMMARY: "Summary",
@@ -74,28 +77,35 @@ async def test_update(hass: HomeAssistant) -> None:
         ATTR_TITLE: "Title",
     }
 
+    # Test with platform
+    update.platform = MockEntityPlatform(hass)
+    assert (
+        update.entity_picture
+        == "https://brands.home-assistant.io/_/test_platform/icon.png"
+    )
+
     # Test no update available
-    update._attr_current_version = "1.0.0"
+    update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "1.0.0"
     assert update.state is STATE_OFF
 
-    # Test state becomes unknown if current version is unknown
-    update._attr_current_version = None
+    # Test state becomes unknown if installed version is unknown
+    update._attr_installed_version = None
     update._attr_latest_version = "1.0.0"
     assert update.state is None
 
     # Test state becomes unknown if latest version is unknown
-    update._attr_current_version = "1.0.0"
+    update._attr_installed_version = "1.0.0"
     update._attr_latest_version = None
     assert update.state is None
 
     # Test no update if new version is not an update
-    update._attr_current_version = "1.0.0"
+    update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "0.9.0"
     assert update.state is STATE_OFF
 
     # Test update if new version is not considered a valid version
-    update._attr_current_version = "1.0.0"
+    update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "awesome_update"
     assert update.state is STATE_ON
 
@@ -157,7 +167,7 @@ async def test_entity_with_no_install(
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
 
     # Should not be able to install as the entity doesn't support that
@@ -173,7 +183,7 @@ async def test_entity_with_no_install(
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
 
@@ -188,9 +198,24 @@ async def test_entity_with_no_install(
     state = hass.states.get("update.update_no_install")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
+
+    # We can clear the skipped marker again
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_skipped",
+        {ATTR_ENTITY_ID: "update.update_no_install"},
+        blocking=True,
+    )
+
+    state = hass.states.get("update.update_no_install")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
 
 
 async def test_entity_with_no_updates(
@@ -208,7 +233,7 @@ async def test_entity_with_no_updates(
     state = hass.states.get("update.no_update")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
 
     # Should not be able to skip when there is no update available
@@ -242,6 +267,58 @@ async def test_entity_with_no_updates(
         )
 
 
+async def test_entity_with_auto_update(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test update entity that has auto update feature."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.update_with_auto_update")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+
+    # Should be able to manually install an update even if it can auto update
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+        blocking=True,
+    )
+
+    # Should not be able to skip the update
+    with pytest.raises(
+        HomeAssistantError,
+        match="Skipping update is not supported for Update with auto update",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SKIP,
+            {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+            blocking=True,
+        )
+
+    # Should not be able to clear a skipped the update
+    with pytest.raises(
+        HomeAssistantError,
+        match="Clearing skipped update is not supported for Update with auto update",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_skipped",
+            {ATTR_ENTITY_ID: "update.update_with_auto_update"},
+            blocking=True,
+        )
+
+
 async def test_entity_with_updates_available(
     hass: HomeAssistant,
     enable_custom_integrations: None,
@@ -258,7 +335,7 @@ async def test_entity_with_updates_available(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
 
@@ -274,7 +351,7 @@ async def test_entity_with_updates_available(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
 
@@ -290,7 +367,7 @@ async def test_entity_with_updates_available(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.1"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.1"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert "Installed latest update" in caplog.text
@@ -311,7 +388,7 @@ async def test_entity_with_unknown_version(
     state = hass.states.get("update.update_unknown")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] is None
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
 
@@ -349,7 +426,7 @@ async def test_entity_with_specific_version(
     state = hass.states.get("update.update_specific_version")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
 
     # Update to a specific version
@@ -364,7 +441,7 @@ async def test_entity_with_specific_version(
     state = hass.states.get("update.update_specific_version")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.9.9"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.9.9"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
     assert "Installed update with version: 0.9.9" in caplog.text
 
@@ -379,7 +456,7 @@ async def test_entity_with_specific_version(
     state = hass.states.get("update.update_specific_version")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.0"
     assert "Installed latest update" in caplog.text
 
@@ -413,7 +490,7 @@ async def test_entity_with_backup_support(
     state = hass.states.get("update.update_backup")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
 
     # Without a backup
@@ -430,7 +507,7 @@ async def test_entity_with_backup_support(
     state = hass.states.get("update.update_backup")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.1"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.1"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert "Creating backup before installing update" not in caplog.text
     assert "Installed latest update" in caplog.text
@@ -451,7 +528,7 @@ async def test_entity_with_backup_support(
     state = hass.states.get("update.update_backup")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.9.8"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.9.8"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert "Creating backup before installing update" in caplog.text
     assert "Installed update with version: 0.9.8" in caplog.text
@@ -472,7 +549,7 @@ async def test_entity_already_in_progress(
     state = hass.states.get("update.update_already_in_progress")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_IN_PROGRESS] == 50
 
@@ -517,14 +594,14 @@ async def test_entity_without_progress_support(
 
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[0].data.get("old_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[0].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert events[0].data.get("new_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[0].data.get("new_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[0].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
 
     assert events[1].data.get("old_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[1].data.get("old_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[1].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert events[1].data.get("new_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[1].data.get("new_state").attributes[ATTR_CURRENT_VERSION] == "1.0.1"
+    assert events[1].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.1"
 
 
 async def test_entity_without_progress_support_raising(
@@ -560,14 +637,14 @@ async def test_entity_without_progress_support_raising(
 
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[0].data.get("old_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[0].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert events[0].data.get("new_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[0].data.get("new_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[0].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
 
     assert events[1].data.get("old_state").attributes[ATTR_IN_PROGRESS] is True
-    assert events[1].data.get("old_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[1].data.get("old_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert events[1].data.get("new_state").attributes[ATTR_IN_PROGRESS] is False
-    assert events[1].data.get("new_state").attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert events[1].data.get("new_state").attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
 
 
 async def test_restore_state(
@@ -596,7 +673,7 @@ async def test_restore_state(
     state = hass.states.get("update.update_available")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_CURRENT_VERSION] == "1.0.0"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "1.0.0"
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] == "1.0.1"
 

@@ -16,15 +16,5 @@
                 "title": "Konfigurasikan Konektor Dinding Tesla"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Frekuensi pembaruan"
-                },
-                "title": "Konfigurasikan opsi untuk Konektor Dinding Tesla"
-            }
-        }
     }
 }

@@ -32,6 +32,7 @@
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "ignore_ip6_link_local": "IPv6 link local address is not supported.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {

@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "token": "Anahtar",
+                    "token": "API Anahtar\u0131",
                     "url": "URL"
                 },
-                "description": "Z-Way sunucusunun ve Z-Way eri\u015fim belirtecinin IP adresini girin. HTTP yerine HTTPS kullan\u0131lmas\u0131 gerekiyorsa, IP adresinin \u00f6n\u00fcne wss:// eklenebilir. Belirteci almak i\u00e7in Z-Way kullan\u0131c\u0131 aray\u00fcz\u00fc > Men\u00fc > Ayarlar > Kullan\u0131c\u0131 > API belirtecine gidin. Home Assistant i\u00e7in yeni bir kullan\u0131c\u0131 olu\u015fturman\u0131z ve Home Assistant'tan kontrol etmeniz gereken cihazlara eri\u015fim izni vermeniz \u00f6nerilir. Uzak bir Z-Way'i ba\u011flamak i\u00e7in find.z-wave.me arac\u0131l\u0131\u011f\u0131yla uzaktan eri\u015fimi kullanmak da m\u00fcmk\u00fcnd\u00fcr. IP alan\u0131na wss://find.z-wave.me yaz\u0131n ve belirteci Global kapsamla kopyalay\u0131n (bunun i\u00e7in find.z-wave.me arac\u0131l\u0131\u011f\u0131yla Z-Way'de oturum a\u00e7\u0131n)."
+                "description": "Z-Way sunucusunun ba\u011flant\u0131 noktas\u0131 ve eri\u015fim anahtar\u0131 ile IP adresini girin. Simgeyi almak i\u00e7in Z-Way kullan\u0131c\u0131 aray\u00fcz\u00fc Smart Home UI > Men\u00fc > Ayarlar > Kullan\u0131c\u0131lar > Y\u00f6netici > API anahtar\u0131na gidin. \n\n Yerel a\u011fda Z-Way'e ba\u011flanma \u00f6rne\u011fi:\n URL: {local_url}\n Belirte\u00e7: {local_token} \n\n Z-Way'e uzaktan eri\u015fim find.z-wave.me arac\u0131l\u0131\u011f\u0131yla ba\u011flanma \u00f6rne\u011fi:\n URL: {find_url}\n Belirte\u00e7: {find_token} \n\n Statik bir genel IP adresiyle Z-Way'e ba\u011flanma \u00f6rne\u011fi:\n URL: {remote_url}\n Belirte\u00e7: {local_token} \n\n find.z-wave.me arac\u0131l\u0131\u011f\u0131yla ba\u011flan\u0131rken, k\u00fcresel kapsaml\u0131 bir anahtar kullanman\u0131z gerekir (bunun i\u00e7in Z-Way'de find.z-wave.me arac\u0131l\u0131\u011f\u0131yla oturum a\u00e7\u0131n)."
             }
         }
     }

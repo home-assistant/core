@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 import functools as ft
 import logging
 import math
@@ -39,7 +40,18 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-# Bitfield of features supported by the fan entity
+
+class FanEntityFeature(IntEnum):
+    """Supported features of the fan entity."""
+
+    SET_SPEED = 1
+    OSCILLATE = 2
+    DIRECTION = 4
+    PRESET_MODE = 8
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the FanEntityFeature enum instead.
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
@@ -103,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         },
         "async_increase_speed",
-        [SUPPORT_SET_SPEED],
+        [FanEntityFeature.SET_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_DECREASE_SPEED,
@@ -113,19 +125,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         },
         "async_decrease_speed",
-        [SUPPORT_SET_SPEED],
+        [FanEntityFeature.SET_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_OSCILLATE,
         {vol.Required(ATTR_OSCILLATING): cv.boolean},
         "async_oscillate",
-        [SUPPORT_OSCILLATE],
+        [FanEntityFeature.OSCILLATE],
     )
     component.async_register_entity_service(
         SERVICE_SET_DIRECTION,
         {vol.Optional(ATTR_DIRECTION): cv.string},
         "async_set_direction",
-        [SUPPORT_DIRECTION],
+        [FanEntityFeature.DIRECTION],
     )
     component.async_register_entity_service(
         SERVICE_SET_PERCENTAGE,
@@ -135,13 +147,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         },
         "async_set_percentage",
-        [SUPPORT_SET_SPEED],
+        [FanEntityFeature.SET_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
         "async_set_preset_mode",
-        [SUPPORT_SET_SPEED, SUPPORT_PRESET_MODE],
+        [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )
 
     return True
@@ -314,8 +326,8 @@ class FanEntity(ToggleEntity):
         attrs = {}
 
         if (
-            self.supported_features & SUPPORT_SET_SPEED
-            or self.supported_features & SUPPORT_PRESET_MODE
+            self.supported_features & FanEntityFeature.SET_SPEED
+            or self.supported_features & FanEntityFeature.PRESET_MODE
         ):
             attrs[ATTR_PRESET_MODES] = self.preset_modes
 
@@ -328,19 +340,19 @@ class FanEntity(ToggleEntity):
         data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
-        if supported_features & SUPPORT_DIRECTION:
+        if supported_features & FanEntityFeature.DIRECTION:
             data[ATTR_DIRECTION] = self.current_direction
 
-        if supported_features & SUPPORT_OSCILLATE:
+        if supported_features & FanEntityFeature.OSCILLATE:
             data[ATTR_OSCILLATING] = self.oscillating
 
-        if supported_features & SUPPORT_SET_SPEED:
+        if supported_features & FanEntityFeature.SET_SPEED:
             data[ATTR_PERCENTAGE] = self.percentage
             data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
         if (
-            supported_features & SUPPORT_PRESET_MODE
-            or supported_features & SUPPORT_SET_SPEED
+            supported_features & FanEntityFeature.PRESET_MODE
+            or supported_features & FanEntityFeature.SET_SPEED
         ):
             data[ATTR_PRESET_MODE] = self.preset_mode
 
@@ -355,7 +367,7 @@ class FanEntity(ToggleEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
-        Requires SUPPORT_SET_SPEED.
+        Requires FanEntityFeature.SET_SPEED.
         """
         if hasattr(self, "_attr_preset_mode"):
             return self._attr_preset_mode
@@ -365,7 +377,7 @@ class FanEntity(ToggleEntity):
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
-        Requires SUPPORT_SET_SPEED.
+        Requires FanEntityFeature.SET_SPEED.
         """
         if hasattr(self, "_attr_preset_modes"):
             return self._attr_preset_modes

@@ -23,7 +23,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.core as ha
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.entity import Entity
@@ -522,11 +522,29 @@ def test_validate_topic():
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
-    mqtt.util.valid_topic("\u0001")
-    mqtt.util.valid_topic("\u001F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\uffff")
+    # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u0001")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u001F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u007F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u009F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdd0")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdef")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\uffff")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001fffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001ffff")
 
 
 def test_validate_subscribe_topic():
@@ -1620,6 +1638,57 @@ async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mo
     assert device_entry is not None
 
 
+async def test_update_incomplete_entry(
+    hass: HomeAssistant, device_reg, mqtt_client_mock, caplog
+):
+    """Test if the MQTT component loads when config entry data is incomplete."""
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    # Config entry data is incomplete
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={"port": 1234})
+    entry.add_to_hass(hass)
+    # Mqtt present in yaml config
+    config = {"broker": "yaml_broker"}
+    await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+
+    # Config entry data should now be updated
+    assert entry.data == {
+        "port": 1234,
+        "broker": "yaml_broker",
+    }
+    # Warnings about broker deprecated, but not about other keys with default values
+    assert (
+        "The 'broker' option is deprecated, please remove it from your configuration"
+        in caplog.text
+    )
+    assert (
+        "Deprecated configuration settings found in configuration.yaml. These settings "
+        "from your configuration entry will override: {'broker': 'yaml_broker'}"
+        in caplog.text
+    )
+
+    # Discover a device to verify the entry was setup correctly
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+
+async def test_fail_no_broker(hass, device_reg, mqtt_client_mock, caplog):
+    """Test if the MQTT component loads when broker configuration is missing."""
+    # Config entry data is incomplete
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert "MQTT broker is not configured, please configure it" in caplog.text
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(hass, caplog, mqtt_mock):
     """Test exception raised by message handler."""
@@ -2309,26 +2378,6 @@ async def test_publish_json_from_template(hass, mqtt_mock):
 
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = mqtt.MqttServiceInfo(
-        topic="tasmota/discovery/DC4F220848A2/config",
-        payload="",
-        qos=0,
-        retain=False,
-        subscribed_topic="tasmota/discovery/#",
-        timestamp=None,
-    )
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected integration that accessed discovery_info['topic']" in caplog.text
 
 
 async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):

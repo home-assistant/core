@@ -32,6 +32,8 @@ from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass
 class ZwaveHumidifierEntityDescriptionRequiredKeys:
@@ -150,10 +152,9 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return int(self._current_mode.value) in [
-            self.entity_description.on_mode,
-            HumidityControlMode.AUTO,
-        ]
+        if (value := self._current_mode.value) is None:
+            return None
+        return int(value) in [self.entity_description.on_mode, HumidityControlMode.AUTO]
 
     def _supports_inverse_mode(self) -> bool:
         return (
@@ -163,7 +164,9 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on device."""
-        mode = int(self._current_mode.value)
+        if (value := self._current_mode.value) is None:
+            return
+        mode = int(value)
         if mode == HumidityControlMode.OFF:
             new_mode = self.entity_description.on_mode
         elif mode == self.entity_description.inverse_mode:
@@ -175,7 +178,9 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off device."""
-        mode = int(self._current_mode.value)
+        if (value := self._current_mode.value) is None:
+            return
+        mode = int(value)
         if mode == HumidityControlMode.AUTO:
             if self._supports_inverse_mode():
                 new_mode = self.entity_description.inverse_mode
@@ -191,7 +196,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        if not self._setpoint:
+        if not self._setpoint or self._setpoint.value is None:
             return None
         return int(self._setpoint.value)
 

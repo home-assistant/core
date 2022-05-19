@@ -45,6 +45,7 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "domain": DOMAIN,
             "type": "node_status",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "condition": "device",
@@ -53,12 +54,14 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "device_id": device.id,
             "value_id": value_id,
             "subtype": f"{config_value.property_} ({name})",
+            "metadata": {},
         },
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "value",
             "device_id": device.id,
+            "metadata": {},
         },
     ]
     conditions = await async_get_device_automations(

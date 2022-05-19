@@ -25,6 +25,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import State, callback
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CLUSTER_TYPE_IN,
@@ -161,7 +162,7 @@ def async_cluster_exists(hass, cluster_id):
 
 async def async_get_zha_device(hass, device_id):
     """Get a ZHA device for the given device registry id."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
@@ -210,23 +211,23 @@ def reduce_attribute(
 class LogMixin:
     """Log helper."""
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log with level."""
         raise NotImplementedError
 
-    def debug(self, msg, *args):
+    def debug(self, msg, *args, **kwargs):
         """Debug level log."""
         return self.log(logging.DEBUG, msg, *args)
 
-    def info(self, msg, *args):
+    def info(self, msg, *args, **kwargs):
         """Info level log."""
         return self.log(logging.INFO, msg, *args)
 
-    def warning(self, msg, *args):
+    def warning(self, msg, *args, **kwargs):
         """Warning method log."""
         return self.log(logging.WARNING, msg, *args)
 
-    def error(self, msg, *args):
+    def error(self, msg, *args, **kwargs):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
 

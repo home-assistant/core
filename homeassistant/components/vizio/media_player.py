@@ -10,9 +10,9 @@ from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
-    SUPPORT_SELECT_SOUND_MODE,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -229,7 +229,9 @@ class VizioDevice(MediaPlayerEntity):
                 self._attr_is_volume_muted = None
 
             if VIZIO_SOUND_MODE in audio_settings:
-                self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+                self._attr_supported_features |= (
+                    MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                )
                 self._attr_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if not self._attr_sound_mode_list:
                     self._attr_sound_mode_list = await self._device.get_setting_options(
@@ -238,8 +240,10 @@ class VizioDevice(MediaPlayerEntity):
                         log_api_exception=False,
                     )
             else:
-                # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
-                self._attr_supported_features &= ~SUPPORT_SELECT_SOUND_MODE
+                # Explicitly remove MediaPlayerEntityFeature.SELECT_SOUND_MODE from supported features
+                self._attr_supported_features &= (
+                    ~MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                )
 
         if input_ := await self._device.get_current_input(log_api_exception=False):
             self._current_input = input_

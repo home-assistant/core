@@ -16,21 +16,8 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -157,36 +144,47 @@ class MediaPlayerGroup(MediaPlayerEntity):
             return
 
         new_features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if new_features & SUPPORT_CLEAR_PLAYLIST:
+        if new_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST:
             self._features[KEY_CLEAR_PLAYLIST].add(entity_id)
         else:
             self._features[KEY_CLEAR_PLAYLIST].discard(entity_id)
-        if new_features & (SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK):
+        if new_features & (
+            MediaPlayerEntityFeature.NEXT_TRACK
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        ):
             self._features[KEY_TRACKS].add(entity_id)
         else:
             self._features[KEY_TRACKS].discard(entity_id)
-        if new_features & (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP):
+        if new_features & (
+            MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.STOP
+        ):
             self._features[KEY_PAUSE_PLAY_STOP].add(entity_id)
         else:
             self._features[KEY_PAUSE_PLAY_STOP].discard(entity_id)
-        if new_features & SUPPORT_PLAY_MEDIA:
+        if new_features & MediaPlayerEntityFeature.PLAY_MEDIA:
             self._features[KEY_PLAY_MEDIA].add(entity_id)
         else:
             self._features[KEY_PLAY_MEDIA].discard(entity_id)
-        if new_features & SUPPORT_SEEK:
+        if new_features & MediaPlayerEntityFeature.SEEK:
             self._features[KEY_SEEK].add(entity_id)
         else:
             self._features[KEY_SEEK].discard(entity_id)
-        if new_features & SUPPORT_SHUFFLE_SET:
+        if new_features & MediaPlayerEntityFeature.SHUFFLE_SET:
             self._features[KEY_SHUFFLE].add(entity_id)
         else:
             self._features[KEY_SHUFFLE].discard(entity_id)
-        if new_features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+        if new_features & (
+            MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+        ):
             self._features[KEY_ON_OFF].add(entity_id)
         else:
             self._features[KEY_ON_OFF].discard(entity_id)
         if new_features & (
-            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+            MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
         ):
             self._features[KEY_VOLUME].add(entity_id)
         else:
@@ -407,32 +405,35 @@ class MediaPlayerGroup(MediaPlayerEntity):
             self._state = None
 
         supported_features = 0
-        supported_features |= (
-            SUPPORT_CLEAR_PLAYLIST if self._features[KEY_CLEAR_PLAYLIST] else 0
-        )
-        supported_features |= (
-            SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-            if self._features[KEY_TRACKS]
-            else 0
-        )
-        supported_features |= (
-            SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
-            if self._features[KEY_PAUSE_PLAY_STOP]
-            else 0
-        )
-        supported_features |= (
-            SUPPORT_PLAY_MEDIA if self._features[KEY_PLAY_MEDIA] else 0
-        )
-        supported_features |= SUPPORT_SEEK if self._features[KEY_SEEK] else 0
-        supported_features |= SUPPORT_SHUFFLE_SET if self._features[KEY_SHUFFLE] else 0
-        supported_features |= (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF if self._features[KEY_ON_OFF] else 0
-        )
-        supported_features |= (
-            SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
-            if self._features[KEY_VOLUME]
-            else 0
-        )
+        if self._features[KEY_CLEAR_PLAYLIST]:
+            supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        if self._features[KEY_TRACKS]:
+            supported_features |= (
+                MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+            )
+        if self._features[KEY_PAUSE_PLAY_STOP]:
+            supported_features |= (
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+            )
+        if self._features[KEY_PLAY_MEDIA]:
+            supported_features |= MediaPlayerEntityFeature.PLAY_MEDIA
+        if self._features[KEY_SEEK]:
+            supported_features |= MediaPlayerEntityFeature.SEEK
+        if self._features[KEY_SHUFFLE]:
+            supported_features |= MediaPlayerEntityFeature.SHUFFLE_SET
+        if self._features[KEY_ON_OFF]:
+            supported_features |= (
+                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+            )
+        if self._features[KEY_VOLUME]:
+            supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
 
         self._supported_features = supported_features
         self.async_write_ha_state()

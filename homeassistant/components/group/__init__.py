@@ -33,6 +33,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
@@ -265,6 +266,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     component: EntityComponent = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
@@ -454,7 +457,7 @@ class GroupEntity(Entity):
             self.async_update_group_state()
             self.async_write_ha_state()
 
-        start.async_at_start(self.hass, _update_at_start)
+        self.async_on_remove(start.async_at_start(self.hass, _update_at_start))
 
     @callback
     def async_defer_or_update_ha_state(self) -> None:
@@ -689,7 +692,7 @@ class Group(Entity):
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
-        start.async_at_start(self.hass, self._async_start)
+        self.async_on_remove(start.async_at_start(self.hass, self._async_start))
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""

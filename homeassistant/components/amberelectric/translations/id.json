@@ -6,16 +6,14 @@
                     "site_name": "Nama Situs",
                     "site_nmi": "Situs NMI"
                 },
-                "description": "Pilih NMI dari situs yang ingin ditambahkan",
-                "title": "Amber Electric"
+                "description": "Pilih NMI dari situs yang ingin ditambahkan"
             },
             "user": {
                 "data": {
                     "api_token": "Token API",
                     "site_id": "ID Site"
                 },
-                "description": "Buka {api_url} untuk membuat kunci API",
-                "title": "Amber Electric"
+                "description": "Buka {api_url} untuk membuat kunci API"
             }
         }
     }

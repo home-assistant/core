@@ -25,7 +25,11 @@ def mock_all(aioclient_mock, request):
         "http://127.0.0.1/info",
         json={
             "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
+            "data": {
+                "supervisor": "222",
+                "homeassistant": "0.110.0",
+                "hassos": "1.2.3",
+            },
         },
     )
     aioclient_mock.get(
@@ -121,23 +125,38 @@ def mock_all(aioclient_mock, request):
         },
     )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/info",
+        json={"result": "ok", "data": {"auto_update": True}},
+    )
     aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/info",
+        json={"result": "ok", "data": {"auto_update": False}},
+    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
+    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected",
+    "entity_id,expected_state, auto_update",
     [
-        ("update.home_assistant_operating_system_update", "on"),
-        ("update.home_assistant_supervisor_update", "on"),
-        ("update.home_assistant_core_update", "on"),
-        ("update.test_update", "on"),
-        ("update.test2_update", "off"),
+        ("update.home_assistant_operating_system_update", "on", False),
+        ("update.home_assistant_supervisor_update", "on", True),
+        ("update.home_assistant_core_update", "on", False),
+        ("update.test_update", "on", True),
+        ("update.test2_update", "off", False),
     ],
 )
-async def test_update_entities(hass, entity_id, expected, aioclient_mock):
+async def test_update_entities(
+    hass,
+    entity_id,
+    expected_state,
+    auto_update,
+    aioclient_mock,
+):
     """Test update entities."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -153,7 +172,10 @@ async def test_update_entities(hass, entity_id, expected, aioclient_mock):
 
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
-    assert state.state == expected
+    assert state.state == expected_state
+
+    # Verify that the auto_update attribute is correct
+    assert state.attributes["auto_update"] is auto_update
 
 
 async def test_update_addon(hass, aioclient_mock):
@@ -465,3 +487,52 @@ async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
     )
     result = await client.receive_json()
     assert result["result"] is None
+
+
+async def test_no_os_entity(hass):
+    """Test handling where there is no os entity."""
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.get_info",
+        return_value={
+            "supervisor": "222",
+            "homeassistant": "0.110.0",
+            "hassos": None,
+        },
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    # Verify that the entity does not exist
+    assert not hass.states.get("update.home_assistant_operating_system_update")
+
+
+async def test_setting_up_core_update_when_addon_fails(hass, caplog):
+    """Test setting up core update when single addon fails."""
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.get_addon_stats",
+        side_effect=HassioAPIError("add-on is not running"),
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_addon_changelog",
+        side_effect=HassioAPIError("add-on is not running"),
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_addon_info",
+        side_effect=HassioAPIError("add-on is not running"),
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    # Verify that the core update entity does exist
+    state = hass.states.get("update.home_assistant_core_update")
+    assert state
+    assert state.state == "on"
+    assert "Could not fetch stats for test: add-on is not running" in caplog.text

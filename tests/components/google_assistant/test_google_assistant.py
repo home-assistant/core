@@ -22,6 +22,7 @@ from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from . import DEMO_DEVICES
 
@@ -136,30 +137,23 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         "test",
         "switch_config_id",
         suggested_object_id="config_switch",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     entity_entry2 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_diagnostic_id",
         suggested_object_id="diagnostic_switch",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     entity_entry3 = entity_registry.async_get_or_create(
-        "switch",
-        "test",
-        "switch_system_id",
-        suggested_object_id="system_switch",
-        entity_category="system",
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_hidden_integration_id",
         suggested_object_id="hidden_integration_switch",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_hidden_user_id",
@@ -172,7 +166,6 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
     hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
     hass_fixture.states.async_set(entity_entry4.entity_id, "foo")
-    hass_fixture.states.async_set(entity_entry5.entity_id, "bar")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}

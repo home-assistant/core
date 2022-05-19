@@ -2,13 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -81,9 +77,11 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     _attr_name = "Alarm Panel"
     _attr_should_poll = False
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):

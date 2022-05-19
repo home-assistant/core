@@ -44,6 +44,24 @@ from .zha_devices_list import (
 NO_TAIL_ID = re.compile("_\\d$")
 UNIQUE_ID_HD = re.compile(r"^(([\da-fA-F]{2}:){7}[\da-fA-F]{2}-\d{1,3})", re.X)
 
+IGNORE_SUFFIXES = [
+    zigpy.zcl.clusters.general.OnOff.StartUpOnOff.__name__,
+    "on_off_transition_time",
+    "on_level",
+    "on_transition_time",
+    "off_transition_time",
+    "default_move_rate",
+    "start_up_current_level",
+]
+
+
+def contains_ignored_suffix(unique_id: str) -> bool:
+    """Return true if the unique_id ends with an ignored suffix."""
+    for suffix in IGNORE_SUFFIXES:
+        if suffix.lower() in unique_id.lower():
+            return True
+    return False
+
 
 @pytest.fixture
 def channels_mock(zha_device_mock):
@@ -120,7 +138,7 @@ async def test_devices(
             assert cluster_identify.request.call_args == mock.call(
                 False,
                 64,
-                (zigpy.types.uint8_t, zigpy.types.uint8_t),
+                cluster_identify.commands_by_name["trigger_effect"].schema,
                 2,
                 0,
                 expect_reply=True,
@@ -142,7 +160,7 @@ async def test_devices(
         _, component, entity_cls, unique_id, channels = call[0]
         # the factory can return None. We filter these out to get an accurate created entity count
         response = entity_cls.create_entity(unique_id, zha_dev, channels)
-        if response:
+        if response and not contains_ignored_suffix(response.name):
             created_entity_count += 1
             unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
                 0
@@ -178,7 +196,9 @@ async def test_devices(
     await hass_disable_services.async_block_till_done()
 
     zha_entity_ids = {
-        ent for ent in entity_ids if ent.split(".")[0] in zha_const.PLATFORMS
+        ent
+        for ent in entity_ids
+        if not contains_ignored_suffix(ent) and ent.split(".")[0] in zha_const.PLATFORMS
     }
     assert zha_entity_ids == {
         e[DEV_SIG_ENT_MAP_ID] for e in device[DEV_SIG_ENT_MAP].values()
@@ -319,12 +339,15 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
     ha_ent_info = {}
     for call in new_ent.call_args_list:
         component, entity_cls, unique_id, channels = call[0]
-        unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)  # ieee + endpoint_id
-        ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-            component,
-            unique_id,
-            channels,
-        )
+        if not contains_ignored_suffix(unique_id):
+            unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
+                0
+            )  # ieee + endpoint_id
+            ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
+                component,
+                unique_id,
+                channels,
+            )
 
     for comp_id, ent_info in device_info[DEV_SIG_ENT_MAP].items():
         component, unique_id = comp_id

@@ -1,6 +1,7 @@
 """Config flow to configure roomba component."""
 
 import asyncio
+from functools import partial
 
 from roombapy import RoombaFactory
 from roombapy.discovery import RoombaDiscovery
@@ -41,12 +42,15 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    roomba = RoombaFactory.create_roomba(
-        address=data[CONF_HOST],
-        blid=data[CONF_BLID],
-        password=data[CONF_PASSWORD],
-        continuous=False,
-        delay=data[CONF_DELAY],
+    roomba = await hass.async_add_executor_job(
+        partial(
+            RoombaFactory.create_roomba,
+            address=data[CONF_HOST],
+            blid=data[CONF_BLID],
+            password=data[CONF_PASSWORD],
+            continuous=False,
+            delay=data[CONF_DELAY],
+        )
     )
 
     info = await async_connect_or_timeout(hass, roomba)

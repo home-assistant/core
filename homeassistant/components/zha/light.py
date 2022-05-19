@@ -26,9 +26,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -91,10 +89,10 @@ SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 SUPPORT_GROUP_LIGHT = (
     SUPPORT_BRIGHTNESS
     | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
+    | LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
     | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
+    | LightEntityFeature.TRANSITION
 )
 
 
@@ -243,7 +241,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 level, duration
             )
             t_log["move_to_level_with_on_off"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = bool(level)
@@ -255,7 +253,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # we should call the on command on the on_off cluster if brightness is not 0.
             result = await self._on_off_channel.on()
             t_log["on_off"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = True
@@ -266,7 +264,7 @@ class BaseLight(LogMixin, light.LightEntity):
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             result = await self._color_channel.move_to_color_temp(temperature, duration)
             t_log["move_to_color_temp"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
@@ -282,7 +280,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 int(xy_color[0] * 65535), int(xy_color[1] * 65535), duration
             )
             t_log["move_to_color"] = result
-            if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
@@ -290,7 +288,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             effect == light.EFFECT_COLORLOOP
-            and self.supported_features & light.SUPPORT_EFFECT
+            and self.supported_features & light.LightEntityFeature.EFFECT
         ):
             result = await self._color_channel.color_loop_set(
                 UPDATE_COLORLOOP_ACTION
@@ -306,7 +304,7 @@ class BaseLight(LogMixin, light.LightEntity):
         elif (
             self._effect == light.EFFECT_COLORLOOP
             and effect != light.EFFECT_COLORLOOP
-            and self.supported_features & light.SUPPORT_EFFECT
+            and self.supported_features & light.LightEntityFeature.EFFECT
         ):
             result = await self._color_channel.color_loop_set(
                 UPDATE_COLORLOOP_ACTION,
@@ -318,7 +316,10 @@ class BaseLight(LogMixin, light.LightEntity):
             t_log["color_loop_set"] = result
             self._effect = None
 
-        if flash is not None and self._supported_features & light.SUPPORT_FLASH:
+        if (
+            flash is not None
+            and self._supported_features & light.LightEntityFeature.FLASH
+        ):
             result = await self._identify_channel.trigger_effect(
                 FLASH_EFFECTS[flash], EFFECT_DEFAULT_VARIANT
             )
@@ -340,7 +341,7 @@ class BaseLight(LogMixin, light.LightEntity):
         else:
             result = await self._on_off_channel.off()
         self.debug("turned off: %s", result)
-        if not isinstance(result, list) or result[1] is not Status.SUCCESS:
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
         self._state = False
 
@@ -373,7 +374,7 @@ class Light(BaseLight, ZhaEntity):
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
-            self._supported_features |= light.SUPPORT_TRANSITION
+            self._supported_features |= light.LightEntityFeature.TRANSITION
             self._brightness = self._level_channel.current_level
 
         if self._color_channel:
@@ -394,13 +395,13 @@ class Light(BaseLight, ZhaEntity):
                     self._hs_color = (0, 0)
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
-                self._supported_features |= light.SUPPORT_EFFECT
+                self._supported_features |= light.LightEntityFeature.EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
                 if self._color_channel.color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
 
         if self._identify_channel:
-            self._supported_features |= light.SUPPORT_FLASH
+            self._supported_features |= light.LightEntityFeature.FLASH
 
         if effect_list:
             self._effect_list = effect_list
@@ -488,7 +489,7 @@ class Light(BaseLight, ZhaEntity):
             ]
 
             results = await self._color_channel.get_attributes(
-                attributes, from_cache=False
+                attributes, from_cache=False, only_cache=False
             )
 
             if (color_mode := results.get("color_mode")) is not None:

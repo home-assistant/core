@@ -1,7 +1,7 @@
 """Support for SleepIQ foundation preset selection."""
 from __future__ import annotations
 
-from asyncsleepiq import BED_PRESETS, SleepIQBed, SleepIQPreset
+from asyncsleepiq import BED_PRESETS, Side, SleepIQBed, SleepIQPreset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -39,14 +39,11 @@ class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
         """Initialize the select entity."""
         self.preset = preset
 
-        if preset.side:
-            self._attr_name = (
-                f"SleepNumber {bed.name} Foundation Preset {preset.side_full}"
-            )
-            self._attr_unique_id = f"{bed.id}_preset_{preset.side}"
-        else:
-            self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
-            self._attr_unique_id = f"{bed.id}_preset"
+        self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
+        self._attr_unique_id = f"{bed.id}_preset"
+        if preset.side != Side.NONE:
+            self._attr_name += f" {preset.side_full}"
+            self._attr_unique_id += f"_{preset.side}"
 
         super().__init__(coordinator, bed)
         self._async_update_attrs()

@@ -1,6 +1,8 @@
 """Support for Nexia Automations."""
 from typing import Any
 
+from nexia.automation import NexiaAutomation
+
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,7 +39,9 @@ async def async_setup_entry(
 class NexiaAutomationScene(NexiaEntity, Scene):
     """Provides Nexia automation support."""
 
-    def __init__(self, coordinator, automation):
+    def __init__(
+        self, coordinator: NexiaDataUpdateCoordinator, automation: NexiaAutomation
+    ) -> None:
         """Initialize the automation scene."""
         super().__init__(
             coordinator,
@@ -60,7 +64,7 @@ class NexiaAutomationScene(NexiaEntity, Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate an automation scene."""
-        await self.hass.async_add_executor_job(self._automation.activate)
+        await self._automation.activate()
 
         async def refresh_callback(_):
             await self.coordinator.async_refresh()

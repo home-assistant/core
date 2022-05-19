@@ -75,6 +75,5 @@
                 "description": "Verbindungsmethode zum Gateway w\u00e4hlen"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

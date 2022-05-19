@@ -14,9 +14,8 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -35,6 +34,8 @@ from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import FanValueMapping, FanValueMappingDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_SPEED_RANGE = (1, 99)  # off is not included
 
@@ -73,6 +74,8 @@ async def async_setup_entry(
 
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
@@ -138,11 +141,6 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(DEFAULT_SPEED_RANGE)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
 
 class ValueMappingZwaveFan(ZwaveFan):
@@ -239,9 +237,9 @@ class ValueMappingZwaveFan(ZwaveFan):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_SET_SPEED
+        flags: int = FanEntityFeature.SET_SPEED
         if self.has_fan_value_mapping and self.fan_value_mapping.presets:
-            flags |= SUPPORT_PRESET_MODE
+            flags |= FanEntityFeature.PRESET_MODE
 
         return flags
 
@@ -376,7 +374,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_PRESET_MODE
+        return FanEntityFeature.PRESET_MODE
 
     @property
     def fan_state(self) -> str | None:

@@ -6,11 +6,16 @@ from typing import cast
 
 import pyvera as veraApi
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     Platform,
@@ -60,6 +65,19 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         return self.current_value
 
     @property
+    def device_class(self) -> str | None:
+        """Return the class of this entity."""
+        if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
+            return SensorDeviceClass.TEMPERATURE
+        if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
+            return SensorDeviceClass.ILLUMINANCE
+        if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
+            return SensorDeviceClass.HUMIDITY
+        if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
+            return SensorDeviceClass.POWER
+        return None
+
+    @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
 
@@ -72,7 +90,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return PERCENTAGE
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
-            return "watts"
+            return POWER_WATT
         return None
 
     def update(self) -> None:

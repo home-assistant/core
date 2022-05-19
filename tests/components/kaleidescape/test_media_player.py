@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
 
@@ -173,7 +174,7 @@ async def test_device(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Test device attributes."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={("kaleidescape", MOCK_SERIAL)}
     )

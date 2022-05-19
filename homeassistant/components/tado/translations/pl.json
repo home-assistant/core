@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "W\u0142\u0105cz tryb awaryjny."
+                    "fallback": "Wybierz tryb awaryjny."
                 },
-                "description": "Tryb rezerwowy prze\u0142\u0105czy si\u0119 na inteligentny harmonogram przy nast\u0119pnym prze\u0142\u0105czeniu z harmonogramu po r\u0119cznym dostosowaniu strefy.",
+                "description": "Tryb awaryjny pozwala wybra\u0107, kiedy wr\u00f3ci\u0107 do inteligentnego harmonogramu z r\u0119cznej nak\u0142adki strefy. (NEXT_TIME_BLOCK:= Zmie\u0144 przy nast\u0119pnej zmianie inteligentnego harmonogramu; MANUAL:= Nie zmieniaj, dop\u00f3ki nie anulujesz; TADO_DEFAULT:= Zmie\u0144 na podstawie ustawie\u0144 w aplikacji Tado).",
                 "title": "Dostosuj opcje Tado"
             }
         }

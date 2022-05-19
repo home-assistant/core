@@ -6,11 +6,7 @@ from typing import Any
 from velbusaio.channels import Temperature as VelbusTemp
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -38,10 +34,12 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     """Representation of a Velbus thermostat."""
 
     _channel: VelbusTemp
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_hvac_mode = HVAC_MODE_HEAT
-    _attr_hvac_modes = [HVAC_MODE_HEAT]
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_preset_modes = list(PRESET_MODES)
 
     @property

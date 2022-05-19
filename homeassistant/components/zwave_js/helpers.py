@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import astuple, dataclass
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -58,6 +59,34 @@ class ZwaveValueID:
 
 
 @callback
+def get_value_id_from_unique_id(unique_id: str) -> str | None:
+    """
+    Get the value ID and optional state key from a unique ID.
+
+    Raises ValueError
+    """
+    split_unique_id = unique_id.split(".")
+    # If the unique ID contains a `-` in its second part, the unique ID contains
+    # a value ID and we can return it.
+    if "-" in (value_id := split_unique_id[1]):
+        return value_id
+    return None
+
+
+@callback
+def get_state_key_from_unique_id(unique_id: str) -> int | None:
+    """Get the state key from a unique ID."""
+    # If the unique ID has more than two parts, it's a special unique ID. If the last
+    # part of the unique ID is an int, then it's a state key and we return it.
+    if len(split_unique_id := unique_id.split(".")) > 2:
+        try:
+            return int(split_unique_id[-1])
+        except ValueError:
+            pass
+    return None
+
+
+@callback
 def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     """Return the value of a ZwaveValue."""
     return value.value if value else None
@@ -66,6 +95,7 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(client: ZwaveClient) -> None:
     """Enable statistics on the driver."""
     await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
+    await client.driver.async_enable_error_reporting()
 
 
 @callback
@@ -251,6 +281,7 @@ def async_get_nodes_from_targets(
     val: dict[str, Any],
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
+    logger: logging.Logger = LOGGER,
 ) -> set[ZwaveNode]:
     """
     Get nodes for all targets.
@@ -263,7 +294,7 @@ def async_get_nodes_from_targets(
         try:
             nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
         except ValueError as err:
-            LOGGER.warning(err.args[0])
+            logger.warning(err.args[0])
 
     # Convert all area IDs to nodes
     for area_id in val.get(ATTR_AREA_ID, []):
@@ -274,7 +305,7 @@ def async_get_nodes_from_targets(
         try:
             nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
         except ValueError as err:
-            LOGGER.warning(err.args[0])
+            logger.warning(err.args[0])
 
     return nodes
 
@@ -299,13 +330,22 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     return node.values[value_id]
 
 
+def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
+    """Find zwave_js config entry from a device."""
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry and entry.domain == DOMAIN:
+            return entry_id
+    return None
+
+
 @callback
 def async_get_node_status_sensor_entity_id(
     hass: HomeAssistant,
     device_id: str,
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
-) -> str:
+) -> str | None:
     """Get the node status sensor entity ID for a given Z-Wave JS device."""
     if not ent_reg:
         ent_reg = er.async_get(hass)
@@ -314,20 +354,16 @@ def async_get_node_status_sensor_entity_id(
     if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
-    entry_id = next(entry_id for entry_id in device.config_entries)
+    if not (entry_id := _zwave_js_config_entry(hass, device)):
+        return None
+
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
-    entity_id = ent_reg.async_get_entity_id(
+    return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
         f"{client.driver.controller.home_id}.{node.node_id}.node_status",
     )
-    if not entity_id:
-        raise HomeAssistantError(
-            "Node status sensor entity not found. Device may not be a zwave_js device"
-        )
-
-    return entity_id
 
 
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:

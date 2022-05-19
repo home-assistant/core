@@ -168,6 +168,14 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
+    @_api_bool
+    def refresh_updates(self):
+        """Refresh available updates.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/refresh_updates", timeout=None)
+
     @api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.

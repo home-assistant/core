@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -12,16 +12,12 @@ from pyoverkiz.types import StateType as OverkizStateType
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
@@ -54,15 +50,15 @@ class OverkizAlarmDescription(
     """Class to describe an Overkiz alarm control panel."""
 
     alarm_disarm: str | None = None
-    alarm_disarm_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_disarm_args: OverkizStateType | list[OverkizStateType] = None
     alarm_arm_home: str | None = None
-    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_home_args: OverkizStateType | list[OverkizStateType] = None
     alarm_arm_night: str | None = None
-    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_night_args: OverkizStateType | list[OverkizStateType] = None
     alarm_arm_away: str | None = None
-    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_arm_away_args: OverkizStateType | list[OverkizStateType] = None
     alarm_trigger: str | None = None
-    alarm_trigger_args: OverkizStateType | list[OverkizStateType] | None = None
+    alarm_trigger_args: OverkizStateType | list[OverkizStateType] = None
 
 
 MAP_INTERNAL_STATUS_STATE: dict[str, str] = {
@@ -91,23 +87,25 @@ def _state_tsk_alarm_controller(select_state: Callable[[str], OverkizStateType])
     ]
 
 
+MAP_CORE_ACTIVE_ZONES: dict[str, str] = {
+    OverkizCommandParam.A: STATE_ALARM_ARMED_HOME,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": STATE_ALARM_ARMED_NIGHT,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}": STATE_ALARM_ARMED_AWAY,
+}
+
+
 def _state_stateful_alarm_controller(
     select_state: Callable[[str], OverkizStateType]
 ) -> str:
     """Return the state of the device."""
-    if state := cast(list, select_state(OverkizState.CORE_ACTIVE_ZONES)):
-        if [
-            OverkizCommandParam.A,
-            OverkizCommandParam.B,
-            OverkizCommandParam.C,
-        ] in state:
-            return STATE_ALARM_ARMED_AWAY
+    if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
+        # The Stateful Alarm Controller has 3 zones with the following options:
+        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not possible to map this to AlarmControlPanel entity,
+        # only the most important zones are mapped, other zones can only be disarmed.
+        if state in MAP_CORE_ACTIVE_ZONES:
+            return MAP_CORE_ACTIVE_ZONES[state]
 
-        if [OverkizCommandParam.A, OverkizCommandParam.B] in state:
-            return STATE_ALARM_ARMED_NIGHT
-
-        if OverkizCommandParam.A in state:
-            return STATE_ALARM_ARMED_HOME
+        return STATE_ALARM_ARMED_CUSTOM_BYPASS
 
     return STATE_ALARM_DISARMED
 
@@ -159,10 +157,10 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
         key=UIWidget.TSKALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
-            SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.TRIGGER
         ),
         fn_state=_state_tsk_alarm_controller,
         alarm_disarm=OverkizCommand.ALARM_OFF,
@@ -178,25 +176,24 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     OverkizAlarmDescription(
         key=UIWidget.STATEFUL_ALARM_CONTROLLER,
         supported_features=(
-            SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
         ),
         fn_state=_state_stateful_alarm_controller,
-        alarm_disarm=OverkizCommand.DISARM,
+        alarm_disarm=OverkizCommand.ALARM_OFF,
         alarm_arm_home=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_home_args=[OverkizCommandParam.A],
+        alarm_arm_home_args=OverkizCommandParam.A,
         alarm_arm_night=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_night_args=[OverkizCommandParam.A, OverkizCommandParam.B],
+        alarm_arm_night_args=f"{OverkizCommandParam.A}, {OverkizCommandParam.B}",
         alarm_arm_away=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_away_args=[
-            OverkizCommandParam.A,
-            OverkizCommandParam.B,
-            OverkizCommandParam.C,
-        ],
+        alarm_arm_away_args=f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}",
     ),
     # MyFoxAlarmController
     OverkizAlarmDescription(
         key=UIWidget.MY_FOX_ALARM_CONTROLLER,
-        supported_features=SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT,
+        supported_features=AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT,
         fn_state=_state_myfox_alarm_controller,
         alarm_disarm=OverkizCommand.DISARM,
         alarm_arm_night=OverkizCommand.PARTIAL,
@@ -206,7 +203,9 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     OverkizAlarmDescription(
         key=UIWidget.ALARM_PANEL_CONTROLLER,
         supported_features=(
-            SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
         ),
         fn_state=_state_alarm_panel_controller,
         alarm_disarm=OverkizCommand.DISARM,
@@ -267,7 +266,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         assert self.entity_description.alarm_disarm
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_disarm,
             self.entity_description.alarm_disarm_args,
         )
@@ -275,7 +274,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         assert self.entity_description.alarm_arm_home
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_arm_home,
             self.entity_description.alarm_arm_home_args,
         )
@@ -283,7 +282,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         assert self.entity_description.alarm_arm_night
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_arm_night,
             self.entity_description.alarm_arm_night_args,
         )
@@ -291,7 +290,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         assert self.entity_description.alarm_arm_away
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_arm_away,
             self.entity_description.alarm_arm_away_args,
         )
@@ -299,7 +298,14 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         assert self.entity_description.alarm_trigger
-        await self.executor.async_execute_command(
+        await self.async_execute_command(
             self.entity_description.alarm_trigger,
             self.entity_description.alarm_trigger_args,
         )
+
+    async def async_execute_command(self, command_name: str, args: Any) -> None:
+        """Execute device command in async context."""
+        if args:
+            await self.executor.async_execute_command(command_name, args)
+        else:
+            await self.executor.async_execute_command(command_name)

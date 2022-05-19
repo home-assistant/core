@@ -162,6 +162,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Authentication failed", exc_info=err)
         http_session.close()
         raise ConfigEntryAuthFailed from err
+    except APIError as err:
+        http_session.close()
+        raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
     if gateway_din and entry.unique_id is not None and is_ip_address(entry.unique_id):
@@ -223,13 +226,18 @@ def call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
 
 def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
+    try:
+        backup_reserve = power_wall.get_backup_reserve_percentage()
+    except MissingAttributeError:
+        backup_reserve = None
+
     return PowerwallData(
         charge=power_wall.get_charge(),
         site_master=power_wall.get_sitemaster(),
         meters=power_wall.get_meters(),
         grid_services_active=power_wall.is_grid_services_active(),
         grid_status=power_wall.get_grid_status(),
-        backup_reserve=power_wall.get_backup_reserve_percentage(),
+        backup_reserve=backup_reserve,
     )
 
 

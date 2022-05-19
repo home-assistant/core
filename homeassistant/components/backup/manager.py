@@ -108,7 +108,7 @@ class BackupManager:
                             size=round(backup_path.stat().st_size / 1_048_576, 2),
                         )
                         backups[backup.slug] = backup
-            except (OSError, TarError, json.JSONDecodeError) as err:
+            except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
 

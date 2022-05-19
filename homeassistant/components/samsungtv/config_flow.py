@@ -167,6 +167,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         updates = {CONF_HOST: self._host}
         if self._mac:
             updates[CONF_MAC] = self._mac
+        if self._model:
+            updates[CONF_MODEL] = self._model
         if self._ssdp_rendering_control_location:
             updates[
                 CONF_SSDP_RENDERING_CONTROL_LOCATION
@@ -363,9 +365,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not entry:
             return None
         entry_kw_args: dict = {}
-        if (
-            self.unique_id
-            and entry.unique_id is None
+        if self.unique_id and (
+            entry.unique_id is None
             or (is_unique_match and self.unique_id != entry.unique_id)
         ):
             entry_kw_args["unique_id"] = self.unique_id
@@ -381,10 +382,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             != self._ssdp_main_tv_agent_location
         )
         update_mac = self._mac and not data.get(CONF_MAC)
+        update_model = self._model and not data.get(CONF_MODEL)
         if (
             update_ssdp_rendering_control_location
             or update_ssdp_main_tv_agent_location
             or update_mac
+            or update_model
         ):
             if update_ssdp_rendering_control_location:
                 data[
@@ -396,6 +399,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ] = self._ssdp_main_tv_agent_location
             if update_mac:
                 data[CONF_MAC] = self._mac
+            if update_model:
+                data[CONF_MODEL] = self._model
             entry_kw_args["data"] = data
         if not entry_kw_args:
             return None
@@ -409,7 +414,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return entry
 
-    async def _async_start_discovery_with_mac_address(self) -> None:
+    @callback
+    def _async_start_discovery_with_mac_address(self) -> None:
         """Start discovery."""
         assert self._host is not None
         if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
@@ -469,6 +475,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
+        if self._method == METHOD_LEGACY and discovery_info.ssdp_st in (
+            UPNP_SVC_RENDERING_CONTROL,
+            UPNP_SVC_MAIN_TV_AGENT,
+        ):
+            # The UDN we use for the unique id cannot be determined
+            # from device_info for legacy devices
+            return self.async_abort(reason="not_supported")
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
@@ -479,7 +492,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
         self._mac = discovery_info.macaddress
         self._host = discovery_info.ip
-        await self._async_start_discovery_with_mac_address()
+        self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
@@ -491,7 +504,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
         self._mac = format_mac(discovery_info.properties["deviceid"])
         self._host = discovery_info.host
-        await self._async_start_discovery_with_mac_address()
+        self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()

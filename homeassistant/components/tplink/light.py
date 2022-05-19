@@ -14,13 +14,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -101,9 +97,9 @@ RANDOM_EFFECT_DICT: Final = {
         cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
     ),
     vol.Optional("random_seed", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=100)
+        vol.Coerce(int), vol.Range(min=1, max=600)
     ),
-    vol.Required("backgrounds"): vol.All(
+    vol.Optional("backgrounds"): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
         [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
@@ -165,6 +161,8 @@ async def async_setup_entry(
 
 class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
+
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     device: SmartBulb
 
@@ -280,37 +278,32 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         return hue, saturation
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_TRANSITION
-
-    @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode | str] | None:
         """Return list of available color modes."""
-        modes = set()
+        modes: set[ColorMode | str] = set()
         if self.device.is_variable_color_temp:
-            modes.add(COLOR_MODE_COLOR_TEMP)
+            modes.add(ColorMode.COLOR_TEMP)
         if self.device.is_color:
-            modes.add(COLOR_MODE_HS)
+            modes.add(ColorMode.HS)
         if self.device.is_dimmable:
-            modes.add(COLOR_MODE_BRIGHTNESS)
+            modes.add(ColorMode.BRIGHTNESS)
 
         if not modes:
-            modes.add(COLOR_MODE_ONOFF)
+            modes.add(ColorMode.ONOFF)
 
         return modes
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the active color mode."""
         if self.device.is_color:
             if self.device.is_variable_color_temp and self.device.color_temp:
-                return COLOR_MODE_COLOR_TEMP
-            return COLOR_MODE_HS
+                return ColorMode.COLOR_TEMP
+            return ColorMode.HS
         if self.device.is_variable_color_temp:
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
 
-        return COLOR_MODE_BRIGHTNESS
+        return ColorMode.BRIGHTNESS
 
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
@@ -318,19 +311,10 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
 
     device: SmartLightStrip
 
-    def __init__(
-        self,
-        device: SmartLightStrip,
-        coordinator: TPLinkDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the smart light strip."""
-        super().__init__(device, coordinator)
-        self._last_custom_effect: dict[str, Any] = {}
-
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return super().supported_features | SUPPORT_EFFECT
+        return super().supported_features | LightEntityFeature.EFFECT
 
     @property
     def effect_list(self) -> list[str] | None:
@@ -351,6 +335,11 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
         if ATTR_COLOR_TEMP in kwargs:
+            if self.effect:
+                # If there is an effect in progress
+                # we have to set an HSV value to clear the effect
+                # before we can set a color temp
+                await self.device.set_hsv(0, 0, brightness)
             await self._async_set_color_temp(
                 int(kwargs[ATTR_COLOR_TEMP]), brightness, transition
             )
@@ -358,20 +347,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             await self._async_set_hsv(kwargs[ATTR_HS_COLOR], brightness, transition)
         elif ATTR_EFFECT in kwargs:
             await self.device.set_effect(kwargs[ATTR_EFFECT])
-        elif (
-            self.device.is_off
-            and self.device.effect
-            and self.device.effect["enable"] == 0
-            and self.device.effect["name"]
-        ):
-            if not self.device.effect["custom"]:
-                await self.device.set_effect(self.device.effect["name"])
-            elif self._last_custom_effect:
-                await self.device.set_custom_effect(self._last_custom_effect)
-            # The device does not remember custom effects
-            # so we must set a default value or it can never turn back on
-            else:
-                await self.device.set_hsv(0, 0, 100, transition=transition)
         else:
             await self._async_turn_on_with_brightness(brightness, transition)
 
@@ -384,7 +359,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         fadeoff: int,
         init_states: tuple[int, int, int],
         random_seed: int,
-        backgrounds: Sequence[tuple[int, int, int]],
+        backgrounds: Sequence[tuple[int, int, int]] | None = None,
         hue_range: tuple[int, int] | None = None,
         saturation_range: tuple[int, int] | None = None,
         brightness_range: tuple[int, int] | None = None,
@@ -396,8 +371,9 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             "type": "random",
             "init_states": [init_states],
             "random_seed": random_seed,
-            "backgrounds": backgrounds,
         }
+        if backgrounds:
+            effect["backgrounds"] = backgrounds
         if fadeoff:
             effect["fadeoff"] = fadeoff
         if hue_range:
@@ -412,7 +388,6 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
-        self._last_custom_effect = effect
         await self.device.set_custom_effect(effect)
 
     async def async_set_sequence_effect(
@@ -434,5 +409,4 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             "spread": spread,
             "direction": direction,
         }
-        self._last_custom_effect = effect
         await self.device.set_custom_effect(effect)

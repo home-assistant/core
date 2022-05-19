@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic
+from typing import Any
 
 from pyunifiprotect.data import Camera, RecordingMode, VideoMode
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ProtectSwitchEntityDescription(
-    ProtectSetableKeysMixin, SwitchEntityDescription, Generic[T]
+    ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
     """Describes UniFi Protect Switch entity."""
 
@@ -43,7 +43,7 @@ async def _set_highfps(obj: Camera, value: bool) -> None:
         await obj.set_video_mode(VideoMode.DEFAULT)
 
 
-ALL_DEVICES_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
         key="ssh",
         name="SSH Enabled",
@@ -53,9 +53,6 @@ ALL_DEVICES_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_ssh_enabled",
         ufp_set_method="set_ssh",
     ),
-)
-
-CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
         key="status_light",
         name="Status Light On",
@@ -137,7 +134,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="Detections: Person",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="can_detect_person",
         ufp_value="is_person_detection_on",
         ufp_set_method="set_person_detection",
     ),
@@ -146,9 +143,27 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="Detections: Vehicle",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
         ufp_set_method="set_vehicle_detection",
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_face",
+        name="Detections: Face",
+        icon="mdi:human-greeting",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_face",
+        ufp_value="is_face_detection_on",
+        ufp_set_method="set_face_detection",
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_package",
+        name="Detections: Package",
+        icon="mdi:package-variant-closed",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_package",
+        ufp_value="is_package_detection_on",
+        ufp_set_method="set_package_detection",
     ),
 )
 
@@ -205,6 +220,15 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
 
 LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
+        key="ssh",
+        name="SSH Enabled",
+        icon="mdi:lock",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="is_ssh_enabled",
+        ufp_set_method="set_ssh",
+    ),
+    ProtectSwitchEntityDescription(
         key="status_light",
         name="Status Light On",
         icon="mdi:led-on",
@@ -225,6 +249,18 @@ DOORLOCK_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+VIEWER_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="ssh",
+        name="SSH Enabled",
+        icon="mdi:lock",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="is_ssh_enabled",
+        ufp_set_method="set_ssh",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -236,11 +272,11 @@ async def async_setup_entry(
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectSwitch,
-        all_descs=ALL_DEVICES_SWITCHES,
         camera_descs=CAMERA_SWITCHES,
         light_descs=LIGHT_SWITCHES,
         sense_descs=SENSE_SWITCHES,
         lock_descs=DOORLOCK_SWITCHES,
+        viewer_descs=VIEWER_SWITCHES,
     )
     async_add_entities(entities)
 

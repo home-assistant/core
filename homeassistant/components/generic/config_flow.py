@@ -4,18 +4,25 @@ from __future__ import annotations
 import contextlib
 from errno import EHOSTUNREACH, EIO
 from functools import partial
-import imghdr
+import io
 import logging
 from types import MappingProxyType
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 
+import PIL
 from async_timeout import timeout
 import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
+import yarl
 
-from homeassistant.components.stream.const import SOURCE_TIMEOUT
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
+    SOURCE_TIMEOUT,
+    convert_stream_options,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -37,14 +44,11 @@ from .const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
     DEFAULT_NAME,
     DOMAIN,
-    FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
-    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,12 +61,13 @@ DEFAULT_DATA = {
     CONF_VERIFY_SSL: True,
 }
 
-SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml"}
+SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 
 
 def build_schema(
     user_input: dict[str, Any] | MappingProxyType[str, Any],
     is_options_flow: bool = False,
+    show_advanced_options=False,
 ):
     """Create schema for camera config setup."""
     spec = {
@@ -93,7 +98,7 @@ def build_schema(
         vol.Required(
             CONF_FRAMERATE,
             description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
-        ): int,
+        ): vol.All(vol.Range(min=0, min_included=False), cv.positive_float),
         vol.Required(
             CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
         ): bool,
@@ -105,14 +110,26 @@ def build_schema(
                 default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
             )
         ] = bool
+        if show_advanced_options:
+            spec[
+                vol.Required(
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                    default=user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
+                )
+            ] = bool
     return vol.Schema(spec)
 
 
 def get_image_type(image):
     """Get the format of downloaded bytes that could be an image."""
-    fmt = imghdr.what(None, h=image)
+    fmt = None
+    imagefile = io.BytesIO(image)
+    with contextlib.suppress(PIL.UnidentifiedImageError):
+        img = PIL.Image.open(imagefile)
+        fmt = img.format.lower()
+
     if fmt is None:
-        # if imghdr can't figure it out, could be svg.
+        # if PIL can't figure it out, could be svg.
         with contextlib.suppress(UnicodeDecodeError):
             if image.decode("utf-8").lstrip().startswith("<svg"):
                 return "svg+xml"
@@ -123,14 +140,13 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
-        return {}, None
-    if not isinstance(url, template_helper.Template) and url:
-        url = cv.template(url)
-        url.hass = hass
+        return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
     try:
+        if not isinstance(url, template_helper.Template):
+            url = template_helper.Template(url, hass)
         url = url.async_render(parse_result=False)
     except TemplateError as err:
-        _LOGGER.error("Error parsing template %s: %s", url, err)
+        _LOGGER.warning("Problem rendering template %s: %s", url, err)
         return {CONF_STILL_IMAGE_URL: "template_error"}, None
     verify_ssl = info.get(CONF_VERIFY_SSL)
     auth = generate_auth(info)
@@ -162,12 +178,20 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     return {}, f"image/{fmt}"
 
 
-def slug_url(url) -> str | None:
+def slug(hass, template) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
-    if not url:
+    if not template:
         return None
-    url_no_scheme = urlparse(url)._replace(scheme="")
-    return slugify(urlunparse(url_no_scheme).strip("/"))
+    if not isinstance(template, template_helper.Template):
+        template = template_helper.Template(template, hass)
+    try:
+        url = template.async_render(parse_result=False)
+        return slugify(yarl.URL(url).host)
+    except TemplateError as err:
+        _LOGGER.error("Syntax error in '%s': %s", template.template, err)
+    except (ValueError, TypeError) as err:
+        _LOGGER.error("Syntax error in '%s': %s", url, err)
+    return None
 
 
 async def async_test_stream(hass, info) -> dict[str, str]:
@@ -178,20 +202,24 @@ async def async_test_stream(hass, info) -> dict[str, str]:
         # For RTSP streams, prefer TCP. This code is duplicated from
         # homeassistant.components.stream.__init__.py:create_stream()
         # It may be possible & better to call create_stream() directly.
-        stream_options: dict[str, str] = {}
+        stream_options: dict[str, bool | str] = {}
+        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+            stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
+        if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+            stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+        pyav_options = convert_stream_options(stream_options)
         if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-            stream_options = {
+            pyav_options = {
                 "rtsp_flags": "prefer_tcp",
                 "stimeout": "5000000",
+                **pyav_options,
             }
-        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
-            stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
         _LOGGER.debug("Attempting to open stream %s", stream_source)
         container = await hass.async_add_executor_job(
             partial(
                 av.open,
                 stream_source,
-                options=stream_options,
+                options=pyav_options,
                 timeout=SOURCE_TIMEOUT,
             )
         )
@@ -222,6 +250,11 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize Generic ConfigFlow."""
+        self.cached_user_input: dict[str, Any] = {}
+        self.cached_title = ""
+
     @staticmethod
     def async_get_options_flow(
         config_entry: ConfigEntry,
@@ -232,8 +265,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     def check_for_existing(self, options):
         """Check whether an existing entry is using the same URLs."""
         return any(
-            entry.options[CONF_STILL_IMAGE_URL] == options[CONF_STILL_IMAGE_URL]
-            and entry.options[CONF_STREAM_SOURCE] == options[CONF_STREAM_SOURCE]
+            entry.options.get(CONF_STILL_IMAGE_URL) == options.get(CONF_STILL_IMAGE_URL)
+            and entry.options.get(CONF_STREAM_SOURCE) == options.get(CONF_STREAM_SOURCE)
             for entry in self._async_current_entries()
         )
 
@@ -242,6 +275,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the start of the config flow."""
         errors = {}
+        hass = self.hass
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
@@ -253,12 +287,16 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = errors | await async_test_stream(self.hass, user_input)
                 still_url = user_input.get(CONF_STILL_IMAGE_URL)
                 stream_url = user_input.get(CONF_STREAM_SOURCE)
-                name = slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
-
+                name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-                    await self.async_set_unique_id(self.flow_id)
+                    if still_url is None:
+                        # If user didn't specify a still image URL,
+                        # The automatically generated still image that stream generates
+                        # is always jpeg
+                        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
+
                     return self.async_create_entry(
                         title=name, data={}, options=user_input
                     )
@@ -276,24 +314,18 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
             return self.async_abort(reason="already_exists")
-        errors, still_format = await async_test_still(self.hass, import_config)
-        errors = errors | await async_test_stream(self.hass, import_config)
+        # Don't bother testing the still or stream details on yaml import.
         still_url = import_config.get(CONF_STILL_IMAGE_URL)
         stream_url = import_config.get(CONF_STREAM_SOURCE)
         name = import_config.get(
-            CONF_NAME, slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME
+            CONF_NAME,
+            slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
         )
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        if not errors:
-            import_config[CONF_CONTENT_TYPE] = still_format
-            await self.async_set_unique_id(self.flow_id)
-            return self.async_create_entry(title=name, data={}, options=import_config)
-        _LOGGER.error(
-            "Error importing generic IP camera platform config: unexpected error '%s'",
-            list(errors.values()),
-        )
-        return self.async_abort(reason="unknown")
+        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
+        import_config[CONF_CONTENT_TYPE] = still_format
+        return self.async_create_entry(title=name, data={}, options=import_config)
 
 
 class GenericOptionsFlowHandler(OptionsFlow):
@@ -302,37 +334,60 @@ class GenericOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Generic IP Camera options flow."""
         self.config_entry = config_entry
+        self.cached_user_input: dict[str, Any] = {}
+        self.cached_title = ""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
+        hass = self.hass
 
         if user_input is not None:
-            errors, still_format = await async_test_still(self.hass, user_input)
+            errors, still_format = await async_test_still(
+                self.hass, self.config_entry.options | user_input
+            )
             errors = errors | await async_test_stream(self.hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
+                title = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
+                if still_url is None:
+                    # If user didn't specify a still image URL,
+                    # The automatically generated still image that stream generates
+                    # is always jpeg
+                    still_format = "image/jpeg"
+                data = {
+                    CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
+                    CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
+                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                    CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
+                    CONF_CONTENT_TYPE: still_format
+                    or self.config_entry.options.get(CONF_CONTENT_TYPE),
+                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                    CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
+                        CONF_LIMIT_REFETCH_TO_URL_CHANGE
+                    ],
+                    CONF_FRAMERATE: user_input[CONF_FRAMERATE],
+                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                        self.config_entry.options.get(
+                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                        ),
+                    ),
+                }
                 return self.async_create_entry(
-                    title=slug_url(still_url) or slug_url(stream_url) or DEFAULT_NAME,
-                    data={
-                        CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                        CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                        CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
-                        CONF_CONTENT_TYPE: still_format,
-                        CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
-                            CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                        ],
-                        CONF_FRAMERATE: user_input[CONF_FRAMERATE],
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    },
+                    title=title,
+                    data=data,
                 )
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(user_input or self.config_entry.options, True),
+            data_schema=build_schema(
+                user_input or self.config_entry.options,
+                True,
+                self.show_advanced_options,
+            ),
             errors=errors,
         )

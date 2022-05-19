@@ -119,6 +119,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
+                except KeyError:
+                    errors["base"] = "firmware_not_fully_provisioned"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
@@ -143,6 +145,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the credentials step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            if get_info_gen(self.info) == 2:
+                user_input[CONF_USERNAME] = "admin"
             try:
                 device_info = await validate_input(
                     self.hass, self.host, self.info, user_input
@@ -152,8 +156,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
+            except aioshelly.exceptions.InvalidAuthError:
+                errors["base"] = "invalid_auth"
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
+            except aioshelly.exceptions.JSONRPCError:
+                errors["base"] = "cannot_connect"
+            except KeyError:
+                errors["base"] = "firmware_not_fully_provisioned"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -171,15 +181,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        schema = vol.Schema(
-            {
+        if get_info_gen(self.info) == 2:
+            schema = {
+                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+            }
+        else:
+            schema = {
                 vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
                 vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
             }
-        )
 
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors
+            step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
 
     async def async_step_zeroconf(
@@ -198,13 +211,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.host = host
 
-        self.context["title_placeholders"] = {"name": discovery_info.name.split(".")[0]}
+        self.context.update(
+            {
+                "title_placeholders": {"name": discovery_info.name.split(".")[0]},
+                "configuration_url": f"http://{discovery_info.host}",
+            }
+        )
 
         if get_info_auth(self.info):
             return await self.async_step_credentials()
 
         try:
             self.device_info = await validate_input(self.hass, self.host, self.info, {})
+        except KeyError:
+            LOGGER.debug("Shelly host %s firmware not fully provisioned", self.host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
@@ -215,18 +235,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.device_info["title"],
-                data={
-                    "host": self.host,
-                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                    "model": self.device_info["model"],
-                    "gen": self.device_info["gen"],
-                },
-            )
-
-        self._set_confirm_only()
+        try:
+            if user_input is not None:
+                return self.async_create_entry(
+                    title=self.device_info["title"],
+                    data={
+                        "host": self.host,
+                        CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
+                        "model": self.device_info["model"],
+                        "gen": self.device_info["gen"],
+                    },
+                )
+        except KeyError:
+            errors["base"] = "firmware_not_fully_provisioned"
+        else:
+            self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",

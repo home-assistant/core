@@ -1,23 +1,17 @@
 """Support for Fronius devices."""
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any, Final
-
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    CONF_RESOURCE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -29,10 +23,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -49,37 +41,7 @@ if TYPE_CHECKING:
         FroniusStorageUpdateCoordinator,
     )
 
-_LOGGER: Final = logging.getLogger(__name__)
-
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_RESOURCE): cv.url,
-            vol.Optional(CONF_MONITORED_CONDITIONS): object,
-        }
-    ),
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Fronius configuration from yaml."""
-    _LOGGER.warning(
-        "Loading Fronius via platform setup is deprecated. Please remove it from your yaml configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(

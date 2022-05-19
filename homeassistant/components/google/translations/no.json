@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "code_expired": "Autentiseringskoden er utl\u00f8pt eller p\u00e5loggingsoppsettet er ugyldig. Pr\u00f8v p\u00e5 nytt.",
+            "invalid_access_token": "Ugyldig tilgangstoken",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "oauth_error": "Mottatt ugyldige token data.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "progress": {
+            "exchange": "Hvis du vil knytte sammen Google-kontoen din, g\u00e5r du til [{url}]({url}) og skriver inn kode:\n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Koble til Google-kontoen"
+            },
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Google Kalender-integrasjonen m\u00e5 autentisere kontoen din p\u00e5 nytt",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            }
+        }
+    }
+}

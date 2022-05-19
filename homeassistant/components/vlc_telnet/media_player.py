@@ -14,23 +14,10 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
@@ -44,22 +31,7 @@ from .const import DATA_AVAILABLE, DATA_VLC, DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
 
-SUPPORT_VLC = (
-    SUPPORT_CLEAR_PLAYLIST
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_STOP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_BROWSE_MEDIA
-)
-
-_T = TypeVar("_T", bound="VlcDevice")
+_VlcDeviceT = TypeVar("_VlcDeviceT", bound="VlcDevice")
 _P = ParamSpec("_P")
 
 
@@ -76,12 +48,12 @@ async def async_setup_entry(
 
 
 def catch_vlc_errors(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
+    func: Callable[Concatenate[_VlcDeviceT, _P], Awaitable[None]]
+) -> Callable[Concatenate[_VlcDeviceT, _P], Coroutine[Any, Any, None]]:
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self: _VlcDeviceT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
@@ -98,6 +70,21 @@ def catch_vlc_errors(
 
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     def __init__(
         self, config_entry: ConfigEntry, vlc: Client, name: str, available: bool
@@ -175,8 +162,16 @@ class VlcDevice(MediaPlayerEntity):
         data = info.data
         LOGGER.debug("Info data: %s", data)
 
-        self._media_artist = data.get(0, {}).get("artist")
-        self._media_title = data.get(0, {}).get("title")
+        self._attr_media_album_name = data.get("data", {}).get("album")
+        self._media_artist = data.get("data", {}).get("artist")
+        self._media_title = data.get("data", {}).get("title")
+        now_playing = data.get("data", {}).get("now_playing")
+
+        # Many radio streams put artist/title/album in now_playing and title is the station name.
+        if now_playing:
+            if not self._media_artist:
+                self._media_artist = self._media_title
+            self._media_title = now_playing
 
         if self._media_title:
             return
@@ -213,11 +208,6 @@ class VlcDevice(MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._muted
-
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return SUPPORT_VLC
 
     @property
     def media_content_type(self) -> str:

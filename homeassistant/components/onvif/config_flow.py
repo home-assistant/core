@@ -13,6 +13,7 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -22,15 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import (
-    CONF_DEVICE_ID,
-    CONF_RTSP_TRANSPORT,
-    DEFAULT_ARGUMENTS,
-    DEFAULT_PORT,
-    DOMAIN,
-    LOGGER,
-    RTSP_TRANS_PROTOCOLS,
-)
+from .const import CONF_DEVICE_ID, DEFAULT_ARGUMENTS, DEFAULT_PORT, DOMAIN, LOGGER
 from .device import get_device
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
@@ -261,10 +254,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             await device.close()
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_configure(user_input)
-
 
 class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle ONVIF options."""
@@ -298,9 +287,9 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_RTSP_TRANSPORT,
                         default=self.config_entry.options.get(
-                            CONF_RTSP_TRANSPORT, RTSP_TRANS_PROTOCOLS[0]
+                            CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
-                    ): vol.In(RTSP_TRANS_PROTOCOLS),
+                    ): vol.In(RTSP_TRANSPORTS),
                 }
             ),
         )

@@ -250,61 +250,6 @@ async def test_user_input_device_found_no_ssdp(
     }
 
 
-async def test_import_device_already_existing(
-    hass, mock_get_device_info_valid, mock_get_source_ip
-):
-    """Test when the configurations.yaml contains an existing device."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1234567890",
-        data={CONF_HOST: "192.168.188.18", "model": "MC20", "serial": "1234567890"},
-    )
-    mock_entry.add_to_hass(hass)
-
-    config = {"platform": "yamaha_musiccast", "host": "192.168.188.18", "port": 5006}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_error(hass, mock_get_device_info_exception, mock_get_source_ip):
-    """Test when in the configuration.yaml a device is configured, which cannot be added.."""
-    config = {"platform": "yamaha_musiccast", "host": "192.168.188.18", "port": 5006}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_import_device_successful(
-    hass,
-    mock_get_device_info_valid,
-    mock_valid_discovery_information,
-    mock_get_source_ip,
-):
-    """Test when the device was imported successfully."""
-    config = {"platform": "yamaha_musiccast", "host": "127.0.0.1", "port": 5006}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert isinstance(result["result"], ConfigEntry)
-    assert result["data"] == {
-        "host": "127.0.0.1",
-        "serial": "1234567890",
-        "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
-    }
-
-
 # SSDP Flows
 
 

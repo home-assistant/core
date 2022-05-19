@@ -4,7 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_system_id": "Ongeldige Airzone systeem ID"
         },
         "step": {
             "user": {

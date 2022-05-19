@@ -7,13 +7,20 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from httplib2.error import ServerNotFoundError
+import aiohttp
+from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException
+from gcal_sync.model import DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -24,19 +31,24 @@ from homeassistant.const import (
     CONF_OFFSET,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 
-from . import config_flow
-from .api import DeviceAuth, GoogleCalendarService
+from .api import ApiAuthImpl, get_feature_access
 from .const import (
     CONF_CALENDAR_ACCESS,
     DATA_CONFIG,
     DATA_SERVICE,
+    DEVICE_AUTH_IMPL,
     DISCOVER_CALENDAR,
     DOMAIN,
     FeatureAccess,
@@ -151,20 +163,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google component."""
     conf = config.get(DOMAIN, {})
     hass.data[DOMAIN] = {DATA_CONFIG: conf}
-    config_flow.OAuth2FlowHandler.async_register_implementation(
-        hass,
-        DeviceAuth(
+
+    if CONF_CLIENT_ID in conf and CONF_CLIENT_SECRET in conf:
+        await async_import_client_credential(
             hass,
-            conf[CONF_CLIENT_ID],
-            conf[CONF_CLIENT_SECRET],
-        ),
-    )
+            DOMAIN,
+            ClientCredential(
+                conf[CONF_CLIENT_ID],
+                conf[CONF_CLIENT_SECRET],
+            ),
+            DEVICE_AUTH_IMPL,
+        )
 
     # Import credentials from the old token file into the new way as
     # a ConfigEntry managed by home assistant.
     storage = Storage(hass.config.path(TOKEN_FILE))
     creds = await hass.async_add_executor_job(storage.get)
-    if creds and conf[CONF_CALENDAR_ACCESS].scope in creds.scopes:
+    if creds and get_feature_access(hass).scope in creds.scopes:
         _LOGGER.debug("Importing configuration entry with credentials")
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -185,17 +200,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         )
     )
-    assert isinstance(implementation, DeviceAuth)
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    required_scope = hass.data[DOMAIN][DATA_CONFIG][CONF_CALENDAR_ACCESS].scope
-    if required_scope not in session.token.get("scope", []):
+    # Force a token refresh to fix a bug where tokens were persisted with
+    # expires_in (relative time delta) and expires_at (absolute time) swapped.
+    # A google session token typically only lasts a few days between refresh.
+    now = datetime.now()
+    if session.token["expires_at"] >= (now + timedelta(days=365)).timestamp():
+        session.token["expires_in"] = 0
+        session.token["expires_at"] = now.timestamp()
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
+
+    access = get_feature_access(hass)
+    if access.scope not in session.token.get("scope", []):
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
-    calendar_service = GoogleCalendarService(hass, session)
+    calendar_service = GoogleCalendarService(
+        ApiAuthImpl(async_get_clientsession(hass), session)
+    )
     hass.data[DOMAIN][DATA_SERVICE] = calendar_service
 
-    await async_setup_services(hass, hass.data[DOMAIN][DATA_CONFIG], calendar_service)
+    track_new = hass.data[DOMAIN][DATA_CONFIG].get(CONF_TRACK_NEW, True)
+    await async_setup_services(hass, track_new, calendar_service)
+    # Only expose the add event service if we have the correct permissions
+    if access is FeatureAccess.read_write:
+        await async_setup_add_event_service(hass, calendar_service)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -209,7 +245,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_services(
     hass: HomeAssistant,
-    config: ConfigType,
+    track_new: bool,
     calendar_service: GoogleCalendarService,
 ) -> None:
     """Set up the service listeners."""
@@ -243,12 +279,13 @@ async def async_setup_services(
     async def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
         try:
-            calendars = await calendar_service.async_list_calendars()
-        except ServerNotFoundError as err:
+            result = await calendar_service.async_list_calendars()
+        except ApiException as err:
             raise HomeAssistantError(str(err)) from err
         tasks = []
-        for calendar in calendars:
-            calendar[CONF_TRACK] = config[CONF_TRACK_NEW]
+        for calendar_item in result.items:
+            calendar = calendar_item.dict(exclude_unset=True)
+            calendar[CONF_TRACK] = track_new
             tasks.append(
                 hass.services.async_call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
             )
@@ -256,10 +293,17 @@ async def async_setup_services(
 
     hass.services.async_register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
 
+
+async def async_setup_add_event_service(
+    hass: HomeAssistant,
+    calendar_service: GoogleCalendarService,
+) -> None:
+    """Add the service to add events."""
+
     async def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
-        start = {}
-        end = {}
+        start: DateOrDatetime | None = None
+        end: DateOrDatetime | None = None
 
         if EVENT_IN in call.data:
             if EVENT_IN_DAYS in call.data[EVENT_IN]:
@@ -268,8 +312,8 @@ async def async_setup_services(
                 start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
                 end_in = start_in + timedelta(days=1)
 
-                start = {"date": start_in.strftime("%Y-%m-%d")}
-                end = {"date": end_in.strftime("%Y-%m-%d")}
+                start = DateOrDatetime(date=start_in)
+                end = DateOrDatetime(date=end_in)
 
             elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
                 now = datetime.now()
@@ -277,36 +321,39 @@ async def async_setup_services(
                 start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
                 end_in = start_in + timedelta(days=1)
 
-                start = {"date": start_in.strftime("%Y-%m-%d")}
-                end = {"date": end_in.strftime("%Y-%m-%d")}
+                start = DateOrDatetime(date=start_in)
+                end = DateOrDatetime(date=end_in)
 
         elif EVENT_START_DATE in call.data:
-            start = {"date": str(call.data[EVENT_START_DATE])}
-            end = {"date": str(call.data[EVENT_END_DATE])}
+            start = DateOrDatetime(date=call.data[EVENT_START_DATE])
+            end = DateOrDatetime(date=call.data[EVENT_END_DATE])
 
         elif EVENT_START_DATETIME in call.data:
-            start_dt = str(
-                call.data[EVENT_START_DATETIME].strftime("%Y-%m-%dT%H:%M:%S")
+            start_dt = call.data[EVENT_START_DATETIME]
+            end_dt = call.data[EVENT_END_DATETIME]
+            start = DateOrDatetime(
+                date_time=start_dt, timezone=str(hass.config.time_zone)
             )
-            end_dt = str(call.data[EVENT_END_DATETIME].strftime("%Y-%m-%dT%H:%M:%S"))
-            start = {"dateTime": start_dt, "timeZone": str(hass.config.time_zone)}
-            end = {"dateTime": end_dt, "timeZone": str(hass.config.time_zone)}
+            end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
+
+        if start is None or end is None:
+            raise ValueError(
+                "Missing required fields to set start or end date/datetime"
+            )
 
         await calendar_service.async_create_event(
             call.data[EVENT_CALENDAR_ID],
-            {
-                "summary": call.data[EVENT_SUMMARY],
-                "description": call.data[EVENT_DESCRIPTION],
-                "start": start,
-                "end": end,
-            },
+            Event(
+                summary=call.data[EVENT_SUMMARY],
+                description=call.data[EVENT_DESCRIPTION],
+                start=start,
+                end=end,
+            ),
         )
 
-    # Only expose the add event service if we have the correct permissions
-    if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
-        hass.services.async_register(
-            DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
-        )
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
+    )
 
 
 def get_calendar_info(

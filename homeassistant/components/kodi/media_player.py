@@ -1,20 +1,25 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
 import re
-from typing import Any
+from typing import Any, TypeVar
 import urllib.parse
 
-import jsonrpc_base
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -31,20 +36,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_URL,
     MEDIA_TYPE_VIDEO,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -96,6 +87,9 @@ from .const import (
     EVENT_TURN_ON,
 )
 
+_KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_KODI_CALL_METHOD_RESULT = "kodi_call_method_result"
@@ -141,23 +135,6 @@ MAP_KODI_MEDIA_TYPES = {
     MEDIA_TYPE_SEASON: "seasonid",
     MEDIA_TYPE_TVSHOW: "tvshowid",
 }
-
-SUPPORT_KODI = (
-    SUPPORT_BROWSE_MEDIA
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -270,18 +247,17 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-def cmd(func):
+def cmd(
+    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]]
+) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
     @wraps(func)
-    async def wrapper(obj, *args, **kwargs):
+    async def wrapper(obj: _KodiEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap all command methods."""
         try:
             await func(obj, *args, **kwargs)
-        except (
-            jsonrpc_base.jsonrpc.TransportError,
-            jsonrpc_base.jsonrpc.ProtocolError,
-        ) as exc:
+        except (TransportError, ProtocolError) as exc:
             # If Kodi is off, we expect calls to fail.
             if obj.state == STATE_OFF:
                 log_function = _LOGGER.debug
@@ -300,11 +276,27 @@ def cmd(func):
 class KodiEntity(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+    )
+
     def __init__(self, connection, kodi, name, uid):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
-        self._name = name
         self._unique_id = uid
         self._players = None
         self._properties = {}
@@ -314,6 +306,8 @@ class KodiEntity(MediaPlayerEntity):
         self._media_position = None
         self._connect_error = False
 
+        self._attr_name = name
+
     def _reset_state(self, players=None):
         self._players = players
         self._properties = {}
@@ -321,7 +315,6 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
-        self._connect_error = False
 
     @property
     def _kodi_is_off(self):
@@ -433,7 +426,7 @@ class KodiEntity(MediaPlayerEntity):
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
-        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg = device_registry.async_get(self.hass)
         device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
@@ -444,20 +437,24 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             await self._on_ws_connected()
-        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+        except (TransportError, CannotConnectError):
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.error("Unable to connect to Kodi via websocket", exc_info=True)
+                _LOGGER.warning("Unable to connect to Kodi via websocket")
             await self._clear_connection(False)
+        else:
+            self._connect_error = False
 
     async def _ping(self):
         try:
             await self._kodi.ping()
-        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+        except (TransportError, CannotConnectError):
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.error("Unable to ping Kodi via websocket", exc_info=True)
+                _LOGGER.warning("Unable to ping Kodi via websocket")
             await self._clear_connection()
+        else:
+            self._connect_error = False
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
@@ -527,11 +524,6 @@ class KodiEntity(MediaPlayerEntity):
             )
         else:
             self._reset_state([])
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def should_poll(self):
@@ -645,9 +637,9 @@ class KodiEntity(MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_KODI
+    def available(self):
+        """Return True if entity is available."""
+        return not self._connect_error
 
     async def async_turn_on(self):
         """Turn the media player on."""
@@ -770,7 +762,7 @@ class KodiEntity(MediaPlayerEntity):
         try:
             result = await self._kodi.call_method(method, **kwargs)
             result_ok = True
-        except jsonrpc_base.jsonrpc.ProtocolError as exc:
+        except ProtocolError as exc:
             result = exc.args[2]["error"]
             _LOGGER.error(
                 "Run API method %s.%s(%s) error: %s",
@@ -779,7 +771,7 @@ class KodiEntity(MediaPlayerEntity):
                 kwargs,
                 result,
             )
-        except jsonrpc_base.jsonrpc.TransportError:
+        except TransportError:
             result = None
             _LOGGER.warning(
                 "TransportError trying to run API method %s.%s(%s)",

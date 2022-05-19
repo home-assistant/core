@@ -30,9 +30,14 @@
           "limit_refetch_to_url_change": "Limit refetch to url change",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "content_type": "Content Type",
           "framerate": "Frame Rate (Hz)",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "content_type": {
+        "description": "Specify the content type for the stream.",
+        "data": {
+          "content_type": "Content Type"
         }
       },
       "confirm": {
@@ -50,10 +55,19 @@
           "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
           "limit_refetch_to_url_change": "[%key:component::generic::config::step::user::data::limit_refetch_to_url_change%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "use_wallclock_as_timestamps": "Use wallclock as timestamps",
           "username": "[%key:common::config_flow::data::username%]",
-          "content_type": "[%key:component::generic::config::step::user::data::content_type%]",
           "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
+        }
+      },
+      "content_type": {
+        "description": "[%key:component::generic::config::step::content_type::description%]",
+        "data": {
+          "content_type": "[%key:component::generic::config::step::content_type::data::content_type%]"
         }
       }
     },

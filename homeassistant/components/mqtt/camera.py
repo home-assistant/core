@@ -1,6 +1,7 @@
 """Camera that loads a picture from an MQTT topic."""
 from __future__ import annotations
 
+from base64 import b64decode
 import functools
 
 import voluptuous as vol
@@ -16,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .. import mqtt
-from .const import CONF_QOS, CONF_TOPIC
+from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -102,7 +103,10 @@ class MqttCamera(MqttEntity, Camera):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            self._last_image = msg.payload
+            if self._config[CONF_ENCODING] == "b64":
+                self._last_image = b64decode(msg.payload)
+            else:
+                self._last_image = msg.payload
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

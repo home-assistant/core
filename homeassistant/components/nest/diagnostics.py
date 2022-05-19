@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from google_nest_sdm import diagnostics
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import InfoTrait
 from google_nest_sdm.exceptions import ApiException
 
+from homeassistant.components.camera import diagnostics as camera_diagnostics
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -42,12 +45,18 @@ async def async_get_config_entry_diagnostics(
         return {"error": str(err)}
     if not nest_devices:
         return {}
-    return {
+    data: dict[str, Any] = {
         **diagnostics.get_diagnostics(),
         "devices": [
             nest_device.get_diagnostics() for nest_device in nest_devices.values()
         ],
     }
+    camera_data = await camera_diagnostics.async_get_config_entry_diagnostics(
+        hass, config_entry
+    )
+    if camera_data:
+        data["camera"] = camera_data
+    return data
 
 
 async def async_get_device_diagnostics(

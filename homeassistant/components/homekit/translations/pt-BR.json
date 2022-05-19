@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (desabilite se voc\u00ea estiver chamando o servi\u00e7o homekit.start manualmente)",
                     "devices": "Dispositivos (gatilhos)"
                 },
                 "description": "Os interruptores program\u00e1veis s\u00e3o criados para cada dispositivo selecionado. Quando um dispositivo dispara, o HomeKit pode ser configurado para executar uma automa\u00e7\u00e3o ou cena.",
@@ -55,18 +54,9 @@
                 "description": "Todas as entidades \"{domains}\" ser\u00e3o inclu\u00eddas, a menos que entidades espec\u00edficas sejam selecionadas.",
                 "title": "Selecione as entidades a serem inclu\u00eddas"
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Entidades",
-                    "mode": "Modo"
-                },
-                "description": "Escolha as entidades a serem inclu\u00eddas. No modo acess\u00f3rio, apenas uma \u00fanica entidade est\u00e1 inclu\u00edda. No modo de incluir ponte, todas as entidades do dom\u00ednio ser\u00e3o inclu\u00eddas a menos que entidades espec\u00edficas sejam selecionadas. No modo de exclus\u00e3o da ponte, todas as entidades do dom\u00ednio ser\u00e3o inclu\u00eddas, exceto para as entidades exclu\u00eddas. Para melhor desempenho, um acess\u00f3rio HomeKit separado ser\u00e1 criado para cada leitor de m\u00eddia de TV, controle remoto, bloqueio e c\u00e2mera baseados em atividades.",
-                "title": "Selecione as entidades a serem inclu\u00eddas"
-            },
             "init": {
                 "data": {
-                    "domains": "Dom\u00ednios a serem inclu\u00eddos",
-                    "include_domains": "Dom\u00ednios para incluir",
+                    "domains": "Dom\u00ednios para incluir",
                     "include_exclude_mode": "Modo de inclus\u00e3o",
                     "mode": "Modo HomeKit"
                 },

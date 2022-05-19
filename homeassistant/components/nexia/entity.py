@@ -3,7 +3,10 @@ from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,7 +23,9 @@ from .coordinator import NexiaDataUpdateCoordinator
 class NexiaEntity(CoordinatorEntity):
     """Base class for nexia entities."""
 
-    def __init__(self, coordinator, name, unique_id):
+    def __init__(
+        self, coordinator: NexiaDataUpdateCoordinator, name: str, unique_id: str
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._unique_id = unique_id
@@ -85,7 +90,7 @@ class NexiaThermostatEntity(NexiaEntity):
 
         Update all the zones on the thermostat.
         """
-        dispatcher_send(
+        async_dispatcher_send(
             self.hass, f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}"
         )
 
@@ -132,4 +137,4 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
 
         Update a single zone.
         """
-        dispatcher_send(self.hass, f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}")
+        async_dispatcher_send(self.hass, f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}")

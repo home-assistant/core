@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Bevestig het toevoegen van de ontvanger",
-                "title": "Denon AVR Network Receivers"
+                "description": "Bevestig het toevoegen van de ontvanger"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "IP-adres"
                 },
-                "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt",
-                "title": "Denon AVR Netwerk Ontvangers"
+                "data_description": {
+                    "host": "Leeg laten om auto-discovery te gebruiken"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Stel Zone 2 in",
                     "zone3": "Stel Zone 3 in"
                 },
-                "description": "Optionele instellingen opgeven",
-                "title": "Denon AVR Network Receivers"
+                "description": "Optionele instellingen opgeven"
             }
         }
     }

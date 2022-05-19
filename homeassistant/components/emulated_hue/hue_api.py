@@ -19,14 +19,14 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    SUPPORT_SET_POSITION,
+    CoverEntityFeature,
 )
-from homeassistant.components.fan import ATTR_PERCENTAGE, SUPPORT_SET_SPEED
+from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
@@ -38,11 +38,11 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
-    SUPPORT_VOLUME_SET,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -461,7 +461,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
 
                 if (
-                    entity_features & SUPPORT_TRANSITION
+                    entity_features & LightEntityFeature.TRANSITION
                     and parsed[STATE_TRANSITION] is not None
                 ):
                     data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
@@ -482,7 +482,7 @@ class HueOneLightChangeView(HomeAssistantView):
             service = None
 
             if (
-                entity_features & SUPPORT_TARGET_TEMPERATURE
+                entity_features & ClimateEntityFeature.TARGET_TEMPERATURE
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
@@ -500,7 +500,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
             if (
-                entity_features & SUPPORT_VOLUME_SET
+                entity_features & MediaPlayerEntityFeature.VOLUME_SET
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 turn_on_needed = True
@@ -518,7 +518,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 service = SERVICE_CLOSE_COVER
 
             if (
-                entity_features & SUPPORT_SET_POSITION
+                entity_features & CoverEntityFeature.SET_POSITION
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
@@ -528,7 +528,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a fan, convert to speed
         elif (
             entity.domain == fan.DOMAIN
-            and entity_features & SUPPORT_SET_SPEED
+            and entity_features & FanEntityFeature.SET_SPEED
             and parsed[STATE_BRIGHTNESS] is not None
         ):
             domain = entity.domain
@@ -766,10 +766,10 @@ def entity_to_json(config, entity):
             }
         )
     elif entity_features & (
-        SUPPORT_SET_POSITION
-        | SUPPORT_SET_SPEED
-        | SUPPORT_VOLUME_SET
-        | SUPPORT_TARGET_TEMPERATURE
+        CoverEntityFeature.SET_POSITION
+        | FanEntityFeature.SET_SPEED
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | ClimateEntityFeature.TARGET_TEMPERATURE
     ) or light.brightness_supported(color_modes):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
