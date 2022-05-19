@@ -10,9 +10,10 @@ from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import EVENT_DATA_JSON, Events, States
+from homeassistant.components.recorder.models import Events, States
 
 from .common import (
+    EVENT_DATA_JSON,
     select_events_context_id_subquery,
     select_events_context_only,
     select_events_without_states,

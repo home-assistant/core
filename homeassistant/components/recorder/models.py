@@ -9,7 +9,6 @@ from typing import Any, TypedDict, cast, overload
 import ciso8601
 from fnvhash import fnv1a_32
 from sqlalchemy import (
-    JSON,
     BigInteger,
     Boolean,
     Column,
@@ -23,7 +22,6 @@ from sqlalchemy import (
     String,
     Text,
     distinct,
-    type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.row import Row
@@ -104,35 +102,12 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
-# Force sqlalchemy to treat a column as JSON
-JSON_TYPE_COERCE = (
-    JSON(none_as_null=True)
-    .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
-    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
+JSON_VARIENT_CAST = Text().with_variant(
+    postgresql.JSON(none_as_null=True), "postgresql"
 )
-
-# Force sqlalchemy to treat a column as JSONB
-JSONB_TYPE_COERCE = (
-    JSON(none_as_null=True)
-    .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
-    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
+JSONB_VARIENT_CAST = Text().with_variant(
+    postgresql.JSONB(none_as_null=True), "postgresql"
 )
-
-# Force the database to treat a text column how its needed to extract json
-JSON_VARIENT_CAST = (
-    JSON(none_as_null=True)
-    .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
-    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
-)
-
-# Force the database to treat a text column how its needed to extract jsonb
-JSONB_VARIENT_CAST = (
-    JSON(none_as_null=True)
-    .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
-    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
-)
-
-
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -635,12 +610,6 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
             f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
-
-
-EVENT_DATA_JSON = type_coerce(EventData.shared_data, JSONB_TYPE_COERCE)
-OLD_FORMAT_EVENT_DATA_JSON = type_coerce(Events.event_data, JSONB_TYPE_COERCE)
-SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSONB_TYPE_COERCE)
-OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSONB_TYPE_COERCE)
 
 
 @overload
