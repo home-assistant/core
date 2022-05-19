@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES, PERCENTAGE, TIME_MILLISECONDS
+from homeassistant.const import DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND, PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -205,14 +205,14 @@ SENSOR_SPEED_TYPES = [
         key="NewOOKLAUplinkBandwidth",
         name="Uplink Bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         icon="mdi:upload",
     ),
     NetgearSensorEntityDescription(
         key="NewOOKLADownlinkBandwidth",
         name="Downlink Bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         icon="mdi:download",
     ),
     NetgearSensorEntityDescription(
