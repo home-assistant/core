@@ -166,15 +166,12 @@ async def test_last_run_was_recently_clean(
 
 
 @pytest.mark.parametrize(
-    "mysql_version, db_supports_row_number",
-    [
-        ("10.3.0-MariaDB", True),
-        ("8.0.0", True),
-    ],
+    "mysql_version",
+    ["10.3.0-MariaDB", "8.0.0"],
 )
-def test_setup_connection_for_dialect_mysql(mysql_version, db_supports_row_number):
+def test_setup_connection_for_dialect_mysql(mysql_version):
     """Test setting up the connection for a mysql dialect."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -199,18 +196,14 @@ def test_setup_connection_for_dialect_mysql(mysql_version, db_supports_row_numbe
     assert execute_args[0] == "SET session wait_timeout=28800"
     assert execute_args[1] == "SELECT VERSION()"
 
-    assert instance_mock._db_supports_row_number == db_supports_row_number
-
 
 @pytest.mark.parametrize(
-    "sqlite_version, db_supports_row_number",
-    [
-        ("3.31.0", True),
-    ],
+    "sqlite_version",
+    ["3.31.0"],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_number):
+def test_setup_connection_for_dialect_sqlite(sqlite_version):
     """Test setting up the connection for a sqlite dialect."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -246,20 +239,16 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_num
     assert execute_args[1] == "PRAGMA synchronous=NORMAL"
     assert execute_args[2] == "PRAGMA foreign_keys=ON"
 
-    assert instance_mock._db_supports_row_number == db_supports_row_number
-
 
 @pytest.mark.parametrize(
-    "sqlite_version, db_supports_row_number",
-    [
-        ("3.31.0", True),
-    ],
+    "sqlite_version",
+    ["3.31.0"],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
-    sqlite_version, db_supports_row_number
+    sqlite_version,
 ):
     """Test setting up the connection for a sqlite dialect with a zero commit interval."""
-    instance_mock = MagicMock(_db_supports_row_number=True, commit_interval=0)
+    instance_mock = MagicMock(commit_interval=0)
     execute_args = []
     close_mock = MagicMock()
 
@@ -295,8 +284,6 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     assert execute_args[1] == "PRAGMA synchronous=FULL"
     assert execute_args[2] == "PRAGMA foreign_keys=ON"
 
-    assert instance_mock._db_supports_row_number == db_supports_row_number
-
 
 @pytest.mark.parametrize(
     "mysql_version,message",
@@ -317,7 +304,7 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 )
 def test_fail_outdated_mysql(caplog, mysql_version, message):
     """Test setting up the connection for an outdated mysql version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -353,7 +340,7 @@ def test_fail_outdated_mysql(caplog, mysql_version, message):
 )
 def test_supported_mysql(caplog, mysql_version):
     """Test setting up the connection for a supported mysql version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -396,7 +383,7 @@ def test_supported_mysql(caplog, mysql_version):
 )
 def test_fail_outdated_pgsql(caplog, pgsql_version, message):
     """Test setting up the connection for an outdated PostgreSQL version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -429,7 +416,7 @@ def test_fail_outdated_pgsql(caplog, pgsql_version, message):
 )
 def test_supported_pgsql(caplog, pgsql_version):
     """Test setting up the connection for a supported PostgreSQL version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -474,7 +461,7 @@ def test_supported_pgsql(caplog, pgsql_version):
 )
 def test_fail_outdated_sqlite(caplog, sqlite_version, message):
     """Test setting up the connection for an outdated sqlite version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -510,7 +497,7 @@ def test_fail_outdated_sqlite(caplog, sqlite_version, message):
 )
 def test_supported_sqlite(caplog, sqlite_version):
     """Test setting up the connection for a supported sqlite version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 

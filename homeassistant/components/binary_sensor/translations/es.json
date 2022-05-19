@@ -59,8 +59,6 @@
             "connected": "{entity_name} conectado",
             "gas": "{entity_name} empez\u00f3 a detectar gas",
             "hot": "{entity_name} se est\u00e1 calentando",
-            "is_not_tampered": "{entity_name} dej\u00f3 de detectar alteraciones",
-            "is_tampered": "{entity_name} comenz\u00f3 a detectar alteraciones",
             "light": "{entity_name} empez\u00f3 a detectar la luz",
             "locked": "{entity_name} bloqueado",
             "moist": "{entity_name} se humedece",
@@ -136,10 +134,6 @@
         },
         "carbon_monoxide": {
             "off": "Libre",
-            "on": "Detectado"
-        },
-        "co": {
-            "off": "No detectado",
             "on": "Detectado"
         },
         "cold": {

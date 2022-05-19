@@ -13,8 +13,7 @@
         },
         "step": {
             "creds": {
-                "description": "Autentiseringsuppgifter beh\u00f6vs. Tryck p\u00e5 'Skicka' och sedan uppdatera enheter i appen \"PS4 Second Screen\" p\u00e5 din mobiltelefon eller surfplatta och v\u00e4lj 'Home Assistent' enheten att forts\u00e4tta.",
-                "title": "PlayStation 4"
+                "description": "Autentiseringsuppgifter beh\u00f6vs. Tryck p\u00e5 'Skicka' och sedan uppdatera enheter i appen \"PS4 Second Screen\" p\u00e5 din mobiltelefon eller surfplatta och v\u00e4lj 'Home Assistent' enheten att forts\u00e4tta."
             },
             "link": {
                 "data": {
@@ -22,17 +21,13 @@
                     "ip_address": "IP-adress",
                     "name": "Namn",
                     "region": "Region"
-                },
-                "description": "Ange din PlayStation 4 information. F\u00f6r 'PIN', navigera till 'Inst\u00e4llningar' p\u00e5 din PlayStation 4 konsol. Navigera sedan till \"Inst\u00e4llningar f\u00f6r mobilappanslutning\" och v\u00e4lj \"L\u00e4gg till enhet\". Ange PIN-koden som visas.",
-                "title": "PlayStation 4"
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP-adress (l\u00e4mna tom om du anv\u00e4nder automatisk uppt\u00e4ckt).",
                     "mode": "Konfigureringsl\u00e4ge"
-                },
-                "description": "V\u00e4lj l\u00e4ge f\u00f6r konfigurering. F\u00e4ltet IP-adress kan l\u00e4mnas tomt om du v\u00e4ljer Automatisk uppt\u00e4ckt, eftersom enheter d\u00e5 kommer att identifieras automatiskt.",
-                "title": "PlayStation 4"
+                }
             }
         }
     }

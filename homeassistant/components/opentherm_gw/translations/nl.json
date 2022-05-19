@@ -11,8 +11,7 @@
                     "device": "Pad of URL",
                     "id": "ID",
                     "name": "Naam"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Lees Precisie",
                     "set_precision": "Precisie instellen",
                     "temporary_override_mode": "Tijdelijke setpoint-overschrijvingsmodus"
-                },
-                "description": "Opties voor de OpenTherm Gateway"
+                }
             }
         }
     }

@@ -10,49 +10,22 @@
             "cover": {
                 "data": {
                     "hide_members": "Esconde miembros",
-                    "name": "Nombre del Grupo",
-                    "title": "Agregar grupo"
-                },
-                "description": "Seleccionar opciones de grupo"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "Miembros del grupo"
+                    "name": "Nombre del Grupo"
                 }
             },
             "fan": {
                 "data": {
                     "entities": "Miembros",
-                    "hide_members": "Esconde miembros",
-                    "title": "Agregar grupo"
+                    "hide_members": "Esconde miembros"
                 },
-                "description": "Selecciona las opciones del grupo",
                 "title": "Agregar grupo"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Miembros del grupo"
-                }
-            },
-            "init": {
-                "data": {
-                    "group_type": "Tipo de grupo"
-                },
-                "description": "Selecciona el tipo de grupo"
             },
             "light": {
                 "data": {
                     "entities": "Miembros",
-                    "hide_members": "Esconde miembros",
-                    "title": "Agregar grupo"
+                    "hide_members": "Esconde miembros"
                 },
                 "title": "Agregar grupo"
-            },
-            "light_options": {
-                "data": {
-                    "entities": "Miembros del grupo"
-                },
-                "description": "Selecciona las opciones del grupo"
             },
             "lock": {
                 "data": {
@@ -67,11 +40,7 @@
                     "hide_members": "Esconde miembros",
                     "name": "Nombre"
                 },
-                "description": "Selecciona las opciones del grupo",
                 "title": "Agregar grupo"
-            },
-            "media_player_options": {
-                "description": "Selecciona las opciones del grupo"
             },
             "switch": {
                 "data": {
@@ -96,19 +65,9 @@
                     "hide_members": "Esconde miembros"
                 }
             },
-            "binary_sensor_options": {
-                "data": {
-                    "all": "Todas las entidades"
-                }
-            },
             "cover": {
                 "data": {
                     "hide_members": "Esconde miembros"
-                }
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "Miembros"
                 }
             },
             "fan": {
@@ -116,21 +75,10 @@
                     "hide_members": "Esconde miembros"
                 }
             },
-            "fan_options": {
-                "data": {
-                    "entities": "Miembros"
-                }
-            },
             "light": {
                 "data": {
                     "entities": "Miembros",
                     "hide_members": "Esconde miembros"
-                }
-            },
-            "light_options": {
-                "data": {
-                    "all": "Todas las entidades",
-                    "entities": "Miembros"
                 }
             },
             "lock": {
@@ -142,11 +90,6 @@
                 "data": {
                     "entities": "Miembros",
                     "hide_members": "Esconde miembros"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Miembros"
                 }
             }
         }

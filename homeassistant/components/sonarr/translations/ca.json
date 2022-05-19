@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "Clau API",
-                    "base_path": "Ruta a l'API",
-                    "host": "Amfitri\u00f3",
-                    "port": "Port",
-                    "ssl": "Utilitza un certificat SSL",
                     "url": "URL",
                     "verify_ssl": "Verifica el certificat SSL"
                 }

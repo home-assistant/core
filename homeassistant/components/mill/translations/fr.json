@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "S\u00e9lectionner le type de connexion",
-                    "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
+                    "connection_type": "S\u00e9lectionner le type de connexion"
                 },
                 "description": "S\u00e9lectionnez le type de connexion. Local n\u00e9cessite des radiateurs de g\u00e9n\u00e9ration 3"
             }

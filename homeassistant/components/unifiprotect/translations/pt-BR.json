@@ -7,16 +7,14 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
-            "protect_version": "A vers\u00e3o m\u00ednima exigida \u00e9 v1.20.0. Atualize o UniFi Protect e tente novamente.",
-            "unknown": "Erro inesperado"
+            "protect_version": "A vers\u00e3o m\u00ednima exigida \u00e9 v1.20.0. Atualize o UniFi Protect e tente novamente."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Senha",
-                    "username": "Usu\u00e1rio",
-                    "verify_ssl": "Verifique o certificado SSL"
+                    "username": "Usu\u00e1rio"
                 },
                 "description": "Deseja configurar {name} ({ip_address})?\nVoc\u00ea precisar\u00e1 de um usu\u00e1rio local criado no console do sistema operacional UniFi para fazer login. Usu\u00e1rios da Ubiquiti Cloud n\u00e3o funcionar\u00e3o. Para mais informa\u00e7\u00f5es: {local_user_documentation_url}",
                 "title": "Descoberta UniFi Protect"
