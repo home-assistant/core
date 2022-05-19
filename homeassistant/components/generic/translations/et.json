@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autentimine",
-                    "content_type": "Sisu t\u00fc\u00fcp",
                     "framerate": "Kaadrisagedus (Hz)",
                     "limit_refetch_to_url_change": "Piira laadimist URL-i muutmiseni",
                     "password": "Salas\u00f5na",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Autentimine",
-                    "content_type": "Sisu t\u00fc\u00fcp",
                     "framerate": "Kaadrisagedus (Hz)",
                     "limit_refetch_to_url_change": "Piira laadimist URL-i muutmiseni",
                     "password": "Salas\u00f5na",

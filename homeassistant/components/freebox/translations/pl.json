@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
-                },
-                "title": "Freebox"
+                }
             }
         }
     }

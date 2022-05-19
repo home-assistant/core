@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
-                    "latitude": "Breedtegraad",
                     "location": "Locatie",
-                    "longitude": "Lengtegraad",
                     "name": "Naam"
                 },
                 "description": "Om een API sleutel te krijgen, meld je aan bij [Tomorrow.io](https://app.tomorrow.io/signup)."

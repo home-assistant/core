@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "individual_address": "Indywidualny adres dla po\u0142\u0105czenia",
                     "local_ip": "Lokalny adres IP Home Assistanta",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT",
                     "tunneling_type": "Typ tunelowania KNX"
                 },
                 "data_description": {
@@ -110,9 +108,7 @@
             "tunnel": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT",
                     "tunneling_type": "Typ tunelowania KNX"
                 },
                 "data_description": {

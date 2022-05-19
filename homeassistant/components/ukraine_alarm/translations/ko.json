@@ -7,11 +7,6 @@
             "rate_limit": "\uc694\uccad\uc774 \ub108\ubb34 \ub9ce\uc2b5\ub2c8\ub2e4",
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
-        "error": {
-            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
-            "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
-        },
         "step": {
             "community": {
                 "data": {
@@ -25,15 +20,8 @@
                 },
                 "description": "\uc8fc\ubfd0\ub9cc \uc544\ub2c8\ub77c \ud2b9\uc815 \uc9c0\uc5ed\uc744 \ubaa8\ub2c8\ud130\ub9c1\ud558\ub824\uba74 \ud574\ub2f9 \uc9c0\uc5ed\uc744 \uc120\ud0dd\ud558\uc2ed\uc2dc\uc624"
             },
-            "state": {
-                "data": {
-                    "region": "\uc9c0\uc5ed"
-                },
-                "description": "\ubaa8\ub2c8\ud130\ub9c1\ud560 \uc8fc \uc120\ud0dd"
-            },
             "user": {
                 "data": {
-                    "api_key": "API \ud0a4",
                     "region": "\uc9c0\uc5ed"
                 },
                 "description": "\ubaa8\ub2c8\ud130\ub9c1\ud560 \uc8fc \uc120\ud0dd"

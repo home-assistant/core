@@ -11,13 +11,6 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
-                },
-                "title": "Konfiguracja uwierzytelniania"
-            },
             "configure": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
@@ -40,14 +33,6 @@
                     "host": "Wybierz odnalezione urz\u0105dzenie ONVIF"
                 },
                 "title": "Wybierz urz\u0105dzenie ONVIF"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa",
-                    "port": "Port"
-                },
-                "title": "Konfiguracja urz\u0105dzenia ONVIF"
             },
             "user": {
                 "data": {

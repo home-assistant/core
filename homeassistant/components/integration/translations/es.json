@@ -26,9 +26,6 @@
                 "data_description": {
                     "round": "Controla el n\u00famero de d\u00edgitos decimales en la salida."
                 }
-            },
-            "options": {
-                "description": "La precisi\u00f3n controla el n\u00famero de d\u00edgitos decimales en la salida."
             }
         }
     },

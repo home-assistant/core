@@ -15,56 +15,25 @@
                 "data": {
                     "entities": "Membri",
                     "hide_members": "Nascondi membri",
-                    "name": "Nome",
-                    "title": "Aggiungi gruppo"
+                    "name": "Nome"
                 },
-                "description": "Seleziona le opzioni di gruppo",
                 "title": "Aggiungi gruppo"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "Membri del gruppo"
-                },
-                "description": "Seleziona le opzioni di gruppo"
             },
             "fan": {
                 "data": {
                     "entities": "Membri",
                     "hide_members": "Nascondi membri",
-                    "name": "Nome",
-                    "title": "Aggiungi gruppo"
+                    "name": "Nome"
                 },
-                "description": "Seleziona le opzioni di gruppo",
                 "title": "Aggiungi gruppo"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Membri del gruppo"
-                },
-                "description": "Seleziona le opzioni di gruppo"
-            },
-            "init": {
-                "data": {
-                    "group_type": "Tipo di gruppo"
-                },
-                "description": "Seleziona il tipo di gruppo"
             },
             "light": {
                 "data": {
-                    "all": "Tutte le entit\u00e0",
                     "entities": "Membri",
                     "hide_members": "Nascondi membri",
-                    "name": "Nome",
-                    "title": "Aggiungi gruppo"
+                    "name": "Nome"
                 },
-                "description": "Se \"tutte le entit\u00e0\" \u00e8 abilitata, lo stato del gruppo \u00e8 attivo solo se tutti i membri sono attivi. Se \"tutte le entit\u00e0\" \u00e8 disabilitata, lo stato del gruppo \u00e8 attivo se un membro \u00e8 attivo.",
                 "title": "Aggiungi gruppo"
-            },
-            "light_options": {
-                "data": {
-                    "entities": "Membri del gruppo"
-                },
-                "description": "Seleziona le opzioni di gruppo"
             },
             "lock": {
                 "data": {
@@ -78,17 +47,9 @@
                 "data": {
                     "entities": "Membri",
                     "hide_members": "Nascondi membri",
-                    "name": "Nome",
-                    "title": "Aggiungi gruppo"
+                    "name": "Nome"
                 },
-                "description": "Seleziona le opzioni di gruppo",
                 "title": "Aggiungi gruppo"
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Membri del gruppo"
-                },
-                "description": "Seleziona le opzioni di gruppo"
             },
             "switch": {
                 "data": {
@@ -99,9 +60,6 @@
                 "title": "Aggiungi gruppo"
             },
             "user": {
-                "data": {
-                    "group_type": "Tipo di gruppo"
-                },
                 "description": "I gruppi consentono di creare una nuova entit\u00e0 che rappresenta pi\u00f9 entit\u00e0 dello stesso tipo.",
                 "menu_options": {
                     "binary_sensor": "Gruppo di sensori binari",
@@ -126,32 +84,16 @@
                 },
                 "description": "Se \"tutte le entit\u00e0\" \u00e8 abilitata, lo stato del gruppo \u00e8 attivo solo se tutti i membri sono attivi. Se \"tutte le entit\u00e0\" \u00e8 disabilitata, lo stato del gruppo \u00e8 attivo se un membro \u00e8 attivo."
             },
-            "binary_sensor_options": {
-                "data": {
-                    "all": "Tutte le entit\u00e0",
-                    "entities": "Membri"
-                }
-            },
             "cover": {
                 "data": {
                     "entities": "Membri",
                     "hide_members": "Nascondi membri"
                 }
             },
-            "cover_options": {
-                "data": {
-                    "entities": "Membri"
-                }
-            },
             "fan": {
                 "data": {
                     "entities": "Membri",
                     "hide_members": "Nascondi membri"
-                }
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Membri"
                 }
             },
             "light": {
@@ -161,12 +103,6 @@
                     "hide_members": "Nascondi membri"
                 },
                 "description": "Se \"tutte le entit\u00e0\" \u00e8 abilitata, lo stato del gruppo \u00e8 attivo solo se tutti i membri sono attivi. Se \"tutte le entit\u00e0\" \u00e8 disabilitata, lo stato del gruppo \u00e8 attivo se un membro \u00e8 attivo."
-            },
-            "light_options": {
-                "data": {
-                    "all": "Tutte le entit\u00e0",
-                    "entities": "Membri"
-                }
             },
             "lock": {
                 "data": {
@@ -178,11 +114,6 @@
                 "data": {
                     "entities": "Membri",
                     "hide_members": "Nascondi membri"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Membri"
                 }
             },
             "switch": {

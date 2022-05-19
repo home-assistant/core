@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autenticaci\u00f3",
-                    "content_type": "Tipus de contingut",
                     "framerate": "Freq\u00fc\u00e8ncia de visualitzaci\u00f3 (Hz)",
                     "limit_refetch_to_url_change": "Limita la lectura al canvi d'URL",
                     "password": "Contrasenya",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Autenticaci\u00f3",
-                    "content_type": "Tipus de contingut",
                     "framerate": "Freq\u00fc\u00e8ncia de visualitzaci\u00f3 (Hz)",
                     "limit_refetch_to_url_change": "Limita la lectura al canvi d'URL",
                     "password": "Contrasenya",

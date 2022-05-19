@@ -6,9 +6,6 @@
             "timeout": "Tiempo m\u00e1ximo de espera para establecer la conexi\u00f3n agotado",
             "unknown": "Error inesperado"
         },
-        "error": {
-            "unknown": "Error inesperado"
-        },
         "step": {
             "district": {
                 "data": {
@@ -16,15 +13,8 @@
                 },
                 "description": "Si quieres monitorear no s\u00f3lo el estado, elige el distrito espec\u00edfico"
             },
-            "state": {
-                "data": {
-                    "region": "Regi\u00f3n"
-                },
-                "description": "Escoja el estado a monitorear"
-            },
             "user": {
                 "data": {
-                    "api_key": "Clave API",
                     "region": "Regi\u00f3n"
                 },
                 "description": "Escoja el estado a monitorear"

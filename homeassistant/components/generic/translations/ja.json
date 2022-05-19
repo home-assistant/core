@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "\u8a8d\u8a3c",
-                    "content_type": "\u30b3\u30f3\u30c6\u30f3\u30c4\u306e\u7a2e\u985e",
                     "framerate": "\u30d5\u30ec\u30fc\u30e0\u30ec\u30fc\u30c8\uff08Hz\uff09",
                     "limit_refetch_to_url_change": "URL\u5909\u66f4\u6642\u306e\u518d\u53d6\u5f97\u3092\u5236\u9650\u3059\u308b",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "\u8a8d\u8a3c",
-                    "content_type": "\u30b3\u30f3\u30c6\u30f3\u30c4\u306e\u7a2e\u985e",
                     "framerate": "\u30d5\u30ec\u30fc\u30e0\u30ec\u30fc\u30c8\uff08Hz\uff09",
                     "limit_refetch_to_url_change": "URL\u5909\u66f4\u6642\u306e\u518d\u53d6\u5f97\u3092\u5236\u9650\u3059\u308b",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
