@@ -128,25 +128,28 @@ class JSONLiteral(JSON):  # type: ignore[misc]
         return process
 
 
+# Force sqlalchemy to treat a column as JSON
 JSON_TYPE_COERCE = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
     .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
 
+# Force sqlalchemy to treat a column as JSONB
 JSONB_TYPE_COERCE = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
     .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
 
-
+# Force the database to treat a text column as JSON
 JSON_VARIENT_CAST = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
     .with_variant(Text(), "sqlite")
 )
 
+# Force the database to treat a text column as JSONB
 JSONB_VARIENT_CAST = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
