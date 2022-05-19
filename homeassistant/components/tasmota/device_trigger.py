@@ -13,7 +13,10 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationsResult,
+)
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -264,9 +267,9 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device triggers for a Tasmota device."""
-    triggers: list[dict[str, str]] = []
+    triggers: GetAutomationsResult = []
 
     if DEVICE_TRIGGERS not in hass.data:
         return triggers
@@ -291,7 +294,7 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: Callable,
+    action: AutomationActionType,
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a device trigger."""
