@@ -1,6 +1,7 @@
 """Support for Netgear routers."""
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Optional
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -348,7 +349,7 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity, RestoreEntity
         self._name = f"{router.device_name} {entity_description.name}"
         self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
-        self._value: str | None = None
+        self._value: Optional[str] = None
         self.async_update_device()
 
     @property
