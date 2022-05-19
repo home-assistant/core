@@ -1,4 +1,6 @@
 """Support for Netgear switches."""
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from pynetgear import ALLOW, BLOCK
