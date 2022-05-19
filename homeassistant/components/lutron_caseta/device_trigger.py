@@ -352,7 +352,7 @@ async def async_get_triggers(
     if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], [])
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], {})
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
         for subtype in valid_buttons:
