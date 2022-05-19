@@ -204,6 +204,11 @@ class NetgearRouter:
         async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
 
+    async def async_get_speed_test(self) -> dict[str, Any] | None:
+        """Perform a speed test and get the results from the router."""
+        async with self._api_lock:
+            return await self.hass.async_add_executor_job(self._api.get_new_speed_test_result)
+
     async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
         """Allow or block a device connected to the router."""
         async with self._api_lock:

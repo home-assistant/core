@@ -8,13 +8,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
+from homeassistant.const import DATA_MEGABYTES, PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_SPEED, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER
 from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
 
 SENSOR_TYPES = {
@@ -200,6 +200,29 @@ SENSOR_TRAFFIC_TYPES = [
     ),
 ]
 
+SENSOR_SPEED_TYPES = [
+    NetgearSensorEntityDescription(
+        key="NewOOKLAUplinkBandwidth",
+        name="Uplink Bandwidth",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewOOKLADownlinkBandwidth",
+        name="Downlink Bandwidth",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download",
+    ),
+    NetgearSensorEntityDescription(
+        key="AveragePing",
+        name="Average Ping",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=TIME_MILLISECONDS,
+        icon="mdi:wan",
+    ),
+]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -208,6 +231,7 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
     coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
+    coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
 
     # Router entities
     router_entities = []
@@ -215,6 +239,11 @@ async def async_setup_entry(
     for description in SENSOR_TRAFFIC_TYPES:
         router_entities.append(
             NetgearRouterSensorEntity(coordinator_traffic, router, description)
+        )
+
+    for description in SENSOR_SPEED_TYPES:
+        router_entities.append(
+            NetgearRouterSensorEntity(coordinator_speed, router, description)
         )
 
     async_add_entities(router_entities)

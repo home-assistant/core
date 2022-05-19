@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
     KEY_ROUTER,
     PLATFORMS,
@@ -25,6 +26,7 @@ from .router import NetgearRouter
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
+SPEED_TEST_INTERVAL = timedelta(seconds=1800)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -75,6 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from the router."""
         return await router.async_get_traffic_meter()
 
+    async def async_update_speed_test() -> dict[str, Any] | None:
+        """Fetch data from the router."""
+        return await router.async_get_speed_test()
+
     # Create update coordinators
     coordinator = DataUpdateCoordinator(
         hass,
@@ -90,6 +96,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_traffic_meter,
         update_interval=SCAN_INTERVAL,
     )
+    coordinator_speed_test = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{router.device_name} Speed test",
+        update_method=async_update_speed_test,
+        update_interval=SPEED_TEST_INTERVAL,
+    )
 
     await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
@@ -98,6 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,
         KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
+        KEY_COORDINATOR_SPEED: coordinator_speed_test,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
