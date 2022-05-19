@@ -8,7 +8,6 @@ import logging
 
 import async_timeout
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
-from systembridgeconnector.const import MODEL_MAP
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -77,14 +76,13 @@ class SystemBridgeDataUpdateCoordinator(
         self,
         module: str,
         data: dict,
+        module_handler: Callable,
     ) -> None:
         """Handle data from the WebSocket client."""
         if module in MODULES:
             self.logger.debug("Set new data for: %s", module)
-            if module_handler := MODEL_MAP.get(module):
-                self.logger.debug("Module handler : %s", module_handler)
-                setattr(self.systembridge_data, module, module_handler(**data))
-                self.async_set_updated_data(self.systembridge_data)
+            setattr(self.systembridge_data, module, module_handler(**data))
+            self.async_set_updated_data(self.systembridge_data)
 
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
