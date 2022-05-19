@@ -99,7 +99,7 @@ async def test_full_flow_yaml_creds(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "client-id"
+    assert result.get("title") == "Import from configuration.yaml"
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -161,7 +161,7 @@ async def test_full_flow_application_creds(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "client-id"
+    assert result.get("title") == "Import from configuration.yaml"
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -278,7 +278,7 @@ async def test_exchange_error(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "client-id"
+    assert result.get("title") == "Import from configuration.yaml"
     assert "data" in result
     data = result["data"]
     assert "token" in data
