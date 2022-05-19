@@ -7,7 +7,10 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationsResult,
+)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -327,7 +330,9 @@ TRIGGER_SCHEMA = vol.Any(
 )
 
 
-async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     # if device is available verify parameters against device capabilities
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
@@ -335,17 +340,17 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     if not device:
         return config
 
-    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
+    if not (DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
         raise InvalidDeviceAutomationConfig(
             f"Device type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
         )
 
-    return schema(config)
+    return config
 
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device triggers for lutron caseta devices."""
     triggers = []
 
