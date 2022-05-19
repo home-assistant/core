@@ -21,13 +21,13 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.camera.const import StreamType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,14 +43,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the cameras."""
 
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    try:
-        device_manager = await subscriber.async_get_device_manager()
-    except ApiException as err:
-        raise PlatformNotReady from err
-
-    # Fetch initial data so we have data when entities subscribe.
-
+    device_manager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     entities = []
     for device in device_manager.devices.values():
         if (

@@ -17,7 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .events import DEVICE_TRAIT_TRIGGER_MAP, NEST_EVENT
 
 DEVICE = "device"
@@ -42,14 +42,12 @@ def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str | None:
     return None
 
 
-async def async_get_device_trigger_types(
+@callback
+def async_get_device_trigger_types(
     hass: HomeAssistant, nest_device_id: str
 ) -> list[str]:
     """List event triggers supported for a Nest device."""
-    # All devices should have already been loaded so any failures here are
-    # "shouldn't happen" cases
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    device_manager = await subscriber.async_get_device_manager()
+    device_manager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     if not (nest_device := device_manager.devices.get(nest_device_id)):
         raise InvalidDeviceAutomationConfig(f"Nest device not found {nest_device_id}")
 
@@ -69,7 +67,7 @@ async def async_get_triggers(
     nest_device_id = async_get_nest_device_id(hass, device_id)
     if not nest_device_id:
         raise InvalidDeviceAutomationConfig(f"Device not found {device_id}")
-    trigger_types = await async_get_device_trigger_types(hass, nest_device_id)
+    trigger_types = async_get_device_trigger_types(hass, nest_device_id)
     return [
         {
             CONF_PLATFORM: DEVICE,

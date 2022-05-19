@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
-from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
     ThermostatHeatCoolTrait,
@@ -30,11 +29,10 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
@@ -80,12 +78,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the client entities."""
 
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    try:
-        device_manager = await subscriber.async_get_device_manager()
-    except ApiException as err:
-        raise PlatformNotReady from err
-
+    device_manager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     entities = []
     for device in device_manager.devices.values():
         if ThermostatHvacTrait.NAME in device.traits:
