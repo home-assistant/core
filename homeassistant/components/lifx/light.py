@@ -382,9 +382,9 @@ class LIFXManager:
         if bulb.mac_addr not in self.discoveries_inflight:
             self.discoveries_inflight[bulb.mac_addr] = bulb.ip_addr
             _LOGGER.debug("Discovered %s (%s)", bulb.ip_addr, bulb.mac_addr)
-            self.hass.async_create_task(self.register_bulb(bulb))
         else:
-            _LOGGER.warning("Duplicate LIFX discovery response ignored")
+            _LOGGER.debug("Duplicate LIFX discovery response detected from %s (%s)")
+        self.hass.async_create_task(self.register_bulb(bulb))
 
     async def register_bulb(self, bulb):
         """Handle LIFX bulb registration lifecycle."""
