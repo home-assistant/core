@@ -215,7 +215,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         self._unique_id = f"{router.serial_number}-{entity_description.key}"
 
         self._state = None
-        self._available = False
+        self._available = None
 
     @property
     def is_on(self):
