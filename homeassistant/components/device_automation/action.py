@@ -1,6 +1,7 @@
 """Device action validator."""
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
@@ -9,7 +10,12 @@ from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import DeviceAutomationType, async_get_device_automation_platform
+from . import (
+    DeviceAutomationType,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+    async_get_device_automation_platform,
+)
 from .exceptions import InvalidDeviceAutomationConfig
 
 
@@ -36,6 +42,18 @@ class DeviceAutomationActionProtocol(Protocol):
     ) -> None:
         """Execute a device action."""
         raise NotImplementedError
+
+    def async_get_action_capabilities(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> GetAutomationCapabilitiesResult | Awaitable[GetAutomationCapabilitiesResult]:
+        """List action capabilities."""
+        return {}
+
+    def async_get_actions(
+        self, hass: HomeAssistant, device_id: str
+    ) -> GetAutomationsResult | Awaitable[GetAutomationsResult]:
+        """List actions."""
+        return []
 
 
 async def async_validate_action_config(
