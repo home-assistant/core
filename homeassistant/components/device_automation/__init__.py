@@ -44,6 +44,8 @@ if TYPE_CHECKING:
     ]
 
 # mypy: allow-untyped-calls, allow-untyped-defs
+GetAutomationsResult = list[dict[str, Any]]
+GetAutomationCapabilitiesResult = dict[str, vol.Schema]
 
 DOMAIN = "device_automation"
 
