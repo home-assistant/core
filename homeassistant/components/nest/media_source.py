@@ -273,7 +273,7 @@ def async_get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     if DATA_DEVICE_MANAGER not in hass.data[DOMAIN]:
         # Integration unloaded, or is legacy nest integration
         return {}
-    device_manager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     device_registry = dr.async_get(hass)
     devices = {}
     for device in device_manager.devices.values():

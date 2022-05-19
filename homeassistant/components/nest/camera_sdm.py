@@ -43,7 +43,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the cameras."""
 
-    device_manager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     entities = []
     for device in device_manager.devices.values():
         if (

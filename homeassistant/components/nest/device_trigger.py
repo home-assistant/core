@@ -47,7 +47,7 @@ def async_get_device_trigger_types(
     hass: HomeAssistant, nest_device_id: str
 ) -> list[str]:
     """List event triggers supported for a Nest device."""
-    device_manager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     if not (nest_device := device_manager.devices.get(nest_device_id)):
         raise InvalidDeviceAutomationConfig(f"Nest device not found {nest_device_id}")
 
