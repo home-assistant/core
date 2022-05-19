@@ -1,7 +1,6 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -103,29 +102,6 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
     def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
-
-
-class JSONLiteral(JSON):  # type: ignore[misc]
-    """Teach SA how to literalize json."""
-
-    impl = JSON
-
-    def coerce_compared_value(self, op: Any, value: Any) -> Any:
-        """Coerce a compared value to JSON."""
-        return (
-            self.impl.coerce_compared_value(  # pylint: disable=no-value-for-parameter
-                op, value
-            )
-        )
-
-    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
-        """Processor to convert a value to JSON."""
-
-        def process(value: Any) -> str:
-            """Dump json."""
-            return json.dumps(value)
-
-        return process
 
 
 # Force sqlalchemy to treat a column as JSON
