@@ -1,8 +1,6 @@
 """Provides device triggers for lutron caseta."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -347,7 +345,7 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for lutron caseta devices."""
     triggers = []
 
