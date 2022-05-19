@@ -5,6 +5,10 @@ from typing import Final
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import (
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -24,7 +28,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
 from .const import (
@@ -55,7 +59,7 @@ ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device actions for Alarm control panel devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -90,7 +94,10 @@ async def async_get_actions(
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: ConfigType, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
@@ -117,7 +124,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List action capabilities."""
     # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
     # capability attribute
