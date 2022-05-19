@@ -12,6 +12,7 @@ from homeassistant.const import DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND, 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_SPEED, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER
@@ -317,7 +318,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
+class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity, RestoreEntity):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
