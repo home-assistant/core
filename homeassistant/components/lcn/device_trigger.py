@@ -7,7 +7,11 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from homeassistant.components.homeassistant.triggers import event
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -51,7 +55,7 @@ TYPE_SCHEMAS = {
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
@@ -101,6 +105,6 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List trigger capabilities."""
     return TYPE_SCHEMAS.get(config[CONF_TYPE], {})
