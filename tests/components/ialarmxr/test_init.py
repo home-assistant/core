@@ -95,3 +95,26 @@ async def test_setup_not_ready_timeout(hass, ialarmxr_api, mock_config_entry):
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_and_then_fail_on_update(
+    hass, ialarmxr_api, mock_config_entry
+):
+    """Test setup entry."""
+    ialarmxr_api.return_value.get_mac = Mock(return_value="00:00:54:12:34:56")
+    ialarmxr_api.return_value.get_status = Mock(value=ialarmxr_api.DISARMED)
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    ialarmxr_api.return_value.get_mac.assert_called_once()
+    ialarmxr_api.return_value.get_status.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    ialarmxr_api.return_value.get_status = Mock(side_effect=asyncio.TimeoutError)
+    future = utcnow() + timedelta(seconds=60)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    ialarmxr_api.return_value.get_status.assert_called_once()
+    assert hass.states.get("alarm_control_panel.ialarmxr").state == "unavailable"
