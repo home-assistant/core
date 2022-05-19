@@ -639,8 +639,8 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
 EVENT_DATA_JSON = type_coerce(EventData.shared_data, JSONB_TYPE_COERCE)
 OLD_FORMAT_EVENT_DATA_JSON = type_coerce(Events.event_data, JSONB_TYPE_COERCE)
-SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON_TYPE_COERCE)
-OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSON_TYPE_COERCE)
+SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSONB_TYPE_COERCE)
+OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSONB_TYPE_COERCE)
 
 
 @overload
