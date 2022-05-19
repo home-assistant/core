@@ -293,6 +293,9 @@ async def _async_get_device_automation_capabilities(
     try:
         capabilities = getattr(platform, function_name)(hass, automation)
         if asyncio.iscoroutine(capabilities):
+            # Using a coroutine to get device automation capabitilites is deprecated
+            # enable warning when core is fully migrated
+            # then remove in xxxx.xx
             capabilities = await capabilities
     except InvalidDeviceAutomationConfig:
         return {}
