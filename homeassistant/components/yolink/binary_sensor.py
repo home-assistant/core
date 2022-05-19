@@ -21,19 +21,11 @@ from .entity import YoLinkEntity
 
 
 @dataclass
-class YoLinkBinarySensorEntityDescriptionMixin:
-    """Mixin for device type."""
-
-    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-
-
-@dataclass
-class YoLinkBinarySensorEntityDescription(
-    YoLinkBinarySensorEntityDescriptionMixin, BinarySensorEntityDescription
-):
+class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
-    value: Callable = lambda state: state
+    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
+    value: Callable[[str], bool | None] = lambda _: None
 
 
 SENSOR_DEVICE_TYPE = [ATTR_DEVICE_DOOR_SENSOR]
