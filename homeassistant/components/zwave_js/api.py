@@ -66,18 +66,11 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
-    LOGGER,
 )
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
     update_data_collection_preference,
-)
-from .migrate import (
-    ZWaveMigrationData,
-    async_get_migration_data,
-    async_map_legacy_zwave_values,
-    async_migrate_legacy_zwave,
 )
 
 DATA_UNSUBSCRIBE = "unsubs"
@@ -365,7 +358,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
     websocket_api.async_register_command(hass, websocket_node_ready)
-    websocket_api.async_register_command(hass, websocket_migrate_zwave)
     hass.http.register_view(FirmwareUploadView())
 
 
@@ -2058,73 +2050,4 @@ async def websocket_subscribe_node_statistics(
                 **_get_node_statistics_dict(node.statistics),
             },
         )
-    )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/migrate_zwave",
-        vol.Required(ENTRY_ID): str,
-        vol.Optional(DRY_RUN, default=True): bool,
-    }
-)
-@websocket_api.async_response
-@async_get_entry
-async def websocket_migrate_zwave(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-) -> None:
-    """Migrate Z-Wave device and entity data to Z-Wave JS integration."""
-    if "zwave" not in hass.config.components:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "zwave_not_loaded", "Integration zwave is not loaded"
-            )
-        )
-        return
-
-    zwave = hass.components.zwave
-    zwave_config_entries = hass.config_entries.async_entries("zwave")
-    zwave_config_entry = zwave_config_entries[0]  # zwave only has a single config entry
-    zwave_data: dict[str, ZWaveMigrationData] = await zwave.async_get_migration_data(
-        hass, zwave_config_entry
-    )
-    LOGGER.debug("Migration zwave data: %s", zwave_data)
-
-    zwave_js_config_entry = entry
-    zwave_js_data = await async_get_migration_data(hass, zwave_js_config_entry)
-    LOGGER.debug("Migration zwave_js data: %s", zwave_js_data)
-
-    migration_map = async_map_legacy_zwave_values(zwave_data, zwave_js_data)
-
-    zwave_entity_ids = [entry["entity_id"] for entry in zwave_data.values()]
-    zwave_js_entity_ids = [entry["entity_id"] for entry in zwave_js_data.values()]
-    migration_device_map = {
-        zwave_device_id: zwave_js_device_id
-        for zwave_js_device_id, zwave_device_id in migration_map.device_entries.items()
-    }
-    migration_entity_map = {
-        zwave_entry["entity_id"]: zwave_js_entity_id
-        for zwave_js_entity_id, zwave_entry in migration_map.entity_entries.items()
-    }
-    LOGGER.debug("Migration entity map: %s", migration_entity_map)
-
-    if not msg[DRY_RUN]:
-        await async_migrate_legacy_zwave(
-            hass, zwave_config_entry, zwave_js_config_entry, migration_map
-        )
-
-    connection.send_result(
-        msg[ID],
-        {
-            "migration_device_map": migration_device_map,
-            "zwave_entity_ids": zwave_entity_ids,
-            "zwave_js_entity_ids": zwave_js_entity_ids,
-            "migration_entity_map": migration_entity_map,
-            "migrated": not msg[DRY_RUN],
-        },
     )
