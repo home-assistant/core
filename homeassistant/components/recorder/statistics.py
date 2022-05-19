@@ -437,22 +437,6 @@ def _compile_hourly_statistics_summary_mean_stmt(
     return stmt
 
 
-def _compile_hourly_statistics_summary_sum_legacy_stmt(
-    start_time: datetime, end_time: datetime
-) -> StatementLambdaElement:
-    """Generate the legacy sum statement for hourly statistics.
-
-    This is used for databases not supporting row number.
-    """
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SUMMARY_SUM_LEGACY))
-    stmt += (
-        lambda q: q.filter(StatisticsShortTerm.start >= start_time)
-        .filter(StatisticsShortTerm.start < end_time)
-        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
-    )
-    return stmt
-
-
 def compile_hourly_statistics(
     instance: Recorder, session: Session, start: datetime
 ) -> None:
@@ -481,66 +465,37 @@ def compile_hourly_statistics(
             }
 
     # Get last hour's last sum
-    if instance._db_supports_row_number:  # pylint: disable=[protected-access]
-        subquery = (
-            session.query(*QUERY_STATISTICS_SUMMARY_SUM)
-            .filter(StatisticsShortTerm.start >= bindparam("start_time"))
-            .filter(StatisticsShortTerm.start < bindparam("end_time"))
-            .subquery()
-        )
-        query = (
-            session.query(subquery)
-            .filter(subquery.c.rownum == 1)
-            .order_by(subquery.c.metadata_id)
-        )
-        stats = execute(query.params(start_time=start_time, end_time=end_time))
+    subquery = (
+        session.query(*QUERY_STATISTICS_SUMMARY_SUM)
+        .filter(StatisticsShortTerm.start >= bindparam("start_time"))
+        .filter(StatisticsShortTerm.start < bindparam("end_time"))
+        .subquery()
+    )
+    query = (
+        session.query(subquery)
+        .filter(subquery.c.rownum == 1)
+        .order_by(subquery.c.metadata_id)
+    )
+    stats = execute(query.params(start_time=start_time, end_time=end_time))
 
-        if stats:
-            for stat in stats:
-                metadata_id, start, last_reset, state, _sum, _ = stat
-                if metadata_id in summary:
-                    summary[metadata_id].update(
-                        {
-                            "last_reset": process_timestamp(last_reset),
-                            "state": state,
-                            "sum": _sum,
-                        }
-                    )
-                else:
-                    summary[metadata_id] = {
-                        "start": start_time,
+    if stats:
+        for stat in stats:
+            metadata_id, start, last_reset, state, _sum, _ = stat
+            if metadata_id in summary:
+                summary[metadata_id].update(
+                    {
                         "last_reset": process_timestamp(last_reset),
                         "state": state,
                         "sum": _sum,
                     }
-    else:
-        stmt = _compile_hourly_statistics_summary_sum_legacy_stmt(start_time, end_time)
-        stats = execute_stmt_lambda_element(session, stmt)
-
-        if stats:
-            for metadata_id, group in groupby(stats, lambda stat: stat["metadata_id"]):  # type: ignore[no-any-return]
-                (
-                    metadata_id,
-                    last_reset,
-                    state,
-                    _sum,
-                ) = next(group)
-                if metadata_id in summary:
-                    summary[metadata_id].update(
-                        {
-                            "start": start_time,
-                            "last_reset": process_timestamp(last_reset),
-                            "state": state,
-                            "sum": _sum,
-                        }
-                    )
-                else:
-                    summary[metadata_id] = {
-                        "start": start_time,
-                        "last_reset": process_timestamp(last_reset),
-                        "state": state,
-                        "sum": _sum,
-                    }
+                )
+            else:
+                summary[metadata_id] = {
+                    "start": start_time,
+                    "last_reset": process_timestamp(last_reset),
+                    "state": state,
+                    "sum": _sum,
+                }
 
     # Insert compiled hourly statistics in the database
     for metadata_id, stat in summary.items():
