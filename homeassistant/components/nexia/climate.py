@@ -343,28 +343,26 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._signal_zone_update()
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool:
         """Emergency heat state."""
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
-        data = super().extra_state_attributes
         if not self._has_relative_humidity:
-            return data
+            return None
 
+        attrs = {}
         if self._has_dehumidify_support:
             dehumdify_setpoint = percent_conv(
                 self._thermostat.get_dehumidify_setpoint()
             )
-            data[ATTR_DEHUMIDIFY_SETPOINT] = dehumdify_setpoint
-
+            attrs[ATTR_DEHUMIDIFY_SETPOINT] = dehumdify_setpoint
         if self._has_humidify_support:
             humdify_setpoint = percent_conv(self._thermostat.get_humidify_setpoint())
-            data[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
-
-        return data
+            attrs[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
+        return attrs
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set the preset mode."""
