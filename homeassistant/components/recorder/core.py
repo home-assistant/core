@@ -1031,7 +1031,9 @@ class Recorder(threading.Thread):
         if self._using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
 
-        self.engine = create_engine(self.db_url, **kwargs, future=True)
+        self.engine = create_engine(
+            self.db_url, **kwargs, future=True, echo=True, logging_name="zippy"
+        )
 
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 

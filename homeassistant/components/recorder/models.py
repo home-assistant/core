@@ -1,6 +1,7 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -9,6 +10,7 @@ from typing import Any, TypedDict, cast, overload
 import ciso8601
 from fnvhash import fnv1a_32
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Column,
@@ -22,6 +24,7 @@ from sqlalchemy import (
     String,
     Text,
     distinct,
+    type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.row import Row
@@ -102,12 +105,55 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
-JSON_VARIENT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True), "postgresql"
+class JSONLiteral(JSON):  # type: ignore[misc]
+    """Teach SA how to literalize json."""
+
+    impl = JSON
+
+    def coerce_compared_value(self, op: Any, value: Any) -> Any:
+        """Coerce a compared value to JSON."""
+        return (
+            self.impl.coerce_compared_value(  # pylint: disable=no-value-for-parameter
+                op, value
+            )
+        )
+
+    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
+        """Processor to convert a value to JSON."""
+
+        def process(value: Any) -> str:
+            """Dump json."""
+            return json.dumps(value)
+
+        return process
+
+
+JSON_TYPE_COERCE = (
+    JSON(none_as_null=True)
+    .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
+    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
-JSONB_VARIENT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"
+
+JSONB_TYPE_COERCE = (
+    JSON(none_as_null=True)
+    .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
+    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
+
+
+JSON_VARIENT_CAST = (
+    JSON(none_as_null=True)
+    .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
+    .with_variant(Text(), "sqlite")
+)
+
+JSONB_VARIENT_CAST = (
+    JSON(none_as_null=True)
+    .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
+    .with_variant(Text(), "sqlite")
+)
+
+
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -610,6 +656,20 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
             f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
+
+
+EVENT_DATA_JSON = type_coerce(
+    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONB_TYPE_COERCE
+)
+OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSONB_TYPE_COERCE
+)
+SHARED_ATTRS_JSON = type_coerce(
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON_TYPE_COERCE
+)
+OLD_FORMAT_ATTRS_JSON = type_coerce(
+    States.attributes.cast(JSON_VARIENT_CAST), JSON_TYPE_COERCE
+)
 
 
 @overload

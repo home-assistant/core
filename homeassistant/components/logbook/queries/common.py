@@ -1,13 +1,10 @@
 """Queries for logbook."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime as dt
-import json
-from typing import Any
 
 import sqlalchemy
-from sqlalchemy import JSON, select, type_coerce
+from sqlalchemy import Column, select
 from sqlalchemy.orm import Query, aliased
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
@@ -15,8 +12,8 @@ from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.recorder.models import (
-    JSON_VARIENT_CAST,
-    JSONB_VARIENT_CAST,
+    OLD_FORMAT_ATTRS_JSON,
+    SHARED_ATTRS_JSON,
     EventData,
     Events,
     StateAttributes,
@@ -32,44 +29,8 @@ UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
 OLD_STATE = aliased(States, name="old_state")
 
-
-class JSONLiteral(JSON):  # type: ignore[misc]
-    """Teach SA how to literalize json."""
-
-    impl = JSON
-
-    def coerce_compared_value(self, op: Any, value: Any) -> Any:
-        """Coerce a compared value to JSON."""
-        return (
-            self.impl.coerce_compared_value(  # pylint: disable=no-value-for-parameter
-                op, value
-            )
-        )
-
-    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
-        """Processor to convert a value to JSON."""
-
-        def process(value: Any) -> str:
-            """Dump json."""
-            return json.dumps(value)
-
-        return process
-
-
-EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
-)
-OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
-)
-
-SHARED_ATTRS_JSON = type_coerce(
-    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
-)
-OLD_FORMAT_ATTRS_JSON = type_coerce(
-    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
-)
-
+ICON_IN_SHARED_ATTRS: Column = SHARED_ATTRS_JSON["icon"]
+ICON_IN_ATTRS: Column = OLD_FORMAT_ATTRS_JSON["icon"]
 
 PSUEDO_EVENT_STATE_CHANGED = None
 # Since we don't store event_types and None
@@ -93,8 +54,8 @@ STATE_COLUMNS = (
     States.state_id.label("state_id"),
     States.state.label("state"),
     States.entity_id.label("entity_id"),
-    SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
-    OLD_FORMAT_ATTRS_JSON["icon"].as_string().label("old_format_icon"),
+    ICON_IN_SHARED_ATTRS.as_string().label("icon"),
+    ICON_IN_ATTRS.as_string().label("old_format_icon"),
 )
 
 STATE_CONTEXT_ONLY_COLUMNS = (

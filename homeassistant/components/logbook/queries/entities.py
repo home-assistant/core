@@ -12,13 +12,13 @@ from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.models import (
     ENTITY_ID_LAST_UPDATED_INDEX,
+    EVENT_DATA_JSON,
+    OLD_FORMAT_EVENT_DATA_JSON,
     Events,
     States,
 )
 
 from .common import (
-    EVENT_DATA_JSON,
-    OLD_FORMAT_EVENT_DATA_JSON,
     apply_states_filters,
     select_events_context_id_subquery,
     select_events_context_only,
