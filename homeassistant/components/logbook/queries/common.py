@@ -36,6 +36,16 @@ OLD_STATE = aliased(States, name="old_state")
 class JSONLiteral(JSON):  # type: ignore[misc]
     """Teach SA how to literalize json."""
 
+    impl = JSON
+
+    def coerce_compared_value(self, op: Any, value: Any) -> Any:
+        """Coerce a compared value to JSON."""
+        return (
+            self.impl.coerce_compared_value(  # pylint: disable=no-value-for-parameter
+                op, value
+            )
+        )
+
     def literal_processor(self, dialect: str) -> Callable[[Any], str]:
         """Processor to convert a value to JSON."""
 
