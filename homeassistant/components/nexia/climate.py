@@ -40,7 +40,6 @@ from .const import (
     ATTR_DEHUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_RUN_MODE,
-    ATTR_ZONE_STATUS,
     DOMAIN,
 )
 from .coordinator import NexiaDataUpdateCoordinator
@@ -344,31 +343,26 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._signal_zone_update()
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool:
         """Emergency heat state."""
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
-        data = super().extra_state_attributes
-
-        data[ATTR_ZONE_STATUS] = self._zone.get_status()
-
         if not self._has_relative_humidity:
-            return data
+            return None
 
+        attrs = {}
         if self._has_dehumidify_support:
             dehumdify_setpoint = percent_conv(
                 self._thermostat.get_dehumidify_setpoint()
             )
-            data[ATTR_DEHUMIDIFY_SETPOINT] = dehumdify_setpoint
-
+            attrs[ATTR_DEHUMIDIFY_SETPOINT] = dehumdify_setpoint
         if self._has_humidify_support:
             humdify_setpoint = percent_conv(self._thermostat.get_humidify_setpoint())
-            data[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
-
-        return data
+            attrs[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
+        return attrs
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set the preset mode."""
@@ -376,23 +370,23 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._signal_zone_update()
 
     async def async_turn_aux_heat_off(self):
-        """Turn. Aux Heat off."""
+        """Turn Aux Heat off."""
         await self._thermostat.set_emergency_heat(False)
         self._signal_thermostat_update()
 
     async def async_turn_aux_heat_on(self):
-        """Turn. Aux Heat on."""
+        """Turn Aux Heat on."""
         self._thermostat.set_emergency_heat(True)
         self._signal_thermostat_update()
 
     async def async_turn_off(self):
-        """Turn. off the zone."""
-        await self.set_hvac_mode(OPERATION_MODE_OFF)
+        """Turn off the zone."""
+        await self.async_set_hvac_mode(OPERATION_MODE_OFF)
         self._signal_zone_update()
 
     async def async_turn_on(self):
-        """Turn. on the zone."""
-        await self.set_hvac_mode(OPERATION_MODE_AUTO)
+        """Turn on the zone."""
+        await self.async_set_hvac_mode(OPERATION_MODE_AUTO)
         self._signal_zone_update()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
