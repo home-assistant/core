@@ -1291,8 +1291,6 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
         tmp_path,
         "light",
         config,
-        assert_entity_exists=False,
-        remove_platform=False,
     )
     assert (
         "Invalid config for [light]: [platform] is an invalid option for [light]. "
@@ -1309,8 +1307,6 @@ async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
         tmp_path,
         "light",
         config,
-        assert_entity_exists=False,
-        remove_platform=False,
     )
     assert (
         "Invalid config for [light]: required key not provided @ data['command_topic']."
@@ -1327,8 +1323,6 @@ async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
         tmp_path,
         "light",
         config,
-        assert_entity_exists=False,
-        remove_platform=False,
     )
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
