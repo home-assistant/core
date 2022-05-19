@@ -142,14 +142,14 @@ JSONB_TYPE_COERCE = (
     .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
 
-# Force the database to treat a text column as JSON
+# Force the database to treat a text column how its needed to extract json
 JSON_VARIENT_CAST = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
     .with_variant(Text(), "sqlite")
 )
 
-# Force the database to treat a text column as JSONB
+# Force the database to treat a text column how its needed to extract jsonb
 JSONB_VARIENT_CAST = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
