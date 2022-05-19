@@ -1,6 +1,9 @@
 """Provides device automations for Nest."""
 from __future__ import annotations
 
+from typing import Any
+
+from google_nest_sdm.device_manager import DeviceManager
 import voluptuous as vol
 
 from homeassistant.components.automation import (

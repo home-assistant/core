@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,

@@ -25,6 +25,7 @@ import os
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventImageType, ImageEventBase
 from google_nest_sdm.event_media import (
     ClipPreviewSession,

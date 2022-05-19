@@ -15,6 +15,7 @@ from google_nest_sdm.camera_traits import (
     StreamingProtocol,
 )
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
