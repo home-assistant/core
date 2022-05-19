@@ -1,7 +1,15 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -15,6 +23,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_TYPE,
 )
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
@@ -22,6 +31,7 @@ from homeassistant.helpers.entity import (
     get_device_class,
     get_unit_of_measurement,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
@@ -134,7 +144,12 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     numeric_state_config = {
         numeric_state_trigger.CONF_PLATFORM: "numeric_state",
@@ -155,9 +170,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> GetAutomationsResult:
     """List device triggers."""
-    triggers = []
+    triggers: GetAutomationsResult = []
     entity_registry = er.async_get(hass)
 
     entries = [
@@ -192,7 +209,9 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> GetAutomationCapabilitiesResult:
     """List trigger capabilities."""
     try:
         unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
