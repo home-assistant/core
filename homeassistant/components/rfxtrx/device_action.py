@@ -50,8 +50,8 @@ async def async_get_actions(
     actions = []
     for action_type in ACTION_TYPES:
         if hasattr(device, action_type):
-            values = getattr(device, ACTION_SELECTION[action_type], {})
-            for value in values.values():
+            data: dict[int, str] = getattr(device, ACTION_SELECTION[action_type], {})
+            for value in data.values():
                 actions.append(
                     {
                         CONF_DEVICE_ID: device_id,

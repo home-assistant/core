@@ -55,7 +55,7 @@ async def async_get_triggers(
 
     triggers = []
     for conf_type in TRIGGER_TYPES:
-        data = getattr(device, TRIGGER_SELECTION[conf_type], {})
+        data: dict[int, str] = getattr(device, TRIGGER_SELECTION[conf_type], {})
         for command in data.values():
             triggers.append(
                 {
