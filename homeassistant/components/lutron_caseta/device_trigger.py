@@ -340,12 +340,12 @@ async def async_validate_trigger_config(
     if not device:
         return config
 
-    if not (DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
+    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
         raise InvalidDeviceAutomationConfig(
             f"Device type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
         )
 
-    return config
+    return schema(config)
 
 
 async def async_get_triggers(
