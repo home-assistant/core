@@ -22,6 +22,7 @@ DEV_TYPE_TO_HA = {
     "ESWD16": "walldimmer",
     "ESL100": "bulb-dimmable",
     "ESL100CW": "bulb-tunable-white",
+    "XYD0001": "bulb-multicolor",
 }
 
 
@@ -53,8 +54,10 @@ def _setup_entities(devices, async_add_entities):
             entities.append(VeSyncDimmableLightHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
             entities.append(VeSyncTunableWhiteLightHA(dev))
+        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-multicolor",):
+            entities.append(VeSyncMulticolorLightHA(dev))
         else:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
@@ -178,3 +181,7 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     def max_mireds(self):
         """Set device warmest white temperature."""
         return 370  # 370 Mireds  ( 1,000,000 divided by 2700 Kelvin = 370 Mireds)
+
+
+class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):
+    """Representation of a VeSync Multicolor Light device."""

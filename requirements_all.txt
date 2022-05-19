@@ -2008,7 +2008,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.0.3
+pyvesync==2.0.4
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
