@@ -1,11 +1,15 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
+from datetime import timedelta
+
 from elkm1_lib.const import Max
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, CONF_ZONE
 
 DOMAIN = "elkm1"
+
+LOGIN_TIMEOUT = 20
 
 CONF_AUTO_CONFIGURE = "auto_configure"
 CONF_AREA = "area"
@@ -18,9 +22,8 @@ CONF_SETTING = "setting"
 CONF_TASK = "task"
 CONF_THERMOSTAT = "thermostat"
 
-
-BARE_TEMP_FAHRENHEIT = "F"
-BARE_TEMP_CELSIUS = "C"
+DISCOVER_SCAN_TIMEOUT = 10
+DISCOVERY_INTERVAL = timedelta(minutes=15)
 
 ELK_ELEMENTS = {
     CONF_AREA: Max.AREAS.value,
@@ -40,6 +43,7 @@ EVENT_ELKM1_KEYPAD_KEY_PRESSED = "elkm1.keypad_key_pressed"
 ATTR_KEYPAD_ID = "keypad_id"
 ATTR_KEY = "key"
 ATTR_KEY_NAME = "key_name"
+ATTR_KEYPAD_NAME = "keypad_name"
 ATTR_CHANGED_BY_KEYPAD = "changed_by_keypad"
 ATTR_CHANGED_BY_ID = "changed_by_id"
 ATTR_CHANGED_BY_TIME = "changed_by_time"

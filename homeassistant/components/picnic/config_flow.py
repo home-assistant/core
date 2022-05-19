@@ -9,6 +9,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_COUNTRY_CODE, COUNTRY_CODES, DOMAIN
@@ -71,8 +72,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def async_step_reauth(self, _):
+        """Perform the re-auth step upon an API authentication error."""
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+        """Handle the authentication step, this is the generic step for both `step_user` and `step_reauth`."""
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -90,17 +95,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            # Set the unique id and abort if it already exists
-            await self.async_set_unique_id(info["unique_id"])
-            self._abort_if_unique_id_configured()
+            data = {
+                CONF_ACCESS_TOKEN: auth_token,
+                CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
+            }
+            existing_entry = await self.async_set_unique_id(info["unique_id"])
 
-            return self.async_create_entry(
-                title=info["title"],
-                data={
-                    CONF_ACCESS_TOKEN: auth_token,
-                    CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
-                },
-            )
+            # Abort if we're adding a new config and the unique id is already in use, else create the entry
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["title"], data=data)
+
+            # In case of re-auth, only continue if an exiting account exists with the same unique id
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(existing_entry, data=data)
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            # Set the error because the account is different
+            errors["base"] = "different_account"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

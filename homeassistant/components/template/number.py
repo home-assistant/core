@@ -108,6 +108,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
     ) -> None:
         """Initialize the number."""
         super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
             hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
@@ -156,8 +157,10 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         if self._optimistic:
             self._attr_value = value
             self.async_write_ha_state()
-        await self._command_set_value.async_run(
-            {ATTR_VALUE: value}, context=self._context
+        await self.async_run_script(
+            self._command_set_value,
+            run_variables={ATTR_VALUE: value},
+            context=self._context,
         )
 
 

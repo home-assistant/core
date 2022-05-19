@@ -7,5 +7,9 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-class SpeakerUnavailable(HomeAssistantError):
-    """Speaker is unavailable."""
+class SonosUpdateError(HomeAssistantError):
+    """Update failed."""
+
+
+class S1BatteryMissing(SonosUpdateError):
+    """Battery update failed on S1 firmware."""

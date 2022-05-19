@@ -6,15 +6,12 @@ from typing import Any
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const.command_class.sound_switch import ToneID
 
-from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntity
-from homeassistant.components.siren.const import (
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
+    SirenEntity,
+    SirenEntityFeature,
 )
+from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -62,14 +61,18 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
             int(id): val for id, val in self.info.primary_value.metadata.states.items()
         }
         self._attr_supported_features = (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_SET
+            SirenEntityFeature.TURN_ON
+            | SirenEntityFeature.TURN_OFF
+            | SirenEntityFeature.VOLUME_SET
         )
         if self._attr_available_tones:
-            self._attr_supported_features |= SUPPORT_TONES
+            self._attr_supported_features |= SirenEntityFeature.TONES
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether device is on."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     async def async_set_value(

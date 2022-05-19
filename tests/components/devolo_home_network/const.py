@@ -18,6 +18,7 @@ CONNECTED_STATIONS = {
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host=IP,
+    addresses=[IP],
     port=14791,
     hostname="test.local.",
     type="_dvl-deviceapi._tcp.local.",
@@ -38,6 +39,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 
 DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
     host="mock_host",
+    addresses=["mock_host"],
     hostname="mock_hostname",
     name="mock_name",
     port=None,
@@ -60,6 +62,12 @@ NEIGHBOR_ACCESS_POINTS = {
 
 PLCNET = {
     "network": {
+        "devices": [
+            {
+                "mac_address": "AA:BB:CC:DD:EE:FF",
+                "attached_to_router": False,
+            }
+        ],
         "data_rates": [
             {
                 "mac_address_from": "AA:BB:CC:DD:EE:FF",
@@ -68,6 +76,17 @@ PLCNET = {
                 "tx_rate": 0.0,
             },
         ],
-        "devices": [],
+    }
+}
+
+PLCNET_ATTACHED = {
+    "network": {
+        "devices": [
+            {
+                "mac_address": "AA:BB:CC:DD:EE:FF",
+                "attached_to_router": True,
+            }
+        ],
+        "data_rates": [],
     }
 }

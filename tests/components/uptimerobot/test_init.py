@@ -11,14 +11,12 @@ from homeassistant.components.uptimerobot.const import (
 )
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get_registry,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt
 
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
+    MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY,
     MOCK_UPTIMEROBOT_MONITOR,
     UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY,
     MockApiResponseKey,
@@ -48,6 +46,39 @@ async def test_reauthentication_trigger_in_setup(
 
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == "could not authenticate"
+
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
+
+    assert (
+        "Config entry 'test@test.test' for uptimerobot integration could not authenticate"
+        in caplog.text
+    )
+
+
+async def test_reauthentication_trigger_key_read_only(
+    hass: HomeAssistant, caplog: LogCaptureFixture
+):
+    """Test reauthentication trigger."""
+    mock_config_entry = MockConfigEntry(
+        **MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_config_entry.reason
+        == "Wrong API key type detected, use the 'main' API key"
+    )
 
     assert len(flows) == 1
     flow = flows[0]
@@ -153,9 +184,9 @@ async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
 async def test_device_management(hass: HomeAssistant):
     """Test that we are adding and removing devices for monitors returned from the API."""
     mock_entry = await setup_uptimerobot_integration(hass)
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
 
-    devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
     assert len(devices) == 1
 
     assert devices[0].identifiers == {(DOMAIN, "1234")}
@@ -173,7 +204,7 @@ async def test_device_management(hass: HomeAssistant):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
-    devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
     assert len(devices) == 2
     assert devices[0].identifiers == {(DOMAIN, "1234")}
     assert devices[1].identifiers == {(DOMAIN, "12345")}
@@ -190,7 +221,7 @@ async def test_device_management(hass: HomeAssistant):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
-    devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
     assert len(devices) == 1
     assert devices[0].identifiers == {(DOMAIN, "1234")}
 

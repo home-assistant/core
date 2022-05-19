@@ -19,19 +19,12 @@ from homeassistant.components.version.const import (
 )
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.util import dt
 
+from .common import MOCK_VERSION, MOCK_VERSION_DATA, setup_version_integration
+
 from tests.common import async_fire_time_changed
-from tests.components.version.common import (
-    MOCK_VERSION,
-    MOCK_VERSION_DATA,
-    setup_version_integration,
-)
 
 
 async def test_reload_config_entry(hass: HomeAssistant):
@@ -203,30 +196,3 @@ async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
         CONF_VERSION_SOURCE: VERSION_SOURCE_VERSIONS,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_existing(hass: HomeAssistant) -> None:
-    """Test importing existing configuration."""
-    with patch(
-        "homeassistant.components.version.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == RESULT_TYPE_ABORT
-
-        assert len(mock_setup_entry.mock_calls) == 1

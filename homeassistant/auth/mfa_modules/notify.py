@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.storage import Store
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -99,8 +100,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._user_settings: _UsersDict | None = None
-        self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._user_store = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._include = config.get(CONF_INCLUDE, [])
         self._exclude = config.get(CONF_EXCLUDE, [])
@@ -118,7 +119,9 @@ class NotifyAuthModule(MultiFactorAuthModule):
             if self._user_settings is not None:
                 return
 
-            if (data := await self._user_store.async_load()) is None:
+            if (data := await self._user_store.async_load()) is None or not isinstance(
+                data, dict
+            ):
                 data = {STORAGE_USERS: {}}
 
             self._user_settings = {
@@ -251,7 +254,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         await self.async_notify(
             code,
-            notify_setting.notify_service,  # type: ignore
+            notify_setting.notify_service,  # type: ignore[arg-type]
             notify_setting.target,
         )
 

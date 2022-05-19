@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
+    InclusionState,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -29,6 +30,7 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
     CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
@@ -76,14 +78,16 @@ async def test_network_status(hass, integration, hass_ws_client):
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
+    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+        await ws_client.send_json(
+            {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
+        )
+        msg = await ws_client.receive_json()
+        result = msg["result"]
 
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
     assert result["client"]["server_version"] == "1.0.0"
+    assert result["controller"]["inclusion_state"] == InclusionState.IDLE
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
@@ -167,6 +171,7 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert result["status"] == 1
     assert result["zwave_plus_version"] == 1
     assert result["highest_security_class"] == SecurityClass.S0_LEGACY
+    assert not result["is_controller_node"]
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -244,6 +249,7 @@ async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_
         result["device_database_url"]
         == "https://devices.zwave-js.io/?jumpTo=0x0086:0x0002:0x0082:0.0"
     )
+    assert result["comments"] == [{"level": "info", "text": "test"}]
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -473,7 +479,15 @@ async def test_add_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 67},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 67,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -837,6 +851,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
                 PRODUCT_TYPE: 1,
                 PRODUCT_ID: 1,
                 APPLICATION_VERSION: "test",
+                ADDITIONAL_PROPERTIES: {"name": "test"},
             },
         }
     )
@@ -861,6 +876,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
             max_inclusion_request_interval=None,
             uuid=None,
             supported_protocols=None,
+            additional_properties={"name": "test"},
         ).to_dict(),
     }
 
@@ -1603,7 +1619,15 @@ async def test_replace_failed_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 67},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 67,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -2186,7 +2210,15 @@ async def test_refresh_node_info(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 52},
+        data={
+            "source": "node",
+            "event": "interview failed",
+            "nodeId": 52,
+            "args": {
+                "errorMessage": "error",
+                "isFinal": True,
+            },
+        },
     )
     client.driver.receive_event(event)
 
@@ -3140,10 +3172,12 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
     result = msg["result"]
     assert result is None
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "driver.enable_statistics"
     assert args["applicationName"] == "Home Assistant"
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "driver.enable_error_reporting"
     assert entry.data[CONF_DATA_COLLECTION_OPTED_IN]
 
     client.async_send_command.reset_mock()
@@ -3445,7 +3479,14 @@ async def test_subscribe_firmware_update_status_initial_value(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"sent_fragments": 1, "total_fragments": 10}
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update progress",
+        "sent_fragments": 1,
+        "total_fragments": 10,
+    }
 
 
 async def test_subscribe_firmware_update_status_failures(
@@ -3654,7 +3695,12 @@ async def test_subscribe_controller_statistics(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "statistics updated",
+        "source": "controller",
         "messages_tx": 0,
         "messages_rx": 0,
         "messages_dropped_tx": 0,
@@ -3749,7 +3795,13 @@ async def test_subscribe_node_statistics(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "source": "node",
+        "event": "statistics updated",
+        "nodeId": multisensor_6.node_id,
         "commands_tx": 0,
         "commands_rx": 0,
         "commands_dropped_tx": 0,

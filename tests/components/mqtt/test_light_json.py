@@ -102,6 +102,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -126,9 +127,11 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -268,7 +271,7 @@ async def test_no_color_brightness_color_temp_white_val_if_no_topics(hass, mqtt_
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
@@ -290,6 +293,16 @@ async def test_no_color_brightness_color_temp_white_val_if_no_topics(hass, mqtt_
     assert state.attributes.get("white_value") is None
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("hs_color") is None
+
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"OFF"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state": null}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock):
@@ -318,7 +331,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = (
         light.SUPPORT_BRIGHTNESS
         | light.SUPPORT_COLOR
@@ -446,7 +459,7 @@ async def test_controlling_state_via_topic2(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = (
         light.SUPPORT_BRIGHTNESS
         | light.SUPPORT_COLOR
@@ -960,7 +973,7 @@ async def test_sending_hs_color(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     mqtt_mock.reset_mock()
     await common.async_turn_on(
@@ -1023,7 +1036,7 @@ async def test_sending_rgb_color_no_brightness(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
@@ -1078,7 +1091,7 @@ async def test_sending_rgb_color_no_brightness2(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
@@ -1155,7 +1168,7 @@ async def test_sending_rgb_color_with_brightness(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
@@ -1226,7 +1239,7 @@ async def test_sending_rgb_color_with_scaled_brightness(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
@@ -1296,7 +1309,7 @@ async def test_sending_xy_color(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(
         hass, "light.test", brightness=50, xy_color=[0.123, 0.123]
@@ -1359,7 +1372,7 @@ async def test_effect(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = (
         light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     )
@@ -1422,7 +1435,7 @@ async def test_flash_short_and_long(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
@@ -1481,7 +1494,7 @@ async def test_transition(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     await common.async_turn_on(hass, "light.test", transition=15)
@@ -1529,7 +1542,7 @@ async def test_brightness_scale(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("brightness") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
@@ -1573,7 +1586,7 @@ async def test_invalid_values(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     expected_features = (
         light.SUPPORT_BRIGHTNESS
         | light.SUPPORT_COLOR
@@ -1883,7 +1896,13 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, payload='{"state":"ON"}'
+        hass,
+        mqtt_mock,
+        light.DOMAIN,
+        DEFAULT_CONFIG,
+        light.SERVICE_TURN_ON,
+        command_payload='{"state": "ON"}',
+        state_payload='{"state":"ON"}',
     )
 
 
@@ -1974,6 +1993,13 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
 
 
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = light.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
+
+
 @pytest.mark.parametrize(
     "topic,value,attribute,attribute_value,init_payload",
     [
@@ -2013,3 +2039,15 @@ async def test_encoding_subscribable_topics(
         init_payload,
         skip_raw_test=True,
     )
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = light.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

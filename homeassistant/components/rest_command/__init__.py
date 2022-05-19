@@ -144,8 +144,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)
 
-            except aiohttp.ClientError:
-                _LOGGER.error("Client error %s", request_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error(
+                    "Client error. Url: %s. Error: %s",
+                    request_url,
+                    err,
+                )
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)

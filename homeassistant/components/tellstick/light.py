@@ -1,11 +1,7 @@
 """Support for Tellstick lights."""
 from __future__ import annotations
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -17,8 +13,6 @@ from . import (
     DEFAULT_SIGNAL_REPETITIONS,
     TellstickDevice,
 )
-
-SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(
@@ -47,6 +41,9 @@ def setup_platform(
 class TellstickLight(TellstickDevice, LightEntity):
     """Representation of a Tellstick light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, tellcore_device, signal_repetitions):
         """Initialize the Tellstick light."""
         super().__init__(tellcore_device, signal_repetitions)
@@ -57,11 +54,6 @@ class TellstickLight(TellstickDevice, LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_TELLSTICK
 
     def _parse_ha_data(self, kwargs):
         """Turn the value from HA into something useful."""

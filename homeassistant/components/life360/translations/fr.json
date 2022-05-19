@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "create_entry": {
@@ -9,8 +9,8 @@
         },
         "error": {
             "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
-            "invalid_auth": "Authentification invalide",
-            "invalid_username": "Nom d'utilisateur invalide",
+            "invalid_auth": "Authentification non valide",
+            "invalid_username": "Nom d'utilisateur non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {

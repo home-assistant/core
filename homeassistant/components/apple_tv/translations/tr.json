@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "already_configured_device": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "backoff": "Cihaz \u015fu anda e\u015fle\u015ftirme isteklerini kabul etmiyor (\u00e7ok say\u0131da ge\u00e7ersiz PIN kodu girmi\u015f olabilirsiniz), daha sonra tekrar deneyin.",
             "device_did_not_pair": "Cihazdan e\u015fle\u015ftirme i\u015flemini bitirmek i\u00e7in herhangi bir giri\u015fimde bulunulmad\u0131.",
             "device_not_found": "Cihaz ke\u015fif s\u0131ras\u0131nda bulunamad\u0131, l\u00fctfen tekrar eklemeyi deneyin.",
             "inconsistent_device": "Ke\u015fif s\u0131ras\u0131nda beklenen protokoller bulunamad\u0131. Bu normalde \u00e7ok noktaya yay\u0131n DNS (Zeroconf) ile ilgili bir sorunu g\u00f6sterir. L\u00fctfen cihaz\u0131 tekrar eklemeyi deneyin.",
-            "invalid_config": "Bu ayg\u0131t\u0131n yap\u0131land\u0131rmas\u0131 tamamlanmad\u0131. L\u00fctfen tekrar eklemeyi deneyin.",
+            "ipv6_not_supported": "IPv6 desteklenmiyor.",
             "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
             "setup_failed": "Cihaz kurulumu ba\u015far\u0131s\u0131z.",
@@ -18,7 +17,6 @@
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
-            "no_usable_service": "Bir ayg\u0131t bulundu, ancak ba\u011flant\u0131 kurman\u0131n herhangi bir yolunu tan\u0131mlayamad\u0131. Bu iletiyi g\u00f6rmeye devam ederseniz, IP adresini belirtmeye veya Apple TV'nizi yeniden ba\u015flatmaya \u00e7al\u0131\u015f\u0131n.",
             "unknown": "Beklenmeyen hata"
         },
         "flow_title": "{name} ( {type} )",
@@ -72,6 +70,5 @@
                 "description": "Genel cihaz ayarlar\u0131n\u0131 yap\u0131land\u0131r\u0131n"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

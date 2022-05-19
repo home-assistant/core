@@ -12,6 +12,11 @@
         },
         "flow_title": "{name} ({ipaddress})",
         "step": {
+            "pick_device": {
+                "data": {
+                    "device": "\u05d4\u05ea\u05e7\u05df"
+                }
+            },
             "user": {
                 "data": {
                     "host": "\u05de\u05d0\u05e8\u05d7"

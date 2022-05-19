@@ -1,10 +1,105 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "hide_members": "Esconde miembros"
+                },
+                "title": "Agregar grupo"
+            },
+            "cover": {
+                "data": {
+                    "hide_members": "Esconde miembros",
+                    "name": "Nombre del Grupo"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "Miembros",
+                    "hide_members": "Esconde miembros"
+                },
+                "title": "Agregar grupo"
+            },
+            "light": {
+                "data": {
+                    "entities": "Miembros",
+                    "hide_members": "Esconde miembros"
+                },
+                "title": "Agregar grupo"
+            },
+            "lock": {
+                "data": {
+                    "entities": "Miembros",
+                    "hide_members": "Esconde miembros"
+                },
+                "title": "Agregar grupo"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Miembros",
+                    "hide_members": "Esconde miembros",
+                    "name": "Nombre"
+                },
+                "title": "Agregar grupo"
+            },
+            "switch": {
+                "data": {
+                    "entities": "Miembros"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "binary_sensor": "Grupo de sensores binarios",
+                    "cover": "Grupo de cubiertas",
+                    "fan": "Grupo de ventiladores",
+                    "switch": "Grupo de conmutadores"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Todas las entidades",
+                    "hide_members": "Esconde miembros"
+                }
+            },
+            "cover": {
+                "data": {
+                    "hide_members": "Esconde miembros"
+                }
+            },
+            "fan": {
+                "data": {
+                    "hide_members": "Esconde miembros"
+                }
+            },
+            "light": {
+                "data": {
+                    "entities": "Miembros",
+                    "hide_members": "Esconde miembros"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "Miembros"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Miembros",
+                    "hide_members": "Esconde miembros"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Cerrado",
             "home": "En casa",
             "locked": "Bloqueado",
-            "not_home": "Fuera de casa",
+            "not_home": "Fuera",
             "off": "Apagado",
             "ok": "OK",
             "on": "Encendido",

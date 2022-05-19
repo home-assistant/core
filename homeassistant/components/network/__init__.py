@@ -6,11 +6,16 @@ import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
 
 from . import util
-from .const import IPV4_BROADCAST_ADDR, PUBLIC_TARGET_IP
+from .const import (
+    IPV4_BROADCAST_ADDR,
+    LOOPBACK_TARGET_IP,
+    MDNS_TARGET_IP,
+    PUBLIC_TARGET_IP,
+)
 from .models import Adapter
 from .network import Network, async_get_network
 
@@ -26,7 +31,7 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
 
 @bind_hass
 async def async_get_source_ip(
-    hass: HomeAssistant, target_ip: str = PUBLIC_TARGET_IP
+    hass: HomeAssistant, target_ip: str | UndefinedType = UNDEFINED
 ) -> str:
     """Get the source ip for a target ip."""
     adapters = await async_get_adapters(hass)
@@ -35,7 +40,15 @@ async def async_get_source_ip(
         if adapter["enabled"] and (ipv4s := adapter["ipv4"]):
             all_ipv4s.extend([ipv4["address"] for ipv4 in ipv4s])
 
-    source_ip = util.async_get_source_ip(target_ip)
+    if target_ip is UNDEFINED:
+        source_ip = (
+            util.async_get_source_ip(PUBLIC_TARGET_IP)
+            or util.async_get_source_ip(MDNS_TARGET_IP)
+            or util.async_get_source_ip(LOOPBACK_TARGET_IP)
+        )
+    else:
+        source_ip = util.async_get_source_ip(target_ip)
+
     if not all_ipv4s:
         _LOGGER.warning(
             "Because the system does not have any enabled IPv4 addresses, source address detection may be inaccurate"
@@ -60,12 +73,14 @@ async def async_get_enabled_source_ips(
         if not adapter["enabled"]:
             continue
         if adapter["ipv4"]:
-            sources.extend(IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"])
+            addrs_ipv4 = [IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"]]
+            sources.extend(addrs_ipv4)
         if adapter["ipv6"]:
-            # With python 3.9 add scope_ids can be
-            # added by enumerating adapter["ipv6"]s
-            # IPv6Address(f"::%{ipv6['scope_id']}")
-            sources.extend(IPv6Address(ipv6["address"]) for ipv6 in adapter["ipv6"])
+            addrs_ipv6 = [
+                IPv6Address(f"{ipv6['address']}%{ipv6['scope_id']}")
+                for ipv6 in adapter["ipv6"]
+            ]
+            sources.extend(addrs_ipv6)
 
     return sources
 

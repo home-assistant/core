@@ -15,7 +15,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 from . import AugustData
-from .const import DATA_AUGUST, DOMAIN
+from .const import DOMAIN
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    async_add_entities([AugustLock(data, lock) for lock in data.locks])
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
@@ -39,17 +39,10 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     def __init__(self, data, device):
         """Initialize the lock."""
         super().__init__(data, device)
-        self._data = data
-        self._device = device
         self._lock_status = None
         self._attr_name = device.device_name
         self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
-
-    @property
-    def _hyper_bridge(self):
-        """Check if the lock has a paired hyper bridge."""
-        return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
 
     async def async_lock(self, **kwargs):
         """Lock the device."""

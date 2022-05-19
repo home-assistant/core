@@ -20,7 +20,7 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN,
 )
-from .model import RainMachineSensorDescriptionMixin
+from .model import RainMachineDescriptionMixinApiCategory
 
 TYPE_FLOW_SENSOR = "flow_sensor"
 TYPE_FREEZE = "freeze"
@@ -35,7 +35,7 @@ TYPE_WEEKDAY = "weekday"
 
 @dataclass
 class RainMachineBinarySensorDescription(
-    BinarySensorEntityDescription, RainMachineSensorDescriptionMixin
+    BinarySensorEntityDescription, RainMachineDescriptionMixinApiCategory
 ):
     """Describe a RainMachine binary sensor."""
 
@@ -119,7 +119,7 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     @callback
-    def async_get_sensor(api_category: str) -> partial:
+    def async_get_sensor_by_api_category(api_category: str) -> partial:
         """Generate the appropriate sensor object for an API category."""
         if api_category == DATA_PROVISION_SETTINGS:
             return partial(
@@ -143,7 +143,9 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            async_get_sensor(description.api_category)(controller, description)
+            async_get_sensor_by_api_category(description.api_category)(
+                controller, description
+            )
             for description in BINARY_SENSOR_DESCRIPTIONS
         ]
     )

@@ -28,16 +28,7 @@
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Controleer het SSL-certificaat"
                 },
-                "description": "Wil je {name} ({host}) instellen?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
-                },
-                "description": "Reden: {details}",
-                "title": "Synology DSM Verifieer de integratie opnieuw"
+                "description": "Wil je {name} ({host}) instellen?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Controleer het SSL-certificaat"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },
@@ -64,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuten tussen scans",
+                    "snap_profile_type": "Kwaliteitsniveau van camera-snapshots (0:hoog 1:gemiddeld 2:laag)",
                     "timeout": "Time-out (seconden)"
                 }
             }

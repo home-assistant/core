@@ -9,9 +9,11 @@
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "server_in_maintenance": "Il server \u00e8 inattivo per manutenzione",
+            "too_many_attempts": "Troppi tentativi con un token non valido, temporaneamente bandito",
             "too_many_requests": "Troppe richieste, riprova pi\u00f9 tardi.",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

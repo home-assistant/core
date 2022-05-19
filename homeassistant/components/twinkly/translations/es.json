@@ -12,10 +12,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Host (o direcci\u00f3n IP) de tu dispositivo Twinkly"
-                },
-                "description": "Configura tu tira led Twinkly",
-                "title": "Twinkly"
+                    "host": "Host"
+                }
             }
         }
     }

@@ -9,9 +9,11 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "server_in_maintenance": "Server ist wegen Wartungsarbeiten au\u00dfer Betrieb",
+            "too_many_attempts": "Zu viele Versuche mit einem ung\u00fcltigen Token, vor\u00fcbergehend gesperrt",
             "too_many_requests": "Zu viele Anfragen, versuche es sp\u00e4ter erneut.",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

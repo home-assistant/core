@@ -9,9 +9,11 @@
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "server_in_maintenance": "serveren er nede for vedlikehold",
+            "too_many_attempts": "For mange fors\u00f8k med et ugyldig token, midlertidig utestengt",
             "too_many_requests": "For mange foresp\u00f8rsler. Pr\u00f8v igjen senere",
             "unknown": "Uventet feil"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

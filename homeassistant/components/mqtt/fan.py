@@ -1,6 +1,7 @@
 """Support for MQTT fans."""
 from __future__ import annotations
 
+import asyncio
 import functools
 import logging
 import math
@@ -12,14 +13,8 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -40,7 +34,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
+from . import MqttCommandTemplate, MqttValueTemplate, subscription
 from .. import mqtt
 from .const import (
     CONF_COMMAND_TEMPLATE,
@@ -49,12 +43,19 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
+    CONF_STATE_VALUE_TEMPLATE,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_get_platform_config_from_yaml,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+    warn_for_legacy_schema,
+)
 
-CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
@@ -124,7 +125,7 @@ def valid_preset_mode_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -159,10 +160,6 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
         ): cv.string,
-        vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
-        vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
-        vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(
@@ -172,17 +169,21 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
         ): cv.string,
         vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(
-            CONF_SPEED_LIST,
-            default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
-        ): cv.ensure_list,
         vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+# Configuring MQTT Fans under the fan platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    valid_speed_range_configuration,
+    valid_preset_mode_configuration,
+    warn_for_legacy_schema(fan.DOMAIN),
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -211,9 +212,11 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    """Set up MQTT fans configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
+    await async_setup_platform_helper(
+        hass, fan.DOMAIN, config, async_add_entities, _async_setup_entity
+    )
 
 
 async def async_setup_entry(
@@ -221,7 +224,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT fan dynamically through MQTT discovery."""
+    """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -243,7 +256,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._state = False
+        self._state = None
         self._percentage = None
         self._preset_mode = None
         self._oscillation = None
@@ -333,12 +346,12 @@ class MqttFan(MqttEntity, FanEntity):
         self._supported_features = 0
         self._supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
-            and SUPPORT_OSCILLATE
+            and FanEntityFeature.OSCILLATE
         )
         if self._feature_percentage:
-            self._supported_features |= SUPPORT_SET_SPEED
+            self._supported_features |= FanEntityFeature.SET_SPEED
         if self._feature_preset_mode:
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._supported_features |= FanEntityFeature.PRESET_MODE
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
@@ -351,7 +364,7 @@ class MqttFan(MqttEntity, FanEntity):
                 entity=self,
             ).async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -367,6 +380,8 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
                 self._state = False
+            elif payload == PAYLOAD_NONE:
+                self._state = None
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -479,9 +494,13 @@ class MqttFan(MqttEntity, FanEntity):
             }
             self._oscillation = False
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
     def assumed_state(self):
@@ -489,7 +508,7 @@ class MqttFan(MqttEntity, FanEntity):
         return self._optimistic
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
@@ -526,7 +545,6 @@ class MqttFan(MqttEntity, FanEntity):
     # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,
@@ -536,8 +554,7 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -558,8 +575,7 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -579,8 +595,7 @@ class MqttFan(MqttEntity, FanEntity):
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -597,14 +612,11 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
+        self._valid_preset_mode_or_raise(preset_mode)
 
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_PRESET_MODE_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],
@@ -630,8 +642,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._payload["OSCILLATE_OFF_PAYLOAD"]
             )
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
             mqtt_payload,
             self._config[CONF_QOS],

@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import CONF_ACCESS_TOKEN, DOMAIN
-from .coordinator import DataUpdateCoordinators
+from .coordinator import GitHubDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
@@ -35,11 +35,10 @@ async def async_get_config_entry_diagnostics(
     else:
         data["rate_limit"] = rate_limit_response.data.as_dict
 
-    repositories: dict[str, DataUpdateCoordinators] = hass.data[DOMAIN]
+    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
     data["repositories"] = {}
 
-    for repository, coordinators in repositories.items():
-        info = coordinators["information"].data
-        data["repositories"][repository] = info.as_dict if info else None
+    for repository, coordinator in repositories.items():
+        data["repositories"][repository] = coordinator.data
 
     return data

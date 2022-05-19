@@ -129,14 +129,14 @@ class GlancesSensor(SensorEntity):
                     break
             if self.entity_description.key == "disk_free":
                 try:
-                    self._state = round(disk["free"] / 1024 ** 3, 1)
+                    self._state = round(disk["free"] / 1024**3, 1)
                 except KeyError:
                     self._state = round(
-                        (disk["size"] - disk["used"]) / 1024 ** 3,
+                        (disk["size"] - disk["used"]) / 1024**3,
                         1,
                     )
             elif self.entity_description.key == "disk_use":
-                self._state = round(disk["used"] / 1024 ** 3, 1)
+                self._state = round(disk["used"] / 1024**3, 1)
             elif self.entity_description.key == "disk_use_percent":
                 self._state = disk["percent"]
         elif self.entity_description.key == "battery":
@@ -170,15 +170,15 @@ class GlancesSensor(SensorEntity):
         elif self.entity_description.key == "memory_use_percent":
             self._state = value["mem"]["percent"]
         elif self.entity_description.key == "memory_use":
-            self._state = round(value["mem"]["used"] / 1024 ** 2, 1)
+            self._state = round(value["mem"]["used"] / 1024**2, 1)
         elif self.entity_description.key == "memory_free":
-            self._state = round(value["mem"]["free"] / 1024 ** 2, 1)
+            self._state = round(value["mem"]["free"] / 1024**2, 1)
         elif self.entity_description.key == "swap_use_percent":
             self._state = value["memswap"]["percent"]
         elif self.entity_description.key == "swap_use":
-            self._state = round(value["memswap"]["used"] / 1024 ** 3, 1)
+            self._state = round(value["memswap"]["used"] / 1024**3, 1)
         elif self.entity_description.key == "swap_free":
-            self._state = round(value["memswap"]["free"] / 1024 ** 3, 1)
+            self._state = round(value["memswap"]["free"] / 1024**3, 1)
         elif self.entity_description.key == "processor_load":
             # Windows systems don't provide load details
             try:
@@ -219,7 +219,7 @@ class GlancesSensor(SensorEntity):
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         mem_use += container["memory"]["usage"]
-                    self._state = round(mem_use / 1024 ** 2, 1)
+                    self._state = round(mem_use / 1024**2, 1)
             except KeyError:
                 self._state = STATE_UNAVAILABLE
         elif self.entity_description.type == "raid":

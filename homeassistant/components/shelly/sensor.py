@@ -174,6 +174,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        available=lambda block: cast(int, block.energy) != -1,
     ),
     ("emeter", "energyReturned"): BlockSensorDescription(
         key="emeter|energyReturned",
@@ -182,6 +183,7 @@ SENSORS: Final = {
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        available=lambda block: cast(int, block.energyReturned) != -1,
     ),
     ("light", "energy"): BlockSensorDescription(
         key="light|energy",
@@ -214,6 +216,15 @@ SENSORS: Final = {
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("sensor", "temp"): BlockSensorDescription(
+        key="sensor|temp",
+        name="Temperature",
+        unit_fn=temperature_unit,
+        value=lambda value: round(value, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("sensor", "extTemp"): BlockSensorDescription(
         key="sensor|extTemp",
@@ -383,12 +394,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_entry_rpc(
+        return async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
         )
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -397,7 +408,7 @@ async def async_setup_entry(
             _build_block_description,
         )
     else:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -405,7 +416,7 @@ async def async_setup_entry(
             BlockSensor,
             _build_block_description,
         )
-        await async_setup_entry_rest(
+        async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
         )
 

@@ -1,45 +1,62 @@
 """The tests for SleepIQ binary sensor platform."""
-from unittest.mock import MagicMock
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.helpers import entity_registry as er
 
-from homeassistant.components.sleepiq import binary_sensor as sleepiq
-from homeassistant.setup import async_setup_component
-
-from tests.components.sleepiq.test_init import mock_responses
-
-CONFIG = {"username": "foo", "password": "bar"}
-
-
-async def test_sensor_setup(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock)
-
-    await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
-
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 2
-
-    left_side = devices[1]
-    assert left_side.name == "SleepNumber ILE Test1 Is In Bed"
-    assert left_side.state == "on"
-
-    right_side = devices[0]
-    assert right_side.name == "SleepNumber ILE Test2 Is In Bed"
-    assert right_side.state == "off"
+from tests.components.sleepiq.conftest import (
+    BED_NAME,
+    BED_NAME_LOWER,
+    SLEEPER_L_ID,
+    SLEEPER_L_NAME,
+    SLEEPER_L_NAME_LOWER,
+    SLEEPER_R_ID,
+    SLEEPER_R_NAME,
+    SLEEPER_R_NAME_LOWER,
+    setup_platform,
+)
 
 
-async def test_setup_single(hass, requests_mock):
-    """Test for successfully setting up the SleepIQ platform."""
-    mock_responses(requests_mock, single=True)
+async def test_binary_sensors(hass, mock_asyncsleepiq):
+    """Test the SleepIQ binary sensors."""
+    await setup_platform(hass, DOMAIN)
+    entity_registry = er.async_get(hass)
 
-    await async_setup_component(hass, "sleepiq", {"sleepiq": CONFIG})
+    state = hass.states.get(
+        f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_is_in_bed"
+    )
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.OCCUPANCY
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Is In Bed"
+    )
 
-    device_mock = MagicMock()
-    sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
-    devices = device_mock.call_args[0][0]
-    assert len(devices) == 1
+    entity = entity_registry.async_get(
+        f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_is_in_bed"
+    )
+    assert entity
+    assert entity.unique_id == f"{SLEEPER_L_ID}_is_in_bed"
 
-    right_side = devices[0]
-    assert right_side.name == "SleepNumber ILE Test1 Is In Bed"
-    assert right_side.state == "on"
+    state = hass.states.get(
+        f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_is_in_bed"
+    )
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed-empty"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.OCCUPANCY
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Is In Bed"
+    )
+
+    entity = entity_registry.async_get(
+        f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_is_in_bed"
+    )
+    assert entity
+    assert entity.unique_id == f"{SLEEPER_R_ID}_is_in_bed"

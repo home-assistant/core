@@ -75,7 +75,16 @@ async def _mock_setup_august(
     return entry
 
 
-async def _create_august_with_devices(  # noqa: C901
+async def _create_august_with_devices(
+    hass, devices, api_call_side_effects=None, activities=None, pubnub=None
+):
+    entry, api_instance = await _create_august_api_with_devices(
+        hass, devices, api_call_side_effects, activities, pubnub
+    )
+    return entry
+
+
+async def _create_august_api_with_devices(  # noqa: C901
     hass, devices, api_call_side_effects=None, activities=None, pubnub=None
 ):
     if api_call_side_effects is None:
@@ -171,7 +180,7 @@ async def _create_august_with_devices(  # noqa: C901
         # are any locks
         assert api_instance.async_status_async.mock_calls
 
-    return entry
+    return entry, api_instance
 
 
 async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):

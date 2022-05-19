@@ -1,4 +1,6 @@
 """Support for MQTT discovery."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import functools
@@ -25,6 +27,8 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_TOPIC,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DOMAIN,
 )
 
@@ -50,6 +54,7 @@ SUPPORTED_COMPONENTS = [
     "lock",
     "number",
     "scene",
+    "siren",
     "select",
     "sensor",
     "switch",
@@ -59,8 +64,6 @@ SUPPORTED_COMPONENTS = [
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 PENDING_DISCOVERED = "mqtt_pending_components"
-CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
-DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
 DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
@@ -72,18 +75,20 @@ LAST_DISCOVERY = "mqtt_last_discovery"
 TOPIC_BASE = "~"
 
 
-def clear_discovery_hash(hass, discovery_hash):
+class MQTTConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    discovery_data: dict
+
+
+def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple) -> None:
     """Clear entry in ALREADY_DISCOVERED list."""
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
-def set_discovery_hash(hass, discovery_hash):
+def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple):
     """Clear entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
-
-
-class MQTTConfig(dict):
-    """Dummy class to allow adding attributes."""
 
 
 async def async_start(  # noqa: C901
@@ -180,6 +185,7 @@ async def async_start(  # noqa: C901
         await async_process_discovery_payload(component, discovery_id, payload)
 
     async def async_process_discovery_payload(component, discovery_id, payload):
+        """Process the payload of a new discovery."""
 
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
@@ -227,13 +233,13 @@ async def async_start(  # noqa: C901
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
+                        # pylint: disable-next=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
                     elif component == "tag":
                         # Local import to avoid circular dependencies
-                        # pylint: disable=import-outside-toplevel
+                        # pylint: disable-next=import-outside-toplevel
                         from . import tag
 
                         await tag.async_setup_entry(hass, config_entry)
@@ -252,9 +258,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}

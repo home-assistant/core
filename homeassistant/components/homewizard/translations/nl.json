@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "api_not_enabled": "De API is niet ingeschakeld. Activeer API in de HomeWizard Energy App onder instellingen",
             "device_not_supported": "Dit apparaat wordt niet ondersteund",
-            "invalid_discovery_parameters": "unsupported_api_version",
+            "invalid_discovery_parameters": "Niet-ondersteunde API-versie gedetecteerd",
             "unknown_error": "Onverwachte fout"
         },
         "step": {

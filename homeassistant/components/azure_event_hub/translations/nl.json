@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Service is al geconfigureerd",
-            "cannot_connect": "Verbinding maken met de credentails uit de configuration.yaml is mislukt, verwijder deze uit de yaml en gebruik de config flow.",
+            "cannot_connect": "Verbinding maken met de credentials uit de configuration.yaml is mislukt, verwijder deze uit yaml en gebruik de config flow.",
             "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
-            "unknown": "Verbinding maken met de credentails uit de configuration.yaml is mislukt met een onbekende fout, verwijder a.u.b. de yaml en gebruik de config flow."
+            "unknown": "Verbinding maken met de credentials uit de configuration.yaml is mislukt met een onbekende fout, verwijder deze uit yaml en gebruik de config flow."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

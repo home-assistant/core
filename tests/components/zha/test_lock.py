@@ -7,6 +7,7 @@ import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNAVAILABLE,
@@ -96,7 +97,7 @@ async def async_lock(hass, cluster, entity_id):
     ):
         # lock via UI
         await hass.services.async_call(
-            Platform.LOCK, "lock", {"entity_id": entity_id}, blocking=True
+            LOCK_DOMAIN, "lock", {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
@@ -110,7 +111,7 @@ async def async_unlock(hass, cluster, entity_id):
     ):
         # lock via UI
         await hass.services.async_call(
-            Platform.LOCK, "unlock", {"entity_id": entity_id}, blocking=True
+            LOCK_DOMAIN, "unlock", {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False

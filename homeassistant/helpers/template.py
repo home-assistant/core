@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
     STATE_UNKNOWN,
@@ -76,6 +77,7 @@ _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
 _GROUP_DOMAIN_PREFIX = "group."
+_ZONE_DOMAIN_PREFIX = "zone."
 
 _COLLECTABLE_STATE_ATTRIBUTES = {
     "state",
@@ -415,7 +417,7 @@ class Template:
 
         return self._parse_result(render_result)
 
-    def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
+    def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
             result = literal_eval(render_result)
@@ -717,22 +719,24 @@ class DomainStates:
         return f"<template DomainStates('{self._domain}')>"
 
 
-class TemplateState(State):
+class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state", "_collect")
+    __slots__ = ("_hass", "_collect", "_entity_id")
+
+    _state: State
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
+    def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
         """Initialize template state."""
         self._hass = hass
-        self._state = state
         self._collect = collect
+        self._entity_id = entity_id
 
     def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
-            self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+            self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -741,10 +745,10 @@ class TemplateState(State):
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
             if self._collect and _RENDER_INFO in self._hass.data:
-                self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+                self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
-            return self._state.entity_id
+            return self._entity_id
         if item == "state_with_unit":
             return self.state_with_unit
         raise KeyError
@@ -755,7 +759,7 @@ class TemplateState(State):
 
         Intentionally does not collect state
         """
-        return self._state.entity_id
+        return self._entity_id
 
     @property
     def state(self):
@@ -817,9 +821,42 @@ class TemplateState(State):
         self._collect_state()
         return self._state.__eq__(other)
 
+
+class TemplateState(TemplateStateBase):
+    """Class to represent a state object in a template."""
+
+    __slots__ = ("_state",)
+
+    # Inheritance is done so functions that check against State keep working
+    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
+        """Initialize template state."""
+        super().__init__(hass, collect, state.entity_id)
+        self._state = state
+
     def __repr__(self) -> str:
         """Representation of Template State."""
-        return f"<template TemplateState({self._state.__repr__()})>"
+        return f"<template TemplateState({self._state!r})>"
+
+
+class TemplateStateFromEntityId(TemplateStateBase):
+    """Class to represent a state object in a template."""
+
+    def __init__(
+        self, hass: HomeAssistant, entity_id: str, collect: bool = True
+    ) -> None:
+        """Initialize template state."""
+        super().__init__(hass, collect, entity_id)
+
+    @property
+    def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
+        state = self._hass.states.get(self._entity_id)
+        if not state:
+            state = State(self._entity_id, STATE_UNKNOWN)
+        return state
+
+    def __repr__(self) -> str:
+        """Representation of Template State."""
+        return f"<template TemplateStateFromEntityId({self._entity_id})>"
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
@@ -836,7 +873,7 @@ def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
     return _get_template_state_from_state(hass, entity_id, state)
 
 
@@ -886,7 +923,10 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
-    """Expand out any groups into entity states."""
+    """Expand out any groups and zones into entity states."""
+    # circular import.
+    from . import entity as entity_helper  # pylint: disable=import-outside-toplevel
+
     search = list(args)
     found = {}
     while search:
@@ -904,11 +944,16 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
+        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
+            (source := entity_helper.entity_sources(hass).get(entity_id))
+            and source["domain"] == "group"
+        ):
             # Collect state will be called in here since it's wrapped
-            group_entities = entity.attributes.get(ATTR_ENTITY_ID)
-            if group_entities:
+            if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
                 search += group_entities
+        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+            if zone_entities := entity.attributes.get(ATTR_PERSONS):
+                search += zone_entities
         else:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
@@ -1280,21 +1325,12 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def warn_no_default(function, value, default):
+def raise_no_default(function, value):
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
-    _LOGGER.warning(
-        (
-            "Template warning: '%s' got invalid input '%s' when %s template '%s' "
-            "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2022.1"
-        ),
-        function,
-        value,
-        action,
-        template,
-        function,
-        default,
+    raise ValueError(
+        f"Template error: {function} got invalid input '{value}' when {action} template '{template}' "
+        "but no default was specified"
     )
 
 
@@ -1302,7 +1338,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Filter to round a value."""
     try:
         # support rounding methods like jinja
-        multiplier = float(10 ** precision)
+        multiplier = float(10**precision)
         if method == "ceil":
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":
@@ -1316,8 +1352,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     except (ValueError, TypeError):
         # If value can't be converted to float
         if default is _SENTINEL:
-            warn_no_default("round", value, value)
-            return value
+            raise_no_default("round", value)
         return default
 
 
@@ -1328,20 +1363,25 @@ def multiply(value, amount, default=_SENTINEL):
     except (ValueError, TypeError):
         # If value can't be converted to float
         if default is _SENTINEL:
-            warn_no_default("multiply", value, value)
-            return value
+            raise_no_default("multiply", value)
         return default
 
 
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
-        return math.log(float(value), float(base))
+        value_float = float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("log", value, value)
-            return value
+            raise_no_default("log", value)
         return default
+    try:
+        base_float = float(base)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("log", base)
+        return default
+    return math.log(value_float, base_float)
 
 
 def sine(value, default=_SENTINEL):
@@ -1350,8 +1390,7 @@ def sine(value, default=_SENTINEL):
         return math.sin(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("sin", value, value)
-            return value
+            raise_no_default("sin", value)
         return default
 
 
@@ -1361,8 +1400,7 @@ def cosine(value, default=_SENTINEL):
         return math.cos(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("cos", value, value)
-            return value
+            raise_no_default("cos", value)
         return default
 
 
@@ -1372,8 +1410,7 @@ def tangent(value, default=_SENTINEL):
         return math.tan(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("tan", value, value)
-            return value
+            raise_no_default("tan", value)
         return default
 
 
@@ -1383,8 +1420,7 @@ def arc_sine(value, default=_SENTINEL):
         return math.asin(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("asin", value, value)
-            return value
+            raise_no_default("asin", value)
         return default
 
 
@@ -1394,8 +1430,7 @@ def arc_cosine(value, default=_SENTINEL):
         return math.acos(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("acos", value, value)
-            return value
+            raise_no_default("acos", value)
         return default
 
 
@@ -1405,8 +1440,7 @@ def arc_tangent(value, default=_SENTINEL):
         return math.atan(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("atan", value, value)
-            return value
+            raise_no_default("atan", value)
         return default
 
 
@@ -1429,8 +1463,7 @@ def arc_tangent2(*args, default=_SENTINEL):
         return math.atan2(float(args[0]), float(args[1]))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("atan2", args, args)
-            return args
+            raise_no_default("atan2", args)
         return default
 
 
@@ -1440,8 +1473,7 @@ def square_root(value, default=_SENTINEL):
         return math.sqrt(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("sqrt", value, value)
-            return value
+            raise_no_default("sqrt", value)
         return default
 
 
@@ -1457,8 +1489,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_custom", value, value)
-            return value
+            raise_no_default("timestamp_custom", value)
         return default
 
 
@@ -1469,8 +1500,7 @@ def timestamp_local(value, default=_SENTINEL):
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_local", value, value)
-            return value
+            raise_no_default("timestamp_local", value)
         return default
 
 
@@ -1481,8 +1511,7 @@ def timestamp_utc(value, default=_SENTINEL):
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_utc", value, value)
-            return value
+            raise_no_default("timestamp_utc", value)
         return default
 
 
@@ -1492,8 +1521,7 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return dt_util.as_timestamp(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("as_timestamp", value, None)
-            return None
+            raise_no_default("as_timestamp", value)
         return default
 
 
@@ -1513,8 +1541,7 @@ def strptime(string, fmt, default=_SENTINEL):
         return datetime.strptime(string, fmt)
     except (ValueError, AttributeError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("strptime", string, string)
-            return string
+            raise_no_default("strptime", string)
         return default
 
 
@@ -1573,8 +1600,7 @@ def forgiving_float(value, default=_SENTINEL):
         return float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("float", value, value)
-            return value
+            raise_no_default("float", value)
         return default
 
 
@@ -1584,26 +1610,23 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("float", value, 0)
-            return 0
+            raise_no_default("float", value)
         return default
 
 
 def forgiving_int(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and warn if it fails."""
+    """Try to convert value to an int, and raise if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
-        warn_no_default("int", value, value)
-        return value
+        raise_no_default("int", value)
     return result
 
 
 def forgiving_int_filter(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and warn if it fails."""
+    """Try to convert value to an int, and raise if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
-        warn_no_default("int", value, 0)
-        return 0
+        raise_no_default("int", value)
     return result
 
 

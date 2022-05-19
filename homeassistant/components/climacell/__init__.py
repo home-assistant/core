@@ -15,7 +15,8 @@ from pyclimacell.exceptions import (
     UnknownException,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.tomorrowio import DOMAIN as TOMORROW_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_VERSION,
@@ -36,22 +37,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
-    CC_ATTR_CLOUD_COVER,
-    CC_ATTR_CONDITION,
-    CC_ATTR_HUMIDITY,
-    CC_ATTR_OZONE,
-    CC_ATTR_PRECIPITATION,
-    CC_ATTR_PRECIPITATION_PROBABILITY,
-    CC_ATTR_PRECIPITATION_TYPE,
-    CC_ATTR_PRESSURE,
-    CC_ATTR_TEMPERATURE,
-    CC_ATTR_TEMPERATURE_HIGH,
-    CC_ATTR_TEMPERATURE_LOW,
-    CC_ATTR_VISIBILITY,
-    CC_ATTR_WIND_DIRECTION,
-    CC_ATTR_WIND_GUST,
-    CC_ATTR_WIND_SPEED,
-    CC_SENSOR_TYPES,
     CC_V3_ATTR_CLOUD_COVER,
     CC_V3_ATTR_CONDITION,
     CC_V3_ATTR_HUMIDITY,
@@ -142,8 +127,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if params:
         hass.config_entries.async_update_entry(entry, **params)
 
-    api_class = ClimaCellV3 if entry.data[CONF_API_VERSION] == 3 else ClimaCellV4
-    api = api_class(
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            TOMORROW_DOMAIN,
+            context={"source": SOURCE_IMPORT, "old_config_entry_id": entry.entry_id},
+            data=entry.data,
+        )
+    )
+
+    # Eventually we will remove the code that sets up the platforms and force users to
+    # migrate. This will only impact users still on the V3 API because we can't
+    # automatically migrate them, but for V4 users, we can skip the platform setup.
+    if entry.data[CONF_API_VERSION] == 4:
+        return True
+
+    api = ClimaCellV3(
         entry.data[CONF_API_KEY],
         entry.data.get(CONF_LATITUDE, hass.config.latitude),
         entry.data.get(CONF_LONGITUDE, hass.config.longitude),
@@ -172,7 +170,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    hass.data[DOMAIN].pop(config_entry.entry_id, None)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
 
@@ -208,89 +206,62 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         data: dict[str, Any] = {FORECASTS: {}}
         try:
-            if self._api_version == 3:
-                data[CURRENT] = await self._api.realtime(
-                    [
-                        CC_V3_ATTR_TEMPERATURE,
-                        CC_V3_ATTR_HUMIDITY,
-                        CC_V3_ATTR_PRESSURE,
-                        CC_V3_ATTR_WIND_SPEED,
-                        CC_V3_ATTR_WIND_DIRECTION,
-                        CC_V3_ATTR_CONDITION,
-                        CC_V3_ATTR_VISIBILITY,
-                        CC_V3_ATTR_OZONE,
-                        CC_V3_ATTR_WIND_GUST,
-                        CC_V3_ATTR_CLOUD_COVER,
-                        CC_V3_ATTR_PRECIPITATION_TYPE,
-                        *(sensor_type.key for sensor_type in CC_V3_SENSOR_TYPES),
-                    ]
-                )
-                data[FORECASTS][HOURLY] = await self._api.forecast_hourly(
-                    [
-                        CC_V3_ATTR_TEMPERATURE,
-                        CC_V3_ATTR_WIND_SPEED,
-                        CC_V3_ATTR_WIND_DIRECTION,
-                        CC_V3_ATTR_CONDITION,
-                        CC_V3_ATTR_PRECIPITATION,
-                        CC_V3_ATTR_PRECIPITATION_PROBABILITY,
-                    ],
-                    None,
-                    timedelta(hours=24),
-                )
+            data[CURRENT] = await self._api.realtime(
+                [
+                    CC_V3_ATTR_TEMPERATURE,
+                    CC_V3_ATTR_HUMIDITY,
+                    CC_V3_ATTR_PRESSURE,
+                    CC_V3_ATTR_WIND_SPEED,
+                    CC_V3_ATTR_WIND_DIRECTION,
+                    CC_V3_ATTR_CONDITION,
+                    CC_V3_ATTR_VISIBILITY,
+                    CC_V3_ATTR_OZONE,
+                    CC_V3_ATTR_WIND_GUST,
+                    CC_V3_ATTR_CLOUD_COVER,
+                    CC_V3_ATTR_PRECIPITATION_TYPE,
+                    *(sensor_type.key for sensor_type in CC_V3_SENSOR_TYPES),
+                ]
+            )
+            data[FORECASTS][HOURLY] = await self._api.forecast_hourly(
+                [
+                    CC_V3_ATTR_TEMPERATURE,
+                    CC_V3_ATTR_WIND_SPEED,
+                    CC_V3_ATTR_WIND_DIRECTION,
+                    CC_V3_ATTR_CONDITION,
+                    CC_V3_ATTR_PRECIPITATION,
+                    CC_V3_ATTR_PRECIPITATION_PROBABILITY,
+                ],
+                None,
+                timedelta(hours=24),
+            )
 
-                data[FORECASTS][DAILY] = await self._api.forecast_daily(
-                    [
-                        CC_V3_ATTR_TEMPERATURE,
-                        CC_V3_ATTR_WIND_SPEED,
-                        CC_V3_ATTR_WIND_DIRECTION,
-                        CC_V3_ATTR_CONDITION,
-                        CC_V3_ATTR_PRECIPITATION_DAILY,
-                        CC_V3_ATTR_PRECIPITATION_PROBABILITY,
-                    ],
-                    None,
-                    timedelta(days=14),
-                )
+            data[FORECASTS][DAILY] = await self._api.forecast_daily(
+                [
+                    CC_V3_ATTR_TEMPERATURE,
+                    CC_V3_ATTR_WIND_SPEED,
+                    CC_V3_ATTR_WIND_DIRECTION,
+                    CC_V3_ATTR_CONDITION,
+                    CC_V3_ATTR_PRECIPITATION_DAILY,
+                    CC_V3_ATTR_PRECIPITATION_PROBABILITY,
+                ],
+                None,
+                timedelta(days=14),
+            )
 
-                data[FORECASTS][NOWCAST] = await self._api.forecast_nowcast(
-                    [
-                        CC_V3_ATTR_TEMPERATURE,
-                        CC_V3_ATTR_WIND_SPEED,
-                        CC_V3_ATTR_WIND_DIRECTION,
-                        CC_V3_ATTR_CONDITION,
-                        CC_V3_ATTR_PRECIPITATION,
-                    ],
-                    None,
-                    timedelta(
-                        minutes=min(300, self._config_entry.options[CONF_TIMESTEP] * 30)
-                    ),
-                    self._config_entry.options[CONF_TIMESTEP],
-                )
-            else:
-                return await self._api.realtime_and_all_forecasts(
-                    [
-                        CC_ATTR_TEMPERATURE,
-                        CC_ATTR_HUMIDITY,
-                        CC_ATTR_PRESSURE,
-                        CC_ATTR_WIND_SPEED,
-                        CC_ATTR_WIND_DIRECTION,
-                        CC_ATTR_CONDITION,
-                        CC_ATTR_VISIBILITY,
-                        CC_ATTR_OZONE,
-                        CC_ATTR_WIND_GUST,
-                        CC_ATTR_CLOUD_COVER,
-                        CC_ATTR_PRECIPITATION_TYPE,
-                        *(sensor_type.key for sensor_type in CC_SENSOR_TYPES),
-                    ],
-                    [
-                        CC_ATTR_TEMPERATURE_LOW,
-                        CC_ATTR_TEMPERATURE_HIGH,
-                        CC_ATTR_WIND_SPEED,
-                        CC_ATTR_WIND_DIRECTION,
-                        CC_ATTR_CONDITION,
-                        CC_ATTR_PRECIPITATION,
-                        CC_ATTR_PRECIPITATION_PROBABILITY,
-                    ],
-                )
+            data[FORECASTS][NOWCAST] = await self._api.forecast_nowcast(
+                [
+                    CC_V3_ATTR_TEMPERATURE,
+                    CC_V3_ATTR_WIND_SPEED,
+                    CC_V3_ATTR_WIND_DIRECTION,
+                    CC_V3_ATTR_CONDITION,
+                    CC_V3_ATTR_PRECIPITATION,
+                ],
+                None,
+                timedelta(
+                    minutes=min(300, self._config_entry.options[CONF_TIMESTEP] * 30)
+                ),
+                self._config_entry.options[CONF_TIMESTEP],
+            )
         except (
             CantConnectException,
             InvalidAPIKeyException,
@@ -302,7 +273,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         return data
 
 
-class ClimaCellEntity(CoordinatorEntity):
+class ClimaCellEntity(CoordinatorEntity[ClimaCellDataUpdateCoordinator]):
     """Base ClimaCell Entity."""
 
     def __init__(
@@ -340,14 +311,6 @@ class ClimaCellEntity(CoordinatorEntity):
             )
 
         return items.get("value")
-
-    def _get_current_property(self, property_name: str) -> int | str | float | None:
-        """
-        Get property from current conditions.
-
-        Used for V4 API.
-        """
-        return self.coordinator.data.get(CURRENT, {}).get(property_name)
 
     @property
     def attribution(self):

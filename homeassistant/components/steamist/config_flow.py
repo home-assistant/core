@@ -10,14 +10,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_MODEL, CONNECTION_EXCEPTIONS, DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .const import CONNECTION_EXCEPTIONS, DISCOVER_SCAN_TIMEOUT, DOMAIN
 from .discovery import (
     async_discover_device,
     async_discover_devices,
@@ -48,10 +48,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         self._discovered_device = Device30303(
             ipaddress=discovery_info["ipaddress"],
             name=discovery_info["name"],

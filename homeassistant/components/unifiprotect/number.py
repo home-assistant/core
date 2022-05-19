@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Generic
 
 from pyunifiprotect.data.devices import Camera, Doorlock, Light
 
@@ -31,7 +30,7 @@ class NumberKeysMixin:
 
 @dataclass
 class ProtectNumberEntityDescription(
-    ProtectSetableKeysMixin, NumberEntityDescription, NumberKeysMixin, Generic[T]
+    ProtectSetableKeysMixin[T], NumberEntityDescription, NumberKeysMixin
 ):
     """Describes UniFi Protect Number entity."""
 

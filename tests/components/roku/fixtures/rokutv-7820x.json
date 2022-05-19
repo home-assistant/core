@@ -79,53 +79,53 @@
     "@version": "1.0.0",
     "#text": "Antenna TV"
   },
-  "apps": [  
+  "apps": [
     {
       "@id": "tvinput.hdmi2",
       "@type": "tvin",
       "@version": "1.0.0",
       "#text": "Satellite TV"
-    },  
+    },
     {
       "@id": "tvinput.hdmi1",
       "@type": "tvin",
       "@version": "1.0.0",
       "#text": "Blu-ray player"
-    },  
+    },
     {
       "@id": "tvinput.dtv",
       "@type": "tvin",
       "@version": "1.0.0",
       "#text": "Antenna TV"
-    },  
+    },
     {
       "@id": "11",
       "#text": "Roku Channel Store"
-    },  
+    },
     {
       "@id": "12",
       "#text": "Netflix"
-    },  
+    },
     {
       "@id": "13",
       "#text": "Amazon Video on Demand"
-    },  
+    },
     {
       "@id": "14",
       "#text": "MLB.TV®"
-    },  
+    },
     {
       "@id": "26",
       "#text": "Free FrameChannel Service"
-    },  
+    },
     {
       "@id": "27",
       "#text": "Mediafly"
-    },  
+    },
     {
       "@id": "28",
       "#text": "Pandora"
-    },  
+    },
     {
       "@id": "74519",
       "@subtype": "rsga",
@@ -155,16 +155,28 @@
     "program-audio-format": "AC3",
     "program-has-cc": "true"
   },
-  "channels": [  
+  "channels": [
     {
       "number": "1.1",
       "name": "WhatsOn",
       "type": "air-digital",
       "user-hidden": "false"
-    },  
+    },
     {
       "number": "1.3",
       "name": "QVC",
+      "type": "air-digital",
+      "user-hidden": "false"
+    },
+    {
+      "number": "14.3",
+      "name": "getTV",
+      "type": "air-digital",
+      "user-hidden": "false"
+    },
+    {
+      "number": "99.1",
+      "name": "",
       "type": "air-digital",
       "user-hidden": "false"
     }
@@ -172,8 +184,7 @@
   "media": {
     "@error": "false",
     "@state": "close",
-    "format": 
-    {
+    "format": {
       "@audio": "eac3",
       "@captions": "none",
       "@drm": "none",

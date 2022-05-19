@@ -5,7 +5,14 @@
         },
         "step": {
             "user": {
-                "description": "Instituto Portugu\u00eas do Mar e Atmosfera"
+                "data": {
+                    "latitude": "\u0393\u03b5\u03c9\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc \u03c0\u03bb\u03ac\u03c4\u03bf\u03c2",
+                    "longitude": "\u0393\u03b5\u03c9\u03b3\u03c1\u03b1\u03c6\u03b9\u03ba\u03cc \u03bc\u03ae\u03ba\u03bf\u03c2",
+                    "mode": "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1",
+                    "name": "\u038c\u03bd\u03bf\u03bc\u03b1"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "\u03a4\u03bf\u03c0\u03bf\u03b8\u03b5\u03c3\u03af\u03b1"
             }
         }
     },

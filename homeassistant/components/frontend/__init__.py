@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import pathlib
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -22,6 +22,7 @@ from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
@@ -313,7 +314,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     # pylint: disable=import-outside-toplevel
     import hass_frontend
 
-    return cast(pathlib.Path, hass_frontend.where())
+    return hass_frontend.where()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -360,19 +361,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
+    # Can be removed in 2023
+    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(hass, "profile")
-
-    # To smooth transition to new urls, add redirects to new urls of dev tools
-    # Added June 27, 2019. Can be removed in 2021.
-    for panel in ("event", "service", "state", "template"):
-        hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
-    for panel in ("logs", "info", "mqtt"):
-        # Can be removed in 2021.
-        hass.http.register_redirect(f"/dev-{panel}", f"/config/{panel}")
-        # Added June 20 2020. Can be removed in 2022.
-        hass.http.register_redirect(f"/developer-tools/{panel}", f"/config/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -396,11 +390,12 @@ async def _async_setup_themes(
     """Set up themes data and services."""
     hass.data[DATA_THEMES] = themes or {}
 
-    store = hass.data[DATA_THEMES_STORE] = hass.helpers.storage.Store(
-        THEMES_STORAGE_VERSION, THEMES_STORAGE_KEY
+    store = hass.data[DATA_THEMES_STORE] = Store(
+        hass, THEMES_STORAGE_VERSION, THEMES_STORAGE_KEY
     )
 
-    theme_data = await store.async_load() or {}
+    if not (theme_data := await store.async_load()) or not isinstance(theme_data, dict):
+        theme_data = {}
     theme_name = theme_data.get(DATA_DEFAULT_THEME, DEFAULT_THEME)
     dark_theme_name = theme_data.get(DATA_DEFAULT_DARK_THEME)
 
@@ -533,6 +528,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """
         if (
             request.path != "/"
+            and len(request.url.parts) > 1
             and request.url.parts[1] not in self.hass.data[DATA_PANELS]
         ):
             return None, set()
@@ -610,7 +606,7 @@ class ManifestJSONView(HomeAssistantView):
     name = "manifestjson"
 
     @callback
-    def get(self, request: web.Request) -> web.Response:  # pylint: disable=no-self-use
+    def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
         return web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"
@@ -673,7 +669,7 @@ def websocket_get_themes(
         "type": "frontend/get_translations",
         vol.Required("language"): str,
         vol.Required("category"): str,
-        vol.Optional("integration"): str,
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
         vol.Optional("config_flow"): bool,
     }
 )

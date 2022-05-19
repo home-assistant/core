@@ -14,7 +14,9 @@ from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.translation import async_get_translations
 
 from .const import (
     DEFAULT_AREAS,
@@ -147,11 +149,11 @@ class UserOnboardingView(_BaseOnboardingView):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.
-            translations = await hass.helpers.translation.async_get_translations(
-                data["language"], "area", DOMAIN
+            translations = await async_get_translations(
+                hass, data["language"], "area", {DOMAIN}
             )
 
-            area_registry = await hass.helpers.area_registry.async_get_registry()
+            area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
                 area_registry.async_create(
@@ -188,9 +190,8 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
             await self._async_mark_done(hass)
 
-            await hass.config_entries.flow.async_init(
-                "met", context={"source": "onboarding"}
-            )
+            # Integrations to set up when finishing onboarding
+            onboard_integrations = ["met", "radio_browser"]
 
             # pylint: disable=import-outside-toplevel
             from homeassistant.components import hassio
@@ -199,9 +200,17 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 hassio.is_hassio(hass)
                 and "raspberrypi" in hassio.get_core_info(hass)["machine"]
             ):
-                await hass.config_entries.flow.async_init(
-                    "rpi_power", context={"source": "onboarding"}
+                onboard_integrations.append("rpi_power")
+
+            # Set up integrations after onboarding
+            await asyncio.gather(
+                *(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    )
+                    for domain in onboard_integrations
                 )
+            )
 
             return self.json({})
 

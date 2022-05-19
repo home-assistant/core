@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_time_change,
@@ -41,6 +41,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .util import mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +89,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate entities when the mac address gets discovered."""
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        if not (unique_id := entry.unique_id):
+            return None
+        entry_id = entry.entry_id
+        entity_unique_id = entity_entry.unique_id
+        entity_mac = entity_unique_id[: len(unique_id)]
+        new_unique_id = None
+        if entity_unique_id.startswith(entry_id):
+            # Old format {entry_id}....., New format {unique_id}....
+            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+        elif (
+            ":" in entity_mac
+            and entity_mac != unique_id
+            and mac_matches_by_one(entity_mac, unique_id)
+        ):
+            # Old format {dhcp_mac}....., New format {discovery_mac}....
+            new_unique_id = f"{unique_id}{entity_unique_id[len(unique_id):]}"
+        else:
+            return None
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            entity_unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    if entry.title != coordinator.title:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
@@ -124,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.unique_id and discovery.get(ATTR_ID):
         mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
-        if mac != entry.unique_id:
+        if not mac_matches_by_one(mac, entry.unique_id):
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
                 f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
@@ -133,7 +174,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not discovery_cached:
         # Only update the entry once we have verified the unique id
         # is either missing or we have verified it matches
-        async_update_entry_from_discovery(hass, entry, discovery, device.model_num)
+        async_update_entry_from_discovery(
+            hass, entry, discovery, device.model_num, True
+        )
+
+    await _async_migrate_unique_ids(hass, entry)
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -147,6 +192,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_sync_time()  # set at startup
     entry.async_on_unload(async_track_time_change(hass, _async_sync_time, 2, 40, 30))
 
+    # There must not be any awaits between here and the return
+    # to avoid a race condition where the add_update_listener is not
+    # in place in time for the check in async_update_entry_from_discovery
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 

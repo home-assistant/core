@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "bad_ssdp": "Falta un valor necesario en los datos SSDP",
+            "no_devices_found": "No se han encontrado dispositivos en la red"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Escoge un dispositivo a configurar"
+            }
+        }
+    }
+}

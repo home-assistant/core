@@ -6,7 +6,9 @@
         "step": {
             "user": {
                 "data": {
-                    "hostname": "El nom d'amfitri\u00f3 al qual realitzar la consulta DNS"
+                    "hostname": "El nom d'amfitri\u00f3 al qual realitzar la consulta DNS",
+                    "resolver": "Resolutor de cerca IPV4",
+                    "resolver_ipv6": "Resolutor de cerca IPV6"
                 }
             }
         }

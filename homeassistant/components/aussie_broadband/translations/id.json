@@ -11,7 +11,7 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
                 },

@@ -10,11 +10,16 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.water_heater import (
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -40,8 +45,6 @@ VICARE_TEMP_WATER_MAX = 60
 OPERATION_MODE_ON = "on"
 OPERATION_MODE_OFF = "off"
 
-SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE
-
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
     VICARE_MODE_DHWANDHEATING: OPERATION_MODE_ON,
@@ -54,18 +57,6 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_OFF: VICARE_MODE_OFF,
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
-
-
-def _build_entity(name, vicare_api, circuit, device_config, heating_type):
-    """Create a ViCare water_heater entity."""
-    _LOGGER.debug("Found device %s", name)
-    return ViCareWater(
-        name,
-        vicare_api,
-        circuit,
-        device_config,
-        heating_type,
-    )
 
 
 def _get_circuits(vicare_api):
@@ -93,7 +84,7 @@ async def async_setup_entry(
         if len(circuits) > 1:
             suffix = f" {circuit.id}"
 
-        entity = _build_entity(
+        entity = ViCareWater(
             f"{name} Water{suffix}",
             api,
             circuit,
@@ -107,6 +98,8 @@ async def async_setup_entry(
 
 class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
+
+    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the DHW water_heater device."""
@@ -159,12 +152,8 @@ class ViCareWater(WaterHeaterEntity):
             "name": self._device_config.getModel(),
             "manufacturer": "Viessmann",
             "model": (DOMAIN, self._device_config.getModel()),
+            "configuration_url": "https://developer.viessmann.com/",
         }
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
 
     @property
     def name(self):
@@ -203,9 +192,14 @@ class ViCareWater(WaterHeaterEntity):
         return VICARE_TEMP_WATER_MAX
 
     @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to wholes."""
+        return PRECISION_WHOLE
+
+    @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_WHOLE
+        return PRECISION_TENTHS
 
     @property
     def current_operation(self):

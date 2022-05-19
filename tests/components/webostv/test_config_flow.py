@@ -7,11 +7,10 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
+from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import (
     CONF_CLIENT_SECRET,
-    CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
@@ -24,7 +23,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME, setup_webostv
+from . import setup_webostv
+from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
 
 MOCK_YAML_CONFIG = {
     CONF_HOST: HOST,
@@ -43,66 +43,6 @@ MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
         ssdp.ATTR_UPNP_UDN: f"uuid:{FAKE_UUID}",
     },
 )
-
-
-async def test_import(hass, client):
-    """Test we can import yaml config."""
-    assert client
-
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: config_entries.SOURCE_IMPORT},
-            data=MOCK_YAML_CONFIG,
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == TV_NAME
-    assert result["data"][CONF_HOST] == MOCK_YAML_CONFIG[CONF_HOST]
-    assert result["data"][CONF_CLIENT_SECRET] == MOCK_YAML_CONFIG[CONF_CLIENT_SECRET]
-    assert result["result"].unique_id == MOCK_YAML_CONFIG[CONF_UNIQUE_ID]
-
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: config_entries.SOURCE_IMPORT},
-            data=MOCK_YAML_CONFIG,
-        )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    "sources",
-    [
-        ["Live TV", "Input01", "Input02"],
-        "Live TV, Input01 , Input02",
-        "Live TV,Input01 ,Input02",
-    ],
-)
-async def test_import_sources(hass, client, sources):
-    """Test import yaml config with sources list/csv."""
-    assert client
-
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: config_entries.SOURCE_IMPORT},
-            data={
-                **MOCK_YAML_CONFIG,
-                CONF_CUSTOMIZE: {
-                    CONF_SOURCES: sources,
-                },
-            },
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == TV_NAME
-    assert result["data"][CONF_HOST] == MOCK_YAML_CONFIG[CONF_HOST]
-    assert result["data"][CONF_CLIENT_SECRET] == MOCK_YAML_CONFIG[CONF_CLIENT_SECRET]
-    assert result["options"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
-    assert result["result"].unique_id == MOCK_YAML_CONFIG[CONF_UNIQUE_ID]
 
 
 async def test_form(hass, client):
@@ -149,8 +89,27 @@ async def test_form(hass, client):
     assert result["title"] == TV_NAME
 
 
-async def test_options_flow(hass, client):
-    """Test options config flow."""
+@pytest.mark.parametrize(
+    "apps, inputs",
+    [
+        # Live TV in apps (default)
+        (MOCK_APPS, MOCK_INPUTS),
+        # Live TV in inputs
+        (
+            {},
+            {
+                **MOCK_INPUTS,
+                "livetv": {"label": "Live TV", "id": "livetv", "appId": LIVE_TV_APP_ID},
+            },
+        ),
+        # Live TV not found
+        ({}, MOCK_INPUTS),
+    ],
+)
+async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
+    """Test options config flow Live TV found in apps."""
+    client.apps = apps
+    client.inputs = inputs
     entry = await setup_webostv(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -161,20 +120,24 @@ async def test_options_flow(hass, client):
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SOURCES: ["Input01", "Input02"]},
+        user_input={CONF_SOURCES: ["Live TV", "Input01", "Input02"]},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"][CONF_SOURCES] == ["Input01", "Input02"]
+    assert result2["data"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
+
+
+async def test_options_flow_cannot_retrieve(hass, client):
+    """Test options config flow cannot retrieve sources."""
+    entry = await setup_webostv(hass)
 
     client.connect = Mock(side_effect=ConnectionRefusedError())
-    result3 = await hass.config_entries.options.async_init(entry.entry_id)
-
+    result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_FORM
-    assert result3["errors"] == {"base": "cannot_retrieve"}
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_retrieve"}
 
 
 async def test_form_cannot_connect(hass, client):
@@ -278,7 +241,7 @@ async def test_ssdp_update_uuid(hass, client):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert entry.unique_id == MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:]
+    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
 
 
 async def test_ssdp_not_update_uuid(hass, client):
@@ -302,9 +265,9 @@ async def test_ssdp_not_update_uuid(hass, client):
 
 async def test_form_abort_uuid_configured(hass, client):
     """Test abort if uuid is already configured, verify host update."""
-    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:])
+    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:])
     assert client
-    assert entry.unique_id == MOCK_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN][5:]
+    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
     assert entry.data[CONF_HOST] == HOST
 
     result = await hass.config_entries.flow.async_init(

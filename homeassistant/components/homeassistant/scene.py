@@ -35,6 +35,7 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -206,9 +207,7 @@ async def async_setup_platform(
 
         hass.bus.async_fire(EVENT_SCENE_RELOADED, context=call.context)
 
-    hass.helpers.service.async_register_admin_service(
-        SCENE_DOMAIN, SERVICE_RELOAD, reload_config
-    )
+    async_register_admin_service(hass, SCENE_DOMAIN, SERVICE_RELOAD, reload_config)
 
     async def apply_service(call: ServiceCall) -> None:
         """Apply a scene."""

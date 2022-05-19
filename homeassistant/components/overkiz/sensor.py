@@ -359,6 +359,13 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.IO_ELECTRIC_BOOSTER_OPERATING_TIME,
         name="Electric Booster Operating Time",
     ),
+    # Cover
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_CLOSURE,
+        name="Target Closure",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}

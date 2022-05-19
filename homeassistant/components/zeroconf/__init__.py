@@ -28,9 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, instance_id
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
@@ -101,41 +100,12 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
     host: str
+    addresses: list[str]
     port: int | None
     hostname: str
     type: str
     name: str
     properties: dict[str, Any]
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        return getattr(self, name)
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return default
 
 
 @bind_hass
@@ -228,7 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(hass)
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
@@ -540,13 +510,14 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    if not (addresses := service.addresses):
+    if not (addresses := service.addresses or service.parsed_addresses()):
         return None
-    if (host := _first_non_link_local_or_v6_address(addresses)) is None:
+    if (host := _first_non_link_local_address(addresses)) is None:
         return None
 
     return ZeroconfServiceInfo(
         host=str(host),
+        addresses=service.parsed_addresses(),
         port=service.port,
         hostname=service.server,
         type=service.type,
@@ -555,11 +526,18 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     )
 
 
-def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
-    """Return the first ipv6 or non-link local ipv4 address."""
+def _first_non_link_local_address(
+    addresses: list[bytes] | list[str],
+) -> str | None:
+    """Return the first ipv6 or non-link local ipv4 address, preferring IPv4."""
     for address in addresses:
         ip_addr = ip_address(address)
-        if not ip_addr.is_link_local or ip_addr.version == 6:
+        if not ip_addr.is_link_local and ip_addr.version == 4:
+            return str(ip_addr)
+    # If we didn't find a good IPv4 address, check for IPv6 addresses.
+    for address in addresses:
+        ip_addr = ip_address(address)
+        if not ip_addr.is_link_local and ip_addr.version == 6:
             return str(ip_addr)
     return None
 

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "not_insteon_device": "Uppt\u00e4ckt enhet \u00e4r inte en Insteon-enhet"
+        }
+    }
+}

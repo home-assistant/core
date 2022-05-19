@@ -6,6 +6,7 @@
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken",
             "discover_timeout": "Hue bridges kunnen niet worden gevonden",
+            "invalid_host": "Ongeldige host",
             "no_bridges": "Geen Philips Hue bridges ontdekt",
             "not_hue_bridge": "Dit is geen Hue bridge",
             "unknown": "Onverwachte fout"

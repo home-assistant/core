@@ -61,7 +61,7 @@
                     "debug": "\u30c7\u30d0\u30c3\u30b0\u306e\u6709\u52b9\u5316",
                     "device": "\u8a2d\u5b9a\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u3092\u9078\u629e",
                     "event_code": "\u30a4\u30d9\u30f3\u30c8\u30b3\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u8ffd\u52a0",
-                    "remove_device": "\u524a\u9664\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u306e\u9078\u629e"
+                    "protocols": "\u30d7\u30ed\u30c8\u30b3\u30eb"
                 },
                 "title": "Rfxtrx\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
             },
@@ -70,11 +70,9 @@
                     "command_off": "\u30b3\u30de\u30f3\u30c9\u30aa\u30d5\u306e\u30c7\u30fc\u30bf\u30d3\u30c3\u30c8\u5024",
                     "command_on": "\u30b3\u30de\u30f3\u30c9\u30aa\u30f3\u306e\u30c7\u30fc\u30bf\u30d3\u30c3\u30c8\u5024",
                     "data_bit": "\u30c7\u30fc\u30bf\u30d3\u30c3\u30c8\u6570",
-                    "fire_event": "\u30c7\u30d0\u30a4\u30b9 \u30a4\u30d9\u30f3\u30c8\u3092\u6709\u52b9\u306b\u3059\u308b",
                     "off_delay": "\u30aa\u30d5\u9045\u5ef6",
                     "off_delay_enabled": "\u30aa\u30d5\u9045\u5ef6\u3092\u6709\u52b9\u306b\u3059\u308b",
                     "replace_device": "\u4ea4\u63db\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u3092\u9078\u629e",
-                    "signal_repetitions": "\u4fe1\u53f7\u306e\u30ea\u30d4\u30fc\u30c8\u6570",
                     "venetian_blind_mode": "Venetian blind\u30e2\u30fc\u30c9"
                 },
                 "title": "\u30c7\u30d0\u30a4\u30b9\u30aa\u30d7\u30b7\u30e7\u30f3\u306e\u8a2d\u5b9a"

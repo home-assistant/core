@@ -49,7 +49,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Humidifier devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device
@@ -66,7 +66,7 @@ async def async_get_actions(
         }
         actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
-        if supported_features & const.SUPPORT_MODES:
+        if supported_features & const.HumidifierEntityFeature.MODES:
             actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions

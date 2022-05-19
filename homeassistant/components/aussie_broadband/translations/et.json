@@ -11,7 +11,7 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Salas\u00f5na"
                 },

@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "pairing_failed": "L'appairage a \u00e9chou\u00e9\u00a0; veuillez v\u00e9rifier que le Bosch Smart Home Controller est en mode d'appairage (voyant clignotant) et que votre mot de passe est correct.",
             "session_error": "Erreur de session\u00a0: l'API renvoie un r\u00e9sultat non-OK.",
             "unknown": "Erreur inattendue"
@@ -33,6 +33,5 @@
                 "title": "Param\u00e8tres d'authentification SHC"
             }
         }
-    },
-    "title": "Bosch SHC"
+    }
 }

@@ -12,6 +12,7 @@
         },
         "step": {
             "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de RTSPtoWebRTC-server die wordt geleverd door de add-on: {addon}?",
                 "title": "RTSPtoWebRTC via Home Assistant add-on"
             },
             "user": {

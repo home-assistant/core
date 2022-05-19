@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "TelldusLive ya est\u00e1 configurado",
+            "already_configured": "El servicio ya est\u00e1 configurado",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n",
             "unknown": "Se produjo un error desconocido",
             "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."

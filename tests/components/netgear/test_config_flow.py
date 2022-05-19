@@ -59,6 +59,7 @@ SSL = False
 USERNAME = "Home_Assistant"
 PASSWORD = "password"
 SSDP_URL = f"http://{HOST}:{PORT}/rootDesc.xml"
+SSDP_URLipv6 = f"http://[::ffff:a00:1]:{PORT}/rootDesc.xml"
 SSDP_URL_SLL = f"https://{HOST}:{PORT}/rootDesc.xml"
 
 
@@ -232,6 +233,32 @@ async def test_ssdp_already_configured(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_ipv6(hass):
+    """Test ssdp abort when using a ipv6 address."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PASSWORD: PASSWORD},
+        unique_id=SERIAL,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URLipv6,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_ipv4_address"
 
 
 async def test_ssdp(hass, service):

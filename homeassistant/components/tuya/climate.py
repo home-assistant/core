@@ -8,21 +8,13 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -35,14 +27,14 @@ from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 TUYA_HVAC_TO_HA = {
-    "auto": HVAC_MODE_HEAT_COOL,
-    "cold": HVAC_MODE_COOL,
-    "freeze": HVAC_MODE_COOL,
-    "heat": HVAC_MODE_HEAT,
-    "hot": HVAC_MODE_HEAT,
-    "manual": HVAC_MODE_HEAT_COOL,
-    "wet": HVAC_MODE_DRY,
-    "wind": HVAC_MODE_FAN_ONLY,
+    "auto": HVACMode.HEAT_COOL,
+    "cold": HVACMode.COOL,
+    "freeze": HVACMode.COOL,
+    "heat": HVACMode.HEAT,
+    "hot": HVACMode.HEAT,
+    "manual": HVACMode.HEAT_COOL,
+    "wet": HVACMode.DRY,
+    "wind": HVACMode.FAN_ONLY,
 }
 
 
@@ -50,7 +42,7 @@ TUYA_HVAC_TO_HA = {
 class TuyaClimateSensorDescriptionMixin:
     """Define an entity description mixin for climate entities."""
 
-    switch_only_hvac_mode: str
+    switch_only_hvac_mode: HVACMode
 
 
 @dataclass
@@ -65,19 +57,31 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": TuyaClimateEntityDescription(
         key="kt",
-        switch_only_hvac_mode=HVAC_MODE_COOL,
+        switch_only_hvac_mode=HVACMode.COOL,
     ),
     # Heater
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46epy4j82
     "qn": TuyaClimateEntityDescription(
         key="qn",
-        switch_only_hvac_mode=HVAC_MODE_HEAT,
+        switch_only_hvac_mode=HVACMode.HEAT,
+    ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryrs?id=Kaiuz0nfferyx
+    "rs": TuyaClimateEntityDescription(
+        key="rs",
+        switch_only_hvac_mode=HVACMode.HEAT,
     ),
     # Thermostat
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(
         key="wk",
-        switch_only_hvac_mode=HVAC_MODE_HEAT_COOL,
+        switch_only_hvac_mode=HVACMode.HEAT_COOL,
+    ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": TuyaClimateEntityDescription(
+        key="wkf",
+        switch_only_hvac_mode=HVACMode.HEAT,
     ),
 }
 
@@ -155,8 +159,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_CELSIUS
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(DPCode.TEMP_CURRENT, dptype=DPType.INTEGER)
-        farhenheit_type = self.find_dpcode(DPCode.TEMP_CURRENT_F, dptype=DPType.INTEGER)
+        celsius_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+        )
+        farhenheit_type = self.find_dpcode(
+            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
+        )
         if farhenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
             or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
@@ -185,25 +193,25 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
         if self._set_temperature:
-            self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
             self._attr_max_temp = self._set_temperature.max_scaled
             self._attr_min_temp = self._set_temperature.min_scaled
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
-        self._attr_hvac_modes = []
+        self._attr_hvac_modes: list[str] = []
         self._hvac_to_tuya = {}
         if enum_type := self.find_dpcode(
             DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
-            self._attr_hvac_modes = [HVAC_MODE_OFF]
+            self._attr_hvac_modes = [HVACMode.OFF]
             for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
                 if tuya_mode in enum_type.range:
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
         elif self.find_dpcode(DPCode.SWITCH, prefer_function=True):
             self._attr_hvac_modes = [
-                HVAC_MODE_OFF,
+                HVACMode.OFF,
                 description.switch_only_hvac_mode,
             ]
 
@@ -211,7 +219,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if int_type := self.find_dpcode(
             DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
         ):
-            self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
             self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
@@ -223,9 +231,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine fan modes
         if enum_type := self.find_dpcode(
-            DPCode.FAN_SPEED_ENUM, dptype=DPType.ENUM, prefer_function=True
+            (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
-            self._attr_supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             self._attr_fan_modes = enum_type.range
 
         # Determine swing modes
@@ -238,7 +248,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ),
             prefer_function=True,
         ):
-            self._attr_supported_features |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
             if self.find_dpcode((DPCode.SHAKE, DPCode.SWING), prefer_function=True):
                 self._attr_swing_modes.append(SWING_ON)
@@ -265,9 +275,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                         self.device.name,
                     )
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        commands = [{"code": DPCode.SWITCH, "value": hvac_mode != HVAC_MODE_OFF}]
+        commands = [{"code": DPCode.SWITCH, "value": hvac_mode != HVACMode.OFF}]
         if hvac_mode in self._hvac_to_tuya:
             commands.append(
                 {"code": DPCode.MODE, "value": self._hvac_to_tuya[hvac_mode]}
@@ -347,6 +357,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if temperature is None:
             return None
 
+        if self._current_temperature.scale == 0 and self._current_temperature.step != 1:
+            # The current temperature can have a scale of 0 or 1 and is used for
+            # rounding, Home Assistant doesn't need to round but we will always
+            # need to divide the value by 10^1 in case of 0 as scale.
+            # https://developer.tuya.com/en/docs/iot/shift-temperature-scale-follow-the-setting-of-app-account-center?id=Ka9qo7so58efq#title-7-Round%20values
+            temperature = temperature / 10
+
         return self._current_temperature.scale_value(temperature)
 
     @property
@@ -386,24 +403,24 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return round(self._set_humidity.scale_value(humidity))
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac mode."""
         # If the switch off, hvac mode is off as well. Unless the switch
         # the switch is on or doesn't exists of course...
         if not self.device.status.get(DPCode.SWITCH, True):
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         if DPCode.MODE not in self.device.function:
             if self.device.status.get(DPCode.SWITCH, False):
                 return self.entity_description.switch_only_hvac_mode
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         if (
             mode := self.device.status.get(DPCode.MODE)
         ) is not None and mode in TUYA_HVAC_TO_HA:
             return TUYA_HVAC_TO_HA[mode]
 
-        return HVAC_MODE_OFF
+        return HVACMode.OFF
 
     @property
     def fan_mode(self) -> str | None:
@@ -436,7 +453,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return
 
         # Fake turn on
-        for mode in (HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL):
+        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
             if mode not in self.hvac_modes:
                 continue
             self.set_hvac_mode(mode)
@@ -449,5 +466,5 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return
 
         # Fake turn off
-        if HVAC_MODE_OFF in self.hvac_modes:
-            self.set_hvac_mode(HVAC_MODE_OFF)
+        if HVACMode.OFF in self.hvac_modes:
+            self.set_hvac_mode(HVACMode.OFF)

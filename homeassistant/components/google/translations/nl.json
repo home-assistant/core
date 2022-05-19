@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "already_in_progress": "Configuratie flow is al in bewerking",
+            "code_expired": "De authenticatiecode is verlopen of de instelling van de inloggegevens is ongeldig, probeer het opnieuw.",
+            "invalid_access_token": "Ongeldige toegang token",
+            "missing_configuration": "Het component is niet geconfigureerd. Volg a.u.b. de documentatie",
+            "oauth_error": "Ongeldige token data ontvangen",
+            "reauth_successful": "Herauthentiecatie was succesvol"
+        },
+        "create_entry": {
+            "default": "Authenticatie succesvol"
+        },
+        "progress": {
+            "exchange": "Om uw Google-account te koppelen, gaat u naar de [ {url} ]( {url} ) en voert u de code in: \n\n {user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Link Google Account"
+            },
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
+            },
+            "reauth_confirm": {
+                "description": "De Google Agenda-integratie moet uw account opnieuw verifi\u00ebren",
+                "title": "Herauthentiseer integratie"
+            }
+        }
+    }
+}

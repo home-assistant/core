@@ -6,11 +6,7 @@ from typing import Any
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,7 +49,8 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             element_uid=element_uid,
         )
 
-        self._attr_supported_features = SUPPORT_BRIGHTNESS
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._binary_switch_property = device_instance.binary_switch_property.get(
             element_uid.replace("Dimmer", "BinarySwitch")
         )

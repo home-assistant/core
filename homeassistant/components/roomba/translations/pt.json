@@ -13,10 +13,7 @@
             },
             "user": {
                 "data": {
-                    "continuous": "Cont\u00ednuo",
-                    "delay": "Atraso",
-                    "host": "Servidor",
-                    "password": "Palavra-passe"
+                    "host": "Servidor"
                 },
                 "title": "Conectar ao dispositivo"
             }

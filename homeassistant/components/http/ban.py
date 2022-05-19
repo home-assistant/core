@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final
@@ -67,7 +67,7 @@ async def ban_middleware(
         return await handler(request)
 
     # Verify if IP is not banned
-    ip_address_ = ip_address(request.remote)
+    ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
     is_banned = any(
         ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
     )
@@ -107,7 +107,7 @@ async def process_wrong_login(request: Request) -> None:
     """
     hass = request.app["hass"]
 
-    remote_addr = ip_address(request.remote)
+    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
     remote_host = request.remote
     with suppress(herror):
         remote_host, _, _ = await hass.async_add_executor_job(
@@ -170,7 +170,7 @@ async def process_success_login(request: Request) -> None:
     No release IP address from banned list function, it can only be done by
     manual modify ip bans config file.
     """
-    remote_addr = ip_address(request.remote)
+    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
 
     # Check if ban middleware is loaded
     if KEY_BANNED_IPS not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
@@ -189,7 +189,11 @@ async def process_success_login(request: Request) -> None:
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime | None = None) -> None:
+    def __init__(
+        self,
+        ip_ban: str | IPv4Address | IPv6Address,
+        banned_at: datetime | None = None,
+    ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or dt_util.utcnow()

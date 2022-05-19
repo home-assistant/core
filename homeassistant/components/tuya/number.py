@@ -18,6 +18,15 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            name="Time",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
@@ -246,6 +255,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "fs": (
         NumberEntityDescription(
             key=DPCode.TEMP,
+            name="Temperature",
+            icon="mdi:thermometer-lines",
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET,
+            name="Temperature",
+            icon="mdi:thermometer-lines",
+        ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_SET_F,
             name="Temperature",
             icon="mdi:thermometer-lines",
         ),

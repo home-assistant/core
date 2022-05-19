@@ -9,9 +9,11 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "server_in_maintenance": "Sunucu bak\u0131m nedeniyle kapal\u0131",
+            "too_many_attempts": "Ge\u00e7ersiz anahtarla \u00e7ok fazla deneme, ge\u00e7ici olarak yasakland\u0131",
             "too_many_requests": "\u00c7ok fazla istek var, daha sonra tekrar deneyin",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "A\u011f ge\u00e7idi: {gateway_id}",
         "step": {
             "user": {
                 "data": {

@@ -75,8 +75,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[Entity] = []
 
-    sensors = coordinator.client.get_sensor_list()
-    if not sensors:
+    if not (sensors := coordinator.client.get_sensor_list()):
         return
 
     for sensor_name in sensors:

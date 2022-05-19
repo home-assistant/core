@@ -1,7 +1,6 @@
 """Config flow for Efergy integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pyefergy import Efergy, exceptions
@@ -12,9 +11,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 
 class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,6 +66,6 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except exceptions.InvalidAuth:
             return None, "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return api.info["hid"], None

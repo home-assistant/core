@@ -13,7 +13,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.entity_registry import RegistryEntry, RegistryEntryHider
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
@@ -1347,6 +1347,16 @@ async def test_options_flow_exclude_mode_skips_category_entities(
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(sonos_config_switch.entity_id, "off")
+
+    sonos_notconfig_switch: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "sonos",
+        "notconfig",
+        device_id="1234",
+        entity_category=None,
+    )
+    hass.states.async_set(sonos_notconfig_switch.entity_id, "off")
+
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
@@ -1391,6 +1401,94 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     result4 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
+        user_input={
+            "entities": [
+                "media_player.tv",
+                "switch.other",
+                sonos_notconfig_switch.entity_id,
+            ]
+        },
+    )
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [
+                "media_player.tv",
+                "switch.other",
+                sonos_notconfig_switch.entity_id,
+            ],
+            "include_domains": ["media_player", "switch"],
+            "include_entities": [],
+        },
+    }
+
+
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_options_flow_exclude_mode_skips_hidden_entities(
+    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf, entity_reg
+):
+    """Ensure exclude mode does not offer hidden entities."""
+    config_entry = _mock_config_entry_with_options_populated()
+    await async_init_entry(hass, config_entry)
+
+    hass.states.async_set("media_player.tv", "off")
+    hass.states.async_set("media_player.sonos", "off")
+    hass.states.async_set("switch.other", "off")
+
+    sonos_hidden_switch: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "sonos",
+        "config",
+        device_id="1234",
+        hidden_by=RegistryEntryHider.INTEGRATION,
+    )
+    hass.states.async_set(sonos_hidden_switch.entity_id, "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        "domains": [
+            "fan",
+            "humidifier",
+            "vacuum",
+            "media_player",
+            "climate",
+            "alarm_control_panel",
+        ],
+        "mode": "bridge",
+        "include_exclude_mode": "exclude",
+    }
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["media_player", "switch"],
+            "mode": "bridge",
+            "include_exclude_mode": "exclude",
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "exclude"
+    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
+
+    # sonos_hidden_switch.entity_id is a hidden entity
+    # so it should not be selectable since it will always be excluded
+    with pytest.raises(voluptuous.error.MultipleInvalid):
+        await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"entities": [sonos_hidden_switch.entity_id]},
+        )
+
+    result4 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
         user_input={"entities": ["media_player.tv", "switch.other"]},
     )
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -1401,5 +1499,87 @@ async def test_options_flow_exclude_mode_skips_category_entities(
             "exclude_entities": ["media_player.tv", "switch.other"],
             "include_domains": ["media_player", "switch"],
             "include_entities": [],
+        },
+    }
+
+
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_options_flow_include_mode_allows_hidden_entities(
+    port_mock, hass, mock_get_source_ip, hk_driver, mock_async_zeroconf, entity_reg
+):
+    """Ensure include mode does not offer hidden entities."""
+    config_entry = _mock_config_entry_with_options_populated()
+    await async_init_entry(hass, config_entry)
+
+    hass.states.async_set("media_player.tv", "off")
+    hass.states.async_set("media_player.sonos", "off")
+    hass.states.async_set("switch.other", "off")
+
+    sonos_hidden_switch: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "sonos",
+        "config",
+        device_id="1234",
+        hidden_by=RegistryEntryHider.INTEGRATION,
+    )
+    hass.states.async_set(sonos_hidden_switch.entity_id, "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        "domains": [
+            "fan",
+            "humidifier",
+            "vacuum",
+            "media_player",
+            "climate",
+            "alarm_control_panel",
+        ],
+        "mode": "bridge",
+        "include_exclude_mode": "exclude",
+    }
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["media_player", "switch"],
+            "mode": "bridge",
+            "include_exclude_mode": "include",
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "include"
+    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
+
+    # sonos_hidden_switch.entity_id is a hidden entity
+    # we allow it to be selected in include mode only
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={
+            "entities": [
+                sonos_hidden_switch.entity_id,
+                "media_player.tv",
+                "switch.other",
+            ]
+        },
+    )
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": [],
+            "include_entities": [
+                sonos_hidden_switch.entity_id,
+                "media_player.tv",
+                "switch.other",
+            ],
         },
     }

@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from . import Stream
 
-PROVIDERS = Registry()
+PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
 @attr.s(slots=True)
@@ -394,6 +394,9 @@ class KeyFrameConverter:
 
         This is run by the worker thread and will only be called once per worker.
         """
+
+        if self._codec_context:
+            return
 
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel

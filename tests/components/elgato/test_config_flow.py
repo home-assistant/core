@@ -61,6 +61,7 @@ async def test_full_zeroconf_flow_implementation(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="example.local.",
             name="mock_name",
             port=9123,
@@ -126,6 +127,7 @@ async def test_zeroconf_connection_error(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -167,6 +169,7 @@ async def test_zeroconf_device_exists_abort(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
+            addresses=["127.0.0.1"],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -187,6 +190,7 @@ async def test_zeroconf_device_exists_abort(
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.2",
+            addresses=["127.0.0.2"],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,

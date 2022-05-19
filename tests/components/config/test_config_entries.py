@@ -9,10 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS
+from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -23,6 +23,13 @@ from tests.common import (
 )
 
 
+@pytest.fixture
+def clear_handlers():
+    """Clear config entry handlers."""
+    with patch.dict(HANDLERS, clear=True):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def mock_test_component(hass):
     """Ensure a component called 'test' exists."""
@@ -30,101 +37,131 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-def client(hass, hass_client):
+async def client(hass, hass_client):
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(async_setup_component(hass, "http", {}))
-    hass.loop.run_until_complete(config_entries.async_setup(hass))
-    yield hass.loop.run_until_complete(hass_client())
+    await async_setup_component(hass, "http", {})
+    await config_entries.async_setup(hass)
+    return await hass_client()
 
 
-async def test_get_entries(hass, client):
+async def test_get_entries(hass, client, clear_handlers):
     """Test get entries."""
-    with patch.dict(HANDLERS, clear=True):
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(hass, MockModule("comp3"))
 
-        @HANDLERS.register("comp1")
-        class Comp1ConfigFlow:
-            """Config flow with options flow."""
+    @HANDLERS.register("comp1")
+    class Comp1ConfigFlow:
+        """Config flow with options flow."""
 
-            @staticmethod
-            @callback
-            def async_get_options_flow(config_entry):
-                """Get options flow."""
-                pass
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Get options flow."""
+            pass
 
-            @classmethod
-            @callback
-            def async_supports_options_flow(cls, config_entry):
-                """Return options flow support for this handler."""
-                return True
+        @classmethod
+        @callback
+        def async_supports_options_flow(cls, config_entry):
+            """Return options flow support for this handler."""
+            return True
 
-        hass.helpers.config_entry_flow.register_discovery_flow(
-            "comp2", "Comp 2", lambda: None
-        )
+    config_entry_flow.register_discovery_flow("comp2", "Comp 2", lambda: None)
 
-        entry = MockConfigEntry(
-            domain="comp1",
-            title="Test 1",
-            source="bla",
-        )
-        entry.supports_unload = True
-        entry.add_to_hass(hass)
-        MockConfigEntry(
-            domain="comp2",
-            title="Test 2",
-            source="bla2",
-            state=core_ce.ConfigEntryState.SETUP_ERROR,
-            reason="Unsupported API",
-        ).add_to_hass(hass)
-        MockConfigEntry(
-            domain="comp3",
-            title="Test 3",
-            source="bla3",
-            disabled_by=core_ce.ConfigEntryDisabler.USER,
-        ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain="comp1",
+        title="Test 1",
+        source="bla",
+    )
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp2",
+        title="Test 2",
+        source="bla2",
+        state=core_ce.ConfigEntryState.SETUP_ERROR,
+        reason="Unsupported API",
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp3",
+        title="Test 3",
+        source="bla3",
+        disabled_by=core_ce.ConfigEntryDisabler.USER,
+    ).add_to_hass(hass)
 
-        resp = await client.get("/api/config/config_entries/entry")
-        assert resp.status == HTTPStatus.OK
-        data = await resp.json()
-        for entry in data:
-            entry.pop("entry_id")
-        assert data == [
-            {
-                "domain": "comp1",
-                "title": "Test 1",
-                "source": "bla",
-                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-                "supports_options": True,
-                "supports_unload": True,
-                "pref_disable_new_entities": False,
-                "pref_disable_polling": False,
-                "disabled_by": None,
-                "reason": None,
-            },
-            {
-                "domain": "comp2",
-                "title": "Test 2",
-                "source": "bla2",
-                "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
-                "supports_options": False,
-                "supports_unload": False,
-                "pref_disable_new_entities": False,
-                "pref_disable_polling": False,
-                "disabled_by": None,
-                "reason": "Unsupported API",
-            },
-            {
-                "domain": "comp3",
-                "title": "Test 3",
-                "source": "bla3",
-                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-                "supports_options": False,
-                "supports_unload": False,
-                "pref_disable_new_entities": False,
-                "pref_disable_polling": False,
-                "disabled_by": core_ce.ConfigEntryDisabler.USER,
-                "reason": None,
-            },
-        ]
+    resp = await client.get("/api/config/config_entries/entry")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    for entry in data:
+        entry.pop("entry_id")
+    assert data == [
+        {
+            "domain": "comp1",
+            "title": "Test 1",
+            "source": "bla",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": True,
+            "supports_remove_device": False,
+            "supports_unload": True,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": None,
+            "reason": None,
+        },
+        {
+            "domain": "comp2",
+            "title": "Test 2",
+            "source": "bla2",
+            "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": None,
+            "reason": "Unsupported API",
+        },
+        {
+            "domain": "comp3",
+            "title": "Test 3",
+            "source": "bla3",
+            "state": core_ce.ConfigEntryState.NOT_LOADED.value,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "disabled_by": core_ce.ConfigEntryDisabler.USER,
+            "reason": None,
+        },
+    ]
+
+    resp = await client.get("/api/config/config_entries/entry?domain=comp3")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 1
+    assert data[0]["domain"] == "comp3"
+
+    resp = await client.get("/api/config/config_entries/entry?domain=comp3&type=helper")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 0
+
+    resp = await client.get(
+        "/api/config/config_entries/entry?domain=comp3&type=integration"
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 1
+
+    resp = await client.get("/api/config/config_entries/entry?type=integration")
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert len(data) == 2
+    assert data[0]["domain"] == "comp1"
+    assert data[1]["domain"] == "comp3"
 
 
 async def test_remove_entry(hass, client):
@@ -190,13 +227,59 @@ async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_available_flows(hass, client):
+async def test_reload_entry_in_setup_retry(hass, client, hass_admin_user):
+    """Test reloading an entry via the API that is in setup retry."""
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.SETUP_RETRY)
+    entry.supports_unload = True
+    entry.add_to_hass(hass)
+
+    with patch.dict(HANDLERS, {"comp": ConfigFlow, "test": ConfigFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/entry/{entry.entry_id}/reload"
+        )
+        await hass.async_block_till_done()
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {"require_restart": False}
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    "type_filter,result",
+    (
+        (None, {"hello", "another", "world"}),
+        ("integration", {"hello", "another"}),
+        ("helper", {"world"}),
+    ),
+)
+async def test_available_flows(hass, client, type_filter, result):
     """Test querying the available flows."""
-    with patch.object(config_flows, "FLOWS", ["hello", "world"]):
-        resp = await client.get("/api/config/config_entries/flow_handlers")
+    with patch.object(
+        config_flows,
+        "FLOWS",
+        {"integration": ["hello", "another"], "helper": ["world"]},
+    ):
+        resp = await client.get(
+            "/api/config/config_entries/flow_handlers",
+            params={"type": type_filter} if type_filter else {},
+        )
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
-        assert set(data) == {"hello", "world"}
+        assert set(data) == result
 
 
 ############################
@@ -250,6 +333,35 @@ async def test_initialize_flow(hass, client):
         "errors": {"username": "Should be unique."},
         "last_step": None,
     }
+
+
+async def test_initialize_flow_unmet_dependency(hass, client):
+    """Test unmet dependencies are listed."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    mock_integration(
+        hass, MockModule(domain="dependency_1", config_schema=config_schema)
+    )
+    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    mock_integration(
+        hass,
+        MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            pass
+
+    with patch.dict(HANDLERS, {"test2": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test2", "show_advanced_options": True},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.text()
+    assert data == "Failed dependencies dependency_1"
 
 
 async def test_initialize_flow_unauth(hass, client, hass_admin_user):
@@ -341,6 +453,7 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
+            "supports_remove_device": False,
             "supports_unload": False,
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
@@ -414,6 +527,7 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
+                "supports_remove_device": False,
                 "supports_unload": False,
                 "pref_disable_new_entities": False,
                 "pref_disable_polling": False,
@@ -952,7 +1066,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
-            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+            return self.async_show_form(step_id="account")
 
     ws_client = await hass_ws_client(hass)
 

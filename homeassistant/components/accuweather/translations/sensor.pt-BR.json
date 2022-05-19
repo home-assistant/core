@@ -1,0 +1,9 @@
+{
+    "state": {
+        "accuweather__pressure_tendency": {
+            "falling": "Queda",
+            "rising": "Eleva\u00e7\u00e3o",
+            "steady": "Est\u00e1vel"
+        }
+    }
+}

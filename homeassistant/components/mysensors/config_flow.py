@@ -309,7 +309,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(
-                    verification_func, user_input.get(CONF_DEVICE)
+                    verification_func, user_input[CONF_DEVICE]
                 )
             except vol.Invalid:
                 errors[CONF_DEVICE] = (

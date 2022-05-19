@@ -25,17 +25,8 @@
             "cannot_connect": "No se pudo conectar"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "La cubierta est\u00e1 invertida"
-                },
-                "description": "Configurar opciones para `{entity_id}`",
-                "title": "Configurar entidad"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Estado de inversi\u00f3n predeterminado para cubiertas no configuradas",
-                    "entity_id": "Configurar una entidad espec\u00edfica.",
                     "target_id": "Configurar opciones para una cubierta."
                 },
                 "title": "Configurar opciones de MyLink"
@@ -48,6 +39,5 @@
                 "title": "Configurar la cubierta MyLink"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

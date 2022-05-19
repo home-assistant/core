@@ -1,11 +1,12 @@
 """Support for Google Calendar event device sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from dataclasses import dataclass
+import datetime
 from http import HTTPStatus
 import logging
 import re
-from typing import cast, final
+from typing import Any, cast, final
 
 from aiohttp import web
 
@@ -24,13 +25,11 @@ from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -62,18 +61,78 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-def get_date(date):
+def get_date(date: dict[str, Any]) -> datetime.datetime:
     """Get the dateTime from date or dateTime as a local."""
     if "date" in date:
+        parsed_date = dt.parse_date(date["date"])
+        assert parsed_date
         return dt.start_of_local_day(
-            dt.dt.datetime.combine(dt.parse_date(date["date"]), dt.dt.time.min)
+            datetime.datetime.combine(parsed_date, datetime.time.min)
         )
-    return dt.as_local(dt.parse_datetime(date["dateTime"]))
+    parsed_datetime = dt.parse_datetime(date["dateTime"])
+    assert parsed_datetime
+    return dt.as_local(parsed_datetime)
 
 
-def normalize_event(event):
+@dataclass
+class CalendarEvent:
+    """An event on a calendar."""
+
+    start: datetime.date | datetime.datetime
+    end: datetime.date | datetime.datetime
+    summary: str
+    description: str | None = None
+    location: str | None = None
+
+    @property
+    def start_datetime_local(self) -> datetime.datetime:
+        """Return event start time as a local datetime."""
+        return _get_datetime_local(self.start)
+
+    @property
+    def end_datetime_local(self) -> datetime.datetime:
+        """Return event end time as a local datetime."""
+        return _get_datetime_local(self.end)
+
+    @property
+    def all_day(self) -> bool:
+        """Return true if the event is an all day event."""
+        return not isinstance(self.start, datetime.datetime)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the event."""
+        data = {
+            "start": self.start.isoformat(),
+            "end": self.end.isoformat(),
+            "summary": self.summary,
+            "all_day": self.all_day,
+        }
+        if self.description:
+            data["description"] = self.description
+        if self.location:
+            data["location"] = self.location
+        return data
+
+
+def _get_datetime_local(
+    dt_or_d: datetime.datetime | datetime.date,
+) -> datetime.datetime:
+    """Convert a calendar event date/datetime to a datetime if needed."""
+    if isinstance(dt_or_d, datetime.datetime):
+        return dt.as_local(dt_or_d)
+    return dt.start_of_local_day(dt_or_d)
+
+
+def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
+    """Convert a calendar event date/datetime to a datetime if needed."""
+    if isinstance(dt_or_d, datetime.datetime):
+        return {"dateTime": dt.as_local(dt_or_d).isoformat()}
+    return {"date": dt_or_d.isoformat()}
+
+
+def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
     """Normalize a calendar event."""
-    normalized_event = {}
+    normalized_event: dict[str, Any] = {}
 
     start = event.get("start")
     end = event.get("end")
@@ -97,15 +156,14 @@ def normalize_event(event):
     return normalized_event
 
 
-def calculate_offset(event, offset):
-    """Calculate event offset.
+def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
+    """Extract the offset from the event summary.
 
-    Return the updated event with the offset_time included.
+    Return a tuple with the updated event summary and offset time.
     """
-    summary = event.get("summary", "")
     # check if we have an offset tag in the message
     # time is HH:MM or MM
-    reg = f"{offset}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)"
+    reg = f"{offset_prefix}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)"
     search = re.search(reg, summary)
     if search and search.group(1):
         time = search.group(1)
@@ -117,35 +175,40 @@ def calculate_offset(event, offset):
 
         offset_time = time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
-        event["summary"] = summary
-    else:
-        offset_time = dt.dt.timedelta()  # default it
-
-    event["offset_time"] = offset_time
-    return event
+        return (summary, offset_time)
+    return (summary, datetime.timedelta())
 
 
-def is_offset_reached(event):
+def is_offset_reached(
+    start: datetime.datetime, offset_time: datetime.timedelta
+) -> bool:
     """Have we reached the offset time specified in the event title."""
-    start = get_date(event["start"])
-    if start is None or event["offset_time"] == dt.dt.timedelta():
+    if offset_time == datetime.timedelta():
         return False
-
-    return start + event["offset_time"] <= dt.now(start.tzinfo)
+    return start + offset_time <= dt.now(start.tzinfo)
 
 
 class CalendarEventDevice(Entity):
-    """Base class for calendar event entities."""
+    """Legacy API for calendar event entities."""
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "CalendarEventDevice is deprecated, modify %s to extend CalendarEntity",
+            cls.__name__,
+        )
 
     @property
-    def event(self):
+    def event(self) -> dict[str, Any] | None:
         """Return the next upcoming event."""
         raise NotImplementedError()
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
+
         if (event := self.event) is None:
             return None
 
@@ -160,7 +223,7 @@ class CalendarEventDevice(Entity):
         }
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
             return STATE_OFF
@@ -179,7 +242,59 @@ class CalendarEventDevice(Entity):
 
         return STATE_OFF
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self,
+        hass: HomeAssistant,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> list[dict[str, Any]]:
+        """Return calendar events within a datetime range."""
+        raise NotImplementedError()
+
+
+class CalendarEntity(Entity):
+    """Base class for calendar event entities."""
+
+    @property
+    def event(self) -> CalendarEvent | None:
+        """Return the next upcoming event."""
+        raise NotImplementedError()
+
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any] | None:
+        """Return the entity state attributes."""
+        if (event := self.event) is None:
+            return None
+
+        return {
+            "message": event.summary,
+            "all_day": event.all_day,
+            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
+            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
+            "location": event.location if event.location else "",
+            "description": event.description if event.description else "",
+        }
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of the calendar event."""
+        if (event := self.event) is None:
+            return STATE_OFF
+
+        now = dt.now()
+
+        if event.start_datetime_local <= now < event.end_datetime_local:
+            return STATE_ON
+
+        return STATE_OFF
+
+    async def async_get_events(
+        self,
+        hass: HomeAssistant,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         raise NotImplementedError()
 
@@ -194,22 +309,46 @@ class CalendarEventView(http.HomeAssistantView):
         """Initialize calendar view."""
         self.component = component
 
-    async def get(self, request, entity_id):
+    async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Return calendar events."""
         entity = self.component.get_entity(entity_id)
         start = request.query.get("start")
         end = request.query.get("end")
-        if None in (start, end, entity):
+        if start is None or end is None or entity is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
-        event_list = await entity.async_get_events(
+        if start_date is None or end_date is None:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        # Compatibility shim for old API
+        if isinstance(entity, CalendarEventDevice):
+            event_list = await entity.async_get_events(
+                request.app["hass"], start_date, end_date
+            )
+            return self.json(event_list)
+
+        if not isinstance(entity, CalendarEntity):
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        calendar_event_list = await entity.async_get_events(
             request.app["hass"], start_date, end_date
         )
-        return self.json(event_list)
+        return self.json(
+            [
+                {
+                    "summary": event.summary,
+                    "description": event.description,
+                    "location": event.location,
+                    "start": _get_api_date(event.start),
+                    "end": _get_api_date(event.end),
+                }
+                for event in calendar_event_list
+            ]
+        )
 
 
 class CalendarListView(http.HomeAssistantView):

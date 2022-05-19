@@ -72,7 +72,7 @@ def check_invalid_device_trigger(
         "Please manually fix the outdated automation(s) once to fix this issue."
     )
     if automation_info:
-        automation_id = automation_info["variables"]["this"]["attributes"]["id"]  # type: ignore
+        automation_id = automation_info["variables"]["this"]["attributes"]["id"]  # type: ignore[index]
         msg += f"\n\n[Check it out](/config/automation/edit/{automation_id})."
     persistent_notification.async_create(
         bridge.hass,
@@ -119,7 +119,8 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(bridge: "HueBridge", device_entry: DeviceEntry):
+@callback
+def async_get_triggers(bridge: HueBridge, device_entry: DeviceEntry):
     """Return device triggers for device on `v2` bridge."""
     api: HueBridgeV2 = bridge.api
 

@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
 from .coordinator import RokuDataUpdateCoordinator
+from .helpers import format_channel_name
 
 CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_APP: MEDIA_CLASS_APP,
@@ -69,12 +70,12 @@ def get_thumbnail_url_full(
 
 
 async def async_browse_media(
-    hass,
+    hass: HomeAssistant,
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
     media_content_id: str | None,
     media_content_type: str | None,
-):
+) -> BrowseMedia:
     """Browse media."""
     if media_content_id is None:
         return await root_payload(
@@ -113,7 +114,7 @@ async def root_payload(
     hass: HomeAssistant,
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
-):
+) -> BrowseMedia:
     """Return root payload for Roku."""
     device = coordinator.data
 
@@ -133,6 +134,9 @@ async def root_payload(
                 get_browse_image_url,
             )
         )
+
+    for child in children:
+        child.thumbnail = "https://brands.home-assistant.io/_/roku/logo.png"
 
     try:
         browse_item = await media_source.async_browse_media(hass, None)
@@ -191,11 +195,11 @@ def build_item_response(
         title = "TV Channels"
         media = [
             {
-                "channel_number": item.number,
-                "title": item.name,
+                "channel_number": channel.number,
+                "title": format_channel_name(channel.number, channel.name),
                 "type": MEDIA_TYPE_CHANNEL,
             }
-            for item in coordinator.data.channels
+            for channel in coordinator.data.channels
         ]
         children_media_class = MEDIA_CLASS_CHANNEL
 
@@ -223,7 +227,7 @@ def item_payload(
     item: dict,
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
-):
+) -> BrowseMedia:
     """
     Create response payload for a single media item.
 

@@ -66,7 +66,7 @@
                     "debug": "Enged\u00e9lyezze a hibakeres\u00e9st",
                     "device": "V\u00e1lassza ki a konfigur\u00e1lni k\u00edv\u00e1nt eszk\u00f6zt",
                     "event_code": "\u00cdrja be a hozz\u00e1adni k\u00edv\u00e1nt esem\u00e9ny k\u00f3dj\u00e1t",
-                    "remove_device": "V\u00e1lassza ki a t\u00f6r\u00f6lni k\u00edv\u00e1nt eszk\u00f6zt"
+                    "protocols": "Protokollok"
                 },
                 "title": "Rfxtrx opci\u00f3k"
             },
@@ -75,11 +75,9 @@
                     "command_off": "Adatbitek \u00e9rt\u00e9ke a parancs kikapcsol\u00e1s\u00e1hoz",
                     "command_on": "Adatbitek \u00e9rt\u00e9ke a parancshoz",
                     "data_bit": "Adatbitek sz\u00e1ma",
-                    "fire_event": "Eszk\u00f6zesem\u00e9ny enged\u00e9lyez\u00e9se",
                     "off_delay": "Kikapcsol\u00e1si k\u00e9sleltet\u00e9s",
                     "off_delay_enabled": "Kikapcsol\u00e1si k\u00e9sleltet\u00e9s enged\u00e9lyez\u00e9se",
                     "replace_device": "V\u00e1lassza ki a cser\u00e9lni k\u00edv\u00e1nt eszk\u00f6zt",
-                    "signal_repetitions": "A jelism\u00e9tl\u00e9sek sz\u00e1ma",
                     "venetian_blind_mode": "Velencei red\u0151ny \u00fczemm\u00f3d"
                 },
                 "title": "Konfigur\u00e1lja az eszk\u00f6z be\u00e1ll\u00edt\u00e1sait"

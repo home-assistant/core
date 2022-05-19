@@ -74,7 +74,7 @@ async def async_validate_trigger_config(
     """Validate trigger config."""
     config = _TRIGGER_SCHEMA(config)
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config

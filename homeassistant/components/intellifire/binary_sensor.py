@@ -7,16 +7,18 @@ from dataclasses import dataclass
 from intellifire4py import IntellifirePollData
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import IntellifireEntity
 
 
 @dataclass
@@ -58,6 +60,85 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
         icon="mdi:home-thermometer-outline",
         value_fn=lambda data: data.thermostat_on,
     ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_pilot_flame",
+        name="Pilot Flame Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_pilot_flame,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_flame",
+        name="Flame Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_flame,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_fan_delay",
+        name="Fan Delay Error",
+        icon="mdi:fan-alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_fan_delay,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_maintenance",
+        name="Maintenance Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_maintenance,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_disabled",
+        name="Disabled Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_disabled,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_fan",
+        name="Fan Error",
+        icon="mdi:fan-alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_fan,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_lights",
+        name="Lights Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_lights,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_accessory",
+        name="Accessory Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_accessory,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_soft_lock_out",
+        name="Soft Lock Out Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_soft_lock_out,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_ecm_offline",
+        name="ECM Offline Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_ecm_offline,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    IntellifireBinarySensorEntityDescription(
+        key="error_offline",
+        name="Offline Error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.error_offline,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
 )
 
 
@@ -75,29 +156,12 @@ async def async_setup_entry(
     )
 
 
-class IntellifireBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """A semi-generic wrapper around Binary Sensor entities for IntelliFire."""
+class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
+    """Extends IntellifireEntity with Binary Sensor specific logic."""
 
-    # Define types
-    coordinator: IntellifireDataUpdateCoordinator
     entity_description: IntellifireBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: IntellifireDataUpdateCoordinator,
-        description: IntellifireBinarySensorEntityDescription,
-    ) -> None:
-        """Class initializer."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-
-        # Set the Display name the User will see
-        self._attr_name = f"Fireplace {description.name}"
-        self._attr_unique_id = f"{description.key}_{coordinator.api.data.serial}"
-        # Configure the Device Info
-        self._attr_device_info = self.coordinator.device_info
 
     @property
     def is_on(self) -> bool:
         """Use this to get the correct value."""
-        return self.entity_description.value_fn(self.coordinator.api.data)
+        return self.entity_description.value_fn(self.coordinator.read_api.data)

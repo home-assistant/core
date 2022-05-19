@@ -11,12 +11,9 @@
                 "data": {
                     "host": "Amfitri\u00f3 (opcional)",
                     "password": "Contrasenya",
-                    "port": "Port (opcional)",
-                    "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari (opcional)"
                 },
-                "description": "Amfitri\u00f3 predeterminat: {host}\nPort predeterminat: {port}\nNom d'usuari predeterminat: {username}",
-                "title": "Netgear"
+                "description": "Amfitri\u00f3 predeterminat: {host}\nNom d'usuari predeterminat: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Temps per considerar 'a casa' (segons)"
                 },
-                "description": "Especifica les configuracions opcional",
-                "title": "Netgear"
+                "description": "Especifica les configuracions opcional"
             }
         }
     }

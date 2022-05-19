@@ -19,9 +19,7 @@ async def test_fallback_to_polling(
     caplog.clear()
 
     # Ensure subscriptions are cancelled and polling methods are called when subscriptions time out
-    with patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker.update_media"
-    ), patch(
+    with patch("homeassistant.components.sonos.media.SonosMedia.poll_media"), patch(
         "homeassistant.components.sonos.speaker.SonosSpeaker.subscription_address"
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)

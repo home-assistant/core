@@ -2,21 +2,19 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "discovery_started": "\u958b\u59cb\u63a2\u7d22"
+            "discovery_started": "\u958b\u59cb\u641c\u7d22"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "protect_version": "\u6240\u9700\u6700\u4f4e\u7248\u672c\u70ba V1.20.0\u3002\u8acb\u66f4\u65b0 UniFi \u76e3\u63a7\u5f8c\u518d\u91cd\u8a66\u4e00\u6b21\u3002",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+            "protect_version": "\u6240\u9700\u6700\u4f4e\u7248\u672c\u70ba V1.20.0\u3002\u8acb\u66f4\u65b0 UniFi \u76e3\u63a7\u5f8c\u518d\u91cd\u8a66\u4e00\u6b21\u3002"
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "\u5bc6\u78bc",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
-                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({ip_address})\uff1f\u9700\u8981\u65bc UniFi OS Console \u65b0\u589e\u672c\u5730\u4f7f\u7528\u8005\u4ee5\u9032\u884c\u767b\u5165\u3001Ubiquiti \u96f2\u7aef\u4f7f\u7528\u8005\u7121\u6cd5\u4f7f\u7528\u3002\u66f4\u591a\u8a73\u7d30\u8cc7\u8a0a\uff1a{local_user_documentation_url}",
                 "title": "\u767c\u73fe UniFi \u76e3\u63a7"

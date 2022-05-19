@@ -18,9 +18,7 @@
       "macaddress": "4CFCAA*"
     }
   ],
-  "codeowners": [
-    "@einarhauks"
-  ],
+  "codeowners": ["@einarhauks"],
   "iot_class": "local_polling",
   "loggers": ["tesla_wall_connector"]
 }

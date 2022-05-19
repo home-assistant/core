@@ -26,6 +26,7 @@ from aiounifi.events import (
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -34,7 +35,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -73,7 +74,7 @@ from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -397,7 +398,9 @@ class UniFiController:
             del self._heartbeat_time[unique_id]
 
     @staticmethod
-    async def async_config_entry_updated(hass, config_entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         If config entry is updated due to reauth flow

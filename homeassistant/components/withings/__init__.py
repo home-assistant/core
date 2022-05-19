@@ -111,10 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     const.CONF_USE_WEBHOOK
                 ],
                 CONF_WEBHOOK_ID: webhook_id,
-                const.CONF_WEBHOOK_URL: entry.data.get(
-                    const.CONF_WEBHOOK_URL,
-                    webhook.async_generate_url(hass, webhook_id),
-                ),
             },
         }
 

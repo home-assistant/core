@@ -18,8 +18,7 @@
                     "name": "Nama Perangkat",
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                },
-                "title": "Hubungkan ke DoorBird"
+                }
             }
         }
     },
@@ -29,7 +28,9 @@
                 "data": {
                     "events": "Daftar event yang dipisahkan koma."
                 },
-                "description": "Tambahkan nama event yang dipisahkan koma untuk setiap event yang ingin dilacak. Setelah memasukkannya di sini, gunakan aplikasi DoorBird untuk menetapkannya ke event tertentu. Baca dokumentasi di https://www.home-assistant.io/integrations/doorbird/#events. Contoh: somebody_pressed_the_button, motion"
+                "data_description": {
+                    "events": "Tambahkan nama event yang dipisahkan koma untuk setiap event yang ingin dilacak. Setelah memasukkannya di sini, gunakan aplikasi DoorBird untuk menetapkannya ke event tertentu.\n\nMisalnya: ada_yang_menekan_tombol, gerakan"
+                }
             }
         }
     }

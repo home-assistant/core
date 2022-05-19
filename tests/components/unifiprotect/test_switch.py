@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera, Light
-from pyunifiprotect.data.types import RecordingMode, VideoMode
+from pyunifiprotect.data.types import RecordingMode, SmartDetectObjectType, VideoMode
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
-    ALL_DEVICES_SWITCHES,
     CAMERA_SWITCHES,
     LIGHT_SWITCHES,
     ProtectSwitchEntityDescription,
@@ -25,6 +24,17 @@ from .conftest import (
     enable_entity,
     ids_from_device_description,
 )
+
+CAMERA_SWITCHES_BASIC = [
+    d
+    for d in CAMERA_SWITCHES
+    if d.name != "Detections: Face"
+    and d.name != "Detections: Package"
+    and d.name != "SSH Enabled"
+]
+CAMERA_SWITCHES_NO_EXTRA = [
+    d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
+]
 
 
 @pytest.fixture(name="light")
@@ -79,6 +89,10 @@ async def camera_fixture(
     camera_obj.feature_flags.has_privacy_mask = True
     camera_obj.feature_flags.has_speaker = True
     camera_obj.feature_flags.has_smart_detect = True
+    camera_obj.feature_flags.smart_detect_types = [
+        SmartDetectObjectType.PERSON,
+        SmartDetectObjectType.VEHICLE,
+    ]
     camera_obj.is_ssh_enabled = False
     camera_obj.led_settings.is_enabled = False
     camera_obj.hdr_mode = False
@@ -202,7 +216,7 @@ async def test_switch_setup_light(
 
     entity_registry = er.async_get(hass)
 
-    description = LIGHT_SWITCHES[0]
+    description = LIGHT_SWITCHES[1]
 
     unique_id, entity_id = ids_from_device_description(
         Platform.SWITCH, light, description
@@ -217,7 +231,7 @@ async def test_switch_setup_light(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    description = ALL_DEVICES_SWITCHES[0]
+    description = LIGHT_SWITCHES[0]
 
     unique_id = f"{light.id}_{description.key}"
     entity_id = f"switch.test_light_{description.name.lower().replace(' ', '_')}"
@@ -244,7 +258,7 @@ async def test_switch_setup_camera_all(
 
     entity_registry = er.async_get(hass)
 
-    for description in CAMERA_SWITCHES:
+    for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = ids_from_device_description(
             Platform.SWITCH, camera, description
         )
@@ -258,7 +272,7 @@ async def test_switch_setup_camera_all(
         assert state.state == STATE_OFF
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    description = ALL_DEVICES_SWITCHES[0]
+    description = CAMERA_SWITCHES[0]
 
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
@@ -288,7 +302,7 @@ async def test_switch_setup_camera_none(
 
     entity_registry = er.async_get(hass)
 
-    for description in CAMERA_SWITCHES:
+    for description in CAMERA_SWITCHES_BASIC:
         if description.ufp_required_field is not None:
             continue
 
@@ -305,7 +319,7 @@ async def test_switch_setup_camera_none(
         assert state.state == STATE_OFF
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    description = ALL_DEVICES_SWITCHES[0]
+    description = CAMERA_SWITCHES[0]
 
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
@@ -329,7 +343,7 @@ async def test_switch_setup_camera_none(
 async def test_switch_light_status(hass: HomeAssistant, light: Light):
     """Tests status light switch for lights."""
 
-    description = LIGHT_SWITCHES[0]
+    description = LIGHT_SWITCHES[1]
 
     light.__fields__["set_status_light"] = Mock()
     light.set_status_light = AsyncMock()
@@ -354,7 +368,7 @@ async def test_switch_camera_ssh(
 ):
     """Tests SSH switch for cameras."""
 
-    description = ALL_DEVICES_SWITCHES[0]
+    description = CAMERA_SWITCHES[0]
 
     camera.__fields__["set_ssh"] = Mock()
     camera.set_ssh = AsyncMock()
@@ -375,14 +389,11 @@ async def test_switch_camera_ssh(
     camera.set_ssh.assert_called_with(False)
 
 
-@pytest.mark.parametrize("description", CAMERA_SWITCHES)
+@pytest.mark.parametrize("description", CAMERA_SWITCHES_NO_EXTRA)
 async def test_switch_camera_simple(
     hass: HomeAssistant, camera: Camera, description: ProtectSwitchEntityDescription
 ):
     """Tests all simple switches for cameras."""
-
-    if description.name in ("High FPS", "Privacy Mode"):
-        return
 
     assert description.ufp_set_method is not None
 
@@ -408,7 +419,7 @@ async def test_switch_camera_simple(
 async def test_switch_camera_highfps(hass: HomeAssistant, camera: Camera):
     """Tests High FPS switch for cameras."""
 
-    description = CAMERA_SWITCHES[2]
+    description = CAMERA_SWITCHES[3]
 
     camera.__fields__["set_video_mode"] = Mock()
     camera.set_video_mode = AsyncMock()
@@ -431,7 +442,7 @@ async def test_switch_camera_highfps(hass: HomeAssistant, camera: Camera):
 async def test_switch_camera_privacy(hass: HomeAssistant, camera: Camera):
     """Tests Privacy Mode switch for cameras."""
 
-    description = CAMERA_SWITCHES[3]
+    description = CAMERA_SWITCHES[4]
 
     camera.__fields__["set_privacy"] = Mock()
     camera.set_privacy = AsyncMock()
@@ -458,7 +469,7 @@ async def test_switch_camera_privacy_already_on(
 ):
     """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 
-    description = CAMERA_SWITCHES[3]
+    description = CAMERA_SWITCHES[4]
 
     camera_privacy.__fields__["set_privacy"] = Mock()
     camera_privacy.set_privacy = AsyncMock()

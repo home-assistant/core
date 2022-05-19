@@ -8,10 +8,8 @@ from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
 
 
-class AsekoEntity(CoordinatorEntity):
+class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
     """Representation of an aseko entity."""
-
-    coordinator: AsekoDataUpdateCoordinator
 
     def __init__(self, unit: Unit, coordinator: AsekoDataUpdateCoordinator) -> None:
         """Initialize the aseko entity."""

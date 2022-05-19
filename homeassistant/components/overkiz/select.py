@@ -39,8 +39,7 @@ def _select_option_open_closed_pedestrian(
             OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
             OverkizCommandParam.OPEN: OverkizCommand.OPEN,
             OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-        }[OverkizCommandParam(option)],
-        None,
+        }[OverkizCommandParam(option)]
     )
 
 
@@ -72,6 +71,17 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         select_option=_select_option_memorized_simple_volume,
         entity_category=EntityCategory.CONFIG,
         device_class=OverkizDeviceClass.MEMORIZED_SIMPLE_VOLUME,
+    ),
+    # SomfyHeatingTemperatureInterface
+    OverkizSelectDescription(
+        key=OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE,
+        name="Operating Mode",
+        icon="mdi:sun-snowflake",
+        options=[OverkizCommandParam.HEATING, OverkizCommandParam.COOLING],
+        select_option=lambda option, execute_command: execute_command(
+            OverkizCommand.SET_OPERATING_MODE, option
+        ),
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 

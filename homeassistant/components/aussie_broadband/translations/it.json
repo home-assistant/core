@@ -11,7 +11,7 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Password"
                 },

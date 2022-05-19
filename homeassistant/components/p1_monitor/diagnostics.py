@@ -1,6 +1,7 @@
 """Diagnostics support for P1 Monitor."""
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -28,8 +29,8 @@ async def async_get_config_entry_diagnostics(
             "data": async_redact_data(entry.data, TO_REDACT),
         },
         "data": {
-            "smartmeter": coordinator.data[SERVICE_SMARTMETER].__dict__,
-            "phases": coordinator.data[SERVICE_PHASES].__dict__,
-            "settings": coordinator.data[SERVICE_SETTINGS].__dict__,
+            "smartmeter": asdict(coordinator.data[SERVICE_SMARTMETER]),
+            "phases": asdict(coordinator.data[SERVICE_PHASES]),
+            "settings": asdict(coordinator.data[SERVICE_SETTINGS]),
         },
     }

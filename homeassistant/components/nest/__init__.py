@@ -42,7 +42,11 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
@@ -145,7 +149,7 @@ class SignalUpdateCallback:
         if not (events := event_message.resource_update_events):
             return
         _LOGGER.debug("Event Update %s", events.keys())
-        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self._hass)
         device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
@@ -158,6 +162,8 @@ class SignalUpdateCallback:
                 "timestamp": event_message.timestamp,
                 "nest_event_id": image_event.event_token,
             }
+            if image_event.zones:
+                message["zones"] = image_event.zones
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
@@ -264,7 +270,7 @@ class NestEventViewBase(HomeAssistantView, ABC):
     ) -> web.StreamResponse:
         """Start a GET request."""
         user = request[KEY_HASS_USER]
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_device(entity_registry, device_id):
             if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
                 raise Unauthorized(entity_id=entry.entity_id)
@@ -276,10 +282,10 @@ class NestEventViewBase(HomeAssistantView, ABC):
             )
         try:
             media = await self.load_media(nest_device, event_token)
-        except DecodeException as err:
-            raise HomeAssistantError(
-                "Even token was invalid: %s" % event_token
-            ) from err
+        except DecodeException:
+            return self._json_error(
+                f"Event token was invalid '{event_token}'", HTTPStatus.NOT_FOUND
+            )
         except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not media:
@@ -354,8 +360,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Start a GET request."""
         contents = media.contents
-        content_type = media.content_type
-        if content_type == "image/jpeg":
+        if (content_type := media.content_type) == "image/jpeg":
             image = Image(media.event_image_type.content_type, contents)
             contents = img_util.scale_jpeg_camera_image(
                 image, THUMBNAIL_SIZE_PX, THUMBNAIL_SIZE_PX

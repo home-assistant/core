@@ -16,18 +16,24 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
+from homeassistant.core import Context, CoreState, Event, State, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    Event,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.template import Template, result_as_boolean
+from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.template import (
+    Template,
+    TemplateStateFromEntityId,
+    result_as_boolean,
+)
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -94,7 +100,7 @@ LEGACY_FIELDS = {
 
 def rewrite_common_legacy_to_modern_conf(
     entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] = None
-) -> list[dict]:
+) -> dict[str, Any]:
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
     if extra_legacy_fields is None:
@@ -176,10 +182,12 @@ class _TemplateAttribute:
             if self.none_on_template_error:
                 self._default_update(result)
             else:
+                assert self.on_update
                 self.on_update(result)
             return
 
         if not self.validator:
+            assert self.on_update
             self.on_update(result)
             return
 
@@ -197,9 +205,11 @@ class _TemplateAttribute:
                 self._entity.entity_id,
                 ex.msg,
             )
+            assert self.on_update
             self.on_update(None)
             return
 
+        assert self.on_update
         self.on_update(validated)
         return
 
@@ -243,13 +253,28 @@ class TemplateEntity(Entity):
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
 
+        class DummyState(State):
+            """None-state for template entities not yet added to the state machine."""
+
+            def __init__(self) -> None:
+                """Initialize a new state."""
+                super().__init__("unknown.unknown", STATE_UNKNOWN)
+                self.entity_id = None  # type: ignore[assignment]
+
+            @property
+            def name(self) -> str:
+                """Name of this state."""
+                return "<None>"
+
+        variables = {"this": DummyState()}
+
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
         if self._friendly_name_template:
             self._friendly_name_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_name = self._friendly_name_template.async_render(
-                    parse_result=False
+                    variables=variables, parse_result=False
                 )
 
         # Templates will not render while the entity is unavailable, try to render the
@@ -258,13 +283,15 @@ class TemplateEntity(Entity):
             self._entity_picture_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_entity_picture = self._entity_picture_template.async_render(
-                    parse_result=False
+                    variables=variables, parse_result=False
                 )
 
         if self._icon_template:
             self._icon_template.hass = hass
             with contextlib.suppress(TemplateError):
-                self._attr_icon = self._icon_template.async_render(parse_result=False)
+                self._attr_icon = self._icon_template.async_render(
+                    variables=variables, parse_result=False
+                )
 
     @callback
     def _update_available(self, result):
@@ -321,11 +348,11 @@ class TemplateEntity(Entity):
         """
         assert self.hass is not None, "hass cannot be None"
         template.hass = self.hass
-        attribute = _TemplateAttribute(
+        template_attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
         self._template_attrs.setdefault(template, [])
-        self._template_attrs[template].append(attribute)
+        self._template_attrs[template].append(template_attribute)
 
     @callback
     def _handle_results(
@@ -362,10 +389,13 @@ class TemplateEntity(Entity):
         self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        template_var_tups = []
+        template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
+
+        variables = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
+
         for template, attributes in self._template_attrs.items():
-            template_var_tup = TrackTemplate(template, None)
+            template_var_tup = TrackTemplate(template, variables)
             is_availability_template = False
             for attribute in attributes:
                 # pylint: disable-next=protected-access
@@ -426,3 +456,21 @@ class TemplateEntity(Entity):
     async def async_update(self) -> None:
         """Call for forced update."""
         self._async_update()
+
+    async def async_run_script(
+        self,
+        script: Script,
+        *,
+        run_variables: _VarsType | None = None,
+        context: Context | None = None,
+    ) -> None:
+        """Run an action script."""
+        if run_variables is None:
+            run_variables = {}
+        return await script.async_run(
+            run_variables={
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                **run_variables,
+            },
+            context=context,
+        )
