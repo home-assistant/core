@@ -28,7 +28,7 @@ async def async_setup_entry(
         for io_device_id, io_device in coordinator.data["io_devices"].items()
         if io_device["_HEATAREA_ID"]
     )
-    # HEATCTRL atrribute ACTOR_PERCENT is not available in older firmware versions
+    # HEATCTRL attribute ACTOR_PERCENT is not available in older firmware versions
     async_add_entities(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
