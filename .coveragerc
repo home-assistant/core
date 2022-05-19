@@ -1472,6 +1472,7 @@ omit =
     homeassistant/components/yi/camera.py
     homeassistant/components/yolink/__init__.py
     homeassistant/components/yolink/api.py
+    homeassistant/components/yolink/binary_sensor.py
     homeassistant/components/yolink/const.py
     homeassistant/components/yolink/coordinator.py
     homeassistant/components/yolink/entity.py
