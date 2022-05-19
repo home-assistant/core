@@ -92,11 +92,9 @@ async def async_attach_trigger(
 
         if (
             event == EVENT_ENTER
-            and not from_match
             and to_match
             or event == EVENT_LEAVE
             and from_match
-            and not to_match
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
             hass.async_run_hass_job(
