@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Authenticatie",
-                    "content_type": "Inhoudstype",
                     "framerate": "Framesnelheid (Hz)",
                     "limit_refetch_to_url_change": "Beperk refetch tot url verandering",
                     "password": "Wachtwoord",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Authenticatie",
-                    "content_type": "Inhoudstype",
                     "framerate": "Framesnelheid (Hz)",
                     "limit_refetch_to_url_change": "Beperk refetch tot url verandering",
                     "password": "Wachtwoord",

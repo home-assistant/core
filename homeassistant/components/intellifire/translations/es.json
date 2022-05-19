@@ -32,11 +32,6 @@
                 },
                 "description": "Se han descubierto los siguientes dispositivos IntelliFire. Selecciona lo que quieras configurar.",
                 "title": "Selecci\u00f3n de dispositivo"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

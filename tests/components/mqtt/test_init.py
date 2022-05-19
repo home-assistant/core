@@ -1,5 +1,6 @@
 """The tests for the MQTT component."""
 import asyncio
+import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -29,6 +30,8 @@ from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+
+from .test_common import help_test_setup_manual_entity_from_yaml
 
 from tests.common import (
     MockConfigEntry,
@@ -1279,6 +1282,51 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
+async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
+    """Test set up a manual MQTT item with a platform key."""
+    config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+    )
+    assert (
+        "Invalid config for [light]: [platform] is an invalid option for [light]. "
+        "Check: light->platform. (See ?, line ?)" in caplog.text
+    )
+
+
+async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
+    """Test set up a manual MQTT item with an invalid config."""
+    config = {"name": "test"}
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+    )
+    assert (
+        "Invalid config for [light]: required key not provided @ data['command_topic']."
+        " Got None. (See ?, line ?)" in caplog.text
+    )
+
+
+async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
+    """Test set up a manual MQTT platform without items."""
+    config = None
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+    )
+    assert "voluptuous.error.MultipleInvalid" not in caplog.text
+
+
 async def test_setup_mqtt_client_protocol(hass):
     """Test MQTT client protocol setup."""
     entry = MockConfigEntry(
@@ -1628,7 +1676,8 @@ async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mo
     # User sets up a config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
     # Discover a device to verify the entry was setup correctly
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
@@ -2413,3 +2462,23 @@ async def test_subscribe_connection_status(hass, mqtt_mock, mqtt_client_mock):
     assert len(mqtt_connected_calls) == 2
     assert mqtt_connected_calls[0] is True
     assert mqtt_connected_calls[1] is False
+
+
+async def test_one_deprecation_warning_per_platform(hass, mqtt_mock, caplog):
+    """Test a deprecation warning is is logged once per platform."""
+    platform = "light"
+    config = {"platform": "mqtt", "command_topic": "test-topic"}
+    config1 = copy.deepcopy(config)
+    config1["name"] = "test1"
+    config2 = copy.deepcopy(config)
+    config2["name"] = "test2"
+    await async_setup_component(hass, platform, {platform: [config1, config2]})
+    await hass.async_block_till_done()
+    count = 0
+    for record in caplog.records:
+        if record.levelname == "WARNING" and (
+            f"Manually configured MQTT {platform}(s) found under platform key '{platform}'"
+            in record.message
+        ):
+            count += 1
+    assert count == 1

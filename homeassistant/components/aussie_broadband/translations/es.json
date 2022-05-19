@@ -9,10 +9,6 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {
-            "reauth": {
-                "description": "Actualizar la contrase\u00f1a de {username}",
-                "title": "Reautenticaci\u00f3n de la integraci\u00f3n"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a"

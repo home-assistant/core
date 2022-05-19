@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "no_devices": "Nessun dispositivo trovato nell'account",
             "unknown": "Errore imprevisto"
         },
         "step": {
