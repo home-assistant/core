@@ -146,14 +146,14 @@ JSONB_TYPE_COERCE = (
 JSON_VARIENT_CAST = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSON(none_as_null=True), "postgresql")
-    .with_variant(Text(), "sqlite")
+    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
 
 # Force the database to treat a text column how its needed to extract jsonb
 JSONB_VARIENT_CAST = (
     JSON(none_as_null=True)
     .with_variant(postgresql.JSONB(none_as_null=True), "postgresql")
-    .with_variant(Text(), "sqlite")
+    .with_variant(sqlite.JSON(none_as_null=True), "sqlite")
 )
 
 
@@ -661,18 +661,10 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
         )
 
 
-EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONB_TYPE_COERCE
-)
-OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSONB_VARIENT_CAST), JSONB_TYPE_COERCE
-)
-SHARED_ATTRS_JSON = type_coerce(
-    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON_TYPE_COERCE
-)
-OLD_FORMAT_ATTRS_JSON = type_coerce(
-    States.attributes.cast(JSON_VARIENT_CAST), JSON_TYPE_COERCE
-)
+EVENT_DATA_JSON = type_coerce(EventData.shared_data, JSONB_TYPE_COERCE)
+OLD_FORMAT_EVENT_DATA_JSON = type_coerce(Events.event_data, JSONB_TYPE_COERCE)
+SHARED_ATTRS_JSON = type_coerce(StateAttributes.shared_attrs, JSON_TYPE_COERCE)
+OLD_FORMAT_ATTRS_JSON = type_coerce(States.attributes, JSON_TYPE_COERCE)
 
 
 @overload
