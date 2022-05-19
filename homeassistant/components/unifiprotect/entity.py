@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from pyunifiprotect.data import (
+    NVR,
     Camera,
     Doorlock,
     Event,
@@ -16,7 +17,6 @@ from pyunifiprotect.data import (
     StateType,
     Viewer,
 )
-from pyunifiprotect.data.nvr import NVR
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
