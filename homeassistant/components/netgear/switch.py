@@ -229,7 +229,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
 
     async def async_added_to_hass(self):
         """Fetch state when entity is added."""
-        await async_update()
+        await self.async_update()
         await super().async_added_to_hass()
 
     async def async_update(self):
