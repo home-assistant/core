@@ -15,7 +15,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATOR, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
+from .const import (
+    ATTR_COORDINATOR,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -28,16 +34,34 @@ class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     value: Callable[[str], bool | None] = lambda _: None
 
 
-SENSOR_DEVICE_TYPE = [ATTR_DEVICE_DOOR_SENSOR]
+SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+]
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
-        name="state",
+        name="State",
         value=lambda value: value == "open",
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        name="Motion",
+        value=lambda value: value == "alert",
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="state",
+        name="Leak",
+        icon="mdi:water",
+        value=lambda value: value == "alert",
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
     ),
 )
 
