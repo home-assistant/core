@@ -71,12 +71,27 @@ class ContextFilter(Protocol):
     def __call__(
         self,
         hass: HomeAssistant,
-        context: Context | None,
         entity_id: str,
         state: str,
         attr: dict[str, Any],
-    ) -> Context | None:
+    ) -> bool:
         """Define context filter type."""
+
+
+def state_filter(wanted_state: str) -> ContextFilter:
+    """Return a context filter which is True for a given state."""
+
+    @callback
+    def async_state_filter(
+        hass: HomeAssistant,
+        entity_id: str,
+        state: str,
+        attr: dict[str, Any],
+    ) -> bool:
+        """Filter state changes attributed to a turn_off call."""
+        return state == wanted_state
+
+    return async_state_filter
 
 
 @callback
@@ -700,10 +715,10 @@ class Entity(ABC):
             self._context_set = None
 
         context = self._context
-        if self._context_filter:
-            context = self._context_filter(
-                self.hass, context, self.entity_id, state, attr
-            )
+        if self._context_filter and not self._context_filter(
+            self.hass, self.entity_id, state, attr
+        ):
+            context = None
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update, context
         )

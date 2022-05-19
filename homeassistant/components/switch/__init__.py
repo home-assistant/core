@@ -17,12 +17,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity import (
+    ToggleEntity,
+    ToggleEntityDescription,
+    state_filter,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -71,54 +75,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     @callback
-    def async_turn_off_filter(
-        hass: HomeAssistant,
-        context: Context | None,
-        entity_id: str,
-        state: str,
-        attr: dict[str, Any],
-    ) -> Context | None:
-        """Filter state changes attributed to a turn_off call."""
-        if state != STATE_OFF:
-            return None
-        return context
-
-    @callback
-    def async_turn_on_filter(
-        hass: HomeAssistant,
-        context: Context | None,
-        entity_id: str,
-        state: str,
-        attr: dict[str, Any],
-    ) -> Context | None:
-        """Filter state changes attributed to a turn_on call."""
-        if state != STATE_ON:
-            return None
-        return context
-
-    @callback
     def async_toggle_filter(
         hass: HomeAssistant,
-        context: Context | None,
         entity_id: str,
         state: str,
         attr: dict[str, Any],
-    ) -> Context | None:
+    ) -> bool:
         """Filter state changes attributed to a turn_off call."""
-        old_state = hass.states.get(entity_id)
-        if not old_state:
-            return None
-        if old_state.state == STATE_OFF and state == STATE_ON:
-            return context
-        if old_state.state == STATE_ON and state == STATE_OFF:
-            return context
-        return None
+        if not (old_state := hass.states.get(entity_id)):
+            return False
+        return (old_state.state == STATE_OFF and state == STATE_ON) or (
+            old_state.state == STATE_ON and state == STATE_OFF
+        )
 
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", context_filter=async_turn_off_filter
+        SERVICE_TURN_OFF, {}, "async_turn_off", context_filter=state_filter(STATE_OFF)
     )
     component.async_register_entity_service(
-        SERVICE_TURN_ON, {}, "async_turn_on", context_filter=async_turn_on_filter
+        SERVICE_TURN_ON, {}, "async_turn_on", context_filter=state_filter(STATE_ON)
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE, {}, "async_toggle", context_filter=async_toggle_filter
