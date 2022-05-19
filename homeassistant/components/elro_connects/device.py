@@ -53,7 +53,6 @@ class ElroConnectsK1(K1):
         self._data: dict[int, dict] = {}
         self._connector_id = entry.data[CONF_CONNECTOR_ID]
         self._retry_count = 0
-        self._connected = False
 
         K1.__init__(
             self,
@@ -66,10 +65,6 @@ class ElroConnectsK1(K1):
         """Synchronize with the K1 connector."""
         new_data: dict[int, dict] = {}
         try:
-            # Only connect the first time or if there were recent issues
-            if not self._connected:
-                await self.async_connect()
-            self._connected = True
             update_status = await self.async_process_command(GET_ALL_EQUIPMENT_STATUS)
             new_data = update_status
             update_names = await self.async_process_command(GET_DEVICE_NAMES)
@@ -78,7 +73,6 @@ class ElroConnectsK1(K1):
             self._data = new_data
         except K1.K1ConnectionError as err:
             self._retry_count += 1
-            self._connected = False
             if not self._data or self._retry_count >= MAX_RETRIES:
                 raise K1.K1ConnectionError(err) from err
 
