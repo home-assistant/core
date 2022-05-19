@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import cast
 
 import attr
 import voluptuous as vol
@@ -12,7 +12,10 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationsResult,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
@@ -290,7 +293,7 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> GetAutomationsResult:
     """List device triggers for MQTT devices."""
     triggers: list[dict] = []
 
