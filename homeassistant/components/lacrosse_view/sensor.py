@@ -27,7 +27,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], int]
+    value_fn: Callable[[Sensor, str], float]
 
 
 @dataclass
@@ -85,7 +85,7 @@ async def async_setup_entry(
                         != sensor.name  # If the name is the same as the field, don't include it.
                         else sub(r"(?<!^)(?=[A-Z])", " ", field),
                         state_class=SensorStateClass.MEASUREMENT,
-                        value_fn=lambda sensor, field: int(
+                        value_fn=lambda sensor, field: float(
                             sensor.data[field]["values"][-1]["s"]
                         ),
                         native_unit_of_measurement=UNIT_LIST.get(
@@ -130,7 +130,7 @@ class LaCrosseViewSensor(
         }
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> float:
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[int(self.entity_description.key.split(" ")[0])],

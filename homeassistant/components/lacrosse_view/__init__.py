@@ -1,6 +1,8 @@
 """The LaCrosse View integration."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
@@ -17,9 +19,32 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
+def _retry(
+    func: Callable[..., Awaitable[list[Sensor]]]
+) -> Callable[..., Awaitable[list[Sensor]]]:
+    """Handle query retries."""
+
+    async def wrapper() -> list[Sensor]:
+        """Wrap all query functions."""
+        update_retries = 5
+        while update_retries > 0:
+            try:
+                result = await func()
+            except HTTPError as error:
+                update_retries -= 1
+                if update_retries == 0:
+                    raise error
+                await asyncio.sleep(1)
+
+        return result
+
+    return wrapper
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LaCrosse View from a config entry."""
 
+    @_retry
     async def get_data() -> list[Sensor]:
         """Get the data from the LaCrosse View."""
         if hass.data[DOMAIN][entry.entry_id][
@@ -57,10 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> list[Sensor]:
         """Fetch data from API."""
-        try:
-            data: list[Sensor] = await get_data()
-        except HTTPError as error:
-            raise error
+        data: list[Sensor] = await get_data()
 
         return data
 
