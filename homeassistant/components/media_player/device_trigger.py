@@ -1,8 +1,6 @@
 """Provides device automations for Media player."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -11,6 +9,8 @@ from homeassistant.components.automation import (
 )
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
     entity,
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
@@ -55,7 +55,7 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> GetAutomationsResult:
     """List device triggers for Media player entities."""
     registry = entity_registry.async_get(hass)
     triggers = await entity.async_get_triggers(hass, device_id, DOMAIN)
@@ -82,7 +82,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in TRIGGER_TYPES:
         return await entity.async_get_trigger_capabilities(hass, config)
