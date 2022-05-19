@@ -3,6 +3,12 @@
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_VIA_DEVICE,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -41,11 +47,7 @@ class NexiaThermostatEntity(NexiaEntity):
         """Initialize the entity."""
         super().__init__(coordinator, name, unique_id)
         self._thermostat: NexiaThermostat = thermostat
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
             identifiers={(DOMAIN, self._thermostat.thermostat_id)},
             manufacturer=MANUFACTURER,
@@ -86,21 +88,13 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         """Initialize the entity."""
         super().__init__(coordinator, zone.thermostat, name, unique_id)
         self._zone: NexiaThermostatZone = zone
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        data = super().device_info
         zone_name = self._zone.get_name()
-        data.update(
-            {
-                "identifiers": {(DOMAIN, self._zone.zone_id)},
-                "name": zone_name,
-                "suggested_area": zone_name,
-                "via_device": (DOMAIN, self._zone.thermostat.thermostat_id),
-            }
-        )
-        return data
+        self._attr_device_info |= {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._zone.zone_id)},
+            ATTR_NAME: zone_name,
+            ATTR_SUGGESTED_AREA: zone_name,
+            ATTR_VIA_DEVICE: (DOMAIN, self._zone.thermostat.thermostat_id),
+        }
 
     async def async_added_to_hass(self):
         """Listen for signals for services."""
