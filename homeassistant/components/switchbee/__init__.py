@@ -29,7 +29,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.SWITCH,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.BUTTON,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -147,19 +152,31 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         try:
             result = await self._api.get_multiple_states(list(self._devices.keys()))
         except switchbee.SwitchBeeError as exp:
-            _LOGGER.warning(
-                "Failed to fetch devices states from the central unit status=%s", exp
-            )
+            error_message = "Failed to fetch devices states from the central unit\n"
+
+            if switchbee.STATUS_INVALID_TOKEN in str(exp):
+                error_message += "Invalid Token, make sure the user you configured is not being used by another platform via API, if yes, please re-authenticate with a different user"
+            else:
+                error_message += exp
             raise UpdateFailed(
-                f"Error communicating with API: {exp}"
+                f"Error communicating with API: {error_message}"
             ) from switchbee.SwitchBeeError
         else:
             states = result[switchbee.ATTR_DATA]
             for state in states:
-                if state[switchbee.ATTR_ID] in self._devices:
-                    self._devices[state[switchbee.ATTR_ID]]["state"] = state["state"]
-                    self._devices[state[switchbee.ATTR_ID]][
-                        "uid"
-                    ] = f"{self._mac}-{state[switchbee.ATTR_ID]}"
-
+                # Make sure the device we fetched already discovered by HASS
+                device_id = state[switchbee.ATTR_ID]
+                if device_id in self._devices:
+                    try:
+                        self._devices[device_id]["state"] = state["state"]
+                        self._devices[device_id]["uid"] = f"{self._mac}-{device_id}"
+                    except KeyError as exp:
+                        _LOGGER.warning(
+                            "%s\nRecieved invalid device state for %s from the Central Unit: %s\nKeeping old state",
+                            exp,
+                            self._devices[device_id],
+                            state,
+                        )
+                else:
+                    pass
             return self._devices
