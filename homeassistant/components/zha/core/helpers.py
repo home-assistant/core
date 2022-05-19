@@ -15,7 +15,7 @@ import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -34,10 +34,12 @@ from .const import (
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
 )
-from .device import ZHADevice
-from .gateway import ZHAGateway
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
+
+if TYPE_CHECKING:
+    from .device import ZHADevice
+    from .gateway import ZHAGateway
 
 _T = TypeVar("_T")
 
