@@ -266,7 +266,7 @@ class SetupEntity(Protocol):
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant, domain: str, schema: vol.Schema
 ) -> list[ConfigType]:
-    """Return a list of validated configurations for the domain read from configuration.yaml."""
+    """Return a list of validated configurations for the domain."""
 
     def async_validate_config(
         hass: HomeAssistant,

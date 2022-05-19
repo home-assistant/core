@@ -1295,7 +1295,8 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
         remove_platform=False,
     )
     assert (
-        "Invalid config for [light]: [platform] is an invalid option for [light]. Check: light->platform. (See ?, line ?)"
+        "Invalid config for [light]: [platform] is an invalid option for [light]. "
+        "Check: light->platform. (See ?, line ?)"
         in caplog.text
     )
 
