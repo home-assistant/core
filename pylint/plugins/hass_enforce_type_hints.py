@@ -177,12 +177,23 @@ _METHOD_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_action"],
-        function_name="async_get_actions",
+        function_name="async_validate_action_config",
         arg_types={
             0: "HomeAssistant",
-            1: "str",
+            1: "ConfigType",
         },
-        return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+        return_type="ConfigType",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_action"],
+        function_name="async_call_action_from_config",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+            2: "TemplateVarsType",
+            3: "Context | None",
+        },
+        return_type=None,
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_action"],
@@ -191,16 +202,34 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigType",
         },
-        return_type="dict[str, Schema]",
+        return_type="GetAutomationCapabilitiesResult",
     ),
     TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_condition"],
-        function_name="async_get_conditions",
+        module_filter=_MODULE_FILTERS["device_action"],
+        function_name="async_get_actions",
         arg_types={
             0: "HomeAssistant",
             1: "str",
         },
-        return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+        return_type="GetAutomationsResult",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_condition"],
+        function_name="async_validate_condition_config",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type="ConfigType",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_condition"],
+        function_name="async_condition_from_config",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type="ConditionCheckerType",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_condition"],
@@ -209,7 +238,16 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigType",
         },
-        return_type="dict[str, Schema]",
+        return_type="GetAutomationCapabilitiesResult",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_condition"],
+        function_name="async_get_conditions",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+        },
+        return_type="GetAutomationsResult",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_tracker"],
@@ -253,12 +291,23 @@ _METHOD_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_trigger"],
-        function_name="async_get_triggers",
+        function_name="async_validate_condition_config",
         arg_types={
             0: "HomeAssistant",
-            1: "str",
+            1: "ConfigType",
         },
-        return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+        return_type="ConfigType",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_trigger"],
+        function_name="async_attach_trigger",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+            2: "AutomationActionType",
+            3: "AutomationTriggerInfo",
+        },
+        return_type="CALLBACK_TYPE",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_trigger"],
@@ -267,7 +316,16 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigType",
         },
-        return_type="dict[str, Schema]",
+        return_type="GetAutomationCapabilitiesResult",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_trigger"],
+        function_name="async_get_triggers",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+        },
+        return_type="GetAutomationsResult",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["diagnostics"],
