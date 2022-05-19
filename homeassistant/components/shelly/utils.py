@@ -297,6 +297,9 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key in keys_dict:
         return [key]
 
+    if key == "switch" and "cover:0" in keys_dict:
+        key = "cover"
+
     keys_list: list[str] = []
     for i in range(MAX_RPC_KEY_INSTANCES):
         key_inst = f"{key}:{i}"
