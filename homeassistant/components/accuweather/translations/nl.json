@@ -18,9 +18,7 @@
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad",
                     "name": "Naam"
-                },
-                "description": "Als je hulp nodig hebt bij de configuratie, kijk dan hier: https://www.home-assistant.io/integrations/accuweather/ \n\n Sommige sensoren zijn niet standaard ingeschakeld. U kunt ze inschakelen in het entiteitenregister na de integratieconfiguratie.\n Weersvoorspelling is niet standaard ingeschakeld. U kunt het inschakelen in de integratieopties.",
-                "title": "AccuWeather"
+                }
             }
         }
     },
@@ -30,8 +28,7 @@
                 "data": {
                     "forecast": "Weervoorspelling"
                 },
-                "description": "Vanwege de beperkingen van de gratis versie van de AccuWeather API-sleutel, worden gegevensupdates elke 64 minuten in plaats van elke 32 minuten uitgevoerd wanneer u weersvoorspelling inschakelt.",
-                "title": "AccuWeather-opties"
+                "description": "Vanwege de beperkingen van de gratis versie van de AccuWeather API-sleutel, worden gegevensupdates elke 64 minuten in plaats van elke 32 minuten uitgevoerd wanneer u weersvoorspelling inschakelt."
             }
         }
     },

@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Uwierzytelnianie",
-                    "content_type": "Typ zawarto\u015bci",
                     "framerate": "Od\u015bwie\u017canie (Hz)",
                     "limit_refetch_to_url_change": "Ogranicz pobieranie do zmiany adresu URL",
                     "password": "Has\u0142o",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Uwierzytelnianie",
-                    "content_type": "Typ zawarto\u015bci",
                     "framerate": "Od\u015bwie\u017canie (Hz)",
                     "limit_refetch_to_url_change": "Ogranicz pobieranie do zmiany adresu URL",
                     "password": "Has\u0142o",

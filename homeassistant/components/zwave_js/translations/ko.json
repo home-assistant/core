@@ -23,7 +23,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "\ub124\ud2b8\uc6cc\ud06c \ud0a4",
                     "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
                 },
                 "title": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uad6c\uc131\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694"
@@ -56,7 +55,9 @@
             "set_config_parameter": "\uad6c\uc131 \ub9e4\uac1c\ubcc0\uc218 {subtype} \uc758 \uac12 \uc124\uc815",
             "set_lock_usercode": "{entity_name} \uc5d0 \uc0ac\uc6a9\uc790 \ucf54\ub4dc \uc124\uc815",
             "set_value": "Z-Wave Value\uc758 \uc124\uc815\uac12"
+        },
+        "trigger_type": {
+            "event.value_notification.scene_activation": "{subtype} \uc5d0\uc11c \uc7a5\uba74 \ud65c\uc131\ud654"
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }
