@@ -234,7 +234,7 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
 
     async def async_update(self):
         """Poll the state of the switch."""
-        async with self._router._api_lock:
+        async with self._router.api_lock:
             response = await self.hass.async_add_executor_job(self.entity_description.update(self._router))
         if response is None:
             self._available = False
@@ -244,12 +244,12 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        async with self._router._api_lock:
+        async with self._router.api_lock:
             await self.hass.async_add_executor_job(self.entity_description.action(self._router), True)
         self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        async with self._router._api_lock:
+        async with self._router.api_lock:
             await self.hass.async_add_executor_job(self.entity_description.action(self._router), False)
         self.async_schedule_update_ha_state(force_refresh=True)

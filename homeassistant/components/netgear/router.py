@@ -87,14 +87,14 @@ class NetgearRouter:
         )
         self._consider_home = timedelta(seconds=consider_home_int)
 
-        self._api: Netgear = None
-        self._api_lock = asyncio.Lock()
+        self.api: Netgear = None
+        self.api_lock = asyncio.Lock()
 
         self.devices: dict[str, Any] = {}
 
     def _setup(self) -> bool:
         """Set up a Netgear router sync portion."""
-        self._api = get_api(
+        self.api = get_api(
             self._password,
             self._host,
             self._username,
@@ -102,7 +102,7 @@ class NetgearRouter:
             self._ssl,
         )
 
-        self._info = self._api.get_info()
+        self._info = self.api.get_info()
         if self._info is None:
             return False
 
@@ -141,7 +141,7 @@ class NetgearRouter:
 
     async def async_setup(self) -> bool:
         """Set up a Netgear router."""
-        async with self._api_lock:
+        async with self.api_lock:
             if not await self.hass.async_add_executor_job(self._setup):
                 return False
 
@@ -175,14 +175,14 @@ class NetgearRouter:
     async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self.method_version == 1:
-            async with self._api_lock:
+            async with self.api_lock:
                 return await self.hass.async_add_executor_job(
-                    self._api.get_attached_devices
+                    self.api.get_attached_devices
                 )
 
-        async with self._api_lock:
+        async with self.api_lock:
             return await self.hass.async_add_executor_job(
-                self._api.get_attached_devices_2
+                self.api.get_attached_devices_2
             )
 
     async def async_update_device_trackers(self, now=None) -> bool:
@@ -218,8 +218,8 @@ class NetgearRouter:
 
     async def async_get_traffic_meter(self) -> dict[str, Any] | None:
         """Get the traffic meter data of the router."""
-        async with self._api_lock:
-            return await self.hass.async_add_executor_job(self._api.get_traffic_meter)
+        async with self.api_lock:
+            return await self.hass.async_add_executor_job(self.api.get_traffic_meter)
 
     async def async_get_speed_test(self) -> dict[str, Any] | None:
         """Perform a speed test and get the results from the router."""
@@ -230,25 +230,25 @@ class NetgearRouter:
 
     async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
         """Allow or block a device connected to the router."""
-        async with self._api_lock:
+        async with self.api_lock:
             await self.hass.async_add_executor_job(
-                self._api.allow_block_device, mac, allow_block
+                self.api.allow_block_device, mac, allow_block
             )
 
     async def async_reboot(self) -> None:
         """Reboot the router."""
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(self._api.reboot)
+        async with self.api_lock:
+            await self.hass.async_add_executor_job(self.api.reboot)
 
     @property
     def port(self) -> int:
         """Port used by the API."""
-        return self._api.port
+        return self.api.port
 
     @property
     def ssl(self) -> bool:
         """SSL used by the API."""
-        return self._api.ssl
+        return self.api.ssl
 
 
 class NetgearBaseEntity(CoordinatorEntity):
