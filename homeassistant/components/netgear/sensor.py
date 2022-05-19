@@ -343,6 +343,13 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
         """Return the state of the sensor."""
         return self._value
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if self.coordinator.data is None:
+            state = await self.async_get_last_state()
+            self._value = state.state
+
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
