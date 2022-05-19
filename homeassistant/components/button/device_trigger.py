@@ -1,15 +1,16 @@
 """Provides device triggers for Button."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationsResult,
+)
 from homeassistant.components.homeassistant.triggers.state import (
     async_attach_trigger as async_attach_state_trigger,
     async_validate_trigger_config as async_validate_state_trigger_config,
@@ -39,7 +40,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> GetAutomationsResult:
     """List device triggers for button devices."""
     registry = entity_registry.async_get(hass)
     return [

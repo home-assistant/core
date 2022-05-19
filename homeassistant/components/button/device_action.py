@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import GetAutomationsResult
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -13,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN, SERVICE_PRESS
 
@@ -28,7 +30,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device actions for button devices."""
     registry = entity_registry.async_get(hass)
     return [
@@ -44,7 +46,10 @@ async def async_get_actions(
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
     await hass.services.async_call(
