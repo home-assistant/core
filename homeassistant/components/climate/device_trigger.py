@@ -1,15 +1,17 @@
 """Provides device automations for Climate."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
@@ -65,7 +67,7 @@ TRIGGER_SCHEMA = vol.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> GetAutomationsResult:
     """List device triggers for Climate devices."""
     registry = entity_registry.async_get(hass)
     triggers = []
@@ -169,7 +171,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List trigger capabilities."""
     trigger_type = config[CONF_TYPE]
 
