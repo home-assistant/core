@@ -34,6 +34,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from . import migration, statistics
@@ -459,10 +460,18 @@ class Recorder(threading.Thread):
 
     @callback
     def async_update_statistics_metadata(
-        self, statistic_id: str, unit_of_measurement: str | None
+        self,
+        statistic_id: str,
+        *,
+        new_statistic_id: str | UndefinedType = UNDEFINED,
+        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
-        self.queue_task(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
+        self.queue_task(
+            UpdateStatisticsMetadataTask(
+                statistic_id, new_statistic_id, new_unit_of_measurement
+            )
+        )
 
     @callback
     def async_external_statistics(

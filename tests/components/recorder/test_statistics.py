@@ -311,7 +311,7 @@ def test_rename_entity(hass_recorder):
         entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
 
     hass.add_job(rename_entry)
-    hass.block_till_done()
+    wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
@@ -389,7 +389,7 @@ def test_rename_entity_collision(hass_recorder, caplog):
         entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
 
     hass.add_job(rename_entry)
-    hass.block_till_done()
+    wait_recording_done(hass)
 
     # Statistics failed to migrate due to the collision
     stats = statistics_during_period(hass, zero, period="5minute")

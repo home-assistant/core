@@ -33,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -208,9 +209,10 @@ class ValidationIssue:
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
 
-    async def _async_entity_id_changed(event: Event) -> None:
-        await async_migrate_statistics(
-            hass, event.data["old_entity_id"], event.data["entity_id"]
+    @callback
+    def _async_entity_id_changed(event: Event) -> None:
+        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+            event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
         )
 
     @callback
@@ -836,13 +838,26 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
 
 
 def update_statistics_metadata(
-    instance: Recorder, statistic_id: str, unit_of_measurement: str | None
+    instance: Recorder,
+    statistic_id: str,
+    new_statistic_id: str | None | UndefinedType,
+    new_unit_of_measurement: str | None | UndefinedType,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:
-        session.query(StatisticsMeta).filter(
-            StatisticsMeta.statistic_id == statistic_id
-        ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
+    if new_unit_of_measurement is not UNDEFINED:
+        with session_scope(session=instance.get_session()) as session:
+            session.query(StatisticsMeta).filter(
+                StatisticsMeta.statistic_id == statistic_id
+            ).update({StatisticsMeta.unit_of_measurement: new_unit_of_measurement})
+    if new_statistic_id is not UNDEFINED:
+        with session_scope(
+            session=instance.get_session(),
+            exception_filter=_filter_unique_constraint_integrity_error(instance),
+        ) as session:
+            session.query(StatisticsMeta).filter(
+                (StatisticsMeta.statistic_id == statistic_id)
+                & (StatisticsMeta.source == DOMAIN)
+            ).update({StatisticsMeta.statistic_id: new_statistic_id})
 
 
 def list_statistic_ids(
@@ -1390,29 +1405,6 @@ def async_add_external_statistics(
 
     # Insert job in recorder's queue
     hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
-
-
-async def async_migrate_statistics(
-    hass: HomeAssistant, old_statistic_id: str, new_statistic_id: str
-) -> None:
-    """Migrate statistics when statistics_id changes."""
-
-    def migrate_statistics(old_statistic_id: str, new_statistic_id: str) -> None:
-        """Migrate statistics when statistics_id changes."""
-        with session_scope(
-            hass=hass,
-            exception_filter=_filter_unique_constraint_integrity_error(
-                hass.data[DATA_INSTANCE]
-            ),
-        ) as session:
-            session.query(StatisticsMeta).filter(
-                (StatisticsMeta.statistic_id == old_statistic_id)
-                & (StatisticsMeta.source == DOMAIN)
-            ).update({StatisticsMeta.statistic_id: new_statistic_id})
-
-    await hass.data[DATA_INSTANCE].async_add_executor_job(
-        migrate_statistics, old_statistic_id, new_statistic_id
-    )
 
 
 def _filter_unique_constraint_integrity_error(
