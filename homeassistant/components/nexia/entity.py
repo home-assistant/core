@@ -45,7 +45,6 @@ class NexiaThermostatEntity(NexiaEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        assert isinstance(self.coordinator, NexiaDataUpdateCoordinator)
         return DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
             identifiers={(DOMAIN, self._thermostat.thermostat_id)},
