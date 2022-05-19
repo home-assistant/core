@@ -162,7 +162,9 @@ async def async_attach_trigger(bridge, device_entry, config, action, automation_
 
 
 @callback
-def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
+def async_get_triggers(
+    bridge: "HueBridge", device: DeviceEntry
+) -> list[dict[str, str]]:
     """Return device triggers for device on `v1` bridge.
 
     Make sure device is a supported remote model.
@@ -170,7 +172,7 @@ def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
     Generate device trigger list.
     """
     if device.model not in REMOTES:
-        return
+        return []
 
     triggers = []
     for trigger, subtype in REMOTES[device.model]:

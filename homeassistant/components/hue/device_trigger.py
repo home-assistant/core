@@ -82,7 +82,9 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(hass: "HomeAssistant", device_id: str):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """Get device triggers for given (hass) device id."""
     if DOMAIN not in hass.data:
         return []
@@ -101,3 +103,4 @@ async def async_get_triggers(hass: "HomeAssistant", device_id: str):
         if bridge.api_version == 1:
             return async_get_triggers_v1(bridge, device_entry)
         return async_get_triggers_v2(bridge, device_entry)
+    return []
