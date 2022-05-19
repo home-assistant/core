@@ -12,16 +12,14 @@
         },
         "step": {
             "confirm_discovery": {
-                "description": "DHCP-reservering op uw router wordt aanbevolen. Als dit niet het geval is, is het apparaat mogelijk niet meer beschikbaar totdat Home Assistant het nieuwe IP-adres detecteert. Raadpleeg de gebruikershandleiding van uw router.",
-                "title": "Goal Zero Yeti"
+                "description": "DHCP-reservering op uw router wordt aanbevolen. Als dit niet het geval is, is het apparaat mogelijk niet meer beschikbaar totdat Home Assistant het nieuwe IP-adres detecteert. Raadpleeg de gebruikershandleiding van uw router."
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Naam"
                 },
-                "description": "Raadpleeg de documentatie om er zeker van te zijn dat aan alle vereisten wordt voldaan.",
-                "title": "Goal Zero Yeti"
+                "description": "Raadpleeg de documentatie om er zeker van te zijn dat aan alle vereisten wordt voldaan."
             }
         }
     }

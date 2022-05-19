@@ -420,7 +420,7 @@ blockchain==1.4.4
 # bluepy==1.3.0
 
 # homeassistant.components.bond
-bond-api==0.1.16
+bond-api==0.1.18
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.30
@@ -689,7 +689,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.8.0
+gcal-sync==0.8.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1077,7 +1077,7 @@ nettigo-air-monitor==1.2.4
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.13
+nexia==1.0.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0

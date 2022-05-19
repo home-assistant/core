@@ -9,7 +9,6 @@
                     "entity_id": "Eingangssensor",
                     "hysteresis": "Hysterese",
                     "lower": "Untere Grenze",
-                    "mode": "Schwellenwertmodus",
                     "name": "Name",
                     "upper": "Obergrenze"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Eingangssensor",
                     "hysteresis": "Hysterese",
                     "lower": "Untere Grenze",
-                    "mode": "Schwellenwertmodus",
                     "name": "Name",
                     "upper": "Obergrenze"
                 },

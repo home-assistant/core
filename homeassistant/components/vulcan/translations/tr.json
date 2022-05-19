@@ -30,14 +30,6 @@
                 },
                 "description": "Mobil uygulama kay\u0131t sayfas\u0131n\u0131 kullanarak Vulcan Hesab\u0131n\u0131za giri\u015f yap\u0131n."
             },
-            "reauth": {
-                "data": {
-                    "pin": "Pin",
-                    "region": "Sembol",
-                    "token": "Anahtar"
-                },
-                "description": "Mobil uygulama kay\u0131t sayfas\u0131n\u0131 kullanarak Vulcan Hesab\u0131n\u0131za giri\u015f yap\u0131n."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
@@ -57,21 +49,6 @@
                     "student_name": "\u00d6\u011frenci se\u00e7"
                 },
                 "description": "\u00d6\u011frenciyi se\u00e7in, yeniden t\u00fcmle\u015ftirme ekleyerek daha fazla \u00f6\u011frenci ekleyebilirsiniz."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Hata olu\u015ftu"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "En son kat\u0131l\u0131m giri\u015fleriyle ilgili bildirimleri g\u00f6ster",
-                    "grade_notify": "En son notlarla ilgili bildirimleri g\u00f6ster",
-                    "message_notify": "Yeni mesaj al\u0131nd\u0131\u011f\u0131nda bildirimleri g\u00f6ster",
-                    "scan_interval": "G\u00fcncelleme aral\u0131\u011f\u0131 (dakika olarak)"
-                }
             }
         }
     }

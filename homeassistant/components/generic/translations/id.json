@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autentikasi",
-                    "content_type": "Jenis Konten",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Batasi pengambilan ulang untuk perubahan URL",
                     "password": "Kata Sandi",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Autentikasi",
-                    "content_type": "Jenis Konten",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Batasi pengambilan ulang untuk perubahan URL",
                     "password": "Kata Sandi",

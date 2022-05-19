@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Elhelyezked\u00e9s",
                     "usercode": "Felhaszn\u00e1l\u00f3i k\u00f3d"
                 },
                 "description": "Adja meg ennek a felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1t a k\u00f6vetkez\u0151 helyen: {location_id}",
@@ -26,8 +25,7 @@
                 "data": {
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                },
-                "title": "Total Connect"
+                }
             }
         }
     }

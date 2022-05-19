@@ -11,9 +11,6 @@
         },
         "step": {
             "locations": {
-                "data": {
-                    "location": "\uc704\uce58"
-                },
                 "description": "\uc774 \uc704\uce58\uc758 \ud574\ub2f9 \uc0ac\uc6a9\uc790\uc5d0 \ub300\ud55c \uc0ac\uc6a9\uc790 \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
                 "title": "\uc704\uce58 \uc0ac\uc6a9\uc790 \ucf54\ub4dc"
             },
@@ -25,8 +22,7 @@
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
-                },
-                "title": "Total Connect"
+                }
             }
         }
     }

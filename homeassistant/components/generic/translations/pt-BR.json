@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autentica\u00e7\u00e3o",
-                    "content_type": "Tipo de conte\u00fado",
                     "framerate": "Taxa de quadros (Hz)",
                     "limit_refetch_to_url_change": "Limitar a nova busca \u00e0 altera\u00e7\u00e3o de URL",
                     "password": "Senha",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Autentica\u00e7\u00e3o",
-                    "content_type": "Tipo de conte\u00fado",
                     "framerate": "Taxa de quadros (Hz)",
                     "limit_refetch_to_url_change": "Limitar a nova busca \u00e0 altera\u00e7\u00e3o de URL",
                     "password": "Senha",

@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
-                    "base_path": "Bane til API",
-                    "host": "Vert",
-                    "port": "Port",
-                    "ssl": "Bruker et SSL-sertifikat",
                     "url": "URL",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }
