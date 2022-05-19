@@ -67,7 +67,7 @@ CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
@@ -90,10 +90,11 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_TEMPLATE = vol.All(
     # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
     cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )
 
 DISCOVERY_SCHEMA_TEMPLATE = vol.All(
@@ -101,6 +102,8 @@ DISCOVERY_SCHEMA_TEMPLATE = vol.All(
     cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
+
+PLATFORM_SCHEMA_MODERN_TEMPLATE = _PLATFORM_SCHEMA_BASE
 
 
 async def async_setup_entity_template(
