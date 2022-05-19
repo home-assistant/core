@@ -61,23 +61,30 @@ def test_get_significant_states_minimal_response(hass_history):
     hist = get_significant_states(
         hass, zero, four, filters=history.Filters(), minimal_response=True
     )
+    entites_with_reducable_states = [
+        "media_player.test",
+        "media_player.test3",
+    ]
 
-    # The second media_player.test state is reduced
+    # All states for media_player.test state are reduced
     # down to last_changed and state when minimal_response
+    # is set except for the first state.
     # is set.  We use JSONEncoder to make sure that are
     # pre-encoded last_changed is always the same as what
     # will happen with encoding a native state
-    input_state = states["media_player.test"][1]
-    orig_last_changed = json.dumps(
-        process_timestamp(input_state.last_changed),
-        cls=JSONEncoder,
-    ).replace('"', "")
-    orig_state = input_state.state
-    states["media_player.test"][1] = {
-        "last_changed": orig_last_changed,
-        "state": orig_state,
-    }
-
+    for entity_id in entites_with_reducable_states:
+        entity_states = states[entity_id]
+        for state_idx in range(1, len(entity_states)):
+            input_state = entity_states[state_idx]
+            orig_last_changed = orig_last_changed = json.dumps(
+                process_timestamp(input_state.last_changed),
+                cls=JSONEncoder,
+            ).replace('"', "")
+            orig_state = input_state.state
+            entity_states[state_idx] = {
+                "last_changed": orig_last_changed,
+                "state": orig_state,
+            }
     assert states == hist
 
 
@@ -616,6 +623,9 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     hass.states.async_set("sensor.power", 50, {"attr": "any"})
     await async_wait_recording_done(hass)
     hass.states.async_set("sensor.power", 23, {"attr": "any"})
+    last_changed = hass.states.get("sensor.power").last_changed
+    await async_wait_recording_done(hass)
+    hass.states.async_set("sensor.power", 23, {"attr": "any"})
     await async_wait_recording_done(hass)
     client = await hass_client()
     response = await client.get(
@@ -634,9 +644,13 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     assert "entity_id" not in state_list[1]
     assert state_list[1]["state"] == "50"
 
-    assert state_list[2]["entity_id"] == "sensor.power"
-    assert state_list[2]["attributes"] == {}
+    assert "attributes" not in state_list[2]
+    assert "entity_id" not in state_list[2]
     assert state_list[2]["state"] == "23"
+    assert state_list[2]["last_changed"] == json.dumps(
+        process_timestamp(last_changed),
+        cls=JSONEncoder,
+    ).replace('"', "")
 
 
 async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mock):
@@ -1131,7 +1145,7 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
     assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
 
     assert sensor_test_history[2]["s"] == "on"
-    assert sensor_test_history[2]["a"] == {}
+    assert "a" not in sensor_test_history[2]
 
     await client.send_json(
         {
