@@ -35,14 +35,12 @@
                 "title": "Plex\u30b5\u30fc\u30d0\u30fc\u3092\u9078\u629e"
             },
             "user": {
-                "description": "[plex.tv](https://plex.tv) \u306b\u9032\u307f\u3001Plex server\u3092\u30ea\u30f3\u30af\u3057\u307e\u3059\u3002",
-                "title": "Plex Media Server"
+                "description": "[plex.tv](https://plex.tv) \u306b\u9032\u307f\u3001Plex server\u3092\u30ea\u30f3\u30af\u3057\u307e\u3059\u3002"
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u65b9\u6cd5"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

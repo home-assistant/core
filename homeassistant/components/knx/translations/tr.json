@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Sunucu",
-                    "individual_address": "Ba\u011flant\u0131 i\u00e7in bireysel adres",
                     "local_ip": "Home Asistan\u0131n\u0131n Yerel IP'si",
                     "port": "Port",
-                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu",
                     "tunneling_type": "KNX T\u00fcnel Tipi"
                 },
                 "data_description": {
@@ -110,9 +108,7 @@
             "tunnel": {
                 "data": {
                     "host": "Sunucu",
-                    "local_ip": "Yerel IP (emin de\u011filseniz bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
-                    "route_back": "Geri Y\u00f6nlendirme / NAT Modu",
                     "tunneling_type": "KNX T\u00fcnel Tipi"
                 },
                 "data_description": {

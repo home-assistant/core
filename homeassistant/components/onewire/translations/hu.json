@@ -4,22 +4,13 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "invalid_path": "A k\u00f6nyvt\u00e1r nem tal\u00e1lhat\u00f3."
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
-            "owserver": {
-                "data": {
-                    "host": "C\u00edm",
-                    "port": "Port"
-                },
-                "title": "Owserver adatok be\u00e1ll\u00edt\u00e1sa"
-            },
             "user": {
                 "data": {
                     "host": "C\u00edm",
-                    "port": "Port",
-                    "type": "Kapcsolat t\u00edpusa"
+                    "port": "Port"
                 },
                 "title": "A 1-Wire be\u00e1ll\u00edt\u00e1sa"
             }
@@ -34,9 +25,7 @@
                 "data": {
                     "one": "\u00dcres",
                     "other": "\u00dcres"
-                },
-                "description": "A SysBus implement\u00e1ci\u00f3j\u00e1nak nincsenek opci\u00f3i.",
-                "title": "OneWire SysBus opci\u00f3k"
+                }
             },
             "configure_device": {
                 "data": {

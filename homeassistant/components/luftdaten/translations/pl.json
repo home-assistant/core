@@ -10,8 +10,7 @@
                 "data": {
                     "show_on_map": "Poka\u017c na mapie",
                     "station_id": "ID sensora"
-                },
-                "title": "Konfiguracja Luftdaten"
+                }
             }
         }
     }

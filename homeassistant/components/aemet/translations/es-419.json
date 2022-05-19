@@ -5,8 +5,7 @@
                 "data": {
                     "name": "Nombre de la integraci\u00f3n"
                 },
-                "description": "Configure la integraci\u00f3n de AEMET OpenData. Para generar la clave API vaya a https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "Configure la integraci\u00f3n de AEMET OpenData. Para generar la clave API vaya a https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

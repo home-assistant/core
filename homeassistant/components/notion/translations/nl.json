@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
-            "no_devices": "Geen apparaten gevonden in account",
             "unknown": "Onverwachte fout"
         },
         "step": {

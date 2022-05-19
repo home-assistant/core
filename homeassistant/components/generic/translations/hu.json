@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Hiteles\u00edt\u00e9s",
-                    "content_type": "Tartalom t\u00edpusa",
                     "framerate": "K\u00e9pkockasebess\u00e9g (Hz)",
                     "limit_refetch_to_url_change": "Korl\u00e1tozza a visszah\u00edv\u00e1st az url v\u00e1ltoz\u00e1sra",
                     "password": "Jelsz\u00f3",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Hiteles\u00edt\u00e9s",
-                    "content_type": "Tartalom t\u00edpusa",
                     "framerate": "K\u00e9pkockasebess\u00e9g (Hz)",
                     "limit_refetch_to_url_change": "Korl\u00e1tozza a visszah\u00edv\u00e1st az url v\u00e1ltoz\u00e1sra",
                     "password": "Jelsz\u00f3",

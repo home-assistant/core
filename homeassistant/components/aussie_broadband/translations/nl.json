@@ -11,13 +11,6 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Wachtwoord"
-                },
-                "description": "Update wachtwoord voor {username}",
-                "title": "Verifieer de integratie opnieuw"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord"

@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "The following components are supported: {components}",
-                "title": "WiLight"
+                "description": "The following components are supported: {components}"
             }
         }
     }

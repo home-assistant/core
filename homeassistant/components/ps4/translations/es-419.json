@@ -13,8 +13,7 @@
         },
         "step": {
             "creds": {
-                "description": "Credenciales necesarias. Presione 'Enviar' y luego en la aplicaci\u00f3n de la segunda pantalla de PS4, actualice los dispositivos y seleccione el dispositivo 'Home-Assistant' para continuar.",
-                "title": "Playstation 4"
+                "description": "Credenciales necesarias. Presione 'Enviar' y luego en la aplicaci\u00f3n de la segunda pantalla de PS4, actualice los dispositivos y seleccione el dispositivo 'Home-Assistant' para continuar."
             },
             "link": {
                 "data": {
@@ -22,17 +21,13 @@
                     "ip_address": "Direcci\u00f3n IP",
                     "name": "Nombre",
                     "region": "Regi\u00f3n"
-                },
-                "description": "Ingresa tu informaci\u00f3n de PlayStation 4. Para 'PIN', navegue hasta 'Configuraci\u00f3n' en su consola PlayStation 4. Luego navegue a 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y seleccione 'Agregar dispositivo'. Ingrese el PIN que se muestra.",
-                "title": "Playstation 4"
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP (dejar en blanco si se utiliza el descubrimiento autom\u00e1tico).",
                     "mode": "Modo de configuraci\u00f3n"
-                },
-                "description": "Seleccione el modo para la configuraci\u00f3n. El campo Direcci\u00f3n IP puede dejarse en blanco si selecciona Descubrimiento autom\u00e1tico, ya que los dispositivos se descubrir\u00e1n autom\u00e1ticamente.",
-                "title": "Playstation 4"
+                }
             }
         }
     }

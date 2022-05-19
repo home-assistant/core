@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Asukoht",
                     "usercode": "Kasutajakood"
                 },
                 "description": "Sisesta kasutaja kood asukohale {location_id}",
@@ -26,8 +25,7 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                },
-                "title": ""
+                }
             }
         }
     }
