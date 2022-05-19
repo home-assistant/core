@@ -291,7 +291,9 @@ async def _async_get_device_automation_capabilities(
         return {}
 
     try:
-        capabilities = await getattr(platform, function_name)(hass, automation)
+        capabilities = getattr(platform, function_name)(hass, automation)
+        if asyncio.iscoroutine(capabilities):
+            capabilities = await capabilities
     except InvalidDeviceAutomationConfig:
         return {}
 
