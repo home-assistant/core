@@ -249,13 +249,6 @@ async def async_from_config_dict(
         return None
 
     await _async_set_up_integrations(hass, config)
-    import json
-
-    from homeassistant.helpers.json import ExtendedJSONEncoder
-
-    _LOGGER.error(
-        "Sys modules: %s", json.dumps(sys.modules, cls=ExtendedJSONEncoder, indent=4)
-    )
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
