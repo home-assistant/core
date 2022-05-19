@@ -46,8 +46,8 @@ class ProtectData:
         self._hass = hass
         self._update_interval = update_interval
         self._subscriptions: dict[str, list[CALLBACK_TYPE]] = {}
-        self._entity_to_device_map: dict[str, ProtectDeviceRef] = {}
-        self._device_to_device_map: dict[str, ProtectDeviceRef] = {}
+        self._entity_to_ufp_device_map: dict[str, ProtectDeviceRef] = {}
+        self._device_to_ufp_device_map: dict[str, ProtectDeviceRef] = {}
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
