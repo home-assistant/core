@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -23,6 +20,5 @@
                 "title": "Dispositivo de ventilador de Modern Forms descubierto"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

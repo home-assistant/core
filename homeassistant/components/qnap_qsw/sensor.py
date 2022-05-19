@@ -7,8 +7,6 @@ from typing import Final
 from aioqsw.const import (
     QSD_FAN1_SPEED,
     QSD_FAN2_SPEED,
-    QSD_PRODUCT,
-    QSD_SYSTEM_BOARD,
     QSD_SYSTEM_SENSOR,
     QSD_SYSTEM_TIME,
     QSD_TEMP,
@@ -28,17 +26,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import QswEntity
 from .const import ATTR_MAX, DOMAIN, RPM
 from .coordinator import QswUpdateCoordinator
+from .entity import QswEntityDescription, QswSensorEntity
 
 
 @dataclass
-class QswSensorEntityDescription(SensorEntityDescription):
+class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     """A class that describes QNAP QSW sensor entities."""
 
     attributes: dict[str, list[str]] | None = None
-    subkey: str = ""
 
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
@@ -96,7 +93,7 @@ async def async_setup_entry(
     )
 
 
-class QswSensor(QswEntity, SensorEntity):
+class QswSensor(QswSensorEntity, SensorEntity):
     """Define a QNAP QSW sensor."""
 
     entity_description: QswSensorEntityDescription
@@ -109,9 +106,7 @@ class QswSensor(QswEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = (
-            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
-        )
+        self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = (
             f"{entry.unique_id}_{description.key}_{description.subkey}"
         )
@@ -119,20 +114,9 @@ class QswSensor(QswEntity, SensorEntity):
         self._async_update_attrs()
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update attributes when the coordinator updates."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         self._attr_native_value = self.get_device_value(
             self.entity_description.key, self.entity_description.subkey
         )
-
-        if self.entity_description.attributes:
-            self._attr_extra_state_attributes = {
-                key: self.get_device_value(val[0], val[1])
-                for key, val in self.entity_description.attributes.items()
-            }
+        super()._async_update_attrs()

@@ -28,3 +28,6 @@ class FeatureAccess(Enum):
     def scope(self) -> str:
         """Google calendar scope for the feature."""
         return self._scope
+
+
+DEFAULT_FEATURE_ACCESS = FeatureAccess.read_write

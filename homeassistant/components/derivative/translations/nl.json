@@ -4,19 +4,19 @@
             "user": {
                 "data": {
                     "name": "Naam",
-                    "round": "Precisie",
-                    "source": "Invoer sensor",
+                    "round": "Nauwkeurigheid",
+                    "source": "Invoersensor",
                     "time_window": "Tijdsvenster",
                     "unit_prefix": "Metrisch voorvoegsel",
                     "unit_time": "Tijdseenheid"
                 },
                 "data_description": {
-                    "round": "Regelt het aantal decimale cijfers in de uitvoer.",
+                    "round": "Regelt het aantal decimalen in de uitvoer.",
                     "time_window": "Indien ingesteld, is de waarde van de sensor een tijdgewogen voortschrijdend gemiddelde van de afgeleiden binnen dit venster.",
                     "unit_prefix": "De uitvoer wordt geschaald volgens het geselecteerde metrische voorvoegsel en de tijdseenheid van de afgeleide"
                 },
                 "description": "Maak een sensor die de afgeleide van een sensor schat.",
-                "title": "Voeg afgeleide sensor toe"
+                "title": "Voeg afgeleidesensor toe"
             }
         }
     },
@@ -25,35 +25,19 @@
             "init": {
                 "data": {
                     "name": "Naam",
-                    "round": "Precisie",
-                    "source": "Invoer sensor",
+                    "round": "Nauwkeurigheid",
+                    "source": "Invoersensor",
                     "time_window": "Tijdsvenster",
                     "unit_prefix": "Metrisch voorvoegsel",
                     "unit_time": "Tijdseenheid"
                 },
                 "data_description": {
-                    "round": "Regelt het aantal decimale cijfers in de uitvoer.",
+                    "round": "Regelt het aantal decimalen in de uitvoer.",
                     "time_window": "Indien ingesteld, is de waarde van de sensor een tijdgewogen voortschrijdend gemiddelde van de afgeleiden binnen dit venster.",
                     "unit_prefix": "De uitvoer wordt geschaald volgens het geselecteerde metrische voorvoegsel en de tijdseenheid van de afgeleide."
                 }
-            },
-            "options": {
-                "data": {
-                    "name": "Naam",
-                    "round": "Precisie",
-                    "source": "Invoer sensor",
-                    "time_window": "Tijdsvenster",
-                    "unit_prefix": "Metrisch voorvoegsel",
-                    "unit_time": "Tijdseenheid"
-                },
-                "data_description": {
-                    "round": "Regelt het aantal decimale cijfers in de uitvoer.",
-                    "time_window": "Indien ingesteld, is de waarde van de sensor een tijdgewogen voortschrijdend gemiddelde van de afgeleiden binnen dit venster.",
-                    "unit_prefix": "De uitvoer wordt geschaald volgens het geselecteerde metrische voorvoegsel en de tijdseenheid van de afgeleide."
-                },
-                "description": "Maak een sensor die de afgeleide van een sensor schat."
             }
         }
     },
-    "title": "Derivatieve sensor"
+    "title": "Afgeleide"
 }

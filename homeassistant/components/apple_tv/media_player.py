@@ -79,7 +79,8 @@ SUPPORT_APPLE_TV = (
 SUPPORT_FEATURE_MAPPING = {
     FeatureName.PlayUrl: MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.PLAY_MEDIA,
-    FeatureName.StreamFile: MediaPlayerEntityFeature.PLAY_MEDIA,
+    FeatureName.StreamFile: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA,
     FeatureName.Pause: MediaPlayerEntityFeature.PAUSE,
     FeatureName.Play: MediaPlayerEntityFeature.PLAY,
     FeatureName.SetPosition: MediaPlayerEntityFeature.SEEK,
@@ -282,23 +283,20 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         if media_type == MEDIA_TYPE_APP:
             await self.atv.apps.launch_app(media_id)
 
-        is_media_source_id = media_source.is_media_source_id(media_id)
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = play_item.url
+            media_type = MEDIA_TYPE_MUSIC
 
-        if (
-            not is_media_source_id
-            and self._is_feature_available(FeatureName.StreamFile)
-            and (await is_streamable(media_id) or media_type == MEDIA_TYPE_MUSIC)
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        if self._is_feature_available(FeatureName.StreamFile) and (
+            media_type == MEDIA_TYPE_MUSIC or await is_streamable(media_id)
         ):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id)
 
-        if self._is_feature_available(FeatureName.PlayUrl):
-            if is_media_source_id:
-                play_item = await media_source.async_resolve_media(self.hass, media_id)
-                media_id = play_item.url
-
-            media_id = async_process_play_media_url(self.hass, media_id)
-
+        elif self._is_feature_available(FeatureName.PlayUrl):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
             await self.atv.stream.play_url(media_id)
         else:
@@ -397,9 +395,12 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         media_content_id=None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        # If we can't stream URLs, we can't browse media.
-        # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
-        if not self._is_feature_available(FeatureName.PlayUrl):
+        if media_content_id == "apps" or (
+            # If we can't stream files or URLs, we can't browse media.
+            # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
+            not self._is_feature_available(FeatureName.PlayUrl)
+            and not self._is_feature_available(FeatureName.StreamFile)
+        ):
             return build_app_list(self._app_list)
 
         if self._app_list:

@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Dit is een integratie voor vaste telefoongesprekken met een CX93001 spraakmodem. Hiermee kan beller-ID informatie worden opgehaald met een optie om een inkomende oproep te weigeren.",
-                "title": "Telefoonmodem"
+                "description": "Dit is een integratie voor vaste telefoongesprekken met een CX93001 spraakmodem. Hiermee kan beller-ID informatie worden opgehaald met een optie om een inkomende oproep te weigeren."
             },
             "user": {
                 "data": {
                     "name": "Naam",
                     "port": "Poort"
                 },
-                "description": "Dit is een integratie voor vaste telefoongesprekken met een CX93001 spraakmodem. Hiermee kan beller-ID informatie worden opgehaald met een optie om een inkomende oproep te weigeren.",
-                "title": "Telefoonmodem"
+                "description": "Dit is een integratie voor vaste telefoongesprekken met een CX93001 spraakmodem. Hiermee kan beller-ID informatie worden opgehaald met een optie om een inkomende oproep te weigeren."
             }
         }
     }

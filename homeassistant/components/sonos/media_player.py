@@ -127,6 +127,9 @@ async def async_setup_entry(
             speakers.append(entity.speaker)
 
         if service_call.service == SERVICE_JOIN:
+            _LOGGER.warning(
+                "Service 'sonos.join' is deprecated and will be removed in 2022.8, please use 'media_player.join'"
+            )
             master = platform.entities.get(service_call.data[ATTR_MASTER])
             if master:
                 await SonosSpeaker.join_multi(hass, master.speaker, speakers)  # type: ignore[arg-type]
@@ -136,6 +139,9 @@ async def async_setup_entry(
                     service_call.data[ATTR_MASTER],
                 )
         elif service_call.service == SERVICE_UNJOIN:
+            _LOGGER.warning(
+                "Service 'sonos.unjoin' is deprecated and will be removed in 2022.8, please use 'media_player.unjoin'"
+            )
             await SonosSpeaker.unjoin_multi(hass, speakers)  # type: ignore[arg-type]
         elif service_call.service == SERVICE_SNAPSHOT:
             await SonosSpeaker.snapshot_multi(

@@ -15,56 +15,25 @@
                 "data": {
                     "entities": "Leden",
                     "hide_members": "Verberg leden",
-                    "name": "Naam",
-                    "title": "Groep toevoegen"
+                    "name": "Naam"
                 },
-                "description": "Selecteer groepsopties",
                 "title": "Groep toevoegen"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "Groepsleden"
-                },
-                "description": "Selecteer groepsopties"
             },
             "fan": {
                 "data": {
                     "entities": "Leden",
                     "hide_members": "Verberg leden",
-                    "name": "Naam",
-                    "title": "Groep toevoegen"
+                    "name": "Naam"
                 },
-                "description": "Selecteer groepsopties",
                 "title": "Groep toevoegen"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Groepsleden"
-                },
-                "description": "Selecteer groepsopties"
-            },
-            "init": {
-                "data": {
-                    "group_type": "Groepstype"
-                },
-                "description": "Selecteer groepstype"
             },
             "light": {
                 "data": {
-                    "all": "Alle entiteiten",
                     "entities": "Leden",
                     "hide_members": "Verberg leden",
-                    "name": "Naam",
-                    "title": "Groep toevoegen"
+                    "name": "Naam"
                 },
-                "description": "Als \"alle entiteiten\" is ingeschakeld, is de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \"all entities\" is uitgeschakeld, is de groep ingeschakeld als een lid is ingeschakeld.",
                 "title": "Groep toevoegen"
-            },
-            "light_options": {
-                "data": {
-                    "entities": "Groepsleden"
-                },
-                "description": "Selecteer groepsopties"
             },
             "lock": {
                 "data": {
@@ -78,17 +47,9 @@
                 "data": {
                     "entities": "Leden",
                     "hide_members": "Verberg leden",
-                    "name": "Naam",
-                    "title": "Groep toevoegen"
+                    "name": "Naam"
                 },
-                "description": "Selecteer groepsopties",
                 "title": "Groep toevoegen"
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Groepsleden"
-                },
-                "description": "Selecteer groepsopties"
             },
             "switch": {
                 "data": {
@@ -99,18 +60,15 @@
                 "title": "Nieuwe groep"
             },
             "user": {
-                "data": {
-                    "group_type": "Groepstype"
-                },
                 "description": "Met groepen kunt u een nieuwe entiteit cre\u00ebren die meerdere entiteiten van hetzelfde type vertegenwoordigt.",
                 "menu_options": {
-                    "binary_sensor": "Binaire sensorgroep",
+                    "binary_sensor": "Binaire-sensorgroep",
                     "cover": "Rolluikgroep",
                     "fan": "Ventilatorgroep",
                     "light": "Lichtgroep",
-                    "lock": "Groep vergrendelen",
+                    "lock": "Slotgroep",
                     "media_player": "Mediaspelergroep",
-                    "switch": "Groep wisselen"
+                    "switch": "Schakelaargroep"
                 },
                 "title": "Groep toevoegen"
             }
@@ -126,32 +84,16 @@
                 },
                 "description": "Als \"alle entiteiten\" is ingeschakeld, is de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \"all entities\" is uitgeschakeld, is de groep ingeschakeld als een lid is ingeschakeld."
             },
-            "binary_sensor_options": {
-                "data": {
-                    "all": "Alle entiteiten",
-                    "entities": "Leden"
-                }
-            },
             "cover": {
                 "data": {
                     "entities": "Leden",
                     "hide_members": "Verberg leden"
                 }
             },
-            "cover_options": {
-                "data": {
-                    "entities": "Leden"
-                }
-            },
             "fan": {
                 "data": {
                     "entities": "Leden",
                     "hide_members": "Verberg leden"
-                }
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Leden"
                 }
             },
             "light": {
@@ -161,12 +103,6 @@
                     "hide_members": "Verberg leden"
                 },
                 "description": "Als \"alle entiteiten\" is ingeschakeld, is de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \"all entities\" is uitgeschakeld, is de groep ingeschakeld als een lid is ingeschakeld."
-            },
-            "light_options": {
-                "data": {
-                    "all": "Alle entiteiten",
-                    "entities": "Leden"
-                }
             },
             "lock": {
                 "data": {
@@ -178,11 +114,6 @@
                 "data": {
                     "entities": "Leden",
                     "hide_members": "Verberg leden"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Leden"
                 }
             },
             "switch": {

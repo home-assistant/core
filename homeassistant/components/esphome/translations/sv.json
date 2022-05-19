@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "ESP \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
             "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {

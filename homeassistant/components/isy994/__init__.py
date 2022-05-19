@@ -41,6 +41,7 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
@@ -120,7 +121,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {}
+    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: []}
     for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 

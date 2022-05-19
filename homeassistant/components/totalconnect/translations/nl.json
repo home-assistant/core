@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Locatie",
                     "usercode": "Gebruikerscode"
                 },
                 "description": "Voer de gebruikerscode voor deze gebruiker in op locatie {location_id}",
@@ -26,8 +25,7 @@
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                },
-                "title": "Total Connect"
+                }
             }
         }
     }

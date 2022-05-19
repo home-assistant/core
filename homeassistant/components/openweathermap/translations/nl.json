@@ -17,8 +17,7 @@
                     "mode": "Mode",
                     "name": "Naam"
                 },
-                "description": "Om een API sleutel te genereren ga naar https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Om een API sleutel te genereren ga naar https://openweathermap.org/appid"
             }
         }
     },

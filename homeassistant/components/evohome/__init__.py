@@ -24,6 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -32,8 +33,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -197,7 +199,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user_data = tokens.pop(USER_DATA, None)
         return (tokens, user_data)
 
-    store = hass.helpers.storage.Store(STORAGE_VER, STORAGE_KEY)
+    store = Store(hass, STORAGE_VER, STORAGE_KEY)
     tokens, user_data = await load_auth_tokens(store)
 
     client_v2 = evohomeasync2.EvohomeClient(
@@ -257,8 +259,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    hass.helpers.event.async_track_time_interval(
-        broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
+    async_track_time_interval(
+        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     setup_service_functions(hass, broker)
@@ -297,7 +299,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:

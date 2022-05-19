@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
-                    "base_path": "Pad naar API",
-                    "host": "Host",
-                    "port": "Poort",
-                    "ssl": "Maakt gebruik van een SSL-certificaat",
                     "url": "URL",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }

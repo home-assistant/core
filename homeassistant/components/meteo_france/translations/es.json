@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ciudad ya est\u00e1 configurada",
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada",
             "unknown": "Error desconocido: por favor, vuelva a intentarlo m\u00e1s tarde"
         },
         "error": {

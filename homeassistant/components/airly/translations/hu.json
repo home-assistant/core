@@ -15,8 +15,7 @@
                     "longitude": "Hossz\u00fas\u00e1g",
                     "name": "Elnevez\u00e9s"
                 },
-                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://developer.airly.eu/register webhelyet",
-                "title": "Airly"
+                "description": "Az API-kulcs l\u00e9trehoz\u00e1s\u00e1hoz keresse fel a https://developer.airly.eu/register webhelyet"
             }
         }
     },

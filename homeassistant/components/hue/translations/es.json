@@ -3,11 +3,12 @@
         "abort": {
             "all_configured": "Ya se han configurado todas las pasarelas Philips Hue",
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para la pasarela ya est\u00e1 en marcha.",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "cannot_connect": "No se pudo conectar",
             "discover_timeout": "Imposible encontrar pasarelas Philips Hue",
+            "invalid_host": "Host inv\u00e1lido",
             "no_bridges": "No se han encontrado pasarelas Philips Hue.",
-            "not_hue_bridge": "No es una pasarela Hue",
+            "not_hue_bridge": "No es un enlace Hue",
             "unknown": "Error inesperado"
         },
         "error": {

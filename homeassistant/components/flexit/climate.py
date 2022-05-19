@@ -6,7 +6,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate.const import (
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.components.modbus import get_hub
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
@@ -69,9 +73,7 @@ class Flexit(ClimateEntity):
         self._target_temperature = None
         self._current_temperature = None
         self._current_fan_mode = None
-        self._current_operation = None
         self._fan_modes = ["Off", "Low", "Medium", "High"]
-        self._current_operation = None
         self._filter_hours = None
         self._filter_alarm = None
         self._heat_recovery = None
@@ -124,15 +126,15 @@ class Flexit(ClimateEntity):
         )
 
         if self._heating:
-            self._current_operation = "Heating"
+            self._attr_hvac_action = HVACAction.HEATING
         elif self._cooling:
-            self._current_operation = "Cooling"
+            self._attr_hvac_action = HVACAction.COOLING
         elif self._heat_recovery:
-            self._current_operation = "Recovering"
+            self._attr_hvac_action = HVACAction.IDLE
         elif actual_air_speed:
-            self._current_operation = "Fan Only"
+            self._attr_hvac_action = HVACAction.FAN
         else:
-            self._current_operation = "Off"
+            self._attr_hvac_action = HVACAction.OFF
 
     @property
     def extra_state_attributes(self):
@@ -175,7 +177,7 @@ class Flexit(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        return HVACMode.COOL
 
     @property
     def hvac_modes(self) -> list[str]:

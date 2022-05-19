@@ -8,16 +8,9 @@
             "unknown": "Uventet feil"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Ressurser"
-                },
-                "title": "Velg ressurser som skal overv\u00e5kes"
-            },
             "ups": {
                 "data": {
-                    "alias": "",
-                    "resources": "Ressurser"
+                    "alias": ""
                 },
                 "title": "Velg UPS som skal overv\u00e5kes"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uventet feil"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressurser",
                     "scan_interval": "Skanneintervall (sekunder)"
-                },
-                "description": "Velg Sensor Ressurser."
+                }
             }
         }
     }

@@ -35,14 +35,12 @@
                 "title": "Vyberte server Plex"
             },
             "user": {
-                "description": "Pro propojen\u00ed Plex serveru, pokra\u010dujte na [plex.tv](https://plex.tv).",
-                "title": "Plex Media Server"
+                "description": "Pro propojen\u00ed Plex serveru, pokra\u010dujte na [plex.tv](https://plex.tv)."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Metoda nastaven\u00ed"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

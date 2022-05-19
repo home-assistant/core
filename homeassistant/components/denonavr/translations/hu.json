@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "K\u00e9rj\u00fck, er\u0151s\u00edtse meg a vev\u0151 hozz\u00e1ad\u00e1s\u00e1t",
-                "title": "Denon AVR h\u00e1l\u00f3zati vev\u0151k\u00e9sz\u00fcl\u00e9kek"
+                "description": "K\u00e9rj\u00fck, er\u0151s\u00edtse meg a vev\u0151 hozz\u00e1ad\u00e1s\u00e1t"
             },
             "select": {
                 "data": {
@@ -29,9 +28,7 @@
                 },
                 "data_description": {
                     "host": "Az automatikus felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz hagyja \u00fcresen"
-                },
-                "description": "Csatlakozzon a vev\u0151h\u00f6z, ha az IP-c\u00edm nincs be\u00e1ll\u00edtva, az automatikus felder\u00edt\u00e9st haszn\u00e1lja",
-                "title": "Denon AVR h\u00e1l\u00f3zati vev\u0151k\u00e9sz\u00fcl\u00e9kek"
+                }
             }
         }
     },
@@ -44,8 +41,7 @@
                     "zone2": "\u00c1ll\u00edtsa be a 2. z\u00f3n\u00e1t",
                     "zone3": "\u00c1ll\u00edtsa be a 3. z\u00f3n\u00e1t"
                 },
-                "description": "Adja meg az opcion\u00e1lis be\u00e1ll\u00edt\u00e1sokat",
-                "title": "Denon AVR h\u00e1l\u00f3zati vev\u0151k\u00e9sz\u00fcl\u00e9kek"
+                "description": "Adja meg az opcion\u00e1lis be\u00e1ll\u00edt\u00e1sokat"
             }
         }
     }
