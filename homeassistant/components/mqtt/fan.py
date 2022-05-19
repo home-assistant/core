@@ -1,6 +1,7 @@
 """Support for MQTT fans."""
 from __future__ import annotations
 
+import asyncio
 import functools
 import logging
 import math
@@ -225,10 +226,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    for config in await async_get_platform_config_from_yaml(
-        hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN
-    ):
-        await _async_setup_entity(hass, async_add_entities, config, config_entry)
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry

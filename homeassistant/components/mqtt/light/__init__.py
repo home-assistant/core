@@ -1,6 +1,7 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
+import asyncio
 import functools
 
 import voluptuous as vol
@@ -107,10 +108,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT lights configured under the light platform key (deprecated)."""
     # load and initialize platform config from configuration.yaml
-    for config in await async_get_platform_config_from_yaml(
-        hass, light.DOMAIN, PLATFORM_SCHEMA_MODERN
-    ):
-        await _async_setup_entity(hass, async_add_entities, config, config_entry)
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, light.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
