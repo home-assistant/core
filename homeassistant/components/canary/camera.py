@@ -218,23 +218,13 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         if self._last_event is None:
             return
 
-        if (
-            self._last_image_id == self._last_event.entry_id
-            and utcnow >= self._expires_at
-        ):
-            await self._expire_image()
-            return
-
         if self._last_image_id != self._last_event.entry_id:
             self._image = None
 
         try:
-            last_event = self.coordinator.data["entries"][self._device.device_id][0]
-            return last_event
-        except KeyError:
-            return None
+            self._image_url = self._last_event.thumbnails[0].image_url
         except IndexError:
-            return None
+            self._image_url = None
 
     async def _set_last_event(self) -> None:
         if self._last_event is None:
@@ -273,7 +263,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         ffmpeg_args = f"{self._ffmpeg_arguments} {self._headers_for_ffmpeg()}"
         stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(live_stream_url, extra_cmd=self._ffmpeg_arguments)
+        await stream.open_camera(live_stream_url, extra_cmd=ffmpeg_args)
 
         try:
             stream_reader = await stream.get_reader()

@@ -258,18 +258,6 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
             self.entry()
         return self._state
 
-            if entry is not None:
-                if self._sensor_type[0] == "entries_captured_today":
-                    return len(entry)
-                if self._sensor_type[0] == "last_entry_date":
-                    try:
-                        last_entry_date = entry[0].start_time
-                        return cast(datetime, last_entry_date)
-                    except IndexError:
-                        return None
-
-        return None
-
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
