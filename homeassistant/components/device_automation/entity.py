@@ -1,8 +1,6 @@
 """Device automation helpers for entity."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -15,7 +13,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from . import DEVICE_TRIGGER_BASE_SCHEMA
+from . import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from .const import CONF_CHANGED_STATES
 
 # mypy: allow-untyped-calls, allow-untyped-defs
@@ -64,7 +66,7 @@ async def _async_get_automations(
     device_id: str,
     automation_templates: list[dict[str, str]],
     domain: str,
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device automations."""
     automations: list[dict[str, str]] = []
     entity_registry = er.async_get(hass)
@@ -91,14 +93,14 @@ async def _async_get_automations(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
-) -> list[dict[str, Any]]:
+) -> GetAutomationsResult:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
