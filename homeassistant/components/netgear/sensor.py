@@ -8,14 +8,25 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND, PERCENTAGE, TIME_MILLISECONDS
+from homeassistant.const import (
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    PERCENTAGE,
+    TIME_MILLISECONDS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_SPEED, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER
+from .const import (
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_COORDINATOR_SPEED,
+    KEY_COORDINATOR_TRAFFIC,
+    KEY_ROUTER,
+)
 from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
 
 SENSOR_TYPES = {
@@ -224,6 +235,7 @@ SENSOR_SPEED_TYPES = [
         icon="mdi:wan",
     ),
 ]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
