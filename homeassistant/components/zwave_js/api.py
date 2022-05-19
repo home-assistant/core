@@ -68,7 +68,11 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
 )
-from .helpers import async_enable_statistics, update_data_collection_preference
+from .helpers import (
+    async_enable_statistics,
+    async_get_node_from_device_id,
+    update_data_collection_preference,
+)
 from .migrate import (
     ZWaveMigrationData,
     async_get_migration_data,
@@ -83,6 +87,7 @@ ID = "id"
 ENTRY_ID = "entry_id"
 ERR_NOT_LOADED = "not_loaded"
 NODE_ID = "node_id"
+DEVICE_ID = "device_id"
 COMMAND_CLASS_ID = "command_class_id"
 TYPE = "type"
 PROPERTY = "property"
@@ -254,21 +259,20 @@ def async_get_entry(orig_func: Callable) -> Callable:
 def async_get_node(orig_func: Callable) -> Callable:
     """Decorate async function to get node."""
 
-    @async_get_entry
     @wraps(orig_func)
     async def async_get_node_func(
-        hass: HomeAssistant,
-        connection: ActiveConnection,
-        msg: dict,
-        entry: ConfigEntry,
-        client: Client,
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        node_id = msg[NODE_ID]
-        node = client.driver.controller.nodes.get(node_id)
+        device_id = msg[DEVICE_ID]
 
-        if node is None:
-            connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        try:
+            node = async_get_node_from_device_id(hass, device_id)
+        except ValueError as err:
+            error_code = ERR_NOT_FOUND
+            if "loaded" in err.args[0]:
+                error_code = ERR_NOT_LOADED
+            connection.send_error(msg[ID], error_code, err.args[0])
             return
         await orig_func(hass, connection, msg, node)
 
@@ -299,13 +303,26 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
     return async_handle_failed_command_func
 
 
+def node_status(node: Node) -> dict[str, Any]:
+    """Get node status."""
+    return {
+        "node_id": node.node_id,
+        "is_routing": node.is_routing,
+        "status": node.status,
+        "is_secure": node.is_secure,
+        "ready": node.ready,
+        "zwave_plus_version": node.zwave_plus_version,
+        "highest_security_class": node.highest_security_class,
+        "is_controller_node": node.is_controller_node,
+    }
+
+
 @callback
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
-    websocket_api.async_register_command(hass, websocket_ping_node)
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
@@ -395,7 +412,9 @@ async def websocket_network_status(
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
-            "nodes": list(client.driver.controller.nodes),
+            "nodes": [
+                node_status(node) for node in client.driver.controller.nodes.values()
+            ],
         },
     }
     connection.send_result(
@@ -407,8 +426,7 @@ async def websocket_network_status(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/node_ready",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -443,8 +461,7 @@ async def websocket_node_ready(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/node_status",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -456,27 +473,13 @@ async def websocket_node_status(
     node: Node,
 ) -> None:
     """Get the status of a Z-Wave JS node."""
-    data = {
-        "node_id": node.node_id,
-        "is_routing": node.is_routing,
-        "status": node.status,
-        "is_secure": node.is_secure,
-        "ready": node.ready,
-        "zwave_plus_version": node.zwave_plus_version,
-        "highest_security_class": node.highest_security_class,
-        "is_controller_node": node.is_controller_node,
-    }
-    connection.send_result(
-        msg[ID],
-        data,
-    )
+    connection.send_result(msg[ID], node_status(node))
 
 
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/node_metadata",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -501,30 +504,6 @@ async def websocket_node_metadata(
     connection.send_result(
         msg[ID],
         data,
-    )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/ping_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
-    }
-)
-@websocket_api.async_response
-@async_handle_failed_command
-@async_get_node
-async def websocket_ping_node(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    node: Node,
-) -> None:
-    """Ping a Z-Wave JS node."""
-    result = await node.async_ping()
-    connection.send_result(
-        msg[ID],
-        result,
     )
 
 
@@ -1189,23 +1168,20 @@ async def websocket_replace_failed_node(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/remove_failed_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_entry
+@async_get_node
 async def websocket_remove_failed_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
+    node: Node,
 ) -> None:
     """Remove a failed node from the Z-Wave network."""
-    controller = client.driver.controller
-    node_id = msg[NODE_ID]
+    controller = node.client.driver.controller
 
     @callback
     def async_cleanup() -> None:
@@ -1215,10 +1191,7 @@ async def websocket_remove_failed_node(
 
     @callback
     def node_removed(event: dict) -> None:
-        node = event["node"]
-        node_details = {
-            "node_id": node.node_id,
-        }
+        node_details = {"node_id": event["node"].node_id}
 
         connection.send_message(
             websocket_api.event_message(
@@ -1229,7 +1202,7 @@ async def websocket_remove_failed_node(
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("node removed", node_removed)]
 
-    result = await controller.async_remove_failed_node(node_id)
+    result = await controller.async_remove_failed_node(node.node_id)
     connection.send_result(
         msg[ID],
         result,
@@ -1335,24 +1308,21 @@ async def websocket_stop_healing_network(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/heal_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_entry
+@async_get_node
 async def websocket_heal_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
+    node: Node,
 ) -> None:
     """Heal a node on the Z-Wave network."""
-    controller = client.driver.controller
-    node_id = msg[NODE_ID]
-    result = await controller.async_heal_node(node_id)
+    controller = node.client.driver.controller
+    result = await controller.async_heal_node(node.node_id)
     connection.send_result(
         msg[ID],
         result,
@@ -1363,8 +1333,7 @@ async def websocket_heal_node(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/refresh_node_info",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     },
 )
 @websocket_api.async_response
@@ -1414,8 +1383,7 @@ async def websocket_refresh_node_info(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/refresh_node_values",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     },
 )
 @websocket_api.async_response
@@ -1436,8 +1404,7 @@ async def websocket_refresh_node_values(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/refresh_node_cc_values",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
         vol.Required(COMMAND_CLASS_ID): int,
     },
 )
@@ -1469,8 +1436,7 @@ async def websocket_refresh_node_cc_values(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/set_config_parameter",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
         vol.Required(PROPERTY): int,
         vol.Optional(PROPERTY_KEY): int,
         vol.Required(VALUE): vol.Any(int, BITMASK_SCHEMA),
@@ -1521,8 +1487,7 @@ async def websocket_set_config_parameter(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/get_config_parameters",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1762,8 +1727,7 @@ async def websocket_data_collection_status(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/abort_firmware_update",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1794,8 +1758,7 @@ def _get_firmware_update_progress_dict(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/subscribe_firmware_update_status",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
@@ -2047,8 +2010,7 @@ def _get_node_statistics_dict(statistics: NodeStatistics) -> dict[str, int]:
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/subscribe_node_statistics",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
