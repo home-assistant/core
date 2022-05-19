@@ -1,8 +1,8 @@
 """The nexia integration base entity."""
+
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -20,33 +20,18 @@ from .const import (
 from .coordinator import NexiaDataUpdateCoordinator
 
 
-class NexiaEntity(CoordinatorEntity):
+class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
     """Base class for nexia entities."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self, coordinator: NexiaDataUpdateCoordinator, name: str, unique_id: str
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._unique_id = unique_id
-        self._name = name
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device specific state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        self._attr_unique_id = unique_id
+        self._attr_name = name
 
 
 class NexiaThermostatEntity(NexiaEntity):
