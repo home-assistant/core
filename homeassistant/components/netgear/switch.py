@@ -117,7 +117,7 @@ async def async_setup_entry(
             NetgearRouterSwitchEntity(router, description)
         )
 
-    async_add_entities(router_entities, True)
+    async_add_entities(router_entities)
 
     # Entities per network device
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
@@ -226,6 +226,11 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
     def available(self):
         """Return if the switch is available."""
         return self._available
+
+    async def async_added_to_hass(self):
+        """Fetch state when entity is added."""
+        await super().async_added_to_hass()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_update(self):
         """Poll the state of the switch."""
