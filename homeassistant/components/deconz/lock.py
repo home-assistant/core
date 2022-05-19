@@ -34,7 +34,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.lights.locks.subscribe(
-            async_add_lock_from_light,
+            gateway.evaluate_add_device(async_add_lock_from_light),
             EventType.ADDED,
         )
     )
@@ -49,7 +49,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         gateway.api.sensors.door_lock.subscribe(
-            async_add_lock_from_sensor,
+            gateway.evaluate_add_device(async_add_lock_from_sensor),
             EventType.ADDED,
         )
     )

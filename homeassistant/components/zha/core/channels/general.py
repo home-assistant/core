@@ -222,6 +222,14 @@ class LevelControlChannel(ZigbeeChannel):
 
     CURRENT_LEVEL = 0
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
+    ZCL_INIT_ATTRS = {
+        "on_off_transition_time": True,
+        "on_level": True,
+        "on_transition_time": True,
+        "off_transition_time": True,
+        "default_move_rate": True,
+        "start_up_current_level": True,
+    }
 
     @property
     def current_level(self) -> int | None:

@@ -393,7 +393,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        BELGIUM_HOURLY_GAS_METER_READING,
+        BELGIUM_5MIN_GAS_METER_READING,
         ELECTRICITY_ACTIVE_TARIFF,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
@@ -411,7 +411,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     }
 
     telegram = {
-        BELGIUM_HOURLY_GAS_METER_READING: MBusObject(
+        BELGIUM_5MIN_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},

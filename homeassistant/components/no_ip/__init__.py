@@ -16,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
-    hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
+    async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
     return True
 

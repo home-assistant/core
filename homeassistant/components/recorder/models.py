@@ -105,6 +105,9 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
 JSON_VARIENT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"
 )
+JSONB_VARIENT_CAST = Text().with_variant(
+    postgresql.JSONB(none_as_null=True), "postgresql"
+)
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -118,6 +121,10 @@ DOUBLE_TYPE = (
 )
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
+
+
+class UnsupportedDialect(Exception):
+    """The dialect or its version is not supported."""
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
