@@ -2546,10 +2546,13 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
     assert response["id"] == 2
 
     results = response["result"]
-    assert results[0]["entity_id"] == "light.kitchen"
-    assert results[0]["state"] == "on"
+    assert results[0]["domain"] == "test"
+    assert results[0]["message"] == "is on fire"
+    assert results[0]["name"] == "device name"
     assert results[1]["entity_id"] == "light.kitchen"
-    assert results[1]["state"] == "off"
+    assert results[1]["state"] == "on"
+    assert results[2]["entity_id"] == "light.kitchen"
+    assert results[2]["state"] == "off"
 
     await client.send_json(
         {
