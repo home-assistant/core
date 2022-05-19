@@ -1,15 +1,17 @@
 """Provides device automations for Lock."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -43,7 +45,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> GetAutomationsResult:
     """List device triggers for Lock devices."""
     registry = entity_registry.async_get(hass)
     triggers = []
@@ -70,7 +72,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
