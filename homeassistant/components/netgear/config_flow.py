@@ -200,11 +200,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             return await self._show_setup_form(user_input, errors)
 
-        # Check if already configured
-        info = await self.hass.async_add_executor_job(api.get_info)
-        await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
         config_data = {
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
@@ -212,6 +207,11 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: api.port,
             CONF_SSL: api.ssl,
         }
+
+        # Check if already configured
+        info = await self.hass.async_add_executor_job(api.get_info)
+        await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates=config_data)
 
         config_options = {
             CONF_NOT_TRACK: not_track,
