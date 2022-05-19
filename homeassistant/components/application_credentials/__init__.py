@@ -15,13 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_DOMAIN,
-    CONF_ID,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN, CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_entry_oauth2_flow
@@ -45,14 +39,12 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
 CONF_AUTH_DOMAIN = "auth_domain"
-DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_CLIENT_SECRET): cv.string,
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
 }
 UPDATE_FIELDS: dict = {}  # Not supported
 
@@ -63,7 +55,6 @@ class ClientCredential:
 
     client_id: str
     client_secret: str
-    name: str | None = None
 
 
 @dataclass
@@ -131,9 +122,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
                 item[CONF_AUTH_DOMAIN] if CONF_AUTH_DOMAIN in item else item[CONF_ID]
             )
             credentials[auth_domain] = ClientCredential(
-                client_id=item[CONF_CLIENT_ID],
-                client_secret=item[CONF_CLIENT_SECRET],
-                name=item.get(CONF_NAME),
+                item[CONF_CLIENT_ID], item[CONF_CLIENT_SECRET]
             )
         return credentials
 
@@ -180,7 +169,6 @@ async def async_import_client_credential(
         CONF_CLIENT_SECRET: credential.client_secret,
         CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
-    item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
     await storage_collection.async_import_item(item)
 
 
@@ -203,12 +191,11 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
             authorization_server.authorize_url,
             authorization_server.token_url,
         )
-        self._name = credential.name
 
     @property
     def name(self) -> str:
         """Name of the implementation."""
-        return self._name or self.client_id
+        return self.client_id
 
 
 async def _async_provide_implementation(
