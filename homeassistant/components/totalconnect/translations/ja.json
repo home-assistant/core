@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3",
                     "usercode": "\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9"
                 },
                 "description": "\u3053\u306e\u30e6\u30fc\u30b6\u30fc\u306e\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u5834\u6240 {location_id} \u306b\u5165\u529b\u3057\u307e\u3059",
@@ -26,8 +25,7 @@
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
-                },
-                "title": "\u30c8\u30fc\u30bf\u30eb\u30b3\u30cd\u30af\u30c8"
+                }
             }
         }
     }

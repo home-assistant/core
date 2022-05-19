@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "County"
-                },
-                "description": "Kies hieronder uw county",
-                "title": "PECO Uitval Teller"
+                }
             }
         }
     }

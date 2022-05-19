@@ -35,14 +35,12 @@
                 "title": "Selecteer Plex server"
             },
             "user": {
-                "description": "Ga verder naar [plex.tv] (https://plex.tv) om een Plex-server te koppelen.",
-                "title": "Plex Media Server"
+                "description": "Ga verder naar [plex.tv] (https://plex.tv) om een Plex-server te koppelen."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Installatiemethode"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

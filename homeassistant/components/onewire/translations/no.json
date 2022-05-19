@@ -4,22 +4,13 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "invalid_path": "Finner ikke mappen"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
-            "owserver": {
-                "data": {
-                    "host": "Vert",
-                    "port": "Port"
-                },
-                "title": "Angi detaljer om owserver"
-            },
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port",
-                    "type": "Tilkoblingstype"
+                    "port": "Port"
                 },
                 "title": "Angi serverdetaljer"
             }
@@ -30,10 +21,6 @@
             "device_not_selected": "Velg enheter som skal konfigureres"
         },
         "step": {
-            "ack_no_options": {
-                "description": "Det er ingen alternativer for SysBus-implementeringen",
-                "title": "OneWire SysBus-alternativer"
-            },
             "configure_device": {
                 "data": {
                     "precision": "Sensorpresisjon"

@@ -10,9 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Felder\u00edt\u00e9si (discovery) topik el\u0151tagja"
-                },
-                "description": "Adja meg a Tasmota konfigur\u00e1ci\u00f3t.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Szeretn\u00e9 b\u00e1ll\u00edtani a Tasmota-t?"

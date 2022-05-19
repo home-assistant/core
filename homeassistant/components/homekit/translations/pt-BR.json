@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (desabilite se voc\u00ea estiver chamando o servi\u00e7o homekit.start manualmente)",
                     "devices": "Dispositivos (gatilhos)"
                 },
                 "description": "Os interruptores program\u00e1veis s\u00e3o criados para cada dispositivo selecionado. Quando um dispositivo dispara, o HomeKit pode ser configurado para executar uma automa\u00e7\u00e3o ou cena.",

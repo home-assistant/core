@@ -5,7 +5,6 @@
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "no_bridges": "Geen deCONZ bridges ontdekt",
             "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
-            "not_deconz_bridge": "Geen deCONZ bridge",
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {

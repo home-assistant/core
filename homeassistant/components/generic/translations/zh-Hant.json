@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "\u9a57\u8b49",
-                    "content_type": "\u5167\u5bb9\u985e\u578b",
                     "framerate": "\u5f71\u683c\u7387 (Hz)",
                     "limit_refetch_to_url_change": "\u9650\u5236 URL \u8b8a\u66f4\u66f4\u65b0",
                     "password": "\u5bc6\u78bc",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "\u9a57\u8b49",
-                    "content_type": "\u5167\u5bb9\u985e\u578b",
                     "framerate": "\u5f71\u683c\u7387 (Hz)",
                     "limit_refetch_to_url_change": "\u9650\u5236 URL \u8b8a\u66f4\u66f4\u65b0",
                     "password": "\u5bc6\u78bc",
