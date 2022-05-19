@@ -215,16 +215,27 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         self._unique_id = f"{router.serial_number}-{entity_description.key}"
 
         self._state = None
+        self._available = False
 
     @property
     def is_on(self):
         """Return true if switch is on."""
         return self._state
 
+    @property
+    def available(self):
+        """Return if the switch is available."""
+        return self._available
+
     async def async_update(self):
         """Poll the state of the switch."""
         async with self._router._api_lock:
-            self._state = await self.hass.async_add_executor_job(self.entity_description.update(self._router))
+            response = await self.hass.async_add_executor_job(self.entity_description.update(self._router))
+        if response is None:
+            self._available = False
+        else:
+            self._state = response
+            self._available = True
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
