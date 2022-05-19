@@ -742,7 +742,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.2.4
 
 # homeassistant.components.nexia
-nexia==1.0.0
+nexia==1.0.1
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
