@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -317,7 +317,7 @@ class NetgearDeviceEntity(NetgearBaseEntity):
         )
 
 
-class NetgearRouterEntity(CoordinatorEntity):
+class NetgearRouterCoordinatorEntity(CoordinatorEntity):
     """Base class for a Netgear router entity."""
 
     def __init__(
@@ -339,6 +339,35 @@ class NetgearRouterEntity(CoordinatorEntity):
         """Handle updated data from the coordinator."""
         self.async_update_device()
         super()._handle_coordinator_update()
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._router.unique_id)},
+        )
+
+
+class NetgearRouterEntity(Entity):
+    """Base class for a Netgear router entity without coordinator."""
+
+    def __init__(
+        self, router: NetgearRouter
+    ) -> None:
+        """Initialize a Netgear device."""
+        self._router = router
+        self._name = router.device_name
+        self._unique_id = router.serial_number
 
     @property
     def unique_id(self) -> str:

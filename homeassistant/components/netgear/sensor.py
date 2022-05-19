@@ -33,7 +33,7 @@ from .const import (
     KEY_COORDINATOR_TRAFFIC,
     KEY_ROUTER,
 )
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
+from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -338,7 +338,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
+class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, SensorEntity):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
