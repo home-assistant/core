@@ -18,6 +18,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     POWER_KILO_WATT,
+    POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -599,6 +600,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name="Total Energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_POWER,
+            name="Total Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=POWER_WATT,
+            subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
