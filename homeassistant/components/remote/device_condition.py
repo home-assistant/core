@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.device_automation import (
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+    toggle_entity,
+)
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.condition import ConditionCheckerType
@@ -28,13 +32,13 @@ def async_condition_from_config(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device conditions."""
     return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List condition capabilities."""
     return await toggle_entity.async_get_condition_capabilities(hass, config)

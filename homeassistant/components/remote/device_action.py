@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.device_automation import (
+    GetAutomationsResult,
+    toggle_entity,
+)
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -19,7 +22,7 @@ async def async_call_action_from_config(
     hass: HomeAssistant,
     config: ConfigType,
     variables: TemplateVarsType,
-    context: Context,
+    context: Context | None,
 ) -> None:
     """Change state based on configuration."""
     await toggle_entity.async_call_action_from_config(
@@ -29,6 +32,6 @@ async def async_call_action_from_config(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> GetAutomationsResult:
     """List device actions."""
     return await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
