@@ -31,6 +31,8 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
     "x_of_y": re.compile(r"^(\w+)\[(.*?]*)\]$"),
     # x_of_y_comma_z matches items such as "Callable[..., Awaitable[None]]"
     "x_of_y_comma_z": re.compile(r"^(\w+)\[(.*?]*), (.*?]*)\]$"),
+    # x_of_y_of_z_comma_a matches items such as "list[dict[str, Any]]"
+    "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
 
 _MODULE_FILTERS: dict[str, re.Pattern] = {
@@ -44,12 +46,20 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     "application_credentials": re.compile(
         r"^homeassistant\.components\.\w+\.(application_credentials)$"
     ),
-    # device_tracker matches only in the package root (device_tracker.py)
-    "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
-    # diagnostics matches only in the package root (diagnostics.py)
-    "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
     # config_flow matches only in the package root (config_flow.py)
     "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$"),
+    # device_action matches only in the package root (device_action.py)
+    "device_action": re.compile(r"^homeassistant\.components\.\w+\.(device_action)$"),
+    # device_condition matches only in the package root (device_condition.py)
+    "device_condition": re.compile(
+        r"^homeassistant\.components\.\w+\.(device_condition)$"
+    ),
+    # device_tracker matches only in the package root (device_tracker.py)
+    "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
+    # device_trigger matches only in the package root (device_trigger.py)
+    "device_trigger": re.compile(r"^homeassistant\.components\.\w+\.(device_trigger)$"),
+    # diagnostics matches only in the package root (diagnostics.py)
+    "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -158,6 +168,50 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type="AuthorizationServer",
     ),
     TypeHintMatch(
+        module_filter=_MODULE_FILTERS["config_flow"],
+        function_name="_async_has_devices",
+        arg_types={
+            0: "HomeAssistant",
+        },
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_action"],
+        function_name="async_get_actions",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+        },
+        return_type="list[dict[str, str]]",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_action"],
+        function_name="async_get_action_capabilities",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type="dict[str, Schema]",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_condition"],
+        function_name="async_get_conditions",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+        },
+        return_type="list[dict[str, str]]",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_condition"],
+        function_name="async_get_condition_capabilities",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type="dict[str, Schema]",
+    ),
+    TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_tracker"],
         function_name="setup_scanner",
         arg_types={
@@ -198,6 +252,24 @@ _METHOD_MATCH: list[TypeHintMatch] = [
         return_type=["DeviceScanner", "DeviceScanner | None"],
     ),
     TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_trigger"],
+        function_name="async_get_triggers",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+        },
+        return_type="list[dict[str, str]]",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["device_trigger"],
+        function_name="async_get_trigger_capabilities",
+        arg_types={
+            0: "HomeAssistant",
+            1: "ConfigType",
+        },
+        return_type="dict[str, Schema]",
+    ),
+    TypeHintMatch(
         module_filter=_MODULE_FILTERS["diagnostics"],
         function_name="async_get_config_entry_diagnostics",
         arg_types={
@@ -215,14 +287,6 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             2: "DeviceEntry",
         },
         return_type=UNDEFINED,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["config_flow"],
-        function_name="_async_has_devices",
-        arg_types={
-            0: "HomeAssistant",
-        },
-        return_type="bool",
     ),
 ]
 
@@ -252,6 +316,18 @@ def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) 
             isinstance(node, astroid.BinOp)
             and _is_valid_type(match.group(1), node.left)
             and _is_valid_type(match.group(2), node.right)
+        )
+
+    # Special case for xxx[yyy[zzz, aaa]]`
+    if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
+        return (
+            isinstance(node, astroid.Subscript)
+            and _is_valid_type(match.group(1), node.value)
+            and isinstance(subnode := node.slice, astroid.Subscript)
+            and _is_valid_type(match.group(2), subnode.value)
+            and isinstance(subnode.slice, astroid.Tuple)
+            and _is_valid_type(match.group(3), subnode.slice.elts[0])
+            and _is_valid_type(match.group(4), subnode.slice.elts[1])
         )
 
     # Special case for xxx[yyy, zzz]`
