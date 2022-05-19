@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping
 import contextlib
+from dataclasses import asdict, dataclass
 import logging
 from typing import cast
 
@@ -66,10 +67,19 @@ async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]
     return loggers
 
 
+@dataclass
+class LoggerSetting:
+    """Settings for a single module or integration."""
+
+    level: str
+    persistence: str
+    type: str
+
+
 class LoggerSettings:
     """Manage log settings."""
 
-    _stored_config: dict[str, dict[str, dict[str, str]]]
+    _stored_config: dict[str, dict[str, LoggerSetting]]
 
     def __init__(self, hass: HomeAssistant, yaml_config: ConfigType) -> None:
         """Initialize log settings."""
@@ -83,10 +93,10 @@ class LoggerSettings:
     async def async_load(self) -> None:
         """Load stored settings."""
 
-        def reset_persistence(settings: dict[str, str]) -> dict[str, str]:
+        def reset_persistence(settings: LoggerSetting) -> LoggerSetting:
             """Reset persistence."""
-            if settings["persistence"] == "once":
-                settings["persistence"] = "none"
+            if settings.persistence == "once":
+                settings.persistence = "none"
             return settings
 
         stored_config = await self._store.async_load()
@@ -94,7 +104,7 @@ class LoggerSettings:
             # Reset domains for which the overrides should only be applied once
             self._stored_config = {
                 "logs": {
-                    domain: reset_persistence(settings)
+                    domain: reset_persistence(LoggerSetting(**settings))
                     for domain, settings in cast(dict, stored_config)["logs"].items()
                 }
             }
@@ -107,9 +117,9 @@ class LoggerSettings:
         """Generate data to be saved."""
         return {
             "logs": {
-                domain: settings
+                domain: asdict(settings)
                 for domain, settings in self._stored_config["logs"].items()
-                if settings["persistence"] in ("once", "permanent")
+                if settings.persistence in ("once", "permanent")
             }
         }
 
@@ -119,28 +129,31 @@ class LoggerSettings:
         self._store.async_delay_save(self._async_data_to_save, 15)
 
     async def async_update(
-        self, hass: HomeAssistant, domain: str, settings: dict[str, str]
+        self, hass: HomeAssistant, domain: str, settings: LoggerSetting
     ) -> None:
         """Update settings."""
-        if settings["level"] == "NOTSET":
+        if settings.level == "NOTSET":
             self._stored_config["logs"].pop(domain, None)
         else:
             self._stored_config["logs"][domain] = settings
         self.async_save()
 
-        if settings["type"] == "integration":
+        if settings.type == "integration":
             loggers = await get_integration_loggers(hass, domain)
         else:
             loggers = [domain]
 
         combined_logs = {}
         for logger in loggers:
-            combined_logs[logger] = LOGSEVERITY[settings["level"]]
+            combined_logs[logger] = LOGSEVERITY[settings.level]
+
+        # Consider potentially chattier log levels already set in configuration.yaml
         if DOMAIN in self._yaml_config and LOGGER_LOGS in self._yaml_config[DOMAIN]:
+            yaml_log_settings = self._yaml_config[DOMAIN][LOGGER_LOGS]
             for logger in loggers:
                 combined_logs[logger] = _chattiest_log_level(
                     combined_logs[logger],
-                    self._yaml_config[DOMAIN][LOGGER_LOGS].get(logger, logging.NOTSET),
+                    yaml_log_settings.get(logger, logging.NOTSET),
                 )
         set_log_levels(hass, combined_logs)
 
@@ -148,13 +161,13 @@ class LoggerSettings:
         """Get combination of levels from yaml and storage."""
         combined_logs = defaultdict(lambda: logging.CRITICAL)
         for domain, settings in self._stored_config["logs"].items():
-            if settings["type"] == "integration":
+            if settings.type == "integration":
                 loggers = await get_integration_loggers(hass, domain)
             else:
                 loggers = [domain]
 
             for logger in loggers:
-                combined_logs[logger] = LOGSEVERITY[settings["level"]]
+                combined_logs[logger] = LOGSEVERITY[settings.level]
 
         if DOMAIN in self._yaml_config and LOGGER_LOGS in self._yaml_config[DOMAIN]:
             for domain, level in self._yaml_config[DOMAIN][LOGGER_LOGS].items():
