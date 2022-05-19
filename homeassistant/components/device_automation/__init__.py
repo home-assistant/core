@@ -190,22 +190,42 @@ def _async_set_entity_device_automation_metadata(
     automation["metadata"]["secondary"] = bool(entry.entity_category or entry.hidden_by)
 
 
+async def _async_get_automation_for_device(
+    hass: HomeAssistant,
+    platform: DeviceAutomationPlatformType,
+    function_name: str,
+    device_id: str,
+) -> list[dict[str, Any]]:
+    """List device automations."""
+    automations = getattr(platform, function_name)(hass, device_id)
+    if asyncio.iscoroutine(automations):
+        # Using a coroutine to get device automations is deprecated
+        # enable warning when core is fully migrated
+        # then remove in xxxx.xx
+        return await automations  # type: ignore[no-any-return]
+    return automations  # type: ignore[no-any-return]
+
+
 async def _async_get_device_automations_from_domain(
-    hass, domain, automation_type, device_ids, return_exceptions
-):
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: DeviceAutomationType,
+    device_ids: Iterable[str],
+    return_exceptions: bool,
+) -> list[list[dict[str, Any]]]:
     """List device automations."""
     try:
         platform = await async_get_device_automation_platform(
             hass, domain, automation_type
         )
     except InvalidDeviceAutomationConfig:
-        return {}
+        return []
 
     function_name = automation_type.value.get_automations_func
 
-    return await asyncio.gather(
+    return await asyncio.gather(  # type: ignore[no-any-return]
         *(
-            getattr(platform, function_name)(hass, device_id)
+            _async_get_automation_for_device(hass, platform, function_name, device_id)
             for device_id in device_ids
         ),
         return_exceptions=return_exceptions,
