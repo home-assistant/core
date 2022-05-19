@@ -1,21 +1,26 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+import importlib
+import sys
 from unittest.mock import patch, sentinel
 
 import pytest
 from pytest import approx
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, statistics
-from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import (
     StatisticsShortTerm,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
-    delete_duplicates,
+    delete_statistics_duplicates,
+    delete_statistics_meta_duplicates,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics,
@@ -32,7 +37,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done, do_adhoc_statistics
 
-from tests.common import mock_registry
+from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
@@ -306,10 +311,90 @@ def test_rename_entity(hass_recorder):
         entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
 
     hass.add_job(rename_entry)
-    hass.block_till_done()
+    wait_recording_done(hass)
 
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
+
+
+def test_rename_entity_collision(hass_recorder, caplog):
+    """Test statistics is migrated when entity_id is changed."""
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+
+    entity_reg = mock_registry(hass)
+
+    @callback
+    def add_entry():
+        reg_entry = entity_reg.async_get_or_create(
+            "sensor",
+            "test",
+            "unique_0000",
+            suggested_object_id="test1",
+        )
+        assert reg_entry.entity_id == "sensor.test1"
+
+    hass.add_job(add_entry)
+    hass.block_till_done()
+
+    zero, four, states = record_states(hass)
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
+        assert stats == {}
+    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
+    assert stats == {}
+
+    do_adhoc_statistics(hass, start=zero)
+    wait_recording_done(hass)
+    expected_1 = {
+        "statistic_id": "sensor.test1",
+        "start": process_timestamp_to_utc_isoformat(zero),
+        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+        "mean": approx(14.915254237288135),
+        "min": approx(10.0),
+        "max": approx(20.0),
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+    }
+    expected_stats1 = [
+        {**expected_1, "statistic_id": "sensor.test1"},
+    ]
+    expected_stats2 = [
+        {**expected_1, "statistic_id": "sensor.test2"},
+    ]
+
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
+    # Insert metadata for sensor.test99
+    metadata_1 = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "sensor.test99",
+        "unit_of_measurement": "kWh",
+    }
+
+    with session_scope(hass=hass) as session:
+        session.add(recorder.models.StatisticsMeta.from_meta(metadata_1))
+
+    # Rename entity sensor.test1 to sensor.test99
+    @callback
+    def rename_entry():
+        entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
+
+    hass.add_job(rename_entry)
+    wait_recording_done(hass)
+
+    # Statistics failed to migrate due to the collision
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+    assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
 
 
 def test_statistics_duplicated(hass_recorder, caplog):
@@ -737,7 +822,7 @@ def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
     hass = hass_recorder()
     wait_recording_done(hass)
     with session_scope(hass=hass) as session:
-        delete_duplicates(hass, session)
+        delete_statistics_duplicates(hass, session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found duplicated" not in caplog.text
@@ -798,6 +883,180 @@ def test_duplicate_statistics_handle_integrity_error(hass_recorder, caplog):
         assert len(tmp) == 2
 
     assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
+
+
+def _create_engine_28(*args, **kwargs):
+    """Test version of create_engine that initializes with old schema.
+
+    This simulates an existing db with the old schema.
+    """
+    module = "tests.components.recorder.models_schema_28"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
+    engine = create_engine(*args, **kwargs)
+    old_models.Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(recorder.models.StatisticsRuns(start=statistics.get_start_time()))
+        session.add(
+            recorder.models.SchemaChanges(schema_version=old_models.SCHEMA_VERSION)
+        )
+        session.commit()
+    return engine
+
+
+def test_delete_metadata_duplicates(caplog, tmpdir):
+    """Test removal of duplicated statistics."""
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_28"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
+
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_metadata_2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    # Create some duplicated statistics_meta with schema version 28
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+
+        hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    # Test that the duplicates are removed during migration from schema 28
+    hass = get_test_home_assistant()
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    assert "Deleted 1 duplicated statistics_meta rows" in caplog.text
+
+
+def test_delete_metadata_duplicates_many(caplog, tmpdir):
+    """Test removal of duplicated statistics."""
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_28"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
+
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_metadata_2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_of_measurement": "kWh",
+    }
+    external_co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    # Create some duplicated statistics with schema version 28
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+            for _ in range(3000):
+                session.add(
+                    recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+                )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+
+        hass.stop()
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    # Test that the duplicates are removed during migration from schema 28
+    hass = get_test_home_assistant()
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    assert "Deleted 3002 duplicated statistics_meta rows" in caplog.text
+
+
+def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
+    """Test removal of duplicated statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+    with session_scope(hass=hass) as session:
+        delete_statistics_meta_duplicates(session)
+    assert "duplicated statistics_meta rows" not in caplog.text
 
 
 def record_states(hass):

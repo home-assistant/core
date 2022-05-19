@@ -10,6 +10,7 @@ import threading
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import Event
+from homeassistant.helpers.typing import UndefinedType
 
 from . import purge, statistics
 from .const import DOMAIN, EXCLUDE_ATTRIBUTES
@@ -46,12 +47,16 @@ class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
     statistic_id: str
-    unit_of_measurement: str | None
+    new_statistic_id: str | None | UndefinedType
+    new_unit_of_measurement: str | None | UndefinedType
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.update_statistics_metadata(
-            instance, self.statistic_id, self.unit_of_measurement
+            instance,
+            self.statistic_id,
+            self.new_statistic_id,
+            self.new_unit_of_measurement,
         )
 
 
