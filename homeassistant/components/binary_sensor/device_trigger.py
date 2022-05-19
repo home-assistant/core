@@ -8,8 +8,10 @@ from homeassistant.components.device_automation.const import (
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
 
@@ -276,9 +278,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers = []
+    triggers: list[dict[str, str]] = []
     entity_registry = er.async_get(hass)
 
     entries = [
@@ -308,7 +312,9 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

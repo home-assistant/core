@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_capability, get_supported_features
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, const
 
@@ -84,7 +85,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(hass, config):
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     action_type = config[CONF_TYPE]
 
