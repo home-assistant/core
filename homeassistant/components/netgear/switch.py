@@ -2,6 +2,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from datetime import timedelta
 
 from pynetgear import ALLOW, BLOCK
 
@@ -17,6 +18,7 @@ from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=300)
 
 SWITCH_TYPES = [
     SwitchEntityDescription(
@@ -67,7 +69,7 @@ async def async_setup_entry(
             NetgearRouterSwitchEntity(router, description)
         )
 
-    async_add_entities(router_entities)
+    async_add_entities(router_entities, True)
 
     # Entities per network device
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
