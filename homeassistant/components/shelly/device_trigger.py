@@ -54,7 +54,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 def append_input_triggers(
-    triggers: list[dict[str, Any]],
+    triggers: list[dict[str, str]],
     input_triggers: list[tuple[str, str]],
     device_id: str,
 ) -> None:
