@@ -130,7 +130,7 @@ class NetgearRouter:
                 self.method_version = 2
 
         if self.method_version == 2 and self.track_devices:
-            if not self._api.get_attached_devices_2():
+            if not self.api.get_attached_devices_2():
                 _LOGGER.error(
                     "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
                     self.model,
