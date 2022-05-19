@@ -52,7 +52,7 @@ class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
         self.io_device_id = io_device_id
         self._attr_unique_id = f"{io_device_id}:battery"
         io_device = self.coordinator.data["io_devices"][io_device_id]
-        heat_area = self.coordinator.data["heat_areas"].get(io_device["_HEATAREA_ID"])
+        heat_area = self.coordinator.data["heat_areas"][io_device["_HEATAREA_ID"]]
         self._attr_name = (
             f"{heat_area['HEATAREA_NAME']} IO device {io_device['NR']} battery"
         )
@@ -84,9 +84,7 @@ class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity, SensorEntity):
         self.heat_control_id = heat_control_id
         self._attr_unique_id = f"{heat_control_id}:valve_opening"
         heat_control = self.coordinator.data["heat_controls"][heat_control_id]
-        heat_area = self.coordinator.data["heat_areas"].get(
-            heat_control["_HEATAREA_ID"]
-        )
+        heat_area = self.coordinator.data["heat_areas"][heat_control["_HEATAREA_ID"]]
         self._attr_name = f"{heat_area['HEATAREA_NAME']} heat control {heat_control['NR']} valve opening"
 
     @property
