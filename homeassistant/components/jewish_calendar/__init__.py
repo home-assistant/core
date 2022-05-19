@@ -8,6 +8,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_TIME_ZONE,
@@ -121,12 +122,26 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         hass.config_entries.async_update_entry(config_entry, options=options)
 
+    # The current specification for config_entries of jewish_calendar allows to
+    # optionally specify latitude and longitude. So we can have a config_entry with
+    # CONF_LAT/LON specified, one with CONF_LOCATION or None in which case we'll
+    # take the Home location.
+    if config_entry.data.get(CONF_LATITUDE) or config_entry.data.get(CONF_LONGITUDE):
+        latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+        longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    elif config_entry.data.get(CONF_LOCATION):
+        latitude = config_entry.data[CONF_LOCATION][CONF_LATITUDE]
+        longitude = config_entry.data[CONF_LOCATION][CONF_LONGITUDE]
+    else:
+        latitude = hass.config.latitude
+        longitude = hass.config.longitude
+
     location = Location(
         name=hass.config.location_name,
         diaspora=diaspora,
         # If details of the location are not specified, use Hass's defaults.
-        latitude=config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-        longitude=config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        latitude=latitude,
+        longitude=longitude,
         altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
         timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
