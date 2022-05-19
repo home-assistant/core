@@ -25,13 +25,16 @@ async def async_setup_entry(
 
     async_add_entities(
         Alpha2IODeviceBatterySensor(coordinator, io_device_id)
-        for io_device_id in coordinator.data["io_devices"]
+        for io_device_id, io_device in coordinator.data["io_devices"].items()
+        if io_device["_HEATAREA_ID"]
     )
     # HEATCTRL atrribute ACTOR_PERCENT is not available in older firmware versions
     async_add_entities(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
-        if heat_control["INUSE"] and heat_control.get("ACTOR_PERCENT") is not None
+        if heat_control["INUSE"]
+        and heat_control["_HEATAREA_ID"]
+        and heat_control.get("ACTOR_PERCENT") is not None
     )
 
 
@@ -48,11 +51,11 @@ class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.io_device_id = io_device_id
         self._attr_unique_id = f"{io_device_id}:battery"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the battery sensor."""
-        return f"Alpha2 IO device {self.io_device_id} battery"
+        io_device = self.coordinator.data["io_devices"][io_device_id]
+        heat_area = self.coordinator.data["heat_areas"].get(io_device["_HEATAREA_ID"])
+        self._attr_name = (
+            f"{heat_area['HEATAREA_NAME']} IO device {io_device['NR']} battery"
+        )
 
     @property
     def native_value(self) -> int:
@@ -80,11 +83,11 @@ class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.heat_control_id = heat_control_id
         self._attr_unique_id = f"{heat_control_id}:valve_opening"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the valve sensor."""
-        return f"Alpha2 heat control {self.heat_control_id} valve opening"
+        heat_control = self.coordinator.data["heat_controls"][heat_control_id]
+        heat_area = self.coordinator.data["heat_areas"].get(
+            heat_control["_HEATAREA_ID"]
+        )
+        self._attr_name = f"{heat_area['HEATAREA_NAME']} heat control {heat_control['NR']} valve opening"
 
     @property
     def native_value(self) -> int:
