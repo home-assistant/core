@@ -7,6 +7,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN
 from .core.helpers import async_get_zha_device
@@ -65,7 +66,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers.
 
     Make sure the device supports device automations and
@@ -74,7 +77,7 @@ async def async_get_triggers(hass, device_id):
     zha_device = async_get_zha_device(hass, device_id)
 
     if not zha_device.device_automation_triggers:
-        return
+        return []
 
     triggers = []
     for trigger, subtype in zha_device.device_automation_triggers.keys():
