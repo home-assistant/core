@@ -5,23 +5,21 @@ import asyncio
 from collections.abc import Callable
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationTriggerData,
-    AutomationTriggerInfo,
-)
-from homeassistant.components.device_automation.trigger import (
-    DeviceAutomationTriggerProtocol,
-)
 from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .typing import ConfigType, TemplateVarsType
+
+if TYPE_CHECKING:
+    from homeassistant.components.device_automation.trigger import (
+        DeviceAutomationTriggerProtocol,
+    )
 
 _PLATFORM_ALIASES = {
     "device_automation": ("device",),
@@ -95,6 +93,10 @@ async def async_initialize_triggers(
     variables: TemplateVarsType = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
+    from homeassistant.components.automation import (  # pylint:disable=[import-outside-toplevel]
+        AutomationTriggerData,
+        AutomationTriggerInfo,
+    )
 
     triggers = []
     for idx, conf in enumerate(trigger_config):
