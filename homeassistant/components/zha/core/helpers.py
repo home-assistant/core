@@ -24,7 +24,7 @@ import zigpy.util
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -34,6 +34,8 @@ from .const import (
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
 )
+from .device import ZHADevice
+from .gateway import ZHAGateway
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
 
@@ -161,11 +163,11 @@ def async_cluster_exists(hass, cluster_id):
 
 
 @callback
-def async_get_zha_device(hass, device_id):
+def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     """Get a ZHA device for the given device registry id."""
     device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
     ieee = zigpy.types.EUI64.convert(ieee_address)
     return zha_gateway.devices[ieee]
