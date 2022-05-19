@@ -245,23 +245,23 @@ async def async_setup_entry(
             SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
         )
 
-    for key, _ in coordinator.data.disk.dict().items():
-        if "_percent" in key.lower():
-            partition = key.replace("usage_", "").replace("_percent", "")
-            entities.append(
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"filesystem_{partition.replace(':', '')}",
-                        name=f"{partition} Space Used",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PERCENTAGE,
-                        icon="mdi:harddisk",
-                        value=lambda data, k=key: getattr(data.disk, k),
+    for partition in coordinator.data.disk.partitions:
+        entities.append(
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"filesystem_{partition.replace(':', '')}",
+                    name=f"{partition} Space Used",
+                    state_class=SensorStateClass.MEASUREMENT,
+                    native_unit_of_measurement=PERCENTAGE,
+                    icon="mdi:harddisk",
+                    value=lambda data, p=partition: getattr(
+                        data.disk, f"usage_{p}_percent"
                     ),
-                    entry.data[CONF_PORT],
-                )
+                ),
+                entry.data[CONF_PORT],
             )
+        )
 
     if (
         coordinator.data.battery
@@ -274,14 +274,15 @@ async def async_setup_entry(
             )
 
     displays = []
-    for key, value in coordinator.data.display.dict().items():
-        if "_name" in key:
-            displays.append(
-                {
-                    "key": key.replace("_name", ""),
-                    "name": value.replace("Display ", ""),
-                },
-            )
+    for display in coordinator.data.display.displays:
+        displays.append(
+            {
+                "key": display,
+                "name": getattr(coordinator.data.display, f"{display}_name").replace(
+                    "Display ", ""
+                ),
+            },
+        )
     display_count = len(displays)
 
     entities.append(
@@ -346,14 +347,13 @@ async def async_setup_entry(
         ]
 
     gpus = []
-    for key, value in coordinator.data.gpu.dict().items():
-        if "_name" in key:
-            gpus.append(
-                {
-                    "key": key.replace("_name", ""),
-                    "name": value,
-                },
-            )
+    for gpu in coordinator.data.gpu.gpus:
+        gpus.append(
+            {
+                "key": gpu,
+                "name": getattr(coordinator.data.gpu, f"{gpu}_name"),
+            },
+        )
 
     for index, gpu in enumerate(gpus):
         entities = [

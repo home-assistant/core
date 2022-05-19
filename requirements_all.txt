@@ -2271,7 +2271,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.0.8
+systembridgeconnector==3.0.9
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
