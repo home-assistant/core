@@ -200,13 +200,23 @@ async def test_step_destination_coordinates(
         menu_result["flow_id"],
         {
             "destination": {
-                "latitude": float(CAR_ORIGIN_LATITUDE),
-                "longitude": float(CAR_ORIGIN_LONGITUDE),
+                "latitude": float(CAR_DESTINATION_LATITUDE),
+                "longitude": float(CAR_DESTINATION_LONGITUDE),
                 "radius": 3.0,
             }
         },
     )
     assert location_selector_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        CONF_NAME: "test",
+        CONF_API_KEY: API_KEY,
+        CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+        CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+        CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+        CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+        CONF_MODE: TRAVEL_MODE_CAR,
+    }
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -224,6 +234,15 @@ async def test_step_destination_entity(
         {"destination_entity_id": "zone.home"},
     )
     assert entity_selector_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        CONF_NAME: "test",
+        CONF_API_KEY: API_KEY,
+        CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+        CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+        CONF_DESTINATION_ENTITY_ID: "zone.home",
+        CONF_MODE: TRAVEL_MODE_CAR,
+    }
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -328,6 +347,13 @@ async def test_options_flow_arrival_time_step(
     )
 
     assert time_selector_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.options == {
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+        CONF_ARRIVAL_TIME: "08:00:00",
+    }
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -347,6 +373,13 @@ async def test_options_flow_departure_time_step(
     )
 
     assert time_selector_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.options == {
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+        CONF_DEPARTURE_TIME: "08:00:00",
+    }
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -359,6 +392,12 @@ async def test_options_flow_no_time_step(
     )
 
     assert menu_result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.options == {
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+    }
 
 
 @pytest.mark.usefixtures("valid_response")
