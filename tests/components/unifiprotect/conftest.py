@@ -17,11 +17,11 @@ from pyunifiprotect.data import (
     Doorlock,
     Light,
     Liveview,
+    ProtectAdoptableDeviceModel,
     Sensor,
     Viewer,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
