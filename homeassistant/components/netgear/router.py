@@ -361,9 +361,7 @@ class NetgearRouterCoordinatorEntity(CoordinatorEntity):
 class NetgearRouterEntity(Entity):
     """Base class for a Netgear router entity without coordinator."""
 
-    def __init__(
-        self, router: NetgearRouter
-    ) -> None:
+    def __init__(self, router: NetgearRouter) -> None:
         """Initialize a Netgear device."""
         self._router = router
         self._name = router.device_name

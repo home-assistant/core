@@ -1,8 +1,8 @@
 """Support for Netgear switches."""
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from datetime import timedelta
+import logging
 
 from pynetgear import ALLOW, BLOCK
 
@@ -28,6 +28,7 @@ SWITCH_TYPES = [
         entity_category=EntityCategory.CONFIG,
     )
 ]
+
 
 @dataclass
 class NetgearSwitchEntityDescriptionRequired:
@@ -100,22 +101,21 @@ ROUTER_SWITCH_TYPES = [
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_smart_connect_enabled,
         action=lambda router: router.api.set_smart_connect_enabled,
-    )
+    ),
 ]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up switches for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
-    
+
     # Router entities
     router_entities = []
 
     for description in ROUTER_SWITCH_TYPES:
-        router_entities.append(
-            NetgearRouterSwitchEntity(router, description)
-        )
+        router_entities.append(NetgearRouterSwitchEntity(router, description))
 
     async_add_entities(router_entities)
 
@@ -235,7 +235,9 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
     async def async_update(self):
         """Poll the state of the switch."""
         async with self._router.api_lock:
-            response = await self.hass.async_add_executor_job(self.entity_description.update(self._router))
+            response = await self.hass.async_add_executor_job(
+                self.entity_description.update(self._router)
+            )
         if response is None:
             self._available = False
         else:
@@ -245,11 +247,15 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         async with self._router.api_lock:
-            await self.hass.async_add_executor_job(self.entity_description.action(self._router), True)
+            await self.hass.async_add_executor_job(
+                self.entity_description.action(self._router), True
+            )
         self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         async with self._router.api_lock:
-            await self.hass.async_add_executor_job(self.entity_description.action(self._router), False)
+            await self.hass.async_add_executor_job(
+                self.entity_description.action(self._router), False
+            )
         self.async_schedule_update_ha_state(force_refresh=True)
