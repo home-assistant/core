@@ -15,7 +15,7 @@ from .helpers import LoggerSettings
 
 
 @callback
-def async_load_websocket_api(hass: HomeAssistant):
+def async_load_websocket_api(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, handle_integration_log_info)
     websocket_api.async_register_command(hass, handle_integration_log_level)

@@ -1,6 +1,9 @@
 """Support for setting the level of logging for components."""
+from __future__ import annotations
+
 import logging
 
+import regex
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -70,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
         if service.service == SERVICE_SET_DEFAULT_LEVEL:
-            set_default_log_level(hass, service.data.get(ATTR_LEVEL))
+            set_default_log_level(hass, service.data[ATTR_LEVEL])
         else:
             set_log_levels(hass, service.data)
 
@@ -91,16 +94,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _add_log_filter(logger, patterns):
+def _add_log_filter(logger: logging.Logger, patterns: list[regex.regex]) -> None:
     """Add a Filter to the logger based on a regexp of the filter_str."""
 
-    def filter_func(logrecord):
+    def filter_func(logrecord: logging.LogRecord) -> bool:
         return not any(p.search(logrecord.getMessage()) for p in patterns)
 
     logger.addFilter(filter_func)
 
 
-def _get_logger_class(hass_overrides):
+def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
     """Create a logger subclass.
 
     logging.setLoggerClass checks if it is a subclass of Logger and
@@ -110,7 +113,7 @@ def _get_logger_class(hass_overrides):
     class HassLogger(logging.Logger):
         """Home Assistant aware logger class."""
 
-        def setLevel(self, level) -> None:
+        def setLevel(self, level: int | str) -> None:
             """Set the log level unless overridden."""
             if self.name in hass_overrides:
                 return
@@ -118,7 +121,7 @@ def _get_logger_class(hass_overrides):
             super().setLevel(level)
 
         # pylint: disable=invalid-name
-        def orig_setLevel(self, level) -> None:
+        def orig_setLevel(self, level: int | str) -> None:
             """Set the log level."""
             super().setLevel(level)
 

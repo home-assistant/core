@@ -1,10 +1,15 @@
 """Helpers for the logger integration."""
+from __future__ import annotations
+
 from collections import defaultdict
+from collections.abc import Mapping
 import contextlib
 import logging
+from typing import cast
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
@@ -19,14 +24,14 @@ from .const import (
 
 
 @callback
-def set_default_log_level(hass, level):
+def set_default_log_level(hass: HomeAssistant, level: int) -> None:
     """Set the default log level for components."""
     _set_log_level(logging.getLogger(""), level)
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)
 
 
 @callback
-def set_log_levels(hass, logpoints):
+def set_log_levels(hass: HomeAssistant, logpoints: Mapping[str, int]) -> None:
     """Set the specified log levels."""
     hass.data[DOMAIN]["overrides"].update(logpoints)
     for key, value in logpoints.items():
@@ -34,7 +39,7 @@ def set_log_levels(hass, logpoints):
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)
 
 
-def _set_log_level(logger, level):
+def _set_log_level(logger: logging.Logger, level: int) -> None:
     """Set the log level.
 
     Any logger fetched before this integration is loaded will use old class.
@@ -42,7 +47,7 @@ def _set_log_level(logger, level):
     getattr(logger, "orig_setLevel", logger.setLevel)(level)
 
 
-def _chattiest_log_level(level1, level2):
+def _chattiest_log_level(level1: int, level2: int) -> int:
     """Return the chattiest log level."""
     if level1 == logging.NOTSET:
         return level2
@@ -51,7 +56,7 @@ def _chattiest_log_level(level1, level2):
     return min(level1, level2)
 
 
-async def get_integration_loggers(hass, domain):
+async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]:
     """Get loggers for an integration."""
     loggers = [f"homeassistant.components.{domain}"]
     with contextlib.suppress(IntegrationNotFound):
@@ -64,9 +69,9 @@ async def get_integration_loggers(hass, domain):
 class LoggerSettings:
     """Manage log settings."""
 
-    _stored_config: dict
+    _stored_config: dict[str, dict[str, dict[str, str]]]
 
-    def __init__(self, hass, yaml_config):
+    def __init__(self, hass: HomeAssistant, yaml_config: ConfigType) -> None:
         """Initialize log settings."""
 
         self._yaml_config = yaml_config
@@ -75,22 +80,22 @@ class LoggerSettings:
             self._default_level = yaml_config[DOMAIN][LOGGER_DEFAULT]
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load stored settings."""
 
-        def reset_persistence(settings):
+        def reset_persistence(settings: dict[str, str]) -> dict[str, str]:
             """Reset persistence."""
             if settings["persistence"] == "once":
                 settings["persistence"] = "none"
             return settings
 
-        self._stored_config = await self._store.async_load()
-        if self._stored_config:
+        stored_config = await self._store.async_load()
+        if stored_config:
             # Reset domains for which the overrides should only be applied once
             self._stored_config = {
                 "logs": {
                     domain: reset_persistence(settings)
-                    for domain, settings in self._stored_config["logs"].items()
+                    for domain, settings in cast(dict, stored_config)["logs"].items()
                 }
             }
             await self._store.async_save(self._async_data_to_save())
@@ -98,7 +103,7 @@ class LoggerSettings:
             self._stored_config = {"logs": {}}
 
     @callback
-    def _async_data_to_save(self):
+    def _async_data_to_save(self) -> dict[str, dict[str, dict[str, str]]]:
         """Generate data to be saved."""
         return {
             "logs": {
@@ -109,11 +114,13 @@ class LoggerSettings:
         }
 
     @callback
-    def async_save(self):
+    def async_save(self) -> None:
         """Save settings."""
         self._store.async_delay_save(self._async_data_to_save, 15)
 
-    async def async_update(self, hass, domain, settings):
+    async def async_update(
+        self, hass: HomeAssistant, domain: str, settings: dict[str, str]
+    ) -> None:
         """Update settings."""
         if settings["level"] == "NOTSET":
             self._stored_config["logs"].pop(domain, None)
@@ -137,7 +144,7 @@ class LoggerSettings:
                 )
         set_log_levels(hass, combined_logs)
 
-    async def async_get_levels(self, hass):
+    async def async_get_levels(self, hass: HomeAssistant) -> dict[str, int]:
         """Get combination of levels from yaml and storage."""
         combined_logs = defaultdict(lambda: logging.CRITICAL)
         for domain, settings in self._stored_config["logs"].items():

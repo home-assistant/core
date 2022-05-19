@@ -105,6 +105,7 @@ homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
+homeassistant.components.logger.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
