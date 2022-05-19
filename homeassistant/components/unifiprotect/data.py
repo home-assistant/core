@@ -170,11 +170,11 @@ class ProtectData:
             )
         self._subscriptions.setdefault(device.id, []).append(update_callback)
         assert device.model is not None
-        self._entity_to_device_map[entry.unique_id] = ProtectDeviceRef(
+        self._entity_to_ufp_device_map[entry.unique_id] = ProtectDeviceRef(
             device.model, device.id
         )
         if entry.device_id is not None:
-            self._device_to_device_map[entry.device_id] = ProtectDeviceRef(
+            self._device_to_ufp_device_map[entry.device_id] = ProtectDeviceRef(
                 device.model, device.id
             )
 
@@ -194,13 +194,13 @@ class ProtectData:
         self._subscriptions[device.id].remove(update_callback)
         if not self._subscriptions[device.id]:
             del self._subscriptions[device.id]
-        if entry.unique_id in self._entity_to_device_map:
-            del self._entity_to_device_map[entry.unique_id]
+        if entry.unique_id in self._entity_to_ufp_device_map:
+            del self._entity_to_ufp_device_map[entry.unique_id]
         if (
             entry.device_id is not None
-            and entry.device_id in self._device_to_device_map
+            and entry.device_id in self._device_to_ufp_device_map
         ):
-            del self._device_to_device_map[entry.device_id]
+            del self._device_to_ufp_device_map[entry.device_id]
         if not self._subscriptions and self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
@@ -234,19 +234,7 @@ class ProtectData:
     ) -> ProtectAdoptableDeviceModel | NVR | None:
         """Get UniFi Protect device from HA device ID."""
 
-        ref = self._device_to_device_map.get(device_id)
-        if ref is None:
-            return None  # pragma: no cover
-
-        return self._async_get_device_from_ref(ref)
-
-    @callback
-    def async_get_ufp_device_from_entity(
-        self, unique_id: str
-    ) -> ProtectAdoptableDeviceModel | NVR | None:
-        """Get UniFi Protect device from HA entity unique ID."""
-
-        ref = self._entity_to_device_map.get(unique_id)
+        ref = self._device_to_ufp_device_map.get(device_id)
         if ref is None:
             return None  # pragma: no cover
 

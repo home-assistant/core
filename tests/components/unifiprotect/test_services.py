@@ -181,3 +181,21 @@ async def test_set_default_doorbell_text(
         blocking=True,
     )
     nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
+
+
+async def test_set_default_doorbell_text(
+    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+):
+    """Test set_default_doorbell_text service."""
+
+    nvr = mock_entry.api.bootstrap.nvr
+    nvr.__fields__["set_default_doorbell_message"] = Mock()
+    nvr.set_default_doorbell_message = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+        {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+        blocking=True,
+    )
+    nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
