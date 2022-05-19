@@ -72,7 +72,7 @@ async def test_global_service_bad_device(
     assert not nvr.add_custom_doorbell_message.called
 
 
-async def test_global_service_exception(
+async def test_add_doorbell_text_exception(
     hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
     """Test global service, unexpected error."""
@@ -109,6 +109,25 @@ async def test_add_doorbell_text(
     nvr.add_custom_doorbell_message.assert_called_once_with("Test Message")
 
 
+async def test_remove_doorbell_text_exception(
+    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+):
+    """Test global service, unexpected error."""
+
+    nvr = mock_entry.api.bootstrap.nvr
+    nvr.__fields__["remove_custom_doorbell_message"] = Mock()
+    nvr.remove_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REMOVE_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+    assert nvr.remove_custom_doorbell_message.called
+
+
 async def test_remove_doorbell_text(
     hass: HomeAssistant, subdevice: dr.DeviceEntry, mock_entry: MockEntityFixture
 ):
@@ -125,6 +144,25 @@ async def test_remove_doorbell_text(
         blocking=True,
     )
     nvr.remove_custom_doorbell_message.assert_called_once_with("Test Message")
+
+
+async def test_set_default_doorbell_text_exception(
+    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+):
+    """Test global service, unexpected error."""
+
+    nvr = mock_entry.api.bootstrap.nvr
+    nvr.__fields__["set_default_doorbell_message"] = Mock()
+    nvr.set_default_doorbell_message = AsyncMock(side_effect=BadRequest)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+    assert nvr.set_default_doorbell_message.called
 
 
 async def test_set_default_doorbell_text(

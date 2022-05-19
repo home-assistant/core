@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Final
 
 from pyunifiprotect.data import (
     NVR,
@@ -49,7 +49,8 @@ from .models import ProtectRequiredKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
-DEVICE_CLASS_DETECTION = "unifiprotect__detection"
+DEVICE_CLASS_DETECTION: Final = "unifiprotect__detection"
+DEVICE_CLASS_CAP_SENSOR: Final = "unifiprotect__cap_sensor"
 
 
 @dataclass
@@ -313,6 +314,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:harddisk",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=DEVICE_CLASS_CAP_SENSOR,
         ufp_value="storage_stats.utilization",
         precision=2,
     ),

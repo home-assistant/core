@@ -9,6 +9,8 @@ add_doorbell_text:
       selector:
         device:
           integration: unifiprotect
+          entity:
+            device_class: unifiprotect__cap_sensor
     message:
       name: Custom Message
       description: New custom message to add for Doorbells. Must be less than 30 characters.
@@ -27,6 +29,8 @@ remove_doorbell_text:
       selector:
         device:
           integration: unifiprotect
+          entity:
+            device_class: unifiprotect__cap_sensor
     message:
       name: Custom Message
       description: Existing custom message to remove for Doorbells.
@@ -45,6 +49,8 @@ set_default_doorbell_text:
       selector:
         device:
           integration: unifiprotect
+          entity:
+            device_class: unifiprotect__cap_sensor
     message:
       name: Default Message
       description: The default message for your Doorbell. Must be less than 30 characters.

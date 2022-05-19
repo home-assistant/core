@@ -4,10 +4,11 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Optional, cast
 
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import (
+    NVR,
     Bootstrap,
     Event,
     Liveview,
@@ -18,9 +19,11 @@ from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceM
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES
+from .models import ProtectDeviceRef
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +46,8 @@ class ProtectData:
         self._hass = hass
         self._update_interval = update_interval
         self._subscriptions: dict[str, list[CALLBACK_TYPE]] = {}
+        self._entity_to_device_map: dict[str, ProtectDeviceRef] = {}
+        self._device_to_device_map: dict[str, ProtectDeviceRef] = {}
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
@@ -153,28 +158,49 @@ class ProtectData:
 
     @callback
     def async_subscribe_device_id(
-        self, device_id: str, update_callback: CALLBACK_TYPE
+        self,
+        entry: RegistryEntry,
+        device: ProtectAdoptableDeviceModel,
+        update_callback: CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self.async_refresh, self._update_interval
             )
-        self._subscriptions.setdefault(device_id, []).append(update_callback)
+        self._subscriptions.setdefault(device.id, []).append(update_callback)
+        assert device.model is not None
+        self._entity_to_device_map[entry.unique_id] = ProtectDeviceRef(
+            device.model, device.id
+        )
+        if entry.device_id is not None:
+            self._device_to_device_map[entry.device_id] = ProtectDeviceRef(
+                device.model, device.id
+            )
 
         def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(device_id, update_callback)
+            self.async_unsubscribe_device_id(entry, device, update_callback)
 
         return _unsubscribe
 
     @callback
     def async_unsubscribe_device_id(
-        self, device_id: str, update_callback: CALLBACK_TYPE
+        self,
+        entry: RegistryEntry,
+        device: ProtectAdoptableDeviceModel,
+        update_callback: CALLBACK_TYPE,
     ) -> None:
         """Remove a callback subscriber."""
-        self._subscriptions[device_id].remove(update_callback)
-        if not self._subscriptions[device_id]:
-            del self._subscriptions[device_id]
+        self._subscriptions[device.id].remove(update_callback)
+        if not self._subscriptions[device.id]:
+            del self._subscriptions[device.id]
+        if entry.unique_id in self._entity_to_device_map:
+            del self._entity_to_device_map[entry.unique_id]
+        if (
+            entry.device_id is not None
+            and entry.device_id in self._device_to_device_map
+        ):
+            del self._device_to_device_map[entry.device_id]
         if not self._subscriptions and self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
@@ -188,3 +214,40 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
             update_callback()
+
+    @callback
+    def _async_get_device_from_ref(
+        self, ref: ProtectDeviceRef
+    ) -> ProtectAdoptableDeviceModel | NVR | None:
+
+        if ref.model == ModelType.NVR:
+            if ref.device_id == self.api.bootstrap.nvr.id:
+                return self.api.bootstrap.nvr
+            return None  # pragma: no cover
+
+        device = getattr(self.api.bootstrap, f"{ref.model}s").get(ref.device_id)
+        return cast(Optional[ProtectAdoptableDeviceModel], device)
+
+    @callback
+    def async_get_ufp_device_from_device(
+        self, device_id: str
+    ) -> ProtectAdoptableDeviceModel | NVR | None:
+        """Get UniFi Protect device from HA device ID."""
+
+        ref = self._device_to_device_map.get(device_id)
+        if ref is None:
+            return None  # pragma: no cover
+
+        return self._async_get_device_from_ref(ref)
+
+    @callback
+    def async_get_ufp_device_from_entity(
+        self, unique_id: str
+    ) -> ProtectAdoptableDeviceModel | NVR | None:
+        """Get UniFi Protect device from HA entity unique ID."""
+
+        ref = self._entity_to_device_map.get(unique_id)
+        if ref is None:
+            return None  # pragma: no cover
+
+        return self._async_get_device_from_ref(ref)

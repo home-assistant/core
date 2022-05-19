@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Generic, TypeVar
 
-from pyunifiprotect.data import ProtectDeviceModel
+from pyunifiprotect.data import ModelType, ProtectDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -15,6 +15,14 @@ from .utils import get_nested_attr
 _LOGGER = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=ProtectDeviceModel)
+
+
+@dataclass
+class ProtectDeviceRef:
+    """UniFi Protect device ref."""
+
+    model: ModelType
+    device_id: str
 
 
 @dataclass
