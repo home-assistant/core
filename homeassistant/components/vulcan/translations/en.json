@@ -30,14 +30,6 @@
                 },
                 "description": "Login to your Vulcan Account using mobile app registration page."
             },
-            "reauth": {
-                "data": {
-                    "pin": "Pin",
-                    "region": "Symbol",
-                    "token": "Token"
-                },
-                "description": "Login to your Vulcan Account using mobile app registration page."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
@@ -57,21 +49,6 @@
                     "student_name": "Select student"
                 },
                 "description": "Select student, you can add more students by adding integration again."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Error occurred"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Show notifications about the latest attendance entries",
-                    "grade_notify": "Show notifications about the latest grades",
-                    "message_notify": "Show notifications when new message received",
-                    "scan_interval": "Update interval (in minutes)"
-                }
             }
         }
     }

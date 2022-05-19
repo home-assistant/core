@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Ez egy integr\u00e1ci\u00f3 a CX93001 hangmodemmel t\u00f6rt\u00e9n\u0151 vezet\u00e9kes h\u00edv\u00e1sokhoz. Ez k\u00e9pes lek\u00e9rdezni a h\u00edv\u00f3azonos\u00edt\u00f3 inform\u00e1ci\u00f3t a bej\u00f6v\u0151 h\u00edv\u00e1s visszautas\u00edt\u00e1s\u00e1nak lehet\u0151s\u00e9g\u00e9vel.",
-                "title": "Telefon modem"
+                "description": "Ez egy integr\u00e1ci\u00f3 a CX93001 hangmodemmel t\u00f6rt\u00e9n\u0151 vezet\u00e9kes h\u00edv\u00e1sokhoz. Ez k\u00e9pes lek\u00e9rdezni a h\u00edv\u00f3azonos\u00edt\u00f3 inform\u00e1ci\u00f3t a bej\u00f6v\u0151 h\u00edv\u00e1s visszautas\u00edt\u00e1s\u00e1nak lehet\u0151s\u00e9g\u00e9vel."
             },
             "user": {
                 "data": {
                     "name": "Elnevez\u00e9s",
                     "port": "Port"
                 },
-                "description": "Ez egy integr\u00e1ci\u00f3 a CX93001 hangmodemmel t\u00f6rt\u00e9n\u0151 vezet\u00e9kes h\u00edv\u00e1sokhoz. Ez k\u00e9pes lek\u00e9rdezni a h\u00edv\u00f3azonos\u00edt\u00f3 inform\u00e1ci\u00f3t a bej\u00f6v\u0151 h\u00edv\u00e1s visszautas\u00edt\u00e1s\u00e1nak lehet\u0151s\u00e9g\u00e9vel.",
-                "title": "Telefon modem"
+                "description": "Ez egy integr\u00e1ci\u00f3 a CX93001 hangmodemmel t\u00f6rt\u00e9n\u0151 vezet\u00e9kes h\u00edv\u00e1sokhoz. Ez k\u00e9pes lek\u00e9rdezni a h\u00edv\u00f3azonos\u00edt\u00f3 inform\u00e1ci\u00f3t a bej\u00f6v\u0151 h\u00edv\u00e1s visszautas\u00edt\u00e1s\u00e1nak lehet\u0151s\u00e9g\u00e9vel."
             }
         }
     }

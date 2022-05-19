@@ -7,9 +7,6 @@
             "switchbot_unsupported_type": "Tipus de Switchbot no compatible.",
             "unknown": "Error inesperat"
         },
-        "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
-        },
         "flow_title": "{name}",
         "step": {
             "user": {
