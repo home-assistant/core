@@ -236,7 +236,7 @@ async def test_ssdp_already_configured(hass):
 
 
 async def test_ssdp_ipv6(hass):
-    """Test ssdp abort when using a ipv6 adress."""
+    """Test ssdp abort when using a ipv6 address."""
     MockConfigEntry(
         domain=DOMAIN,
         data={CONF_PASSWORD: PASSWORD},
