@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "IP-adres"
                 },
-                "description": "Selecteer de Xiaomi Aqara Gateway die u wilt verbinden",
-                "title": "Selecteer de Xiaomi Aqara Gateway waarmee u verbinding wilt maken"
+                "description": "Selecteer de Xiaomi Aqara Gateway die u wilt verbinden"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "De netwerkinterface die moet worden gebruikt",
                     "mac": "MAC-adres (optioneel)"
                 },
-                "description": "Als de IP- en MAC-adressen leeg worden gelaten, wordt auto-discovery gebruikt",
-                "title": "Xiaomi Aqara Gateway"
+                "description": "Als de IP- en MAC-adressen leeg worden gelaten, wordt auto-discovery gebruikt"
             }
         }
     }

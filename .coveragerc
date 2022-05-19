@@ -97,6 +97,7 @@ omit =
     homeassistant/components/baf/entity.py
     homeassistant/components/baf/fan.py
     homeassistant/components/baf/sensor.py
+    homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -549,6 +550,7 @@ omit =
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/intellifire/sensor.py
+    homeassistant/components/intellifire/switch.py
     homeassistant/components/intellifire/entity.py
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*

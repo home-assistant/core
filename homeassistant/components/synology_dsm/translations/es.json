@@ -28,16 +28,7 @@
                     "username": "Usuario",
                     "verify_ssl": "Verificar certificado SSL"
                 },
-                "description": "\u00bfQuieres configurar {name} ({host})?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Contrase\u00f1a",
-                    "username": "Usuario"
-                },
-                "description": "Raz\u00f3n: {details}",
-                "title": "Volver a autenticar la integraci\u00f3n Synology DSM"
+                "description": "\u00bfQuieres configurar {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario",
                     "verify_ssl": "Verificar certificado SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },

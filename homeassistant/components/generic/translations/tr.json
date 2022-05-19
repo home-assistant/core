@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Kimlik Do\u011frulama",
-                    "content_type": "\u0130\u00e7erik T\u00fcr\u00fc",
                     "framerate": "Kare H\u0131z\u0131 (Hz)",
                     "limit_refetch_to_url_change": "Yeniden getirmeyi url de\u011fi\u015fikli\u011fiyle s\u0131n\u0131rla",
                     "password": "Parola",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Kimlik Do\u011frulama",
-                    "content_type": "\u0130\u00e7erik T\u00fcr\u00fc",
                     "framerate": "Kare H\u0131z\u0131 (Hz)",
                     "limit_refetch_to_url_change": "Yeniden getirmeyi url de\u011fi\u015fikli\u011fiyle s\u0131n\u0131rla",
                     "password": "Parola",

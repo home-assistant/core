@@ -15,9 +15,6 @@
                     "port": "Poort"
                 },
                 "description": "Configureer een lokaal Elexa Guardian-apparaat."
-            },
-            "zeroconf_confirm": {
-                "description": "Wilt u dit Guardian-apparaat instellen?"
             }
         }
     }

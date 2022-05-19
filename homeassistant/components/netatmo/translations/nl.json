@@ -59,7 +59,7 @@
             },
             "public_weather_areas": {
                 "data": {
-                    "new_area": "Naam van het gebied",
+                    "new_area": "Naam van ruimte",
                     "weather_areas": "Weersgebieden"
                 },
                 "description": "Configureer openbare weersensoren.",

@@ -33,4 +33,4 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        return await self.hass.async_add_executor_job(self.nexia_home.update)
+        return await self.nexia_home.update()
