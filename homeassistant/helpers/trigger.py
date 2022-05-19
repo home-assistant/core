@@ -9,6 +9,13 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationTriggerData,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation.trigger import (
+    DeviceAutomationTriggerProtocol,
+)
 from homeassistant.const import CONF_ENABLED, CONF_ID, CONF_PLATFORM, CONF_VARIABLES
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -22,7 +29,9 @@ _PLATFORM_ALIASES = {
 }
 
 
-async def _async_get_trigger_platform(hass: HomeAssistant, config: ConfigType) -> Any:
+async def _async_get_trigger_platform(
+    hass: HomeAssistant, config: ConfigType
+) -> DeviceAutomationTriggerProtocol:
     platform_and_sub_type = config[CONF_PLATFORM].split(".")
     platform = platform_and_sub_type[0]
     for alias, triggers in _PLATFORM_ALIASES.items():
@@ -96,14 +105,14 @@ async def async_initialize_triggers(
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
         trigger_idx = f"{idx}"
-        trigger_data = {"id": trigger_id, "idx": trigger_idx}
-        info = {
-            "domain": domain,
-            "name": name,
-            "home_assistant_start": home_assistant_start,
-            "variables": variables,
-            "trigger_data": trigger_data,
-        }
+        trigger_data = AutomationTriggerData(id=trigger_id, idx=trigger_idx)
+        info = AutomationTriggerInfo(
+            domain=domain,
+            name=name,
+            home_assistant_start=home_assistant_start,
+            variables=variables,
+            trigger_data=trigger_data,
+        )
 
         triggers.append(
             platform.async_attach_trigger(
