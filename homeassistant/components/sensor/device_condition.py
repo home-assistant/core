@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import GetAutomationsResult
+from homeassistant.components.device_automation import (
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -198,7 +201,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List condition capabilities."""
     try:
         unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
