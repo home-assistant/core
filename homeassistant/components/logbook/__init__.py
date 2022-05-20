@@ -103,6 +103,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
+EVENT_COALESCE_TIME = 1
 
 DOMAIN = "logbook"
 
@@ -220,7 +221,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(LogbookView(conf, filters, entities_filter))
     websocket_api.async_register_command(hass, ws_get_events)
-    websocket_api.async_register_command(hass, ws_get_event_stream)
+    websocket_api.async_register_command(hass, ws_event_stream)
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
 
@@ -325,7 +326,7 @@ def async_event_to_row(event: Event) -> Row | None:
         )
     if event.data.get("old_state") is None or event.data.get("new_state") is None:
         return None
-    new_state: State = event.data["new_data"]
+    new_state: State = event.data["new_state"]
     return cast(
         Row,
         EventAsRow(
@@ -350,7 +351,6 @@ async def async_stream_events(
 ) -> None:
     """Stream events from the queue."""
     instance = get_instance(hass)
-
     # Fetch any events from the database that have
     # not been committed since the original fetch
     await asyncio.sleep(instance.commit_interval)
@@ -373,14 +373,23 @@ async def async_stream_events(
         # event we already sent it so we skip it.
         if events[0].time_fired < last_time:
             continue
-        await asyncio.sleep(1)  # try to group events
+        await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
         while True:
             try:
                 events.append(stream_queue.get_nowait())
             except asyncio.QueueEmpty:
                 break
-        event_generator = (async_event_to_row(e) for e in events)
-        logbook_events = event_stream.humanify(event_generator)
+
+        try:
+            logbook_events = event_stream.humanify(
+                row
+                for row in (async_event_to_row(e) for e in events)
+                if row is not None
+            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.critical("Error processing logbook events: %s", exc_info=True)
+            continue
+
         connection.send_message(
             JSON_DUMP(
                 messages.event_message(
@@ -394,14 +403,14 @@ async def async_stream_events(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "logbook/get_events_stream",
+        vol.Required("type"): "logbook/event_stream",
         vol.Required("start_time"): str,
         vol.Optional("entity_ids"): [str],
         vol.Optional("device_ids"): [str],
     }
 )
 @websocket_api.async_response
-async def ws_get_event_stream(
+async def ws_event_stream(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Handle logbook get events websocket command."""
@@ -432,17 +441,27 @@ async def ws_get_event_stream(
         include_entity_name=False,
     )
 
-    stream_queue: asyncio.Queue[Event] = asyncio.Queue()
+    stream_queue: asyncio.Queue[Event] = asyncio.Queue(2048)
     subscriptions: list[CALLBACK_TYPE] = []
-    forward_events = callback(stream_queue.put_nowait)
+
+    @callback
+    def _forward_events(event: Event) -> None:
+        stream_queue.put_nowait(event)
 
     for event_type in event_types:
         subscriptions.append(
-            hass.bus.async_listen(event_type, forward_events, run_immediately=True)
+            hass.bus.async_listen(event_type, _forward_events, run_immediately=True)
         )
     if entity_ids:
         subscriptions.append(
-            async_track_state_change_event(hass, entity_ids, forward_events)
+            async_track_state_change_event(hass, entity_ids, _forward_events)
+        )
+    else:
+        # We want the firehose
+        subscriptions.append(
+            hass.bus.async_listen(
+                EVENT_STATE_CHANGED, _forward_events, run_immediately=True
+            )
         )
 
     message, last_time = await get_instance(hass).async_add_executor_job(

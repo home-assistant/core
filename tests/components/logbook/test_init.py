@@ -16,6 +16,7 @@ from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -36,7 +37,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.json import JSONEncoder
@@ -2794,3 +2795,55 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert results[3]["context_state"] == "off"
     assert results[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
     assert "context_event_type" not in results[3]
+
+
+@patch("homeassistant.components.logbook.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
+    """Test subscribe/unsubscribe logbook stream."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    state: State = hass.states.get("binary_sensor.is_light")
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "binary_sensor.is_light",
+            "state": "off",
+            "when": state.last_updated.timestamp(),
+        }
+    ]
+
+    hass.states.async_set("light.not_permitted", "on")
+    hass.states.async_set("light.permitted", "on", {"color": "blue"})
+    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    hass.states.async_set(
+        "light.permitted", "on", {"effect": "help", "color": ["blue", "green"]}
+    )
+    hass.states.async_remove("light.permitted")
+    hass.states.async_set("light.permitted", "on", {"effect": "help", "color": "blue"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {}
