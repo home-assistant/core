@@ -223,6 +223,20 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         mutually_exclusive=Action.OPEN,
         argument=None,
     ),
+    BondButtonEntityDescription(
+        key=Action.INCREASE_POSITION,
+        name="Increase Position",
+        icon="mdi:plus-box",
+        mutually_exclusive=Action.SET_POSITION,
+        argument=STEP_SIZE,
+    ),
+    BondButtonEntityDescription(
+        key=Action.DECREASE_POSITION,
+        name="Decrease Position",
+        icon="mdi:minus-box",
+        mutually_exclusive=Action.SET_POSITION,
+        argument=STEP_SIZE,
+    ),
 )
 
 
