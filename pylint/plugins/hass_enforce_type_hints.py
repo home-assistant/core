@@ -46,6 +46,8 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     "application_credentials": re.compile(
         r"^homeassistant\.components\.\w+\.(application_credentials)$"
     ),
+    # backup matches only in the package root (backup.py)
+    "backup": re.compile(r"^homeassistant\.components\.\w+\.(backup)$"),
     # config_flow matches only in the package root (config_flow.py)
     "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$"),
     # device_action matches only in the package root (device_action.py)
@@ -166,6 +168,22 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
         },
         return_type="AuthorizationServer",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["backup"],
+        function_name="async_pre_backup",
+        arg_types={
+            0: "HomeAssistant",
+        },
+        return_type=None,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["backup"],
+        function_name="async_post_backup",
+        arg_types={
+            0: "HomeAssistant",
+        },
+        return_type=None,
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["config_flow"],
