@@ -148,7 +148,7 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     chime_button = entity_registry.async_get(entity_id)
     assert chime_button is not None
     assert chime_button.device_id is not None
-    chime_device_id = _async_unique_id_to_device_id(chime_button.unique_id)
+    chime_ufp_device_id = _async_unique_id_to_ufp_device_id(chime_button.unique_id)
 
     instance = _async_get_ufp_instance(hass, chime_button.device_id)
     chime = instance.bootstrap.chimes[chime_device_id]
