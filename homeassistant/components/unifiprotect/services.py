@@ -134,7 +134,7 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
 
 
 @callback
-def _async_unique_id_to_device_id(unique_id: str) -> str:
+def _async_unique_id_to_ufp_device_id(unique_id: str) -> str:
     """Extract the UFP device id from the registry entry unique id."""
     return unique_id.split("_")[0]
 
@@ -151,7 +151,7 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     chime_ufp_device_id = _async_unique_id_to_ufp_device_id(chime_button.unique_id)
 
     instance = _async_get_ufp_instance(hass, chime_button.device_id)
-    chime = instance.bootstrap.chimes[chime_device_id]
+    chime = instance.bootstrap.chimes[chime_ufp_device_id]
 
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
     doorbell_refs = async_extract_referenced_entity_ids(hass, call)
@@ -166,8 +166,8 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
             != BinarySensorDeviceClass.OCCUPANCY
         ):
             continue
-        doorbell_device_id = _async_unique_id_to_device_id(doorbell_sensor.unique_id)
-        camera = instance.bootstrap.cameras[doorbell_device_id]
+        doorbell_ufp_device_id = _async_unique_id_to_ufp_device_id(doorbell_sensor.unique_id)
+        camera = instance.bootstrap.cameras[doorbell_ufp_device_id]
         doorbell_ids.add(camera.id)
     chime.camera_ids = sorted(doorbell_ids)
     await chime.save_device()
