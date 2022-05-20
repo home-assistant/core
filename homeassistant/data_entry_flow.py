@@ -26,6 +26,8 @@ RESULT_TYPE_MENU = "menu"
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
+FlowInput = Mapping[str, Any]
+
 
 @dataclass
 class BaseServiceInfo:
