@@ -32,7 +32,7 @@ async def chime_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BUTTON, 2, 1)
+    assert_entity_counts(hass, Platform.BUTTON, 3, 2)
 
     return chime_obj
 

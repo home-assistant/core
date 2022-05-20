@@ -191,17 +191,19 @@ async def test_set_chime_paired_doorbells(
     await hass.async_block_till_done()
 
     registry = er.async_get(hass)
-    entity = registry.async_get("binary_sensor.test_camera_2_doorbell")
-    assert entity is not None
+    chime_entry = registry.async_get("button.test_chime_play_chime")
+    camera_entry = registry.async_get("binary_sensor.test_camera_2_doorbell")
+    assert chime_entry is not None
+    assert camera_entry is not None
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_CHIME_PAIRED,
         {
-            ATTR_ENTITY_ID: "button.test_chime_play_chime",
+            ATTR_DEVICE_ID: chime_entry.device_id,
             "doorbells": {
                 ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
-                ATTR_DEVICE_ID: [entity.device_id],
+                ATTR_DEVICE_ID: [camera_entry.device_id],
             },
         },
         blocking=True,
