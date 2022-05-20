@@ -61,8 +61,7 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectData:
     ]
 
     if not ufp_instances:
-        # should not be possible unless user manually enters a bad device ID
-        raise HomeAssistantError(  # pragma: no cover
+        raise HomeAssistantError(
             f"No UniFi Protect Config Entry found for device ID: {device_id}"
         )
 

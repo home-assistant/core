@@ -179,28 +179,20 @@ class ProtectData:
             )
 
         def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(entry, device, update_callback)
+            self.async_unsubscribe_device_id(device.id, update_callback)
 
         return _unsubscribe
 
     @callback
     def async_unsubscribe_device_id(
         self,
-        entry: RegistryEntry,
-        device: ProtectAdoptableDeviceModel,
+        device_id: str,
         update_callback: CALLBACK_TYPE,
     ) -> None:
         """Remove a callback subscriber."""
-        self._subscriptions[device.id].remove(update_callback)
-        if not self._subscriptions[device.id]:
-            del self._subscriptions[device.id]
-        if entry.unique_id in self._entity_to_ufp_device_map:
-            del self._entity_to_ufp_device_map[entry.unique_id]
-        if (
-            entry.device_id is not None
-            and entry.device_id in self._device_to_ufp_device_map
-        ):
-            del self._device_to_ufp_device_map[entry.device_id]
+        self._subscriptions[device_id].remove(update_callback)
+        if not self._subscriptions[device_id]:
+            del self._subscriptions[device_id]
         if not self._subscriptions and self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
@@ -236,6 +228,6 @@ class ProtectData:
 
         ref = self._device_to_ufp_device_map.get(device_id)
         if ref is None:
-            return None  # pragma: no cover
+            return None
 
         return self._async_get_device_from_ref(ref)

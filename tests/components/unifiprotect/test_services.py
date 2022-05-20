@@ -181,3 +181,24 @@ async def test_set_default_doorbell_text(
         blocking=True,
     )
     nvr.set_default_doorbell_message.assert_called_once_with("Test Message")
+
+
+async def test_set_default_doorbell_text_orphened_device(
+    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+):
+    """Test set_default_doorbell_text service with an orphened device entry."""
+    dev_reg = dr.async_get(hass)
+    broken_device = dev_reg.async_get_or_create(
+        identifiers={DOMAIN, "AABBCCDDEEFF"}, config_entry_id=mock_entry.entry.entry_id
+    )
+    nvr = mock_entry.api.bootstrap.nvr
+    nvr.__fields__["set_default_doorbell_message"] = Mock()
+    nvr.set_default_doorbell_message = AsyncMock()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DEFAULT_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: broken_device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
