@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Falha ao conectar",
-            "unknown": "Erro inesperado"
+            "cannot_connect": "Falha ao conectar"
         },
         "step": {
             "user": {

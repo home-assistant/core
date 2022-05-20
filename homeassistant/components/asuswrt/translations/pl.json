@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "invalid_unique_id": "Nie mo\u017cna okre\u015bli\u0107 prawid\u0142owego unikalnego identyfikatora urz\u0105dzenia",
-            "not_unique_id_exist": "Urz\u0105dzenie bez prawid\u0142owego unikatowego identyfikatora jest ju\u017c skonfigurowane. Konfiguracja wielu instancji nie jest mo\u017cliwa",
-            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+            "no_unique_id": "Urz\u0105dzenie bez prawid\u0142owego unikalnego identyfikatora jest ju\u017c skonfigurowane. Konfiguracja wielu instancji nie jest mo\u017cliwa."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",

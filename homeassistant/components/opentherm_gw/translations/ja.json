@@ -11,8 +11,7 @@
                     "device": "\u30d1\u30b9\u307e\u305f\u306fURL",
                     "id": "ID",
                     "name": "\u540d\u524d"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "\u7cbe\u5ea6\u3092\u8aad\u307f\u8fbc\u3080",
                     "set_precision": "\u7cbe\u5ea6\u3092\u8a2d\u5b9a\u3059\u308b",
                     "temporary_override_mode": "\u4e00\u6642\u7684\u306a\u30bb\u30c3\u30c8\u30dd\u30a4\u30f3\u30c8\u306e\u30aa\u30fc\u30d0\u30fc\u30e9\u30a4\u30c9\u30e2\u30fc\u30c9"
-                },
-                "description": "OpenTherm Gateway\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
+                }
             }
         }
     }

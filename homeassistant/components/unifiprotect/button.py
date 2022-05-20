@@ -1,20 +1,47 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 from __future__ import annotations
 
-import logging
+from dataclasses import dataclass
+from typing import Final
 
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import ProtectAdoptableDeviceModel
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICES_THAT_ADOPT, DOMAIN
+from .const import DOMAIN
 from .data import ProtectData
-from .entity import ProtectDeviceEntity
+from .entity import ProtectDeviceEntity, async_all_device_entities
+from .models import ProtectSetableKeysMixin, T
 
-_LOGGER = logging.getLogger(__name__)
+
+@dataclass
+class ProtectButtonEntityDescription(
+    ProtectSetableKeysMixin[T], ButtonEntityDescription
+):
+    """Describes UniFi Protect Button entity."""
+
+    ufp_press: str | None = None
+
+
+DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
+
+
+ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
+    ProtectButtonEntityDescription(
+        key="reboot",
+        entity_registry_enabled_default=False,
+        device_class=ButtonDeviceClass.RESTART,
+        name="Reboot Device",
+        ufp_press="reboot",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -25,34 +52,30 @@ async def async_setup_entry(
     """Discover devices on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            ProtectButton(
-                data,
-                device,
-            )
-            for device in data.get_by_types(DEVICES_THAT_ADOPT)
-        ]
+    entities: list[ProtectDeviceEntity] = async_all_device_entities(
+        data, ProtectButton, all_descs=ALL_DEVICE_BUTTONS
     )
+
+    async_add_entities(entities)
 
 
 class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     """A Ubiquiti UniFi Protect Reboot button."""
 
-    _attr_entity_registry_enabled_default = False
-    _attr_device_class = ButtonDeviceClass.RESTART
+    entity_description: ProtectButtonEntityDescription
 
     def __init__(
         self,
         data: ProtectData,
         device: ProtectAdoptableDeviceModel,
+        description: ProtectButtonEntityDescription,
     ) -> None:
         """Initialize an UniFi camera."""
-        super().__init__(data, device)
-        self._attr_name = f"{self.device.name} Reboot Device"
+        super().__init__(data, device, description)
+        self._attr_name = f"{self.device.name} {self.entity_description.name}"
 
     async def async_press(self) -> None:
         """Press the button."""
 
-        _LOGGER.debug("Rebooting %s with id %s", self.device.model, self.device.id)
-        await self.device.reboot()
+        if self.entity_description.ufp_press is not None:
+            await getattr(self.device, self.entity_description.ufp_press)()

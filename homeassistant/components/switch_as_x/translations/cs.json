@@ -1,16 +1,10 @@
 {
     "config": {
         "step": {
-            "config": {
-                "user": {
-                    "entity_id": "Entita vyp\u00edna\u010de"
-                }
-            },
             "user": {
                 "data": {
                     "target_domain": "Typ"
-                },
-                "title": "Ud\u011blejte vyp\u00edna\u010dem ..."
+                }
             }
         }
     },

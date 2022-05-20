@@ -75,6 +75,5 @@
                 "description": "Pilih metode koneksi ke gateway"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

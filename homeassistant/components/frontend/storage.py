@@ -35,8 +35,10 @@ def with_store(orig_func: Callable) -> Callable:
         user_id = connection.user.id
 
         if (store := stores.get(user_id)) is None:
-            store = stores[user_id] = hass.helpers.storage.Store(
-                STORAGE_VERSION_USER_DATA, f"frontend.user_data_{connection.user.id}"
+            store = stores[user_id] = Store(
+                hass,
+                STORAGE_VERSION_USER_DATA,
+                f"frontend.user_data_{connection.user.id}",
             )
 
         if user_id not in data:

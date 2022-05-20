@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
-            "link_local_address": "Link local addresses are not supported",
+            "link_local_address": "Lokala l\u00e4nkadresser st\u00f6ds inte",
             "not_axis_device": "Uppt\u00e4ckte enhet som inte \u00e4r en Axis enhet"
         },
         "error": {

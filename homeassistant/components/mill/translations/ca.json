@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Selecciona el tipus de connexi\u00f3",
-                    "password": "Contrasenya",
-                    "username": "Nom d'usuari"
+                    "connection_type": "Selecciona el tipus de connexi\u00f3"
                 },
                 "description": "Selecciona el tipus de connexi\u00f3. La local necessita escalfadors de generaci\u00f3 3"
             }

@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Konum",
                     "usercode": "Kullan\u0131c\u0131 kodu"
                 },
                 "description": "Bu kullan\u0131c\u0131n\u0131n kullan\u0131c\u0131 kodunu {location_id} konumuna girin",
@@ -26,8 +25,7 @@
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                },
-                "title": "Toplam Ba\u011flant\u0131"
+                }
             }
         }
     }

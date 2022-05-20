@@ -30,7 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done
+from .common import async_wait_recording_done, do_adhoc_statistics
 
 from tests.common import mock_registry
 from tests.components.recorder.common import wait_recording_done
@@ -57,8 +57,8 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    recorder.do_adhoc_statistics(start=zero)
-    recorder.do_adhoc_statistics(start=four)
+    do_adhoc_statistics(hass, start=zero)
+    do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
     expected_1 = {
         "statistic_id": "sensor.test1",
@@ -197,12 +197,11 @@ def test_compile_periodic_statistics_exception(
     """Test exception handling when compiling periodic statistics."""
 
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
 
     now = dt_util.utcnow()
-    recorder.do_adhoc_statistics(start=now)
-    recorder.do_adhoc_statistics(start=now + timedelta(minutes=5))
+    do_adhoc_statistics(hass, start=now)
+    do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     wait_recording_done(hass)
     expected_1 = {
         "statistic_id": "sensor.test1",
@@ -249,7 +248,6 @@ def test_compile_periodic_statistics_exception(
 def test_rename_entity(hass_recorder):
     """Test statistics is migrated when entity_id is changed."""
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
 
     entity_reg = mock_registry(hass)
@@ -277,7 +275,7 @@ def test_rename_entity(hass_recorder):
     stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     expected_1 = {
         "statistic_id": "sensor.test1",
@@ -317,7 +315,6 @@ def test_rename_entity(hass_recorder):
 def test_statistics_duplicated(hass_recorder, caplog):
     """Test statistics with same start time is not compiled."""
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
@@ -331,7 +328,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
         "homeassistant.components.sensor.recorder.compile_statistics",
         return_value=statistics.PlatformCompiledStatistics([], {}),
     ) as compile_statistics:
-        recorder.do_adhoc_statistics(start=zero)
+        do_adhoc_statistics(hass, start=zero)
         wait_recording_done(hass)
         assert compile_statistics.called
         compile_statistics.reset_mock()
@@ -339,7 +336,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
         assert "Statistics already compiled" not in caplog.text
         caplog.clear()
 
-        recorder.do_adhoc_statistics(start=zero)
+        do_adhoc_statistics(hass, start=zero)
         wait_recording_done(hass)
         assert not compile_statistics.called
         compile_statistics.reset_mock()

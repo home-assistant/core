@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+import contextlib
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -40,7 +41,9 @@ from .const import (
     DB_WORKER_PREFIX,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
+    MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
@@ -53,6 +56,7 @@ from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticsRuns,
+    UnsupportedDialect,
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
@@ -75,6 +79,7 @@ from .tasks import (
     WaitTask,
 )
 from .util import (
+    build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
     is_second_sunday,
@@ -175,7 +180,6 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
-        self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
@@ -192,6 +196,13 @@ class Recorder(threading.Thread):
     def backlog(self) -> int:
         """Return the number of items in the recorder backlog."""
         return self._queue.qsize()
+
+    @property
+    def dialect_name(self) -> SupportedDialect | None:
+        """Return the dialect the recorder uses."""
+        with contextlib.suppress(ValueError):
+            return SupportedDialect(self.engine.dialect.name) if self.engine else None
+        return None
 
     @property
     def _using_file_sqlite(self) -> bool:
@@ -237,7 +248,9 @@ class Recorder(threading.Thread):
     def async_initialize(self) -> None:
         """Initialize the recorder."""
         self._event_listener = self.hass.bus.async_listen(
-            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+            MATCH_ALL,
+            self.event_listener,
+            run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
             self.hass, self._async_check_queue, timedelta(minutes=10)
@@ -458,11 +471,6 @@ class Recorder(threading.Thread):
         self.queue_task(ExternalStatisticsTask(metadata, stats))
 
     @callback
-    def using_sqlite(self) -> bool:
-        """Return if recorder uses sqlite as the engine."""
-        return bool(self.engine and self.engine.dialect.name == "sqlite")
-
-    @callback
     def _async_setup_periodic_tasks(self) -> None:
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self._get_session:
@@ -471,7 +479,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass, self._async_keep_alive, timedelta(seconds=KEEPALIVE_TIME)
             )
@@ -598,6 +606,8 @@ class Recorder(threading.Thread):
             try:
                 self._setup_connection()
                 return migration.get_schema_version(self.get_session)
+            except UnsupportedDialect:
+                break
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
@@ -839,15 +849,14 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         self._commits_without_expire += 1
 
+        self.event_session.commit()
         if self._pending_expunge:
-            self.event_session.flush()
             for dbstate in self._pending_expunge:
                 # Expunge the state so its not expired
                 # until we use it later for dbstate.old_state
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
-        self.event_session.commit()
 
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
@@ -916,7 +925,8 @@ class Recorder(threading.Thread):
     @callback
     def event_listener(self, event: Event) -> None:
         """Listen for new events and put them in the process queue."""
-        self.queue_task(EventTask(event))
+        if self._async_event_filter(event):
+            self.queue_task(EventTask(event))
 
     def block_till_done(self) -> None:
         """Block till all events processed.
@@ -936,7 +946,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -965,7 +975,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if not self.using_sqlite():
+        if self.dialect_name != SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )
@@ -1007,6 +1017,14 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+        elif self.db_url.startswith(MYSQLDB_URL_PREFIX):
+            # If they have configured MySQLDB but don't have
+            # the MySQLDB module installed this will throw
+            # an ImportError which we suppress here since
+            # sqlalchemy will give them a better error when
+            # it tried to import it below.
+            with contextlib.suppress(ImportError):
+                kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
         else:
             kwargs["echo"] = False
 

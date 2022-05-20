@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Standort",
                     "usercode": "Benutzercode"
                 },
                 "description": "Gib den Benutzercode f\u00fcr den Benutzer {location_id} an dieser Stelle ein",
@@ -26,8 +25,7 @@
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
-                },
-                "title": "Total Connect"
+                }
             }
         }
     }

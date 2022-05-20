@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "\u00bfQuieres configurar {name} ?"

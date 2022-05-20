@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Kimlik Do\u011frulama",
-                    "content_type": "\u0130\u00e7erik T\u00fcr\u00fc",
                     "framerate": "Kare H\u0131z\u0131 (Hz)",
                     "limit_refetch_to_url_change": "Yeniden getirmeyi url de\u011fi\u015fikli\u011fiyle s\u0131n\u0131rla",
                     "password": "Parola",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "Kimlik Do\u011frulama",
-                    "content_type": "\u0130\u00e7erik T\u00fcr\u00fc",
                     "framerate": "Kare H\u0131z\u0131 (Hz)",
                     "limit_refetch_to_url_change": "Yeniden getirmeyi url de\u011fi\u015fikli\u011fiyle s\u0131n\u0131rla",
                     "password": "Parola",
                     "rtsp_transport": "RTSP aktar\u0131m protokol\u00fc",
                     "still_image_url": "Hareketsiz G\u00f6r\u00fcnt\u00fc URL'si (\u00f6rne\u011fin http://...)",
                     "stream_source": "Ak\u0131\u015f Kayna\u011f\u0131 URL'si (\u00f6r. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Wallclock'u zaman damgas\u0131 olarak kullan\u0131n",
                     "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Bu se\u00e7enek, baz\u0131 kameralarda hatal\u0131 zaman damgas\u0131 uygulamalar\u0131ndan kaynaklanan segmentlere ay\u0131rma veya kilitlenme sorunlar\u0131n\u0131 d\u00fczeltebilir"
                 }
             }
         }

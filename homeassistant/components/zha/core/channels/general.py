@@ -222,6 +222,14 @@ class LevelControlChannel(ZigbeeChannel):
 
     CURRENT_LEVEL = 0
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
+    ZCL_INIT_ATTRS = {
+        "on_off_transition_time": True,
+        "on_level": True,
+        "on_transition_time": True,
+        "off_transition_time": True,
+        "default_move_rate": True,
+        "start_up_current_level": True,
+    }
 
     @property
     def current_level(self) -> int | None:
@@ -307,6 +315,22 @@ class OnOffChannel(ZigbeeChannel):
     def on_off(self) -> bool | None:
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
+
+    async def turn_on(self) -> bool:
+        """Turn the on off cluster on."""
+        result = await self.on()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return False
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
+        return True
+
+    async def turn_off(self) -> bool:
+        """Turn the on off cluster off."""
+        result = await self.off()
+        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            return False
+        self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
+        return True
 
     @callback
     def cluster_command(self, tsn, command_id, args):

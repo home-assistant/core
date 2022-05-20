@@ -79,4 +79,6 @@ async def test_api_events(
         "start": {"date": "2022-01-06"},
         "end": {"date": "2022-01-06"},
         "summary": "Christmas Tree Pickup",
+        "description": None,
+        "location": None,
     }

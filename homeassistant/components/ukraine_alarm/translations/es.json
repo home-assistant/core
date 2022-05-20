@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "max_regions": "Se pueden configurar un m\u00e1ximo de 5 regiones",
+            "timeout": "Tiempo m\u00e1ximo de espera para establecer la conexi\u00f3n agotado",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "district": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Si quieres monitorear no s\u00f3lo el estado, elige el distrito espec\u00edfico"
+            },
+            "user": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Escoja el estado a monitorear"
+            }
+        }
+    }
+}

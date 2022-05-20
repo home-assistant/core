@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import logbook
 import homeassistant.components.automation as automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
@@ -53,7 +52,7 @@ from tests.common import (
     async_mock_service,
     mock_restore_cache,
 )
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.components.logbook.common import MockRow, mock_humanify
 
 
 @pytest.fixture
@@ -1223,38 +1222,33 @@ async def test_logbook_humanify_automation_triggered_event(hass):
     hass.config.components.add("recorder")
     await async_setup_component(hass, automation.DOMAIN, {})
     await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_AUTOMATION_TRIGGERED,
-                    {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
-                ),
-                MockLazyEventPartialState(
-                    EVENT_AUTOMATION_TRIGGERED,
-                    {
-                        ATTR_ENTITY_ID: "automation.bye",
-                        ATTR_NAME: "Bye Automation",
-                        ATTR_SOURCE: "source of trigger",
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_AUTOMATION_TRIGGERED,
+                {ATTR_ENTITY_ID: "automation.hello", ATTR_NAME: "Hello Automation"},
+            ),
+            MockRow(
+                EVENT_AUTOMATION_TRIGGERED,
+                {
+                    ATTR_ENTITY_ID: "automation.bye",
+                    ATTR_NAME: "Bye Automation",
+                    ATTR_SOURCE: "source of trigger",
+                },
+            ),
+        ],
     )
 
     assert event1["name"] == "Hello Automation"
     assert event1["domain"] == "automation"
-    assert event1["message"] == "has been triggered"
+    assert event1["message"] == "triggered"
     assert event1["entity_id"] == "automation.hello"
 
     assert event2["name"] == "Bye Automation"
     assert event2["domain"] == "automation"
-    assert event2["message"] == "has been triggered by source of trigger"
+    assert event2["message"] == "triggered by source of trigger"
     assert event2["entity_id"] == "automation.bye"
 
 
@@ -1474,6 +1468,7 @@ async def test_blueprint_automation(hass, calls):
                     "input": {
                         "trigger_event": "blueprint_event",
                         "service_to_call": "test.automation",
+                        "a_number": 5,
                     },
                 }
             }
@@ -1499,6 +1494,7 @@ async def test_blueprint_automation_bad_config(hass, caplog):
                     "input": {
                         "trigger_event": "blueprint_event",
                         "service_to_call": {"dict": "not allowed"},
+                        "a_number": 5,
                     },
                 }
             }

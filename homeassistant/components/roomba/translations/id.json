@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Pilih Roomba atau Braava.",
-                "title": "Sambungkan secara otomatis ke perangkat"
-            },
             "link": {
                 "description": "Tekan dan tahan tombol Home pada {name} hingga perangkat mengeluarkan suara (sekitar dua detik), lalu kirim dalam waktu 30 detik.",
                 "title": "Ambil Kata Sandi"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Host"
                 },
                 "description": "Tidak ada Roomba atau Braava yang ditemukan di jaringan Anda.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Terus menerus",
-                    "delay": "Tunda",
-                    "host": "Host",
-                    "password": "Kata Sandi"
+                    "host": "Host"
                 },
                 "description": "Pilih Roomba atau Braava.",
                 "title": "Sambungkan secara otomatis ke perangkat"

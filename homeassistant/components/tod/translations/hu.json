@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "BE ut\u00e1n",
                     "after_time": "BE id\u0151pont",
-                    "before": "KI ut\u00e1n",
                     "before_time": "KI id\u0151pont",
                     "name": "Elnevez\u00e9s"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "BE ut\u00e1n",
                     "after_time": "BE id\u0151pont",
-                    "before": "KI ut\u00e1n",
                     "before_time": "KI id\u0151pont"
-                },
-                "description": "\u00c1ll\u00edtsa be, hogy az \u00e9rz\u00e9kel\u0151 mikor kapcsoljon be \u00e9s ki."
+                }
             }
         }
     },

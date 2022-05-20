@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pyunifiprotect.data.devices import Camera, Doorlock, Light
+from pyunifiprotect.data import Camera, Doorlock, Light
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry

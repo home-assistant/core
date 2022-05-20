@@ -406,7 +406,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -434,17 +439,25 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task: asyncio.Future[_R]
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Coroutinefunction:
-            task = self.loop.create_task(
-                cast(Callable[..., Coroutine[Any, Any, _R]], hassjob.target)(*args)
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(
+                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
+                )
+            task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(cast(Callable[..., _R], hassjob.target), *args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(
-                None, cast(Callable[..., _R], hassjob.target), *args
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         # If a task is scheduled
         if self._track_task:
@@ -522,8 +535,14 @@ class HomeAssistant:
         hassjob: HassJob
         args: parameters for method to call.
         """
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Callback:
-            cast(Callable[..., _R], hassjob.target)(*args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
@@ -565,7 +584,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -734,7 +758,9 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context()
+        self.context: Context = context or Context(
+            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+        )
 
     def __hash__(self) -> int:
         """Make hashable."""
@@ -778,6 +804,7 @@ class _FilterableJob(NamedTuple):
 
     job: HassJob[None | Awaitable[None]]
     event_filter: Callable[[Event], bool] | None
+    run_immediately: bool
 
 
 class EventBus:
@@ -845,7 +872,7 @@ class EventBus:
         if not listeners:
             return
 
-        for job, event_filter in listeners:
+        for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
                 try:
                     if not event_filter(event):
@@ -853,7 +880,13 @@ class EventBus:
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in event filter")
                     continue
-            self._hass.async_add_hass_job(job, event)
+            if run_immediately:
+                try:
+                    job.target(event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error running job: %s", job)
+            else:
+                self._hass.async_add_hass_job(job, event)
 
     def listen(
         self,
@@ -881,6 +914,7 @@ class EventBus:
         event_type: str,
         listener: Callable[[Event], None | Awaitable[None]],
         event_filter: Callable[[Event], bool] | None = None,
+        run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -891,12 +925,18 @@ class EventBus:
         @callback that returns a boolean value, determines if the
         listener callable should run.
 
+        If run_immediately is passed, the callback will be run
+        right away instead of using call_soon. Only use this if
+        the callback results in scheduling another task.
+
         This method must be run in the event loop.
         """
         if event_filter is not None and not is_callback(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if run_immediately and not is_callback(listener):
+            raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, _FilterableJob(HassJob(listener), event_filter)
+            event_type, _FilterableJob(HassJob(listener), event_filter, run_immediately)
         )
 
     @callback
@@ -966,7 +1006,7 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = _FilterableJob(HassJob(_onetime_listener), None)
+        filterable_job = _FilterableJob(HassJob(_onetime_listener), None, False)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
 
@@ -1349,10 +1389,10 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        if context is None:
-            context = Context()
-
         now = dt_util.utcnow()
+
+        if context is None:
+            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
 
         state = State(
             entity_id,
@@ -1855,11 +1895,19 @@ class Config:
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
+        store = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
 
-        if not (data := await store.async_load()):
+        if not (data := await store.async_load()) or not isinstance(data, dict):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1891,6 +1939,10 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -1903,7 +1955,11 @@ class Config:
             "currency": self.currency,
         }
 
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        store = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
         await store.async_save(data)

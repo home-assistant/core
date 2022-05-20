@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "invalid_unique_id": "Umulig \u00e5 bestemme en gyldig unik ID for enheten",
-            "not_unique_id_exist": "En enhet uten en gyldig UniqueID er allerede konfigurert. Konfigurasjon av flere forekomster er ikke mulig",
-            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+            "no_unique_id": "En enhet uten en gyldig unik ID er allerede konfigurert. Konfigurasjon av flere forekomster er ikke mulig"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
