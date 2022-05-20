@@ -57,7 +57,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .config_validation import BITMASK_SCHEMA
@@ -607,7 +607,7 @@ async def websocket_add_node(
         )
 
     @callback
-    def device_registered(device: DeviceEntry) -> None:
+    def device_registered(device: dr.DeviceEntry) -> None:
         device_details = {
             "name": device.name,
             "id": device.id,
@@ -1108,7 +1108,7 @@ async def websocket_replace_failed_node(
         )
 
     @callback
-    def device_registered(device: DeviceEntry) -> None:
+    def device_registered(device: dr.DeviceEntry) -> None:
         device_details = {
             "name": device.name,
             "id": device.id,
@@ -1819,24 +1819,36 @@ async def websocket_subscribe_firmware_update_status(
 class FirmwareUploadView(HomeAssistantView):
     """View to upload firmware."""
 
-    url = r"/api/zwave_js/firmware/upload/{config_entry_id}/{node_id:\d+}"
+    url = r"/api/zwave_js/firmware/upload/{device_id}"
     name = "api:zwave_js:firmware:upload"
 
-    async def post(
-        self, request: web.Request, config_entry_id: str, node_id: str
-    ) -> web.Response:
+    def __init__(self) -> None:
+        """Initialize view."""
+        super().__init__()
+        self._dev_reg: dr.DeviceRegistry | None = None
+
+    async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         hass = request.app["hass"]
-        if config_entry_id not in hass.data[DOMAIN]:
-            raise web_exceptions.HTTPBadRequest
 
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        client: Client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
-        node = client.driver.controller.nodes.get(int(node_id))
-        if not node:
+        try:
+            node = async_get_node_from_device_id(hass, device_id)
+        except ValueError as err:
+            if "not loaded" in err.args[0]:
+                raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
+
+        if not self._dev_reg:
+            self._dev_reg = dr.async_get(hass)
+        device = self._dev_reg.async_get(device_id)
+        assert device
+        entry = next(
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in device.config_entries
+        )
 
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
