@@ -32,9 +32,9 @@ TRIGGER_TYPE = {
     "remote_double_button_long_press": 'Both "{subtype}" released after long press',
     "remote_double_button_short_press": 'Both "{subtype}" released',
     "initial_press": 'Button "{subtype}" pressed initially',
-    "repeat": 'Button "{subtype}" held down',
-    "short_release": 'Button "{subtype}" released after short press',
-    "long_release": 'Button "{subtype}" released after long press',
+    "repeat": '{subtype} held down',
+    "short_release": '{subtype} released after short press',
+    "long_release": '{subtype} released after long press',
     "double_short_release": 'Both "{subtype}" released',
 }
 
