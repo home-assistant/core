@@ -7,7 +7,7 @@ from typing import Any
 from dremel3dpy import Dremel3DPrinter
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": SOURCE_IMPORT},
+                context={"source": SOURCE_USER},
                 data={
                     CONF_HOST: conf[CONF_HOST],
                 },
@@ -76,8 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Dremel config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         del hass.data[DOMAIN]
 
     return unload_ok

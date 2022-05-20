@@ -26,9 +26,9 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            Dremel3DPrinterResumeJobButton(coordinator, config_entry),
-            Dremel3DPrinterPauseJobButton(coordinator, config_entry),
-            Dremel3DPrinterStopJobButton(coordinator, config_entry),
+            Dremel3DPrinterResumeJobButton(hass, coordinator, config_entry),
+            Dremel3DPrinterPauseJobButton(hass, coordinator, config_entry),
+            Dremel3DPrinterStopJobButton(hass, coordinator, config_entry),
         ]
     )
 
@@ -54,16 +54,18 @@ class Dremel3DPrinterPauseJobButton(Dremel3DPrinterButton):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: Dremel3DPrinterDataUpdateCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize a new Dremel 3D Printer pause button."""
         super().__init__(coordinator, config_entry, "Pause Job")
+        self._hass = hass
 
     async def async_press(self) -> None:
         """Handle the pause button press."""
         if self.coordinator.api.is_unpaused():
-            self.coordinator.api.pause_print()
+            self._hass.async_add_executor_job(self.coordinator.api.pause_print)
         else:
             raise InvalidPrinterState("Printer is not printing")
 
@@ -73,16 +75,18 @@ class Dremel3DPrinterResumeJobButton(Dremel3DPrinterButton):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: Dremel3DPrinterDataUpdateCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize a new Dremel 3D Printer resume button."""
         super().__init__(coordinator, config_entry, "Resume Job")
+        self._hass = hass
 
     async def async_press(self) -> None:
         """Handle the resume button press."""
         if self.coordinator.api.is_paused():
-            self.coordinator.api.resume_print()
+            self._hass.async_add_executor_job(self.coordinator.api.resume_print)
         else:
             raise InvalidPrinterState("Printer is not currently paused")
 
@@ -92,16 +96,20 @@ class Dremel3DPrinterStopJobButton(Dremel3DPrinterButton):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: Dremel3DPrinterDataUpdateCoordinator,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize a new Dremel 3D Printer stop button."""
         super().__init__(coordinator, config_entry, "Stop Job")
+        self._hass = hass
 
     async def async_press(self) -> None:
         """Handle the button press."""
         if self.coordinator.api.is_printing():
-            self.coordinator.api.stop_print()
+            self._hass.async_add_executor_job(self.coordinator.api.stop_print)
+        else:
+            raise InvalidPrinterState("Printer is not currently printing")
 
 
 class InvalidPrinterState(HomeAssistantError):
