@@ -2661,11 +2661,12 @@ async def test_firmware_upload_view(
 ):
     """Test the HTTP firmware upload view."""
     client = await hass_client()
+    device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.begin_firmware_update",
     ) as mock_cmd:
         resp = await client.post(
-            f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
+            f"/api/zwave_js/firmware/upload/{device.id}",
             data={"file": firmware_file},
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
@@ -2677,12 +2678,13 @@ async def test_firmware_upload_view_failed_command(
 ):
     """Test failed command for the HTTP firmware upload view."""
     client = await hass_client()
+    device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.begin_firmware_update",
         side_effect=FailedCommand("test", "test"),
     ):
         resp = await client.post(
-            f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
+            f"/api/zwave_js/firmware/upload/{device.id}",
             data={"file": firmware_file},
         )
         assert resp.status == HTTPStatus.BAD_REQUEST
@@ -2692,9 +2694,10 @@ async def test_firmware_upload_view_invalid_payload(
     hass, multisensor_6, integration, hass_client
 ):
     """Test an invalid payload for the HTTP firmware upload view."""
+    device = get_device(hass, multisensor_6)
     client = await hass_client()
     resp = await client.post(
-        f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
+        f"/api/zwave_js/firmware/upload/{device.id}",
         data={"wrong_key": bytes(10)},
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
@@ -2702,40 +2705,43 @@ async def test_firmware_upload_view_invalid_payload(
 
 @pytest.mark.parametrize(
     "method, url",
-    [("post", "/api/zwave_js/firmware/upload/{}/{}")],
+    [("post", "/api/zwave_js/firmware/upload/{}")],
 )
 async def test_node_view_non_admin_user(
-    multisensor_6, integration, hass_client, hass_admin_user, method, url
+    hass, multisensor_6, integration, hass_client, hass_admin_user, method, url
 ):
     """Test node level views for non-admin users."""
     client = await hass_client()
+    device = get_device(hass, multisensor_6)
     # Verify we require admin user
     hass_admin_user.groups = []
-    resp = await client.request(
-        method, url.format(integration.entry_id, multisensor_6.node_id)
-    )
+    resp = await client.request(method, url.format(device.id))
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.parametrize(
     "method, url",
     [
-        ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
+        ("post", "/api/zwave_js/firmware/upload/{}"),
     ],
 )
-async def test_view_invalid_entry_id(integration, hass_client, method, url):
-    """Test an invalid config entry id parameter."""
+async def test_view_unloaded_config_entry(
+    hass, multisensor_6, integration, hass_client, method, url
+):
+    """Test an unloaded config entry raises Bad Request."""
     client = await hass_client()
-    resp = await client.request(method, url)
+    device = get_device(hass, multisensor_6)
+    await hass.config_entries.async_unload(integration.entry_id)
+    resp = await client.request(method, url.format(device.id))
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(
     "method, url",
-    [("post", "/api/zwave_js/firmware/upload/{}/111")],
+    [("post", "/api/zwave_js/firmware/upload/INVALID")],
 )
-async def test_view_invalid_node_id(integration, hass_client, method, url):
-    """Test an invalid config entry id parameter."""
+async def test_view_invalid_device_id(integration, hass_client, method, url):
+    """Test an invalid device id parameter."""
     client = await hass_client()
     resp = await client.request(method, url.format(integration.entry_id))
     assert resp.status == HTTPStatus.NOT_FOUND
