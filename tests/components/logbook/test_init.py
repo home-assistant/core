@@ -2442,6 +2442,34 @@ async def test_get_events_bad_end_time(hass, hass_ws_client, recorder_mock):
     assert response["error"]["code"] == "invalid_end_time"
 
 
+async def test_get_events_invalid_filters(hass, hass_ws_client, recorder_mock):
+    """Test get_events invalid filters."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "entity_ids": [],
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "device_ids": [],
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
 async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
     """Test logbook get_events for device ids."""
     now = dt_util.utcnow()
