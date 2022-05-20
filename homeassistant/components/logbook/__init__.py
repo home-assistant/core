@@ -33,6 +33,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.websocket_api import messages
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -297,10 +298,14 @@ def _ws_formatted_get_events(
     end_day: dt,
     formatter: Callable[[int, Any], dict[str, Any]],
     event_stream: EventStream,
-) -> str:
+) -> tuple[str, dt | None]:
     """Fetch events and convert them to json in the executor."""
-    result = formatter(msg_id, event_stream.get_events(start_day, end_day))
-    return JSON_DUMP(result)
+    events = event_stream.get_events(start_day, end_day)
+    last_time = None
+    if events:
+        last_time = dt_util.utc_from_timestamp(events[-1]["when"])
+    result = formatter(msg_id, events)
+    return JSON_DUMP(result), last_time
 
 
 @callback
@@ -333,6 +338,58 @@ def async_event_to_row(event: Event) -> Row | None:
             icon=new_state.attributes.get(ATTR_ICON),
         ),
     )
+
+
+async def async_stream_events(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg_id: int,
+    stream_queue: asyncio.Queue[Event],
+    event_stream: EventStream,
+    last_time_from_db: dt,
+) -> None:
+    """Stream events from the queue."""
+    instance = get_instance(hass)
+
+    # Fetch any events from the database that have
+    # not been committed since the original fetch
+    await asyncio.sleep(instance.commit_interval)
+    message, last_time = await instance.async_add_executor_job(
+        _ws_formatted_get_events,
+        msg_id,
+        last_time_from_db,
+        dt_util.utcnow(),
+        messages.event_message,
+        event_stream,
+    )
+    if last_time:
+        connection.send_message(message)
+    else:
+        last_time = last_time_from_db
+
+    while True:
+        events: list[Event] = [await stream_queue.get()]
+        # If the event is older than the last db
+        # event we already sent it so we skip it.
+        if events[0].time_fired < last_time:
+            continue
+        await asyncio.sleep(1)  # try to group events
+        while True:
+            try:
+                events.append(stream_queue.get_nowait())
+            except asyncio.QueueEmpty:
+                break
+        event_generator = (async_event_to_row(e) for e in events)
+        logbook_events = event_stream.humanify(event_generator)
+        connection.send_message(
+            JSON_DUMP(
+                messages.event_message(
+                    msg_id,
+                    logbook_events,
+                )
+            )
+        )
+        stream_queue.task_done()
 
 
 @websocket_api.websocket_command(
@@ -376,45 +433,36 @@ async def ws_get_event_stream(
     )
 
     stream_queue: asyncio.Queue[Event] = asyncio.Queue()
-
-    @callback
-    def forward_event_stream(event: Event) -> None:
-        """Queue an event for the stream."""
-        stream_queue.put_nowait(event)
-
     subscriptions: list[CALLBACK_TYPE] = []
+    forward_events = callback(stream_queue.put_nowait)
+
     for event_type in event_types:
         subscriptions.append(
-            hass.bus.async_listen(
-                event_type, forward_event_stream, run_immediately=True
-            )
+            hass.bus.async_listen(event_type, forward_events, run_immediately=True)
         )
     if entity_ids:
         subscriptions.append(
-            async_track_state_change_event(hass, entity_ids, forward_event_stream)
+            async_track_state_change_event(hass, entity_ids, forward_events)
         )
 
-    async def async_stream_events() -> None:
-        """Stream events from the queue."""
-        while True:
-            events: list[Event] = [await stream_queue.get()]
-            await asyncio.sleep(1)  # try to group events
-            while True:
-                try:
-                    events.append(stream_queue.get_nowait())
-                except asyncio.QueueEmpty:
-                    break
-            connection.send_message(
-                JSON_DUMP(
-                    messages.event_message(
-                        msg["id"],
-                        event_stream.humanify(async_event_to_row(e) for e in events),
-                    )
-                )
-            )
-            stream_queue.task_done()
-
-    task = asyncio.create_task(async_stream_events())
+    message, last_time = await get_instance(hass).async_add_executor_job(
+        _ws_formatted_get_events,
+        msg["id"],
+        start_time,
+        utc_now,
+        messages.event_message,
+        event_stream,
+    )
+    task = asyncio.create_task(
+        async_stream_events(
+            hass,
+            connection,
+            msg["id"],
+            stream_queue,
+            event_stream,
+            last_time or start_time,
+        )
+    )
 
     def _unsub() -> None:
         """Unsubscribe from all events."""
@@ -423,14 +471,6 @@ async def ws_get_event_stream(
         task.cancel()
 
     connection.subscriptions[msg["id"]] = _unsub
-    message = await get_instance(hass).async_add_executor_job(
-        _ws_formatted_get_events,
-        msg["id"],
-        start_time,
-        utc_now,
-        messages.event_message,
-        event_stream,
-    )
     connection.send_result(msg["id"])
     connection.send_message(message)
 
@@ -487,16 +527,15 @@ async def ws_get_events(
         include_entity_name=False,
     )
 
-    connection.send_message(
-        await get_instance(hass).async_add_executor_job(
-            _ws_formatted_get_events,
-            msg["id"],
-            start_time,
-            end_time,
-            messages.result_message,
-            event_stream,
-        )
+    message, _ = await get_instance(hass).async_add_executor_job(
+        _ws_formatted_get_events,
+        msg["id"],
+        start_time,
+        end_time,
+        messages.result_message,
+        event_stream,
     )
+    connection.send_message(message)
 
 
 class LogbookView(HomeAssistantView):
