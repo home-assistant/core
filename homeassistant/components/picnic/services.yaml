@@ -27,7 +27,7 @@ add_product:
       name: Product name
       description: Search for a product and add the first result
       required: false
-      example: "10510201"
+      example: "Yoghurt"
       # Input is a text string
       selector:
         text:
@@ -42,7 +42,6 @@ add_product:
           max: 50
 
 search:
-  # Service name/description
   name: Search for a product
   description: Fires a 'picnic_search_result' event containing the first 5 search results for the product name.
 
