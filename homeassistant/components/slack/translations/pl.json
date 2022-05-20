@@ -12,7 +12,12 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API",
+                    "default_channel": "Domy\u015blny kana\u0142",
+                    "icon": "Ikona",
                     "username": "Nazwa u\u017cytkownika"
+                },
+                "data_description": {
+                    "api_key": "Token API Slack u\u017cywany do wysy\u0142ania wiadomo\u015bci Slack."
                 }
             }
         }

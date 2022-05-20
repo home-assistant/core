@@ -5,7 +5,7 @@
                 "data": {
                     "name": "Naam",
                     "round": "Nauwkeurigheid",
-                    "source": "Invoersensor",
+                    "source": "Bronsensor",
                     "time_window": "Tijdsvenster",
                     "unit_prefix": "Metrisch voorvoegsel",
                     "unit_time": "Tijdseenheid"
@@ -26,7 +26,7 @@
                 "data": {
                     "name": "Naam",
                     "round": "Nauwkeurigheid",
-                    "source": "Invoersensor",
+                    "source": "Bronsensor",
                     "time_window": "Tijdsvenster",
                     "unit_prefix": "Metrisch voorvoegsel",
                     "unit_time": "Tijdseenheid"
