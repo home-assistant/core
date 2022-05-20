@@ -93,7 +93,7 @@ class EventAsRow:
     context_parent_id: str | None = None
     event_type: str | None = None
     state: str | None = None
-    shared_data: dict[str, Any] = {}
+    shared_data: dict[str, Any] | None = None
     context_only: None = None
 
 
