@@ -2,6 +2,7 @@
 from unittest.mock import call, patch
 
 import pytest
+from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha as zha
 import zigpy.types as t
 import zigpy.zcl.clusters.general as general
@@ -11,6 +12,7 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.setup import async_setup_component
 
 from .common import (
     async_enable_traffic,
@@ -386,6 +388,39 @@ async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_devic
         assert cluster.write_attributes.call_args == call(
             {"window_detection_function": False}
         )
+
+    cluster.read_attributes.reset_mock()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    # the mocking doesn't update the attr cache so this flips back to initial value
+    assert cluster.read_attributes.call_count == 1
+    assert (
+        call(
+            [
+                "window_detection_function",
+            ],
+            allow_cache=False,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in cluster.read_attributes.call_args_list
+    )
+
+    cluster.write_attributes.reset_mock()
+    cluster.write_attributes.side_effect = ZigbeeException
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+    )
+
+    assert len(cluster.write_attributes.mock_calls) == 1
+    assert cluster.write_attributes.call_args == call(
+        {"window_detection_function": False}
+    )
 
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device_tuya, [cluster], (0,))
