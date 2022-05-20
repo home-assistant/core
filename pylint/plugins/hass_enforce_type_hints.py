@@ -48,6 +48,8 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     ),
     # backup matches only in the package root (backup.py)
     "backup": re.compile(r"^homeassistant\.components\.\w+\.(backup)$"),
+    # cast matches only in the package root (cast.py)
+    "cast": re.compile(r"^homeassistant\.components\.\w+\.(cast)$"),
     # config_flow matches only in the package root (config_flow.py)
     "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$"),
     # device_action matches only in the package root (device_action.py)
@@ -184,6 +186,38 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
         },
         return_type=None,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["cast"],
+        function_name="async_get_media_browser_root_object",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+        },
+        return_type="list[BrowseMedia]",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["cast"],
+        function_name="async_browse_media",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+            2: "str",
+            3: "str",
+        },
+        return_type=["BrowseMedia", "BrowseMedia | None"],
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["cast"],
+        function_name="async_play_media",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+            2: "Chromecast",
+            3: "str",
+            4: "str",
+        },
+        return_type="bool",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["config_flow"],
