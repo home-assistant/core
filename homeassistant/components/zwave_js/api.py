@@ -1830,6 +1830,11 @@ class FirmwareUploadView(HomeAssistantView):
     url = r"/api/zwave_js/firmware/upload/{device_id}"
     name = "api:zwave_js:firmware:upload"
 
+    def __init__(self) -> None:
+        """Initialize view."""
+        super().__init__()
+        self._dev_reg: dr.DeviceRegistry | None = None
+
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
         if not request["hass_user"].is_admin:
@@ -1843,8 +1848,9 @@ class FirmwareUploadView(HomeAssistantView):
                 raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
 
-        dev_reg = dr.async_get(hass)
-        device = dev_reg.async_get(device_id)
+        if not self._dev_reg:
+            self._dev_reg = dr.async_get(hass)
+        device = self._dev_reg.async_get(device_id)
         assert device
         entry = next(
             entry
