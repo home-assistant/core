@@ -27,14 +27,6 @@
                 "data_description": {
                     "round_digits": "Regelt het aantal decimale cijfers in de uitvoer wanneer de statistische eigenschap gemiddelde of mediaan is."
                 }
-            },
-            "options": {
-                "data": {
-                    "entity_ids": "Invoer entiteiten",
-                    "round_digits": "Precisie",
-                    "type": "Statistische karakteristieken"
-                },
-                "description": "Precisie bepaalt het aantal decimale cijfers wanneer het statistische kenmerk gemiddelde of mediaan is."
             }
         }
     },

@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Kunci API",
-                    "latitude": "Lintang",
                     "location": "Lokasi",
-                    "longitude": "Bujur",
                     "name": "Nama"
                 },
                 "description": "Untuk mendapatkan kunci API, daftar di [Tomorrow.io](https://app.tomorrow.io/signup)."

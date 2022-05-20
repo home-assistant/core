@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Inloggen mislukt",
             "cannot_connect": "Kan geen verbinding maken",
-            "iftapi_connect": "Fout bij het verbinden met iftapi.net",
-            "unknown": "Onverwachte fout"
+            "iftapi_connect": "Fout bij het verbinden met iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "De volgende IntelliFire-apparaten zijn ontdekt. Selecteer welke u wilt configureren.",
                 "title": "Apparaat selectie"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

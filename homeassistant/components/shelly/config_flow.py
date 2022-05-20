@@ -58,10 +58,12 @@ async def validate_input(
                 options,
             )
             await rpc_device.shutdown()
+            assert rpc_device.shelly
+
             return {
                 "title": get_rpc_device_name(rpc_device),
                 CONF_SLEEP_PERIOD: 0,
-                "model": rpc_device.model,
+                "model": rpc_device.shelly.get("model"),
                 "gen": 2,
             }
 
@@ -123,15 +125,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    return self.async_create_entry(
-                        title=device_info["title"],
-                        data={
-                            **user_input,
-                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                            "model": device_info["model"],
-                            "gen": device_info["gen"],
-                        },
-                    )
+                    if device_info["model"]:
+                        return self.async_create_entry(
+                            title=device_info["title"],
+                            data={
+                                **user_input,
+                                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                                "model": device_info["model"],
+                                "gen": device_info["gen"],
+                            },
+                        )
+                    errors["base"] = "firmware_not_fully_provisioned"
 
         return self.async_show_form(
             step_id="user", data_schema=HOST_SCHEMA, errors=errors
@@ -164,16 +168,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=device_info["title"],
-                    data={
-                        **user_input,
-                        CONF_HOST: self.host,
-                        CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                        "model": device_info["model"],
-                        "gen": device_info["gen"],
-                    },
-                )
+                if device_info["model"]:
+                    return self.async_create_entry(
+                        title=device_info["title"],
+                        data={
+                            **user_input,
+                            CONF_HOST: self.host,
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                            "model": device_info["model"],
+                            "gen": device_info["gen"],
+                        },
+                    )
+                errors["base"] = "firmware_not_fully_provisioned"
         else:
             user_input = {}
 
@@ -229,23 +235,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.device_info["title"],
-                data={
-                    "host": self.host,
-                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                    "model": self.device_info["model"],
-                    "gen": self.device_info["gen"],
-                },
-            )
 
-        self._set_confirm_only()
+        if not self.device_info["model"]:
+            errors["base"] = "firmware_not_fully_provisioned"
+            model = "Shelly"
+        else:
+            model = get_model_name(self.info)
+            if user_input is not None:
+                return self.async_create_entry(
+                    title=self.device_info["title"],
+                    data={
+                        "host": self.host,
+                        CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
+                        "model": self.device_info["model"],
+                        "gen": self.device_info["gen"],
+                    },
+                )
+            self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": get_model_name(self.info),
+                "model": model,
                 "host": self.host,
             },
             errors=errors,

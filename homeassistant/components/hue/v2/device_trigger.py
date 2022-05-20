@@ -119,7 +119,8 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(bridge: "HueBridge", device_entry: DeviceEntry):
+@callback
+def async_get_triggers(bridge: HueBridge, device_entry: DeviceEntry):
     """Return device triggers for device on `v2` bridge."""
     api: HueBridgeV2 = bridge.api
 
