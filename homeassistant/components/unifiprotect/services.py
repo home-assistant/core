@@ -74,9 +74,6 @@ def _async_get_protect_from_call(
 ) -> tuple[ProtectData, str]:
     referenced = async_extract_referenced_entity_ids(hass, call)
 
-    if len(referenced.referenced_devices) == 0:
-        raise HomeAssistantError("No referenced devices")  # pragma: no cover
-
     device_id = referenced.referenced_devices.pop()
     return _async_get_ufp_instance(hass, device_id), device_id
 
