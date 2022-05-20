@@ -1,18 +1,19 @@
 """Tests for the PowerwallDataManager."""
 
+import datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
 from tesla_powerwall import AccessDeniedError, LoginResponse
 
-from homeassistant.components.powerwall.const import DOMAIN, POWERWALL_COORDINATOR
+from homeassistant.components.powerwall.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.util.dt import utcnow
 
 from .mocks import _mock_powerwall_with_fixtures
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant):
@@ -46,17 +47,20 @@ async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant):
         mock_powerwall.login.reset_mock(return_value=True)
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        await hass.data[DOMAIN][config_entry.entry_id][
-            POWERWALL_COORDINATOR
-        ]._async_update_data()
-        mock_powerwall.login.assert_called_once()
+        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        await hass.async_block_till_done()
+        flows = hass.config_entries.flow.async_progress(DOMAIN)
+        assert len(flows) == 0
 
         mock_powerwall.login.reset_mock()
         mock_powerwall.login.side_effect = AccessDeniedError("test")
         mock_powerwall.get_charge.side_effect = [AccessDeniedError("test"), 90.0]
 
-        with pytest.raises(ConfigEntryAuthFailed):
-            await hass.data[DOMAIN][config_entry.entry_id][
-                POWERWALL_COORDINATOR
-            ]._async_update_data()
-        mock_powerwall.login.assert_called_once()
+        async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=1))
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.LOADED
+
+        flows = hass.config_entries.flow.async_progress(DOMAIN)
+        assert len(flows) == 1
+        reauth_flow = flows[0]
+        assert reauth_flow["context"]["source"] == "reauth"
