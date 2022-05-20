@@ -87,6 +87,7 @@ CONTEXT_ENTITY_ID = "context_entity_id"
 CONTEXT_ENTITY_ID_NAME = "context_entity_id_name"
 CONTEXT_EVENT_TYPE = "context_event_type"
 CONTEXT_DOMAIN = "context_domain"
+CONTEXT_STATE = "context_state"
 CONTEXT_SERVICE = "context_service"
 CONTEXT_NAME = "context_name"
 CONTEXT_MESSAGE = "context_message"
@@ -674,12 +675,12 @@ class ContextAugmenter:
 
         # State change
         if context_entity_id := context_row.entity_id:
+            data[CONTEXT_STATE] = context_row.state
             data[CONTEXT_ENTITY_ID] = context_entity_id
             if self.include_entity_name:
                 data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                     context_entity_id, context_row
                 )
-            data[CONTEXT_EVENT_TYPE] = event_type
             return
 
         # Call service
