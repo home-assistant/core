@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API-sleutel",
                     "heating_type": "Verwarmingstype",
-                    "name": "Naam",
                     "password": "Wachtwoord",
-                    "scan_interval": "Scaninterval (seconden)",
                     "username": "E-mail"
                 },
-                "description": "ViCare integratie instellen. Ga naar https://developer.viessmann.com om een API-sleutel te genereren.",
-                "title": "{name}"
+                "description": "ViCare integratie instellen. Ga naar https://developer.viessmann.com om een API-sleutel te genereren."
             }
         }
     }

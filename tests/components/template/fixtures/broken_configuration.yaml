@@ -7,8 +7,8 @@ sensor:
         friendly_name: Combined Sense Energy Usage
         unit_of_measurement: kW
         value_template:
-          "{{ ((states('sensor.energy_usage') | float) + (states('sensor.energy_usage_2')
-          | float)) / 1000 }}"
+          "{{ ((states('sensor.energy_usage') | float(default=0)) + (states('sensor.energy_usage_2')
+          | float(default=0))) / 1000 }}"
       watching_tv_in_master_bedroom:
         friendly_name: Watching TV in Master Bedroom
         value_template:

@@ -7,16 +7,14 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "protect_version": "Minimalna wymagana wersja to v1.20.0. Zaktualizuj UniFi Protect, a nast\u0119pnie spr\u00f3buj ponownie.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d"
+            "protect_version": "Minimalna wymagana wersja to v1.20.0. Zaktualizuj UniFi Protect, a nast\u0119pnie spr\u00f3buj ponownie."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika",
-                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Czy chcesz skonfigurowa\u0107 {name} ({ip_address})? Aby si\u0119 zalogowa\u0107, b\u0119dziesz potrzebowa\u0107 lokalnego u\u017cytkownika utworzonego w konsoli UniFi OS. U\u017cytkownicy Ubiquiti Cloud nie b\u0119d\u0105 dzia\u0142a\u0107. Wi\u0119cej informacji: {local_user_documentation_url}",
                 "title": "Wykryto UniFi Protect"

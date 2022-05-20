@@ -9,7 +9,6 @@
                     "entity_id": "Sensor input",
                     "hysteresis": "Histeresis",
                     "lower": "Batas bawah",
-                    "mode": "Mode ambang batas",
                     "name": "Nama",
                     "upper": "Batas atas"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Sensor input",
                     "hysteresis": "Histeresis",
                     "lower": "Batas bawah",
-                    "mode": "Mode ambang batas",
                     "name": "Nama",
                     "upper": "Batas atas"
                 },

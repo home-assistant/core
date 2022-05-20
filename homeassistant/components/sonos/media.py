@@ -117,6 +117,8 @@ class SonosMedia:
         self.clear()
 
         track_info = self.poll_track_info()
+        if not track_info["uri"]:
+            return
         self.uri = track_info["uri"]
 
         audio_source = self.soco.music_source_from_uri(self.uri)

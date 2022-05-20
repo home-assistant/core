@@ -10,7 +10,6 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "upnp_not_configured": "Mangler UPnP-innstillinger p\u00e5 enheten."
         },
@@ -31,16 +30,6 @@
                 },
                 "description": "Oppdater legitimasjonen til FRITZ!Box Tools for: {host} . \n\n FRITZ!Box Tools kan ikke logge p\u00e5 FRITZ! Box.",
                 "title": "Oppdaterer FRITZ!Box verkt\u00f8y - legitimasjon"
-            },
-            "start_config": {
-                "data": {
-                    "host": "Vert",
-                    "password": "Passord",
-                    "port": "Port",
-                    "username": "Brukernavn"
-                },
-                "description": "Sett opp FRITZ!Box verkt\u00f8y for \u00e5 kontrollere fritz! Boksen.\nMinimum n\u00f8dvendig: brukernavn, passord.",
-                "title": "Sett opp FRITZ!Box verkt\u00f8y - obligatorisk"
             },
             "user": {
                 "data": {

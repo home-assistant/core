@@ -1,6 +1,7 @@
 """Validate device conditions."""
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from typing import TYPE_CHECKING, Protocol, cast
 
 import voluptuous as vol
@@ -10,7 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import DeviceAutomationType, async_get_device_automation_platform
+from . import (
+    DeviceAutomationType,
+    GetAutomationCapabilitiesResult,
+    GetAutomationsResult,
+    async_get_device_automation_platform,
+)
 from .exceptions import InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:
@@ -29,13 +35,21 @@ class DeviceAutomationConditionProtocol(Protocol):
         self, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        raise NotImplementedError
 
     def async_condition_from_config(
         self, hass: HomeAssistant, config: ConfigType
     ) -> condition.ConditionCheckerType:
         """Evaluate state based on configuration."""
-        raise NotImplementedError
+
+    def async_get_condition_capabilities(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> GetAutomationCapabilitiesResult | Awaitable[GetAutomationCapabilitiesResult]:
+        """List condition capabilities."""
+
+    def async_get_conditions(
+        self, hass: HomeAssistant, device_id: str
+    ) -> GetAutomationsResult | Awaitable[GetAutomationsResult]:
+        """List conditions."""
 
 
 async def async_validate_condition_config(

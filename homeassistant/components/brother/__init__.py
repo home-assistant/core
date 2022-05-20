@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+import async_timeout
 from brother import Brother, DictToObj, SnmpError, UnsupportedModel
 import pysnmp.hlapi.asyncio as SnmpEngine
 
@@ -76,7 +77,8 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> DictToObj:
         """Update data via library."""
         try:
-            data = await self.brother.async_update()
+            async with async_timeout.timeout(20):
+                data = await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel) as error:
             raise UpdateFailed(error) from error
         return data
