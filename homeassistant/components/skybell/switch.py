@@ -1,7 +1,7 @@
 """Switch support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -78,4 +78,4 @@ class SkybellSwitch(SkybellEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        return getattr(self._device, self.entity_description.key)
+        return cast(bool, getattr(self._device, self.entity_description.key))

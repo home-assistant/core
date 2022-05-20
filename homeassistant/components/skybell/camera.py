@@ -15,7 +15,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, IMAGE_ACTIVITY, IMAGE_AVATAR
+from .const import (
+    CONF_ACTIVITY_NAME,
+    CONF_AVATAR_NAME,
+    DOMAIN,
+    IMAGE_ACTIVITY,
+    IMAGE_AVATAR,
+)
 from .coordinator import SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
 
@@ -25,8 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
             cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]
         ),
-        vol.Optional("activity_name"): cv.string,
-        vol.Optional("avatar_name"): cv.string,
+        vol.Optional(CONF_ACTIVITY_NAME): cv.string,
+        vol.Optional(CONF_AVATAR_NAME): cv.string,
     }
 )
 

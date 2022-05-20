@@ -1,6 +1,8 @@
 """Config flow for Skybell integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
@@ -22,7 +24,9 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input: dict[str, str] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

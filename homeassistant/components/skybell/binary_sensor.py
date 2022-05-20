@@ -81,7 +81,7 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        event = self._device.latest(f"{self.entity_description.key}")
+        event = self._device.latest(self.entity_description.key)
         self._attr_is_on = bool(event.get(CONST.ID) != self._event.get(CONST.ID))
         self._event = event
         super()._handle_coordinator_update()
