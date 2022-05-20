@@ -95,15 +95,12 @@ async def test_service_call_create_logbook_entry(hass_):
     # Our service call will unblock when the event listeners have been
     # scheduled. This means that they may not have been processed yet.
     await async_wait_recording_done(hass_)
-    ent_reg = er.async_get(hass_)
+    event_stream = logbook.EventStream(hass_, (EVENT_LOGBOOK_ENTRY,))
 
     events = list(
-        logbook._get_events(
-            hass_,
+        event_stream.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 2
@@ -137,15 +134,11 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorde
         },
     )
     await async_wait_recording_done(hass)
-    ent_reg = er.async_get(hass)
-
+    event_stream = logbook.EventStream(hass, (EVENT_LOGBOOK_ENTRY,))
     events = list(
-        logbook._get_events(
-            hass,
+        event_stream.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 1

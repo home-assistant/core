@@ -58,10 +58,12 @@ async def validate_input(
                 options,
             )
             await rpc_device.shutdown()
+            assert rpc_device.shelly
+
             return {
                 "title": get_rpc_device_name(rpc_device),
                 CONF_SLEEP_PERIOD: 0,
-                "model": rpc_device.model,
+                "model": rpc_device.shelly.get("model"),
                 "gen": 2,
             }
 
@@ -119,21 +121,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
-                except KeyError:
-                    errors["base"] = "firmware_not_fully_provisioned"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    return self.async_create_entry(
-                        title=device_info["title"],
-                        data={
-                            **user_input,
-                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                            "model": device_info["model"],
-                            "gen": device_info["gen"],
-                        },
-                    )
+                    if device_info["model"]:
+                        return self.async_create_entry(
+                            title=device_info["title"],
+                            data={
+                                **user_input,
+                                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                                "model": device_info["model"],
+                                "gen": device_info["gen"],
+                            },
+                        )
+                    errors["base"] = "firmware_not_fully_provisioned"
 
         return self.async_show_form(
             step_id="user", data_schema=HOST_SCHEMA, errors=errors
@@ -162,22 +164,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except aioshelly.exceptions.JSONRPCError:
                 errors["base"] = "cannot_connect"
-            except KeyError:
-                errors["base"] = "firmware_not_fully_provisioned"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=device_info["title"],
-                    data={
-                        **user_input,
-                        CONF_HOST: self.host,
-                        CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                        "model": device_info["model"],
-                        "gen": device_info["gen"],
-                    },
-                )
+                if device_info["model"]:
+                    return self.async_create_entry(
+                        title=device_info["title"],
+                        data={
+                            **user_input,
+                            CONF_HOST: self.host,
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                            "model": device_info["model"],
+                            "gen": device_info["gen"],
+                        },
+                    )
+                errors["base"] = "firmware_not_fully_provisioned"
         else:
             user_input = {}
 
@@ -223,8 +225,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.device_info = await validate_input(self.hass, self.host, self.info, {})
-        except KeyError:
-            LOGGER.debug("Shelly host %s firmware not fully provisioned", self.host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
@@ -235,7 +235,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
-        try:
+
+        if not self.device_info["model"]:
+            errors["base"] = "firmware_not_fully_provisioned"
+            model = "Shelly"
+        else:
+            model = get_model_name(self.info)
             if user_input is not None:
                 return self.async_create_entry(
                     title=self.device_info["title"],
@@ -246,15 +251,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "gen": self.device_info["gen"],
                     },
                 )
-        except KeyError:
-            errors["base"] = "firmware_not_fully_provisioned"
-        else:
             self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": get_model_name(self.info),
+                "model": model,
                 "host": self.host,
             },
             errors=errors,

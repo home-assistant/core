@@ -1203,8 +1203,8 @@ build.json @home-assistant/supervisor
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
-/homeassistant/components/yolink/ @YoSmart-Inc
-/tests/components/yolink/ @YoSmart-Inc
+/homeassistant/components/yolink/ @matrixd2
+/tests/components/yolink/ @matrixd2
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/zengge/ @emontnemery

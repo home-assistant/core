@@ -492,7 +492,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.8.1
+gcal-sync==0.9.0
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -835,7 +835,7 @@ pilight==0.1.1
 pillow==9.1.0
 
 # homeassistant.components.plex
-plexapi==4.10.1
+plexapi==4.11.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
