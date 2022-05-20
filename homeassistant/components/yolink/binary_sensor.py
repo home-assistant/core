@@ -31,6 +31,7 @@ class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
+    key: str = "state"
     value: Callable[[str], bool | None] = lambda _: None
 
 
@@ -42,7 +43,6 @@ SENSOR_DEVICE_TYPE = [
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
-        key="state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
@@ -50,16 +50,15 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
-        key="state",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
         value=lambda value: value == "alert",
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
-        key="state",
         name="Leak",
         icon="mdi:water",
+        device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda value: value == "alert",
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
     ),
