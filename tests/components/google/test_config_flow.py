@@ -327,7 +327,7 @@ async def test_missing_configuration(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == "abort"
-    assert result.get("reason") == "missing_credentials"
+    assert result.get("reason") == "missing_configuration"
 
 
 @pytest.mark.parametrize("google_config", [None])
@@ -342,7 +342,7 @@ async def test_missing_configuration_yaml_empty(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == "abort"
-    assert result.get("reason") == "missing_credentials"
+    assert result.get("reason") == "missing_configuration"
 
 
 async def test_wrong_configuration(

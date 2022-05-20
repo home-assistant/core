@@ -31,14 +31,14 @@ async def test_abort_if_no_configuration(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_credentials"
+    assert result["reason"] == "missing_configuration"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_credentials"
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_zeroconf_abort_if_existing_entry(hass):

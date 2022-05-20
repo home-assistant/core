@@ -25,7 +25,6 @@ from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.loader import async_get_application_credentials
 
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
@@ -240,8 +239,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return await self.async_step_auth()
 
         if not implementations:
-            if self.DOMAIN in await async_get_application_credentials(self.hass):
-                return self.async_abort(reason="missing_credentials")
             return self.async_abort(reason="missing_configuration")
 
         req = http.current_request.get()
