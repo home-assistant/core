@@ -39,7 +39,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .device import Device, async_get_mac_address_from_host
+from .device import Device, async_create_device, async_get_mac_address_from_host
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert discovery_info.ssdp_location is not None
     location = discovery_info.ssdp_location
     try:
-        device = await Device.async_create_device(hass, location)
+        device = await async_create_device(hass, location)
     except UpnpConnectionError as err:
         raise ConfigEntryNotReady(
             f"Error connecting to device at location: {location}, err: {err}"
