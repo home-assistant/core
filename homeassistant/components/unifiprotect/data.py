@@ -12,9 +12,10 @@ from pyunifiprotect.data import (
     Event,
     Liveview,
     ModelType,
+    ProtectAdoptableDeviceModel,
+    ProtectDeviceModel,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback

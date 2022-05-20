@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import ProtectAdoptableDeviceModel
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
