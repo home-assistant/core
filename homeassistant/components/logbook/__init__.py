@@ -1,8 +1,10 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Generator
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import json
@@ -36,16 +38,20 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
+    EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Context,
     Event,
     HomeAssistant,
     ServiceCall,
+    State,
     callback,
     split_entity_id,
 )
@@ -60,6 +66,7 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -69,6 +76,26 @@ import homeassistant.util.dt as dt_util
 
 from .queries import statement_for_request
 from .queries.common import PSUEDO_EVENT_STATE_CHANGED
+
+
+@dataclass
+class EventAsRow:
+    """Convert an event to a row."""
+
+    context_id: str
+    time_fired: dt
+    event_id: int
+    old_format_icon: None = None
+    state_id: None = None
+    entity_id: str | None = None
+    icon: str | None = None
+    context_user_id: str | None = None
+    context_parent_id: str | None = None
+    event_type: str | None = None
+    state: str | None = None
+    shared_data: dict[str, Any] = {}
+    context_only: None = None
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,6 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(LogbookView(conf, filters, entities_filter))
     websocket_api.async_register_command(hass, ws_get_events)
+    websocket_api.async_register_command(hass, ws_get_event_stream)
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
 
@@ -264,38 +292,147 @@ def _async_determine_event_types(
 
 
 def _ws_formatted_get_events(
-    hass: HomeAssistant,
     msg_id: int,
     start_day: dt,
     end_day: dt,
-    event_types: tuple[str, ...],
-    ent_reg: er.EntityRegistry,
-    entity_ids: list[str] | None = None,
-    device_ids: list[str] | None = None,
-    filters: Filters | None = None,
-    entities_filter: EntityFilter | Callable[[str], bool] | None = None,
-    context_id: str | None = None,
+    formatter: Callable[[int, Any], dict[str, Any]],
+    event_stream: EventStream,
 ) -> str:
     """Fetch events and convert them to json in the executor."""
-    return JSON_DUMP(
-        messages.result_message(
-            msg_id,
-            _get_events(
-                hass,
-                start_day,
-                end_day,
-                event_types,
-                ent_reg,
-                entity_ids,
-                device_ids,
-                filters,
-                entities_filter,
-                context_id,
-                True,
-                False,
+    result = formatter(msg_id, event_stream.get_events(start_day, end_day))
+    return JSON_DUMP(result)
+
+
+@callback
+def async_event_to_row(event: Event) -> Row | None:
+    """Convert an event to a row."""
+    if event.event_type != EVENT_STATE_CHANGED:
+        return cast(
+            Row,
+            EventAsRow(
+                context_id=event.context.id,
+                context_user_id=event.context.user_id,
+                context_parent_id=event.context.parent_id,
+                time_fired=event.time_fired,
+                event_id=hash(event),
+                shared_data=event.data,
             ),
         )
+    if event.data.get("old_state") is None or event.data.get("new_state") is None:
+        return None
+    new_state: State = event.data["new_data"]
+    return cast(
+        Row,
+        EventAsRow(
+            entity_id=new_state.entity_id,
+            context_id=new_state.context.id,
+            context_user_id=new_state.context.user_id,
+            context_parent_id=new_state.context.parent_id,
+            time_fired=new_state.last_updated,
+            event_id=hash(event),
+            icon=new_state.attributes.get(ATTR_ICON),
+        ),
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "logbook/get_events_stream",
+        vol.Required("start_time"): str,
+        vol.Optional("entity_ids"): [str],
+        vol.Optional("device_ids"): [str],
+    }
+)
+@websocket_api.async_response
+async def ws_get_event_stream(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle logbook get events websocket command."""
+    start_time_str = msg["start_time"]
+    utc_now = dt_util.utcnow()
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if start_time > utc_now:
+        connection.send_result(msg["id"], [])
+        return
+
+    device_ids = msg.get("device_ids")
+    entity_ids = msg.get("entity_ids")
+    event_types = _async_determine_event_types(hass, entity_ids, device_ids)
+
+    event_stream = EventStream(
+        hass,
+        event_types,
+        entity_ids,
+        device_ids,
+        None,
+        timestamp=True,
+        include_entity_name=False,
+    )
+
+    stream_queue: asyncio.Queue[Event] = asyncio.Queue()
+
+    @callback
+    def forward_event_stream(event: Event) -> None:
+        """Queue an event for the stream."""
+        stream_queue.put_nowait(event)
+
+    subscriptions: list[CALLBACK_TYPE] = []
+    for event_type in event_types:
+        subscriptions.append(
+            hass.bus.async_listen(
+                event_type, forward_event_stream, run_immediately=True
+            )
+        )
+    if entity_ids:
+        subscriptions.append(
+            async_track_state_change_event(hass, entity_ids, forward_event_stream)
+        )
+
+    async def async_stream_events() -> None:
+        """Stream events from the queue."""
+        while True:
+            events: list[Event] = [await stream_queue.get()]
+            await asyncio.sleep(1)  # try to group events
+            while True:
+                try:
+                    events.append(stream_queue.get_nowait())
+                except asyncio.QueueEmpty:
+                    break
+            connection.send_message(
+                JSON_DUMP(
+                    messages.event_message(
+                        msg["id"],
+                        event_stream.humanify(async_event_to_row(e) for e in events),
+                    )
+                )
+            )
+            stream_queue.task_done()
+
+    task = asyncio.create_task(async_stream_events())
+
+    def _unsub() -> None:
+        """Unsubscribe from all events."""
+        for subscription in subscriptions:
+            subscription()
+        task.cancel()
+
+    connection.subscriptions[msg["id"]] = _unsub
+    message = await get_instance(hass).async_add_executor_job(
+        _ws_formatted_get_events,
+        msg["id"],
+        start_time,
+        utc_now,
+        messages.event_message,
+        event_stream,
+    )
+    connection.send_result(msg["id"])
+    connection.send_message(message)
 
 
 @websocket_api.websocket_command(
@@ -339,22 +476,25 @@ async def ws_get_events(
     entity_ids = msg.get("entity_ids")
     context_id = msg.get("context_id")
     event_types = _async_determine_event_types(hass, entity_ids, device_ids)
-    ent_reg = er.async_get(hass)
+
+    event_stream = EventStream(
+        hass,
+        event_types,
+        entity_ids,
+        device_ids,
+        context_id,
+        timestamp=True,
+        include_entity_name=False,
+    )
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_formatted_get_events,
-            hass,
             msg["id"],
             start_time,
             end_time,
-            event_types,
-            ent_reg,
-            entity_ids,
-            device_ids,
-            hass.data[LOGBOOK_FILTERS],
-            hass.data[LOGBOOK_ENTITIES_FILTER],
-            context_id,
+            messages.result_message,
+            event_stream,
         )
     )
 
@@ -422,24 +562,22 @@ class LogbookView(HomeAssistantView):
             )
 
         event_types = _async_determine_event_types(hass, entity_ids, None)
-        ent_reg = er.async_get(hass)
+        event_stream = EventStream(
+            hass,
+            event_types,
+            entity_ids,
+            None,
+            context_id,
+            timestamp=False,
+            include_entity_name=True,
+        )
 
         def json_events() -> web.Response:
             """Fetch events and generate JSON."""
             return self.json(
-                _get_events(
-                    hass,
+                event_stream.get_events(
                     start_day,
                     end_day,
-                    event_types,
-                    ent_reg,
-                    entity_ids,
-                    None,
-                    self.filters,
-                    self.entities_filter,
-                    context_id,
-                    False,
-                    True,
                 )
             )
 
@@ -556,75 +694,105 @@ def _humanify(
             yield data
 
 
-def _get_events(
-    hass: HomeAssistant,
-    start_day: dt,
-    end_day: dt,
-    event_types: tuple[str, ...],
-    ent_reg: er.EntityRegistry,
-    entity_ids: list[str] | None = None,
-    device_ids: list[str] | None = None,
-    filters: Filters | None = None,
-    entities_filter: EntityFilter | Callable[[str], bool] | None = None,
-    context_id: str | None = None,
-    timestamp: bool = False,
-    include_entity_name: bool = True,
-) -> list[dict[str, Any]]:
-    """Get events for a period of time."""
-    assert not (
-        context_id and (entity_ids or device_ids)
-    ), "can't pass in both context_id and (entity_ids or device_ids)"
-    external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-    ] = hass.data.get(DOMAIN, {})
-    format_time = _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
-    entity_name_cache = EntityNameCache(hass)
-    if entity_ids or device_ids:
-        entities_filter = None
+class EventStream:
+    """Stream into logbook format."""
 
-    def yield_rows(query: Query) -> Generator[Row, None, None]:
-        """Yield rows from the database."""
-        # end_day - start_day intentionally checks .days and not .total_seconds()
-        # since we don't want to switch over to buffered if they go
-        # over one day by a few hours since the UI makes it so easy to do that.
-        if entity_ids or context_id or (end_day - start_day).days <= 1:
-            return query.all()  # type: ignore[no-any-return]
-        # Only buffer rows to reduce memory pressure
-        # if we expect the result set is going to be very large.
-        # What is considered very large is going to differ
-        # based on the hardware Home Assistant is running on.
-        #
-        # sqlalchemy suggests that is at least 10k, but for
-        # even and RPi3 that number seems higher in testing
-        # so we don't switch over until we request > 1 day+ of data.
-        #
-        return query.yield_per(1024)  # type: ignore[no-any-return]
-
-    stmt = statement_for_request(
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        device_ids,
-        filters,
-        context_id,
-    )
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "Literal statement: %s",
-            stmt.compile(compile_kwargs={"literal_binds": True}),
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        event_types: tuple[str, ...],
+        entity_ids: list[str] | None = None,
+        device_ids: list[str] | None = None,
+        context_id: str | None = None,
+        timestamp: bool = False,
+        include_entity_name: bool = True,
+    ) -> None:
+        """Init the event stream."""
+        self.hass = hass
+        self.ent_reg = er.async_get(hass)
+        self.event_types = event_types
+        self.entity_ids = entity_ids
+        self.device_ids = device_ids
+        self.context_id = context_id
+        self.filters: Filters | None = hass.data[LOGBOOK_FILTERS]
+        if self.limited_select:
+            self.entities_filter: EntityFilter | Callable[[str], bool] | None = None
+        else:
+            self.entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+        self.timestamp = timestamp
+        self.format_time = (
+            _row_time_fired_timestamp if self.timestamp else _row_time_fired_isoformat
         )
+        self.include_entity_name = include_entity_name
+        self.entity_name_cache = EntityNameCache(self.hass)
+        assert not (
+            context_id and (entity_ids or device_ids)
+        ), "can't pass in both context_id and (entity_ids or device_ids)"
+        self.external_events: dict[
+            str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+        ] = hass.data.get(DOMAIN, {})
 
-    with session_scope(hass=hass) as session:
+    @property
+    def limited_select(self) -> bool:
+        """Check if the stream is limited by entities context or device ids."""
+        return bool(self.entity_ids or self.context_id or self.device_ids)
+
+    def get_events(
+        self,
+        start_day: dt,
+        end_day: dt,
+    ) -> list[dict[str, Any]]:
+        """Get events for a period of time."""
+
+        def yield_rows(query: Query) -> Generator[Row, None, None]:
+            """Yield rows from the database."""
+            # end_day - start_day intentionally checks .days and not .total_seconds()
+            # since we don't want to switch over to buffered if they go
+            # over one day by a few hours since the UI makes it so easy to do that.
+            if self.limited_select or (end_day - start_day).days <= 1:
+                return query.all()  # type: ignore[no-any-return]
+            # Only buffer rows to reduce memory pressure
+            # if we expect the result set is going to be very large.
+            # What is considered very large is going to differ
+            # based on the hardware Home Assistant is running on.
+            #
+            # sqlalchemy suggests that is at least 10k, but for
+            # even and RPi3 that number seems higher in testing
+            # so we don't switch over until we request > 1 day+ of data.
+            #
+            return query.yield_per(1024)  # type: ignore[no-any-return]
+
+        stmt = statement_for_request(
+            start_day,
+            end_day,
+            self.event_types,
+            self.entity_ids,
+            self.device_ids,
+            self.filters,
+            self.context_id,
+        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Literal statement: %s",
+                stmt.compile(compile_kwargs={"literal_binds": True}),
+            )
+
+        with session_scope(hass=self.hass) as session:
+            return self.humanify(yield_rows(session.execute(stmt)))
+
+    def humanify(
+        self, row_generator: Generator[Row, None, None]
+    ) -> list[dict[str, str]]:
+        """Humanify rows."""
         return list(
             _humanify(
-                yield_rows(session.execute(stmt)),
-                entities_filter,
-                ent_reg,
-                external_events,
-                entity_name_cache,
-                format_time,
-                include_entity_name,
+                row_generator,
+                self.entities_filter,
+                self.ent_reg,
+                self.external_events,
+                self.entity_name_cache,
+                self.format_time,
+                self.include_entity_name,
             )
         )
 
@@ -672,7 +840,6 @@ class ContextAugmenter:
                 return
 
         event_type = context_row.event_type
-
         # State change
         if context_entity_id := context_row.entity_id:
             data[CONTEXT_STATE] = context_row.state
