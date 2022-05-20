@@ -233,6 +233,12 @@ omit =
     homeassistant/components/doorbird/util.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
+    homeassistant/components/dremel_3d_printer/__init__.py
+    homeassistant/components/dremel_3d_printer/binary_sensor.py
+    homeassistant/components/dremel_3d_printer/button.py
+    homeassistant/components/dremel_3d_printer/camera.py
+    homeassistant/components/dremel_3d_printer/sensor.py
+    homeassistant/components/dremel_3d_printer/services.py
     homeassistant/components/dsmr_reader/*
     homeassistant/components/dte_energy_bridge/sensor.py
     homeassistant/components/dublin_bus_transport/sensor.py
