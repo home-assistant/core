@@ -166,7 +166,9 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
             != BinarySensorDeviceClass.OCCUPANCY
         ):
             continue
-        doorbell_ufp_device_id = _async_unique_id_to_ufp_device_id(doorbell_sensor.unique_id)
+        doorbell_ufp_device_id = _async_unique_id_to_ufp_device_id(
+            doorbell_sensor.unique_id
+        )
         camera = instance.bootstrap.cameras[doorbell_ufp_device_id]
         doorbell_ids.add(camera.id)
     chime.camera_ids = sorted(doorbell_ids)
