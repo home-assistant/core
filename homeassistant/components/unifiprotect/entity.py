@@ -182,7 +182,7 @@ class ProtectDeviceEntity(Entity):
         if self.unique_id is not None:
             self.async_on_remove(
                 self.data.async_subscribe_device_id(
-                    self.unique_id, self.device, self._async_updated_event
+                    self.device.id, self._async_updated_event
                 )
             )
 

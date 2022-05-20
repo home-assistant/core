@@ -3,11 +3,10 @@ from __future__ import annotations
 
 import asyncio
 import functools
-from typing import Any, cast
+from typing import Any
 
 from pydantic import ValidationError
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera, Chime
 from pyunifiprotect.exceptions import BadRequest
 import voluptuous as vol
 
@@ -26,7 +25,6 @@ from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import ATTR_MESSAGE, DOMAIN
 from .data import ProtectData
-from .utils import _async_unifi_mac_from_hass
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -61,26 +59,20 @@ CHIME_PAIRED_SCHEMA = vol.All(
 )
 
 
-def _async_all_ufp_instances(hass: HomeAssistant) -> list[ProtectData]:
-    """All active UFP instances."""
-    return [
-        data for data in hass.data[DOMAIN].values() if isinstance(data, ProtectData)
-    ]
+def _async_ufp_instance_for_config_entry_ids(
+    hass: HomeAssistant, config_entry_ids: set[str]
+) -> ProtectApiClient | None:
+    """Find the UFP instance for the config entry ids."""
+    domain_data = hass.data[DOMAIN]
+    for config_entry_id in config_entry_ids:
+        if config_entry_id in domain_data:
+            protect_data: ProtectData = domain_data[config_entry_id]
+            return protect_data.api
+    return None
 
 
 @callback
-def _async_get_macs_for_device(device_entry: dr.DeviceEntry) -> list[str]:
-    return [
-        _async_unifi_mac_from_hass(cval)
-        for ctype, cval in device_entry.connections
-        if ctype == dr.CONNECTION_NETWORK_MAC
-    ]
-
-
-@callback
-def _async_get_ufp_instance(
-    hass: HomeAssistant, device_id: str
-) -> tuple[dr.DeviceEntry, ProtectData]:
+def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
     if not (device_entry := device_registry.async_get(device_id)):
         raise HomeAssistantError(f"No device found for device id: {device_id}")
@@ -88,43 +80,36 @@ def _async_get_ufp_instance(
     if device_entry.via_device_id is not None:
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
-    macs = _async_get_macs_for_device(device_entry)
-    ufp_instances = [
-        i for i in _async_all_ufp_instances(hass) if i.api.bootstrap.nvr.mac in macs
-    ]
+    config_entry_ids = device_entry.config_entries
+    if ufp_instance := _async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
+        return ufp_instance
 
-    if not ufp_instances:
-        # should not be possible unless user manually enters a bad device ID
-        raise HomeAssistantError(  # pragma: no cover
-            f"No UniFi Protect NVR found for device ID: {device_id}"
-        )
-
-    return device_entry, ufp_instances[0]
+    raise HomeAssistantError(f"No device found for device id: {device_id}")
 
 
 @callback
 def _async_get_protect_from_call(
     hass: HomeAssistant, call: ServiceCall
-) -> list[tuple[dr.DeviceEntry, ProtectApiClient]]:
-    referenced = async_extract_referenced_entity_ids(hass, call)
-
-    instances: list[tuple[dr.DeviceEntry, ProtectApiClient]] = []
-    for device_id in referenced.referenced_devices:
-        entry, instance = _async_get_ufp_instance(hass, device_id)
-        instances.append((entry, instance.api))
-
-    return instances
+) -> set[ProtectApiClient]:
+    return {
+        _async_get_ufp_instance(hass, device_id)
+        for device_id in async_extract_referenced_entity_ids(
+            hass, call
+        ).referenced_devices
+    }
 
 
-async def _async_call_nvr(
-    instances: list[tuple[dr.DeviceEntry, ProtectApiClient]],
+async def _async_service_call_nvr(
+    hass: HomeAssistant,
+    call: ServiceCall,
     method: str,
     *args: Any,
     **kwargs: Any,
 ) -> None:
+    instances = _async_get_protect_from_call(hass, call)
     try:
         await asyncio.gather(
-            *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for _, i in instances)
+            *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
     except (BadRequest, ValidationError) as err:
         raise HomeAssistantError(str(err)) from err
@@ -133,22 +118,25 @@ async def _async_call_nvr(
 async def add_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
     """Add a custom doorbell text message."""
     message: str = call.data[ATTR_MESSAGE]
-    instances = _async_get_protect_from_call(hass, call)
-    await _async_call_nvr(instances, "add_custom_doorbell_message", message)
+    await _async_service_call_nvr(hass, call, "add_custom_doorbell_message", message)
 
 
 async def remove_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
     """Remove a custom doorbell text message."""
     message: str = call.data[ATTR_MESSAGE]
-    instances = _async_get_protect_from_call(hass, call)
-    await _async_call_nvr(instances, "remove_custom_doorbell_message", message)
+    await _async_service_call_nvr(hass, call, "remove_custom_doorbell_message", message)
 
 
 async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
     """Set the default doorbell text message."""
     message: str = call.data[ATTR_MESSAGE]
-    instances = _async_get_protect_from_call(hass, call)
-    await _async_call_nvr(instances, "set_default_doorbell_message", message)
+    await _async_service_call_nvr(hass, call, "set_default_doorbell_message", message)
+
+
+@callback
+def _async_unique_id_to_device_id(unique_id: str) -> str:
+    """Extract the UFP device id from the registry entry unique id."""
+    return unique_id.split("_")[0]
 
 
 async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> None:
@@ -160,9 +148,10 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
         chime_button = entity_registry.async_get(entity_id)
         assert chime_button is not None
         assert chime_button.device_id is not None
+        chime_device_id = _async_unique_id_to_device_id(chime_button.unique_id)
 
-        _, instance = _async_get_ufp_instance(hass, chime_button.device_id)
-        chime = cast(Chime, instance.async_get_ufp_device(chime_button.unique_id))
+        instance = _async_get_ufp_instance(hass, chime_button.device_id)
+        chime = instance.bootstrap.chimes[chime_device_id]
 
         call.data = ReadOnlyDict(call.data.get("doorbells") or {})
         doorbell_refs = async_extract_referenced_entity_ids(hass, call)
@@ -177,10 +166,10 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
                 != BinarySensorDeviceClass.OCCUPANCY
             ):
                 continue
-
-            camera = cast(
-                Camera, instance.async_get_ufp_device(doorbell_sensor.unique_id)
+            doorbell_device_id = _async_unique_id_to_device_id(
+                doorbell_sensor.unique_id
             )
+            camera = instance.bootstrap.cameras[doorbell_device_id]
             doorbell_ids.add(camera.id)
         chime.camera_ids = sorted(doorbell_ids)
         await chime.save_device()
