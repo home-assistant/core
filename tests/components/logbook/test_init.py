@@ -2797,7 +2797,7 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert "context_event_type" not in results[3]
 
 
-@patch("homeassistant.components.logbook.EVENT_COALESCE_TIME", 0)
+@patch("homeassistant.components.logbook.EVENT_COALESCE_TIME", 0.05)
 async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
     """Test subscribe/unsubscribe logbook stream."""
     now = dt_util.utcnow()
@@ -2807,6 +2807,9 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
             for comp in ("homeassistant", "logbook")
         ]
     )
+    await hass.async_block_till_done()
+    init_count = sum(hass.bus.async_listeners().values())
+
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
     state: State = hass.states.get("binary_sensor.is_light")
@@ -2834,16 +2837,57 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
         }
     ]
 
-    hass.states.async_set("light.not_permitted", "on")
-    hass.states.async_set("light.permitted", "on", {"color": "blue"})
-    hass.states.async_set("light.permitted", "on", {"effect": "help"})
+    hass.states.async_set("light.alpha", "on")
+    hass.states.async_set("light.alpha", "off")
+    alpha_off_state: State = hass.states.get("light.alpha")
+    hass.states.async_set("light.zulu", "on", {"color": "blue"})
+    hass.states.async_set("light.zulu", "off", {"effect": "help"})
+    zulu_off_state: State = hass.states.get("light.zulu")
     hass.states.async_set(
-        "light.permitted", "on", {"effect": "help", "color": ["blue", "green"]}
+        "light.zulu", "on", {"effect": "help", "color": ["blue", "green"]}
     )
-    hass.states.async_remove("light.permitted")
-    hass.states.async_set("light.permitted", "on", {"effect": "help", "color": "blue"})
+    zulu_on_state: State = hass.states.get("light.zulu")
+    await hass.async_block_till_done()
+
+    hass.states.async_remove("light.zulu")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == {}
+    assert msg["event"] == [
+        {
+            "entity_id": "light.alpha",
+            "state": "off",
+            "when": alpha_off_state.last_updated.timestamp(),
+        },
+        {
+            "entity_id": "light.zulu",
+            "state": "off",
+            "when": zulu_off_state.last_updated.timestamp(),
+        },
+        {
+            "entity_id": "light.zulu",
+            "state": "on",
+            "when": zulu_on_state.last_updated.timestamp(),
+        },
+    ]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == []
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count

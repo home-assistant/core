@@ -331,6 +331,7 @@ def async_event_to_row(event: Event) -> Row | None:
         Row,
         EventAsRow(
             entity_id=new_state.entity_id,
+            state=new_state.state,
             context_id=new_state.context.id,
             context_user_id=new_state.context.user_id,
             context_parent_id=new_state.context.parent_id,
@@ -371,7 +372,7 @@ async def async_stream_events(
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired < last_time:
+        if events[0].time_fired <= last_time:
             continue
         await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
         while True:
