@@ -212,37 +212,29 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
         val = self._channel.cluster.get(self._zcl_attribute)
-        if val is None:
-            return False if not self._inverted else True
         return bool(val) if not self._inverted else (not bool(val))
+
+    async def async_turn_on_off(self, state) -> None:
+        """Turn the entity on or off."""
+        try:
+            result = await self._channel.cluster.write_attributes(
+                {self._zcl_attribute: state if not self._inverted else not state}
+            )
+        except zigpy.exceptions.ZigbeeException as ex:
+            self.error("Could not set value: %s", ex)
+            return
+        if not isinstance(result, Exception) and all(
+            record.status == Status.SUCCESS for record in result[0]
+        ):
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
-        try:
-            result = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: 1 if not self._inverted else 0}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(result, Exception) and all(
-            record.status == Status.SUCCESS for record in result[0]
-        ):
-            self.async_write_ha_state()
+        await self.async_turn_on_off(True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        try:
-            result = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: 0 if not self._inverted else 1}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(result, Exception) and all(
-            record.status == Status.SUCCESS for record in result[0]
-        ):
-            self.async_write_ha_state()
+        await self.async_turn_on_off(False)
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
@@ -266,4 +258,4 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    _zcl_attribute: str = "child_lock"  # TODO child_lock is easier to develop with
+    _zcl_attribute: str = "window_detection_function"

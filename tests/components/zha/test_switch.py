@@ -3,7 +3,9 @@ from unittest.mock import call, patch
 
 import pytest
 import zigpy.profiles.zha as zha
+import zigpy.types as t
 import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -27,6 +29,42 @@ ON = 1
 OFF = 0
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
+
+
+@pytest.fixture
+async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
+    """Device tracker zigpy tuya device."""
+
+    class TuyaManufCluster(ManufacturerSpecificCluster):
+        """Tuya manufacturer specific cluster."""
+
+        name = "Tuya Manufacturer Specicific"
+        cluster_id = 0xEF00
+        ep_attribute = "tuya_manufacturer"
+
+        attributes = {
+            0xEF01: ("window_detection_function", t.Bool),
+        }
+
+        def __init__(self, endpoint, is_server):
+            super().__init__(endpoint, is_server)
+            self._attr_cache.update({0xEF01: 0})  # entity won't be created without this
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id, TuyaManufCluster.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        manufacturer="_TZE200_b6wax7g0",
+    )
+
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    await hass.async_block_till_done()
+    return zigpy_device
 
 
 @pytest.fixture
@@ -292,3 +330,62 @@ async def test_zha_group_switch_entity(
 
     # test that group light is now back on
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_device_tuya):
+    """Test zha configurable switch platform."""
+
+    zha_device = await zha_device_joined_restored(zigpy_device_tuya)
+    cluster = zigpy_device_tuya.endpoints.get(1).tuya_manufacturer
+    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    assert entity_id is not None
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    # test that the switch was created and that its state is unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    # test that the state has changed from unavailable to off
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": True})
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn off at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": False})
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+    ):
+        # turn on via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.write_attributes.mock_calls) == 1
+        assert cluster.write_attributes.call_args == call(
+            {"window_detection_function": True}
+        )
+
+    # turn off from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+    ):
+        # turn off via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.write_attributes.mock_calls) == 2
+        assert cluster.write_attributes.call_args == call(
+            {"window_detection_function": False}
+        )
+
+    # test joining a new switch to the network and HA
+    await async_test_rejoin(hass, zigpy_device_tuya, [cluster], (0,))
