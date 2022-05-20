@@ -55,7 +55,7 @@ CHIME_PAIRED_SCHEMA = vol.All(
             "doorbells": cv.TARGET_SERVICE_FIELDS,
         },
     ),
-    cv.has_at_least_one_key(ATTR_ENTITY_ID),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
 
@@ -144,35 +144,33 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     ref = async_extract_referenced_entity_ids(hass, call)
     entity_registry = er.async_get(hass)
 
-    for entity_id in ref.referenced:
-        chime_button = entity_registry.async_get(entity_id)
-        assert chime_button is not None
-        assert chime_button.device_id is not None
-        chime_device_id = _async_unique_id_to_device_id(chime_button.unique_id)
+    entity_id = ref.indirectly_referenced.pop()
+    chime_button = entity_registry.async_get(entity_id)
+    assert chime_button is not None
+    assert chime_button.device_id is not None
+    chime_device_id = _async_unique_id_to_device_id(chime_button.unique_id)
 
-        instance = _async_get_ufp_instance(hass, chime_button.device_id)
-        chime = instance.bootstrap.chimes[chime_device_id]
+    instance = _async_get_ufp_instance(hass, chime_button.device_id)
+    chime = instance.bootstrap.chimes[chime_device_id]
 
-        call.data = ReadOnlyDict(call.data.get("doorbells") or {})
-        doorbell_refs = async_extract_referenced_entity_ids(hass, call)
-        doorbell_ids: set[str] = set()
-        for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
-            doorbell_sensor = entity_registry.async_get(camera_id)
-            assert doorbell_sensor is not None
-            if (
-                doorbell_sensor.platform != DOMAIN
-                or doorbell_sensor.domain != Platform.BINARY_SENSOR
-                or doorbell_sensor.original_device_class
-                != BinarySensorDeviceClass.OCCUPANCY
-            ):
-                continue
-            doorbell_device_id = _async_unique_id_to_device_id(
-                doorbell_sensor.unique_id
-            )
-            camera = instance.bootstrap.cameras[doorbell_device_id]
-            doorbell_ids.add(camera.id)
-        chime.camera_ids = sorted(doorbell_ids)
-        await chime.save_device()
+    call.data = ReadOnlyDict(call.data.get("doorbells") or {})
+    doorbell_refs = async_extract_referenced_entity_ids(hass, call)
+    doorbell_ids: set[str] = set()
+    for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
+        doorbell_sensor = entity_registry.async_get(camera_id)
+        assert doorbell_sensor is not None
+        if (
+            doorbell_sensor.platform != DOMAIN
+            or doorbell_sensor.domain != Platform.BINARY_SENSOR
+            or doorbell_sensor.original_device_class
+            != BinarySensorDeviceClass.OCCUPANCY
+        ):
+            continue
+        doorbell_device_id = _async_unique_id_to_device_id(doorbell_sensor.unique_id)
+        camera = instance.bootstrap.cameras[doorbell_device_id]
+        doorbell_ids.add(camera.id)
+    chime.camera_ids = sorted(doorbell_ids)
+    await chime.save_device()
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
