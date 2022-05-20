@@ -14,6 +14,7 @@ import pytest
 from pyunifiprotect.data import (
     NVR,
     Camera,
+    Chime,
     Doorlock,
     Light,
     Liveview,
@@ -49,6 +50,7 @@ class MockBootstrap:
     liveviews: dict[str, Any]
     events: dict[str, Any]
     doorlocks: dict[str, Any]
+    chimes: dict[str, Any]
 
     def reset_objects(self) -> None:
         """Reset all devices on bootstrap for tests."""
@@ -59,6 +61,7 @@ class MockBootstrap:
         self.liveviews = {}
         self.events = {}
         self.doorlocks = {}
+        self.chimes = {}
 
     def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
         """Fake process method for tests."""
@@ -127,6 +130,7 @@ def mock_bootstrap_fixture(mock_nvr: NVR):
         liveviews={},
         events={},
         doorlocks={},
+        chimes={},
     )
 
 
@@ -218,6 +222,14 @@ def mock_doorlock():
 
     data = json.loads(load_fixture("sample_doorlock.json", integration=DOMAIN))
     return Doorlock.from_unifi_dict(**data)
+
+
+@pytest.fixture
+def mock_chime():
+    """Mock UniFi Protect Chime device."""
+
+    data = json.loads(load_fixture("sample_chime.json", integration=DOMAIN))
+    return Chime.from_unifi_dict(**data)
 
 
 @pytest.fixture

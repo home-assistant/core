@@ -43,6 +43,22 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ),
 )
 
+CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
+    ProtectButtonEntityDescription(
+        key="play",
+        name="Play Chime",
+        device_class=DEVICE_CLASS_CHIME_BUTTON,
+        icon="mdi:play",
+        ufp_press="play",
+    ),
+    ProtectButtonEntityDescription(
+        key="play_buzzer",
+        name="Play Buzzer",
+        icon="mdi:play",
+        ufp_press="play_buzzer",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -53,7 +69,7 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data, ProtectButton, all_descs=ALL_DEVICE_BUTTONS
+        data, ProtectButton, all_descs=ALL_DEVICE_BUTTONS, chime_descs=CHIME_BUTTONS
     )
 
     async_add_entities(entities)
