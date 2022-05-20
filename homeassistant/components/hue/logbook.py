@@ -10,36 +10,36 @@ from homeassistant.helpers import device_registry as dr
 from .const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 
 TRIGGER_SUBTYPE = {
-    "button_1": "First button",
-    "button_2": "Second button",
-    "button_3": "Third button",
-    "button_4": "Fourth button",
-    "double_buttons_1_3": "First and Third buttons",
-    "double_buttons_2_4": "Second and Fourth buttons",
-    "dim_down": "Dim down",
-    "dim_up": "Dim up",
-    "turn_off": "Turn off",
-    "turn_on": "Turn on",
-    "1": "First button",
-    "2": "Second button",
-    "3": "Third button",
-    "4": "Fourth button",
+    "button_1": "first button",
+    "button_2": "second button",
+    "button_3": "third button",
+    "button_4": "fourth button",
+    "double_buttons_1_3": "first and third buttons",
+    "double_buttons_2_4": "second and fourth buttons",
+    "dim_down": "dim down",
+    "dim_up": "dim up",
+    "turn_off": "turn off",
+    "turn_on": "turn on",
+    "1": "first button",
+    "2": "second button",
+    "3": "third button",
+    "4": "fourth button",
 }
 TRIGGER_TYPE = {
     "remote_button_long_release": "{subtype} released after long press",
     "remote_button_short_press": "{subtype} pressed",
     "remote_button_short_release": "{subtype} released",
-    "remote_double_button_long_press": "Both {subtype} released after long press",
-    "remote_double_button_short_press": "Both {subtype} released",
+    "remote_double_button_long_press": "both {subtype} released after long press",
+    "remote_double_button_short_press": "both {subtype} released",
     "initial_press": "{subtype} pressed initially",
     "repeat": "{subtype} held down",
     "short_release": "{subtype} released after short press",
     "long_release": "{subtype} released after long press",
-    "double_short_release": "Both {subtype} released",
+    "double_short_release": "both {subtype} released",
 }
 
-UNKNOWN_TYPE = "Unknown Type"
-UNKNOWN_SUB_TYPE = "Unknown Sub Type"
+UNKNOWN_TYPE = "unknown type"
+UNKNOWN_SUB_TYPE = "unknown sub type"
 
 
 @callback
