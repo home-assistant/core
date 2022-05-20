@@ -26,16 +26,16 @@ TRIGGER_SUBTYPE = {
     "4": "Fourth button",
 }
 TRIGGER_TYPE = {
-    "remote_button_long_release": '"{subtype}" button released after long press',
-    "remote_button_short_press": '"{subtype}" button pressed',
-    "remote_button_short_release": '"{subtype}" button released',
-    "remote_double_button_long_press": 'Both "{subtype}" released after long press',
-    "remote_double_button_short_press": 'Both "{subtype}" released',
-    "initial_press": '"{subtype}" pressed initially',
-    "repeat": '{subtype} held down',
-    "short_release": '{subtype} released after short press',
-    "long_release": '{subtype} released after long press',
-    "double_short_release": 'Both "{subtype}" released',
+    "remote_button_long_release": "{subtype} released after long press",
+    "remote_button_short_press": "{subtype} pressed",
+    "remote_button_short_release": "{subtype} released",
+    "remote_double_button_long_press": "Both {subtype} released after long press",
+    "remote_double_button_short_press": "Both {subtype} released",
+    "initial_press": "{subtype} pressed initially",
+    "repeat": "{subtype} held down",
+    "short_release": "{subtype} released after short press",
+    "long_release": "{subtype} released after long press",
+    "double_short_release": "Both {subtype} released",
 }
 
 UNKNOWN_TYPE = "Unknown Type"

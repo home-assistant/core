@@ -71,7 +71,7 @@ async def test_humanify_hue_events(hass, mock_bridge_v2):
 
     assert v2_event["name"] == "Remote 2"
     assert v2_event["domain"] == DOMAIN
-    assert v2_event["message"] == 'Button "First button" pressed initially'
+    assert v2_event["message"] == "First button pressed initially"
 
 
 async def test_humanify_hue_events_devices_removed(hass, mock_bridge_v2):
@@ -101,4 +101,4 @@ async def test_humanify_hue_events_devices_removed(hass, mock_bridge_v2):
 
     assert v2_event["name"] == "wall_switch_with_2_controls_button"
     assert v2_event["domain"] == DOMAIN
-    assert v2_event["message"] == 'Button "First button" pressed initially'
+    assert v2_event["message"] == "First button pressed initially"
