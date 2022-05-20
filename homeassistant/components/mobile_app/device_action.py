@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import notify
 from homeassistant.components.device_automation import (
+    GetAutomationCapabilitiesResult,
     GetAutomationsResult,
     InvalidDeviceAutomationConfig,
 )
@@ -82,7 +83,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List action capabilities."""
     if config[CONF_TYPE] != "notify":
         return {}

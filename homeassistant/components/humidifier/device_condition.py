@@ -4,6 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
+    GetAutomationCapabilitiesResult,
     GetAutomationsResult,
     toggle_entity,
 )
@@ -90,7 +91,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> GetAutomationCapabilitiesResult:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 
