@@ -631,7 +631,7 @@ influxdb==5.3.1
 insteon-frontend-home-assistant==0.1.0
 
 # homeassistant.components.intellifire
-intellifire4py==1.0.2
+intellifire4py==2.0.0
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0

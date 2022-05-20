@@ -5,12 +5,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from intellifire4py import (
-    AsyncUDPFireplaceFinder,
-    IntellifireAsync,
-    IntellifireControlAsync,
-)
+from intellifire4py import AsyncUDPFireplaceFinder, IntellifireControlAsync
 from intellifire4py.exceptions import LoginException
+from intellifire4py.intellifire import IntellifireAPICloud, IntellifireAPILocal
+from intellifire4py.read_async import IntellifireAsync
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,6 +36,7 @@ async def validate_host_input(host: str) -> str:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    LOGGER.debug(f"Instantiating AIntellifire PI with {host}")
     api = IntellifireAsync(host)
     await api.poll()
     serial = api.data.serial
