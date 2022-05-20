@@ -40,7 +40,6 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED,
 )
 from homeassistant.core import (
     Context,
@@ -682,7 +681,6 @@ class ContextAugmenter:
                 data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
                     context_entity_id, context_row
                 )
-            data[CONTEXT_EVENT_TYPE] = EVENT_STATE_CHANGED
             return
 
         # Call service

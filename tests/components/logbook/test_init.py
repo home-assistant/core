@@ -32,7 +32,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
@@ -2795,10 +2794,10 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert results[2]["context_entity_id"] == "binary_sensor.is_light"
     assert results[2]["context_state"] == "off"
     assert results[2]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
-    assert results[2]["context_event_type"] == EVENT_STATE_CHANGED
+    assert "context_event_type" not in results[2]
     assert results[3]["entity_id"] == "light.kitchen2"
     assert results[3]["state"] == "on"
     assert results[3]["context_entity_id"] == "binary_sensor.is_light"
     assert results[3]["context_state"] == "off"
     assert results[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
-    assert results[3]["context_event_type"] == EVENT_STATE_CHANGED
+    assert "context_event_type" not in results[3]
