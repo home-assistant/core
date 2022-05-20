@@ -83,6 +83,7 @@ from .queries.common import PSUEDO_EVENT_STATE_CHANGED
 class EventAsRow:
     """Convert an event to a row."""
 
+    event_data: dict[str, Any]
     context_id: str
     time_fired: dt
     event_id: int
@@ -94,7 +95,7 @@ class EventAsRow:
     context_parent_id: str | None = None
     event_type: str | None = None
     state: str | None = None
-    shared_data: dict[str, Any] | None = None
+    shared_data: str | None = None
     context_only: None = None
 
 
@@ -310,35 +311,31 @@ def _ws_formatted_get_events(
 
 
 @callback
-def async_event_to_row(event: Event) -> Row | None:
+def async_event_to_row(event: Event) -> EventAsRow | None:
     """Convert an event to a row."""
     if event.event_type != EVENT_STATE_CHANGED:
-        return cast(
-            Row,
-            EventAsRow(
-                context_id=event.context.id,
-                context_user_id=event.context.user_id,
-                context_parent_id=event.context.parent_id,
-                time_fired=event.time_fired,
-                event_id=hash(event),
-                shared_data=event.data,
-            ),
+        return EventAsRow(
+            event_data=event.data,
+            event_type=event.event_type,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+            context_parent_id=event.context.parent_id,
+            time_fired=event.time_fired,
+            event_id=hash(event),
         )
     if event.data.get("old_state") is None or event.data.get("new_state") is None:
         return None
     new_state: State = event.data["new_state"]
-    return cast(
-        Row,
-        EventAsRow(
-            entity_id=new_state.entity_id,
-            state=new_state.state,
-            context_id=new_state.context.id,
-            context_user_id=new_state.context.user_id,
-            context_parent_id=new_state.context.parent_id,
-            time_fired=new_state.last_updated,
-            event_id=hash(event),
-            icon=new_state.attributes.get(ATTR_ICON),
-        ),
+    return EventAsRow(
+        event_data=event.data,
+        entity_id=new_state.entity_id,
+        state=new_state.state,
+        context_id=new_state.context.id,
+        context_user_id=new_state.context.user_id,
+        context_parent_id=new_state.context.parent_id,
+        time_fired=new_state.last_updated,
+        event_id=hash(event),
+        icon=new_state.attributes.get(ATTR_ICON),
     )
 
 
@@ -368,6 +365,8 @@ async def async_stream_events(
     else:
         last_time = last_time_from_db
 
+    event_stream.switch_to_live()
+
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
@@ -389,6 +388,9 @@ async def async_stream_events(
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.critical("Error processing logbook events: %s", exc_info=True)
+            continue
+
+        if not logbook_events:
             continue
 
         connection.send_message(
@@ -645,32 +647,51 @@ class LogbookView(HomeAssistantView):
         )
 
 
+class ContextLookup:
+    """A lookup class for context origins."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Memorize context origin."""
+        self.hass = hass
+        self._memorize_new = True
+        self._lookup: dict[str | None, Row | EventAsRow | None] = {None: None}
+
+    def memorize(self, context_id: str, row: Row) -> None:
+        """Memorize a context from the database."""
+        if self._memorize_new:
+            self._lookup.setdefault(context_id, row)
+
+    def clear(self) -> None:
+        """Clear the context origins and stop recording new ones."""
+        self._lookup.clear()
+        self._memorize_new = False
+
+    def get(self, context_id: str) -> Row | EventAsRow | None:
+        """Get the context origin."""
+        if row := self._lookup.get(context_id):
+            return row
+        if event := self.hass.bus.context_origin(context_id):
+            return async_event_to_row(event)
+        return None
+
+
 def _humanify(
-    rows: Generator[Row, None, None],
+    rows: Generator[Row | EventAsRow, None, None],
     entities_filter: EntityFilter | Callable[[str], bool] | None,
     ent_reg: er.EntityRegistry,
-    external_events: dict[
-        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-    ],
-    entity_name_cache: EntityNameCache,
+    context_augmenter: ContextAugmenter,
     format_time: Callable[[Row], Any],
-    include_entity_name: bool = True,
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
-    event_data_cache: dict[str, dict[str, Any]] = {}
-    context_lookup: dict[str | None, Row | None] = {None: None}
-    event_cache = EventCache(event_data_cache)
-    context_augmenter = ContextAugmenter(
-        context_lookup,
-        entity_name_cache,
-        external_events,
-        event_cache,
-        include_entity_name,
-    )
+    context_lookup = context_augmenter.context_lookup
+    external_events = context_augmenter.external_events
+    event_cache = context_augmenter.event_cache
+    entity_name_cache = context_augmenter.entity_name_cache
+    include_entity_name = context_augmenter.include_entity_name
 
-    def _keep_row(row: Row, event_type: str) -> bool:
+    def _keep_row(row: Row | EventAsRow, event_type: str) -> bool:
         """Check if the entity_filter rejects a row."""
         assert entities_filter is not None
         if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
@@ -688,7 +709,7 @@ def _humanify(
     # Process rows
     for row in rows:
         context_id = row.context_id
-        context_lookup.setdefault(context_id, row)
+        context_lookup.memorize(context_id, row)
         if row.context_only:
             continue
         event_type = row.event_type
@@ -717,7 +738,7 @@ def _humanify(
                 LOGBOOK_ENTRY_ENTITY_ID: entity_id,
             }
             if include_entity_name:
-                data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id, row)
+                data[LOGBOOK_ENTRY_NAME] = entity_name_cache.get(entity_id)
             if icon := row.icon or row.old_format_icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
@@ -767,6 +788,9 @@ class EventStream:
         include_entity_name: bool = True,
     ) -> None:
         """Init the event stream."""
+        assert not (
+            context_id and (entity_ids or device_ids)
+        ), "can't pass in both context_id and (entity_ids or device_ids)"
         self.hass = hass
         self.ent_reg = er.async_get(hass)
         self.event_types = event_types
@@ -782,19 +806,32 @@ class EventStream:
         self.format_time = (
             _row_time_fired_timestamp if self.timestamp else _row_time_fired_isoformat
         )
-        self.include_entity_name = include_entity_name
-        self.entity_name_cache = EntityNameCache(self.hass)
-        assert not (
-            context_id and (entity_ids or device_ids)
-        ), "can't pass in both context_id and (entity_ids or device_ids)"
-        self.external_events: dict[
+        external_events: dict[
             str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
         ] = hass.data.get(DOMAIN, {})
+        event_data_cache: dict[str, dict[str, Any]] = {}
+        self.context_augmenter = ContextAugmenter(
+            ContextLookup(hass),
+            EntityNameCache(self.hass),
+            external_events,
+            EventCache(event_data_cache),
+            include_entity_name,
+        )
 
     @property
     def limited_select(self) -> bool:
         """Check if the stream is limited by entities context or device ids."""
         return bool(self.entity_ids or self.context_id or self.device_ids)
+
+    def switch_to_live(self) -> None:
+        """Switch to live stream.
+
+        Replaces the event cache with a mapping
+        object so we do not leak memory during
+        streaming.
+        """
+        self.context_augmenter.event_cache = LiveEventCache({})
+        self.context_augmenter.context_lookup.clear()
 
     def get_events(
         self,
@@ -840,7 +877,7 @@ class EventStream:
             return self.humanify(yield_rows(session.execute(stmt)))
 
     def humanify(
-        self, row_generator: Generator[Row, None, None]
+        self, row_generator: Generator[Row | EventAsRow, None, None]
     ) -> list[dict[str, str]]:
         """Humanify rows."""
         return list(
@@ -848,10 +885,8 @@ class EventStream:
                 row_generator,
                 self.entities_filter,
                 self.ent_reg,
-                self.external_events,
-                self.entity_name_cache,
+                self.context_augmenter,
                 self.format_time,
-                self.include_entity_name,
             )
         )
 
@@ -861,7 +896,7 @@ class ContextAugmenter:
 
     def __init__(
         self,
-        context_lookup: dict[str | None, Row | None],
+        context_lookup: ContextLookup,
         entity_name_cache: EntityNameCache,
         external_events: dict[
             str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
@@ -876,7 +911,9 @@ class ContextAugmenter:
         self.event_cache = event_cache
         self.include_entity_name = include_entity_name
 
-    def augment(self, data: dict[str, Any], row: Row, context_id: str) -> None:
+    def augment(
+        self, data: dict[str, Any], row: Row | EventAsRow, context_id: str
+    ) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
@@ -905,7 +942,7 @@ class ContextAugmenter:
             data[CONTEXT_ENTITY_ID] = context_entity_id
             if self.include_entity_name:
                 data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
-                    context_entity_id, context_row
+                    context_entity_id
                 )
             return
 
@@ -934,9 +971,7 @@ class ContextAugmenter:
             return
         data[CONTEXT_ENTITY_ID] = attr_entity_id
         if self.include_entity_name:
-            data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(
-                attr_entity_id, context_row
-            )
+            data[CONTEXT_ENTITY_ID_NAME] = self.entity_name_cache.get(attr_entity_id)
 
 
 def _is_sensor_continuous(ent_reg: er.EntityRegistry, entity_id: str) -> bool:
@@ -954,7 +989,7 @@ def _is_sensor_continuous(ent_reg: er.EntityRegistry, entity_id: str) -> bool:
     )
 
 
-def _rows_match(row: Row, other_row: Row) -> bool:
+def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
     if (
         (state_id := row.state_id) is not None
@@ -966,18 +1001,18 @@ def _rows_match(row: Row, other_row: Row) -> bool:
     return False
 
 
-def _row_event_data_extract(row: Row, extractor: re.Pattern) -> str | None:
+def _row_event_data_extract(row: Row | EventAsRow, extractor: re.Pattern) -> str | None:
     """Extract from event_data row."""
     result = extractor.search(row.shared_data or row.event_data or "")
     return result.group(1) if result else None
 
 
-def _row_time_fired_isoformat(row: Row) -> str:
+def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
     """Convert the row timed_fired to isoformat."""
     return process_timestamp_to_utc_isoformat(row.time_fired or dt_util.utcnow())
 
 
-def _row_time_fired_timestamp(row: Row) -> float:
+def _row_time_fired_timestamp(row: Row | EventAsRow) -> float:
     """Convert the row timed_fired to timestamp."""
     return process_datetime_to_timestamp(row.time_fired or dt_util.utcnow())
 
@@ -1000,20 +1035,23 @@ class LazyEventPartialState:
 
     def __init__(
         self,
-        row: Row,
+        row: Row | EventAsRow,
         event_data_cache: dict[str, dict[str, Any]],
     ) -> None:
         """Init the lazy event."""
         self.row = row
         self._event_data: dict[str, Any] | None = None
         self._event_data_cache = event_data_cache
-        self.event_type: str = self.row.event_type
+        self.event_type: str | None = self.row.event_type
         self.entity_id: str | None = self.row.entity_id
         self.state = self.row.state
         self.context_id: str | None = self.row.context_id
         self.context_user_id: str | None = self.row.context_user_id
         self.context_parent_id: str | None = self.row.context_parent_id
-        source: str = self.row.shared_data or self.row.event_data
+        if data := getattr(row, "event_data", None):
+            self.data = data
+            return
+        source: str = self.row.shared_data or self.row.event_data  # type: ignore[assignment]
         if not source:
             self.data = {}
         elif event_data := self._event_data_cache.get(source):
@@ -1036,7 +1074,7 @@ class EntityNameCache:
         self._hass = hass
         self._names: dict[str, str] = {}
 
-    def get(self, entity_id: str, row: Row) -> str:
+    def get(self, entity_id: str) -> str:
         """Lookup an the friendly name."""
         if entity_id in self._names:
             return self._names[entity_id]
@@ -1056,13 +1094,21 @@ class EventCache:
     def __init__(self, event_data_cache: dict[str, dict[str, Any]]) -> None:
         """Init the cache."""
         self._event_data_cache = event_data_cache
-        self.event_cache: dict[Row, LazyEventPartialState] = {}
+        self.event_cache: dict[Row | EventAsRow, LazyEventPartialState] = {}
 
-    def get(self, row: Row) -> LazyEventPartialState:
+    def get(self, row: EventAsRow | Row) -> LazyEventPartialState:
         """Get the event from the row."""
+        if isinstance(row, EventAsRow):
+            return LazyEventPartialState(row, self._event_data_cache)
         if event := self.event_cache.get(row):
             return event
-        event = self.event_cache[row] = LazyEventPartialState(
-            row, self._event_data_cache
-        )
-        return event
+        lazy_event = LazyEventPartialState(row, self._event_data_cache)
+        return lazy_event
+
+
+class LiveEventCache(EventCache):
+    """A dummy event cache for live events since we do not need to decode."""
+
+    def get(self, row: EventAsRow) -> LazyEventPartialState:
+        """Return the event."""
+        return LazyEventPartialState(row, self._event_data_cache)

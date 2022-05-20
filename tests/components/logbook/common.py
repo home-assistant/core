@@ -52,14 +52,22 @@ def mock_humanify(hass_, rows):
     """Wrap humanify with mocked logbook objects."""
     entity_name_cache = logbook.EntityNameCache(hass_)
     ent_reg = er.async_get(hass_)
+    event_cache = logbook.EventCache({})
+    context_lookup = logbook.ContextLookup(hass_)
     external_events = hass_.data.get(logbook.DOMAIN, {})
+    context_augmenter = logbook.ContextAugmenter(
+        context_lookup,
+        entity_name_cache,
+        external_events,
+        event_cache,
+        include_entity_name=True,
+    )
     return list(
         logbook._humanify(
             rows,
             None,
             ent_reg,
-            external_events,
-            entity_name_cache,
+            context_augmenter,
             logbook._row_time_fired_isoformat,
         ),
     )

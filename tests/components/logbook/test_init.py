@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 from typing import Callable
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -2797,16 +2797,17 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert "context_event_type" not in results[3]
 
 
-@patch("homeassistant.components.logbook.EVENT_COALESCE_TIME", 0.05)
+@patch("homeassistant.components.logbook.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
     """Test subscribe/unsubscribe logbook stream."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
             async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
+
     await hass.async_block_till_done()
     init_count = sum(hass.bus.async_listeners().values())
 
@@ -2875,10 +2876,46 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
         },
     ]
 
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: "automation.mock_automation"},
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+    )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == []
+    assert msg["event"] == [
+        {
+            "context_id": ANY,
+            "domain": "automation",
+            "entity_id": "automation.mock_automation",
+            "message": "triggered",
+            "name": "Mock automation",
+            "source": None,
+            "when": ANY,
+        },
+        {
+            "context_id": ANY,
+            "domain": "script",
+            "entity_id": "script.mock_script",
+            "message": "started",
+            "name": "Mock script",
+            "when": ANY,
+        },
+        {
+            "domain": "homeassistant",
+            "icon": "mdi:home-assistant",
+            "message": "started",
+            "name": "Home Assistant",
+            "when": ANY,
+        },
+    ]
 
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}

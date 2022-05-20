@@ -36,6 +36,7 @@ from typing import (
 )
 from typing import Union  # pylint: disable=unused-import
 from urllib.parse import urlparse
+from weakref import WeakValueDictionary
 
 import attr
 import voluptuous as vol
@@ -738,7 +739,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
@@ -809,6 +810,12 @@ class EventBus:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
+        self._context_origin: WeakValueDictionary[str, Event] = WeakValueDictionary()
+
+    @callback
+    def context_origin(self, context_id: str) -> Event | None:
+        """Get the origin of an event by context."""
+        return self._context_origin.get(context_id)
 
     @callback
     def async_listeners(self) -> dict[str, int]:
@@ -861,6 +868,7 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
+        self._context_origin.setdefault(event.context.id, event)
 
         _LOGGER.debug("Bus:Handling %s", event)
 
