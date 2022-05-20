@@ -17,8 +17,7 @@
                     "mode": "Modo",
                     "name": "Nome"
                 },
-                "description": "Para gerar a chave de API, acesse https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Para gerar a chave de API, acesse https://openweathermap.org/appid"
             }
         }
     },

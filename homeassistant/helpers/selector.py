@@ -704,7 +704,9 @@ class SelectSelector(Selector):
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.Coerce(SelectSelectorMode),
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
         }
     )
 
@@ -827,7 +829,9 @@ class TextSelector(Selector):
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.Coerce(TextSelectorType),
+            vol.Optional("type"): vol.All(
+                vol.Coerce(TextSelectorType), lambda val: val.value
+            ),
         }
     )
 

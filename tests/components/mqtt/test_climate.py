@@ -19,23 +19,14 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -171,12 +162,12 @@ async def test_supported_features(hass, mqtt_mock):
 
     state = hass.states.get(ENTITY_CLIMATE)
     support = (
-        SUPPORT_TARGET_TEMPERATURE
-        | SUPPORT_SWING_MODE
-        | SUPPORT_FAN_MODE
-        | SUPPORT_PRESET_MODE
-        | SUPPORT_AUX_HEAT
-        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.AUX_HEAT
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 
     assert state.attributes.get("supported_features") == support
@@ -190,12 +181,12 @@ async def test_get_hvac_modes(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     modes = state.attributes.get("hvac_modes")
     assert [
-        HVAC_MODE_AUTO,
-        STATE_OFF,
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
     ] == modes
 
 

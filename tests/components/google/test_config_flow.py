@@ -1,6 +1,7 @@
 """Test the google config flow."""
 
 import datetime
+from typing import Any
 from unittest.mock import Mock, patch
 
 from oauth2client.client import (
@@ -11,8 +12,13 @@ from oauth2client.client import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.google.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, YieldFixture
@@ -64,7 +70,7 @@ async def fire_alarm(hass, point_in_time):
         await hass.async_block_till_done()
 
 
-async def test_full_flow(
+async def test_full_flow_yaml_creds(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
@@ -93,7 +99,7 @@ async def test_full_flow(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "Configuration.yaml"
+    assert result.get("title") == "Import from configuration.yaml"
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -107,6 +113,68 @@ async def test_full_flow(
     data["token"].pop("expires_in")
     assert data == {
         "auth_implementation": "device_auth",
+        "token": {
+            "access_token": "ACCESS_TOKEN",
+            "refresh_token": "REFRESH_TOKEN",
+            "scope": "https://www.googleapis.com/auth/calendar",
+            "token_type": "Bearer",
+        },
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+
+@pytest.mark.parametrize("google_config", [None])
+async def test_full_flow_application_creds(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    config: dict[str, Any],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test successful creds setup."""
+    assert await component_setup()
+
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "imported-cred"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "progress"
+    assert result.get("step_id") == "auth"
+    assert "description_placeholders" in result
+    assert "url" in result["description_placeholders"]
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        # Run one tick to invoke the credential exchange check
+        now = utcnow()
+        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"]
+        )
+
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == "Import from configuration.yaml"
+    assert "data" in result
+    data = result["data"]
+    assert "token" in data
+    assert 0 < data["token"]["expires_in"] < 8 * 86400
+    assert (
+        datetime.datetime.now().timestamp()
+        <= data["token"]["expires_at"]
+        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()
+    )
+    data["token"].pop("expires_at")
+    data["token"].pop("expires_in")
+    assert data == {
+        "auth_implementation": "imported-cred",
         "token": {
             "access_token": "ACCESS_TOKEN",
             "refresh_token": "REFRESH_TOKEN",
@@ -210,7 +278,7 @@ async def test_exchange_error(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "Configuration.yaml"
+    assert result.get("title") == "Import from configuration.yaml"
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -254,12 +322,53 @@ async def test_existing_config_entry(
 async def test_missing_configuration(
     hass: HomeAssistant,
 ) -> None:
-    """Test can't configure when config entry already exists."""
+    """Test can't configure when no authentication source is available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == "abort"
-    assert result.get("reason") == "missing_configuration"
+    assert result.get("reason") == "missing_credentials"
+
+
+@pytest.mark.parametrize("google_config", [None])
+async def test_missing_configuration_yaml_empty(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+) -> None:
+    """Test setup with an empty yaml configuration and no credentials."""
+    assert await component_setup()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "missing_credentials"
+
+
+async def test_wrong_configuration(
+    hass: HomeAssistant,
+) -> None:
+    """Test can't use the wrong type of authentication."""
+
+    # Google calendar flow currently only supports device auth
+    config_entry_oauth2_flow.async_register_implementation(
+        hass,
+        DOMAIN,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            "client-id",
+            "client-secret",
+            "http://example/authorize",
+            "http://example/token",
+        ),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "oauth_error"
 
 
 async def test_import_config_entry_from_existing_token(

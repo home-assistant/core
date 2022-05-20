@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import logbook, script
+from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,7 +41,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service, mock_restore_cache
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.components.logbook.common import MockRow, mock_humanify
 
 ENTITY_ID = "script.test"
 
@@ -377,7 +377,7 @@ async def test_async_get_descriptions_script(hass):
     }
 
     await async_setup_component(hass, DOMAIN, script_config)
-    descriptions = await hass.helpers.service.async_get_all_descriptions()
+    descriptions = await async_get_all_descriptions(hass)
 
     assert descriptions[DOMAIN]["test1"]["description"] == ""
     assert not descriptions[DOMAIN]["test1"]["fields"]
@@ -526,24 +526,19 @@ async def test_logbook_humanify_script_started_event(hass):
     hass.config.components.add("recorder")
     await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_SCRIPT_STARTED,
-                    {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
-                ),
-                MockLazyEventPartialState(
-                    EVENT_SCRIPT_STARTED,
-                    {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_SCRIPT_STARTED,
+                {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
+            ),
+            MockRow(
+                EVENT_SCRIPT_STARTED,
+                {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
+            ),
+        ],
     )
 
     assert event1["name"] == "Hello Script"

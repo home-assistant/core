@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "County"
-                },
-                "description": "Please choose your county below.",
-                "title": "PECO Outage Counter"
+                }
             }
         }
     }

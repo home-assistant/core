@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Authenticatie",
-                    "content_type": "Inhoudstype",
                     "framerate": "Framesnelheid (Hz)",
                     "limit_refetch_to_url_change": "Beperk refetch tot url verandering",
                     "password": "Wachtwoord",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "Authenticatie",
-                    "content_type": "Inhoudstype",
                     "framerate": "Framesnelheid (Hz)",
                     "limit_refetch_to_url_change": "Beperk refetch tot url verandering",
                     "password": "Wachtwoord",
                     "rtsp_transport": "RTSP-transportprotocol",
                     "still_image_url": "URL van stilstaande afbeelding (bijv. http://...)",
                     "stream_source": "Url van streambron (bijv. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Gebruik de wandklok als tijdstempel",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Deze optie kan problemen met segmenteren of crashen verhelpen die het gevolg zijn van buggy timestamp implementaties op sommige camera's"
                 }
             }
         }

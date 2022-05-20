@@ -156,7 +156,7 @@ VALUE_TEMPLATE_KEYS = [
 ]
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -220,13 +220,14 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_BASIC = vol.All(
     # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
     cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.deprecated(CONF_WHITE_VALUE_SCALE),
     cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
     cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
@@ -239,6 +240,8 @@ DISCOVERY_SCHEMA_BASIC = vol.All(
     cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
+
+PLATFORM_SCHEMA_MODERN_BASIC = _PLATFORM_SCHEMA_BASE
 
 
 async def async_setup_entity_basic(

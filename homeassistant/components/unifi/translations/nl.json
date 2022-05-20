@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Unifi Network site is al geconfigureerd",
-            "configuration_updated": "Configuratie bijgewerkt.",
+            "configuration_updated": "Configuratie bijgewerkt",
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {

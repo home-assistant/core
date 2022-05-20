@@ -11,12 +11,7 @@
         "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
-                "description": "Deseja configurar {name}?",
-                "title": "Roku"
-            },
-            "ssdp_confirm": {
-                "description": "Voc\u00ea quer configurar o {name}?",
-                "title": "Roku"
+                "description": "Deseja configurar {name}?"
             },
             "user": {
                 "data": {

@@ -38,7 +38,7 @@ class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[dict[str, Any]], StateType | datetime]
-    info_fn: Callable[[dict[str, Any]], StateType | list]
+    info_fn: Callable[[dict[str, Any]], StateType | list] | None
 
 
 @dataclass
@@ -78,6 +78,24 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_modified"]),
         info_fn=lambda data: data["departure_information"],
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="departure_time_next",
+        name="Departure Time Next",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: as_utc(data["departure_time_next"]),
+        info_fn=None,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="departure_time_next_next",
+        name="Departure Time Next After",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: as_utc(data["departure_time_next_next"]),
+        info_fn=None,
         entity_registry_enabled_default=False,
     ),
 )
@@ -132,9 +150,12 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
             self.coordinator.data
         )
 
-        self._attr_extra_state_attributes = {
-            "other_information": self.entity_description.info_fn(self.coordinator.data),
-        }
+        if self.entity_description.info_fn:
+            self._attr_extra_state_attributes = {
+                "other_information": self.entity_description.info_fn(
+                    self.coordinator.data
+                ),
+            }
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -12,7 +12,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_SUGGESTED_AREA, CONF_HOST, Platform
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_SUGGESTED_AREA, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -229,6 +229,7 @@ def _async_subscribe_pico_remote_events(
     button_devices_by_id: dict[int, dict],
 ):
     """Subscribe to lutron events."""
+    dev_reg = dr.async_get(hass)
 
     @callback
     def _async_button_event(button_id, event_type):
@@ -257,6 +258,7 @@ def _async_subscribe_pico_remote_events(
             )
             return
         lip_button_number = sub_type_to_lip_button[sub_type]
+        hass_device = dev_reg.async_get_device({(DOMAIN, device["serial"])})
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
@@ -266,6 +268,7 @@ def _async_subscribe_pico_remote_events(
                 ATTR_BUTTON_NUMBER: lip_button_number,
                 ATTR_LEAP_BUTTON_NUMBER: button_number,
                 ATTR_DEVICE_NAME: name,
+                ATTR_DEVICE_ID: hass_device.id,
                 ATTR_AREA_NAME: area,
                 ATTR_ACTION: action,
             },
@@ -350,3 +353,12 @@ class LutronCasetaDevice(Entity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
+
+
+class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
+    """A lutron_caseta entity that can update by syncing data from the bridge."""
+
+    async def async_update(self):
+        """Update when forcing a refresh of the device."""
+        self._device = self._smartbridge.get_device_by_id(self.device_id)
+        _LOGGER.debug(self._device)
