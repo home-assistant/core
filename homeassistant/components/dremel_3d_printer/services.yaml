@@ -1,0 +1,60 @@
+print_job:
+  name: Print Job
+  description: Prints a 3D Job from a .gcode file.
+  fields:
+    file_path:
+      name: Filepath
+      description: Determine the local file path of the .gcode file.
+      example: "files/my_file_name.gcode"
+      selector:
+        text:
+    url:
+      name: URL
+      description: Determine the URL of the .gcode file to download. If you also define a file_path, the file_path will be used instead.
+      example: "http://www.foo.com/bar.gcode"
+      selector:
+        text:
+    device_id:
+      name: Device
+      description: Device of the printer to start the 3D print.
+      required: true
+      selector:
+        device:
+          integration: dremel_3d_printer
+          manufacturer: Dremel
+pause_job:
+  name: Pause Job
+  description: Pauses an ongoing 3D print.
+  fields:
+    device_id:
+      name: Device
+      description: Device of the printer to pause the job.
+      required: true
+      selector:
+        device:
+          integration: dremel_3d_printer
+          manufacturer: Dremel
+resume_job:
+  name: Resume Job
+  description: Resume a 3D Job that was paused.
+  fields:
+    device_id:
+      name: Device
+      description: Device of the printer to resume the job.
+      required: true
+      selector:
+        device:
+          integration: dremel_3d_printer
+          manufacturer: Dremel
+stop_job:
+  name: Stop Job
+  description: Stops an ongoing 3D print.
+  fields:
+    device_id:
+      name: Device
+      description: Device of the printer to stop the job.
+      required: true
+      selector:
+        device:
+          integration: dremel_3d_printer
+          manufacturer: Dremel

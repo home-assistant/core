@@ -78,6 +78,7 @@ homeassistant.components.devolo_home_network.*
 homeassistant.components.dhcp.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
+homeassistant.components.dremel_3d_printer.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*

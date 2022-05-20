@@ -1,0 +1,16 @@
+{
+    "config": {
+        "flow_title": "{name} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Connect with your Dremel 3D Printer"
+            }
+        }
+    }
+}
