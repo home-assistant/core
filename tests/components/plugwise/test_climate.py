@@ -150,10 +150,11 @@ async def test_anna_climate_entity_attributes(
     """Test creation of anna climate device environment."""
     state = hass.states.get("climate.anna")
     assert state
-    assert state.state == HVACMode.HEAT
+    assert state.state == HVACMode.AUTO
     assert state.attributes["hvac_modes"] == [
         HVACMode.HEAT,
         HVACMode.COOL,
+        HVACMode.AUTO,
     ]
     assert "no_frost" in state.attributes["preset_modes"]
     assert "home" in state.attributes["preset_modes"]
@@ -199,22 +200,22 @@ async def test_anna_climate_entity_climate_changes(
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.anna", "hvac_mode": "heat_cool"},
+        {"entity_id": "climate.anna", "hvac_mode": "heat"},
         blocking=True,
     )
 
     assert mock_smile_anna.set_temperature.call_count == 1
     assert mock_smile_anna.set_schedule_state.call_count == 1
     mock_smile_anna.set_schedule_state.assert_called_with(
-        "c784ee9fdab44e1395b8dee7d7a497d5", None, "off"
+        "c784ee9fdab44e1395b8dee7d7a497d5", "standaard", "off"
     )
 
     # Auto mode is not available, no schedules
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "climate",
             "set_hvac_mode",
-            {"entity_id": "climate.anna", "hvac_mode": "auto"},
+            {"entity_id": "climate.anna", "hvac_mode": "dry"},
             blocking=True,
         )
 
