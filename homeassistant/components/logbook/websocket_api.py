@@ -93,16 +93,9 @@ async def async_stream_events(
             except asyncio.QueueEmpty:
                 break
 
-        try:
-            logbook_events = event_processor.humanify(
-                row
-                for row in (async_event_to_row(e) for e in events)
-                if row is not None
-            )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.critical("Error processing logbook events: %s", exc_info=True)
-            continue
-
+        logbook_events = event_processor.humanify(
+            row for row in (async_event_to_row(e) for e in events) if row is not None
+        )
         if not logbook_events:
             continue
 

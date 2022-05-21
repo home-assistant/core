@@ -477,7 +477,9 @@ class EventCache:
             return LazyEventPartialState(row, self._event_data_cache)
         if event := self.event_cache.get(row):
             return event
-        lazy_event = LazyEventPartialState(row, self._event_data_cache)
+        self.event_cache[row] = lazy_event = LazyEventPartialState(
+            row, self._event_data_cache
+        )
         return lazy_event
 
     def clear(self) -> None:
