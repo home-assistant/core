@@ -381,6 +381,10 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         },
     ]
 
+    hass.states.async_remove("light.alpha")
+    hass.states.async_remove("light.small")
+    await hass.async_block_till_done()
+
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
     )
