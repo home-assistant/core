@@ -76,10 +76,9 @@ async def async_stream_events(
             except asyncio.QueueEmpty:
                 break
 
-        logbook_events = event_processor.humanify(
+        if logbook_events := event_processor.humanify(
             row for row in (async_event_to_row(e) for e in events) if row is not None
-        )
-        if logbook_events:
+        ):
             connection.send_message(
                 JSON_DUMP(
                     messages.event_message(
