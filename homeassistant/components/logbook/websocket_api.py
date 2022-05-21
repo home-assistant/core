@@ -15,11 +15,16 @@ from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 import homeassistant.util.dt as dt_util
 
-from .helpers import async_determine_event_types
+from .helpers import (
+    async_determine_event_types,
+    async_filter_entities,
+    is_state_filtered,
+)
 from .models import async_event_to_row
 from .processor import EventProcessor
 
@@ -115,6 +120,8 @@ async def ws_event_stream(
 
     device_ids = msg.get("device_ids")
     entity_ids = msg.get("entity_ids")
+    if entity_ids:
+        entity_ids = async_filter_entities(hass, entity_ids)
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
 
     event_processor = EventProcessor(
@@ -129,10 +136,19 @@ async def ws_event_stream(
 
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
     subscriptions: list[CALLBACK_TYPE] = []
+    ent_reg = er.async_get(hass)
 
     @callback
     def _forward_events(event: Event) -> None:
         stream_queue.put_nowait(event)
+
+    @callback
+    def _forward_state_events_filtered(event: Event) -> None:
+        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+            return
+        state: State = event.data["new_state"]
+        if not is_state_filtered(ent_reg, state):
+            stream_queue.put_nowait(event)
 
     for event_type in event_types:
         subscriptions.append(
@@ -140,13 +156,17 @@ async def ws_event_stream(
         )
     if entity_ids:
         subscriptions.append(
-            async_track_state_change_event(hass, entity_ids, _forward_events)
+            async_track_state_change_event(
+                hass, entity_ids, _forward_state_events_filtered
+            )
         )
     else:
         # We want the firehose
         subscriptions.append(
             hass.bus.async_listen(
-                EVENT_STATE_CHANGED, _forward_events, run_immediately=True
+                EVENT_STATE_CHANGED,
+                _forward_state_events_filtered,
+                run_immediately=True,
             )
         )
 
@@ -219,6 +239,13 @@ async def ws_get_events(
     device_ids = msg.get("device_ids")
     entity_ids = msg.get("entity_ids")
     context_id = msg.get("context_id")
+    if entity_ids:
+        entity_ids = async_filter_entities(hass, entity_ids)
+        if not entity_ids and not device_ids:
+            # Everything has been filtered away
+            connection.send_result(msg["id"], [])
+            return
+
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
 
     event_processor = EventProcessor(
