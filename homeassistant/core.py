@@ -716,7 +716,7 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=False, weakref_slot=True)
+@attr.s(slots=True, frozen=False)
 class Context:
     """The context that triggered something."""
 
