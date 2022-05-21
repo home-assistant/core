@@ -76,7 +76,7 @@ def _ws_formatted_get_events(
     return JSON_DUMP(result), last_time
 
 
-async def async_stream_events(
+async def _async_events_consumer(
     setup_complete_future: asyncio.Future[dt],
     connection: ActiveConnection,
     msg_id: int,
@@ -217,11 +217,10 @@ async def ws_event_stream(
     )
 
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
-    task: asyncio.Task | None = None
     subscriptions: list[CALLBACK_TYPE] = []
     setup_complete_future: asyncio.Future[dt] = asyncio.Future()
     task = asyncio.create_task(
-        async_stream_events(
+        _async_events_consumer(
             setup_complete_future,
             connection,
             msg["id"],
@@ -234,6 +233,7 @@ async def ws_event_stream(
         """Unsubscribe from all events."""
         for subscription in subscriptions:
             subscription()
+        subscriptions.clear()
         if task:
             task.cancel()
 

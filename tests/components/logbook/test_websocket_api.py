@@ -9,6 +9,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook import websocket_api
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
@@ -1031,4 +1032,56 @@ async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_client):
+    """Test we unsubscribe if the stream consumer fails or is canceled."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    await async_wait_recording_done(hass)
+    init_count = sum(hass.bus.async_listeners().values())
+    hass.states.async_set("light.small", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+
+    after_ws_created_count = sum(hass.bus.async_listeners().values())
+
+    with patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5), patch.object(
+        websocket_api, "_async_events_consumer"
+    ):
+        await websocket_client.send_json(
+            {
+                "id": 7,
+                "type": "logbook/event_stream",
+                "start_time": now.isoformat(),
+                "entity_ids": ["light.small", "binary_sensor.is_light"],
+            }
+        )
+        await async_wait_recording_done(hass)
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert sum(hass.bus.async_listeners().values()) != init_count
+    for _ in range(5):
+        hass.states.async_set("binary_sensor.is_light", STATE_ON)
+        hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    await async_wait_recording_done(hass)
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == after_ws_created_count
+    await websocket_client.close()
     assert sum(hass.bus.async_listeners().values()) == init_count
