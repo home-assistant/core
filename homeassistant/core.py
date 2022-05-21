@@ -876,9 +876,10 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        if not event.context.origin_event:
-            event.context.origin_event = event
-            self._context_origin.setdefault(event.context.id, event.context)
+        context = event.context
+        if not context.origin_event:
+            context.origin_event = event
+            self._context_origin[context.id] = context
 
         _LOGGER.debug("Bus:Handling %s", event)
 
