@@ -51,11 +51,13 @@ def convert_and_round(
     precision: int,
 ) -> float | None:
     """Safely convert and round a value from ValueWithUnit."""
-    if state.value is None:
-        return None
-    return round(
-        converter(state.value, UNIT_MAP.get(state.unit, state.unit)), precision
-    )
+    if state.value and state.unit:
+        return round(
+            converter(state.value, UNIT_MAP.get(state.unit, state.unit)), precision
+        )
+    if state.value:
+        return state.value
+    return None
 
 
 SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {

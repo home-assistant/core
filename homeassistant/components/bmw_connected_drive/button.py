@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
@@ -28,7 +28,9 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
     enabled_when_read_only: bool = False
-    remote_function: Callable[[MyBMWVehicle], RemoteServiceStatus] | None = None
+    remote_function: Callable[
+        [MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]
+    ] | None = None
     account_function: Callable[[BMWDataUpdateCoordinator], Coroutine] | None = None
 
 

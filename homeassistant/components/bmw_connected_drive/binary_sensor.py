@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
@@ -58,11 +58,11 @@ def _format_cbs_report(
     result[f"{service_type} status"] = report.state.value
     if report.due_date is not None:
         result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
-    if report.due_distance.value is not None:
+    if report.due_distance.value and report.due_distance.unit:
         distance = round(
             unit_system.length(
-                report.due_distance[0],
-                UNIT_MAP.get(report.due_distance[1], report.due_distance[1]),
+                report.due_distance.value,
+                UNIT_MAP.get(report.due_distance.unit, report.due_distance.unit),
             )
         )
         result[f"{service_type} distance"] = f"{distance} {unit_system.length_unit}"
@@ -127,7 +127,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:wrench",
         # device class problem: On means problem detected, Off means no problem
-        value_fn=lambda v: cast(bool, v.condition_based_services.is_service_required),
+        value_fn=lambda v: v.condition_based_services.is_service_required,
         attr_fn=_condition_based_services,
     ),
     BMWBinarySensorEntityDescription(
@@ -136,9 +136,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:car-tire-alert",
         # device class problem: On means problem detected, Off means no problem
-        value_fn=lambda v: cast(
-            bool, v.check_control_messages.has_check_control_messages
-        ),
+        value_fn=lambda v: v.check_control_messages.has_check_control_messages,
         attr_fn=lambda v, u: _check_control_messages(v),
     ),
     # electric
@@ -148,11 +146,9 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         icon="mdi:ev-station",
         # device class power: On means power detected, Off means no power
-        value_fn=lambda v: cast(
-            bool, v.fuel_and_battery.charging_status == ChargingState.CHARGING
-        ),
+        value_fn=lambda v: v.fuel_and_battery.charging_status == ChargingState.CHARGING,
         attr_fn=lambda v, u: {
-            "charging_status": v.fuel_and_battery.charging_status.value,
+            "charging_status": str(v.fuel_and_battery.charging_status),
         },
     ),
     BMWBinarySensorEntityDescription(
@@ -160,7 +156,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         name="Connection status",
         device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-electric",
-        value_fn=lambda v: cast(bool, v.fuel_and_battery.is_charger_connected),
+        value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
     ),
 )
 
