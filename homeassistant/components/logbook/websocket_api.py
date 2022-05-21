@@ -14,7 +14,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import JSON_DUMP
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, EVENT_STATE_CHANGED
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
@@ -137,10 +137,26 @@ async def ws_event_stream(
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
     subscriptions: list[CALLBACK_TYPE] = []
     ent_reg = er.async_get(hass)
+    if entity_ids or device_ids:
+        entity_ids_set = set(entity_ids) if entity_ids else set()
+        device_ids_set = set(device_ids) if device_ids else set()
 
-    @callback
-    def _forward_events(event: Event) -> None:
-        stream_queue.put_nowait(event)
+        @callback
+        def _forward_events_filtered(event: Event) -> None:
+            event_data = event.data
+            if (
+                entity_ids_set and event_data.get(ATTR_ENTITY_ID) in entity_ids_set
+            ) or (device_ids_set and event_data.get(ATTR_DEVICE_ID) in device_ids_set):
+                stream_queue.put_nowait(event)
+
+        event_forwarder = _forward_events_filtered
+    else:
+
+        @callback
+        def _forward_events(event: Event) -> None:
+            stream_queue.put_nowait(event)
+
+        event_forwarder = _forward_events
 
     @callback
     def _forward_state_events_filtered(event: Event) -> None:
@@ -152,8 +168,9 @@ async def ws_event_stream(
 
     for event_type in event_types:
         subscriptions.append(
-            hass.bus.async_listen(event_type, _forward_events, run_immediately=True)
+            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
         )
+
     if entity_ids:
         subscriptions.append(
             async_track_state_change_event(
