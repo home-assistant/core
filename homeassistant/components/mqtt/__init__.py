@@ -193,6 +193,7 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         vol.Optional(Platform.ALARM_CONTROL_PANEL.value): cv.ensure_list,
         vol.Optional(Platform.BUTTON.value): cv.ensure_list,
         vol.Optional(Platform.FAN.value): cv.ensure_list,
+        vol.Optional(Platform.HUMIDIFIER.value): cv.ensure_list,
         vol.Optional(Platform.LIGHT.value): cv.ensure_list,
     }
 )
