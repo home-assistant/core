@@ -135,7 +135,28 @@ async def ws_event_stream(
     )
 
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
+    task: asyncio.Task
     subscriptions: list[CALLBACK_TYPE] = []
+
+    def _unsub() -> None:
+        """Unsubscribe from all events."""
+        for subscription in subscriptions:
+            subscription()
+        task.cancel()
+
+    @callback
+    def _queue_or_cancel(event: Event) -> None:
+        """Queue an event to be processed or cancel."""
+        nonlocal task
+        try:
+            stream_queue.put_nowait(event)
+        except asyncio.QueueFull:
+            _LOGGER.debug(
+                "Client exceeded max pending messages of %s (likely disconnected without unsubscribe)",
+                MAX_PENDING_LOGBOOK_EVENTS,
+            )
+            _unsub()
+
     ent_reg = er.async_get(hass)
     if entity_ids or device_ids:
         entity_ids_set = set(entity_ids) if entity_ids else set()
@@ -147,16 +168,21 @@ async def ws_event_stream(
             if (
                 entity_ids_set and event_data.get(ATTR_ENTITY_ID) in entity_ids_set
             ) or (device_ids_set and event_data.get(ATTR_DEVICE_ID) in device_ids_set):
-                stream_queue.put_nowait(event)
+                _queue_or_cancel(event)
 
         event_forwarder = _forward_events_filtered
     else:
 
         @callback
         def _forward_events(event: Event) -> None:
-            stream_queue.put_nowait(event)
+            _queue_or_cancel(event)
 
         event_forwarder = _forward_events
+
+    for event_type in event_types:
+        subscriptions.append(
+            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
+        )
 
     @callback
     def _forward_state_events_filtered(event: Event) -> None:
@@ -164,12 +190,7 @@ async def ws_event_stream(
             return
         state: State = event.data["new_state"]
         if not is_state_filtered(ent_reg, state):
-            stream_queue.put_nowait(event)
-
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
+            _queue_or_cancel(event)
 
     if entity_ids:
         subscriptions.append(
@@ -204,12 +225,6 @@ async def ws_event_stream(
             last_time or start_time,
         )
     )
-
-    def _unsub() -> None:
-        """Unsubscribe from all events."""
-        for subscription in subscriptions:
-            subscription()
-        task.cancel()
 
     connection.subscriptions[msg["id"]] = _unsub
     connection.send_result(msg["id"])
