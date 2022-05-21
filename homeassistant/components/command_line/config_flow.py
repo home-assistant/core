@@ -45,18 +45,6 @@ class CommandLineConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return CommandLineOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        self._async_abort_entries_match(config)
-
-        if config:
-            self.data = {
-                CONF_NAME: config[CONF_NAME],
-                CONF_PLATFORM: config[CONF_PLATFORM],
-            }
-        return await self.async_step_final(user_input=config)
-
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
@@ -136,14 +124,13 @@ class CommandLineOptionsFlowHandler(OptionsFlow):
 
         platform = self.entry.options[CONF_PLATFORM]
         schema = PLATFORM_TO_DATA_SCHEMA[platform].schema
-        schema_dict = schema.items()
         opt_data_schema = vol.Schema(
             {
                 vol.Optional(
                     key.schema,
                     description={"suggested_value": self.entry.options.get(key.schema)},
                 ): value
-                for key, value in schema_dict
+                for key, value in schema.items()
                 if key.schema not in (CONF_NAME, CONF_PLATFORM)
             }
         )

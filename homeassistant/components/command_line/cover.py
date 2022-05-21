@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
@@ -16,18 +16,17 @@ from homeassistant.const import (
     CONF_COVERS,
     CONF_FRIENDLY_NAME,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .util import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,42 +57,35 @@ async def async_setup_platform(
 ) -> None:
     """Set up cover controlled by shell commands."""
 
-    _LOGGER.warning(
-        # Command Line config flow added in 2022.6 and should be removed in 2022.8
-        "Configuration of the Command Line Cover platform in YAML is deprecated and "
-        "will be removed in Home Assistant 2022.8; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     devices: dict[str, Any] = config.get(CONF_COVERS, {})
-
-    if devices == {}:
-        _LOGGER.error("No covers to import")
-        return
+    covers = []
 
     for device_name, device_config in devices.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
-            template_value: str = value_template.template
-        new_config = {
-            CONF_NAME: device_config.get(CONF_FRIENDLY_NAME, device_name),
-            CONF_COMMAND_OPEN: device_config[CONF_COMMAND_OPEN],
-            CONF_COMMAND_CLOSE: device_config[CONF_COMMAND_CLOSE],
-            CONF_COMMAND_STOP: device_config[CONF_COMMAND_STOP],
-            CONF_COMMAND_STATE: device_config.get(CONF_COMMAND_STATE),
-            CONF_VALUE_TEMPLATE: template_value if value_template else None,
-            CONF_COMMAND_TIMEOUT: device_config[CONF_COMMAND_TIMEOUT],
-            CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
-            CONF_PLATFORM: Platform.COVER,
-        }
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=new_config,
+            value_template.hass = hass
+
+        covers.append(
+            CommandCover(
+                device_config.get(CONF_FRIENDLY_NAME, device_name),
+                device_config[CONF_COMMAND_OPEN],
+                device_config[CONF_COMMAND_CLOSE],
+                device_config[CONF_COMMAND_STOP],
+                device_config.get(CONF_COMMAND_STATE),
+                value_template,
+                device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_UNIQUE_ID),
+                None,
             )
         )
+
+    if not covers:
+        _LOGGER.error("No covers added")
+        return
+
+    async_add_entities(covers)
 
 
 async def async_setup_entry(
@@ -143,7 +135,7 @@ class CommandCover(CoverEntity):
         value_template: Template | None,
         timeout: int,
         unique_id: str | None,
-        entry_id: str,
+        entry_id: str | None,
     ) -> None:
         """Initialize the cover."""
         self._attr_name = name

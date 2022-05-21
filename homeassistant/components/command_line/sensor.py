@@ -9,25 +9,24 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .util import check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,28 +57,27 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
-    _LOGGER.warning(
-        # Command Line config flow added in 2022.6 and should be removed in 2022.8
-        "Configuration of the Command Line Sensor platform in YAML is deprecated"
-        "and will be removed in Home Assistant 2022.8; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
 
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    name: str = config[CONF_NAME]
+    command: str = config[CONF_COMMAND]
+    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    if value_template is not None:
+        value_template.hass = hass
+    json_attributes: list[str] | None = config.get(CONF_JSON_ATTRIBUTES)
+    data = CommandSensorData(hass, command, command_timeout)
 
-    new_config = {
-        **config,
-        CONF_VALUE_TEMPLATE: value_template.template if value_template else None,
-        CONF_PLATFORM: Platform.SENSOR,
-    }
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=new_config,
-        )
+    async_add_entities(
+        [
+            CommandSensor(
+                data, name, unit, value_template, json_attributes, unique_id, None
+            )
+        ],
+        True,
     )
 
 
@@ -128,7 +126,7 @@ class CommandSensor(SensorEntity):
         value_template: Template | None,
         json_attributes: list[str] | None,
         unique_id: str | None,
-        entry_id: str,
+        entry_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self.data = data

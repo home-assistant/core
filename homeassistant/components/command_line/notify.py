@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -33,10 +32,12 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
-    if TYPE_CHECKING:
-        assert discovery_info
-    command: str = discovery_info[CONF_COMMAND]
-    timeout: int = discovery_info[CONF_COMMAND_TIMEOUT]
+    if discovery_info:
+        command: str = discovery_info[CONF_COMMAND]
+        timeout: int = discovery_info[CONF_COMMAND_TIMEOUT]
+    if config:
+        command = config[CONF_COMMAND]
+        timeout = config[CONF_COMMAND_TIMEOUT]
 
     return CommandLineNotificationService(command, timeout)
 

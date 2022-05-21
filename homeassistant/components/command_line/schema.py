@@ -55,7 +55,7 @@ DATA_SCHEMA_COMMON = vol.Schema(
         vol.Required(CONF_PLATFORM): SelectSelector(
             SelectSelectorConfig(options=SELECT_PLATFORMS, mode=SelectSelectorMode.LIST)
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     }
 )
 

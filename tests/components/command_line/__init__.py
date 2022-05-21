@@ -30,6 +30,18 @@ from tests.common import MockConfigEntry
 
 
 async def setup_test_entity(
+    hass: HomeAssistant, domain: str, config_dict: dict[str, Any]
+) -> None:
+    """Set up a test command line binary_sensor entity."""
+    assert await setup.async_setup_component(
+        hass,
+        domain,
+        {domain: {"platform": "command_line", "name": "Test", **config_dict}},
+    )
+    await hass.async_block_till_done()
+
+
+async def setup_test_entity_entry(
     hass: HomeAssistant, config_dict: dict[str, Any], source: str = SOURCE_USER
 ) -> ConfigEntry:
     """Set up a test command line binary_sensor entity."""
@@ -45,31 +57,6 @@ async def setup_test_entity(
     await hass.async_block_till_done()
 
     return config_entry
-
-
-async def setup_test_entities(
-    hass: HomeAssistant, config_dict: dict[str, Any]
-) -> ConfigEntry:
-    """Set up a test command line sensor entity."""
-    await setup.async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "template",
-                    "sensors": {
-                        "template_sensor": {
-                            "value_template": "template_value",
-                        }
-                    },
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    entry = await setup_test_entity(hass, config_dict)
-    return entry
 
 
 ENTRY_CONFIG_SENSOR = {

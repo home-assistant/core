@@ -5,12 +5,12 @@ from homeassistant.components.command_line.const import CONF_COMMAND_TIMEOUT
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 
-from . import setup_test_entity
+from . import setup_test_entity_entry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry."""
-    await setup_test_entity(
+    await setup_test_entity_entry(
         hass,
         {
             CONF_PLATFORM: "sensor",
@@ -26,7 +26,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 async def test_remove_entry(hass: HomeAssistant) -> None:
     """Test remove entry."""
-    entry = await setup_test_entity(
+    entry = await setup_test_entity_entry(
         hass,
         {
             CONF_PLATFORM: "sensor",

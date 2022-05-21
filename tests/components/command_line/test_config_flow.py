@@ -1,30 +1,15 @@
 """The tests for the Command line Config Flow."""
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
-
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.command_line.const import CONF_COMMAND_TIMEOUT, DOMAIN
-from homeassistant.components.command_line.schema import CONF_JSON_ATTRIBUTES
 from homeassistant.const import CONF_COMMAND, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from . import (
-    CONFIG_IMPORT_BINARY_SENSOR,
-    CONFIG_IMPORT_COVER,
-    CONFIG_IMPORT_NOTIFY,
-    CONFIG_IMPORT_SENSOR,
-    CONFIG_IMPORT_SWITCH,
-    ENTRY_CONFIG_SENSOR,
-)
+from . import ENTRY_CONFIG_SENSOR
 
 from tests.common import MockConfigEntry
 
@@ -76,79 +61,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "json_attributes": None,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    "config_import,result_dict",
-    [
-        (
-            {**CONFIG_IMPORT_SENSOR, CONF_PLATFORM: "sensor"},
-            {
-                **CONFIG_IMPORT_SENSOR,
-                CONF_PLATFORM: "sensor",
-                CONF_JSON_ATTRIBUTES: None,
-            },
-        ),
-        (
-            {**CONFIG_IMPORT_BINARY_SENSOR, CONF_PLATFORM: "binary_sensor"},
-            {**CONFIG_IMPORT_BINARY_SENSOR, CONF_PLATFORM: "binary_sensor"},
-        ),
-        (
-            {**CONFIG_IMPORT_COVER, CONF_PLATFORM: "cover"},
-            {**CONFIG_IMPORT_COVER, CONF_PLATFORM: "cover"},
-        ),
-        (
-            {**CONFIG_IMPORT_SWITCH, CONF_PLATFORM: "switch"},
-            {**CONFIG_IMPORT_SWITCH, CONF_PLATFORM: "switch"},
-        ),
-        (
-            {**CONFIG_IMPORT_NOTIFY, CONF_PLATFORM: "notify"},
-            {**CONFIG_IMPORT_NOTIFY, CONF_PLATFORM: "notify"},
-        ),
-    ],
-)
-async def test_import_flow_success(
-    hass: HomeAssistant, config_import: dict[str, Any], result_dict: dict[str, Any]
-) -> None:
-    """Test a successful import of yaml."""
-
-    with patch(
-        "homeassistant.components.command_line.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config_import,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Command Line Test"
-    assert result2["options"] == result_dict
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
-    """Test import of yaml already exist."""
-
-    MockConfigEntry(domain=DOMAIN, data={}, options=CONFIG_IMPORT_SENSOR).add_to_hass(
-        hass
-    )
-
-    with patch(
-        "homeassistant.components.command_line.async_setup_entry",
-        return_value=True,
-    ):
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=CONFIG_IMPORT_SENSOR,
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == RESULT_TYPE_ABORT
-    assert result3["reason"] == "already_configured"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
