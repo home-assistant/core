@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from types import MappingProxyType
 
 import async_timeout
 from bimmer_connected.account import MyBMWAccount
@@ -55,16 +56,22 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(15):
                 await self.account.get_vehicles()
         except HTTPError as err:
+            self._update_config_entry_refresh_token(None)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         if self.account.refresh_token != old_refresh_token:
-            self.hass.config_entries.async_update_entry(
-                self._entry,
-                data={
-                    **self._entry.data,
-                    CONF_REFRESH_TOKEN: self.account.refresh_token,
-                },
-            )
+            self._update_config_entry_refresh_token(self.account.refresh_token)
+
+    def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
+        """Update or delete the refresh_token in the Config Entry."""
+        data = {
+            **self._entry.data,
+            CONF_REFRESH_TOKEN: refresh_token,
+        }
+        if not refresh_token:
+            data.pop(CONF_REFRESH_TOKEN)
+        self._entry.data = MappingProxyType(data)
+        self.hass.config_entries._async_schedule_save()  # pylint: disable=protected-access
 
     def notify_listeners(self) -> None:
         """Notify all listeners to refresh HA state machine."""
