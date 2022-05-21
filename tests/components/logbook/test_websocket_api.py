@@ -1081,7 +1081,8 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
         hass.states.async_set("binary_sensor.is_light", STATE_OFF)
     await async_wait_recording_done(hass)
 
-    # Check our listener got unsubscribed
+    # Check our listener got unsubscribed because
+    # the queue got full and the overload safety tripped
     assert sum(hass.bus.async_listeners().values()) == after_ws_created_count
     await websocket_client.close()
     assert sum(hass.bus.async_listeners().values()) == init_count
