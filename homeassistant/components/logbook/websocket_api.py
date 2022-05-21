@@ -228,10 +228,11 @@ async def ws_event_stream(
 
     connection.subscriptions[msg["id"]] = _unsub
     connection.send_result(msg["id"])
-    if last_time:
-        # If there is not last_time there are not historical
-        # results and there nothing to send
-        connection.send_message(message)
+    # If there is not last_time there are not historical
+    # results, but we still send an empty message so
+    # consumers of the api know their request was
+    # answered but there were no results
+    connection.send_message(message)
 
 
 @websocket_api.websocket_command(
