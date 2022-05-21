@@ -13,12 +13,18 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
-from .const import ATTR_COORDINATOR, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
+from .const import (
+    ATTR_COORDINATOR,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -49,11 +55,32 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         value=lambda value: percentage.ordered_list_item_to_percentage(
             [1, 2, 3, 4], value
         ),
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
+        exists_fn=lambda device: device.device_type
+        in [ATTR_DEVICE_DOOR_SENSOR, ATTR_DEVICE_TH_SENSOR, ATTR_DEVICE_MOTION_SENSOR],
+    ),
+    YoLinkSensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        name="Humidity",
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
+    ),
+    YoLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
 )
 
-SENSOR_DEVICE_TYPE = [ATTR_DEVICE_DOOR_SENSOR]
+SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
+]
 
 
 async def async_setup_entry(

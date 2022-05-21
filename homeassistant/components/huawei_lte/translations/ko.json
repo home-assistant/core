@@ -31,7 +31,8 @@
             "init": {
                 "data": {
                     "name": "\uc54c\ub9bc \uc11c\ube44\uc2a4 \uc774\ub984 (\ubcc0\uacbd \uc2dc \ub2e4\uc2dc \uc2dc\uc791\ud574\uc57c \ud568)",
-                    "recipient": "SMS \uc54c\ub9bc \uc218\uc2e0\uc790"
+                    "recipient": "SMS \uc54c\ub9bc \uc218\uc2e0\uc790",
+                    "track_wired_clients": "\uc720\uc120 \ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ucd94\uc801"
                 }
             }
         }

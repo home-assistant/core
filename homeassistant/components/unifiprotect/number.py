@@ -149,6 +149,20 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
 )
 
+CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
+    ProtectNumberEntityDescription(
+        key="volume",
+        name="Volume",
+        icon="mdi:speaker",
+        entity_category=EntityCategory.CONFIG,
+        ufp_min=0,
+        ufp_max=100,
+        ufp_step=1,
+        ufp_value="volume",
+        ufp_set_method="set_volume",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -164,6 +178,7 @@ async def async_setup_entry(
         light_descs=LIGHT_NUMBERS,
         sense_descs=SENSE_NUMBERS,
         lock_descs=DOORLOCK_NUMBERS,
+        chime_descs=CHIME_NUMBERS,
     )
 
     async_add_entities(entities)

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd.",
+            "already_configured": "Locatie is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "max_regions": "Er kunnen maximaal 5 regio's worden geconfigureerd",
             "rate_limit": "Te veel verzoeken",
@@ -11,13 +11,13 @@
         "step": {
             "community": {
                 "data": {
-                    "region": "[%key:component::ukraine_alarm::config::step::state::data::region%]"
+                    "region": "Regio"
                 },
                 "description": "Als u niet alleen de staat en het district wilt volgen, kiest u de specifieke gemeenschap ervan"
             },
             "district": {
                 "data": {
-                    "region": "[%key:component::ukraine_alarm::config::step::state::data::region%]"
+                    "region": "Regio"
                 },
                 "description": "Als u niet alleen de staat wilt controleren, kies dan het specifieke district"
             },
