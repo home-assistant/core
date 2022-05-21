@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "not_xiaomi_aqara": "Geen Xiaomi Aqara Gateway, ontdekt apparaat kwam niet overeen met bekende gateways"
         },
         "error": {
