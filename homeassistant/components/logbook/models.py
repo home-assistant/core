@@ -9,7 +9,7 @@ from typing import Any, cast
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
-from homeassistant.core import Event, State, callback
+from homeassistant.core import Context, Event, State, callback
 
 
 class LazyEventPartialState:
@@ -62,6 +62,7 @@ class EventAsRow:
     """Convert an event to a row."""
 
     event_data: dict[str, Any]
+    context: Context
     context_id: str
     time_fired: dt
     event_id: int
@@ -83,6 +84,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
     if event.event_type != EVENT_STATE_CHANGED:
         return EventAsRow(
             event_data=event.data,
+            context=event.context,
             event_type=event.event_type,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -95,6 +97,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
     new_state: State = event.data["new_state"]
     return EventAsRow(
         event_data=event.data,
+        context=event.context,
         entity_id=new_state.entity_id,
         state=new_state.state,
         context_id=new_state.context.id,
