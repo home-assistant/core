@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import frontend, websocket_api
+from homeassistant.components import frontend
 from homeassistant.components.recorder.filters import (
     sqlalchemy_filter_from_include_exclude_conf,
 )
@@ -28,6 +28,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import rest_api, websocket_api
 from .const import (
     ATTR_MESSAGE,
     DOMAIN,
@@ -38,8 +39,6 @@ from .const import (
     LOGBOOK_ENTRY_NAME,
     LOGBOOK_FILTERS,
 )
-from .rest_api import LogbookView
-from .websocket_api import ws_event_stream, ws_get_events
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
@@ -123,10 +122,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entities_filter = None
     hass.data[LOGBOOK_FILTERS] = filters
     hass.data[LOGBOOK_ENTITIES_FILTER] = entities_filter
-    hass.http.register_view(LogbookView(conf, filters, entities_filter))
-    websocket_api.async_register_command(hass, ws_get_events)
-    websocket_api.async_register_command(hass, ws_event_stream)
-
+    websocket_api.async_setup(hass)
+    rest_api.async_setup(hass, config, filters, entities_filter)
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
 
     await async_process_integration_platforms(hass, DOMAIN, _process_logbook_platform)

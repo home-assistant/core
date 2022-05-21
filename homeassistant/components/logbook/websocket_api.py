@@ -29,6 +29,13 @@ EVENT_COALESCE_TIME = 1
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the logbook websocket API."""
+    websocket_api.async_register_command(hass, ws_get_events)
+    websocket_api.async_register_command(hass, ws_event_stream)
+
+
 def _ws_formatted_get_events(
     msg_id: int,
     start_day: dt,

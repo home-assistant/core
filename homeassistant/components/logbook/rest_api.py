@@ -11,13 +11,26 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import EntityFilter
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .helpers import async_determine_event_types
 from .processor import EventProcessor
+
+
+@callback
+def async_setup(
+    hass: HomeAssistant,
+    conf: ConfigType,
+    filters: Filters | None,
+    entities_filter: EntityFilter | None,
+) -> None:
+    """Set up the logbook rest API."""
+    hass.http.register_view(LogbookView(conf, filters, entities_filter))
 
 
 class LogbookView(HomeAssistantView):
