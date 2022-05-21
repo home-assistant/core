@@ -3,7 +3,7 @@
   "name": "Somfy",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/somfy",
-  "dependencies": ["auth"],
+  "dependencies": ["application_credentials"],
   "codeowners": ["@tetienne"],
   "requirements": ["pymfy==0.11.0"],
   "zeroconf": [

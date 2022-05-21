@@ -5,6 +5,10 @@ import logging
 from pymfy.api.devices.category import Category
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -20,7 +24,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import api, config_flow
+from . import api
 from .const import COORDINATOR, DOMAIN
 from .coordinator import SomfyDataUpdateCoordinator
 
@@ -60,16 +64,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN][CONF_OPTIMISTIC] = domain_config.get(CONF_OPTIMISTIC, False)
 
     if CONF_CLIENT_ID in domain_config:
-        config_flow.SomfyFlowHandler.async_register_implementation(
+        await async_import_client_credential(
             hass,
-            config_entry_oauth2_flow.LocalOAuth2Implementation(
-                hass,
-                DOMAIN,
+            DOMAIN,
+            ClientCredential(
                 config[DOMAIN][CONF_CLIENT_ID],
                 config[DOMAIN][CONF_CLIENT_SECRET],
-                "https://accounts.somfy.com/oauth/oauth/v2/auth",
-                "https://accounts.somfy.com/oauth/oauth/v2/token",
             ),
+        )
+        _LOGGER.warning(
+            "Configuration of Somfy integration OAuth credentails in YAML is "
+            "deprecated and will be removed in a future release; Your existing "
+            "OAuth Application Credentials (client id and secret) have been "
+            "imported into the UI automatically and can be safely removed from "
+            "your configuration.yaml file"
         )
 
     return True
