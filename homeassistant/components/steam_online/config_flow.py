@@ -201,8 +201,8 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
     def get_accounts(self) -> list[dict[str, str | int]]:
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
-        friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
         try:
+            friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
             _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
         except steam.api.HTTPError:
             return []
