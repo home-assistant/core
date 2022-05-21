@@ -43,10 +43,12 @@ class LazyEventPartialState:
         self.context_id: str | None = self.row.context_id
         self.context_user_id: str | None = self.row.context_user_id
         self.context_parent_id: str | None = self.row.context_parent_id
-        if data := getattr(row, "event_data", None):
+        if data := getattr(row, "data", None):
+            # If its an EventAsRow we can avoid the whole
+            # json decode process as we already have the data
             self.data = data
             return
-        source: str = self.row.shared_data or self.row.event_data  # type: ignore[assignment]
+        source = cast(str, self.row.shared_data or self.row.event_data)
         if not source:
             self.data = {}
         elif event_data := self._event_data_cache.get(source):
@@ -61,11 +63,12 @@ class LazyEventPartialState:
 class EventAsRow:
     """Convert an event to a row."""
 
-    event_data: dict[str, Any]
+    data: dict[str, Any]
     context: Context
     context_id: str
     time_fired: dt
     state_id: int
+    event_data: str | None = None
     old_format_icon: None = None
     event_id: None = None
     entity_id: str | None = None
@@ -83,7 +86,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
     """Convert an event to a row."""
     if event.event_type != EVENT_STATE_CHANGED:
         return EventAsRow(
-            event_data=event.data,
+            data=event.data,
             context=event.context,
             event_type=event.event_type,
             context_id=event.context.id,
@@ -97,7 +100,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
     # since the logbook does not show these
     new_state: State = event.data["new_state"]
     return EventAsRow(
-        event_data=event.data,
+        data=event.data,
         context=event.context,
         entity_id=new_state.entity_id,
         state=new_state.state,
