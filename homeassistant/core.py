@@ -717,13 +717,14 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True, frozen=False, weakref_slot=True)
 class Context:
     """The context that triggered something."""
 
     user_id: str | None = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=ulid_util.ulid)
+    origin_event: Event | None = attr.ib(default=None)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -744,7 +745,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
@@ -815,12 +816,14 @@ class EventBus:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
-        self._context_origin: WeakValueDictionary[str, Event] = WeakValueDictionary()
+        self._context_origin: WeakValueDictionary[str, Context] = WeakValueDictionary()
 
     @callback
     def context_origin(self, context_id: str) -> Event | None:
         """Get the origin of an event by context."""
-        return self._context_origin.get(context_id)
+        if context := self._context_origin.get(context_id):
+            return context.origin_event
+        return None
 
     @callback
     def async_listeners(self) -> dict[str, int]:
@@ -873,11 +876,9 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        if context:
-            self._context_origin.setdefault(event.context.id, event)
-        else:
-            # Brand new, no need to check
-            self._context_origin[event.context.id] = event
+        if not event.context.origin_event:
+            event.context.origin_event = event
+            self._context_origin.setdefault(event.context.id, event.context)
 
         _LOGGER.debug("Bus:Handling %s", event)
 
