@@ -8,14 +8,13 @@ from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException
 from oauth2client.client import Credentials
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import (
     DEVICE_AUTH_CREDS,
-    ApiAuthImpl,
+    AccessTokenAuthImpl,
     DeviceAuth,
     DeviceFlow,
     OAuthError,
@@ -136,13 +135,10 @@ class OAuth2FlowHandler(
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        # Create a placeholder ConfigEntry to use since with the auth we've already created.
-        entry = ConfigEntry(version=1, domain=DOMAIN, title="", data=data, source="")
-        session = config_entry_oauth2_flow.OAuth2Session(
-            self.hass, entry, self.flow_impl
-        )
         calendar_service = GoogleCalendarService(
-            ApiAuthImpl(async_get_clientsession(self.hass), session)
+            AccessTokenAuthImpl(
+                async_get_clientsession(self.hass), data["token"]["access_token"]
+            )
         )
         try:
             primary_calendar = await calendar_service.async_get_calendar("primary")
