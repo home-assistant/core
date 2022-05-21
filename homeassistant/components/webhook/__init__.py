@@ -159,7 +159,7 @@ async def async_handle_webhook(
                 "Deprecation warning: "
                 "Webhook '%s' does not provide a value for local_only. "
                 "This webhook will be blocked after the 2022.8.0 release. "
-                "Use `local_only: true` to keep this webhook operating as-is",
+                "Use `local_only: false` to keep this webhook operating as-is",
                 webhook_id,
             )
 
