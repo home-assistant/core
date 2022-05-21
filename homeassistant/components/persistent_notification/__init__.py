@@ -11,8 +11,6 @@ from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-
-# quick and dirty hack to resolve circular import problem
 from homeassistant.helpers.entity_id import async_generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass

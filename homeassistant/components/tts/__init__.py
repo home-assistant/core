@@ -19,7 +19,7 @@ from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
