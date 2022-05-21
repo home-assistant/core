@@ -31,10 +31,10 @@ from typing import (
     NamedTuple,
     Optional,
     TypeVar,
+    Union,
     cast,
     overload,
 )
-from typing import Union  # pylint: disable=unused-import
 from urllib.parse import urlparse
 from weakref import WeakValueDictionary
 
@@ -407,11 +407,12 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        # This code path is performance sensitive and constructs the
-        # types as strings to avoid the overhead of constructing
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        target = cast("Callable[..., Union[Coroutine[Any, Any, _R], _R]]", target)
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -439,22 +440,25 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         task: asyncio.Future[_R]
-        # This code path is performance sensitive and constructs the
-        # types as strings to avoid the overhead of constructing
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Coroutinefunction:
-            hassjob.target = cast(
-                "Callable[..., Coroutine[Any, Any, _R]]", hassjob.target
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(
+                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
+                )
             task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
-            self.loop.call_soon(cast("Callable[..., _R]", hassjob.target), *args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(
-                None, cast("Callable[..., _R]", hassjob.target), *args
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         # If a task is scheduled
         if self._track_task:
@@ -532,12 +536,14 @@ class HomeAssistant:
         hassjob: HassJob
         args: parameters for method to call.
         """
-        # This code path is performance sensitive and constructs the
-        # types as strings to avoid the overhead of constructing
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Callback:
-            cast("Callable[..., _R]", hassjob.target)(*args)
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
@@ -579,14 +585,13 @@ class HomeAssistant:
         if asyncio.iscoroutine(target):
             return self.async_create_task(target)
 
-        # This code path is performance sensitive and constructs the
-        # types as strings to avoid the overhead of constructing
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        return self.async_run_hass_job(
-            HassJob(cast("Callable[..., Union[Coroutine[Any, Any, _R], _R]]", target)),
-            *args,
-        )
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+        return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
