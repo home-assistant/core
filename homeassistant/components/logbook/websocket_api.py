@@ -228,7 +228,10 @@ async def ws_event_stream(
 
     connection.subscriptions[msg["id"]] = _unsub
     connection.send_result(msg["id"])
-    connection.send_message(message)
+    if last_time:
+        # If there is not last_time there are not historical
+        # results and there nothing to send
+        connection.send_message(message)
 
 
 @websocket_api.websocket_command(

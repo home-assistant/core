@@ -38,6 +38,48 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
+async def _async_mock_device_with_logbook_platform(hass):
+    """Mock an integration that provides a device that are described by the logbook."""
+    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+    entry.add_to_hass(hass)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="device name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Game Room",
+    )
+
+    class MockLogbookPlatform:
+        """Mock a logbook platform."""
+
+        @core.callback
+        def async_describe_events(
+            hass: HomeAssistant,
+            async_describe_event: Callable[
+                [str, str, Callable[[Event], dict[str, str]]], None
+            ],
+        ) -> None:
+            """Describe logbook events."""
+
+            @core.callback
+            def async_describe_test_event(event: Event) -> dict[str, str]:
+                """Describe mock logbook event."""
+                return {
+                    "name": "device name",
+                    "message": "is on fire",
+                }
+
+            async_describe_event("test", "mock_event", async_describe_test_event)
+
+    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    return device
+
+
 async def test_get_events(hass, hass_ws_client, recorder_mock):
     """Test logbook get_events."""
     now = dt_util.utcnow()
@@ -317,43 +359,7 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
         ]
     )
 
-    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
-    entry.add_to_hass(hass)
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
-        sw_version="sw-version",
-        name="device name",
-        manufacturer="manufacturer",
-        model="model",
-        suggested_area="Game Room",
-    )
-
-    class MockLogbookPlatform:
-        """Mock a logbook platform."""
-
-        @core.callback
-        def async_describe_events(
-            hass: HomeAssistant,
-            async_describe_event: Callable[
-                [str, str, Callable[[Event], dict[str, str]]], None
-            ],
-        ) -> None:
-            """Describe logbook events."""
-
-            @core.callback
-            def async_describe_test_event(event: Event) -> dict[str, str]:
-                """Describe mock logbook event."""
-                return {
-                    "name": "device name",
-                    "message": "is on fire",
-                }
-
-            async_describe_event("test", "mock_event", async_describe_test_event)
-
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    device = await _async_mock_device_with_logbook_platform(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire("mock_event", {"device_id": device.id})
@@ -786,6 +792,62 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     hass.states.async_remove("light.alpha")
     hass.states.async_remove("light.small")
     await hass.async_block_till_done()
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_unsubscribe_logbook_stream_device(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test subscribe/unsubscribe logbook stream with a device."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    device = await _async_mock_device_with_logbook_platform(hass)
+
+    await hass.async_block_till_done()
+    init_count = sum(hass.bus.async_listeners().values())
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "device_ids": [device.id],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    hass.bus.async_fire("mock_event", {"device_id": device.id})
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY}
+    ]
 
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
