@@ -53,7 +53,6 @@ def _ws_formatted_get_events(
 
 
 async def async_stream_events(
-    hass: HomeAssistant,
     connection: ActiveConnection,
     msg_id: int,
     stream_queue: asyncio.Queue[Event],
@@ -160,7 +159,6 @@ async def ws_event_stream(
     )
     task = asyncio.create_task(
         async_stream_events(
-            hass,
             connection,
             msg["id"],
             stream_queue,
