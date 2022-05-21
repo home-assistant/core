@@ -78,7 +78,11 @@ async def test_webhook_post(
         "automation",
         {
             "automation": {
-                "trigger": {"platform": "webhook", "webhook_id": "post_webhook"},
+                "trigger": {
+                    "platform": "webhook",
+                    "webhook_id": "post_webhook",
+                    "local_only": True,
+                },
                 "action": {
                     "event": "test_success",
                     "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
