@@ -2,15 +2,10 @@
 from unittest.mock import MagicMock, patch
 
 from herepy.here_enum import RouteMode
-from herepy.routing_api import InvalidCredentialsError, NoRouteFoundError
+from herepy.routing_api import NoRouteFoundError
 import pytest
 
 from homeassistant.components.here_travel_time.const import (
-    ROUTE_MODE_FASTEST,
-    TRAFFIC_MODE_ENABLED,
-)
-from homeassistant.components.here_travel_time.sensor import (
-    ATTR_ATTRIBUTION,
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
     ATTR_DISTANCE,
@@ -19,16 +14,27 @@ from homeassistant.components.here_travel_time.sensor import (
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
-    CONF_MODE,
+    CONF_ARRIVAL_TIME,
+    CONF_DEPARTURE_TIME,
+    CONF_DESTINATION_ENTITY_ID,
+    CONF_DESTINATION_LATITUDE,
+    CONF_DESTINATION_LONGITUDE,
+    CONF_ORIGIN_ENTITY_ID,
+    CONF_ORIGIN_LATITUDE,
+    CONF_ORIGIN_LONGITUDE,
+    CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
     CONF_UNIT_SYSTEM,
+    DOMAIN,
     ICON_BICYCLE,
     ICON_CAR,
     ICON_PEDESTRIAN,
     ICON_PUBLIC,
     ICON_TRUCK,
     NO_ROUTE_ERROR_MESSAGE,
-    TIME_MINUTES,
+    ROUTE_MODE_FASTEST,
+    TRAFFIC_MODE_DISABLED,
+    TRAFFIC_MODE_ENABLED,
     TRAVEL_MODE_BICYCLE,
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PEDESTRIAN,
@@ -36,11 +42,20 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_TRUCK,
     TRAVEL_MODES_VEHICLE,
 )
-from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ICON,
+    CONF_API_KEY,
+    CONF_MODE,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.components.here_travel_time.const import (
+from .const import (
     API_KEY,
     CAR_DESTINATION_LATITUDE,
     CAR_DESTINATION_LONGITUDE,
@@ -48,21 +63,41 @@ from tests.components.here_travel_time.const import (
     CAR_ORIGIN_LONGITUDE,
 )
 
-DOMAIN = "sensor"
-
-PLATFORM = "here_travel_time"
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "mode,icon,traffic_mode,unit_system,expected_state,expected_distance,expected_duration_in_traffic",
+    "mode,icon,traffic_mode,unit_system,arrival_time,departure_time,expected_state,expected_distance,expected_duration_in_traffic",
     [
-        (TRAVEL_MODE_CAR, ICON_CAR, True, "metric", "31", 23.903, 31.016666666666666),
-        (TRAVEL_MODE_BICYCLE, ICON_BICYCLE, False, "metric", "30", 23.903, 30.05),
+        (
+            TRAVEL_MODE_CAR,
+            ICON_CAR,
+            TRAFFIC_MODE_ENABLED,
+            "metric",
+            None,
+            None,
+            "31",
+            23.903,
+            31.016666666666666,
+        ),
+        (
+            TRAVEL_MODE_BICYCLE,
+            ICON_BICYCLE,
+            TRAFFIC_MODE_DISABLED,
+            "metric",
+            None,
+            None,
+            "30",
+            23.903,
+            30.05,
+        ),
         (
             TRAVEL_MODE_PEDESTRIAN,
             ICON_PEDESTRIAN,
-            False,
+            TRAFFIC_MODE_DISABLED,
             "imperial",
+            None,
+            None,
             "30",
             14.852635608048994,
             30.05,
@@ -70,8 +105,10 @@ PLATFORM = "here_travel_time"
         (
             TRAVEL_MODE_PUBLIC_TIME_TABLE,
             ICON_PUBLIC,
-            False,
+            TRAFFIC_MODE_DISABLED,
             "imperial",
+            "08:00:00",
+            None,
             "30",
             14.852635608048994,
             30.05,
@@ -79,41 +116,52 @@ PLATFORM = "here_travel_time"
         (
             TRAVEL_MODE_TRUCK,
             ICON_TRUCK,
-            True,
+            TRAFFIC_MODE_ENABLED,
             "metric",
+            None,
+            "08:00:00",
             "31",
             23.903,
             31.016666666666666,
         ),
     ],
 )
+@pytest.mark.usefixtures("valid_response")
 async def test_sensor(
-    hass,
+    hass: HomeAssistant,
     mode,
     icon,
     traffic_mode,
     unit_system,
+    arrival_time,
+    departure_time,
     expected_state,
     expected_distance,
     expected_duration_in_traffic,
-    valid_response,
 ):
     """Test that sensor works."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "traffic_mode": traffic_mode,
-            "unit_system": unit_system,
-            "mode": mode,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: mode,
+            CONF_NAME: "test",
+        },
+        options={
+            CONF_TRAFFIC_MODE: traffic_mode,
+            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+            CONF_ARRIVAL_TIME: arrival_time,
+            CONF_DEPARTURE_TIME: departure_time,
+            CONF_UNIT_SYSTEM: unit_system,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -145,7 +193,9 @@ async def test_sensor(
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "22nd St NW"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Service Rd S"
     assert sensor.attributes.get(CONF_MODE) == mode
-    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is traffic_mode
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is (
+        traffic_mode == TRAFFIC_MODE_ENABLED
+    )
 
     assert sensor.attributes.get(ATTR_ICON) == icon
 
@@ -156,7 +206,63 @@ async def test_sensor(
         )
 
 
-async def test_entity_ids(hass, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_circular_ref(hass: HomeAssistant, caplog):
+    """Test that a circular ref is handled."""
+    hass.states.async_set(
+        "test.first",
+        "test.second",
+    )
+    hass.states.async_set("test.second", "test.first")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_ENTITY_ID: "test.first",
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "No coordinatnes found for test.first" in caplog.text
+
+
+@pytest.mark.usefixtures("empty_attribution_response")
+async def test_no_attribution(hass: HomeAssistant):
+    """Test that an empty attribution is handled."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test").attributes.get(ATTR_ATTRIBUTION) is None
+
+
+async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
     """Test that origin/destination supplied by entities works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -181,17 +287,19 @@ async def test_entity_ids(hass, valid_response: MagicMock):
                 "longitude": float(CAR_DESTINATION_LONGITUDE),
             },
         )
-        config = {
-            DOMAIN: {
-                "platform": PLATFORM,
-                "name": "test",
-                "origin_entity_id": "zone.origin",
-                "destination_entity_id": "device_tracker.test",
-                "api_key": API_KEY,
-                "mode": TRAVEL_MODE_TRUCK,
-            }
-        }
-        assert await async_setup_component(hass, DOMAIN, config)
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="0123456789",
+            data={
+                CONF_ORIGIN_ENTITY_ID: "zone.origin",
+                CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
+                CONF_API_KEY: API_KEY,
+                CONF_MODE: TRAVEL_MODE_TRUCK,
+                CONF_NAME: "test",
+            },
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -214,20 +322,23 @@ async def test_entity_ids(hass, valid_response: MagicMock):
         )
 
 
-async def test_destination_entity_not_found(hass, caplog, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
     """Test that a not existing destination_entity_id is caught."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_entity_id": "device_tracker.test",
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -236,20 +347,23 @@ async def test_destination_entity_not_found(hass, caplog, valid_response: MagicM
     assert "device_tracker.test are not valid coordinates" in caplog.text
 
 
-async def test_origin_entity_not_found(hass, caplog, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
     """Test that a not existing origin_entity_id is caught."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "device_tracker.test",
-            "destination_latitude": CAR_ORIGIN_LATITUDE,
-            "destination_longitude": CAR_ORIGIN_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_ENTITY_ID: "device_tracker.test",
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -258,26 +372,27 @@ async def test_origin_entity_not_found(hass, caplog, valid_response: MagicMock):
     assert "device_tracker.test are not valid coordinates" in caplog.text
 
 
-async def test_invalid_destination_entity_state(
-    hass, caplog, valid_response: MagicMock
-):
+@pytest.mark.usefixtures("valid_response")
+async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
     """Test that an invalid state of the destination_entity_id is caught."""
     hass.states.async_set(
         "device_tracker.test",
         "test_state",
     )
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_entity_id": "device_tracker.test",
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -286,24 +401,27 @@ async def test_invalid_destination_entity_state(
     assert "test_state are not valid coordinates" in caplog.text
 
 
-async def test_invalid_origin_entity_state(hass, caplog, valid_response: MagicMock):
+@pytest.mark.usefixtures("valid_response")
+async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
     """Test that an invalid state of the origin_entity_id is caught."""
     hass.states.async_set(
         "device_tracker.test",
         "test_state",
     )
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "device_tracker.test",
-            "destination_latitude": CAR_ORIGIN_LATITUDE,
-            "destination_longitude": CAR_ORIGIN_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_ENTITY_ID: "device_tracker.test",
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -312,27 +430,30 @@ async def test_invalid_origin_entity_state(hass, caplog, valid_response: MagicMo
     assert "test_state are not valid coordinates" in caplog.text
 
 
-async def test_route_not_found(hass, caplog):
+async def test_route_not_found(hass: HomeAssistant, caplog):
     """Test that route not found error is correctly handled."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-        }
-    }
     with patch(
-        "homeassistant.components.here_travel_time.sensor._are_valid_client_credentials",
-        return_value=True,
+        "homeassistant.components.here_travel_time.config_flow.validate_api_key",
+        return_value=None,
     ), patch(
         "herepy.RoutingApi.public_transport_timetable",
         side_effect=NoRouteFoundError,
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="0123456789",
+            data={
+                CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+                CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+                CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+                CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+                CONF_API_KEY: API_KEY,
+                CONF_MODE: TRAVEL_MODE_TRUCK,
+                CONF_NAME: "test",
+            },
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -340,113 +461,26 @@ async def test_route_not_found(hass, caplog):
         assert NO_ROUTE_ERROR_MESSAGE in caplog.text
 
 
-async def test_invalid_credentials(hass, caplog):
-    """Test that invalid credentials error is correctly handled."""
+@pytest.mark.usefixtures("valid_response")
+async def test_setup_platform(hass: HomeAssistant, caplog):
+    """Test that setup platform migration works."""
+    config = {
+        "sensor": {
+            "platform": DOMAIN,
+            "name": "test",
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_latitude": CAR_DESTINATION_LATITUDE,
+            "destination_longitude": CAR_DESTINATION_LONGITUDE,
+            "api_key": API_KEY,
+        }
+    }
     with patch(
-        "herepy.RoutingApi.public_transport_timetable",
-        side_effect=InvalidCredentialsError,
+        "homeassistant.components.here_travel_time.async_setup_entry", return_value=True
     ):
-        config = {
-            DOMAIN: {
-                "platform": PLATFORM,
-                "name": "test",
-                "origin_latitude": CAR_ORIGIN_LATITUDE,
-                "origin_longitude": CAR_ORIGIN_LONGITUDE,
-                "destination_latitude": CAR_DESTINATION_LATITUDE,
-                "destination_longitude": CAR_DESTINATION_LONGITUDE,
-                "api_key": API_KEY,
-            }
-        }
-        assert await async_setup_component(hass, DOMAIN, config)
+        await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
-        assert "Invalid credentials" in caplog.text
-
-
-async def test_arrival(hass, valid_response):
-    """Test that arrival works."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
-            "arrival": "01:00:00",
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    sensor = hass.states.get("sensor.test")
-    assert sensor.state == "30"
-
-
-async def test_departure(hass, valid_response):
-    """Test that departure works."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
-            "departure": "23:00:00",
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    sensor = hass.states.get("sensor.test")
-    assert sensor.state == "30"
-
-
-async def test_arrival_only_allowed_for_timetable(hass, caplog):
-    """Test that arrival is only allowed when mode is publicTransportTimeTable."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "arrival": "01:00:00",
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    assert "[arrival] is an invalid option" in caplog.text
-
-
-async def test_exclusive_arrival_and_departure(hass, caplog):
-    """Test that arrival and departure are exclusive."""
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_latitude": CAR_ORIGIN_LATITUDE,
-            "origin_longitude": CAR_ORIGIN_LONGITUDE,
-            "destination_latitude": CAR_DESTINATION_LATITUDE,
-            "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "arrival": "01:00:00",
-            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
-            "departure": "01:00:00",
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    assert "two or more values in the same group of exclusion" in caplog.text
+        assert (
+            "Your HERE travel time configuration has been imported into the UI"
+            in caplog.text
+        )
