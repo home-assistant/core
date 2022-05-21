@@ -91,27 +91,25 @@ async def _async_events_consumer(
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= subscriptions_setup_complete_time:
-            stream_queue.task_done()
-            continue
-        await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
-        while True:
-            try:
-                events.append(stream_queue.get_nowait())
-            except asyncio.QueueEmpty:
-                break
+        if events[0].time_fired > subscriptions_setup_complete_time:
+            await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
+            while True:
+                try:
+                    events.append(stream_queue.get_nowait())
+                except asyncio.QueueEmpty:
+                    break
 
-        if logbook_events := event_processor.humanify(
-            row for row in (async_event_to_row(e) for e in events) if row is not None
-        ):
-            connection.send_message(
-                JSON_DUMP(
-                    messages.event_message(
-                        msg_id,
-                        logbook_events,
+            if logbook_events := event_processor.humanify(
+                async_event_to_row(e) for e in events
+            ):
+                connection.send_message(
+                    JSON_DUMP(
+                        messages.event_message(
+                            msg_id,
+                            logbook_events,
+                        )
                     )
                 )
-            )
         stream_queue.task_done()
 
 
