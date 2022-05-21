@@ -40,7 +40,7 @@ def async_register(
     webhook_id: str,
     handler: Callable[[HomeAssistant, str, Request], Awaitable[Response | None]],
     *,
-    local_only: bool = False,
+    local_only: bool | None = False,
     allowed_methods: Iterable[str] | None = None,
 ) -> None:
     """Register a webhook."""
@@ -141,7 +141,7 @@ async def async_handle_webhook(
             return Response(status=HTTPStatus.OK)
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-    if webhook["local_only"] and not isinstance(request, MockRequest):
+    if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
         if TYPE_CHECKING:
             assert isinstance(request, Request)
             assert request.remote is not None
@@ -153,7 +153,15 @@ async def async_handle_webhook(
 
         if not network.is_local(remote):
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
-            return Response(status=HTTPStatus.OK)
+            if webhook["local_only"]:
+                return Response(status=HTTPStatus.OK)
+            _LOGGER.warning(
+                "Deprecation warning: "
+                "Webhook '%s' does not provide a value for local_only. "
+                "This webhook will be blocked after the 2022.8.0 release. "
+                "Use `local_only: true` to keep this webhook operating as-is",
+                webhook_id,
+            )
 
     try:
         response = await webhook["handler"](hass, webhook_id, request)

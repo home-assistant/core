@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from aiohttp import hdrs
 import voluptuous as vol
@@ -19,6 +20,8 @@ from . import (
     async_register,
     async_unregister,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ("webhook",)
 
@@ -75,7 +78,14 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
-    local_only = config.get(CONF_LOCAL_ONLY, True)
+    local_only = config.get(CONF_LOCAL_ONLY, None)
+    if local_only is None:
+        _LOGGER.warning(
+            "Deprecation warning: "
+            "Webhook '%s' does not provide a value for local_only. "
+            "The default value will be 'true' in the 2022.8.0 release",
+            webhook_id,
+        )
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
 
