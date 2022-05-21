@@ -174,11 +174,14 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
             }
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
+        error = None
         try:
             users = {
                 name["steamid"]: name["personaname"]
                 for name in await self.hass.async_add_executor_job(self.get_accounts)
             }
+            if not users:
+                error = {"base": "unauthorized"}
 
         except steam.api.HTTPTimeoutError:
             users = self.options[CONF_ACCOUNTS]
@@ -191,12 +194,17 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         }
         self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(options), errors=error
+        )
 
     def get_accounts(self) -> list[dict[str, str | int]]:
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
         friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
-        _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        try:
+            _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        except steam.api.HTTPError:
+            return []
         names = interface.GetPlayerSummaries(steamids=_users_str)
         return names["response"]["players"]["player"]
