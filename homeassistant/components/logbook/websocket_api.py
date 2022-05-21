@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 import logging
 from typing import Any
 
@@ -41,6 +41,25 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_event_stream)
 
 
+async def _async_get_ws_formatted_events(
+    hass: HomeAssistant,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt,
+    formatter: Callable[[int, Any], dict[str, Any]],
+    event_processor: EventProcessor,
+) -> tuple[str, dt | None]:
+    """Async wrapper around _ws_formatted_get_events."""
+    return await get_instance(hass).async_add_executor_job(
+        _ws_formatted_get_events,
+        msg_id,
+        start_time,
+        end_time,
+        formatter,
+        event_processor,
+    )
+
+
 def _ws_formatted_get_events(
     msg_id: int,
     start_day: dt,
@@ -57,21 +76,22 @@ def _ws_formatted_get_events(
     return JSON_DUMP(result), last_time
 
 
-async def async_stream_events(
+async def _async_events_consumer(
+    setup_complete_future: asyncio.Future[dt],
     connection: ActiveConnection,
     msg_id: int,
     stream_queue: asyncio.Queue[Event],
     event_processor: EventProcessor,
-    last_time_from_db: dt,
 ) -> None:
     """Stream events from the queue."""
+    subscriptions_setup_complete_time = await setup_complete_future
     event_processor.switch_to_live()
 
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= last_time_from_db:
+        if events[0].time_fired <= subscriptions_setup_complete_time:
             stream_queue.task_done()
             continue
         await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
@@ -93,6 +113,68 @@ async def async_stream_events(
                 )
             )
         stream_queue.task_done()
+
+
+@callback
+def _async_subscribe_events(
+    hass: HomeAssistant,
+    subscriptions: list[CALLBACK_TYPE],
+    target: Callable[[Event], None],
+    event_types: tuple[str, ...],
+    entity_ids: list[str] | None,
+    device_ids: list[str] | None,
+) -> None:
+    """Subscribe to events for the entities and devices or all."""
+    ent_reg = er.async_get(hass)
+    if entity_ids or device_ids:
+        entity_ids_set = set(entity_ids) if entity_ids else set()
+        device_ids_set = set(device_ids) if device_ids else set()
+
+        @callback
+        def _forward_events_filtered(event: Event) -> None:
+            event_data = event.data
+            if (
+                entity_ids_set and event_data.get(ATTR_ENTITY_ID) in entity_ids_set
+            ) or (device_ids_set and event_data.get(ATTR_DEVICE_ID) in device_ids_set):
+                target(event)
+
+        event_forwarder = _forward_events_filtered
+    else:
+
+        @callback
+        def _forward_events(event: Event) -> None:
+            target(event)
+
+        event_forwarder = _forward_events
+
+    for event_type in event_types:
+        subscriptions.append(
+            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
+        )
+
+    @callback
+    def _forward_state_events_filtered(event: Event) -> None:
+        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+            return
+        state: State = event.data["new_state"]
+        if not is_state_filtered(ent_reg, state):
+            target(event)
+
+    if entity_ids:
+        subscriptions.append(
+            async_track_state_change_event(
+                hass, entity_ids, _forward_state_events_filtered
+            )
+        )
+    else:
+        # We want the firehose
+        subscriptions.append(
+            hass.bus.async_listen(
+                EVENT_STATE_CHANGED,
+                _forward_state_events_filtered,
+                run_immediately=True,
+            )
+        )
 
 
 @websocket_api.websocket_command(
@@ -135,19 +217,29 @@ async def ws_event_stream(
     )
 
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
-    task: asyncio.Task
     subscriptions: list[CALLBACK_TYPE] = []
+    setup_complete_future: asyncio.Future[dt] = asyncio.Future()
+    task = asyncio.create_task(
+        _async_events_consumer(
+            setup_complete_future,
+            connection,
+            msg["id"],
+            stream_queue,
+            event_processor,
+        )
+    )
 
     def _unsub() -> None:
         """Unsubscribe from all events."""
         for subscription in subscriptions:
             subscription()
-        task.cancel()
+        subscriptions.clear()
+        if task:
+            task.cancel()
 
     @callback
     def _queue_or_cancel(event: Event) -> None:
         """Queue an event to be processed or cancel."""
-        nonlocal task
         try:
             stream_queue.put_nowait(event)
         except asyncio.QueueFull:
@@ -157,82 +249,52 @@ async def ws_event_stream(
             )
             _unsub()
 
-    ent_reg = er.async_get(hass)
-    if entity_ids or device_ids:
-        entity_ids_set = set(entity_ids) if entity_ids else set()
-        device_ids_set = set(device_ids) if device_ids else set()
+    _async_subscribe_events(
+        hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
+    )
+    subscriptions_setup_complete_time = dt_util.utcnow()
+    connection.subscriptions[msg["id"]] = _unsub
+    connection.send_result(msg["id"])
 
-        @callback
-        def _forward_events_filtered(event: Event) -> None:
-            event_data = event.data
-            if (
-                entity_ids_set and event_data.get(ATTR_ENTITY_ID) in entity_ids_set
-            ) or (device_ids_set and event_data.get(ATTR_DEVICE_ID) in device_ids_set):
-                _queue_or_cancel(event)
-
-        event_forwarder = _forward_events_filtered
-    else:
-
-        @callback
-        def _forward_events(event: Event) -> None:
-            _queue_or_cancel(event)
-
-        event_forwarder = _forward_events
-
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
-
-    @callback
-    def _forward_state_events_filtered(event: Event) -> None:
-        if event.data.get("old_state") is None or event.data.get("new_state") is None:
-            return
-        state: State = event.data["new_state"]
-        if not is_state_filtered(ent_reg, state):
-            _queue_or_cancel(event)
-
-    if entity_ids:
-        subscriptions.append(
-            async_track_state_change_event(
-                hass, entity_ids, _forward_state_events_filtered
-            )
-        )
-    else:
-        # We want the firehose
-        subscriptions.append(
-            hass.bus.async_listen(
-                EVENT_STATE_CHANGED,
-                _forward_state_events_filtered,
-                run_immediately=True,
-            )
-        )
-
-    message, last_time = await get_instance(hass).async_add_executor_job(
-        _ws_formatted_get_events,
+    # Fetch everything from history
+    message, last_event_time = await _async_get_ws_formatted_events(
+        hass,
         msg["id"],
         start_time,
-        utc_now,
+        subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,
     )
-    task = asyncio.create_task(
-        async_stream_events(
-            connection,
-            msg["id"],
-            stream_queue,
-            event_processor,
-            last_time or start_time,
-        )
-    )
-
-    connection.subscriptions[msg["id"]] = _unsub
-    connection.send_result(msg["id"])
     # If there is not last_time there are not historical
     # results, but we still send an empty message so
     # consumers of the api know their request was
     # answered but there were no results
     connection.send_message(message)
+
+    if commit_interval := get_instance(hass).commit_interval:
+        # Fetch any events from the database that have
+        # not been committed since the original fetch
+        # so we can switch over to using the subscriptions
+        await asyncio.sleep(commit_interval)
+        # We only want events that happened after the last event
+        # we had from the last database query or the length
+        # of the commit interval (with a 1 second safety)
+        commit_start_window = dt_util.utcnow() - timedelta(seconds=commit_interval + 1)
+        second_fetch_start_time = max(
+            last_event_time or commit_start_window, commit_start_window
+        )
+        message, final_cutoff_time = await _async_get_ws_formatted_events(
+            hass,
+            msg["id"],
+            second_fetch_start_time,
+            subscriptions_setup_complete_time,
+            messages.event_message,
+            event_processor,
+        )
+        if final_cutoff_time:  # Only sends results if we have them
+            connection.send_message(message)
+
+    setup_complete_future.set_result(subscriptions_setup_complete_time)
 
 
 @websocket_api.websocket_command(
@@ -294,8 +356,8 @@ async def ws_get_events(
         include_entity_name=False,
     )
 
-    message, _ = await get_instance(hass).async_add_executor_job(
-        _ws_formatted_get_events,
+    message, _ = await _async_get_ws_formatted_events(
+        hass,
         msg["id"],
         start_time,
         end_time,
