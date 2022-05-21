@@ -1519,7 +1519,11 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
-
+    homeassistant/components/persistent_notification/__init__.py
+    homeassistant/components/websocket_api/http.py
+    homeassistant/helpers/entity_id.py
+    homeassistant/helpers/entity.py
+    
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =

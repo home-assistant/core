@@ -1,14 +1,12 @@
 """Constants for the Amazon Polly text to speech service."""
-from __future__ import annotations
+import typing
 
-from typing import Final
+CONF_REGION: typing.Final = "region_name"
+CONF_ACCESS_KEY_ID: typing.Final = "aws_access_key_id"
+CONF_SECRET_ACCESS_KEY: typing.Final = "aws_secret_access_key"
 
-CONF_REGION: Final = "region_name"
-CONF_ACCESS_KEY_ID: Final = "aws_access_key_id"
-CONF_SECRET_ACCESS_KEY: Final = "aws_secret_access_key"
-
-DEFAULT_REGION: Final = "us-east-1"
-SUPPORTED_REGIONS: Final[list[str]] = [
+DEFAULT_REGION: typing.Final = "us-east-1"
+SUPPORTED_REGIONS: typing.Final[list[str]] = [
     "us-east-1",
     "us-east-2",
     "us-west-1",
@@ -26,13 +24,13 @@ SUPPORTED_REGIONS: Final[list[str]] = [
     "sa-east-1",
 ]
 
-CONF_ENGINE: Final = "engine"
-CONF_VOICE: Final = "voice"
-CONF_OUTPUT_FORMAT: Final = "output_format"
-CONF_SAMPLE_RATE: Final = "sample_rate"
-CONF_TEXT_TYPE: Final = "text_type"
+CONF_ENGINE: typing.Final = "engine"
+CONF_VOICE: typing.Final = "voice"
+CONF_OUTPUT_FORMAT: typing.Final = "output_format"
+CONF_SAMPLE_RATE: typing.Final = "sample_rate"
+CONF_TEXT_TYPE: typing.Final = "text_type"
 
-SUPPORTED_VOICES: Final[list[str]] = [
+SUPPORTED_VOICES: typing.Final[list[str]] = [
     "Aditi",  # Hindi
     "Amy",
     "Aria",
@@ -100,37 +98,38 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Zhiyu",  # Chinese
 ]
 
-SUPPORTED_OUTPUT_FORMATS: Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]
+SUPPORTED_OUTPUT_FORMATS: typing.Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]
 
-SUPPORTED_ENGINES: Final[list[str]] = ["neural", "standard"]
+SUPPORTED_ENGINES: typing.Final[list[str]] = ["neural", "standard"]
 
-SUPPORTED_SAMPLE_RATES: Final[list[str]] = ["8000", "16000", "22050", "24000"]
+SUPPORTED_SAMPLE_RATES: typing.Final[list[str]] = ["8000", "16000", "22050", "24000"]
 
-SUPPORTED_SAMPLE_RATES_MAP: Final[dict[str, list[str]]] = {
+SUPPORTED_SAMPLE_RATES_MAP: typing.Final[dict[str, list[str]]] = {
     "mp3": ["8000", "16000", "22050", "24000"],
     "ogg_vorbis": ["8000", "16000", "22050"],
     "pcm": ["8000", "16000"],
 }
 
-SUPPORTED_TEXT_TYPES: Final[list[str]] = ["text", "ssml"]
+SUPPORTED_TEXT_TYPES: typing.Final[list[str]] = ["text", "ssml"]
 
-CONTENT_TYPE_EXTENSIONS: Final[dict[str, str]] = {
+CONTENT_TYPE_EXTENSIONS: typing.Final[dict[str, str]] = {
     "audio/mpeg": "mp3",
     "audio/ogg": "ogg",
     "audio/pcm": "pcm",
 }
 
-DEFAULT_ENGINE: Final = "standard"
-DEFAULT_VOICE: Final = "Joanna"
-DEFAULT_OUTPUT_FORMAT: Final = "mp3"
-DEFAULT_TEXT_TYPE: Final = "text"
+DEFAULT_ENGINE: typing.Final = "standard"
+DEFAULT_VOICE: typing.Final = "Joanna"
+DEFAULT_OUTPUT_FORMAT: typing.Final = "mp3"
+DEFAULT_TEXT_TYPE: typing.Final = "text"
 
-DEFAULT_SAMPLE_RATES: Final[dict[str, str]] = {
+DEFAULT_SAMPLE_RATES: typing.Final[dict[str, str]] = {
     "mp3": "22050",
     "ogg_vorbis": "22050",
     "pcm": "16000",
 }
 
-AWS_CONF_CONNECT_TIMEOUT: Final = 10
-AWS_CONF_READ_TIMEOUT: Final = 5
-AWS_CONF_MAX_POOL_CONNECTIONS: Final = 1
+CONF_CONFIG: typing.Final = "config"
+AWS_CONF_CONNECT_TIMEOUT: typing.Final = 10
+AWS_CONF_READ_TIMEOUT: typing.Final = 5
+AWS_CONF_MAX_POOL_CONNECTIONS: typing.Final = 1

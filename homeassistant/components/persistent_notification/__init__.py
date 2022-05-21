@@ -8,10 +8,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.decorators import websocket_command
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_id import async_generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
@@ -39,6 +40,26 @@ _LOGGER = logging.getLogger(__name__)
 STATE = "notifying"
 STATUS_UNREAD = "unread"
 STATUS_READ = "read"
+
+
+@callback
+@bind_hass
+def async_dismiss(
+    hass: HomeAssistant, notification_id: str, *, context: Context | None = None
+) -> None:
+    """Remove a notification."""
+    if (notifications := hass.data.get(DOMAIN)) is None:
+        notifications = hass.data[DOMAIN] = {}
+
+    entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
+
+    if entity_id not in notifications:
+        return
+
+    hass.states.async_remove(entity_id, context)
+
+    del notifications[entity_id]
+    hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
 
 @bind_hass
@@ -98,26 +119,6 @@ def async_create(
     }
 
     hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED, context=context)
-
-
-@callback
-@bind_hass
-def async_dismiss(
-    hass: HomeAssistant, notification_id: str, *, context: Context | None = None
-) -> None:
-    """Remove a notification."""
-    if (notifications := hass.data.get(DOMAIN)) is None:
-        notifications = hass.data[DOMAIN] = {}
-
-    entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
-
-    if entity_id not in notifications:
-        return
-
-    hass.states.async_remove(entity_id, context)
-
-    del notifications[entity_id]
-    hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -186,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "persistent_notification/get"})
+@websocket_command({vol.Required("type"): "persistent_notification/get"})
 def websocket_get_notifications(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
