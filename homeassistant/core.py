@@ -1378,7 +1378,6 @@ class StateMachine:
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
-        utc_now: datetime.datetime | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -1404,7 +1403,7 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        now = utc_now or dt_util.utcnow()
+        now = dt_util.utcnow()
         if context is None:
             context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
 

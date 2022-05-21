@@ -669,17 +669,16 @@ class Entity(ABC):
             return state
 
         state = _convert_temperature(state, attr)
-        utc_now = dt_util.utcnow()
 
         if (
             self._context_set is not None
-            and utc_now - self._context_set > self.context_recent_time
+            and dt_util.utcnow() - self._context_set > self.context_recent_time
         ):
             self._context = None
             self._context_set = None
 
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, self._context, utc_now
+            self.entity_id, state, attr, self.force_update, self._context
         )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
