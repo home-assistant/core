@@ -37,6 +37,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.NUMBER
 )
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.NUMBER)
 
 
 UNITS = {
@@ -495,3 +496,29 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_min_value: float = 0x00
     _attr_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={"_TZE200_htnnfasr", },
+    stop_on_match_group="tuya_manufacturer",
+)
+class TimerDuration(
+    ZHANumberConfigurationEntity, id_suffix="timer_duration"
+):
+    """Representation of a ZHA timer duration configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_min_value: float = 0x00
+    _attr_max_value: float = 0x257
+    _zcl_attribute: str = "timer_duration"
+
+    @property
+    def icon(self):
+        """Return the icon to be used for this entity."""
+        return ICONS.get(14, super().icon)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return UNITS.get(72)
