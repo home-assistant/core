@@ -33,7 +33,9 @@ def set_utc(hass):
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
-async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
+async def test_subscribe_unsubscribe_logbook_stream(
+    hass, recorder_mock, hass_ws_client
+):
     """Test subscribe/unsubscribe logbook stream."""
     now = dt_util.utcnow()
     await asyncio.gather(
@@ -315,7 +317,9 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
-async def test_subscribe_unsubscribe_logbook_stream_entities(hass, hass_ws_client):
+async def test_subscribe_unsubscribe_logbook_stream_entities(
+    hass, recorder_mock, hass_ws_client
+):
     """Test subscribe/unsubscribe logbook stream with specific entities."""
     now = dt_util.utcnow()
     await asyncio.gather(
