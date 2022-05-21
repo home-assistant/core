@@ -228,8 +228,7 @@ def _humanify(
 
     # Process rows
     for row in rows:
-        context_id = row.context_id
-        context_lookup.memorize(context_id, row)
+        context_id = context_lookup.memorize(row)
         if row.context_only:
             continue
         event_type = row.event_type
@@ -302,23 +301,22 @@ class ContextLookup:
         self._memorize_new = True
         self._lookup: dict[str | None, Row | EventAsRow | None] = {None: None}
 
-    def memorize(self, context_id: str, row: Row) -> None:
+    def memorize(self, row: Row) -> str | None:
         """Memorize a context from the database."""
         if self._memorize_new:
+            context_id: str = row.context_id
             self._lookup.setdefault(context_id, row)
+            return context_id
+        return None
 
     def clear(self) -> None:
         """Clear the context origins and stop recording new ones."""
         self._lookup.clear()
         self._memorize_new = False
 
-    def get(self, context_id: str) -> Row | EventAsRow | None:
+    def get(self, context_id: str) -> Row | None:
         """Get the context origin."""
-        if row := self._lookup.get(context_id):
-            return row
-        if event := self.hass.bus.context_origin(context_id):
-            return async_event_to_row(event)
-        return None
+        return self._lookup.get(context_id)
 
 
 class ContextAugmenter:
@@ -332,14 +330,26 @@ class ContextAugmenter:
         self.event_cache = logbook_run.event_cache
         self.include_entity_name = logbook_run.include_entity_name
 
+    def _get_context_row(
+        self, context_id: str | None, row: Row | EventAsRow
+    ) -> Row | EventAsRow:
+        """Get the context row from the id or row context."""
+        if context_id:
+            return self.context_lookup.get(context_id)
+        if (context := getattr(row, "context", None)) is not None and (
+            origin_event := context.origin_event
+        ) is not None:
+            return async_event_to_row(origin_event)
+        return None
+
     def augment(
-        self, data: dict[str, Any], row: Row | EventAsRow, context_id: str
+        self, data: dict[str, Any], row: Row | EventAsRow, context_id: str | None
     ) -> None:
         """Augment data from the row and cache."""
         if context_user_id := row.context_user_id:
             data[CONTEXT_USER_ID] = context_user_id
 
-        if not (context_row := self.context_lookup.get(context_id)):
+        if not (context_row := self._get_context_row(context_id, row)):
             return
 
         if _rows_match(row, context_row):
@@ -347,7 +357,11 @@ class ContextAugmenter:
             # a parent event?
             if (
                 not row.context_parent_id
-                or (context_row := self.context_lookup.get(row.context_parent_id))
+                or (
+                    context_row := self._get_context_row(
+                        row.context_parent_id, context_row
+                    )
+                )
                 is None
             ):
                 return
