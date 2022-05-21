@@ -716,7 +716,7 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=False, weakref_slot=True)
+@attr.s(slots=True, frozen=False)
 class Context:
     """The context that triggered something."""
 
@@ -867,9 +867,8 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        context = event.context
-        if not context.origin_event:
-            context.origin_event = event
+        if not event.context.origin_event:
+            event.context.origin_event = event
 
         _LOGGER.debug("Bus:Handling %s", event)
 
