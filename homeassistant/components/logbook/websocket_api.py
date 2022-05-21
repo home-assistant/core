@@ -53,7 +53,6 @@ def _ws_formatted_get_events(
 
 
 async def async_stream_events(
-    hass: HomeAssistant,
     connection: ActiveConnection,
     msg_id: int,
     stream_queue: asyncio.Queue[Event],
@@ -61,30 +60,13 @@ async def async_stream_events(
     last_time_from_db: dt,
 ) -> None:
     """Stream events from the queue."""
-    instance = get_instance(hass)
-    # Fetch any events from the database that have
-    # not been committed since the original fetch
-    await asyncio.sleep(instance.commit_interval)
-    message, last_time = await instance.async_add_executor_job(
-        _ws_formatted_get_events,
-        msg_id,
-        last_time_from_db,
-        dt_util.utcnow(),
-        messages.event_message,
-        event_processor,
-    )
-    if last_time:
-        connection.send_message(message)
-    else:
-        last_time = last_time_from_db
-
     event_processor.switch_to_live()
 
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= last_time:
+        if events[0].time_fired <= last_time_from_db:
             continue
         await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
         while True:
@@ -93,20 +75,17 @@ async def async_stream_events(
             except asyncio.QueueEmpty:
                 break
 
-        logbook_events = event_processor.humanify(
+        if logbook_events := event_processor.humanify(
             row for row in (async_event_to_row(e) for e in events) if row is not None
-        )
-        if not logbook_events:
-            continue
-
-        connection.send_message(
-            JSON_DUMP(
-                messages.event_message(
-                    msg_id,
-                    logbook_events,
+        ):
+            connection.send_message(
+                JSON_DUMP(
+                    messages.event_message(
+                        msg_id,
+                        logbook_events,
+                    )
                 )
             )
-        )
         stream_queue.task_done()
 
 
@@ -180,7 +159,6 @@ async def ws_event_stream(
     )
     task = asyncio.create_task(
         async_stream_events(
-            hass,
             connection,
             msg["id"],
             stream_queue,
