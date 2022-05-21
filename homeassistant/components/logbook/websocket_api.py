@@ -14,16 +14,13 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import JSON_DUMP
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, EVENT_STATE_CHANGED
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 import homeassistant.util.dt as dt_util
 
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
-    is_state_filtered,
+    async_subscribe_events,
 )
 from .models import async_event_to_row
 from .processor import EventProcessor
@@ -113,68 +110,6 @@ async def _async_events_consumer(
         stream_queue.task_done()
 
 
-@callback
-def _async_subscribe_events(
-    hass: HomeAssistant,
-    subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
-    event_types: tuple[str, ...],
-    entity_ids: list[str] | None,
-    device_ids: list[str] | None,
-) -> None:
-    """Subscribe to events for the entities and devices or all."""
-    ent_reg = er.async_get(hass)
-    if entity_ids or device_ids:
-        entity_ids_set = set(entity_ids) if entity_ids else set()
-        device_ids_set = set(device_ids) if device_ids else set()
-
-        @callback
-        def _forward_events_filtered(event: Event) -> None:
-            event_data = event.data
-            if (
-                entity_ids_set and event_data.get(ATTR_ENTITY_ID) in entity_ids_set
-            ) or (device_ids_set and event_data.get(ATTR_DEVICE_ID) in device_ids_set):
-                target(event)
-
-        event_forwarder = _forward_events_filtered
-    else:
-
-        @callback
-        def _forward_events(event: Event) -> None:
-            target(event)
-
-        event_forwarder = _forward_events
-
-    for event_type in event_types:
-        subscriptions.append(
-            hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
-        )
-
-    @callback
-    def _forward_state_events_filtered(event: Event) -> None:
-        if event.data.get("old_state") is None or event.data.get("new_state") is None:
-            return
-        state: State = event.data["new_state"]
-        if not is_state_filtered(ent_reg, state):
-            target(event)
-
-    if entity_ids:
-        subscriptions.append(
-            async_track_state_change_event(
-                hass, entity_ids, _forward_state_events_filtered
-            )
-        )
-    else:
-        # We want the firehose
-        subscriptions.append(
-            hass.bus.async_listen(
-                EVENT_STATE_CHANGED,
-                _forward_state_events_filtered,
-                run_immediately=True,
-            )
-        )
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "logbook/event_stream",
@@ -247,7 +182,7 @@ async def ws_event_stream(
             )
             _unsub()
 
-    _async_subscribe_events(
+    async_subscribe_events(
         hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
