@@ -29,10 +29,10 @@
     "state": {
         "_": {
             "closed": "Z\u00e1rva",
-            "closing": "Z\u00e1r\u00e1s",
+            "closing": "Z\u00e1r\u00f3dik",
             "open": "Nyitva",
-            "opening": "Nyit\u00e1s",
-            "stopped": "Meg\u00e1ll\u00edtva"
+            "opening": "Ny\u00edlik",
+            "stopped": "Meg\u00e1llt"
         }
     },
     "title": "Bor\u00edt\u00f3"

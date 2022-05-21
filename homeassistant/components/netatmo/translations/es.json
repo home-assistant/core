@@ -4,6 +4,7 @@
             "authorize_url_timeout": "Tiempo excedido generando la url de autorizaci\u00f3n.",
             "missing_configuration": "El componente no est\u00e1 configurado. Por favor, consulta la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "create_entry": {
@@ -12,6 +13,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Selecciona un m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Netatmo necesita volver a autentificar su cuenta",
+                "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
     },
@@ -42,9 +47,9 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nombre del \u00e1rea",
-                    "lat_ne": "Latitud esquina Noreste",
-                    "lat_sw": "Latitud esquina Suroeste",
-                    "lon_ne": "Longitud esquina Noreste",
+                    "lat_ne": "Longitud esquina noreste",
+                    "lat_sw": "Latitud esquina suroeste",
+                    "lon_ne": "Longitud esquina noreste",
                     "lon_sw": "Longitud esquina Suroeste",
                     "mode": "C\u00e1lculo",
                     "show_on_map": "Mostrar en el mapa"

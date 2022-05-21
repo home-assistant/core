@@ -1,12 +1,10 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+from __future__ import annotations
+
 from pyspcwebgw.const import AreaMode
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -14,8 +12,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_API, SIGNAL_UPDATE_ALARM
 
@@ -35,7 +35,12 @@ def _get_alarm_state(area):
     return mode_to_state.get(area.mode)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SPC alarm control panel platform."""
     if discovery_info is None:
         return
@@ -45,6 +50,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
 
     def __init__(self, area, api):
         """Initialize the SPC alarm panel."""
@@ -85,11 +96,6 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return _get_alarm_state(self._area)
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

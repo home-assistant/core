@@ -26,9 +26,13 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Nettverksn\u00f8kkel",
+                    "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
+                    "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
+                    "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
+                    "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
                     "usb_path": "USB enhetsbane"
                 },
+                "description": "Tillegget vil generere sikkerhetsn\u00f8kler hvis disse feltene er tomme.",
                 "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "hassio_confirm": {
@@ -54,10 +58,23 @@
             },
             "usb_confirm": {
                 "description": "Vil du konfigurere {name} med Z-Wave JS-tillegget?"
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du legge til Z-Wave JS Server med hjemme-ID {home_id} funnet p\u00e5 {url} til Home Assistant?",
+                "title": "Oppdaget Z-Wave JS Server"
             }
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Fjern brukerkoden p\u00e5 {entity_name}",
+            "ping": "Ping -enhet",
+            "refresh_value": "Oppdater verdien (e) for {entity_name}",
+            "reset_meter": "Tilbakestill m\u00e5lere p\u00e5 {subtype}",
+            "set_config_parameter": "Angi verdien til konfigurasjonsparameteren {subtype}",
+            "set_lock_usercode": "Angi en brukerkode p\u00e5 {entity_name}",
+            "set_value": "Angi verdien for en Z-Wave-verdi"
+        },
         "condition_type": {
             "config_parameter": "Konfigurer parameter {subtype} verdi",
             "node_status": "Nodestatus",
@@ -99,9 +116,13 @@
                 "data": {
                     "emulate_hardware": "Emuler maskinvare",
                     "log_level": "Loggniv\u00e5",
-                    "network_key": "Nettverksn\u00f8kkel",
+                    "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
+                    "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
+                    "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
+                    "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
                     "usb_path": "USB enhetsbane"
                 },
+                "description": "Tillegget vil generere sikkerhetsn\u00f8kler hvis disse feltene er tomme.",
                 "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "install_addon": {
@@ -123,6 +144,5 @@
                 "title": "Z-Wave JS-tillegget starter"
             }
         }
-    },
-    "title": ""
+    }
 }

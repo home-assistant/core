@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_access_token": "Token de acesso inv\u00e1lido",
+            "timeout": "Tempo limite de conex\u00e3o com o Tibber"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token de acesso"
+                },
+                "description": "Insira seu token de acesso em https://developer.tibber.com/settings/accesstoken"
+            }
+        }
+    }
+}

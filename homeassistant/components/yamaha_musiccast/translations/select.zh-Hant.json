@@ -1,0 +1,52 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "\u81ea\u52d5"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "\u81ea\u52d5",
+            "bypass": "\u5ffd\u7565",
+            "manual": "\u624b\u52d5"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "audio_sync": "\u97f3\u6548\u540c\u6b65",
+            "audio_sync_off": "\u97f3\u6548\u540c\u6b65\u95dc\u9589",
+            "audio_sync_on": "\u97f3\u6548\u540c\u6b65\u958b\u555f",
+            "balanced": "\u5e73\u8861",
+            "lip_sync": "\u5507\u5f62\u540c\u6b65"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "\u58d3\u7e2e",
+            "uncompressed": "\u672a\u58d3\u7e2e"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "\u6548\u80fd",
+            "stability": "\u7a69\u5b9a",
+            "standard": "\u6a19\u6e96"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 \u5206\u9418",
+            "30 min": "30 \u5206\u9418",
+            "60 min": "60 \u5206\u9418",
+            "90 min": "90 \u5206\u9418",
+            "off": "\u95dc\u9589"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "\u81ea\u52d5",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x \u904a\u6232\u6a21\u5f0f",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x \u96fb\u5f71\u6a21\u5f0f",
+            "dolby_pl2x_music": "Dolby ProLogic 2x \u97f3\u6a02\u6a21\u5f0f",
+            "dolby_surround": "Dolby \u74b0\u7e5e\u97f3\u6548",
+            "dts_neo6_cinema": "DTS Neo:6 \u5287\u5834\u6a21\u5f0f",
+            "dts_neo6_music": "DTS Neo:6 \u97f3\u6a02\u6a21\u5f0f",
+            "dts_neural_x": "DTS Neural:X",
+            "toggle": "\u958b\u95dc"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "\u81ea\u52d5",
+            "bypass": "\u5ffd\u7565",
+            "manual": "\u624b\u52d5"
+        }
+    }
+}

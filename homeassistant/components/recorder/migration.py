@@ -1,20 +1,27 @@
 """Schema migration helpers."""
+from collections.abc import Callable, Iterable
 import contextlib
 from datetime import timedelta
 import logging
+from typing import cast
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
+from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import (
+    DatabaseError,
     InternalError,
     OperationalError,
     ProgrammingError,
     SQLAlchemyError,
 )
+from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, DropConstraint
+from sqlalchemy.sql.expression import true
 
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
 
+from .const import SupportedDialect
 from .models import (
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -23,13 +30,16 @@ from .models import (
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
+    StatisticsShortTerm,
+    process_timestamp,
 )
+from .statistics import delete_duplicates, get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def raise_if_exception_missing_str(ex, match_substrs):
+def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) -> None:
     """Raise an exception if the exception and cause do not contain the match substrs."""
     lower_ex_strs = [str(ex).lower(), str(ex.__cause__).lower()]
     for str_sub in match_substrs:
@@ -40,9 +50,9 @@ def raise_if_exception_missing_str(ex, match_substrs):
     raise ex
 
 
-def get_schema_version(instance):
+def get_schema_version(session_maker: Callable[[], Session]) -> int:
     """Get the schema version."""
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(session=session_maker()) as session:
         res = (
             session.query(SchemaChanges)
             .order_by(SchemaChanges.change_id.desc())
@@ -51,35 +61,40 @@ def get_schema_version(instance):
         current_version = getattr(res, "schema_version", None)
 
         if current_version is None:
-            current_version = _inspect_schema_version(instance.engine, session)
+            current_version = _inspect_schema_version(session)
             _LOGGER.debug(
                 "No schema version found. Inspected version: %s", current_version
             )
 
-        return current_version
+        return cast(int, current_version)
 
 
-def schema_is_current(current_version):
+def schema_is_current(current_version: int) -> bool:
     """Check if the schema is current."""
     return current_version == SCHEMA_VERSION
 
 
-def migrate_schema(instance, current_version):
+def migrate_schema(
+    hass: HomeAssistant,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    current_version: int,
+) -> None:
     """Check if the schema needs to be upgraded."""
-    with session_scope(session=instance.get_session()) as session:
-        _LOGGER.warning(
-            "Database is about to upgrade. Schema version: %s", current_version
-        )
-        for version in range(current_version, SCHEMA_VERSION):
-            new_version = version + 1
-            _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-            _apply_update(instance.engine, session, new_version, current_version)
+    _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
+    for version in range(current_version, SCHEMA_VERSION):
+        new_version = version + 1
+        _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
+        _apply_update(hass, engine, session_maker, new_version, current_version)
+        with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
-            _LOGGER.info("Upgrade to version %s done", new_version)
+        _LOGGER.info("Upgrade to version %s done", new_version)
 
 
-def _create_index(connection, table_name, index_name):
+def _create_index(
+    session_maker: Callable[[], Session], table_name: str, index_name: str
+) -> None:
     """Create an index for the specified table.
 
     The index name should match the name given for the index
@@ -100,18 +115,22 @@ def _create_index(connection, table_name, index_name):
         "be patient!",
         index_name,
     )
-    try:
-        index.create(connection)
-    except (InternalError, ProgrammingError, OperationalError) as err:
-        raise_if_exception_missing_str(err, ["already exists", "duplicate"])
-        _LOGGER.warning(
-            "Index %s already exists on %s, continuing", index_name, table_name
-        )
+    with session_scope(session=session_maker()) as session:
+        try:
+            connection = session.connection()
+            index.create(connection)
+        except (InternalError, OperationalError, ProgrammingError) as err:
+            raise_if_exception_missing_str(err, ["already exists", "duplicate"])
+            _LOGGER.warning(
+                "Index %s already exists on %s, continuing", index_name, table_name
+            )
 
     _LOGGER.debug("Finished creating %s", index_name)
 
 
-def _drop_index(connection, table_name, index_name):
+def _drop_index(
+    session_maker: Callable[[], Session], table_name: str, index_name: str
+) -> None:
     """Drop an index from a specified table.
 
     There is no universal way to do something like `DROP INDEX IF EXISTS`
@@ -126,42 +145,48 @@ def _drop_index(connection, table_name, index_name):
     success = False
 
     # Engines like DB2/Oracle
-    try:
-        connection.execute(text(f"DROP INDEX {index_name}"))
-    except SQLAlchemyError:
-        pass
-    else:
-        success = True
+    with session_scope(session=session_maker()) as session:
+        try:
+            connection = session.connection()
+            connection.execute(text(f"DROP INDEX {index_name}"))
+        except SQLAlchemyError:
+            pass
+        else:
+            success = True
 
     # Engines like SQLite, SQL Server
     if not success:
-        try:
-            connection.execute(
-                text(
-                    "DROP INDEX {table}.{index}".format(
-                        index=index_name, table=table_name
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(
+                    text(
+                        "DROP INDEX {table}.{index}".format(
+                            index=index_name, table=table_name
+                        )
                     )
                 )
-            )
-        except SQLAlchemyError:
-            pass
-        else:
-            success = True
+            except SQLAlchemyError:
+                pass
+            else:
+                success = True
 
     if not success:
         # Engines like MySQL, MS Access
-        try:
-            connection.execute(
-                text(
-                    "DROP INDEX {index} ON {table}".format(
-                        index=index_name, table=table_name
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(
+                    text(
+                        "DROP INDEX {index} ON {table}".format(
+                            index=index_name, table=table_name
+                        )
                     )
                 )
-            )
-        except SQLAlchemyError:
-            pass
-        else:
-            success = True
+            except SQLAlchemyError:
+                pass
+            else:
+                success = True
 
     if success:
         _LOGGER.debug(
@@ -182,7 +207,9 @@ def _drop_index(connection, table_name, index_name):
         )
 
 
-def _add_columns(connection, table_name, columns_def):
+def _add_columns(
+    session_maker: Callable[[], Session], table_name: str, columns_def: list[str]
+) -> None:
     """Add columns to a table."""
     _LOGGER.warning(
         "Adding columns %s to table %s. Note: this can take several "
@@ -194,41 +221,50 @@ def _add_columns(connection, table_name, columns_def):
 
     columns_def = [f"ADD {col_def}" for col_def in columns_def]
 
-    try:
-        connection.execute(
-            text(
-                "ALTER TABLE {table} {columns_def}".format(
-                    table=table_name, columns_def=", ".join(columns_def)
-                )
-            )
-        )
-        return
-    except (InternalError, OperationalError):
-        # Some engines support adding all columns at once,
-        # this error is when they don't
-        _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
-
-    for column_def in columns_def:
+    with session_scope(session=session_maker()) as session:
         try:
+            connection = session.connection()
             connection.execute(
                 text(
-                    "ALTER TABLE {table} {column_def}".format(
-                        table=table_name, column_def=column_def
+                    "ALTER TABLE {table} {columns_def}".format(
+                        table=table_name, columns_def=", ".join(columns_def)
                     )
                 )
             )
-        except (InternalError, OperationalError) as err:
-            raise_if_exception_missing_str(err, ["duplicate"])
-            _LOGGER.warning(
-                "Column %s already exists on %s, continuing",
-                column_def.split(" ")[1],
-                table_name,
-            )
+            return
+        except (InternalError, OperationalError, ProgrammingError):
+            # Some engines support adding all columns at once,
+            # this error is when they don't
+            _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
+
+    for column_def in columns_def:
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(
+                    text(
+                        "ALTER TABLE {table} {column_def}".format(
+                            table=table_name, column_def=column_def
+                        )
+                    )
+                )
+            except (InternalError, OperationalError, ProgrammingError) as err:
+                raise_if_exception_missing_str(err, ["already exists", "duplicate"])
+                _LOGGER.warning(
+                    "Column %s already exists on %s, continuing",
+                    column_def.split(" ")[1],
+                    table_name,
+                )
 
 
-def _modify_columns(connection, engine, table_name, columns_def):
+def _modify_columns(
+    session_maker: Callable[[], Session],
+    engine: Engine,
+    table_name: str,
+    columns_def: list[str],
+) -> None:
     """Modify columns in a table."""
-    if engine.dialect.name == "sqlite":
+    if engine.dialect.name == SupportedDialect.SQLITE:
         _LOGGER.debug(
             "Skipping to modify columns %s in table %s; "
             "Modifying column length in SQLite is unnecessary, "
@@ -246,7 +282,7 @@ def _modify_columns(connection, engine, table_name, columns_def):
         table_name,
     )
 
-    if engine.dialect.name == "postgresql":
+    if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
             "ALTER {column} TYPE {type}".format(
                 **dict(zip(["column", "type"], col_def.split(" ", 1)))
@@ -258,34 +294,40 @@ def _modify_columns(connection, engine, table_name, columns_def):
     else:
         columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
 
-    try:
-        connection.execute(
-            text(
-                "ALTER TABLE {table} {columns_def}".format(
-                    table=table_name, columns_def=", ".join(columns_def)
-                )
-            )
-        )
-        return
-    except (InternalError, OperationalError):
-        _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
-
-    for column_def in columns_def:
+    with session_scope(session=session_maker()) as session:
         try:
+            connection = session.connection()
             connection.execute(
                 text(
-                    "ALTER TABLE {table} {column_def}".format(
-                        table=table_name, column_def=column_def
+                    "ALTER TABLE {table} {columns_def}".format(
+                        table=table_name, columns_def=", ".join(columns_def)
                     )
                 )
             )
+            return
         except (InternalError, OperationalError):
-            _LOGGER.exception(
-                "Could not modify column %s in table %s", column_def, table_name
-            )
+            _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
+
+    for column_def in columns_def:
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(
+                    text(
+                        "ALTER TABLE {table} {column_def}".format(
+                            table=table_name, column_def=column_def
+                        )
+                    )
+                )
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not modify column %s in table %s", column_def, table_name
+                )
 
 
-def _update_states_table_with_foreign_key_options(connection, engine):
+def _update_states_table_with_foreign_key_options(
+    session_maker: Callable[[], Session], engine: Engine
+) -> None:
     """Add the options to foreign key constraints."""
     inspector = sqlalchemy.inspect(engine)
     alters = []
@@ -313,18 +355,22 @@ def _update_states_table_with_foreign_key_options(connection, engine):
     )
 
     for alter in alters:
-        try:
-            connection.execute(DropConstraint(alter["old_fk"]))
-            for fkc in states_key_constraints:
-                if fkc.column_keys == alter["columns"]:
-                    connection.execute(AddConstraint(fkc))
-        except (InternalError, OperationalError):
-            _LOGGER.exception(
-                "Could not update foreign options in %s table", TABLE_STATES
-            )
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(DropConstraint(alter["old_fk"]))
+                for fkc in states_key_constraints:
+                    if fkc.column_keys == alter["columns"]:
+                        connection.execute(AddConstraint(fkc))
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not update foreign options in %s table", TABLE_STATES
+                )
 
 
-def _drop_foreign_key_constraints(connection, engine, table, columns):
+def _drop_foreign_key_constraints(
+    session_maker: Callable[[], Session], engine: Engine, table: str, columns: list[str]
+) -> None:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
     drops = []
@@ -342,26 +388,36 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
     )
 
     for drop in drops:
-        try:
-            connection.execute(DropConstraint(drop))
-        except (InternalError, OperationalError):
-            _LOGGER.exception(
-                "Could not drop foreign constraints in %s table on %s",
-                TABLE_STATES,
-                columns,
-            )
+        with session_scope(session=session_maker()) as session:
+            try:
+                connection = session.connection()
+                connection.execute(DropConstraint(drop))
+            except (InternalError, OperationalError):
+                _LOGGER.exception(
+                    "Could not drop foreign constraints in %s table on %s",
+                    TABLE_STATES,
+                    columns,
+                )
 
 
-def _apply_update(engine, session, new_version, old_version):  # noqa: C901
+def _apply_update(  # noqa: C901
+    hass: HomeAssistant,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    new_version: int,
+    old_version: int,
+) -> None:
     """Perform operations to bring schema up to date."""
-    connection = session.connection()
+    dialect = engine.dialect.name
+    big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
+
     if new_version == 1:
-        _create_index(connection, "events", "ix_events_time_fired")
+        _create_index(session_maker, "events", "ix_events_time_fired")
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
-        _create_index(connection, "recorder_runs", "ix_recorder_runs_start_end")
+        _create_index(session_maker, "recorder_runs", "ix_recorder_runs_start_end")
         # Create indexes for states
-        _create_index(connection, "states", "ix_states_last_updated")
+        _create_index(session_maker, "states", "ix_states_last_updated")
     elif new_version == 3:
         # There used to be a new index here, but it was removed in version 4.
         pass
@@ -371,41 +427,41 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
 
         if old_version == 3:
             # Remove index that was added in version 3
-            _drop_index(connection, "states", "ix_states_created_domain")
+            _drop_index(session_maker, "states", "ix_states_created_domain")
         if old_version == 2:
             # Remove index that was added in version 2
-            _drop_index(connection, "states", "ix_states_entity_id_created")
+            _drop_index(session_maker, "states", "ix_states_entity_id_created")
 
         # Remove indexes that were added in version 0
-        _drop_index(connection, "states", "states__state_changes")
-        _drop_index(connection, "states", "states__significant_changes")
-        _drop_index(connection, "states", "ix_states_entity_id_created")
+        _drop_index(session_maker, "states", "states__state_changes")
+        _drop_index(session_maker, "states", "states__significant_changes")
+        _drop_index(session_maker, "states", "ix_states_entity_id_created")
 
-        _create_index(connection, "states", "ix_states_entity_id_last_updated")
+        _create_index(session_maker, "states", "ix_states_entity_id_last_updated")
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
-        _create_index(connection, "states", "ix_states_event_id")
+        _create_index(session_maker, "states", "ix_states_event_id")
     elif new_version == 6:
         _add_columns(
-            session,
+            session_maker,
             "events",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
-        _create_index(connection, "events", "ix_events_context_id")
-        _create_index(connection, "events", "ix_events_context_user_id")
+        _create_index(session_maker, "events", "ix_events_context_id")
+        _create_index(session_maker, "events", "ix_events_context_user_id")
         _add_columns(
-            connection,
+            session_maker,
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
-        _create_index(connection, "states", "ix_states_context_id")
-        _create_index(connection, "states", "ix_states_context_user_id")
+        _create_index(session_maker, "states", "ix_states_context_id")
+        _create_index(session_maker, "states", "ix_states_context_user_id")
     elif new_version == 7:
-        _create_index(connection, "states", "ix_states_entity_id")
+        _create_index(session_maker, "states", "ix_states_entity_id")
     elif new_version == 8:
-        _add_columns(connection, "events", ["context_parent_id CHARACTER(36)"])
-        _add_columns(connection, "states", ["old_state_id INTEGER"])
-        _create_index(connection, "events", "ix_events_context_parent_id")
+        _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
+        _add_columns(session_maker, "states", ["old_state_id INTEGER"])
+        _create_index(session_maker, "events", "ix_events_context_parent_id")
     elif new_version == 9:
         # We now get the context from events with a join
         # since its always there on state_changed events
@@ -415,36 +471,36 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
         # and we would have to move to something like
         # sqlalchemy alembic to make that work
         #
-        _drop_index(connection, "states", "ix_states_context_id")
-        _drop_index(connection, "states", "ix_states_context_user_id")
+        # no longer dropping ix_states_context_id since its recreated in 28
+        _drop_index(session_maker, "states", "ix_states_context_user_id")
         # This index won't be there if they were not running
         # nightly but we don't treat that as a critical issue
-        _drop_index(connection, "states", "ix_states_context_parent_id")
+        _drop_index(session_maker, "states", "ix_states_context_parent_id")
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
-        _drop_index(connection, "states", "ix_states_entity_id")
-        _create_index(connection, "events", "ix_events_event_type_time_fired")
-        _drop_index(connection, "events", "ix_events_event_type")
+        _drop_index(session_maker, "states", "ix_states_entity_id")
+        _create_index(session_maker, "events", "ix_events_event_type_time_fired")
+        _drop_index(session_maker, "events", "ix_events_event_type")
     elif new_version == 10:
         # Now done in step 11
         pass
     elif new_version == 11:
-        _create_index(connection, "states", "ix_states_old_state_id")
-        _update_states_table_with_foreign_key_options(connection, engine)
+        _create_index(session_maker, "states", "ix_states_old_state_id")
+        _update_states_table_with_foreign_key_options(session_maker, engine)
     elif new_version == 12:
-        if engine.dialect.name == "mysql":
-            _modify_columns(connection, engine, "events", ["event_data LONGTEXT"])
-            _modify_columns(connection, engine, "states", ["attributes LONGTEXT"])
+        if engine.dialect.name == SupportedDialect.MYSQL:
+            _modify_columns(session_maker, engine, "events", ["event_data LONGTEXT"])
+            _modify_columns(session_maker, engine, "states", ["attributes LONGTEXT"])
     elif new_version == 13:
-        if engine.dialect.name == "mysql":
+        if engine.dialect.name == SupportedDialect.MYSQL:
             _modify_columns(
-                connection,
+                session_maker,
                 engine,
                 "events",
                 ["time_fired DATETIME(6)", "created DATETIME(6)"],
             )
             _modify_columns(
-                connection,
+                session_maker,
                 engine,
                 "states",
                 [
@@ -454,13 +510,13 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                 ],
             )
     elif new_version == 14:
-        _modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
+        _modify_columns(session_maker, engine, "events", ["event_type VARCHAR(64)"])
     elif new_version == 15:
         # This dropped the statistics table, done again in version 18.
         pass
     elif new_version == 16:
         _drop_foreign_key_constraints(
-            connection, engine, TABLE_STATES, ["old_state_id"]
+            session_maker, engine, TABLE_STATES, ["old_state_id"]
         )
     elif new_version == 17:
         # This dropped the statistics table, done again in version 18.
@@ -468,30 +524,31 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
     elif new_version == 18:
         # Recreate the statistics and statistics meta tables.
         #
-        # Order matters! Statistics has a relation with StatisticsMeta,
-        # so statistics need to be deleted before meta (or in pair depending
-        # on the SQL backend); and meta needs to be created before statistics.
-        if sqlalchemy.inspect(engine).has_table(
-            StatisticsMeta.__tablename__
-        ) or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            Base.metadata.drop_all(
-                bind=engine, tables=[Statistics.__table__, StatisticsMeta.__table__]
-            )
+        # Order matters! Statistics and StatisticsShortTerm have a relation with
+        # StatisticsMeta, so statistics need to be deleted before meta (or in pair
+        # depending on the SQL backend); and meta needs to be created before statistics.
+        Base.metadata.drop_all(
+            bind=engine,
+            tables=[
+                StatisticsShortTerm.__table__,
+                Statistics.__table__,
+                StatisticsMeta.__table__,
+            ],
+        )
 
         StatisticsMeta.__table__.create(engine)
+        StatisticsShortTerm.__table__.create(engine)
         Statistics.__table__.create(engine)
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
         # statistics.
-        now = dt_util.utcnow()
-        start = now.replace(minute=0, second=0, microsecond=0)
-        start = start - timedelta(hours=1)
-        session.add(StatisticsRuns(start=start))
+        with session_scope(session=session_maker()) as session:
+            session.add(StatisticsRuns(start=get_start_time()))
     elif new_version == 20:
         # This changed the precision of statistics from float to double
-        if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
+        if engine.dialect.name in [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]:
             _modify_columns(
-                connection,
+                session_maker,
                 engine,
                 "statistics",
                 [
@@ -503,26 +560,156 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                 ],
             )
     elif new_version == 21:
-        _add_columns(
-            connection,
-            "statistics",
-            ["sum_increase DOUBLE PRECISION"],
-        )
         # Try to change the character set of the statistic_meta table
-        if engine.dialect.name == "mysql":
+        if engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
+                _LOGGER.warning(
+                    "Updating character set and collation of table %s to utf8mb4. "
+                    "Note: this can take several minutes on large databases and slow "
+                    "computers. Please be patient!",
+                    table,
+                )
                 with contextlib.suppress(SQLAlchemyError):
-                    connection.execute(
-                        text(
-                            f"ALTER TABLE {table} CONVERT TO "
-                            "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+                    with session_scope(session=session_maker()) as session:
+                        connection = session.connection()
+                        connection.execute(
+                            # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                            # https://github.com/home-assistant/core/issues/56104
+                            text(
+                                f"ALTER TABLE {table} CONVERT TO "
+                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                            )
+                        )
+    elif new_version == 22:
+        # Recreate the all statistics tables for Oracle DB with Identity columns
+        #
+        # Order matters! Statistics has a relation with StatisticsMeta,
+        # so statistics need to be deleted before meta (or in pair depending
+        # on the SQL backend); and meta needs to be created before statistics.
+        if engine.dialect.name == "oracle":
+            Base.metadata.drop_all(
+                bind=engine,
+                tables=[
+                    StatisticsShortTerm.__table__,
+                    Statistics.__table__,
+                    StatisticsMeta.__table__,
+                    StatisticsRuns.__table__,
+                ],
+            )
+
+            StatisticsRuns.__table__.create(engine)
+            StatisticsMeta.__table__.create(engine)
+            StatisticsShortTerm.__table__.create(engine)
+            Statistics.__table__.create(engine)
+
+        # Block 5-minute statistics for one hour from the last run, or it will overlap
+        # with existing hourly statistics. Don't block on a database with no existing
+        # statistics.
+        with session_scope(session=session_maker()) as session:
+            if session.query(Statistics.id).count() and (
+                last_run_string := session.query(
+                    func.max(StatisticsRuns.start)
+                ).scalar()
+            ):
+                last_run_start_time = process_timestamp(last_run_string)
+                if last_run_start_time:
+                    fake_start_time = last_run_start_time + timedelta(minutes=5)
+                    while fake_start_time < last_run_start_time + timedelta(hours=1):
+                        session.add(StatisticsRuns(start=fake_start_time))
+                        fake_start_time += timedelta(minutes=5)
+
+        # When querying the database, be careful to only explicitly query for columns
+        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # will refer to future columns.
+        with session_scope(session=session_maker()) as session:
+            for sum_statistic in session.query(StatisticsMeta.id).filter_by(
+                has_sum=true()
+            ):
+                last_statistic = (
+                    session.query(
+                        Statistics.start,
+                        Statistics.last_reset,
+                        Statistics.state,
+                        Statistics.sum,
+                    )
+                    .filter_by(metadata_id=sum_statistic.id)
+                    .order_by(Statistics.start.desc())
+                    .first()
+                )
+                if last_statistic:
+                    session.add(
+                        StatisticsShortTerm(
+                            metadata_id=sum_statistic.id,
+                            start=last_statistic.start,
+                            last_reset=last_statistic.last_reset,
+                            state=last_statistic.state,
+                            sum=last_statistic.sum,
                         )
                     )
+    elif new_version == 23:
+        # Add name column to StatisticsMeta
+        _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
+    elif new_version == 24:
+        # Recreate statistics indices to block duplicated statistics
+        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
+        _drop_index(
+            session_maker,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
+        try:
+            _create_index(
+                session_maker, "statistics", "ix_statistics_statistic_id_start"
+            )
+            _create_index(
+                session_maker,
+                "statistics_short_term",
+                "ix_statistics_short_term_statistic_id_start",
+            )
+        except DatabaseError:
+            # There may be duplicated statistics entries, delete duplicated statistics
+            # and try again
+            with session_scope(session=session_maker()) as session:
+                delete_duplicates(hass, session)
+            _create_index(
+                session_maker, "statistics", "ix_statistics_statistic_id_start"
+            )
+            _create_index(
+                session_maker,
+                "statistics_short_term",
+                "ix_statistics_short_term_statistic_id_start",
+            )
+    elif new_version == 25:
+        _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
+        _create_index(session_maker, "states", "ix_states_attributes_id")
+    elif new_version == 26:
+        _create_index(session_maker, "statistics_runs", "ix_statistics_runs_start")
+    elif new_version == 27:
+        _add_columns(session_maker, "events", [f"data_id {big_int}"])
+        _create_index(session_maker, "events", "ix_events_data_id")
+    elif new_version == 28:
+        _add_columns(session_maker, "events", ["origin_idx INTEGER"])
+        # We never use the user_id or parent_id index
+        _drop_index(session_maker, "events", "ix_events_context_user_id")
+        _drop_index(session_maker, "events", "ix_events_context_parent_id")
+        _add_columns(
+            session_maker,
+            "states",
+            [
+                "origin_idx INTEGER",
+                "context_id VARCHAR(36)",
+                "context_user_id VARCHAR(36)",
+                "context_parent_id VARCHAR(36)",
+            ],
+        )
+        _create_index(session_maker, "states", "ix_states_context_id")
+        # Once there are no longer any state_changed events
+        # in the events table we can drop the index on states.event_id
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
-def _inspect_schema_version(engine, session):
+def _inspect_schema_version(session: Session) -> int:
     """Determine the schema version by inspecting the db structure.
 
     When the schema version is not present in the db, either db was just
@@ -531,20 +718,17 @@ def _inspect_schema_version(engine, session):
     version 1 are present to make the determination. Eventually this logic
     can be removed and we can assume a new db is being created.
     """
-    inspector = sqlalchemy.inspect(engine)
+    inspector = sqlalchemy.inspect(session.connection())
     indexes = inspector.get_indexes("events")
 
     for index in indexes:
         if index["column_names"] == ["time_fired"]:
             # Schema addition from version 1 detected. New DB.
-            now = dt_util.utcnow()
-            start = now.replace(minute=0, second=0, microsecond=0)
-            start = start - timedelta(hours=1)
-            session.add(StatisticsRuns(start=start))
+            session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
             return SCHEMA_VERSION
 
     # Version 1 schema changes not found, this db needs to be migrated.
     current_version = SchemaChanges(schema_version=0)
     session.add(current_version)
-    return current_version.schema_version
+    return cast(int, current_version.schema_version)

@@ -12,24 +12,24 @@ ptz:
       selector:
         select:
           options:
-            - 'DOWN'
-            - 'UP'
+            - "DOWN"
+            - "UP"
     pan:
       name: Pan
       description: "Pan direction."
       selector:
         select:
           options:
-            - 'LEFT'
-            - 'RIGHT'
+            - "LEFT"
+            - "RIGHT"
     zoom:
       name: Zoom
       description: "Zoom."
       selector:
         select:
           options:
-            - 'ZOOM_IN'
-            - 'ZOOM_OUT'
+            - "ZOOM_IN"
+            - "ZOOM_OUT"
     distance:
       name: Distance
       description: "Distance coefficient. Sets how much PTZ should be executed in one request."
@@ -71,8 +71,8 @@ ptz:
       selector:
         select:
           options:
-            - 'AbsoluteMove'
-            - 'ContinuousMove'
-            - 'GotoPreset'
-            - 'RelativeMove'
-            - 'Stop'
+            - "AbsoluteMove"
+            - "ContinuousMove"
+            - "GotoPreset"
+            - "RelativeMove"
+            - "Stop"

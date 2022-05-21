@@ -1,5 +1,5 @@
 """Trigger an automation when a LiteJet switch is released."""
-from typing import Callable
+from collections.abc import Callable
 
 import voluptuous as vol
 

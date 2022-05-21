@@ -4,6 +4,7 @@ from google_nest_sdm.event import EventMessage
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -111,15 +112,19 @@ async def test_get_triggers(hass):
             "domain": DOMAIN,
             "type": "camera_motion",
             "device_id": device_entry.id,
+            "metadata": {},
         },
         {
             "platform": "device",
             "domain": DOMAIN,
             "type": "camera_person",
             "device_id": device_entry.id,
+            "metadata": {},
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -147,22 +152,28 @@ async def test_multiple_devices(hass):
     entry2 = registry.async_get("camera.camera_2")
     assert entry2.unique_id == "device-id-2-camera"
 
-    triggers = await async_get_device_automations(hass, "trigger", entry1.device_id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, entry1.device_id
+    )
     assert len(triggers) == 1
     assert triggers[0] == {
         "platform": "device",
         "domain": DOMAIN,
         "type": "camera_sound",
         "device_id": entry1.device_id,
+        "metadata": {},
     }
 
-    triggers = await async_get_device_automations(hass, "trigger", entry2.device_id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, entry2.device_id
+    )
     assert len(triggers) == 1
     assert triggers[0] == {
         "platform": "device",
         "domain": DOMAIN,
         "type": "doorbell_chime",
         "device_id": entry2.device_id,
+        "metadata": {},
     }
 
 
@@ -191,7 +202,9 @@ async def test_triggers_for_invalid_device_id(hass):
     assert device_entry_2 is not None
 
     with pytest.raises(InvalidDeviceAutomationConfig):
-        await async_get_device_automations(hass, "trigger", device_entry_2.id)
+        await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device_entry_2.id
+        )
 
 
 async def test_no_triggers(hass):
@@ -203,7 +216,9 @@ async def test_no_triggers(hass):
     entry = registry.async_get("camera.my_camera")
     assert entry.unique_id == "some-device-id-camera"
 
-    triggers = await async_get_device_automations(hass, "trigger", entry.device_id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, entry.device_id
+    )
     assert triggers == []
 
 

@@ -10,9 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Pr\u00e9fixe du sujet de d\u00e9couverte"
-                },
-                "description": "Veuillez entrer la configuration Tasmota.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Voulez-vous configurer Tasmota ?"

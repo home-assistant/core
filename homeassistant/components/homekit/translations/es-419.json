@@ -20,9 +20,6 @@
     "options": {
         "step": {
             "advanced": {
-                "data": {
-                    "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)"
-                },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
                 "title": "Configuraci\u00f3n avanzada"
             },
@@ -34,9 +31,6 @@
                 "title": "Seleccione el c\u00f3dec de video de la c\u00e1mara."
             },
             "init": {
-                "data": {
-                    "include_domains": "Dominios para incluir"
-                },
                 "description": "Las entidades en los \"Dominios para incluir\" se vincular\u00e1n a HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
                 "title": "Seleccione dominios para puentear."
             },

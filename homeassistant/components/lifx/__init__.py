@@ -3,8 +3,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -26,10 +29,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 DATA_LIFX_MANAGER = "lifx_manager"
 
-PLATFORMS = [LIGHT_DOMAIN]
+PLATFORMS = [Platform.LIGHT]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
     conf = config.get(DOMAIN)
 
@@ -45,13 +48,13 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data.pop(DATA_LIFX_MANAGER).cleanup()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

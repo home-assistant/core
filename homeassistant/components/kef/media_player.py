@@ -1,4 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
+from __future__ import annotations
 
 from datetime import timedelta
 from functools import partial
@@ -12,17 +13,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -32,8 +24,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +91,12 @@ def get_ip_mode(host):
         return "hostname"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the KEF platform."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -123,7 +124,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-    unique_id = f"kef-{mac}" if mac is not None else None
+    if mac is None:
+        raise PlatformNotReady("Cannot get the ip address of kef speaker.")
+
+    unique_id = f"kef-{mac}"
 
     media_player = KefMediaPlayer(
         name,
@@ -225,6 +229,20 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._dsp = None
         self._update_dsp_task_remover = None
 
+        self._attr_supported_features = (
+            MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.NEXT_TRACK  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PAUSE  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PLAY  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK  # only in Bluetooth and Wifi
+        )
+        if supports_on:
+            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -269,25 +287,6 @@ class KefMediaPlayer(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        support_kef = (
-            SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_SELECT_SOURCE
-            | SUPPORT_TURN_OFF
-            | SUPPORT_NEXT_TRACK  # only in Bluetooth and Wifi
-            | SUPPORT_PAUSE  # only in Bluetooth and Wifi
-            | SUPPORT_PLAY  # only in Bluetooth and Wifi
-            | SUPPORT_PREVIOUS_TRACK  # only in Bluetooth and Wifi
-        )
-        if self._supports_on:
-            support_kef |= SUPPORT_TURN_ON
-
-        return support_kef
 
     @property
     def source(self):

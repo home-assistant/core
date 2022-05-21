@@ -8,6 +8,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -27,7 +28,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -40,6 +41,7 @@ from .const import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
+    HumidifierEntityFeature,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,9 +49,21 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-DEVICE_CLASSES = [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
+class HumidifierDeviceClass(StrEnum):
+    """Device class for humidifiers."""
+
+    HUMIDIFIER = "humidifier"
+    DEHUMIDIFIER = "dehumidifier"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
+
+# DEVICE_CLASSES below is deprecated as of 2021.12
+# use the HumidifierDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
 
 @bind_hass
@@ -75,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_MODE,
         {vol.Required(ATTR_MODE): cv.string},
         "async_set_mode",
-        [SUPPORT_MODES],
+        [HumidifierEntityFeature.MODES],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
@@ -106,12 +120,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HumidifierEntityDescription(ToggleEntityDescription):
     """A class that describes humidifier entities."""
 
+    device_class: HumidifierDeviceClass | str | None = None
+
 
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
+    _attr_device_class: HumidifierDeviceClass | str | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
@@ -121,27 +138,36 @@ class HumidifierEntity(ToggleEntity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
-        data = {
+        data: dict[str, int | list[str] | None] = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if supported_features & SUPPORT_MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
+
+    @property
+    def device_class(self) -> HumidifierDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @final
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features or 0
-        data = {}
+        data: dict[str, int | str | None] = {}
 
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & SUPPORT_MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -155,7 +181,7 @@ class HumidifierEntity(ToggleEntity):
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_mode
 
@@ -163,7 +189,7 @@ class HumidifierEntity(ToggleEntity):
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_available_modes
 

@@ -1,28 +1,25 @@
 """Support for tracking MySensors devices."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any, cast
 
 from homeassistant.components import mysensors
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.mysensors import DevId
-from homeassistant.components.mysensors.const import (
-    ATTR_GATEWAY_ID,
-    DiscoveryInfo,
-    GatewayId,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
+from .const import ATTR_GATEWAY_ID, DevId, DiscoveryInfo, GatewayId
 from .helpers import on_unload
 
 
 async def async_setup_scanner(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    async_see: Callable,
-    discovery_info: DiscoveryInfo | None = None,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MySensors device scanner."""
     if not discovery_info:
@@ -30,8 +27,8 @@ async def async_setup_scanner(
 
     new_devices = mysensors.setup_mysensors_platform(
         hass,
-        DOMAIN,
-        discovery_info,
+        Platform.DEVICE_TRACKER,
+        cast(DiscoveryInfo, discovery_info),
         MySensorsDeviceScanner,
         device_args=(hass, async_see),
     )

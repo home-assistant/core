@@ -1,0 +1,60 @@
+{
+  "info": {
+    "email": "**REDACTED**",
+    "password": "**REDACTED**",
+    "region": "MNAO"
+  },
+  "data": {
+    "vin": "**REDACTED**",
+    "id": "**REDACTED**",
+    "nickname": "My Mazda3",
+    "carlineCode": "M3S",
+    "carlineName": "MAZDA3 2.5 S SE AWD",
+    "modelYear": "2021",
+    "modelCode": "M3S  SE XA",
+    "modelName": "W/ SELECT PKG AWD SDN",
+    "automaticTransmission": true,
+    "interiorColorCode": "BY3",
+    "interiorColorName": "BLACK",
+    "exteriorColorCode": "42M",
+    "exteriorColorName": "DEEP CRYSTAL BLUE MICA",
+    "isElectric": false,
+    "status": {
+      "lastUpdatedTimestamp": "20210123143809",
+      "latitude": "**REDACTED**",
+      "longitude": "**REDACTED**",
+      "positionTimestamp": "20210123143808",
+      "fuelRemainingPercent": 87.0,
+      "fuelDistanceRemainingKm": 380.8,
+      "odometerKm": 2795.8,
+      "doors": {
+        "driverDoorOpen": false,
+        "passengerDoorOpen": true,
+        "rearLeftDoorOpen": false,
+        "rearRightDoorOpen": false,
+        "trunkOpen": false,
+        "hoodOpen": true,
+        "fuelLidOpen": false
+      },
+      "doorLocks": {
+        "driverDoorUnlocked": false,
+        "passengerDoorUnlocked": false,
+        "rearLeftDoorUnlocked": false,
+        "rearRightDoorUnlocked": false
+      },
+      "windows": {
+        "driverWindowOpen": false,
+        "passengerWindowOpen": false,
+        "rearLeftWindowOpen": false,
+        "rearRightWindowOpen": false
+      },
+      "hazardLightsOn": false,
+      "tirePressure": {
+        "frontLeftTirePressurePsi": 35.0,
+        "frontRightTirePressurePsi": 35.0,
+        "rearLeftTirePressurePsi": 33.0,
+        "rearRightTirePressurePsi": 33.0
+      }
+    }
+  }
+}

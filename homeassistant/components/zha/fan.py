@@ -11,14 +11,15 @@ from zigpy.zcl.clusters import hvac
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    DOMAIN,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import State, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -26,13 +27,7 @@ from homeassistant.util.percentage import (
 )
 
 from .core import discovery
-from .core.const import (
-    CHANNEL_FAN,
-    DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
-    SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED,
-)
+from .core.const import CHANNEL_FAN, DATA_ZHA, SIGNAL_ADD_ENTITIES, SIGNAL_ATTR_UPDATED
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
@@ -53,13 +48,17 @@ PRESET_MODES = list(NAME_TO_PRESET_MODE)
 
 DEFAULT_ON_PERCENTAGE = 50
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.FAN)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.FAN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation fan from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -68,14 +67,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 class BaseFan(FanEntity):
     """Base representation of a ZHA fan."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     @property
     def preset_modes(self) -> list[str]:
@@ -83,18 +83,11 @@ class BaseFan(FanEntity):
         return PRESET_MODES
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
-
-    @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
-    async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ) -> None:
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
         """Turn the entity on."""
         if percentage is None:
             percentage = DEFAULT_ON_PERCENTAGE

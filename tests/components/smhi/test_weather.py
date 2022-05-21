@@ -19,7 +19,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -27,7 +26,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -60,7 +59,7 @@ async def test_setup_hass(
     assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
     assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 33
     assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 17
-    assert state.attributes[ATTR_WEATHER_ATTRIBUTION].find("SMHI") >= 0
+    assert state.attributes[ATTR_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
     assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
@@ -94,9 +93,7 @@ async def test_properties_no_data(hass: HomeAssistant) -> None:
     assert state
     assert state.name == "test"
     assert state.state == STATE_UNKNOWN
-    assert (
-        state.attributes[ATTR_WEATHER_ATTRIBUTION] == "Swedish weather institute (SMHI)"
-    )
+    assert state.attributes[ATTR_ATTRIBUTION] == "Swedish weather institute (SMHI)"
     assert ATTR_WEATHER_HUMIDITY not in state.attributes
     assert ATTR_WEATHER_PRESSURE not in state.attributes
     assert ATTR_WEATHER_TEMPERATURE not in state.attributes

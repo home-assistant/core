@@ -5,10 +5,11 @@ import secrets
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 
+from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS, CONF_WEBHOOK_ID, DOMAIN
@@ -20,12 +21,12 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "binary_sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -33,10 +34,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a rachio config entry."""
     if CONF_CLOUDHOOK_URL in entry.data:
-        await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
+        await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,9 +58,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Get the URL of this server
     rachio.webhook_auth = secrets.token_hex()
-    webhook_id, webhook_url = await async_get_or_create_registered_webhook_id_and_url(
-        hass, entry
-    )
+    try:
+        (
+            webhook_id,
+            webhook_url,
+        ) = await async_get_or_create_registered_webhook_id_and_url(hass, entry)
+    except cloud.CloudNotConnected as exc:
+        # User has an active cloud subscription, but the connection to the cloud is down
+        raise ConfigEntryNotReady from exc
     rachio.webhook_url = webhook_url
 
     person = RachioPerson(rachio, entry)
@@ -67,6 +73,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Get the API user
     try:
         await person.async_setup(hass)
+    except ConfigEntryAuthFailed as error:
+        # Reauth is not yet implemented
+        _LOGGER.error("Authentication failed: %s", error)
+        return False
     except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error

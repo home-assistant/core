@@ -170,9 +170,8 @@ class MailNotificationService(BaseNotificationService):
         build a multipart HTML if html config is defined.
         """
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA)
 
-        if data:
+        if data := kwargs.get(ATTR_DATA):
             if ATTR_HTML in data:
                 msg = _build_html_msg(
                     message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
@@ -184,8 +183,7 @@ class MailNotificationService(BaseNotificationService):
 
         msg["Subject"] = subject
 
-        recipients = kwargs.get(ATTR_TARGET)
-        if not recipients:
+        if not (recipients := kwargs.get(ATTR_TARGET)):
             recipients = self.recipients
         msg["To"] = recipients if isinstance(recipients, str) else ",".join(recipients)
         if self._sender_name:
@@ -237,7 +235,7 @@ def _attach_file(atch_name, content_id):
         attachment = MIMEImage(file_bytes)
     except TypeError:
         _LOGGER.warning(
-            "Attachment %s has an unknown MIME type. " "Falling back to file",
+            "Attachment %s has an unknown MIME type. Falling back to file",
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=atch_name)

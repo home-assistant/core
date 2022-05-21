@@ -1,15 +1,14 @@
 """Decorator for view methods to help with data validation."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from functools import wraps
+from http import HTTPStatus
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
-
-from homeassistant.const import HTTP_BAD_REQUEST
 
 from .view import HomeAssistantView
 
@@ -49,7 +48,7 @@ class RequestDataValidator:
             except ValueError:
                 if not self._allow_empty or (await request.content.read()) != b"":
                     _LOGGER.error("Invalid JSON received")
-                    return view.json_message("Invalid JSON.", HTTP_BAD_REQUEST)
+                    return view.json_message("Invalid JSON.", HTTPStatus.BAD_REQUEST)
                 data = {}
 
             try:
@@ -57,7 +56,7 @@ class RequestDataValidator:
             except vol.Invalid as err:
                 _LOGGER.error("Data does not match schema: %s", err)
                 return view.json_message(
-                    f"Message format incorrect: {err}", HTTP_BAD_REQUEST
+                    f"Message format incorrect: {err}", HTTPStatus.BAD_REQUEST
                 )
 
             result = await method(view, request, *args, **kwargs)

@@ -1,7 +1,12 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access
+from __future__ import annotations
+
 from collections import OrderedDict
+from typing import Any
 from unittest.mock import patch
+
+import pytest
 
 import homeassistant.components.group as group
 from homeassistant.const import (
@@ -16,11 +21,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.group import common
 
 
@@ -713,7 +719,7 @@ async def test_group_persons_and_device_trackers(hass):
 
 async def test_group_mixed_domains_on(hass):
     """Test group of mixed domains that is on."""
-    hass.states.async_set("lock.alexander_garage_exit_door", "locked")
+    hass.states.async_set("lock.alexander_garage_exit_door", "unlocked")
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
@@ -738,7 +744,7 @@ async def test_group_mixed_domains_on(hass):
 
 async def test_group_mixed_domains_off(hass):
     """Test group of mixed domains that is off."""
-    hass.states.async_set("lock.alexander_garage_exit_door", "unlocked")
+    hass.states.async_set("lock.alexander_garage_exit_door", "locked")
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
@@ -761,11 +767,18 @@ async def test_group_mixed_domains_off(hass):
     assert hass.states.get("group.group_zero").state == "off"
 
 
-async def test_group_locks(hass):
+@pytest.mark.parametrize(
+    "states,group_state",
+    [
+        (("locked", "locked", "unlocked"), "unlocked"),
+        (("locked", "locked", "locked"), "locked"),
+    ],
+)
+async def test_group_locks(hass, states, group_state):
     """Test group of locks."""
-    hass.states.async_set("lock.one", "locked")
-    hass.states.async_set("lock.two", "locked")
-    hass.states.async_set("lock.three", "unlocked")
+    hass.states.async_set("lock.one", states[0])
+    hass.states.async_set("lock.two", states[1])
+    hass.states.async_set("lock.three", states[2])
 
     assert await async_setup_component(hass, "lock", {})
     assert await async_setup_component(
@@ -779,7 +792,7 @@ async def test_group_locks(hass):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == "locked"
+    assert hass.states.get("group.group_zero").state == group_state
 
 
 async def test_group_sensors(hass):
@@ -1349,3 +1362,151 @@ async def test_plant_group(hass):
     await hass.async_block_till_done()
     assert hass.states.get("group.plants").state == "problem"
     assert hass.states.get("group.plant_with_binary_sensors").state == "on"
+
+
+@pytest.mark.parametrize(
+    "group_type,member_state,extra_options",
+    (
+        ("binary_sensor", "on", {"all": False}),
+        ("cover", "open", {}),
+        ("fan", "on", {}),
+        ("light", "on", {"all": False}),
+        ("media_player", "on", {}),
+    ),
+)
+async def test_setup_and_remove_config_entry(
+    hass: HomeAssistant,
+    group_type: str,
+    member_state: str,
+    extra_options: dict[str, Any],
+) -> None:
+    """Test removing a config entry."""
+    registry = er.async_get(hass)
+
+    members1 = [f"{group_type}.one", f"{group_type}.two"]
+
+    for member in members1:
+        hass.states.async_set(member, member_state, {})
+
+    # Setup the config entry
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=group.DOMAIN,
+        options={
+            "entities": members1,
+            "group_type": group_type,
+            "name": "Bed Room",
+            **extra_options,
+        },
+        title="Bed Room",
+    )
+    group_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are present
+    state = hass.states.get(f"{group_type}.bed_room")
+    assert state.attributes["entity_id"] == members1
+    assert registry.async_get(f"{group_type}.bed_room") is not None
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state and entity registry entry are removed
+    assert hass.states.get(f"{group_type}.bed_room") is None
+    assert registry.async_get(f"{group_type}.bed_room") is None
+
+
+@pytest.mark.parametrize(
+    "hide_members,hidden_by_initial,hidden_by",
+    (
+        (False, "integration", "integration"),
+        (False, None, None),
+        (False, "user", "user"),
+        (True, "integration", None),
+        (True, None, None),
+        (True, "user", "user"),
+    ),
+)
+@pytest.mark.parametrize(
+    "group_type,extra_options",
+    (
+        ("binary_sensor", {"all": False}),
+        ("cover", {}),
+        ("fan", {}),
+        ("light", {"all": False}),
+        ("media_player", {}),
+    ),
+)
+async def test_unhide_members_on_remove(
+    hass: HomeAssistant,
+    group_type: str,
+    extra_options: dict[str, Any],
+    hide_members: bool,
+    hidden_by_initial: str,
+    hidden_by: str,
+) -> None:
+    """Test removing a config entry."""
+    registry = er.async_get(hass)
+
+    registry = er.async_get(hass)
+    entry1 = registry.async_get_or_create(
+        group_type,
+        "test",
+        "unique1",
+        suggested_object_id="one",
+        hidden_by=hidden_by_initial,
+    )
+    assert entry1.entity_id == f"{group_type}.one"
+
+    entry3 = registry.async_get_or_create(
+        group_type,
+        "test",
+        "unique3",
+        suggested_object_id="three",
+        hidden_by=hidden_by_initial,
+    )
+    assert entry3.entity_id == f"{group_type}.three"
+
+    entry4 = registry.async_get_or_create(
+        group_type,
+        "test",
+        "unique4",
+        suggested_object_id="four",
+    )
+    assert entry4.entity_id == f"{group_type}.four"
+
+    members = [f"{group_type}.one", f"{group_type}.two", entry3.id, entry4.id]
+
+    # Setup the config entry
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=group.DOMAIN,
+        options={
+            "entities": members,
+            "group_type": group_type,
+            "hide_members": hide_members,
+            "name": "Bed Room",
+            **extra_options,
+        },
+        title="Bed Room",
+    )
+    group_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the state is present
+    assert hass.states.get(f"{group_type}.bed_room")
+
+    # Remove one entity registry entry, to make sure this does not trip up config entry
+    # removal
+    registry.async_remove(entry4.entity_id)
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(group_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the group members are unhidden
+    assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
+    assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 from unittest.mock import patch
 
 import pytest

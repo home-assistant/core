@@ -9,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
@@ -34,13 +37,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform for a Skybell device."""
     cond = config[CONF_MONITORED_CONDITIONS]
     names = {}
     names[IMAGE_ACTIVITY] = config.get(CONF_ACTIVITY_NAME)
     names[IMAGE_AVATAR] = config.get(CONF_AVATAR_NAME)
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+    skybell = hass.data[SKYBELL_DOMAIN]
 
     sensors = []
     for device in skybell.get_devices():

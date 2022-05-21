@@ -1,4 +1,5 @@
 """Tests for the SmartThings config flow module."""
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -15,14 +16,7 @@ from homeassistant.components.smartthings.const import (
     DOMAIN,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    HTTP_FORBIDDEN,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
 from tests.common import MockConfigEntry
 
@@ -361,9 +355,11 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", Mock(return_value=True)
+        smartapp.cloud,
+        "async_active_subscription",
+        Mock(return_value=True),
     ), patch.object(
-        hass.components.cloud,
+        smartapp.cloud,
         "async_create_cloudhook",
         AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
@@ -482,7 +478,7 @@ async def test_unauthorized_token_shows_error(hass, smartthings_mock):
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_UNAUTHORIZED
+        request_info=request_info, history=None, status=HTTPStatus.UNAUTHORIZED
     )
 
     # Webhook confirmation shown
@@ -519,7 +515,7 @@ async def test_forbidden_token_shows_error(hass, smartthings_mock):
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_FORBIDDEN
+        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
     )
 
     # Webhook confirmation shown
@@ -557,7 +553,10 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=422
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
     error.is_target_error = Mock(return_value=True)
     smartthings_mock.apps.side_effect = error
@@ -597,7 +596,10 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=400
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.BAD_REQUEST,
     )
     smartthings_mock.apps.side_effect = error
 
@@ -635,7 +637,7 @@ async def test_unknown_response_error_shows_error(hass, smartthings_mock):
     token = str(uuid4())
     request_info = Mock(real_url="http://example.com")
     error = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_NOT_FOUND
+        request_info=request_info, history=None, status=HTTPStatus.NOT_FOUND
     )
     smartthings_mock.apps.side_effect = error
 

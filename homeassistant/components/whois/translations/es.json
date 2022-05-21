@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado"
+        },
+        "error": {
+            "unknown_date_format": "Formato de fecha desconocido en la respuesta del servidor whois",
+            "whois_command_failed": "El comando whois ha fallado: no se pudo obtener la informaci\u00f3n whois"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Nombre de dominio"
+                }
+            }
+        }
+    }
+}

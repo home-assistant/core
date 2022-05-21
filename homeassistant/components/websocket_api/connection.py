@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Hashable
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable, Hashable
+from contextvars import ContextVar
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -17,6 +18,11 @@ if TYPE_CHECKING:
     from .http import WebSocketAdapter
 
 
+current_connection = ContextVar["ActiveConnection | None"](
+    "current_connection", default=None
+)
+
+
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
@@ -24,7 +30,7 @@ class ActiveConnection:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[str | dict[str, Any] | Callable[[], str]], None],
         user: User,
         refresh_token: RefreshToken,
     ) -> None:
@@ -36,6 +42,7 @@ class ActiveConnection:
         self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
+        current_connection.set(self)
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
@@ -104,8 +111,8 @@ class ActiveConnection:
         self.last_id = cur_id
 
     @callback
-    def async_close(self) -> None:
-        """Close down connection."""
+    def async_handle_close(self) -> None:
+        """Handle closing down connection."""
         for unsub in self.subscriptions.values():
             unsub()
 
@@ -113,6 +120,9 @@ class ActiveConnection:
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:
         """Handle an exception while processing a handler."""
         log_handler = self.logger.error
+
+        code = const.ERR_UNKNOWN_ERROR
+        err_message = None
 
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
@@ -124,13 +134,15 @@ class ActiveConnection:
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):
-            code = const.ERR_UNKNOWN_ERROR
             err_message = str(err)
-        else:
-            code = const.ERR_UNKNOWN_ERROR
+
+        # This if-check matches all other errors but also matches errors which
+        # result in an empty message. In that case we will also log the stack
+        # trace so it can be fixed.
+        if not err_message:
             err_message = "Unknown error"
             log_handler = self.logger.exception
 
-        log_handler("Error handling message: %s", err_message)
+        log_handler("Error handling message: %s (%s)", err_message, code)
 
         self.send_message(messages.error_message(msg["id"], code, err_message))

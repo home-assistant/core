@@ -3,17 +3,15 @@
   "name": "deCONZ",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/deconz",
-  "requirements": [
-    "pydeconz==83"
-  ],
+  "requirements": ["pydeconz==92"],
   "ssdp": [
     {
-      "manufacturer": "Royal Philips Electronics"
+      "manufacturer": "Royal Philips Electronics",
+      "manufacturerURL": "http://www.dresden-elektronik.de"
     }
   ],
-  "codeowners": [
-    "@Kane610"
-  ],
+  "codeowners": ["@Kane610"],
   "quality_scale": "platinum",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["pydeconz"]
 }

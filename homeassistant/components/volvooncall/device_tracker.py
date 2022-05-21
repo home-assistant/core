@@ -1,19 +1,30 @@
 """Support for tracking a Volvo."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
+
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import DATA_KEY, SIGNAL_STATE_UPDATED
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the Volvo tracker."""
     if discovery_info is None:
-        return
+        return False
 
-    vin, component, attr = discovery_info
+    vin, component, attr, slug_attr = discovery_info
     data = hass.data[DATA_KEY]
-    instrument = data.instrument(vin, component, attr)
+    instrument = data.instrument(vin, component, attr, slug_attr)
 
     async def see_vehicle():
         """Handle the reporting of the vehicle position."""

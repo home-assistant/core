@@ -26,8 +26,12 @@ async def test_setup_entry(
     assert state
 
 
-async def test_remove_entry(hass: HomeAssistant) -> None:
+async def test_remove_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+) -> None:
     """Test remove entry."""
+    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    aioclient_mock.get(uri, text=api_response)
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
     entry.add_to_hass(hass)
 

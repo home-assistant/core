@@ -3,23 +3,9 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-)
+from homeassistant.components.sensor import SensorDeviceClass
 
 from tests.components.homekit_controller.common import Helper, setup_test_component
-
-TEMPERATURE = ("temperature", "temperature.current")
-HUMIDITY = ("humidity", "relative-humidity.current")
-LIGHT_LEVEL = ("light", "light-level.current")
-CARBON_DIOXIDE_LEVEL = ("carbon-dioxide", "carbon-dioxide.level")
-BATTERY_LEVEL = ("battery", "battery-level")
-CHARGING_STATE = ("battery", "charging-state")
-LO_BATT = ("battery", "status-lo-batt")
-ON = ("outlet", "on")
 
 
 def create_temperature_sensor_service(accessory):
@@ -76,15 +62,23 @@ async def test_temperature_sensor_read_state(hass, utcnow):
         hass, create_temperature_sensor_service, suffix="temperature"
     )
 
-    helper.characteristics[TEMPERATURE].value = 10
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.TEMPERATURE_SENSOR,
+        {
+            CharacteristicsTypes.TEMPERATURE_CURRENT: 10,
+        },
+    )
     assert state.state == "10"
 
-    helper.characteristics[TEMPERATURE].value = 20
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.TEMPERATURE_SENSOR,
+        {
+            CharacteristicsTypes.TEMPERATURE_CURRENT: 20,
+        },
+    )
     assert state.state == "20"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
 
 
 async def test_temperature_sensor_not_added_twice(hass, utcnow):
@@ -94,6 +88,8 @@ async def test_temperature_sensor_not_added_twice(hass, utcnow):
     )
 
     for state in hass.states.async_all():
+        if state.entity_id.startswith("button"):
+            continue
         assert state.entity_id == helper.entity_id
 
 
@@ -103,15 +99,23 @@ async def test_humidity_sensor_read_state(hass, utcnow):
         hass, create_humidity_sensor_service, suffix="humidity"
     )
 
-    helper.characteristics[HUMIDITY].value = 10
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.HUMIDITY_SENSOR,
+        {
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 10,
+        },
+    )
     assert state.state == "10"
 
-    helper.characteristics[HUMIDITY].value = 20
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.HUMIDITY_SENSOR,
+        {
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 20,
+        },
+    )
     assert state.state == "20"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
+    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
 
 
 async def test_light_level_sensor_read_state(hass, utcnow):
@@ -120,15 +124,23 @@ async def test_light_level_sensor_read_state(hass, utcnow):
         hass, create_light_level_sensor_service, suffix="light_level"
     )
 
-    helper.characteristics[LIGHT_LEVEL].value = 10
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.LIGHT_SENSOR,
+        {
+            CharacteristicsTypes.LIGHT_LEVEL_CURRENT: 10,
+        },
+    )
     assert state.state == "10"
 
-    helper.characteristics[LIGHT_LEVEL].value = 20
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.LIGHT_SENSOR,
+        {
+            CharacteristicsTypes.LIGHT_LEVEL_CURRENT: 20,
+        },
+    )
     assert state.state == "20"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_ILLUMINANCE
+    assert state.attributes["device_class"] == SensorDeviceClass.ILLUMINANCE
 
 
 async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
@@ -137,12 +149,20 @@ async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
         hass, create_carbon_dioxide_level_sensor_service, suffix="co2"
     )
 
-    helper.characteristics[CARBON_DIOXIDE_LEVEL].value = 10
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.CARBON_DIOXIDE_SENSOR,
+        {
+            CharacteristicsTypes.CARBON_DIOXIDE_LEVEL: 10,
+        },
+    )
     assert state.state == "10"
 
-    helper.characteristics[CARBON_DIOXIDE_LEVEL].value = 20
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.CARBON_DIOXIDE_SENSOR,
+        {
+            CharacteristicsTypes.CARBON_DIOXIDE_LEVEL: 20,
+        },
+    )
     assert state.state == "20"
 
 
@@ -152,17 +172,25 @@ async def test_battery_level_sensor(hass, utcnow):
         hass, create_battery_level_sensor, suffix="battery"
     )
 
-    helper.characteristics[BATTERY_LEVEL].value = 100
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.BATTERY_SERVICE,
+        {
+            CharacteristicsTypes.BATTERY_LEVEL: 100,
+        },
+    )
     assert state.state == "100"
     assert state.attributes["icon"] == "mdi:battery"
 
-    helper.characteristics[BATTERY_LEVEL].value = 20
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.BATTERY_SERVICE,
+        {
+            CharacteristicsTypes.BATTERY_LEVEL: 20,
+        },
+    )
     assert state.state == "20"
     assert state.attributes["icon"] == "mdi:battery-20"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_BATTERY
+    assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
 
 
 async def test_battery_charging(hass, utcnow):
@@ -171,13 +199,21 @@ async def test_battery_charging(hass, utcnow):
         hass, create_battery_level_sensor, suffix="battery"
     )
 
-    helper.characteristics[BATTERY_LEVEL].value = 0
-    helper.characteristics[CHARGING_STATE].value = 1
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.BATTERY_SERVICE,
+        {
+            CharacteristicsTypes.BATTERY_LEVEL: 0,
+            CharacteristicsTypes.CHARGING_STATE: 1,
+        },
+    )
     assert state.attributes["icon"] == "mdi:battery-outline"
 
-    helper.characteristics[BATTERY_LEVEL].value = 20
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.BATTERY_SERVICE,
+        {
+            CharacteristicsTypes.BATTERY_LEVEL: 20,
+        },
+    )
     assert state.attributes["icon"] == "mdi:battery-charging-20"
 
 
@@ -187,13 +223,22 @@ async def test_battery_low(hass, utcnow):
         hass, create_battery_level_sensor, suffix="battery"
     )
 
-    helper.characteristics[LO_BATT].value = 0
-    helper.characteristics[BATTERY_LEVEL].value = 1
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.BATTERY_SERVICE,
+        {
+            CharacteristicsTypes.BATTERY_LEVEL: 1,
+            CharacteristicsTypes.STATUS_LO_BATT: 0,
+        },
+    )
     assert state.attributes["icon"] == "mdi:battery-10"
 
-    helper.characteristics[LO_BATT].value = 1
-    state = await helper.poll_and_get_state()
+    state = await helper.async_update(
+        ServicesTypes.BATTERY_SERVICE,
+        {
+            CharacteristicsTypes.BATTERY_LEVEL: 1,
+            CharacteristicsTypes.STATUS_LO_BATT: 1,
+        },
+    )
     assert state.attributes["icon"] == "mdi:battery-alert"
 
 
@@ -202,10 +247,11 @@ def create_switch_with_sensor(accessory):
     service = accessory.add_service(ServicesTypes.OUTLET)
 
     realtime_energy = service.add_char(
-        CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY
+        CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY
     )
     realtime_energy.value = 0
     realtime_energy.format = "float"
+    realtime_energy.perms.append("ev")
 
     cur_state = service.add_char(CharacteristicsTypes.ON)
     cur_state.value = True
@@ -216,26 +262,30 @@ def create_switch_with_sensor(accessory):
 async def test_switch_with_sensor(hass, utcnow):
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_sensor)
-    outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
         hass,
-        "sensor.testdevice_real_time_energy",
+        "sensor.testdevice_power",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
     )
 
-    outlet = energy_helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
-    realtime_energy = outlet[CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY]
-
-    realtime_energy.value = 1
-    state = await energy_helper.poll_and_get_state()
+    state = await energy_helper.async_update(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: 1,
+        },
+    )
     assert state.state == "1"
 
-    realtime_energy.value = 50
-    state = await energy_helper.poll_and_get_state()
+    state = await energy_helper.async_update(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: 50,
+        },
+    )
     assert state.state == "50"
 
 
@@ -245,13 +295,13 @@ async def test_sensor_unavailable(hass, utcnow):
 
     # Find the energy sensor and mark it as offline
     outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
-    realtime_energy = outlet[CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY]
+    realtime_energy = outlet[CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY]
     realtime_energy.status = HapStatusCode.UNABLE_TO_COMMUNICATE
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
         hass,
-        "sensor.testdevice_real_time_energy",
+        "sensor.testdevice_power",
         helper.pairing,
         helper.accessory,
         helper.config_entry,

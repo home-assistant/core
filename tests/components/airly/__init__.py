@@ -23,7 +23,7 @@ async def init_integration(hass, aioclient_mock) -> MockConfigEntry:
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

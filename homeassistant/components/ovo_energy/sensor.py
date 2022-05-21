@@ -1,25 +1,22 @@
 """Support for OVO Energy sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-from typing import Callable, Final
+from datetime import datetime, timedelta
+from typing import Final
 
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_TIMESTAMP,
-    ENERGY_KILO_WATT_HOUR,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -40,37 +37,39 @@ KEY_LAST_GAS_COST: Final = "last_gas_cost"
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
-    value: Callable[[OVODailyUsage], StateType] = round
+    value: Callable[[OVODailyUsage], StateType | datetime] = round
 
 
 SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
     OVOEnergySensorEntityDescription(
         key="last_electricity_reading",
         name="OVO Last Electricity Reading",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value=lambda usage: usage.electricity[-1].consumption,
     ),
     OVOEnergySensorEntityDescription(
         key=KEY_LAST_ELECTRICITY_COST,
         name="OVO Last Electricity Cost",
-        device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
-        value=lambda usage: usage.electricity[-1].consumption,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value=lambda usage: usage.electricity[-1].cost.amount
+        if usage.electricity[-1].cost is not None
+        else None,
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_start_time",
         name="OVO Last Electricity Start Time",
         entity_registry_enabled_default=False,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         value=lambda usage: dt_util.as_utc(usage.electricity[-1].interval.start),
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_end_time",
         name="OVO Last Electricity End Time",
         entity_registry_enabled_default=False,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         value=lambda usage: dt_util.as_utc(usage.electricity[-1].interval.end),
     ),
 )
@@ -79,8 +78,8 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
     OVOEnergySensorEntityDescription(
         key="last_gas_reading",
         name="OVO Last Gas Reading",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         icon="mdi:gas-cylinder",
         value=lambda usage: usage.gas[-1].consumption,
@@ -88,23 +87,25 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
     OVOEnergySensorEntityDescription(
         key=KEY_LAST_GAS_COST,
         name="OVO Last Gas Cost",
-        device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:cash-multiple",
-        value=lambda usage: usage.gas[-1].consumption,
+        value=lambda usage: usage.gas[-1].cost.amount
+        if usage.gas[-1].cost is not None
+        else None,
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_start_time",
         name="OVO Last Gas Start Time",
         entity_registry_enabled_default=False,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         value=lambda usage: dt_util.as_utc(usage.gas[-1].interval.start),
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_end_time",
         name="OVO Last Gas End Time",
         entity_registry_enabled_default=False,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         value=lambda usage: dt_util.as_utc(usage.gas[-1].interval.end),
     ),
 )
@@ -124,14 +125,22 @@ async def async_setup_entry(
     if coordinator.data:
         if coordinator.data.electricity:
             for description in SENSOR_TYPES_ELECTRICITY:
-                if description.key == KEY_LAST_ELECTRICITY_COST:
+                if (
+                    description.key == KEY_LAST_ELECTRICITY_COST
+                    and coordinator.data.electricity[-1] is not None
+                    and coordinator.data.electricity[-1].cost is not None
+                ):
                     description.native_unit_of_measurement = (
                         coordinator.data.electricity[-1].cost.currency_unit
                     )
                 entities.append(OVOEnergySensor(coordinator, description, client))
         if coordinator.data.gas:
             for description in SENSOR_TYPES_GAS:
-                if description.key == KEY_LAST_GAS_COST:
+                if (
+                    description.key == KEY_LAST_GAS_COST
+                    and coordinator.data.gas[-1] is not None
+                    and coordinator.data.gas[-1].cost is not None
+                ):
                     description.native_unit_of_measurement = coordinator.data.gas[
                         -1
                     ].cost.currency_unit
@@ -161,7 +170,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state."""
         usage: OVODailyUsage = self.coordinator.data
         return self.entity_description.value(usage)

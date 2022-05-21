@@ -12,7 +12,7 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA Pin"
+                    "2fa": "2FA PIN"
                 },
                 "description": "\u00dcres",
                 "title": "K\u00e9tfaktoros Hiteles\u00edt\u00e9s"
@@ -24,7 +24,7 @@
                     "password": "Jelsz\u00f3"
                 },
                 "description": "\u00dcres",
-                "title": "Google Hangouts Bejelentkez\u00e9s"
+                "title": "Google Chat bejelentkez\u00e9s"
             }
         }
     }

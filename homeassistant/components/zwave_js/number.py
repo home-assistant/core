@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import TARGET_VALUE_PROPERTY
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +13,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -52,7 +55,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         if self.info.primary_value.metadata.writeable:
             self._target_value = self.info.primary_value
         else:
-            self._target_value = self.get_zwave_value("targetValue")
+            self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
         # Entity class attributes
         self._attr_name = self.generate_name(

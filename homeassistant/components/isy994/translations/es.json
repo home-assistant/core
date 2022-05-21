@@ -9,8 +9,16 @@
             "invalid_host": "La entrada del host no estaba en formato URL completo, por ejemplo, http://192.168.10.100:80",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Dispositivos Universales ISY994 {nombre} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Las credenciales de {host} ya no son v\u00e1lidas.",
+                "title": "Re-autenticaci\u00f3n de ISY"
+            },
             "user": {
                 "data": {
                     "host": "URL",
@@ -19,7 +27,7 @@
                     "username": "Usuario"
                 },
                 "description": "La entrada del host debe estar en formato URL completo, por ejemplo, http://192.168.10.100:80",
-                "title": "Conectar con tu ISY994"
+                "title": "Conexi\u00f3n con ISY"
             }
         }
     },
@@ -40,7 +48,7 @@
     "system_health": {
         "info": {
             "device_connected": "ISY conectado",
-            "host_reachable": "Anfitri\u00f3n accesible",
+            "host_reachable": "Host accesible",
             "last_heartbeat": "Hora del \u00faltimo latido",
             "websocket_status": "Estado del conector de eventos"
         }

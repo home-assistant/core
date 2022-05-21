@@ -1,4 +1,6 @@
 """Tests for config flow."""
+from http import HTTPStatus
+
 from aiohttp.test_utils import TestClient
 
 from homeassistant import config_entries
@@ -35,7 +37,7 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
 
 
 async def test_config_reauth_profile(
-    hass: HomeAssistant, aiohttp_client, aioclient_mock, current_request_with_host
+    hass: HomeAssistant, hass_client_no_auth, aioclient_mock, current_request_with_host
 ) -> None:
     """Test reauth an existing profile re-creates the config entry."""
     hass_config = {
@@ -81,20 +83,22 @@ async def test_config_reauth_profile(
         },
     )
 
-    client: TestClient = await aiohttp_client(hass.http.app)
+    client: TestClient = await hass_client_no_auth()
     resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://account.withings.com/oauth2/token",
+        "https://wbsapi.withings.net/v2/oauth2",
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-            "userid": "0",
+            "body": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "userid": "0",
+            },
         },
     )
 

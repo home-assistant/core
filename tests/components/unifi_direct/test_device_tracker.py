@@ -74,7 +74,7 @@ async def test_get_device_name(mock_ssh, hass):
             CONF_CONSIDER_HOME: timedelta(seconds=180),
         }
     }
-    mock_ssh.return_value.before = load_fixture("unifi_direct.txt")
+    mock_ssh.return_value.before = load_fixture("data.txt", "unifi_direct")
     scanner = get_scanner(hass, conf_dict)
     devices = scanner.scan_devices()
     assert len(devices) == 23
@@ -132,7 +132,7 @@ async def test_to_get_update(mock_sendline, mock_prompt, mock_login, mock_logout
 
 def test_good_response_parses(hass):
     """Test that the response form the AP parses to JSON correctly."""
-    response = _response_to_json(load_fixture("unifi_direct.txt"))
+    response = _response_to_json(load_fixture("data.txt", "unifi_direct"))
     assert response != {}
 
 

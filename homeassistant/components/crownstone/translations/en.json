@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "usb_setup_complete": "Crownstone USB setup complete.",
+            "usb_setup_unsuccessful": "Crownstone USB setup was unsuccessful."
+        },
+        "error": {
+            "account_not_verified": "Account not verified. Please activate your account through the activation email from Crownstone.",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "USB Device Path"
+                },
+                "description": "Select the serial port of the Crownstone USB dongle, or select 'Don't use USB' if you don't want to setup a USB dongle.\n\nLook for a device with VID 10C4 and PID EA60.",
+                "title": "Crownstone USB dongle configuration"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB Device Path"
+                },
+                "description": "Manually enter the path of a Crownstone USB dongle.",
+                "title": "Crownstone USB dongle manual path"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Sphere"
+                },
+                "description": "Select a Crownstone Sphere where the USB is located.",
+                "title": "Crownstone USB Sphere"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "title": "Crownstone account"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "usb_sphere_option": "Crownstone Sphere where the USB is located",
+                    "use_usb_option": "Use a Crownstone USB dongle for local data transmission"
+                }
+            },
+            "usb_config": {
+                "data": {
+                    "usb_path": "USB Device Path"
+                },
+                "description": "Select the serial port of the Crownstone USB dongle.\n\nLook for a device with VID 10C4 and PID EA60.",
+                "title": "Crownstone USB dongle configuration"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB Device Path"
+                },
+                "description": "Manually enter the path of a Crownstone USB dongle.",
+                "title": "Crownstone USB dongle manual path"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Sphere"
+                },
+                "description": "Select a Crownstone Sphere where the USB is located.",
+                "title": "Crownstone USB Sphere"
+            }
+        }
+    }
+}

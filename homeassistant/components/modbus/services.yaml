@@ -1,3 +1,6 @@
+reload:
+  name: Reload
+  description: Reload all modbus entities.
 write_coil:
   name: Write coil
   description: Write to a modbus coil.
@@ -8,19 +11,19 @@ write_coil:
       required: true
       selector:
         number:
-          min: 1
-          max: 255
+          min: 0
+          max: 65535
     state:
       name: State
       description: State to write.
       required: true
-      example: false
+      example: "0 or [1,0]"
       selector:
         object:
-    unit:
-      name: Unit
-      description: Address of the modbus unit.
-      required: true
+    slave:
+      name: Slave
+      description: Address of the modbus unit/slave.
+      required: false
       selector:
         number:
           min: 1
@@ -42,12 +45,12 @@ write_register:
       required: true
       selector:
         number:
-          min: 1
-          max: 255
-    unit:
-      name: Unit
-      description: Address of the modbus unit.
-      required: true
+          min: 0
+          max: 65535
+    slave:
+      name: Slave
+      description: Address of the modbus unit/slave.
+      required: false
       selector:
         number:
           min: 1
@@ -59,6 +62,28 @@ write_register:
       example: "0 or [4,0]"
       selector:
         object:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+stop:
+  name: Stop
+  description: Stop modbus hub.
+  fields:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+restart:
+  name: Restart
+  description: Restart modbus hub (if running stop then start).
+  fields:
     hub:
       name: Hub
       description: Modbus hub name.

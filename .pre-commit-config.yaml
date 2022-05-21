@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.23.3
+    rev: v2.32.1
     hooks:
       - id: pyupgrade
-        args: [--py38-plus]
+        args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 21.7b0
+    rev: 22.3.0
     hooks:
       - id: black
         args:
@@ -13,30 +13,30 @@ repos:
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
+    rev: v2.1.0
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba
+          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,iif,ines,ist,lightsensor,mut,nd,pres,referer,rime,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba,haa,pullrequests
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
         additional_dependencies:
-          - pycodestyle==2.7.0
-          - pyflakes==2.3.1
+          - pycodestyle==2.8.0
+          - pyflakes==2.4.0
           - flake8-docstrings==1.6.0
-          - pydocstyle==6.0.0
-          - flake8-comprehensions==3.5.0
-          - flake8-noqa==1.1.0
+          - pydocstyle==6.1.1
+          - flake8-comprehensions==3.8.0
+          - flake8-noqa==1.2.1
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.0
+    rev: 1.7.4
     hooks:
       - id: bandit
         args:
@@ -45,7 +45,7 @@ repos:
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/isort
-    rev: 5.9.3
+    rev: 5.10.1
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -61,14 +61,13 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.1
+    rev: v1.26.3
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.2.1
+    rev: v2.6.1
     hooks:
       - id: prettier
-        stages: [manual]
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.3.5
     hooks:
@@ -78,7 +77,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py38-plus
+          - --py39-plus
           - --force
           - --keep-updates
         files: ^(homeassistant|tests|script)/.+\.py$
@@ -95,17 +94,37 @@ repos:
         types: [python]
         require_serial: true
         files: ^homeassistant/.+\.py$
+      - id: pylint
+        name: pylint
+        entry: script/run-in-env.sh pylint -j 0
+        language: script
+        types: [python]
+        files: ^homeassistant/.+\.py$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|\.pre-commit-config\.yaml)$
+        files: ^(homeassistant/.+/manifest\.json|setup\.cfg|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml)$
+        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py)$
+      - id: hassfest-metadata
+        name: hassfest-metadata
+        entry: script/run-in-env.sh python3 -m script.hassfest -p metadata
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|setup\.cfg)$
+      - id: hassfest-mypy-config
+        name: hassfest-mypy-config
+        entry: script/run-in-env.sh python3 -m script.hassfest -p mypy_config
+        pass_filenames: false
+        language: script
+        types: [text]
+        files: ^(script/hassfest/mypy_config\.py|\.strict-typing|mypy\.ini)$

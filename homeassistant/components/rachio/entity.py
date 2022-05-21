@@ -1,7 +1,7 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 
 from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -20,22 +20,23 @@ class RachioDevice(Entity):
         return False
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     self._controller.serial_number,
                 )
             },
-            "connections": {
+            connections={
                 (
                     device_registry.CONNECTION_NETWORK_MAC,
                     self._controller.mac_address,
                 )
             },
-            "name": self._controller.name,
-            "model": self._controller.model,
-            "manufacturer": DEFAULT_NAME,
-        }
+            name=self._controller.name,
+            model=self._controller.model,
+            manufacturer=DEFAULT_NAME,
+            configuration_url="https://app.rach.io",
+        )

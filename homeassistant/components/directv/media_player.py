@@ -6,22 +6,15 @@ import logging
 from directv import DIRECTV
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_RECEIVER,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
@@ -43,23 +36,23 @@ _LOGGER = logging.getLogger(__name__)
 KNOWN_MEDIA_TYPES = [MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW]
 
 SUPPORT_DTV = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 SUPPORT_DTV_CLIENT = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 
@@ -67,7 +60,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
     entities = []
@@ -96,9 +89,8 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
 
         self._attr_unique_id = self._device_id
         self._attr_name = name
-        self._attr_device_class = DEVICE_CLASS_RECEIVER
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_available = False
-        self._attr_assumed_state = None
 
         self._is_recorded = None
         self._is_standby = True

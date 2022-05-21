@@ -5,9 +5,9 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "invalid_2fa": "Autenticazione a 2 fattori non valida, riprovare.",
+            "invalid_2fa": "Autenticazione a 2 fattori non valida, riprova.",
             "invalid_2fa_method": "Metodo 2FA non valido (verifica sul telefono).",
-            "invalid_login": "Accesso non valido, si prega di riprovare."
+            "invalid_login": "Accesso non valido, riprova."
         },
         "step": {
             "2fa": {
@@ -20,11 +20,11 @@
             "user": {
                 "data": {
                     "authorization_code": "Codice di autorizzazione (necessario per l'autenticazione manuale)",
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password"
                 },
                 "description": "Vuoto",
-                "title": "Accesso a Google Hangouts"
+                "title": "Accesso a Google Chat"
             }
         }
     }

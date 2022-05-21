@@ -8,8 +8,8 @@ from homeassistant import core
 from homeassistant.components.bond.const import (
     ATTR_POWER_STATE,
     DOMAIN,
-    SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
-    SERVICE_SET_LIGHT_POWER_BELIEF,
+    SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+    SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from homeassistant.components.bond.light import (
     SERVICE_START_DECREASING_BRIGHTNESS,
@@ -18,8 +18,10 @@ from homeassistant.components.bond.light import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -296,7 +298,7 @@ async def test_light_set_brightness_belief_full(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
@@ -321,7 +323,7 @@ async def test_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
     ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
@@ -340,7 +342,7 @@ async def test_fp_light_set_brightness_belief_full(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
@@ -365,14 +367,14 @@ async def test_fp_light_set_brightness_belief_api_error(hass: core.HomeAssistant
     ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
         await hass.async_block_till_done()
 
 
-async def test_light_set_brightness_belief_brightnes_not_supported(
+async def test_light_set_brightness_belief_brightness_not_supported(
     hass: core.HomeAssistant,
 ):
     """Tests that the set brightness belief function of a light that doesn't support setting brightness returns an error."""
@@ -386,7 +388,7 @@ async def test_light_set_brightness_belief_brightnes_not_supported(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
@@ -405,7 +407,7 @@ async def test_light_set_brightness_belief_zero(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
             blocking=True,
         )
@@ -428,7 +430,7 @@ async def test_fp_light_set_brightness_belief_zero(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
             blocking=True,
         )
@@ -451,7 +453,7 @@ async def test_light_set_power_belief(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_BELIEF,
+            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
@@ -476,7 +478,7 @@ async def test_light_set_power_belief_api_error(hass: core.HomeAssistant):
     ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_BELIEF,
+            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
@@ -495,7 +497,7 @@ async def test_fp_light_set_power_belief(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_BELIEF,
+            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
@@ -520,14 +522,14 @@ async def test_fp_light_set_power_belief_api_error(hass: core.HomeAssistant):
     ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_BELIEF,
+            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
         await hass.async_block_till_done()
 
 
-async def test_fp_light_set_brightness_belief_brightnes_not_supported(
+async def test_fp_light_set_brightness_belief_brightness_not_supported(
     hass: core.HomeAssistant,
 ):
     """Tests that the set brightness belief function of a fireplace light that doesn't support setting brightness returns an error."""
@@ -541,7 +543,7 @@ async def test_fp_light_set_brightness_belief_brightnes_not_supported(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
@@ -723,7 +725,20 @@ async def test_brightness_support(hass: core.HomeAssistant):
     )
 
     state = hass.states.get("light.name_1")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_BRIGHTNESS
+    assert state.state == "off"
+    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    with patch_bond_device_state(return_value={"light": 1, "brightness": 50}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("light.name_1")
+    assert state.state == "on"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
 async def test_brightness_not_supported(hass: core.HomeAssistant):
@@ -736,7 +751,20 @@ async def test_brightness_not_supported(hass: core.HomeAssistant):
     )
 
     state = hass.states.get("light.name_1")
-    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_BRIGHTNESS
+    assert state.state == "off"
+    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    with patch_bond_device_state(return_value={"light": 1}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    state = hass.states.get("light.name_1")
+    assert state.state == "on"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
 async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):

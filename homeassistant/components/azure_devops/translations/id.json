@@ -9,7 +9,7 @@
             "invalid_auth": "Autentikasi tidak valid",
             "project_error": "Tidak bisa mendapatkan info proyek."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
                 "data": {

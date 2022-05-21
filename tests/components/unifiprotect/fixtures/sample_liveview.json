@@ -1,0 +1,56 @@
+{
+  "name": "Default",
+  "isDefault": true,
+  "isGlobal": true,
+  "layout": 9,
+  "slots": [
+    {
+      "cameras": ["0488c1538efb5cc9f73f77ca"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["0de062b4f6922d489d3b312d"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["193be66559c03ec5629f54cd"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["16b0c551e36d872806f2806b"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["5becd64d90f1cae3a4146a0f"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["4f5fab885aca3f7c226b22b9"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["cc7a572a0a8677baae933873"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": ["f4e9f4421209908c51284e67"],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    },
+    {
+      "cameras": [],
+      "cycleMode": "time",
+      "cycleInterval": 10
+    }
+  ],
+  "owner": "5a839670ad0a929bf8271c26",
+  "id": "ecb21f15e6d8fae65fea82f8",
+  "modelKey": "liveview"
+}

@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Sequence
-from datetime import timedelta
+from collections.abc import Callable, Coroutine, Sequence
+from datetime import datetime, timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Final, final
+from typing import Any, Final, final
 
 import attr
 import voluptuous as vol
@@ -30,9 +30,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import (
+    config_per_platform,
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
@@ -236,24 +239,24 @@ class DeviceTrackerPlatform:
         with async_start_setup(hass, [full_name]):
             try:
                 scanner = None
-                setup = None
+                setup: bool | None = None
                 if hasattr(self.platform, "async_get_scanner"):
-                    scanner = await self.platform.async_get_scanner(  # type: ignore[attr-defined]
+                    scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}
                     )
                 elif hasattr(self.platform, "get_scanner"):
                     scanner = await hass.async_add_executor_job(
-                        self.platform.get_scanner,  # type: ignore[attr-defined]
+                        self.platform.get_scanner,
                         hass,
                         {DOMAIN: self.config},
                     )
                 elif hasattr(self.platform, "async_setup_scanner"):
-                    setup = await self.platform.async_setup_scanner(  # type: ignore[attr-defined]
+                    setup = await self.platform.async_setup_scanner(
                         hass, self.config, tracker.async_see, discovery_info
                     )
                 elif hasattr(self.platform, "setup_scanner"):
                     setup = await hass.async_add_executor_job(
-                        self.platform.setup_scanner,  # type: ignore[attr-defined]
+                        self.platform.setup_scanner,
                         hass,
                         self.config,
                         tracker.see,
@@ -267,7 +270,7 @@ class DeviceTrackerPlatform:
                         hass, self.config, scanner, tracker.async_see, self.type
                     )
 
-                if setup is None and scanner is None:
+                if not setup and scanner is None:
                     LOGGER.error(
                         "Error setting up platform %s %s", self.type, self.name
                     )
@@ -291,6 +294,7 @@ async def async_extract_config(
         *(
             async_create_platform_type(hass, config, p_type, p_config)
             for p_type, p_config in config_per_platform(config, DOMAIN)
+            if p_type is not None
         )
     ):
         if platform is None:
@@ -337,7 +341,7 @@ def async_setup_scanner_platform(
     # Initial scan of each mac we also tell about host name for config
     seen: Any = set()
 
-    async def async_device_tracker_scan(now: dt_util.dt.datetime | None) -> None:
+    async def async_device_tracker_scan(now: datetime | None) -> None:
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
@@ -396,8 +400,7 @@ async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:
     consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
 
     defaults = conf.get(CONF_NEW_DEVICE_DEFAULTS, {})
-    track_new = conf.get(CONF_TRACK_NEW)
-    if track_new is None:
+    if (track_new := conf.get(CONF_TRACK_NEW)) is None:
         track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = await async_load_config(yaml_path, hass, consider_home)
@@ -487,13 +490,12 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-        registry = await async_get_registry(self.hass)
+        registry = er.async_get(self.hass)
         if mac is None and dev_id is None:
             raise HomeAssistantError("Neither mac or device id passed in")
         if mac is not None:
             mac = str(mac).upper()
-            device = self.mac_to_dev.get(mac)
-            if device is None:
+            if (device := self.mac_to_dev.get(mac)) is None:
                 dev_id = util.slugify(host_name or "") or util.slugify(mac)
         else:
             dev_id = cv.slug(str(dev_id).lower())
@@ -580,7 +582,7 @@ class DeviceTracker:
             )
 
     @callback
-    def async_update_stale(self, now: dt_util.dt.datetime) -> None:
+    def async_update_stale(self, now: datetime) -> None:
         """Update stale devices.
 
         This method must be run in the event loop.
@@ -618,7 +620,7 @@ class Device(RestoreEntity):
     location_name: str | None = None
     gps: GPSType | None = None
     gps_accuracy: int = 0
-    last_seen: dt_util.dt.datetime | None = None
+    last_seen: datetime | None = None
     battery: int | None = None
     attributes: dict | None = None
 
@@ -746,7 +748,7 @@ class Device(RestoreEntity):
 
         await self.async_update()
 
-    def stale(self, now: dt_util.dt.datetime | None = None) -> bool:
+    def stale(self, now: datetime | None = None) -> bool:
         """Return if device state is stale.
 
         Async friendly.
@@ -790,8 +792,7 @@ class Device(RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Add an entity."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
+        if not (state := await self.async_get_last_state()):
             return
         self._state = state.state
         self.last_update_home = state.state == STATE_HOME

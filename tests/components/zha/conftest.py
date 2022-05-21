@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+import itertools
 import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -10,6 +11,7 @@ from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.device
 import zigpy.group
 import zigpy.profiles
+from zigpy.state import State
 import zigpy.types
 import zigpy.zdo.types as zdo_t
 
@@ -26,6 +28,20 @@ FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def globally_load_quirks():
+    """Load quirks automatically so that ZHA tests run deterministically in isolation.
+
+    If portions of the ZHA test suite that do not happen to load quirks are run
+    independently, bugs can emerge that will show up only when more of the test suite is
+    run.
+    """
+
+    import zhaquirks
+
+    zhaquirks.setup()
+
+
 @pytest.fixture
 def zigpy_app_controller():
     """Zigpy ApplicationController fixture."""
@@ -39,6 +55,7 @@ def zigpy_app_controller():
     app.ieee.return_value = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     type(app).nwk = PropertyMock(return_value=zigpy.types.NWK(0x0000))
     type(app).devices = PropertyMock(return_value={})
+    type(app).state = PropertyMock(return_value=State())
     return app
 
 
@@ -116,6 +133,7 @@ def zigpy_device_mock(zigpy_app_controller):
         node_descriptor=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
         nwk=0xB79C,
         patch_cluster=True,
+        quirk=None,
     ):
         """Make a fake device using the specified cluster classes."""
         device = zigpy.device.Device(
@@ -133,13 +151,20 @@ def zigpy_device_mock(zigpy_app_controller):
             endpoint.request = AsyncMock(return_value=[0])
 
             for cluster_id in ep.get(SIG_EP_INPUT, []):
-                cluster = endpoint.add_input_cluster(cluster_id)
-                if patch_cluster:
-                    common.patch_cluster(cluster)
+                endpoint.add_input_cluster(cluster_id)
 
             for cluster_id in ep.get(SIG_EP_OUTPUT, []):
-                cluster = endpoint.add_output_cluster(cluster_id)
-                if patch_cluster:
+                endpoint.add_output_cluster(cluster_id)
+
+        if quirk:
+            device = quirk(zigpy_app_controller, device.ieee, device.nwk, device)
+
+        if patch_cluster:
+            for endpoint in (ep for epid, ep in device.endpoints.items() if epid):
+                endpoint.request = AsyncMock(return_value=[0])
+                for cluster in itertools.chain(
+                    endpoint.in_clusters.values(), endpoint.out_clusters.values()
+                ):
                     common.patch_cluster(cluster)
 
         return device
@@ -152,6 +177,7 @@ def zha_device_joined(hass, setup_zha):
     """Return a newly joined ZHA device."""
 
     async def _zha_device(zigpy_dev):
+        zigpy_dev.last_seen = time.time()
         await setup_zha()
         zha_gateway = common.get_zha_gateway(hass)
         await zha_gateway.async_device_initialized(zigpy_dev)

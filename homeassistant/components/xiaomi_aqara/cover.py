@@ -1,5 +1,8 @@
 """Support for Xiaomi curtain."""
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
@@ -10,7 +13,11 @@ DATA_KEY_PROTO_V1 = "status"
 DATA_KEY_PROTO_V2 = "curtain_status"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]

@@ -1,121 +1,80 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
+from __future__ import annotations
+
 import logging
 
-from basicmodem.basicmodem import BasicModem as bm
-import voluptuous as vol
+from phone_modem import PhoneModem
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import entity_platform
+
+from .const import CID, DATA_KEY_API, DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = "Modem CallerID"
-ICON = "mdi:phone-classic"
-DEFAULT_DEVICE = "/dev/ttyACM0"
-
-STATE_RING = "ring"
-STATE_CALLERID = "callerid"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    }
-)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up modem caller ID sensor platform."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
+    """Set up the Modem Caller ID sensor."""
+    api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
+    async_add_entities(
+        [
+            ModemCalleridSensor(
+                api,
+                entry.title,
+                entry.entry_id,
+            )
+        ]
+    )
 
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_DEVICE)
+    async def _async_on_hass_stop(event: Event) -> None:
+        """HA is shutting down, close modem port."""
+        if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
+            await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
 
-    modem = bm(port)
-    if modem.state == modem.STATE_FAILED:
-        _LOGGER.error("Unable to initialize modem")
-        return
-
-    add_entities([ModemCalleridSensor(hass, name, port, modem)])
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
+    )
 
 
 class ModemCalleridSensor(SensorEntity):
     """Implementation of USB modem caller ID sensor."""
 
-    def __init__(self, hass, name, port, modem):
+    _attr_icon = ICON
+    _attr_should_poll = False
+
+    def __init__(self, api: PhoneModem, name: str, server_unique_id: str) -> None:
         """Initialize the sensor."""
-        self._attributes = {"cid_time": 0, "cid_number": "", "cid_name": ""}
-        self._name = name
-        self.port = port
-        self.modem = modem
-        self._state = STATE_IDLE
-        modem.registercallback(self._incomingcallcallback)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._stop_modem)
+        self.api = api
+        self._attr_name = name
+        self._attr_unique_id = server_unique_id
+        self._attr_native_value = STATE_IDLE
+        self._attr_extra_state_attributes = {
+            CID.CID_TIME: 0,
+            CID.CID_NUMBER: "",
+            CID.CID_NAME: "",
+        }
 
-    def set_state(self, state):
-        """Set the state."""
-        self._state = state
+    async def async_added_to_hass(self) -> None:
+        """Call when the modem sensor is added to Home Assistant."""
+        self.api.registercallback(self._async_incoming_call)
+        await super().async_added_to_hass()
 
-    def set_attributes(self, attributes):
-        """Set the state attributes."""
-        self._attributes = attributes
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    def _stop_modem(self, event):
-        """HA is shutting down, close modem port."""
-        if self.modem:
-            self.modem.close()
-            self.modem = None
-
-    def _incomingcallcallback(self, newstate):
+    @callback
+    def _async_incoming_call(self, new_state: str) -> None:
         """Handle new states."""
-        if newstate == self.modem.STATE_RING:
-            if self.state == self.modem.STATE_IDLE:
-                att = {
-                    "cid_time": self.modem.get_cidtime,
-                    "cid_number": "",
-                    "cid_name": "",
-                }
-                self.set_attributes(att)
-            self._state = STATE_RING
-            self.schedule_update_ha_state()
-        elif newstate == self.modem.STATE_CALLERID:
-            att = {
-                "cid_time": self.modem.get_cidtime,
-                "cid_number": self.modem.get_cidnumber,
-                "cid_name": self.modem.get_cidname,
-            }
-            self.set_attributes(att)
-            self._state = STATE_CALLERID
-            self.schedule_update_ha_state()
-        elif newstate == self.modem.STATE_IDLE:
-            self._state = STATE_IDLE
-            self.schedule_update_ha_state()
+        self._attr_extra_state_attributes = {}
+        if self.api.cid_name:
+            self._attr_extra_state_attributes[CID.CID_NAME] = self.api.cid_name
+        if self.api.cid_number:
+            self._attr_extra_state_attributes[CID.CID_NUMBER] = self.api.cid_number
+        if self.api.cid_time:
+            self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
+        self._attr_native_value = self.api.state
+        self.async_write_ha_state()

@@ -1,4 +1,6 @@
 """Support for exposing NX584 elements as sensors."""
+from __future__ import annotations
+
 import logging
 import threading
 import time
@@ -8,13 +10,16 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +30,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = "5007"
 DEFAULT_SSL = False
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: vol.In(DEVICE_CLASSES)})
+ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,29 +44,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NX584 binary sensor platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    exclude = config.get(CONF_EXCLUDE_ZONES)
-    zone_types = config.get(CONF_ZONE_TYPES)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    exclude = config[CONF_EXCLUDE_ZONES]
+    zone_types = config[CONF_ZONE_TYPES]
 
     try:
         client = nx584_client.Client(f"http://{host}:{port}")
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))
-        return False
+        return
 
     version = [int(v) for v in client.get_version().split(".")]
     if version < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
-        return False
+        return
 
     zone_sensors = {
         zone["number"]: NX584ZoneSensor(
-            zone, zone_types.get(zone["number"], DEVICE_CLASS_OPENING)
+            zone, zone_types.get(zone["number"], BinarySensorDeviceClass.OPENING)
         )
         for zone in zones
         if zone["number"] not in exclude
@@ -72,7 +82,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         watcher.start()
     else:
         _LOGGER.warning("No zones found on NX584")
-    return True
 
 
 class NX584ZoneSensor(BinarySensorEntity):
@@ -122,9 +131,8 @@ class NX584Watcher(threading.Thread):
 
     def _process_zone_event(self, event):
         zone = event["zone"]
-        zone_sensor = self._zone_sensors.get(zone)
         # pylint: disable=protected-access
-        if not zone_sensor:
+        if not (zone_sensor := self._zone_sensors.get(zone)):
             return
         zone_sensor._zone["state"] = event["zone_state"]
         zone_sensor.schedule_update_ha_state()
@@ -138,8 +146,7 @@ class NX584Watcher(threading.Thread):
         """Throw away any existing events so we don't replay history."""
         self._client.get_events()
         while True:
-            events = self._client.get_events()
-            if events:
+            if events := self._client.get_events():
                 self._process_events(events)
 
     def run(self):

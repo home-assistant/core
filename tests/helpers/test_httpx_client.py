@@ -93,6 +93,7 @@ async def test_get_async_client_context_manager(hass):
         assert mock_aclose.call_count == 0
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(hass, caplog):
     """Test log warning message when closing the session from integration context."""
     with patch(
@@ -125,6 +126,7 @@ async def test_warning_close_session_integration(hass, caplog):
     ) in caplog.text
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(hass, caplog):
     """Test log warning message when closing the session from custom context."""
     with patch(

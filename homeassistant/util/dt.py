@@ -5,21 +5,18 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 import re
-import sys
-from typing import Any, cast
+from typing import Any
+import zoneinfo
 
 import ciso8601
-
-from homeassistant.const import MATCH_ALL
-
-if sys.version_info[:2] >= (3, 9):
-    import zoneinfo
-else:
-    from backports import zoneinfo
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.timezone.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
+
+# EPOCHORDINAL is not exposed as a constant
+# https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
+EPOCHORDINAL = dt.datetime(1970, 1, 1).toordinal()
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
@@ -50,8 +47,7 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     Async friendly.
     """
     try:
-        # Cast can be removed when mypy is switched to Python 3.9.
-        return cast(dt.tzinfo, zoneinfo.ZoneInfo(time_zone_str))
+        return zoneinfo.ZoneInfo(time_zone_str)
     except zoneinfo.ZoneInfoNotFoundError:
         return None
 
@@ -106,6 +102,19 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
     return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
+def utc_to_timestamp(utc_dt: dt.datetime) -> float:
+    """Fast conversion of a datetime in UTC to a timestamp."""
+    # Taken from
+    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
+    return (
+        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
+        + utc_dt.hour * 3600
+        + utc_dt.minute * 60
+        + utc_dt.second
+        + (utc_dt.microsecond / 1000000)
+    )
+
+
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
@@ -132,8 +141,7 @@ def parse_datetime(dt_str: str) -> dt.datetime | None:
     with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
 
-    match = DATETIME_RE.match(dt_str)
-    if not match:
+    if not (match := DATETIME_RE.match(dt_str)):
         return None
     kws: dict[str, Any] = match.groupdict()
     if kws["microsecond"]:
@@ -216,7 +224,7 @@ def get_age(date: dt.datetime) -> str:
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
     """Parse the time expression part and return a list of times to match."""
-    if parameter is None or parameter == MATCH_ALL:
+    if parameter is None or parameter == "*":
         res = list(range(min_value, max_value + 1))
     elif isinstance(parameter, str):
         if parameter.startswith("/"):
@@ -246,6 +254,16 @@ def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
     return (dattim + delta).utcoffset() - (dattim - delta).utcoffset()  # type: ignore[operator]
 
 
+def _lower_bound(arr: list[int], cmp: int) -> int | None:
+    """Return the first value in arr greater or equal to cmp.
+
+    Return None if no such value exists.
+    """
+    if (left := bisect.bisect_left(arr, cmp)) == len(arr):
+        return None
+    return arr[left]
+
+
 def find_next_time_expression_time(
     now: dt.datetime,  # pylint: disable=redefined-outer-name
     seconds: list[int],
@@ -264,90 +282,98 @@ def find_next_time_expression_time(
     if not seconds or not minutes or not hours:
         raise ValueError("Cannot find a next time: Time expression never matches!")
 
-    def _lower_bound(arr: list[int], cmp: int) -> int | None:
-        """Return the first value in arr greater or equal to cmp.
+    while True:
+        # Reset microseconds and fold; fold (for ambiguous DST times) will be handled later
+        result = now.replace(microsecond=0, fold=0)
 
-        Return None if no such value exists.
-        """
-        left = bisect.bisect_left(arr, cmp)
-        if left == len(arr):
-            return None
-        return arr[left]
+        # Match next second
+        if (next_second := _lower_bound(seconds, result.second)) is None:
+            # No second to match in this minute. Roll-over to next minute.
+            next_second = seconds[0]
+            result += dt.timedelta(minutes=1)
 
-    result = now.replace(microsecond=0)
+        result = result.replace(second=next_second)
 
-    # Match next second
-    next_second = _lower_bound(seconds, result.second)
-    if next_second is None:
-        # No second to match in this minute. Roll-over to next minute.
-        next_second = seconds[0]
-        result += dt.timedelta(minutes=1)
+        # Match next minute
+        next_minute = _lower_bound(minutes, result.minute)
+        if next_minute != result.minute:
+            # We're in the next minute. Seconds needs to be reset.
+            result = result.replace(second=seconds[0])
 
-    result = result.replace(second=next_second)
+        if next_minute is None:
+            # No minute to match in this hour. Roll-over to next hour.
+            next_minute = minutes[0]
+            result += dt.timedelta(hours=1)
 
-    # Match next minute
-    next_minute = _lower_bound(minutes, result.minute)
-    if next_minute != result.minute:
-        # We're in the next minute. Seconds needs to be reset.
-        result = result.replace(second=seconds[0])
+        result = result.replace(minute=next_minute)
 
-    if next_minute is None:
-        # No minute to match in this hour. Roll-over to next hour.
-        next_minute = minutes[0]
-        result += dt.timedelta(hours=1)
+        # Match next hour
+        next_hour = _lower_bound(hours, result.hour)
+        if next_hour != result.hour:
+            # We're in the next hour. Seconds+minutes needs to be reset.
+            result = result.replace(second=seconds[0], minute=minutes[0])
 
-    result = result.replace(minute=next_minute)
+        if next_hour is None:
+            # No minute to match in this day. Roll-over to next day.
+            next_hour = hours[0]
+            result += dt.timedelta(days=1)
 
-    # Match next hour
-    next_hour = _lower_bound(hours, result.hour)
-    if next_hour != result.hour:
-        # We're in the next hour. Seconds+minutes needs to be reset.
-        result = result.replace(second=seconds[0], minute=minutes[0])
+        result = result.replace(hour=next_hour)
 
-    if next_hour is None:
-        # No minute to match in this day. Roll-over to next day.
-        next_hour = hours[0]
-        result += dt.timedelta(days=1)
+        if result.tzinfo in (None, UTC):
+            # Using UTC, no DST checking needed
+            return result
 
-    result = result.replace(hour=next_hour)
+        if not _datetime_exists(result):
+            # When entering DST and clocks are turned forward.
+            # There are wall clock times that don't "exist" (an hour is skipped).
 
-    if result.tzinfo in (None, UTC):
+            # -> trigger on the next time that 1. matches the pattern and 2. does exist
+            # for example:
+            #   on 2021.03.28 02:00:00 in CET timezone clocks are turned forward an hour
+            #   with pattern "02:30", don't run on 28 mar (such a wall time does not exist on this day)
+            #   instead run at 02:30 the next day
+
+            # We solve this edge case by just iterating one second until the result exists
+            # (max. 3600 operations, which should be fine for an edge case that happens once a year)
+            now += dt.timedelta(seconds=1)
+            continue
+
+        if not _datetime_ambiguous(now):
+            return result
+
+        # When leaving DST and clocks are turned backward.
+        # Then there are wall clock times that are ambiguous i.e. exist with DST and without DST
+        # The logic above does not take into account if a given pattern matches _twice_
+        # in a day.
+        # Example: on 2021.10.31 02:00:00 in CET timezone clocks are turned backward an hour
+
+        if _datetime_ambiguous(result):
+            # `now` and `result` are both ambiguous, so the next match happens
+            # _within_ the current fold.
+
+            # Examples:
+            #  1. 2021.10.31 02:00:00+02:00 with pattern 02:30 -> 2021.10.31 02:30:00+02:00
+            #  2. 2021.10.31 02:00:00+01:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
+            return result.replace(fold=now.fold)
+
+        if now.fold == 0:
+            # `now` is in the first fold, but result is not ambiguous (meaning it no longer matches
+            # within the fold).
+            # -> Check if result matches in the next fold. If so, emit that match
+
+            # Turn back the time by the DST offset, effectively run the algorithm on the first fold
+            # If it matches on the first fold, that means it will also match on the second one.
+
+            # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
+
+            check_result = find_next_time_expression_time(
+                now + _dst_offset_diff(now), seconds, minutes, hours
+            )
+            if _datetime_ambiguous(check_result):
+                return check_result.replace(fold=1)
+
         return result
-
-    if _datetime_ambiguous(result):
-        # This happens when we're leaving daylight saving time and local
-        # clocks are rolled back. In this case, we want to trigger
-        # on both the DST and non-DST time. So when "now" is in the DST
-        # use the DST-on time, and if not, use the DST-off time.
-        fold = 1 if now.dst() else 0
-        if result.fold != fold:
-            result = result.replace(fold=fold)
-
-    if not _datetime_exists(result):
-        # This happens when we're entering daylight saving time and local
-        # clocks are rolled forward, thus there are local times that do
-        # not exist. In this case, we want to trigger on the next time
-        # that *does* exist.
-        # In the worst case, this will run through all the seconds in the
-        # time shift, but that's max 3600 operations for once per year
-        return find_next_time_expression_time(
-            result + dt.timedelta(seconds=1), seconds, minutes, hours
-        )
-
-    # Another edge-case when leaving DST:
-    # When now is in DST and ambiguous *and* the next trigger time we *should*
-    # trigger is ambiguous and outside DST, the excepts above won't catch it.
-    # For example: if triggering on 2:30 and now is 28.10.2018 2:30 (in DST)
-    # we should trigger next on 28.10.2018 2:30 (out of DST), but our
-    # algorithm above would produce 29.10.2018 2:30 (out of DST)
-    if _datetime_ambiguous(now):
-        check_result = find_next_time_expression_time(
-            now + _dst_offset_diff(now), seconds, minutes, hours
-        )
-        if _datetime_ambiguous(check_result):
-            return check_result
-
-    return result
 
 
 def _datetime_exists(dattim: dt.datetime) -> bool:

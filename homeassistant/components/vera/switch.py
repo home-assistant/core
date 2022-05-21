@@ -5,15 +5,11 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.switch import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    SwitchEntity,
-)
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
@@ -29,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraSwitch(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.SWITCH]
         ],
         True,
     )
@@ -57,13 +53,6 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self.vera_device.switch_off()
         self._state = False
         self.schedule_update_ha_state()
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
-            return convert(power, float, 0.0)
 
     @property
     def is_on(self) -> bool:

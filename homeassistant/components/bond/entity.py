@@ -10,6 +10,14 @@ from typing import Any
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
+from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -33,6 +41,7 @@ class BondEntity(Entity):
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
+        sub_device_id: str | None = None,
     ) -> None:
         """Initialize entity with API and device info."""
         self._hub = hub
@@ -43,7 +52,12 @@ class BondEntity(Entity):
         self._bpup_subs = bpup_subs
         self._update_lock: Lock | None = None
         self._initialized = False
-        sub_device_id: str = f"_{sub_device}" if sub_device else ""
+        if sub_device_id:
+            sub_device_id = f"_{sub_device_id}"
+        elif sub_device:
+            sub_device_id = f"_{sub_device}"
+        else:
+            sub_device_id = ""
         self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
         if sub_device:
             sub_device_name = sub_device.replace("_", " ").title()
@@ -54,22 +68,25 @@ class BondEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
-        device_info: DeviceInfo = {
-            "manufacturer": self._hub.make,
+        device_info = DeviceInfo(
+            manufacturer=self._hub.make,
             # type ignore: tuple items should not be Optional
-            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
-        }
+            identifiers={(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            configuration_url=f"http://{self._hub.host}",
+        )
         if self.name is not None:
-            device_info["name"] = self.name
+            device_info[ATTR_NAME] = self._device.name
         if self._hub.bond_id is not None:
-            device_info["via_device"] = (DOMAIN, self._hub.bond_id)
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
         if self._device.location is not None:
-            device_info["suggested_area"] = self._device.location
+            device_info[ATTR_SUGGESTED_AREA] = self._device.location
         if not self._hub.is_bridge:
             if self._hub.model is not None:
-                device_info["model"] = self._hub.model
+                device_info[ATTR_MODEL] = self._hub.model
             if self._hub.fw_ver is not None:
-                device_info["sw_version"] = self._hub.fw_ver
+                device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:
@@ -77,7 +94,7 @@ class BondEntity(Entity):
             if self._device.template:
                 model_data.append(self._device.template)
             if model_data:
-                device_info["model"] = " ".join(model_data)
+                device_info[ATTR_MODEL] = " ".join(model_data)
 
         return device_info
 

@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {modell}\nV\u00e4rd: {host}\nPort: {port}\n\nDu kan konfigurera IO- och panelbeteendet i inst\u00e4llningarna f\u00f6r Konnected Alarm Panel.",
+                "description": "Modell: {model}\nID: {id}\nV\u00e4rd: {host}\nPort: {port}\n\nDu kan konfigurera IO- och panelbeteendet i inst\u00e4llningarna f\u00f6r Konnected Alarm Panel.",
                 "title": "Konnected-enheten redo"
             },
             "import_confirm": {

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya ha sido configurada",
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "no_locations": "No hay ubicaciones disponibles para este usuario, compruebe la configuraci\u00f3n de TotalConnect",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
@@ -11,10 +12,9 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Localizaci\u00f3n",
                     "usercode": "Codigo de usuario"
                 },
-                "description": "Ingrese el c\u00f3digo de usuario para este usuario en esta ubicaci\u00f3n",
+                "description": "Introduce el c\u00f3digo de usuario para este usuario en la ubicaci\u00f3n {location_id}",
                 "title": "C\u00f3digos de usuario de ubicaci\u00f3n"
             },
             "reauth_confirm": {
@@ -25,8 +25,7 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
-                },
-                "title": "Total Connect"
+                }
             }
         }
     }

@@ -1,6 +1,8 @@
 """Provides device actions for Humidifier."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
@@ -12,7 +14,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_capability, get_supported_features
@@ -46,7 +49,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Humidifier devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device
@@ -63,14 +66,17 @@ async def async_get_actions(
         }
         actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
-        if supported_features & const.SUPPORT_MODES:
+        if supported_features & const.HumidifierEntityFeature.MODES:
             actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    variables: dict[str, Any],
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}

@@ -1,38 +1,34 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
 from __future__ import annotations
 
-from abc import abstractmethod
-import logging
+from typing import cast
 
 from surepy.entities import SurepyEntity
+from surepy.entities.pet import Pet as SurepyPet
 from surepy.enums import EntityType, Location
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PRESENCE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SurePetcareDataCoordinator
 from .const import DOMAIN
+from .entity import SurePetcareEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Sure PetCare Flaps binary sensors based on a config entry."""
-    if discovery_info is None:
-        return
 
-    entities: list[SurepyEntity | Pet | Hub | DeviceConnectivity] = []
+    entities: list[SurePetcareBinarySensor] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 
@@ -52,51 +48,26 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class SurePetcareBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SurePetcareBinarySensor(SurePetcareEntity, BinarySensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
         self,
-        _id: int,
-        coordinator: DataUpdateCoordinator,
-        device_class: str,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
     ) -> None:
         """Initialize a Sure Petcare binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(surepetcare_id, coordinator)
 
-        self._id = _id
-
-        surepy_entity: SurepyEntity = coordinator.data[self._id]
-
-        # cover special case where a device has no name set
-        if surepy_entity.name:
-            name = surepy_entity.name
-        else:
-            name = f"Unnamed {surepy_entity.type.name.capitalize()}"
-
-        self._attr_device_class = device_class
-        self._attr_name = f"{surepy_entity.type.name.capitalize()} {name.capitalize()}"
-        self._attr_unique_id = f"{surepy_entity.household_id}-{self._id}"
-        self._update_attr()
-
-    @abstractmethod
-    @callback
-    def _update_attr(self) -> None:
-        """Update the state and attributes."""
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._update_attr()
-        self.async_write_ha_state()
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
 
 
 class Hub(SurePetcareBinarySensor):
     """Sure Petcare Hub."""
 
-    def __init__(self, _id: int, coordinator: DataUpdateCoordinator) -> None:
-        """Initialize a Sure Petcare Hub."""
-        super().__init__(_id, coordinator, DEVICE_CLASS_CONNECTIVITY)
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def available(self) -> bool:
@@ -104,9 +75,8 @@ class Hub(SurePetcareBinarySensor):
         return super().available and bool(self._attr_is_on)
 
     @callback
-    def _update_attr(self) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
-        surepy_entity = self.coordinator.data[self._id]
         state = surepy_entity.raw_data()["status"]
         self._attr_is_on = self._attr_available = bool(state["online"])
         if surepy_entity.raw_data():
@@ -118,20 +88,17 @@ class Hub(SurePetcareBinarySensor):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
 
 
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self, _id: int, coordinator: DataUpdateCoordinator) -> None:
-        """Initialize a Sure Petcare Pet."""
-        super().__init__(_id, coordinator, DEVICE_CLASS_PRESENCE)
+    _attr_device_class = BinarySensorDeviceClass.PRESENCE
 
     @callback
-    def _update_attr(self) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
-        surepy_entity = self.coordinator.data[self._id]
+        surepy_entity = cast(SurepyPet, surepy_entity)
         state = surepy_entity.location
         try:
             self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
@@ -144,27 +111,26 @@ class Pet(SurePetcareBinarySensor):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
 
 
 class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Device."""
 
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     def __init__(
         self,
-        _id: int,
-        coordinator: DataUpdateCoordinator,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
     ) -> None:
         """Initialize a Sure Petcare Device."""
-        super().__init__(_id, coordinator, DEVICE_CLASS_CONNECTIVITY)
-        self._attr_name = f"{self.name}_connectivity"
-        self._attr_unique_id = (
-            f"{self.coordinator.data[self._id].household_id}-{self._id}-connectivity"
-        )
+        super().__init__(surepetcare_id, coordinator)
+        self._attr_name = f"{self._device_name} Connectivity"
+        self._attr_unique_id = f"{self._device_id}-connectivity"
 
     @callback
-    def _update_attr(self):
-        surepy_entity = self.coordinator.data[self._id]
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         state = surepy_entity.raw_data()["status"]
         self._attr_is_on = bool(state)
         if state:
@@ -174,4 +140,3 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)

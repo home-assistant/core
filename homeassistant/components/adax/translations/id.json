@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "heater_not_available": "Pemanas tidak tersedia. Cobalah untuk mengatur ulang pemanas dengan menekan + dan OK selama beberapa detik.",
+            "heater_not_found": "Pemanas tidak ditemukan. Coba dekatkan pemanas ke komputer Home Assistant.",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "account_id": "ID Akun",
+                    "password": "Kata Sandi"
+                }
+            },
+            "local": {
+                "data": {
+                    "wifi_pswd": "Kata sandi Wi-Fi",
+                    "wifi_ssid": "SSID Wi-Fi"
+                },
+                "description": "Atur ulang pemanas dengan menekan + dan OK hingga muncul tampilan 'Reset'. Kemudian tekan dan tahan tombol OK pada pemanas sampai led biru mulai berkedip sebelum menekan Submit. Mengonfigurasi pemanas mungkin memerlukan waktu beberapa menit."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Pilih jenis koneksi"
+                },
+                "description": "Pilih jenis koneksi. Lokal membutuhkan pemanas dengan bluetooth"
+            }
+        }
+    }
+}

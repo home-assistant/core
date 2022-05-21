@@ -1,9 +1,11 @@
 """The tests for the TTS component."""
+from http import HTTPStatus
 from unittest.mock import PropertyMock, patch
 
 import pytest
-import yarl
+import voluptuous as vol
 
+from homeassistant.components import media_source, tts
 from homeassistant.components.demo.tts import DemoProvider
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
@@ -12,76 +14,29 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.tts as tts
-from homeassistant.components.tts import _get_cache_files
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from homeassistant.util.network import normalize_url
 
 from tests.common import assert_setup_component, async_mock_service
 
+ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
-def relative_url(url):
-    """Convert an absolute url to a relative one."""
-    return str(yarl.URL(url).relative())
+
+async def get_media_source_url(hass, media_content_id):
+    """Get the media source url."""
+    if media_source.DOMAIN not in hass.config.components:
+        assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    resolved = await media_source.async_resolve_media(hass, media_content_id)
+    return resolved.url
 
 
 @pytest.fixture
 def demo_provider():
     """Demo TTS provider."""
     return DemoProvider("en")
-
-
-@pytest.fixture(autouse=True)
-def mock_get_cache_files():
-    """Mock the list TTS cache function."""
-    with patch(
-        "homeassistant.components.tts._get_cache_files", return_value={}
-    ) as mock_cache_files:
-        yield mock_cache_files
-
-
-@pytest.fixture(autouse=True)
-def mock_init_cache_dir():
-    """Mock the TTS cache dir in memory."""
-    with patch(
-        "homeassistant.components.tts._init_tts_cache_dir",
-        side_effect=lambda hass, cache_dir: hass.config.path(cache_dir),
-    ) as mock_cache_dir:
-        yield mock_cache_dir
-
-
-@pytest.fixture
-def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request):
-    """Mock the TTS cache dir with empty dir."""
-    mock_init_cache_dir.side_effect = None
-    mock_init_cache_dir.return_value = str(tmp_path)
-
-    # Restore original get cache files behavior, we're working with a real dir.
-    mock_get_cache_files.side_effect = _get_cache_files
-
-    yield tmp_path
-
-    if request.node.rep_call.passed:
-        return
-
-    # Print contents of dir if failed
-    print("Content of dir for", request.node.nodeid)
-    for fil in tmp_path.iterdir():
-        print(fil.relative_to(tmp_path))
-
-    # To show the log.
-    assert False
-
-
-@pytest.fixture()
-def mutagen_mock():
-    """Mock writing tags."""
-    with patch(
-        "homeassistant.components.tts.SpeechManager.write_tags",
-        side_effect=lambda *args: args[1],
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)
@@ -138,8 +93,8 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     )
     await hass.async_block_till_done()
     assert (
@@ -170,8 +125,8 @@ async def test_setup_component_and_test_service_with_config_language(
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
     )
     await hass.async_block_till_done()
     assert (
@@ -205,8 +160,8 @@ async def test_setup_component_and_test_service_with_config_language_special(
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_demo.mp3"
     )
     await hass.async_block_till_done()
     assert (
@@ -246,8 +201,8 @@ async def test_setup_component_and_test_service_with_service_language(
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
     )
     await hass.async_block_till_done()
     assert (
@@ -266,18 +221,18 @@ async def test_setup_component_test_service_with_wrong_service_language(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
-    await hass.services.async_call(
-        tts.DOMAIN,
-        "demo_say",
-        {
-            "entity_id": "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
-            tts.ATTR_LANGUAGE: "lang",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            tts.DOMAIN,
+            "demo_say",
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+                tts.ATTR_LANGUAGE: "lang",
+            },
+            blocking=True,
+        )
     assert len(calls) == 0
-    await hass.async_block_till_done()
     assert not (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_lang_-_demo.mp3"
     ).is_file()
@@ -310,8 +265,8 @@ async def test_setup_component_and_test_service_with_service_options(
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
     )
     await hass.async_block_till_done()
     assert (
@@ -347,8 +302,8 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert (
-            calls[0].data[ATTR_MEDIA_CONTENT_ID]
-            == f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
+            await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+            == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
         )
         await hass.async_block_till_done()
         assert (
@@ -368,17 +323,18 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
-    await hass.services.async_call(
-        tts.DOMAIN,
-        "demo_say",
-        {
-            "entity_id": "media_player.something",
-            tts.ATTR_MESSAGE: "There is someone at the door.",
-            tts.ATTR_LANGUAGE: "de",
-            tts.ATTR_OPTIONS: {"speed": 1},
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            tts.DOMAIN,
+            "demo_say",
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_OPTIONS: {"speed": 1},
+            },
+            blocking=True,
+        )
     opt_hash = tts._hash_options({"speed": 1})
 
     assert len(calls) == 0
@@ -410,7 +366,8 @@ async def test_setup_component_and_test_service_with_base_url_set(hass):
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID] == "http://fnord"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "http://fnord"
         "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
         "_en_-_demo.mp3"
     )
@@ -435,8 +392,8 @@ async def test_setup_component_and_test_service_clear_cache(hass, empty_cache_di
         blocking=True,
     )
     # To make sure the file is persisted
-    await hass.async_block_till_done()
     assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
@@ -446,7 +403,6 @@ async def test_setup_component_and_test_service_clear_cache(hass, empty_cache_di
         tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {}, blocking=True
     )
 
-    await hass.async_block_till_done()
     assert not (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     ).is_file()
@@ -463,8 +419,6 @@ async def test_setup_component_and_test_service_with_receive_voice(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
-    client = await hass_client()
-
     await hass.services.async_call(
         tts.DOMAIN,
         "demo_say",
@@ -476,7 +430,9 @@ async def test_setup_component_and_test_service_with_receive_voice(
     )
     assert len(calls) == 1
 
-    req = await client.get(relative_url(calls[0].data[ATTR_MEDIA_CONTENT_ID]))
+    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    client = await hass_client()
+    req = await client.get(url)
     _, demo_data = demo_provider.get_tts_audio("bla", "en")
     demo_data = tts.SpeechManager.write_tags(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
@@ -486,7 +442,7 @@ async def test_setup_component_and_test_service_with_receive_voice(
         "en",
         None,
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
 
 
@@ -501,8 +457,6 @@ async def test_setup_component_and_test_service_with_receive_voice_german(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
-    client = await hass_client()
-
     await hass.services.async_call(
         tts.DOMAIN,
         "demo_say",
@@ -513,7 +467,9 @@ async def test_setup_component_and_test_service_with_receive_voice_german(
         blocking=True,
     )
     assert len(calls) == 1
-    req = await client.get(relative_url(calls[0].data[ATTR_MEDIA_CONTENT_ID]))
+    url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    client = await hass_client()
+    req = await client.get(url)
     _, demo_data = demo_provider.get_tts_audio("bla", "de")
     demo_data = tts.SpeechManager.write_tags(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
@@ -523,7 +479,7 @@ async def test_setup_component_and_test_service_with_receive_voice_german(
         "de",
         None,
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
 
 
@@ -539,7 +495,7 @@ async def test_setup_component_and_web_view_wrong_file(hass, hass_client):
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTP_NOT_FOUND
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
 async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
@@ -554,7 +510,7 @@ async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
     url = "/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTP_NOT_FOUND
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
 async def test_setup_component_test_without_cache(hass, empty_cache_dir):
@@ -644,8 +600,8 @@ async def test_setup_component_test_with_cache_dir(
         )
     assert len(calls) == 1
     assert (
-        calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+        await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     )
 
 
@@ -682,7 +638,7 @@ async def test_setup_component_load_cache_retrieve_without_mem_cache(
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
 
 
@@ -698,7 +654,7 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     data = {"platform": "demo", "message": "There is someone at the door."}
 
     req = await client.post(url, json=data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     response = await req.json()
     assert response == {
         "url": "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
@@ -718,7 +674,7 @@ async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
     data = {"message": "There is someone at the door."}
 
     req = await client.post(url, json=data)
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_tags_with_wave(hass, demo_provider):
@@ -730,7 +686,7 @@ async def test_tags_with_wave(hass, demo_provider):
         + "22 56 00 00 88 58 01 00 04 00 10 00 64 61 74 61 00 00 00 00"
     )
 
-    tagged_data = tts.SpeechManager.write_tags(
+    tagged_data = ORIG_WRITE_TAGS(
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.wav",
         demo_data,
         demo_provider,
@@ -740,3 +696,41 @@ async def test_tags_with_wave(hass, demo_provider):
     )
 
     assert tagged_data != demo_data
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        "http://example.local:8123",
+        "http://example.local",
+        "http://example.local:80",
+        "https://example.com",
+        "https://example.com:443",
+        "https://example.com:8123",
+    ),
+)
+def test_valid_base_url(value):
+    """Test we validate base urls."""
+    assert tts.valid_base_url(value) == normalize_url(value)
+    # Test we strip trailing `/`
+    assert tts.valid_base_url(value + "/") == normalize_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        "http://example.local:8123/sub-path",
+        "http://example.local/sub-path",
+        "https://example.com/sub-path",
+        "https://example.com:8123/sub-path",
+        "mailto:some@email",
+        "http:example.com",
+        "http:/example.com",
+        "http//example.com",
+        "example.com",
+    ),
+)
+def test_invalid_base_url(value):
+    """Test we catch bad base urls."""
+    with pytest.raises(vol.Invalid):
+        tts.valid_base_url(value)

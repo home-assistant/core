@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN, const
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_ALARM_ARMED_AWAY,
@@ -14,6 +15,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -43,16 +46,51 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, ["disarm"]),
-        (False, const.SUPPORT_ALARM_ARM_AWAY, 0, ["disarm", "arm_away"]),
-        (False, const.SUPPORT_ALARM_ARM_HOME, 0, ["disarm", "arm_home"]),
-        (False, const.SUPPORT_ALARM_ARM_NIGHT, 0, ["disarm", "arm_night"]),
-        (False, const.SUPPORT_ALARM_TRIGGER, 0, ["disarm", "trigger"]),
+        (
+            False,
+            const.AlarmControlPanelEntityFeature.ARM_AWAY,
+            0,
+            ["disarm", "arm_away"],
+        ),
+        (
+            False,
+            const.AlarmControlPanelEntityFeature.ARM_HOME,
+            0,
+            ["disarm", "arm_home"],
+        ),
+        (
+            False,
+            const.AlarmControlPanelEntityFeature.ARM_NIGHT,
+            0,
+            ["disarm", "arm_night"],
+        ),
+        (False, const.AlarmControlPanelEntityFeature.TRIGGER, 0, ["disarm", "trigger"]),
         (True, 0, 0, ["disarm"]),
-        (True, 0, const.SUPPORT_ALARM_ARM_AWAY, ["disarm", "arm_away"]),
-        (True, 0, const.SUPPORT_ALARM_ARM_HOME, ["disarm", "arm_home"]),
-        (True, 0, const.SUPPORT_ALARM_ARM_NIGHT, ["disarm", "arm_night"]),
-        (True, 0, const.SUPPORT_ALARM_ARM_VACATION, ["disarm", "arm_vacation"]),
-        (True, 0, const.SUPPORT_ALARM_TRIGGER, ["disarm", "trigger"]),
+        (
+            True,
+            0,
+            const.AlarmControlPanelEntityFeature.ARM_AWAY,
+            ["disarm", "arm_away"],
+        ),
+        (
+            True,
+            0,
+            const.AlarmControlPanelEntityFeature.ARM_HOME,
+            ["disarm", "arm_home"],
+        ),
+        (
+            True,
+            0,
+            const.AlarmControlPanelEntityFeature.ARM_NIGHT,
+            ["disarm", "arm_night"],
+        ),
+        (
+            True,
+            0,
+            const.AlarmControlPanelEntityFeature.ARM_VACATION,
+            ["disarm", "arm_vacation"],
+        ),
+        (True, 0, const.AlarmControlPanelEntityFeature.TRIGGER, ["disarm", "trigger"]),
     ],
 )
 async def test_get_actions(
@@ -89,10 +127,62 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in expected_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert_lists_same(actions, expected_actions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected actions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=const.AlarmControlPanelEntityFeature.ARM_AWAY,
+    )
+    expected_actions = []
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for action in ["disarm", "arm_away"]
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
@@ -114,15 +204,19 @@ async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
             "type": "arm_night",
             "device_id": device_entry.id,
             "entity_id": "alarm_control_panel.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "disarm",
             "device_id": device_entry.id,
             "entity_id": "alarm_control_panel.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
@@ -158,11 +252,14 @@ async def test_get_action_capabilities(
         },
         "trigger": {"extra_fields": []},
     }
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 6
+    assert {action["type"] for action in actions} == set(expected_capabilities)
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == expected_capabilities[action["type"]]
 
@@ -207,11 +304,14 @@ async def test_get_action_capabilities_arm_code(
         },
         "trigger": {"extra_fields": []},
     }
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 6
+    assert {action["type"] for action in actions} == set(expected_capabilities)
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == expected_capabilities[action["type"]]
 

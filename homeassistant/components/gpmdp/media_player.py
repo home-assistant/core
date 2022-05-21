@@ -1,22 +1,22 @@
 """Support for Google Play Music Desktop Player."""
+from __future__ import annotations
+
 import json
 import logging
 import socket
 import time
+from typing import Any
 
 import voluptuous as vol
 from websocket import _exceptions, create_connection
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components import configurator
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,10 +25,13 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
-_CONFIGURING = {}
+_CONFIGURING: dict[str, Any] = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
@@ -36,15 +39,6 @@ DEFAULT_NAME = "GPM Desktop Player"
 DEFAULT_PORT = 5672
 
 GPMDP_CONFIG_FILE = "gpmpd.conf"
-
-SUPPORT_GPMDP = (
-    SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PLAY
-)
 
 PLAYBACK_DICT = {"0": STATE_PAUSED, "1": STATE_PAUSED, "2": STATE_PLAYING}  # Stopped
 
@@ -59,10 +53,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def request_configuration(hass, config, url, add_entities_callback):
     """Request configuration steps from the user."""
-    configurator = hass.components.configurator
     if "gpmdp" in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING["gpmdp"], "Failed to register, please try again."
+            hass, _CONFIGURING["gpmdp"], "Failed to register, please try again."
         )
 
         return
@@ -106,8 +99,7 @@ def request_configuration(hass, config, url, add_entities_callback):
                     "the desktop player and try again"
                 )
                 break
-            code = tmpmsg["payload"]
-            if code == "CODE_REQUIRED":
+            if (code := tmpmsg["payload"]) == "CODE_REQUIRED":
                 continue
             setup_gpmdp(hass, config, code, add_entities_callback)
             save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
@@ -147,17 +139,21 @@ def setup_gpmdp(hass, config, code, add_entities):
         return
 
     if "gpmdp" in _CONFIGURING:
-        configurator = hass.components.configurator
-        configurator.request_done(_CONFIGURING.pop("gpmdp"))
+        configurator.request_done(hass, _CONFIGURING.pop("gpmdp"))
 
     add_entities([GPMDP(name, url, code)], True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the GPMDP platform."""
     codeconfig = load_json(hass.config.path(GPMDP_CONFIG_FILE))
     if codeconfig:
-        code = codeconfig.get("CODE")
+        code = codeconfig.get("CODE") if isinstance(codeconfig, dict) else None
     elif discovery_info is not None:
         if "gpmdp" in _CONFIGURING:
             return
@@ -169,6 +165,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class GPMDP(MediaPlayerEntity):
     """Representation of a GPMDP."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, name, url, code):
         """Initialize the media player."""
@@ -209,8 +214,7 @@ class GPMDP(MediaPlayerEntity):
         """Send ws messages to GPMDP and verify request id in response."""
 
         try:
-            websocket = self.get_ws()
-            if websocket is None:
+            if (websocket := self.get_ws()) is None:
                 self._status = STATE_OFF
                 return
             self._request_id += 1
@@ -313,11 +317,6 @@ class GPMDP(MediaPlayerEntity):
         """Return the name of the device."""
         return self._name
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_GPMDP
-
     def media_next_track(self):
         """Send media_next command to media player."""
         self.send_gpmdp_msg("playback", "forward", False)
@@ -340,8 +339,7 @@ class GPMDP(MediaPlayerEntity):
 
     def media_seek(self, position):
         """Send media_seek command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send(
             json.dumps(
@@ -356,24 +354,21 @@ class GPMDP(MediaPlayerEntity):
 
     def volume_up(self):
         """Send volume_up command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send('{"namespace": "volume", "method": "increaseVolume"}')
         self.schedule_update_ha_state()
 
     def volume_down(self):
         """Send volume_down command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send('{"namespace": "volume", "method": "decreaseVolume"}')
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):
         """Set volume on media player, range(0..1)."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send(
             json.dumps(

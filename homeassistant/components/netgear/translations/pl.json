@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "config": "B\u0142\u0105d po\u0142\u0105czenia lub logowania: sprawd\u017a konfiguracj\u0119"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP (opcjonalnie)",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika (opcjonalnie)"
+                },
+                "description": "Domy\u015blne IP lub nazwa hosta: {host}\nDomy\u015blna nazwa u\u017cytkownika: {username}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Czas przed oznaczeniem \"w domu\" (w sekundach)"
+                },
+                "description": "Okre\u015bl opcjonalne ustawienia"
+            }
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "\u8f38\u5165\u5be6\u9ad4",
+                    "name": "\u540d\u7a31",
+                    "round_digits": "\u6e96\u78ba\u5ea6",
+                    "type": "\u7d71\u8a08\u7279\u5fb5"
+                },
+                "data_description": {
+                    "round_digits": "\u7576\u7d71\u8a08\u7279\u5fb5\u70ba\u5e73\u5747\u503c\u6216\u4e2d\u503c\u6642\u3001\u63a7\u5236\u8f38\u51fa\u5c0f\u6578\u4f4d\u6578\u3002"
+                },
+                "description": "\u65b0\u589e\u81ea\u8f38\u5165\u611f\u6e2c\u5668\u4e86\u8868\u4e2d\uff0c\u8a08\u7b97\u6700\u4f4e\u3001\u6700\u9ad8\u3001\u5e73\u5747\u503c\u6216\u4e2d\u503c\u611f\u6e2c\u5668\u3002",
+                "title": "\u65b0\u589e\u6700\u5c0f\u503c / \u6700\u5927\u503c / \u5e73\u5747\u503c / \u4e2d\u503c\u611f\u6e2c\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "\u8f38\u5165\u5be6\u9ad4",
+                    "round_digits": "\u6e96\u78ba\u5ea6",
+                    "type": "\u7d71\u8a08\u7279\u5fb5"
+                },
+                "data_description": {
+                    "round_digits": "\u7576\u7d71\u8a08\u7279\u5fb5\u70ba\u5e73\u5747\u503c\u6216\u4e2d\u503c\u6642\u3001\u63a7\u5236\u8f38\u51fa\u5c0f\u6578\u4f4d\u6578\u3002"
+                }
+            }
+        }
+    },
+    "title": "\u6700\u5c0f\u503c / \u6700\u5927\u503c / \u5e73\u5747\u503c / \u4e2d\u503c\u611f\u6e2c\u5668"
+}

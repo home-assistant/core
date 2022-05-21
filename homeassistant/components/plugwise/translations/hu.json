@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_setup": "Adja hozz\u00e1 Adamot Anna helyett. Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse meg a Home Assistant Plugwise integr\u00e1ci\u00f3s dokument\u00e1ci\u00f3j\u00e1t",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "flow_title": "{name}",

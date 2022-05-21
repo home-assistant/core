@@ -13,9 +13,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -122,10 +120,12 @@ class GarageDoorOpener(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_obstruction_sensor:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_obstruction_sensor],
-                self._async_update_obstruction_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_obstruction_sensor],
+                    self._async_update_obstruction_event,
+                )
             )
 
         await super().run()
@@ -199,11 +199,11 @@ class OpeningDeviceBase(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._supports_stop = self.features & SUPPORT_STOP
+        self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
-        self._supports_tilt = self.features & SUPPORT_SET_TILT_POSITION
+        self._supports_tilt = self.features & CoverEntityFeature.SET_TILT_POSITION
 
         if self._supports_tilt:
             self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
@@ -247,14 +247,17 @@ class OpeningDeviceBase(HomeAccessory):
     def async_update_state(self, new_state):
         """Update cover position and tilt after state changed."""
         # update tilt
+        if not self._supports_tilt:
+            return
         current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-        if isinstance(current_tilt, (float, int)):
-            # HomeKit sends values between -90 and 90.
-            # We'll have to normalize to [0,100]
-            current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
-            current_tilt = int(current_tilt)
-            self.char_current_tilt.set_value(current_tilt)
-            self.char_target_tilt.set_value(current_tilt)
+        if not isinstance(current_tilt, (float, int)):
+            return
+        # HomeKit sends values between -90 and 90.
+        # We'll have to normalize to [0,100]
+        current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
+        current_tilt = int(current_tilt)
+        self.char_current_tilt.set_value(current_tilt)
+        self.char_target_tilt.set_value(current_tilt)
 
 
 class OpeningDevice(OpeningDeviceBase, HomeAccessory):
@@ -271,7 +274,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             CHAR_CURRENT_POSITION, value=0
         )
         target_args = {"value": 0}
-        if self.features & SUPPORT_SET_POSITION:
+        if self.features & CoverEntityFeature.SET_POSITION:
             target_args["setter_callback"] = self.move_cover
         else:
             # If its tilt only we lock the position state to 0 (closed)
@@ -314,7 +317,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
 
 @TYPES.register("Window")
 class Window(OpeningDevice):
-    """Generate a Window accessory for a cover entity with DEVICE_CLASS_WINDOW.
+    """Generate a Window accessory for a cover entity with WINDOW device class.
 
     The entity must support: set_cover_position.
     """

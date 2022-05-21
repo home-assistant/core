@@ -6,26 +6,16 @@ import logging
 
 import bellows.zigbee.application
 import voluptuous as vol
+import zigpy.application
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
 import zigpy_znp.zigbee.application
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.number import DOMAIN as NUMBER
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.const import Platform
 import homeassistant.helpers.config_validation as cv
-
-from .typing import CALLABLE_T
 
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
@@ -53,6 +43,7 @@ ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
 ATTR_OUT_CLUSTERS = "out_clusters"
+ATTR_PARAMS = "params"
 ATTR_POWER_SOURCE = "power_source"
 ATTR_PROFILE_ID = "profile_id"
 ATTR_QUIRK_APPLIED = "quirk_applied"
@@ -79,11 +70,14 @@ CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
 CHANNEL_COVER = "window_covering"
+CHANNEL_DEVICE_TEMPERATURE = "device_temperature"
 CHANNEL_DOORLOCK = "door_lock"
 CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
 CHANNEL_HUMIDITY = "humidity"
+CHANNEL_SOIL_MOISTURE = "soil_moisture"
+CHANNEL_LEAF_WETNESS = "leaf_wetness"
 CHANNEL_IAS_ACE = "ias_ace"
 CHANNEL_IAS_WD = "ias_wd"
 CHANNEL_IDENTIFY = "identify"
@@ -108,17 +102,20 @@ CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
 PLATFORMS = (
-    ALARM,
-    BINARY_SENSOR,
-    CLIMATE,
-    COVER,
-    DEVICE_TRACKER,
-    FAN,
-    LIGHT,
-    LOCK,
-    NUMBER,
-    SENSOR,
-    SWITCH,
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
 )
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"
@@ -172,7 +169,6 @@ DATA_ZHA = "zha"
 DATA_ZHA_CONFIG = "config"
 DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
-DATA_ZHA_DISPATCHERS = "zha_dispatchers"
 DATA_ZHA_GATEWAY = "zha_gateway"
 DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
 DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
@@ -216,8 +212,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
-PRESET_SCHEDULE = "schedule"
-PRESET_COMPLEX = "complex"
+PRESET_SCHEDULE = "Schedule"
+PRESET_COMPLEX = "Complex"
+PRESET_TEMP_MANUAL = "Temporary manual"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
@@ -226,6 +223,8 @@ ZHA_CONFIG_SCHEMAS = {
     ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA,
     ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
 }
+
+_ControllerClsType = type[zigpy.application.ControllerApplication]
 
 
 class RadioType(enum.Enum):
@@ -265,13 +264,13 @@ class RadioType(enum.Enum):
                 return radio.name
         raise ValueError
 
-    def __init__(self, description: str, controller_cls: CALLABLE_T) -> None:
+    def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:
         """Init instance."""
         self._desc = description
         self._ctrl_cls = controller_cls
 
     @property
-    def controller(self) -> CALLABLE_T:
+    def controller(self) -> _ControllerClsType:
         """Return controller class."""
         return self._ctrl_cls
 
@@ -374,6 +373,7 @@ ZHA_CHANNEL_MSG_BIND = "zha_channel_bind"
 ZHA_CHANNEL_MSG_CFG_RPT = "zha_channel_configure_reporting"
 ZHA_CHANNEL_MSG_DATA = "zha_channel_msg_data"
 ZHA_CHANNEL_CFG_DONE = "zha_channel_cfg_done"
+ZHA_CHANNEL_READS_PER_REQ = 5
 ZHA_GW_MSG = "zha_gateway_message"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
 ZHA_GW_MSG_DEVICE_INFO = "device_info"
@@ -393,3 +393,10 @@ EFFECT_BREATHE = 0x01
 EFFECT_OKAY = 0x02
 
 EFFECT_DEFAULT_VARIANT = 0x00
+
+
+class Strobe(t.enum8):
+    """Strobe enum."""
+
+    No_Strobe = 0x00
+    Strobe = 0x01

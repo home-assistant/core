@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "home_control": "De devolo Home Control Centrale Unit werkt niet met deze integratie."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-adres"
+                },
+                "description": "Wil je beginnen met instellen?"
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u het devolo-thuisnetwerkapparaat met de hostnaam ` {host_name} ` aan Home Assistant toevoegen?",
+                "title": "Ontdekt devolo thuisnetwerk apparaat"
+            }
+        }
+    }
+}

@@ -2,15 +2,12 @@
 import asyncio
 from contextlib import suppress
 import copy
+from http import HTTPStatus
 
 from aiohttp.client_exceptions import ClientResponseError
 
 from homeassistant.components.buienradar.const import CONF_COUNTRY, CONF_DELTA, DOMAIN
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
@@ -59,7 +56,7 @@ async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert aioclient_mock.call_count == 1
     body = await resp.text()
     assert body == "hello world"
@@ -89,7 +86,7 @@ async def test_expire_delta(aioclient_mock, hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert aioclient_mock.call_count == 1
     body = await resp.text()
     assert body == "hello world"
@@ -216,7 +213,9 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
 
     client = await hass_client()
 
-    aioclient_mock.get(radar_map_url(), text=None, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(
+        radar_map_url(), text=None, status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
 
     # A 404 should not return data and throw:
     with suppress(ClientResponseError):

@@ -1,0 +1,25 @@
+{
+  "Body": {
+    "Data": {
+      "1": {
+        "CustomName": "Inverter name",
+        "DT": 1,
+        "ErrorCode": 0,
+        "InverterState": "Running",
+        "PVPower": 9360,
+        "Show": 1,
+        "StatusCode": 7,
+        "UniqueID": "12345678"
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-26T11:07:53+00:00"
+  }
+}

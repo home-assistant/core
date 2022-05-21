@@ -2,20 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from functools import partial
-from typing import Any, Callable, Dict, cast
+from typing import Any, cast
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_ZIP_CODE,
-    DATA_COORDINATOR,
     DOMAIN,
     LOGGER,
     TYPE_ALLERGY_FORECAST,
@@ -39,14 +38,11 @@ from .const import (
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IQVIA as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    coordinators = {}
-
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         hass.config_entries.async_update_entry(
@@ -55,6 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(entry.data[CONF_ZIP_CODE], session=websession)
+
+    # We disable the client's request retry abilities here to avoid a lengthy (and
+    # blocking) startup:
+    client.disable_request_retries()
 
     async def async_get_data_from_api(
         api_coro: Callable[..., Awaitable]
@@ -65,9 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except IQVIAError as err:
             raise UpdateFailed from err
 
-        return cast(Dict[str, Any], data)
+        return cast(dict[str, Any], data)
 
+    coordinators = {}
     init_data_update_tasks = []
+
     for sensor_type, api_coro in (
         (TYPE_ALLERGY_FORECAST, client.allergens.extended),
         (TYPE_ALLERGY_INDEX, client.allergens.current),
@@ -93,7 +95,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # API calls fail:
         raise ConfigEntryNotReady()
 
-    hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
+    # Once we've successfully authenticated, we re-enable client request retries:
+    client.enable_request_retries()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinators
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -103,31 +110,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity, SensorEntity):
+class IQVIAEntity(CoordinatorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         entry: ConfigEntry,
-        sensor_type: str,
-        name: str,
-        icon: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_icon = icon
-        self._attr_name = name
-        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
-        self._attr_native_unit_of_measurement = "index"
+        self._attr_extra_state_attributes = {}
+        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{description.key}"
         self._entry = entry
-        self._type = sensor_type
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -142,9 +145,9 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        if self._type == TYPE_ALLERGY_FORECAST:
+        if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
-                self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                self.hass.data[DOMAIN][self._entry.entry_id][
                     TYPE_ALLERGY_OUTLOOK
                 ].async_add_listener(self._handle_coordinator_update)
             )

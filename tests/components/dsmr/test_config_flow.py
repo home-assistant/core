@@ -7,7 +7,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch, sentinel
 import serial
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dsmr import DOMAIN, config_flow
 
 from tests.common import MockConfigEntry
@@ -49,13 +49,70 @@ async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "10.10.0.1", "port": 1234, "dsmr_version": "2.2"},
+            {
+                "host": "10.10.0.1",
+                "port": 1234,
+                "dsmr_version": "2.2",
+            },
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "host": "10.10.0.1",
         "port": 1234,
         "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+    }
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "10.10.0.1:1234"
+    assert result["data"] == {**entry_data, **SERIAL_DATA}
+
+
+async def test_setup_network_rfxtrx(
+    hass,
+    dsmr_connection_send_validate_fixture,
+    rfxtrx_dsmr_connection_send_validate_fixture,
+):
+    """Test we can setup network."""
+    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Network"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_network"
+    assert result["errors"] == {}
+
+    # set-up DSMRProtocol to yield no valid telegram, this will retry with RFXtrxDSMRProtocol
+    protocol.telegram = {}
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "10.10.0.1",
+                "port": 1234,
+                "dsmr_version": "2.2",
+            },
+        )
+        await hass.async_block_till_done()
+
+    entry_data = {
+        "host": "10.10.0.1",
+        "port": 1234,
+        "dsmr_version": "2.2",
+        "protocol": "rfxtrx_dsmr_protocol",
     }
 
     assert result["type"] == "create_entry"
@@ -87,17 +144,195 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "2.2"},
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": port.device,
         "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
     }
 
     assert result["type"] == "create_entry"
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_serial_rfxtrx(
+    com_mock,
+    hass,
+    dsmr_connection_send_validate_fixture,
+    rfxtrx_dsmr_connection_send_validate_fixture,
+):
+    """Test we can setup serial."""
+    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    # set-up DSMRProtocol to yield no valid telegram, this will retry with RFXtrxDSMRProtocol
+    protocol.telegram = {}
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "2.2"},
+        )
+        await hass.async_block_till_done()
+
+    entry_data = {
+        "port": port.device,
+        "dsmr_version": "2.2",
+        "protocol": "rfxtrx_dsmr_protocol",
+    }
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == port.device
+    assert result["data"] == {**entry_data, **SERIAL_DATA}
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
+    """Test we can setup serial."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "5L"},
+        )
+        await hass.async_block_till_done()
+
+    entry_data = {
+        "port": port.device,
+        "dsmr_version": "5L",
+        "protocol": "dsmr_protocol",
+        "serial_id": "12345678",
+        "serial_id_gas": "123456789",
+    }
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == port.device
+    assert result["data"] == entry_data
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
+    """Test we can setup serial."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"port": port.device, "dsmr_version": "5S"}
+        )
+        await hass.async_block_till_done()
+
+    entry_data = {
+        "port": port.device,
+        "dsmr_version": "5S",
+        "protocol": "dsmr_protocol",
+        "serial_id": None,
+        "serial_id_gas": None,
+    }
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == port.device
+    assert result["data"] == entry_data
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
+    """Test we can setup serial."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "Q3D"},
+        )
+        await hass.async_block_till_done()
+
+    entry_data = {
+        "port": port.device,
+        "dsmr_version": "Q3D",
+        "protocol": "dsmr_protocol",
+        "serial_id": "12345678",
+        "serial_id_gas": None,
+    }
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == port.device
+    assert result["data"] == entry_data
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
@@ -123,7 +358,8 @@ async def test_setup_serial_manual(
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"port": "Enter Manually", "dsmr_version": "2.2"}
+        result["flow_id"],
+        {"port": "Enter Manually", "dsmr_version": "2.2"},
     )
 
     assert result["type"] == "form"
@@ -134,10 +370,12 @@ async def test_setup_serial_manual(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"port": "/dev/ttyUSB0"}
         )
+        await hass.async_block_till_done()
 
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
     }
 
     assert result["type"] == "create_entry"
@@ -150,8 +388,6 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     port = com_port()
 
     result = await hass.config_entries.flow.async_init(
@@ -182,7 +418,8 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
         first_fail_connection_factory,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "2.2"},
         )
 
     assert result["type"] == "form"
@@ -191,13 +428,19 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_serial_wrong_telegram(
-    com_mock, hass, dsmr_connection_send_validate_fixture
+async def test_setup_serial_timeout(
+    com_mock,
+    hass,
+    dsmr_connection_send_validate_fixture,
+    rfxtrx_dsmr_connection_send_validate_fixture,
 ):
-    """Test failed telegram data."""
+    """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    (
+        connection_factory,
+        transport,
+        rfxtrx_protocol,
+    ) = rfxtrx_dsmr_connection_send_validate_fixture
 
     port = com_port()
 
@@ -205,7 +448,17 @@ async def test_setup_serial_wrong_telegram(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    protocol.telegram = {}
+    first_timeout_wait_closed = AsyncMock(
+        return_value=True,
+        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+    )
+    protocol.wait_closed = first_timeout_wait_closed
+
+    first_timeout_wait_closed = AsyncMock(
+        return_value=True,
+        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
+    )
+    rfxtrx_protocol.wait_closed = first_timeout_wait_closed
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -220,8 +473,56 @@ async def test_setup_serial_wrong_telegram(
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {}
 
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {"base": "cannot_communicate"}
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_serial_wrong_telegram(
+    com_mock,
+    hass,
+    dsmr_connection_send_validate_fixture,
+    rfxtrx_dsmr_connection_send_validate_fixture,
+):
+    """Test failed telegram data."""
+    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
+    (
+        rfxtrx_connection_factory,
+        transport,
+        rfxtrx_protocol,
+    ) = rfxtrx_dsmr_connection_send_validate_fixture
+
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "setup_serial"
+    assert result["errors"] == {}
+
+    protocol.telegram = {}
+    rfxtrx_protocol.telegram = {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "2.2"},
     )
 
     assert result["type"] == "form"
@@ -229,200 +530,8 @@ async def test_setup_serial_wrong_telegram(
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
-async def test_import_usb(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "/dev/ttyUSB0"
-    assert result["data"] == {**entry_data, **SERIAL_DATA}
-
-
-async def test_import_usb_failed_connection(
-    hass, dsmr_connection_send_validate_fixture
-):
-    """Test we can import."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    # override the mock to have it fail the first time and succeed after
-    first_fail_connection_factory = AsyncMock(
-        return_value=(transport, protocol),
-        side_effect=chain([serial.serialutil.SerialException], repeat(DEFAULT)),
-    )
-
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
-        first_fail_connection_factory,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_usb_no_data(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    # override the mock to have it fail the first time and succeed after
-    wait_closed = AsyncMock(
-        return_value=(transport, protocol),
-        side_effect=chain([asyncio.TimeoutError], repeat(DEFAULT)),
-    )
-
-    protocol.wait_closed = wait_closed
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_communicate"
-
-
-async def test_import_usb_wrong_telegram(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import."""
-    (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    protocol.telegram = {}
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_communicate"
-
-
-async def test_import_network(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import from network."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "host": "localhost",
-        "port": "1234",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "localhost:1234"
-    assert result["data"] == {**entry_data, **SERIAL_DATA}
-
-
-async def test_import_update(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=entry_data,
-        unique_id="/dev/ttyUSB0",
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.dsmr.async_unload_entry", return_value=True):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    await hass.async_block_till_done()
-
-    new_entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-        "precision": 3,
-        "reconnect_interval": 30,
-    }
-
-    with patch(
-        "homeassistant.components.dsmr.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.dsmr.async_unload_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=new_entry_data,
-        )
-
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-    assert entry.data["precision"] == 3
-
-
 async def test_options_flow(hass):
     """Test options flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry_data = {
         "port": "/dev/ttyUSB0",
@@ -458,52 +567,6 @@ async def test_options_flow(hass):
         await hass.async_block_till_done()
 
     assert entry.options == {"time_between_update": 15}
-
-
-async def test_import_luxembourg(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "5L",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "/dev/ttyUSB0"
-    assert result["data"] == {**entry_data, **SERIAL_DATA}
-
-
-async def test_import_sweden(hass, dsmr_connection_send_validate_fixture):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "5S",
-        "precision": 4,
-        "reconnect_interval": 30,
-    }
-
-    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_data,
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "/dev/ttyUSB0"
-    assert result["data"] == {**entry_data, **SERIAL_DATA_SWEDEN}
 
 
 def test_get_serial_by_id_no_dir():

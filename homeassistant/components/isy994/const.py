@@ -1,48 +1,17 @@
 """Constants for the ISY994 Platform."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_VIBRATION,
-    DOMAIN as BINARY_SENSOR,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
@@ -109,6 +78,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -133,14 +103,29 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
-PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+PROGRAM_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LOCK,
+    Platform.SWITCH,
+]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
 # ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
-ISY_GROUP_PLATFORM = SWITCH
+ISY_GROUP_PLATFORM = Platform.SWITCH
 
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
@@ -183,8 +168,6 @@ TYPE_CATEGORY_X10 = "113."
 TYPE_EZIO2X4 = "7.3.255."
 TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
 
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-
 # Used for discovery
 UDN_UUID_PREFIX = "uuid:"
 ISY_URL_POSTFIX = "/desc"
@@ -208,12 +191,14 @@ UOM_INDEX = "25"
 UOM_ON_OFF = "2"
 UOM_PERCENTAGE = "51"
 
+SENSOR_AUX = "sensor_aux"
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
-NODE_FILTERS = {
-    BINARY_SENSOR: {
+NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
+    Platform.BINARY_SENSOR: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
@@ -233,7 +218,7 @@ NODE_FILTERS = {
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
-    SENSOR: {
+    Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
         FILTER_UOM: (
@@ -257,28 +242,28 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
         FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
     },
-    LOCK: {
+    Platform.LOCK: {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
-    FAN: {
+    Platform.FAN: {
         FILTER_UOM: [],
         FILTER_STATES: ["off", "low", "med", "high"],
         FILTER_NODE_DEF_ID: ["FanLincMotor"],
         FILTER_INSTEON_TYPE: ["1.46."],
         FILTER_ZWAVE_CAT: [],
     },
-    COVER: {
+    Platform.COVER: {
         FILTER_UOM: [UOM_BARRIER],
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
         FILTER_ZWAVE_CAT: [],
     },
-    LIGHT: {
+    Platform.LIGHT: {
         FILTER_UOM: ["51"],
         FILTER_STATES: ["on", "off", "%"],
         FILTER_NODE_DEF_ID: [
@@ -295,7 +280,7 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_DIMMABLE],
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
-    SWITCH: {
+    Platform.SWITCH: {
         FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
@@ -325,7 +310,7 @@ NODE_FILTERS = {
         ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
-    CLIMATE: {
+    Platform.CLIMATE: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
@@ -473,38 +458,38 @@ UOM_TO_STATES = {
         27: "factory reset",
     },
     UOM_HVAC_ACTIONS: {  # Thermostat Heat/Cool State
-        0: CURRENT_HVAC_IDLE,
-        1: CURRENT_HVAC_HEAT,
-        2: CURRENT_HVAC_COOL,
-        3: CURRENT_HVAC_FAN,
-        4: CURRENT_HVAC_HEAT,  # Pending Heat
-        5: CURRENT_HVAC_COOL,  # Pending Cool
+        0: HVACAction.IDLE.value,
+        1: HVACAction.HEATING.value,
+        2: HVACAction.COOLING.value,
+        3: HVACAction.FAN.value,
+        4: HVACAction.HEATING.value,  # Pending Heat
+        5: HVACAction.COOLING.value,  # Pending Cool
         # >6 defined in ISY but not implemented, leaving for future expanision.
-        6: CURRENT_HVAC_IDLE,
-        7: CURRENT_HVAC_HEAT,
-        8: CURRENT_HVAC_HEAT,
-        9: CURRENT_HVAC_COOL,
-        10: CURRENT_HVAC_HEAT,
-        11: CURRENT_HVAC_HEAT,
+        6: HVACAction.IDLE.value,
+        7: HVACAction.HEATING.value,
+        8: HVACAction.HEATING.value,
+        9: HVACAction.COOLING.value,
+        10: HVACAction.HEATING.value,
+        11: HVACAction.HEATING.value,
     },
     UOM_HVAC_MODE_GENERIC: {  # Thermostat Mode
-        0: HVAC_MODE_OFF,
-        1: HVAC_MODE_HEAT,
-        2: HVAC_MODE_COOL,
-        3: HVAC_MODE_AUTO,
+        0: HVACMode.OFF.value,
+        1: HVACMode.HEAT.value,
+        2: HVACMode.COOL.value,
+        3: HVACMode.AUTO.value,
         4: PRESET_BOOST,
         5: "resume",
-        6: HVAC_MODE_FAN_ONLY,
+        6: HVACMode.FAN_ONLY.value,
         7: "furnace",
-        8: HVAC_MODE_DRY,
+        8: HVACMode.DRY.value,
         9: "moist air",
         10: "auto changeover",
         11: "energy save heat",
         12: "energy save cool",
         13: PRESET_AWAY,
-        14: HVAC_MODE_AUTO,
-        15: HVAC_MODE_AUTO,
-        16: HVAC_MODE_AUTO,
+        14: HVACMode.AUTO.value,
+        15: HVACMode.AUTO.value,
+        16: HVACMode.AUTO.value,
     },
     "68": {  # Thermostat Fan Mode
         0: FAN_AUTO,
@@ -597,14 +582,14 @@ UOM_TO_STATES = {
         },  # 1-99 are percentage open
     },
     UOM_HVAC_MODE_INSTEON: {  # Insteon Thermostat Mode
-        0: HVAC_MODE_OFF,
-        1: HVAC_MODE_HEAT,
-        2: HVAC_MODE_COOL,
-        3: HVAC_MODE_HEAT_COOL,
-        4: HVAC_MODE_FAN_ONLY,
-        5: HVAC_MODE_AUTO,  # Program Auto
-        6: HVAC_MODE_AUTO,  # Program Heat-Set @ Local Device Only
-        7: HVAC_MODE_AUTO,  # Program Cool-Set @ Local Device Only
+        0: HVACMode.OFF.value,
+        1: HVACMode.HEAT.value,
+        2: HVACMode.COOL.value,
+        3: HVACMode.HEAT_COOL.value,
+        4: HVACMode.FAN_ONLY.value,
+        5: HVACMode.AUTO.value,  # Program Auto
+        6: HVACMode.AUTO.value,  # Program Heat-Set @ Local Device Only
+        7: HVACMode.AUTO.value,  # Program Cool-Set @ Local Device Only
     },
     UOM_FAN_MODES: {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
     "115": {  # Most recent On style action taken for lamp control
@@ -625,28 +610,28 @@ UOM_TO_STATES = {
 }
 
 ISY_HVAC_MODES = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_FAN_ONLY,
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.HEAT_COOL,
+    HVACMode.AUTO,
+    HVACMode.FAN_ONLY,
 ]
 
 HA_HVAC_TO_ISY = {
-    HVAC_MODE_OFF: "off",
-    HVAC_MODE_HEAT: "heat",
-    HVAC_MODE_COOL: "cool",
-    HVAC_MODE_HEAT_COOL: "auto",
-    HVAC_MODE_FAN_ONLY: "fan_only",
-    HVAC_MODE_AUTO: "program_auto",
+    HVACMode.OFF: "off",
+    HVACMode.HEAT: "heat",
+    HVACMode.COOL: "cool",
+    HVACMode.HEAT_COOL: "auto",
+    HVACMode.FAN_ONLY: "fan_only",
+    HVACMode.AUTO: "program_auto",
 }
 
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
-    DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],
-    DEVICE_CLASS_OPENING: [
+    BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],
+    BinarySensorDeviceClass.OPENING: [
         "16.9.",
         "16.6.",
         "16.7.",
@@ -655,22 +640,22 @@ BINARY_SENSOR_DEVICE_TYPES_ISY = {
         "16.20.",
         "16.21.",
     ],
-    DEVICE_CLASS_MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
+    BinarySensorDeviceClass.MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
 }
 
 BINARY_SENSOR_DEVICE_TYPES_ZWAVE = {
-    DEVICE_CLASS_SAFETY: ["137", "172", "176", "177", "178"],
-    DEVICE_CLASS_SMOKE: ["138", "156"],
-    DEVICE_CLASS_PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
-    DEVICE_CLASS_GAS: ["150", "151"],
-    DEVICE_CLASS_SOUND: ["153"],
-    DEVICE_CLASS_COLD: ["152", "168"],
-    DEVICE_CLASS_HEAT: ["154", "166", "167"],
-    DEVICE_CLASS_MOISTURE: ["159", "169"],
-    DEVICE_CLASS_DOOR: ["160"],
-    DEVICE_CLASS_BATTERY: ["162"],
-    DEVICE_CLASS_MOTION: ["155"],
-    DEVICE_CLASS_VIBRATION: ["173"],
+    BinarySensorDeviceClass.SAFETY: ["137", "172", "176", "177", "178"],
+    BinarySensorDeviceClass.SMOKE: ["138", "156"],
+    BinarySensorDeviceClass.PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
+    BinarySensorDeviceClass.GAS: ["150", "151"],
+    BinarySensorDeviceClass.SOUND: ["153"],
+    BinarySensorDeviceClass.COLD: ["152", "168"],
+    BinarySensorDeviceClass.HEAT: ["154", "166", "167"],
+    BinarySensorDeviceClass.MOISTURE: ["159", "169"],
+    BinarySensorDeviceClass.DOOR: ["160"],
+    BinarySensorDeviceClass.BATTERY: ["162"],
+    BinarySensorDeviceClass.MOTION: ["155"],
+    BinarySensorDeviceClass.VIBRATION: ["173"],
 }
 
 

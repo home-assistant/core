@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "name": "Ad"
+                },
+                "description": "T\u00fcm gereksinimlerin kar\u015f\u0131land\u0131\u011f\u0131ndan emin olmak i\u00e7in l\u00fctfen belgelere bak\u0131n."
+            }
+        }
+    }
+}

@@ -1,12 +1,18 @@
 """Support for Habitica sensors."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME, HTTP_TOO_MANY_REQUESTS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -15,26 +21,34 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-ST = SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
+SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
 
 SENSORS_TYPES = {
-    "name": ST("Name", None, "", ["profile", "name"]),
-    "hp": ST("HP", "mdi:heart", "HP", ["stats", "hp"]),
-    "maxHealth": ST("max HP", "mdi:heart", "HP", ["stats", "maxHealth"]),
-    "mp": ST("Mana", "mdi:auto-fix", "MP", ["stats", "mp"]),
-    "maxMP": ST("max Mana", "mdi:auto-fix", "MP", ["stats", "maxMP"]),
-    "exp": ST("EXP", "mdi:star", "EXP", ["stats", "exp"]),
-    "toNextLevel": ST("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
-    "lvl": ST("Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]),
-    "gp": ST("Gold", "mdi:currency-usd-circle", "Gold", ["stats", "gp"]),
-    "class": ST("Class", "mdi:sword", "", ["stats", "class"]),
+    "name": SensorType("Name", None, "", ["profile", "name"]),
+    "hp": SensorType("HP", "mdi:heart", "HP", ["stats", "hp"]),
+    "maxHealth": SensorType("max HP", "mdi:heart", "HP", ["stats", "maxHealth"]),
+    "mp": SensorType("Mana", "mdi:auto-fix", "MP", ["stats", "mp"]),
+    "maxMP": SensorType("max Mana", "mdi:auto-fix", "MP", ["stats", "maxMP"]),
+    "exp": SensorType("EXP", "mdi:star", "EXP", ["stats", "exp"]),
+    "toNextLevel": SensorType("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
+    "lvl": SensorType(
+        "Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]
+    ),
+    "gp": SensorType("Gold", "mdi:circle-multiple", "Gold", ["stats", "gp"]),
+    "class": SensorType("Class", "mdi:sword", "", ["stats", "class"]),
 }
 
 TASKS_TYPES = {
-    "habits": ST("Habits", "mdi:clipboard-list-outline", "n_of_tasks", ["habits"]),
-    "dailys": ST("Dailys", "mdi:clipboard-list-outline", "n_of_tasks", ["dailys"]),
-    "todos": ST("TODOs", "mdi:clipboard-list-outline", "n_of_tasks", ["todos"]),
-    "rewards": ST("Rewards", "mdi:clipboard-list-outline", "n_of_tasks", ["rewards"]),
+    "habits": SensorType(
+        "Habits", "mdi:clipboard-list-outline", "n_of_tasks", ["habits"]
+    ),
+    "dailys": SensorType(
+        "Dailys", "mdi:clipboard-list-outline", "n_of_tasks", ["dailys"]
+    ),
+    "todos": SensorType("TODOs", "mdi:clipboard-list-outline", "n_of_tasks", ["todos"]),
+    "rewards": SensorType(
+        "Rewards", "mdi:clipboard-list-outline", "n_of_tasks", ["rewards"]
+    ),
 }
 
 TASKS_MAP_ID = "id"
@@ -65,10 +79,14 @@ TASKS_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the habitica sensors."""
 
-    entities = []
+    entities: list[SensorEntity] = []
     name = config_entry.data[CONF_NAME]
     sensor_data = HabitipyData(hass.data[DOMAIN][config_entry.entry_id])
     await sensor_data.update()
@@ -94,7 +112,7 @@ class HabitipyData:
         try:
             self.data = await self.api.user.get()
         except ClientResponseError as error:
-            if error.status == HTTP_TOO_MANY_REQUESTS:
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(
                     "Sensor data update for %s has too many API requests;"
                     " Skipping the update",
@@ -111,7 +129,7 @@ class HabitipyData:
             try:
                 self.tasks[task_type] = await self.api.tasks.user.get(type=task_type)
             except ClientResponseError as error:
-                if error.status == HTTP_TOO_MANY_REQUESTS:
+                if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(
                         "Sensor data update for %s has too many API requests;"
                         " Skipping the update",
@@ -213,8 +231,7 @@ class HabitipyTaskSensor(SensorEntity):
                 task_id = received_task[TASKS_MAP_ID]
                 task = {}
                 for map_key, map_value in TASKS_MAP.items():
-                    value = received_task.get(map_value)
-                    if value:
+                    if value := received_task.get(map_value):
                         task[map_key] = value
                 attrs[task_id] = task
             return attrs

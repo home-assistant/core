@@ -25,9 +25,16 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import (
+    DATA_CLIENT,
+    DOMAIN,
+    SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_SET_LOCK_USERCODE,
+)
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +48,6 @@ STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
         STATE_LOCKED: True,
     },
 }
-
-SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
-SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 
 
 async def async_setup_entry(

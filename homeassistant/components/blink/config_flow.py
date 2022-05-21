@@ -6,11 +6,6 @@ from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.blink.const import (
-    DEFAULT_SCAN_INTERVAL,
-    DEVICE_ID,
-    DOMAIN,
-)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
@@ -18,6 +13,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+
+from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

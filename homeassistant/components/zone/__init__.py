@@ -1,6 +1,7 @@
 """Support for the definition of zones."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -9,8 +10,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -19,7 +22,10 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
+    STATE_HOME,
+    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.helpers import (
@@ -27,6 +33,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity,
     entity_component,
+    event,
     service,
     storage,
 )
@@ -122,7 +129,7 @@ def async_active_zone(
             continue
 
         within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist  # type: ignore
+        closer_zone = closest is None or zone_dist < min_dist  # type: ignore[unreachable]
         smaller_zone = (
             zone_dist == min_dist
             and zone.attributes[ATTR_RADIUS]
@@ -285,6 +292,8 @@ class Zone(entity.Entity):
         self._config = config
         self.editable = True
         self._attrs: dict | None = None
+        self._remove_listener: Callable[[], None] | None = None
+        self._persons_in_zone: set[str] = set()
         self._generate_attrs()
 
     @classmethod
@@ -296,9 +305,9 @@ class Zone(entity.Entity):
         return zone
 
     @property
-    def state(self) -> str:
+    def state(self) -> int:
         """Return the state property really does nothing for a zone."""
-        return "zoning"
+        return len(self._persons_in_zone)
 
     @property
     def name(self) -> str:
@@ -316,11 +325,6 @@ class Zone(entity.Entity):
         return self._config.get(CONF_ICON)
 
     @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return the state attributes of the zone."""
-        return self._attrs
-
-    @property
     def should_poll(self) -> bool:
         """Zone does not poll."""
         return False
@@ -334,12 +338,61 @@ class Zone(entity.Entity):
         self.async_write_ha_state()
 
     @callback
+    def _person_state_change_listener(self, evt: Event) -> None:
+        person_entity_id = evt.data[ATTR_ENTITY_ID]
+        cur_count = len(self._persons_in_zone)
+        if self._state_is_in_zone(evt.data.get("new_state")):
+            self._persons_in_zone.add(person_entity_id)
+        elif person_entity_id in self._persons_in_zone:
+            self._persons_in_zone.remove(person_entity_id)
+
+        if len(self._persons_in_zone) != cur_count:
+            self._generate_attrs()
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        person_domain = "person"  # avoid circular import
+        persons = self.hass.states.async_entity_ids(person_domain)
+        for person in persons:
+            if self._state_is_in_zone(self.hass.states.get(person)):
+                self._persons_in_zone.add(person)
+        self._generate_attrs()
+
+        self.async_on_remove(
+            event.async_track_state_change_filtered(
+                self.hass,
+                event.TrackStates(False, set(), {person_domain}),
+                self._person_state_change_listener,
+            ).async_remove
+        )
+
+    @callback
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
-        self._attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
+            ATTR_PERSONS: sorted(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
+
+    @callback
+    def _state_is_in_zone(self, state: State | None) -> bool:
+        """Return if given state is in zone."""
+        return (
+            state is not None
+            and state.state
+            not in (
+                STATE_NOT_HOME,
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            )
+            and (
+                state.state.casefold() == self.name.casefold()
+                or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
+            )
+        )

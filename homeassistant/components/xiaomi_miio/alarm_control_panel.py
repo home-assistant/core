@@ -1,19 +1,22 @@
 """Support for Xiomi Gateway alarm control panels."""
-
 from functools import partial
 import logging
 
 from miio import DeviceException
 
 from homeassistant.components.alarm_control_panel import (
-    SUPPORT_ALARM_ARM_AWAY,
     AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_GATEWAY, DOMAIN
 
@@ -24,7 +27,11 @@ XIAOMI_STATE_DISARMED_VALUE = "off"
 XIAOMI_STATE_ARMING_VALUE = "oning"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
     gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
@@ -41,6 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     """Representation of the XiaomiGatewayAlarm."""
+
+    _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
 
     def __init__(
         self, gateway_device, gateway_name, model, mac_address, gateway_device_id
@@ -65,11 +74,11 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         return self._gateway_device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway_device_id)},
+        )
 
     @property
     def name(self):
@@ -90,11 +99,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""

@@ -6,23 +6,14 @@ from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
-)
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_ACCESS_TOKEN,
-    CONF_SCAN_INTERVAL,
-    TIME_MINUTES,
-)
-from homeassistant.core import callback
+from homeassistant.components import persistent_notification
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,27 +29,6 @@ NOTIFICATION_TITLE = "Hydrawise Setup"
 DATA_HYDRAWISE = "hydrawise"
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = 15
-
-DEVICE_MAP_INDEX = [
-    "KEY_INDEX",
-    "ICON_INDEX",
-    "DEVICE_CLASS_INDEX",
-    "UNIT_OF_MEASURE_INDEX",
-]
-DEVICE_MAP = {
-    "auto_watering": ["Automatic Watering", None, DEVICE_CLASS_SWITCH, None],
-    "is_watering": ["Watering", None, DEVICE_CLASS_MOISTURE, None],
-    "manual_watering": ["Manual Watering", None, DEVICE_CLASS_SWITCH, None],
-    "next_cycle": ["Next Cycle", None, DEVICE_CLASS_TIMESTAMP, None],
-    "status": ["Status", None, DEVICE_CLASS_CONNECTIVITY, None],
-    "watering_time": ["Watering Time", "mdi:water-pump", None, TIME_MINUTES],
-}
-
-BINARY_SENSORS = ["is_watering", "status"]
-
-SENSORS = ["next_cycle", "watering_time"]
-
-SWITCHES = ["auto_watering", "manual_watering"]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -77,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hunter Hydrawise component."""
     conf = config[DOMAIN]
     access_token = conf[CONF_ACCESS_TOKEN]
@@ -88,7 +58,8 @@ def setup(hass, config):
         hass.data[DATA_HYDRAWISE] = HydrawiseHub(hydrawise)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
@@ -118,17 +89,11 @@ class HydrawiseHub:
 class HydrawiseEntity(Entity):
     """Entity class for Hydrawise devices."""
 
-    def __init__(self, data, sensor_type):
+    def __init__(self, data, description: EntityDescription):
         """Initialize the Hydrawise entity."""
+        self.entity_description = description
         self.data = data
-        self._sensor_type = sensor_type
-        self._name = f"{self.data['name']} {DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index('KEY_INDEX')]}"
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_name = f"{self.data['name']} {description.name}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -147,15 +112,3 @@ class HydrawiseEntity(Entity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.get("relay")}
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor type."""
-        return DEVICE_MAP[self._sensor_type][
-            DEVICE_MAP_INDEX.index("DEVICE_CLASS_INDEX")
-        ]
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]

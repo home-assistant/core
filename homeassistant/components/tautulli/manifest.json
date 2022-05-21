@@ -2,7 +2,9 @@
   "domain": "tautulli",
   "name": "Tautulli",
   "documentation": "https://www.home-assistant.io/integrations/tautulli",
-  "requirements": ["pytautulli==21.8.1"],
-  "codeowners": ["@ludeeus"],
-  "iot_class": "local_polling"
+  "requirements": ["pytautulli==21.11.0"],
+  "config_flow": true,
+  "codeowners": ["@ludeeus", "@tkdrob"],
+  "iot_class": "local_polling",
+  "loggers": ["pytautulli"]
 }

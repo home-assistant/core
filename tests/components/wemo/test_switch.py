@@ -85,3 +85,8 @@ async def test_available_after_update(
     await entity_test_helpers.test_avaliable_after_update(
         hass, pywemo_registry, pywemo_device, wemo_entity, SWITCH_DOMAIN
     )
+
+
+async def test_turn_off_state(hass, wemo_entity):
+    """Test that the device state is updated after turning off."""
+    await entity_test_helpers.test_turn_off_state(hass, wemo_entity, SWITCH_DOMAIN)

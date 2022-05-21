@@ -12,6 +12,9 @@ from awesomeversion import (
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
+
 from .model import Config, Integration
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -31,54 +34,41 @@ SUPPORTED_IOT_CLASSES = [
 
 # List of integrations that are supposed to have no IoT class
 NO_IOT_CLASS = [
-    "air_quality",
-    "alarm_control_panel",
+    *{platform.value for platform in Platform},
     "api",
+    "application_credentials",
     "auth",
     "automation",
-    "binary_sensor",
     "blueprint",
-    "calendar",
-    "camera",
-    "climate",
     "color_extractor",
     "config",
     "configurator",
     "counter",
-    "cover",
     "default_config",
     "device_automation",
     "device_tracker",
+    "diagnostics",
     "discovery",
     "downloader",
-    "fan",
     "ffmpeg",
     "frontend",
-    "geo_location",
     "history",
     "homeassistant",
-    "humidifier",
-    "image_processing",
     "image",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
     "input_text",
     "intent_script",
     "intent",
-    "light",
-    "lock",
     "logbook",
     "logger",
     "lovelace",
-    "mailbox",
     "map",
-    "media_player",
     "media_source",
     "my",
-    "notify",
-    "number",
     "onboarding",
     "panel_custom",
     "panel_iframe",
@@ -86,25 +76,14 @@ NO_IOT_CLASS = [
     "profiler",
     "proxy",
     "python_script",
-    "remote",
     "safe_mode",
-    "scene",
     "script",
     "search",
-    "select",
-    "sensor",
-    "siren",
-    "stt",
-    "switch",
     "system_health",
     "system_log",
     "tag",
     "timer",
     "trace",
-    "tts",
-    "vacuum",
-    "water_heater",
-    "weather",
     "webhook",
     "websocket_api",
     "zone",
@@ -174,20 +153,32 @@ MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
+        vol.Optional("integration_type"): "helper",
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
         vol.Optional("zeroconf"): [
             vol.Any(
                 str,
-                vol.Schema(
-                    {
-                        vol.Required("type"): str,
-                        vol.Optional("macaddress"): vol.All(
-                            str, verify_uppercase, verify_wildcard
-                        ),
-                        vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
-                        vol.Optional("name"): vol.All(str, verify_lowercase),
-                    }
+                vol.All(
+                    cv.deprecated("macaddress"),
+                    cv.deprecated("model"),
+                    cv.deprecated("manufacturer"),
+                    vol.Schema(
+                        {
+                            vol.Required("type"): str,
+                            vol.Optional("macaddress"): vol.All(
+                                str, verify_uppercase, verify_wildcard
+                            ),
+                            vol.Optional("manufacturer"): vol.All(
+                                str, verify_lowercase
+                            ),
+                            vol.Optional("model"): vol.All(str, verify_lowercase),
+                            vol.Optional("name"): vol.All(str, verify_lowercase),
+                            vol.Optional("properties"): vol.Schema(
+                                {str: verify_lowercase}
+                            ),
+                        }
+                    ),
                 ),
             )
         ],
@@ -202,6 +193,7 @@ MANIFEST_SCHEMA = vol.Schema(
                         str, verify_uppercase, verify_wildcard
                     ),
                     vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                    vol.Optional("registered_devices"): cv.boolean,
                 }
             )
         ],
@@ -228,14 +220,17 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
+        vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("supported_brands"): vol.Schema({str: str}),
     }
 )
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Remove("supported_brands"): dict,
     }
 )
 
@@ -288,6 +283,13 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         and "iot_class" not in integration.manifest
     ):
         integration.add_error("manifest", "Domain is missing an IoT Class")
+
+    for domain, _name in integration.manifest.get("supported_brands", {}).items():
+        if (core_components_dir / domain).exists():
+            integration.add_warning(
+                "manifest",
+                f"Supported brand domain {domain} collides with built-in core integration",
+            )
 
     if not integration.core:
         validate_version(integration)

@@ -1,12 +1,13 @@
 """Support for Modbus fans."""
 from __future__ import annotations
 
-import logging
+from typing import Any
 
 from homeassistant.components.fan import FanEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .base_platform import BaseSwitch
@@ -14,14 +15,16 @@ from .const import CONF_FANS
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Read configuration and create Modbus fans."""
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
     fans = []
 
@@ -36,16 +39,15 @@ class ModbusFan(BaseSwitch, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Set fan on."""
         await self.async_turn(self.command_on)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if fan is on.
 
         This is needed due to the ongoing conversion of fan.

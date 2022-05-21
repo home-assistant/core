@@ -1,5 +1,7 @@
 """The tests for hls streams."""
 from datetime import timedelta
+from http import HTTPStatus
+import logging
 from unittest.mock import patch
 from urllib.parse import urlparse
 
@@ -15,16 +17,11 @@ from homeassistant.components.stream.const import (
     NUM_PLAYLIST_SEGMENTS,
 )
 from homeassistant.components.stream.core import Part
-from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
-    FAKE_TIME,
-    DefaultSegment as Segment,
-    generate_h264_video,
-)
+from tests.components.stream.common import FAKE_TIME, DefaultSegment as Segment
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"init"
@@ -32,6 +29,18 @@ FAKE_PAYLOAD = b"fake-payload"
 SEGMENT_DURATION = 10
 TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
+
+HLS_CONFIG = {
+    "stream": {
+        "ll_hls": False,
+    }
+}
+
+
+@pytest.fixture
+async def setup_component(hass) -> None:
+    """Test fixture to setup the stream component."""
+    await async_setup_component(hass, "stream", HLS_CONFIG)
 
 
 class HlsClient:
@@ -83,15 +92,18 @@ def make_playlist(
     discontinuity_sequence=0,
     segments=None,
     hint=None,
+    segment_duration=None,
     part_target_duration=None,
 ):
     """Create a an hls playlist response for tests to assert on."""
+    if not segment_duration:
+        segment_duration = SEGMENT_DURATION
     response = [
         "#EXTM3U",
         "#EXT-X-VERSION:6",
         "#EXT-X-INDEPENDENT-SEGMENTS",
         '#EXT-X-MAP:URI="init.mp4"',
-        f"#EXT-X-TARGETDURATION:{SEGMENT_DURATION}",
+        f"#EXT-X-TARGETDURATION:{segment_duration}",
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
         f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
     ]
@@ -105,7 +117,7 @@ def make_playlist(
         )
     else:
         response.append(
-            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*SEGMENT_DURATION:.3f},PRECISE=YES",
+            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*segment_duration:.3f},PRECISE=YES",
         )
     if segments:
         response.extend(segments)
@@ -115,20 +127,20 @@ def make_playlist(
     return "\n".join(response)
 
 
-async def test_hls_stream(hass, hls_stream, stream_worker_sync):
+async def test_hls_stream(
+    hass, setup_component, hls_stream, stream_worker_sync, h264_video
+):
     """
     Test hls stream.
 
     Purposefully not mocking anything here to test full
     integration with the stream component.
     """
-    await async_setup_component(hass, "stream", {"stream": {}})
 
     stream_worker_sync.pause()
 
     # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -138,23 +150,23 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Fetch master playlist
     master_playlist_response = await hls_client.get()
-    assert master_playlist_response.status == 200
+    assert master_playlist_response.status == HTTPStatus.OK
 
     # Fetch init
     master_playlist = await master_playlist_response.text()
     init_response = await hls_client.get("/init.mp4")
-    assert init_response.status == 200
+    assert init_response.status == HTTPStatus.OK
 
     # Fetch playlist
     playlist_url = "/" + master_playlist.splitlines()[-1]
     playlist_response = await hls_client.get(playlist_url)
-    assert playlist_response.status == 200
+    assert playlist_response.status == HTTPStatus.OK
 
     # Fetch segment
     playlist = await playlist_response.text()
     segment_url = "/" + [line for line in playlist.splitlines() if line][-1]
     segment_response = await hls_client.get(segment_url)
-    assert segment_response.status == 200
+    assert segment_response.status == HTTPStatus.OK
 
     stream_worker_sync.resume()
 
@@ -163,18 +175,33 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Ensure playlist not accessible after stream ends
     fail_response = await hls_client.get()
-    assert fail_response.status == HTTP_NOT_FOUND
+    assert fail_response.status == HTTPStatus.NOT_FOUND
+
+    assert stream.get_diagnostics() == {
+        "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "keepalive": False,
+        "start_worker": 1,
+        "video_codec": "h264",
+        "worker_error": 1,
+    }
 
 
-async def test_stream_timeout(hass, hass_client, stream_worker_sync):
+async def test_stream_timeout(
+    hass, hass_client, setup_component, stream_worker_sync, h264_video
+):
     """Test hls stream timeout."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream_worker_sync.pause()
 
     # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
+
+    available_states = []
+
+    def update_callback() -> None:
+        nonlocal available_states
+        available_states.append(stream.available)
+
+    stream.set_update_callback(update_callback)
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -186,7 +213,7 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     # Fetch playlist
     parsed_url = urlparse(url)
     playlist_response = await http_client.get(parsed_url.path)
-    assert playlist_response.status == 200
+    assert playlist_response.status == HTTPStatus.OK
 
     # Wait a minute
     future = dt_util.utcnow() + timedelta(minutes=1)
@@ -194,7 +221,7 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Fetch again to reset timer
     playlist_response = await http_client.get(parsed_url.path)
-    assert playlist_response.status == 200
+    assert playlist_response.status == HTTPStatus.OK
 
     stream_worker_sync.resume()
 
@@ -205,18 +232,20 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Ensure playlist not accessible
     fail_response = await http_client.get(parsed_url.path)
-    assert fail_response.status == HTTP_NOT_FOUND
+    assert fail_response.status == HTTPStatus.NOT_FOUND
+
+    # Streams only marked as failure when keepalive is true
+    assert available_states == [True]
 
 
-async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
+async def test_stream_timeout_after_stop(
+    hass, hass_client, setup_component, stream_worker_sync, h264_video
+):
     """Test hls stream timeout after the stream has been stopped already."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream_worker_sync.pause()
 
     # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -232,22 +261,30 @@ async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
     await hass.async_block_till_done()
 
 
-async def test_stream_keepalive(hass):
-    """Test hls stream retries the stream when keepalive=True."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
+async def test_stream_retries(hass, setup_component, should_retry):
+    """Test hls stream is retried on failure."""
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
     track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
 
+    available_states = []
+
+    def update_callback() -> None:
+        nonlocal available_states
+        available_states.append(stream.available)
+
+    stream.set_update_callback(update_callback)
+
     cur_time = 0
 
     def time_side_effect():
+        logging.info("time side effect")
         nonlocal cur_time
         if cur_time >= 80:
-            stream.keepalive = False  # Thread should exit and be joinable.
+            logging.info("changing return value")
+            should_retry.return_value = False  # Thread should exit and be joinable.
         cur_time += 40
         return cur_time
 
@@ -258,21 +295,24 @@ async def test_stream_keepalive(hass):
     ):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
-        # Request stream
-        stream.keepalive = True
+        # Request stream. Enable retries which are disabled by default in tests.
+        should_retry.return_value = True
         stream.start()
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
+        await hass.async_block_till_done()
 
     # Stop stream, if it hasn't quit already
     stream.stop()
 
+    # Stream marked initially available, then marked as failed, then marked available
+    # before the final failure that exits the stream.
+    assert available_states == [True, False, True]
 
-async def test_hls_playlist_view_no_output(hass, hls_stream):
+
+async def test_hls_playlist_view_no_output(hass, setup_component, hls_stream):
     """Test rendering the hls playlist with no output segments."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
 
@@ -280,13 +320,11 @@ async def test_hls_playlist_view_no_output(hass, hls_stream):
 
     # Fetch playlist
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
+async def test_hls_playlist_view(hass, setup_component, hls_stream, stream_worker_sync):
     """Test rendering the hls playlist with 1 and 2 output segments."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -298,7 +336,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     hls_client = await hls_stream(stream)
 
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == make_playlist(
         sequence=0, segments=[make_segment(0), make_segment(1)]
     )
@@ -307,7 +345,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     hls.put(segment)
     await hass.async_block_till_done()
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == make_playlist(
         sequence=0, segments=[make_segment(0), make_segment(1), make_segment(2)]
     )
@@ -316,10 +354,8 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     stream.stop()
 
 
-async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
+async def test_hls_max_segments(hass, setup_component, hls_stream, stream_worker_sync):
     """Test rendering the hls playlist with more segments than the segment deque can hold."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -333,7 +369,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
         await hass.async_block_till_done()
 
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist.
     start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
@@ -356,20 +392,21 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     # The segment that fell off the buffer is not accessible
     with patch.object(hls.stream_settings, "hls_part_timeout", 0.1):
         segment_response = await hls_client.get("/segment/0.m4s")
-    assert segment_response.status == 404
+    assert segment_response.status == HTTPStatus.NOT_FOUND
 
     # However all segments in the buffer are accessible, even those that were not in the playlist.
     for sequence in range(1, MAX_SEGMENTS + 1):
         segment_response = await hls_client.get(f"/segment/{sequence}.m4s")
-        assert segment_response.status == 200
+        assert segment_response.status == HTTPStatus.OK
 
     stream_worker_sync.resume()
     stream.stop()
 
 
-async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_sync):
+async def test_hls_playlist_view_discontinuity(
+    hass, setup_component, hls_stream, stream_worker_sync
+):
     """Test a discontinuity across segments in the stream with 3 segments."""
-    await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
@@ -390,7 +427,7 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     hls_client = await hls_stream(stream)
 
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.text() == make_playlist(
         sequence=0,
         segments=[
@@ -404,10 +441,10 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     stream.stop()
 
 
-async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sync):
+async def test_hls_max_segments_discontinuity(
+    hass, setup_component, hls_stream, stream_worker_sync
+):
     """Test a discontinuity with more segments than the segment deque can hold."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -428,7 +465,7 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
     await hass.async_block_till_done()
 
     resp = await hls_client.get("/playlist.m3u8")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist causing the
     # EXT-X-DISCONTINUITY tag to be omitted and EXT-X-DISCONTINUITY-SEQUENCE
@@ -444,4 +481,34 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
     )
 
     stream_worker_sync.resume()
+    stream.stop()
+
+
+async def test_remove_incomplete_segment_on_exit(
+    hass, setup_component, stream_worker_sync
+):
+    """Test that the incomplete segment gets removed when the worker thread quits."""
+    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream_worker_sync.pause()
+    stream.start()
+    hls = stream.add_provider(HLS_PROVIDER)
+
+    segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)
+    hls.put(segment)
+    segment = Segment(sequence=1, stream_id=0, duration=SEGMENT_DURATION)
+    hls.put(segment)
+    segment = Segment(sequence=2, stream_id=0, duration=0)
+    hls.put(segment)
+    await hass.async_block_till_done()
+
+    segments = hls._segments
+    assert len(segments) == 3
+    assert not segments[-1].complete
+    stream_worker_sync.resume()
+    stream._thread_quit.set()
+    stream._thread.join()
+    stream._thread = None
+    await hass.async_block_till_done()
+    assert segments[-1].complete
+    assert len(segments) == 2
     stream.stop()

@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.arcam_fmj.const import DOMAIN
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -51,12 +52,17 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": "media_player.arcam_fmj_5678",
+            "metadata": {"secondary": False},
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
 
     # Test triggers are either arcam_fmj specific or media_player entity triggers
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     for expected_trigger in expected_triggers:
         assert expected_trigger in triggers
     for trigger in triggers:

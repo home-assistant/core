@@ -1,5 +1,7 @@
 """Test the Sonarr config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from aiopyarr import ArrAuthenticationException, ArrException
 
 from homeassistant.components.sonarr.const import (
     CONF_UPCOMING_DAYS,
@@ -9,7 +11,7 @@ from homeassistant.components.sonarr.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -17,17 +19,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.components.sonarr import (
-    HOST,
-    MOCK_REAUTH_INPUT,
-    MOCK_USER_INPUT,
-    _patch_async_setup_entry,
-    mock_connection,
-    mock_connection_error,
-    mock_connection_invalid_auth,
-    setup_integration,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
+from tests.components.sonarr import MOCK_REAUTH_INPUT, MOCK_USER_INPUT
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -42,10 +35,10 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 
 
 async def test_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test we show user form on connection error."""
-    mock_connection_error(aioclient_mock)
+    mock_sonarr_config_flow.async_get_system_status.side_effect = ArrException
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -60,10 +53,12 @@ async def test_cannot_connect(
 
 
 async def test_invalid_auth(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test we show user form on invalid auth."""
-    mock_connection_invalid_auth(aioclient_mock)
+    mock_sonarr_config_flow.async_get_system_status.side_effect = (
+        ArrAuthenticationException
+    )
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -78,30 +73,30 @@ async def test_invalid_auth(
 
 
 async def test_unknown_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test we show user form on unknown error."""
+    mock_sonarr_config_flow.async_get_system_status.side_effect = Exception
+
     user_input = MOCK_USER_INPUT.copy()
-    with patch(
-        "homeassistant.components.sonarr.config_flow.Sonarr.update",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
-            data=user_input,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=user_input,
+    )
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
 
 
 async def test_full_reauth_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_sonarr_config_flow: MagicMock,
+    mock_setup_entry: None,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the manual reauth flow from start to finish."""
-    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
-    assert entry
+    entry = init_integration
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -124,26 +119,23 @@ async def test_full_reauth_flow_implementation(
     assert result["step_id"] == "user"
 
     user_input = MOCK_REAUTH_INPUT.copy()
-    with _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
 
     assert entry.data[CONF_API_KEY] == "test-api-key-reauth"
 
-    mock_setup_entry.assert_called_once()
-
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_sonarr_config_flow: MagicMock,
+    mock_setup_entry: None,
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    mock_connection(aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -154,25 +146,24 @@ async def test_full_user_flow_implementation(
 
     user_input = MOCK_USER_INPUT.copy()
 
-    with _patch_async_setup_entry():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=user_input,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
+    assert result["title"] == "192.168.1.189"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
 
 
 async def test_full_user_flow_advanced_options(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_sonarr_config_flow: MagicMock,
+    mock_setup_entry: None,
 ) -> None:
     """Test the full manual user flow with advanced options."""
-    mock_connection(aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER, "show_advanced_options": True}
     )
@@ -185,24 +176,27 @@ async def test_full_user_flow_advanced_options(
         CONF_VERIFY_SSL: True,
     }
 
-    with _patch_async_setup_entry():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=user_input,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
+    assert result["title"] == "192.168.1.189"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_URL] == "http://192.168.1.189:8989"
     assert result["data"][CONF_VERIFY_SSL]
 
 
-async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
+@patch("homeassistant.components.sonarr.PLATFORMS", [])
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+    init_integration: MockConfigEntry,
+):
     """Test updating options."""
-    with patch("homeassistant.components.sonarr.PLATFORMS", []):
-        entry = await setup_integration(hass, aioclient_mock)
+    entry = init_integration
 
     assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
     assert entry.options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
@@ -212,12 +206,11 @@ async def test_options_flow(hass, aioclient_mock: AiohttpClientMocker):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with _patch_async_setup_entry():
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_UPCOMING_DAYS] == 2

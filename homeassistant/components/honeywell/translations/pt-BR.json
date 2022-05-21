@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Insira as credenciais usadas para fazer login em mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "away_cool_temperature": "Temperatura de frio ausente",
+                    "away_heat_temperature": "Temperatura de calor ausente"
+                },
+                "description": "Op\u00e7\u00f5es adicionais de configura\u00e7\u00e3o Honeywell. As temperaturas s\u00e3o definidas em Fahrenheit."
+            }
+        }
+    }
+}

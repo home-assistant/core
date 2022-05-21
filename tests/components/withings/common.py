@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from http import HTTPStatus
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
@@ -103,13 +104,13 @@ class ComponentFactory:
         self,
         hass: HomeAssistant,
         api_class_mock: MagicMock,
-        aiohttp_client,
+        hass_client_no_auth,
         aioclient_mock: AiohttpClientMocker,
     ) -> None:
         """Initialize the object."""
         self._hass = hass
         self._api_class_mock = api_class_mock
-        self._aiohttp_client = aiohttp_client
+        self._hass_client = hass_client_no_auth
         self._aioclient_mock = aioclient_mock
         self._client_id = None
         self._client_secret = None
@@ -208,20 +209,22 @@ class ComponentFactory:
         )
 
         # Simulate user being redirected from withings site.
-        client: TestClient = await self._aiohttp_client(self._hass.http.app)
+        client: TestClient = await self._hass_client()
         resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
         self._aioclient_mock.clear_requests()
         self._aioclient_mock.post(
-            "https://account.withings.com/oauth2/token",
+            "https://wbsapi.withings.net/v2/oauth2",
             json={
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "userid": profile_config.user_id,
+                "body": {
+                    "refresh_token": "mock-refresh-token",
+                    "access_token": "mock-access-token",
+                    "type": "Bearer",
+                    "expires_in": 60,
+                    "userid": profile_config.user_id,
+                },
             },
         )
 
@@ -259,7 +262,7 @@ class ComponentFactory:
 
     async def call_webhook(self, user_id: int, appli: NotifyAppli) -> WebhookResponse:
         """Call the webhook to notify of data changes."""
-        client: TestClient = await self._aiohttp_client(self._hass.http.app)
+        client: TestClient = await self._hass_client()
         data_manager = get_data_manager_by_user_id(self._hass, user_id)
 
         resp = await client.post(

@@ -1,5 +1,6 @@
 """Test the MELCloud config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import ClientError, ClientResponseError
@@ -8,7 +9,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
-from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 
 from tests.common import MockConfigEntry
 
@@ -95,9 +95,9 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
 @pytest.mark.parametrize(
     "error,message",
     [
-        (401, "invalid_auth"),
-        (HTTP_FORBIDDEN, "invalid_auth"),
-        (HTTP_INTERNAL_SERVER_ERROR, "cannot_connect"),
+        (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (HTTPStatus.FORBIDDEN, "invalid_auth"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
     ],
 )
 async def test_form_response_errors(

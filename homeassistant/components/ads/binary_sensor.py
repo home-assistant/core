@@ -1,14 +1,20 @@
 """Support for ADS binary sensors."""
+from __future__ import annotations
+
+import pyads
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOVING,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
 
@@ -22,7 +28,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
@@ -40,11 +51,11 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
     def __init__(self, ads_hub, name, ads_var, device_class):
         """Initialize ADS binary sensor."""
         super().__init__(ads_hub, name, ads_var)
-        self._attr_device_class = device_class or DEVICE_CLASS_MOVING
+        self._attr_device_class = device_class or BinarySensorDeviceClass.MOVING
 
     async def async_added_to_hass(self):
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
     @property
     def is_on(self) -> bool:

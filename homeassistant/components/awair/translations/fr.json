@@ -13,14 +13,14 @@
             "reauth": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s",
-                    "email": "Email"
+                    "email": "Courriel"
                 },
                 "description": "Veuillez ressaisir votre jeton d'acc\u00e8s d\u00e9veloppeur Awair."
             },
             "user": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s",
-                    "email": "Email"
+                    "email": "Courriel"
                 },
                 "description": "Vous devez vous inscrire pour un jeton d'acc\u00e8s d\u00e9veloppeur Awair sur: https://developer.getawair.com/onboard/login"
             }

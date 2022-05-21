@@ -43,10 +43,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureSmartcam(CoordinatorEntity, Camera):
+class VerisureSmartcam(CoordinatorEntity[VerisureDataUpdateCoordinator], Camera):
     """Representation of a Verisure camera."""
-
-    coordinator = VerisureDataUpdateCoordinator
 
     def __init__(
         self,
@@ -63,21 +61,22 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
 
         self.serial_number = serial_number
         self._directory_path = directory_path
-        self._image = None
+        self._image: str | None = None
         self._image_id = None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["cameras"][self.serial_number]["area"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": "SmartCam",
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model="SmartCam",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -86,7 +85,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         self.check_imagelist()
         if not self._image:
             LOGGER.debug("No image to display")
-            return
+            return None
         LOGGER.debug("Trying to open %s", self._image)
         with open(self._image, "rb") as file:
             return file.read()

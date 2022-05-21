@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamnie nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Seadme v\u00f5ti",
+                    "host": "Host",
+                    "port": "Port",
+                    "verify_ssl": "Kontrolli SSL serti"
+                }
+            }
+        }
+    }
+}

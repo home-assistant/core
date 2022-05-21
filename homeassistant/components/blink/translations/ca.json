@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_access_token": "Token d'acc\u00e9s no v\u00e0lid",
+            "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },

@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "discovery_confirm": {
-                "description": "Be akarja \u00e1ll\u00edtani ezt a Guardian eszk\u00f6zt?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani ezt a Guardian eszk\u00f6zt?"
             },
             "user": {
                 "data": {
@@ -15,9 +15,6 @@
                     "port": "Port"
                 },
                 "description": "Konfigur\u00e1lja a helyi Elexa Guardian eszk\u00f6zt."
-            },
-            "zeroconf_confirm": {
-                "description": "Be akarja \u00e1ll\u00edtani ezt a Guardian eszk\u00f6zt?"
             }
         }
     }

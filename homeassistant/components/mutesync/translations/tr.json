@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Se\u00e7enekler > Kimlik Do\u011frulama'da kimlik do\u011frulamay\u0131 etkinle\u015ftirin",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu"
+                }
+            }
+        }
+    }
+}

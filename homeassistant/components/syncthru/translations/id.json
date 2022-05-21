@@ -8,7 +8,7 @@
             "syncthru_not_supported": "Perangkat tidak mendukung SyncThru",
             "unknown_state": "Status printer tidak diketahui, verifikasi URL dan konektivitas jaringan"
         },
-        "flow_title": "Printer Samsung SyncThru: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

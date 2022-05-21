@@ -1,13 +1,19 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date as Date
 import logging
+from typing import Any
 
-import hdate
+from hdate import HDate
+from hdate.zmanim import Zmanim
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
@@ -18,11 +24,11 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SENSORS = (
+INFO_SENSORS = (
     SensorEntityDescription(
         key="date",
         name="Date",
-        icon="mdi:judaism",
+        icon="mdi:star-david",
     ),
     SensorEntityDescription(
         key="weekly_portion",
@@ -130,14 +136,14 @@ async def async_setup_platform(
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> None:
     """Set up the Jewish calendar sensor platform."""
     if discovery_info is None:
         return
 
     sensors = [
         JewishCalendarSensor(hass.data[DOMAIN], description)
-        for description in DATA_SENSORS
+        for description in INFO_SENSORS
     ]
     sensors.extend(
         JewishCalendarTimeSensor(hass.data[DOMAIN], description)
@@ -150,7 +156,11 @@ async def async_setup_platform(
 class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, data, description: SensorEntityDescription) -> None:
+    def __init__(
+        self,
+        data: dict[str, str | bool | int | float],
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
         self._attr_name = f"{data['name']} {description.name}"
@@ -160,29 +170,25 @@ class JewishCalendarSensor(SensorEntity):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
-        self._state = None
         self._holiday_attrs: dict[str, str] = {}
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if isinstance(self._state, datetime):
-            return self._state.isoformat()
-        return self._state
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()
         _LOGGER.debug("Now: %s Location: %r", now, self._location)
 
         today = now.date()
-        sunset = dt_util.as_local(
-            get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
-        )
+        event_date = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, today)
+
+        if event_date is None:
+            _LOGGER.error("Can't get sunset event date for %s", today)
+            return
+
+        sunset = dt_util.as_local(event_date)
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
+        daytime_date = HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area (aka "Bein
@@ -200,12 +206,16 @@ class JewishCalendarSensor(SensorEntity):
         if today_times.havdalah and now > today_times.havdalah:
             after_tzais_date = daytime_date.next_day
 
-        self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
-        _LOGGER.debug("New value for %s: %s", self.entity_description.key, self._state)
+        self._attr_native_value = self.get_state(
+            daytime_date, after_shkia_date, after_tzais_date
+        )
+        _LOGGER.debug(
+            "New value for %s: %s", self.entity_description.key, self._attr_native_value
+        )
 
-    def make_zmanim(self, date):
+    def make_zmanim(self, date: Date) -> Zmanim:
         """Create a Zmanim object."""
-        return hdate.Zmanim(
+        return Zmanim(
             date=date,
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
@@ -220,7 +230,9 @@ class JewishCalendarSensor(SensorEntity):
             return {}
         return self._holiday_attrs
 
-    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
+    def get_state(
+        self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
+    ) -> Any | None:
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
@@ -247,26 +259,11 @@ class JewishCalendarSensor(SensorEntity):
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self._state is None:
-            return None
-        return dt_util.as_utc(self._state).isoformat()
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes."""
-        attrs: dict[str, str] = {}
-
-        if self._state is None:
-            return attrs
-
-        return attrs
-
-    def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
+    def get_state(
+        self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
+    ) -> Any | None:
         """For a given type of sensor, return the state."""
         if self.entity_description.key == "upcoming_shabbat_candle_lighting":
             times = self.make_zmanim(

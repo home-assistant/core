@@ -9,16 +9,14 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -29,7 +27,6 @@ from tests.common import async_fire_time_changed, mock_device_registry, mock_reg
 
 async def test_sensors_pro(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Pro."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -57,14 +54,14 @@ async def test_sensors_pro(hass, canary) -> None:
             "20_temperature",
             "21.12",
             TEMP_CELSIUS,
-            DEVICE_CLASS_TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,
             None,
         ),
         "home_dining_room_humidity": (
             "20_humidity",
             "50.46",
             PERCENTAGE,
-            DEVICE_CLASS_HUMIDITY,
+            SensorDeviceClass.HUMIDITY,
             None,
         ),
         "home_dining_room_air_quality": (
@@ -79,7 +76,7 @@ async def test_sensors_pro(hass, canary) -> None:
     for (sensor_id, data) in sensors.items():
         entity_entry = registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
-        assert entity_entry.device_class == data[3]
+        assert entity_entry.original_device_class == data[3]
         assert entity_entry.unique_id == data[0]
         assert entity_entry.original_icon == data[4]
 
@@ -97,7 +94,6 @@ async def test_sensors_pro(hass, canary) -> None:
 
 async def test_sensors_attributes_pro(hass, canary) -> None:
     """Test the creation and values of the sensors attributes for Canary Pro."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 
@@ -131,7 +127,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state2 = hass.states.get(entity_id)
@@ -147,7 +143,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
     future += timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state3 = hass.states.get(entity_id)
@@ -158,7 +154,6 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
 async def test_sensors_flex(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Flex."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
@@ -185,14 +180,14 @@ async def test_sensors_flex(hass, canary) -> None:
             "20_battery",
             "70.46",
             PERCENTAGE,
-            DEVICE_CLASS_BATTERY,
+            SensorDeviceClass.BATTERY,
             None,
         ),
         "home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
             SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-            DEVICE_CLASS_SIGNAL_STRENGTH,
+            SensorDeviceClass.SIGNAL_STRENGTH,
             None,
         ),
     }
@@ -200,7 +195,7 @@ async def test_sensors_flex(hass, canary) -> None:
     for (sensor_id, data) in sensors.items():
         entity_entry = registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
-        assert entity_entry.device_class == data[3]
+        assert entity_entry.original_device_class == data[3]
         assert entity_entry.unique_id == data[0]
         assert entity_entry.original_icon == data[4]
 

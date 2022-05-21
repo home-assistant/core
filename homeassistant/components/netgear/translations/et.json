@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "config": "\u00dchenduse v\u00f5i sisselogimise viga: kontrolli oma s\u00e4tteid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (valikuline)",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi (valikuline)"
+                },
+                "description": "Vaikimisi host: {host}\nVaikimisi kasutajanimi: {username}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Kohaloleku m\u00e4\u00e4ramise aeg (sekundites)"
+                },
+                "description": "Valikuliste s\u00e4tete m\u00e4\u00e4ramine"
+            }
+        }
+    }
+}

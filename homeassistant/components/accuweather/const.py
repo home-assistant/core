@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -22,7 +22,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_METERS,
@@ -123,21 +122,21 @@ FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureMax",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Max",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureMin",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Min",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShadeMax",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Shade Max",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -145,7 +144,7 @@ FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShadeMin",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Shade Min",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -215,12 +214,12 @@ FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
 SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     AccuWeatherSensorDescription(
         key="ApparentTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Apparent Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="Ceiling",
@@ -228,7 +227,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
         name="Cloud Ceiling",
         unit_metric=LENGTH_METERS,
         unit_imperial=LENGTH_FEET,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
@@ -237,33 +236,33 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
         unit_metric=PERCENTAGE,
         unit_imperial=PERCENTAGE,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="DewPoint",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Dew Point",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShade",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Shade",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="Precipitation",
@@ -271,7 +270,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
         name="Precipitation",
         unit_metric=LENGTH_MILLIMETERS,
         unit_imperial=LENGTH_INCHES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
@@ -287,25 +286,25 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
         name="UV Index",
         unit_metric=UV_INDEX,
         unit_imperial=UV_INDEX,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="WetBulbTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Wet Bulb Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="WindChillTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Wind Chill Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="Wind",
@@ -313,7 +312,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
         name="Wind",
         unit_metric=SPEED_KILOMETERS_PER_HOUR,
         unit_imperial=SPEED_MILES_PER_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
@@ -322,6 +321,6 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
         unit_metric=SPEED_KILOMETERS_PER_HOUR,
         unit_imperial=SPEED_MILES_PER_HOUR,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )

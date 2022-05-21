@@ -40,7 +40,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Vacuum devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     triggers = []
 
     # Get all the integrations entities for this device
@@ -92,7 +92,7 @@ async def async_attach_trigger(
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
-    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

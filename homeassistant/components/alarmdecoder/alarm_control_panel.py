@@ -2,13 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,6 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -41,8 +39,8 @@ ATTR_KEYPRESS = "keypress"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up for AlarmDecoder alarm panels."""
     options = entry.options
     arm_options = options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
@@ -79,9 +77,11 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     _attr_name = "Alarm Panel"
     _attr_should_poll = False
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
@@ -94,8 +94,8 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_PANEL_MESSAGE, self._message_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback
             )
         )
 

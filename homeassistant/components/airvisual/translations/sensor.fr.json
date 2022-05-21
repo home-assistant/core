@@ -10,8 +10,8 @@
         },
         "airvisual__pollutant_level": {
             "good": "Bon",
-            "hazardous": "Hasardeux",
-            "moderate": "Mod\u00e9rer",
+            "hazardous": "Dangereux",
+            "moderate": "Mod\u00e9r\u00e9",
             "unhealthy": "Malsain",
             "unhealthy_sensitive": "Malsain pour les groupes sensibles",
             "very_unhealthy": "Tr\u00e8s malsain"

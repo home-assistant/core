@@ -1,4 +1,6 @@
 """Support for Freedompro climate."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -7,14 +9,15 @@ from pyfreedompro import put_state
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -22,17 +25,23 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 HVAC_MAP = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
 }
 
 HVAC_INVERT_MAP = {v: k for k, v in HVAC_MAP.items()}
 
-SUPPORTED_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL]
+SUPPORTED_HVAC_MODES = [
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+]
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Freedompro climate."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -59,18 +68,18 @@ class Device(CoordinatorEntity, ClimateEntity):
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._characteristics = device["characteristics"]
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self.unique_id),
             },
-            "model": device["type"],
-            "manufacturer": "Freedompro",
-        }
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_current_temperature = 0
         self._attr_target_temperature = 0
-        self._attr_hvac_mode = HVAC_MODE_OFF
+        self._attr_hvac_mode = HVACMode.OFF
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -115,7 +124,7 @@ class Device(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs):
-        """Async function to set temperarture to climate."""
+        """Async function to set temperature to climate."""
         payload = {}
         if ATTR_HVAC_MODE in kwargs:
             if kwargs[ATTR_HVAC_MODE] not in SUPPORTED_HVAC_MODES:

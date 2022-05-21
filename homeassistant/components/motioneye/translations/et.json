@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Voo URL-i mall",
                     "webhook_set": "Seadista motionEye veebihaagid, et teatada s\u00fcndmustest Home Assistanti'le",
                     "webhook_set_overwrite": "Kirjuta tundmatud veebihaagid \u00fcle"
                 }

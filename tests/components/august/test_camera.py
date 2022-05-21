@@ -1,5 +1,6 @@
 """The camera tests for the august platform."""
 
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.const import STATE_IDLE
@@ -30,6 +31,6 @@ async def test_create_doorbell(hass, hass_client_no_auth):
 
         client = await hass_client_no_auth()
         resp = await client.get(url)
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         body = await resp.text()
         assert body == "image"

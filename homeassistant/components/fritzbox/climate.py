@@ -1,4 +1,4 @@
-"""Support for AVM FRITZ!SmartHome thermostate devices."""
+"""Support for AVM FRITZ!SmartHome thermostat devices."""
 from __future__ import annotations
 
 from typing import Any
@@ -6,12 +6,10 @@ from typing import Any
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,9 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import FritzBoxEntity
 from .const import (
     ATTR_STATE_BATTERY_LOW,
-    ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
     CONF_COORDINATOR,
@@ -36,9 +32,7 @@ from .const import (
 )
 from .model import ClimateExtraAttributes
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -68,12 +62,11 @@ async def async_setup_entry(
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
-    """The thermostat class for FRITZ!SmartHome thermostates."""
+    """The thermostat class for FRITZ!SmartHome thermostats."""
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
 
     @property
     def temperature_unit(self) -> str:
@@ -88,6 +81,8 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
+        if self.device.has_temperature_sensor and self.device.temperature is not None:
+            return self.device.temperature  # type: ignore [no-any-return]
         return self.device.actual_temperature  # type: ignore [no-any-return]
 
     @property
@@ -114,22 +109,22 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current operation mode."""
-        if (
-            self.device.target_temperature == OFF_REPORT_SET_TEMPERATURE
-            or self.device.target_temperature == OFF_API_TEMPERATURE
+        if self.device.target_temperature in (
+            OFF_REPORT_SET_TEMPERATURE,
+            OFF_API_TEMPERATURE,
         ):
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
             await self.async_set_temperature(
@@ -174,8 +169,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         """Return the device specific state attributes."""
         attrs: ClimateExtraAttributes = {
             ATTR_STATE_BATTERY_LOW: self.device.battery_low,
-            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
-            ATTR_STATE_LOCKED: self.device.lock,
         }
 
         # the following attributes are available since fritzos 7
@@ -185,7 +178,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             attrs[ATTR_STATE_HOLIDAY_MODE] = self.device.holiday_active
         if self.device.summer_active is not None:
             attrs[ATTR_STATE_SUMMER_MODE] = self.device.summer_active
-        if ATTR_STATE_WINDOW_OPEN is not None:
+        if self.device.window_open is not None:
             attrs[ATTR_STATE_WINDOW_OPEN] = self.device.window_open
 
         return attrs

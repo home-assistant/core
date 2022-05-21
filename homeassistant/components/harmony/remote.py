@@ -4,7 +4,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -12,13 +11,15 @@ from homeassistant.components.remote import (
     ATTR_HOLD_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
-    SUPPORT_ACTIVITY,
+    RemoteEntity,
+    RemoteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -49,8 +50,8 @@ HARMONY_CHANGE_CHANNEL_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Harmony config entry."""
 
     data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
@@ -76,8 +77,10 @@ async def async_setup_entry(
     )
 
 
-class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
+class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
+
+    _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
     def __init__(self, data, activity, delay_secs, out_path):
         """Initialize HarmonyRemote class."""
@@ -93,7 +96,6 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         self._attr_unique_id = data.unique_id
         self._attr_device_info = self._data.device_info(DOMAIN)
         self._attr_name = data.name
-        self._attr_supported_features = SUPPORT_ACTIVITY
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -144,8 +146,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         # Restore the last activity so we know
         # how what to turn on if nothing
         # is specified
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
         if ATTR_LAST_ACTIVITY not in last_state.attributes:
             return
@@ -212,8 +213,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
             if self._last_activity:
                 activity = self._last_activity
             else:
-                all_activities = self._data.activity_names
-                if all_activities:
+                if all_activities := self._data.activity_names:
                     activity = all_activities[0]
 
         if activity:
@@ -228,8 +228,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)
-        device = kwargs.get(ATTR_DEVICE)
-        if device is None:
+        if (device := kwargs.get(ATTR_DEVICE)) is None:
             _LOGGER.error("%s: Missing required argument: device", self.name)
             return
 
@@ -257,8 +256,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         _LOGGER.debug(
             "%s: Writing hub configuration to file: %s", self.name, self._config_path
         )
-        json_config = self._data.json_config
-        if json_config is None:
+        if (json_config := self._data.json_config) is None:
             _LOGGER.warning("%s: No configuration received from hub", self.name)
             return
 

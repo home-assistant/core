@@ -1,32 +1,32 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 from __future__ import annotations
 
-import logging
+from typing import cast
 
 from surepy.entities import SurepyEntity
+from surepy.entities.devices import Felaqua as SurepyFelaqua
 from surepy.enums import EntityType
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, VOLUME_MILLILITERS
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
+from .entity import SurePetcareEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Sure PetCare Flaps sensors."""
-    if discovery_info is None:
-        return
 
-    entities: list[SurepyEntity] = []
+    entities: list[SurePetcareEntity] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 
@@ -38,41 +38,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ]:
             entities.append(SureBattery(surepy_entity.id, coordinator))
 
+        if surepy_entity.type == EntityType.FELAQUA:
+            entities.append(Felaqua(surepy_entity.id, coordinator))
+
     async_add_entities(entities)
 
 
-class SureBattery(CoordinatorEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
+class SureBattery(SurePetcareEntity, SensorEntity):
+    """A sensor implementation for Sure Petcare batteries."""
 
-    def __init__(self, _id: int, coordinator: DataUpdateCoordinator) -> None:
-        """Initialize a Sure Petcare sensor."""
-        super().__init__(coordinator)
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
 
-        self._id = _id
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare battery sensor."""
+        super().__init__(surepetcare_id, coordinator)
 
-        surepy_entity: SurepyEntity = coordinator.data[_id]
-
-        self._attr_device_class = DEVICE_CLASS_BATTERY
-        if surepy_entity.name:
-            self._attr_name = f"{surepy_entity.type.name.capitalize()} {surepy_entity.name.capitalize()} Battery Level"
-        else:
-            self._attr_name = f"{surepy_entity.type.name.capitalize()}  Battery Level"
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_unique_id = (
-            f"{surepy_entity.household_id}-{surepy_entity.id}-battery"
-        )
-        self._update_attr()
+        self._attr_name = f"{self._device_name} Battery Level"
+        self._attr_unique_id = f"{self._device_id}-battery"
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._update_attr()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_attr(self) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state and attributes."""
-        surepy_entity = self.coordinator.data[self._id]
         state = surepy_entity.raw_data()["status"]
 
         try:
@@ -92,4 +82,27 @@ class SureBattery(CoordinatorEntity, SensorEntity):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)
+
+
+class Felaqua(SurePetcareEntity, SensorEntity):
+    """Sure Petcare Felaqua."""
+
+    _attr_native_unit_of_measurement = VOLUME_MILLILITERS
+
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare Felaqua sensor."""
+        super().__init__(surepetcare_id, coordinator)
+
+        surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
+
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
+        self._attr_entity_picture = surepy_entity.icon
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Update the state."""
+        surepy_entity = cast(SurepyFelaqua, surepy_entity)
+        self._attr_native_value = surepy_entity.water_remaining

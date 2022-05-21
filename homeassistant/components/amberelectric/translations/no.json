@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Side navn",
+                    "site_nmi": "Nettsted NMI"
+                },
+                "description": "Velg NMI for nettstedet du vil legge til"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API-token",
+                    "site_id": "Nettsted -ID"
+                },
+                "description": "G\u00e5 til {api_url} \u00e5 generere en API -n\u00f8kkel"
+            }
+        }
+    }
+}

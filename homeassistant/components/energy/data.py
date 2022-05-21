@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
-from collections.abc import Awaitable
-from typing import Callable, Literal, Optional, TypedDict, Union, cast
+from collections.abc import Awaitable, Callable
+from typing import Literal, Optional, TypedDict, Union, cast
 
 import voluptuous as vol
 
@@ -291,7 +291,7 @@ class EnergyManager:
             "device_consumption",
         ):
             if key in update:
-                data[key] = update[key]  # type: ignore
+                data[key] = update[key]  # type: ignore[literal-required]
 
         self.data = data
         self._store.async_delay_save(lambda: cast(dict, self.data), 60)

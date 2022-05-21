@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/blinksticklight",
   "requirements": ["blinkstick==1.2.0"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["blinkstick"]
 }

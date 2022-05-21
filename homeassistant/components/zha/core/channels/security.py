@@ -7,14 +7,12 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
-import logging
 
 from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
-from homeassistant.core import CALLABLE_T, callback
+from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
 from ..const import (
@@ -25,6 +23,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from ..typing import CALLABLE_T
 from .base import ChannelStatus, ZigbeeChannel
 
 IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
@@ -42,8 +41,6 @@ IAS_ACE_GET_ZONE_STATUS = (
 NAME = 0
 SIGNAL_ARMED_STATE_CHANGED = "zha_armed_state_changed"
 SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(AceCluster.cluster_id)
@@ -87,8 +84,8 @@ class IasAce(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args) -> None:
         """Handle commands received to this cluster."""
-        self.warning(
-            "received command %s", self._cluster.server_commands.get(command_id)[NAME]
+        self.debug(
+            "received command %s", self._cluster.server_commands[command_id].name
         )
         self.command_map[command_id](*args)
 
@@ -97,7 +94,7 @@ class IasAce(ZigbeeChannel):
         mode = AceCluster.ArmMode(arm_mode)
 
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_ARM)[NAME],
+            self._cluster.server_commands[IAS_ACE_ARM].name,
             {
                 "arm_mode": mode.value,
                 "arm_mode_description": mode.name,
@@ -123,7 +120,7 @@ class IasAce(ZigbeeChannel):
             code != self.panel_code
             and self.armed_state != AceCluster.PanelStatus.Panel_Disarmed
         ):
-            self.warning("Invalid code supplied to IAS ACE")
+            self.debug("Invalid code supplied to IAS ACE")
             self.invalid_tries += 1
             zigbee_reply = self.arm_response(
                 AceCluster.ArmNotification.Invalid_Arm_Disarm_Code
@@ -134,12 +131,12 @@ class IasAce(ZigbeeChannel):
                 self.armed_state == AceCluster.PanelStatus.Panel_Disarmed
                 and self.alarm_status == AceCluster.AlarmStatus.No_Alarm
             ):
-                self.warning("IAS ACE already disarmed")
+                self.debug("IAS ACE already disarmed")
                 zigbee_reply = self.arm_response(
                     AceCluster.ArmNotification.Already_Disarmed
                 )
             else:
-                self.warning("Disarming all IAS ACE zones")
+                self.debug("Disarming all IAS ACE zones")
                 zigbee_reply = self.arm_response(
                     AceCluster.ArmNotification.All_Zones_Disarmed
                 )
@@ -180,12 +177,12 @@ class IasAce(ZigbeeChannel):
     ) -> None:
         """Arm the panel with the specified statuses."""
         if self.code_required_arm_actions and code != self.panel_code:
-            self.warning("Invalid code supplied to IAS ACE")
+            self.debug("Invalid code supplied to IAS ACE")
             zigbee_reply = self.arm_response(
                 AceCluster.ArmNotification.Invalid_Arm_Disarm_Code
             )
         else:
-            self.warning("Arming all IAS ACE zones")
+            self.debug("Arming all IAS ACE zones")
             self.armed_state = panel_status
             zigbee_reply = self.arm_response(armed_type)
         return zigbee_reply
@@ -193,7 +190,7 @@ class IasAce(ZigbeeChannel):
     def _bypass(self, zone_list, code) -> None:
         """Handle the IAS ACE bypass command."""
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_BYPASS)[NAME],
+            self._cluster.server_commands[IAS_ACE_BYPASS].name,
             {"zone_list": zone_list, "code": code},
         )
 
@@ -345,6 +342,8 @@ class IasWd(ZigbeeChannel):
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
+    ZCL_INIT_ATTRS = {"zone_status": True, "zone_state": False, "zone_type": True}
+
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
@@ -404,8 +403,3 @@ class IASZoneChannel(ZigbeeChannel):
                 self.cluster.attributes.get(attrid, [attrid])[0],
                 value,
             )
-
-    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
-        """Initialize channel."""
-        attributes = ["zone_status", "zone_state", "zone_type"]
-        return self.get_attributes(attributes, from_cache=from_cache)

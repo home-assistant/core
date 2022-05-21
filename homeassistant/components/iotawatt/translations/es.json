@@ -10,11 +10,12 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
-                }
+                },
+                "description": "El dispositivo IoTawatt requiere autenticaci\u00f3n. Introduce el nombre de usuario y la contrase\u00f1a y haz clic en el bot\u00f3n Enviar."
             },
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n"
+                    "host": "Host"
                 }
             }
         }

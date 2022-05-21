@@ -1,8 +1,8 @@
 """Provides device automations for Tasmota."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
 
 import attr
 from hatasmota.models import DiscoveryHashType
@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -219,7 +219,7 @@ async def async_setup_trigger(
         hass, TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*discovery_hash), discovery_update
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         set(),
         {(CONNECTION_NETWORK_MAC, tasmota_trigger.cfg.mac)},
@@ -264,7 +264,7 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for a Tasmota device."""
     triggers: list[dict[str, str]] = []
 

@@ -1,193 +1,229 @@
 """Tests for the Nest config flow."""
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nest import DOMAIN, config_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from .common import TEST_CONFIG_LEGACY
+
+from tests.common import MockConfigEntry
+
+CONFIG = TEST_CONFIG_LEGACY.config
 
 
 async def test_abort_if_no_implementation_registered(hass):
     """Test we abort if no implementation is registered."""
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "missing_configuration"
 
 
 async def test_abort_if_single_instance_allowed(hass):
     """Test we abort if Nest is already setup."""
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
+    existing_entry = MockConfigEntry(domain=DOMAIN, data={})
+    existing_entry.add_to_hass(hass)
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_init()
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow_implementation(hass):
     """Test registering an implementation and finishing flow works."""
-    gen_authorize_url = AsyncMock(return_value="https://example.com")
-    convert_code = AsyncMock(return_value={"access_token": "yoo"})
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, convert_code
-    )
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+    # Register an additional implementation to select from during the flow
     config_flow.register_flow_implementation(
         hass, "test-other", "Test Other", None, None
     )
 
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await flow.async_step_init({"flow_impl": "test"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"flow_impl": "nest"},
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
-    assert result["description_placeholders"] == {"url": "https://example.com"}
+    assert (
+        result["description_placeholders"]
+        .get("url")
+        .startswith("https://home.nest.com/login/oauth2?client_id=some-client-id")
+    )
 
-    result = await flow.async_step_link({"code": "123ABC"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["tokens"] == {"access_token": "yoo"}
-    assert result["data"]["impl_domain"] == "test"
-    assert result["title"] == "Nest (via Test)"
+    def mock_login(auth):
+        assert auth.pin == "123ABC"
+        auth.auth_callback({"access_token": "yoo"})
+
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.NestAuth.login", new=mock_login
+    ), patch(
+        "homeassistant.components.nest.async_setup_legacy_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "123ABC"}
+        )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"]["tokens"] == {"access_token": "yoo"}
+        assert result["data"]["impl_domain"] == "nest"
+        assert result["title"] == "Nest (via configuration.yaml)"
 
 
 async def test_not_pick_implementation_if_only_one(hass):
-    """Test we allow picking implementation if we have two."""
-    gen_authorize_url = AsyncMock(return_value="https://example.com")
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, None
-    )
+    """Test we pick the default implementation when registered."""
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
 
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
 
 async def test_abort_if_timeout_generating_auth_url(hass):
     """Test we abort if generating authorize url fails."""
-    gen_authorize_url = Mock(side_effect=asyncio.TimeoutError)
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, None
-    )
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.generate_auth_url",
+        side_effect=asyncio.TimeoutError,
+    ):
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
+        await hass.async_block_till_done()
 
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_timeout"
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "authorize_url_timeout"
 
 
 async def test_abort_if_exception_generating_auth_url(hass):
     """Test we abort if generating authorize url blows up."""
-    gen_authorize_url = Mock(side_effect=ValueError)
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, None
-    )
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.generate_auth_url",
+        side_effect=ValueError,
+    ):
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
+        await hass.async_block_till_done()
 
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_verify_code_timeout(hass):
     """Test verify code timing out."""
-    gen_authorize_url = AsyncMock(return_value="https://example.com")
-    convert_code = Mock(side_effect=asyncio.TimeoutError)
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, convert_code
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
-    result = await flow.async_step_link({"code": "123ABC"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"code": "timeout"}
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        side_effect=asyncio.TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "123ABC"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "link"
+        assert result["errors"] == {"code": "timeout"}
 
 
 async def test_verify_code_invalid(hass):
     """Test verify code invalid."""
-    gen_authorize_url = AsyncMock(return_value="https://example.com")
-    convert_code = Mock(side_effect=config_flow.CodeInvalid)
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, convert_code
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
-    result = await flow.async_step_link({"code": "123ABC"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"code": "invalid_pin"}
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        side_effect=config_flow.CodeInvalid,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "123ABC"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "link"
+        assert result["errors"] == {"code": "invalid_pin"}
 
 
 async def test_verify_code_unknown_error(hass):
     """Test verify code unknown error."""
-    gen_authorize_url = AsyncMock(return_value="https://example.com")
-    convert_code = Mock(side_effect=config_flow.NestAuthError)
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, convert_code
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
-    result = await flow.async_step_link({"code": "123ABC"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"code": "unknown"}
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        side_effect=config_flow.NestAuthError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "123ABC"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "link"
+        assert result["errors"] == {"code": "unknown"}
 
 
 async def test_verify_code_exception(hass):
     """Test verify code blows up."""
-    gen_authorize_url = AsyncMock(return_value="https://example.com")
-    convert_code = Mock(side_effect=ValueError)
-    config_flow.register_flow_implementation(
-        hass, "test", "Test", gen_authorize_url, convert_code
+    assert await async_setup_component(hass, DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    flow = config_flow.NestFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
-    result = await flow.async_step_link({"code": "123ABC"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"code": "internal_error"}
+    with patch(
+        "homeassistant.components.nest.legacy.local_auth.NestAuth.login",
+        side_effect=ValueError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "123ABC"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "link"
+        assert result["errors"] == {"code": "internal_error"}
 
 
 async def test_step_import(hass):
     """Test that we trigger import when configuring with client."""
     with patch("os.path.isfile", return_value=False):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"client_id": "bla", "client_secret": "bla"}}
-        )
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
 
     flow = hass.config_entries.flow.async_progress()[0]
@@ -203,12 +239,11 @@ async def test_step_import_with_token_cache(hass):
         "homeassistant.components.nest.config_flow.load_json",
         return_value={"access_token": "yo"},
     ), patch(
-        "homeassistant.components.nest.async_setup_entry", return_value=mock_coro(True)
-    ):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"client_id": "bla", "client_secret": "bla"}}
-        )
+        "homeassistant.components.nest.async_setup_legacy_entry", return_value=True
+    ) as mock_setup:
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 

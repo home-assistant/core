@@ -1,0 +1,109 @@
+{
+  "devices": [
+    {
+      "addresses": ["100.11.11.111"],
+      "id": "123456",
+      "user": "frenck",
+      "name": "frencks-iphone.homeassistant.github",
+      "hostname": "Frencks-iPhone",
+      "clientVersion": "1.12.3-td91ea7286-ge1bbbd90c",
+      "updateAvailable": true,
+      "os": "iOS",
+      "created": "2021-08-19T09:25:22Z",
+      "lastSeen": "2021-09-16T06:11:23Z",
+      "keyExpiryDisabled": false,
+      "expires": "2022-02-15T09:25:22Z",
+      "authorized": true,
+      "isExternal": false,
+      "machineKey": "mkey:mock",
+      "nodeKey": "nodekey:mock",
+      "blocksIncomingConnections": false,
+      "enabledRoutes": [],
+      "advertisedRoutes": [],
+      "clientConnectivity": {
+        "endpoints": ["192.0.0.1:41641", "192.168.11.154:41641"],
+        "derp": "",
+        "mappingVariesByDestIP": false,
+        "latency": {},
+        "clientSupports": {
+          "hairPinning": false,
+          "ipv6": false,
+          "pcp": false,
+          "pmp": false,
+          "udp": true,
+          "upnp": false
+        }
+      }
+    },
+    {
+      "addresses": ["100.11.11.112"],
+      "id": "123457",
+      "user": "frenck",
+      "name": "router.homeassistant.github",
+      "hostname": "router",
+      "clientVersion": "1.14.0-t5cff36945-g809e87bba",
+      "updateAvailable": true,
+      "os": "linux",
+      "created": "2021-08-29T09:49:06Z",
+      "lastSeen": "2021-11-15T20:37:03Z",
+      "keyExpiryDisabled": false,
+      "expires": "2022-02-25T09:49:06Z",
+      "authorized": true,
+      "isExternal": false,
+      "machineKey": "mkey:mock",
+      "nodeKey": "nodekey:mock",
+      "blocksIncomingConnections": false,
+      "enabledRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
+      "advertisedRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
+      "clientConnectivity": {
+        "endpoints": ["10.10.10.1:41641", "111.111.111.111:41641"],
+        "derp": "",
+        "mappingVariesByDestIP": false,
+        "latency": {
+          "Bangalore": {
+            "latencyMs": 143.42505599999998
+          },
+          "Chicago": {
+            "latencyMs": 101.123646
+          },
+          "Dallas": {
+            "latencyMs": 136.85886
+          },
+          "Frankfurt": {
+            "latencyMs": 18.968314
+          },
+          "London": {
+            "preferred": true,
+            "latencyMs": 14.314574
+          },
+          "New York City": {
+            "latencyMs": 83.078912
+          },
+          "San Francisco": {
+            "latencyMs": 148.215522
+          },
+          "Seattle": {
+            "latencyMs": 181.553595
+          },
+          "Singapore": {
+            "latencyMs": 164.566539
+          },
+          "São Paulo": {
+            "latencyMs": 207.250179
+          },
+          "Tokyo": {
+            "latencyMs": 226.90714300000002
+          }
+        },
+        "clientSupports": {
+          "hairPinning": true,
+          "ipv6": false,
+          "pcp": false,
+          "pmp": false,
+          "udp": true,
+          "upnp": false
+        }
+      }
+    }
+  ]
+}

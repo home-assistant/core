@@ -152,13 +152,6 @@ async def test_numpy_errors(hass, caplog):
             "test": {
                 "source": "sensor.uncompensated",
                 "data_points": [
-                    [1.0, 1.0],
-                    [1.0, 1.0],
-                ],
-            },
-            "test2": {
-                "source": "sensor.uncompensated2",
-                "data_points": [
                     [0.0, 1.0],
                     [0.0, 1.0],
                 ],
@@ -169,8 +162,6 @@ async def test_numpy_errors(hass, caplog):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
-
-    assert "polyfit may be poorly conditioned" in caplog.text
 
     assert "invalid value encountered in true_divide" in caplog.text
 

@@ -1,15 +1,27 @@
 """Tests for the Spotify config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from spotipy import SpotifyException
 
 from homeassistant import data_entry_flow, setup
+from homeassistant.components import zeroconf
 from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
+
+BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.2.3.4",
+    addresses=["1.2.3.4"],
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={},
+    type="mock_type",
+)
 
 
 async def test_abort_if_no_configuration(hass):
@@ -19,14 +31,14 @@ async def test_abort_if_no_configuration(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "missing_credentials"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "missing_credentials"
 
 
 async def test_zeroconf_abort_if_existing_entry(hass):
@@ -34,7 +46,7 @@ async def test_zeroconf_abort_if_existing_entry(hass):
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -80,7 +92,7 @@ async def test_full_flow(
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -183,7 +195,13 @@ async def test_reauthentication(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -250,7 +268,13 @@ async def test_reauth_account_mismatch(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -283,3 +307,13 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_account_mismatch"
+
+
+async def test_abort_if_no_reauth_entry(hass):
+    """Check flow aborts when no entry is known when entring reauth confirmation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth_confirm"}
+    )
+
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "reauth_account_mismatch"

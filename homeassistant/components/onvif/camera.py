@@ -7,11 +7,15 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
-from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_manager
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base import ONVIFBaseEntity
 from .const import (
@@ -24,7 +28,6 @@ from .const import (
     ATTR_SPEED,
     ATTR_TILT,
     ATTR_ZOOM,
-    CONF_RTSP_TRANSPORT,
     CONF_SNAPSHOT_AUTH,
     CONTINUOUS_MOVE,
     DIR_DOWN,
@@ -42,7 +45,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ONVIF camera video stream."""
     platform = entity_platform.async_get_current_platform()
 
@@ -81,6 +88,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     """Representation of an ONVIF camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, device, profile):
         """Initialize ONVIF camera entity."""
         ONVIFBaseEntity.__init__(self, device, profile)
@@ -95,14 +104,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._stream_uri = None
 
     @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_STREAM
-
-    @property
     def name(self) -> str:
         """Return the name of this camera."""
-        return f"{self.device.name} - {self.profile.name}"
+        return f"{self.device.name} {self.profile.name}"
 
     @property
     def unique_id(self) -> str:
@@ -153,7 +157,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)
 
-        ffmpeg_manager = self.hass.data[DATA_FFMPEG]
+        ffmpeg_manager = get_ffmpeg_manager(self.hass)
         stream = CameraMjpeg(ffmpeg_manager.binary)
 
         await stream.open_camera(

@@ -1,24 +1,24 @@
 """Support for Xiaomi Aqara sensors."""
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import XiaomiDevice
 from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
@@ -29,27 +29,27 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
     "illumination": SensorEntityDescription(
         key="illumination",
         native_unit_of_measurement="lm",
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     "lux": SensorEntityDescription(
         key="lux",
         native_unit_of_measurement=LIGHT_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         native_unit_of_measurement=PRESSURE_HPA,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
@@ -59,7 +59,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "load_power": SensorEntityDescription(
         key="load_power",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
     ),
     "final_tilt_angle": SensorEntityDescription(
         key="final_tilt_angle",
@@ -73,7 +73,11 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
@@ -154,17 +158,12 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
+        self.entity_description = SENSOR_TYPES[data_key]
         super().__init__(device, name, xiaomi_hub, config_entry)
-
-    @cached_property
-    def entity_description(self) -> SensorEntityDescription:  # type: ignore[override]
-        """Return entity_description for data_key."""
-        return SENSOR_TYPES[self._data_key]
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        value = data.get(self._data_key)
-        if value is None:
+        if (value := data.get(self._data_key)) is None:
             return False
         if self._data_key in ("coordination", "status"):
             self._attr_native_value = value
@@ -191,7 +190,7 @@ class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

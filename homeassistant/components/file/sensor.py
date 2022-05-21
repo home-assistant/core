@@ -1,4 +1,6 @@
 """Support for sensor value(s) stored in local files."""
+from __future__ import annotations
+
 import logging
 import os
 
@@ -11,7 +13,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,12 +35,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the file sensor."""
-    file_path = config.get(CONF_FILE_PATH)
-    name = config.get(CONF_NAME)
-    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
+    file_path: str = config[CONF_FILE_PATH]
+    name: str = config[CONF_NAME]
+    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
@@ -48,33 +59,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FileSensor(SensorEntity):
     """Implementation of a file sensor."""
 
-    def __init__(self, name, file_path, unit_of_measurement, value_template):
+    _attr_icon = ICON
+
+    def __init__(
+        self,
+        name: str,
+        file_path: str,
+        unit_of_measurement: str | None,
+        value_template: Template | None,
+    ) -> None:
         """Initialize the file sensor."""
-        self._name = name
+        self._attr_name = name
         self._file_path = file_path
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
 
     def update(self):
         """Get the latest entry from a file and updates the state."""
@@ -91,8 +89,8 @@ class FileSensor(SensorEntity):
             return
 
         if self._val_tpl is not None:
-            self._state = self._val_tpl.async_render_with_possible_json_value(
-                data, None
+            self._attr_native_value = (
+                self._val_tpl.async_render_with_possible_json_value(data, None)
             )
         else:
-            self._state = data
+            self._attr_native_value = data

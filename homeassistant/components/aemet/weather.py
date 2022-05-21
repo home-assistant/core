@@ -1,6 +1,9 @@
 """Support for the AEMET OpenData service."""
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PRESSURE_HPA, SPEED_KILOMETERS_PER_HOUR, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -21,7 +24,11 @@ from .const import (
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AEMET OpenData weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
@@ -36,11 +43,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, False)
 
 
-class AemetWeather(CoordinatorEntity, WeatherEntity):
+class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
     """Implementation of an AEMET OpenData sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
 
     def __init__(
         self,
@@ -85,10 +94,10 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
 
     @property
     def wind_bearing(self):
-        """Return the temperature."""
+        """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_WIND_BEARING]
 
     @property
     def wind_speed(self):
-        """Return the temperature."""
+        """Return the wind speed."""
         return self.coordinator.data[ATTR_API_WIND_SPEED]

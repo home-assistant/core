@@ -1,4 +1,5 @@
 """The tests for the emulated Hue component."""
+from http import HTTPStatus
 import json
 import unittest
 
@@ -9,7 +10,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import emulated_hue
 from homeassistant.components.emulated_hue import upnp
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON
 
 from tests.common import get_test_instance_port
 
@@ -26,6 +27,12 @@ class MockTransport:
     def sendto(self, response, addr):
         """Mock sendto."""
         self.sends.append((response, addr))
+
+
+@pytest.fixture
+def aiohttp_client(loop, aiohttp_client, socket_enabled):
+    """Return aiohttp_client and allow opening sockets."""
+    return aiohttp_client
 
 
 @pytest.fixture
@@ -143,7 +150,7 @@ async def test_description_xml(hass, hue_client):
     client = await hue_client()
     result = await client.get("/description.xml", timeout=5)
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
     assert "text/xml" in result.headers["content-type"]
 
     try:
@@ -162,7 +169,7 @@ async def test_create_username(hass, hue_client):
 
     result = await client.post("/api", data=json.dumps(request_json), timeout=5)
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     resp_json = await result.json()
@@ -182,7 +189,7 @@ async def test_unauthorized_view(hass, hue_client):
         "/api/unauthorized", data=json.dumps(request_json), timeout=5
     )
 
-    assert result.status == HTTP_OK
+    assert result.status == HTTPStatus.OK
     assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
     resp_json = await result.json()
@@ -206,4 +213,4 @@ async def test_valid_username_request(hass, hue_client):
 
     result = await client.post("/api", data=json.dumps(request_json), timeout=5)
 
-    assert result.status == 400
+    assert result.status == HTTPStatus.BAD_REQUEST

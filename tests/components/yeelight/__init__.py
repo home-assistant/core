@@ -1,14 +1,14 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.utils import CaseInsensitiveDict
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import yeelight as hass_yeelight
+from homeassistant.components import zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -16,6 +16,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YeelightScanner,
+    scanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import callback
@@ -36,6 +37,18 @@ CAPABILITIES = {
     " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
     "name": "",
 }
+
+ID_DECIMAL = f"{int(ID, 16):08d}"
+
+ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host=IP_ADDRESS,
+    addresses=[IP_ADDRESS],
+    port=54321,
+    hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
+    type="_miio._udp.local.",
+    name=f"yeelink-light-strip1_miio{ID_DECIMAL}._miio._udp.local.",
+    properties={"epoch": "1", "mac": "000000000000"},
+)
 
 NAME = "name"
 SHORT_ID = hex(int("0x000000000015243f", 16))
@@ -125,6 +138,7 @@ def _mocked_bulb(cannot_connect=False):
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
     bulb.capabilities = CAPABILITIES.copy()
+    bulb.available = True
     bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()
@@ -140,15 +154,15 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-    bulb.start_music = MagicMock()
+    bulb.async_start_music = AsyncMock()
     return bulb
 
 
-def _patched_ssdp_listener(info, *args, **kwargs):
+def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
-        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+        if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
         await listener.async_connect_callback()
 
@@ -166,23 +180,20 @@ def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
-        return _patched_ssdp_listener(
-            None if no_device else capabilities or CAPABILITIES,
-            *args,
-            **kwargs,
-        )
+        info = None
+        if not no_device:
+            info = capabilities or CAPABILITIES
+        return _patched_ssdp_listener(info, *args, **kwargs)
 
     return patch(
-        "homeassistant.components.yeelight.SsdpSearchListener",
+        "homeassistant.components.yeelight.scanner.SsdpSearchListener",
         new=_generate_fake_ssdp_listener,
     )
 
 
 def _patch_discovery_interval():
-    return patch.object(
-        hass_yeelight, "DISCOVERY_SEARCH_INTERVAL", timedelta(seconds=0)
-    )
+    return patch.object(scanner, "DISCOVERY_SEARCH_INTERVAL", timedelta(seconds=0))
 
 
 def _patch_discovery_timeout():
-    return patch.object(hass_yeelight, "DISCOVERY_TIMEOUT", 0.0001)
+    return patch.object(scanner, "DISCOVERY_TIMEOUT", 0.0001)

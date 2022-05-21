@@ -26,9 +26,13 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "V\u00f5rgu v\u00f5ti",
+                    "s0_legacy_key": "S0 vana t\u00fc\u00fcpi v\u00f5ti",
+                    "s2_access_control_key": "S2 juurdep\u00e4\u00e4suv\u00f5ti",
+                    "s2_authenticated_key": "Autenditud S2 v\u00f5ti",
+                    "s2_unauthenticated_key": "Autentimata S2 v\u00f5ti",
                     "usb_path": "USB-seadme asukoha rada"
                 },
+                "description": "Lisandmoodul loob ise turvav\u00f5tmed kui need v\u00e4ljad t\u00fchjaks j\u00e4etakse.",
                 "title": "Sisesta Z-Wave JS lisandmooduli seaded"
             },
             "hassio_confirm": {
@@ -54,10 +58,23 @@
             },
             "usb_confirm": {
                 "description": "Kas seadistada Z-Wave JS lisandmoodul {name}?"
+            },
+            "zeroconf_confirm": {
+                "description": "Kas lisada Z-Wave JS-server, mille ID {home_id} on leitud aadressil {url}, Home Assistant'ile?",
+                "title": "Avastatud Z-Wave JS Server"
             }
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Kustutaolemi {entity_name} kasutajakood",
+            "ping": "K\u00fcsitle seadet",
+            "refresh_value": "Olemi {entity_name} v\u00e4\u00e4rtuste v\u00e4rskendamine",
+            "reset_meter": "L\u00e4htesta arvesti {subtype}",
+            "set_config_parameter": "Seadeparameetri {subtype} v\u00e4\u00e4rtuse omistamine",
+            "set_lock_usercode": "Olemi {entity_name} kasutaja koodi m\u00e4\u00e4ramine",
+            "set_value": "Z-Wave v\u00e4\u00e4rtuse m\u00e4\u00e4ramine"
+        },
         "condition_type": {
             "config_parameter": "Seadeparameeteri {subtype} v\u00e4\u00e4rtus",
             "node_status": "S\u00f5lme olek",
@@ -99,9 +116,13 @@
                 "data": {
                     "emulate_hardware": "Riistvara emuleerimine",
                     "log_level": "Logimise tase",
-                    "network_key": "V\u00f5rgu v\u00f5ti",
+                    "s0_legacy_key": "S0 vana t\u00fc\u00fcpi v\u00f5ti",
+                    "s2_access_control_key": "S2 juurdep\u00e4\u00e4suv\u00f5ti",
+                    "s2_authenticated_key": "Autenditud S2 v\u00f5ti",
+                    "s2_unauthenticated_key": "Autentimata S2 v\u00f5ti",
                     "usb_path": "USB-seadme asukoha rada"
                 },
+                "description": "Lisandmoodul loob ise turvav\u00f5tmed kui need v\u00e4ljad t\u00fchjaks j\u00e4etakse.",
                 "title": "Sisesta Z-Wave JS lisandmooduli seaded"
             },
             "install_addon": {
@@ -123,6 +144,5 @@
                 "title": "Z-Wave JS lisandmoodul k\u00e4ivitub."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

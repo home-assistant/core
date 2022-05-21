@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "\u4f4d\u5740\u540d\u7a31",
+                    "site_nmi": "\u4f4d\u5740 NMI"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u65b0\u589e\u7684\u4f4d\u5740 NMI"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API \u6b0a\u6756",
+                    "site_id": "\u4f4d\u5740 ID"
+                },
+                "description": "\u9023\u7dda\u81f3 {api_url} \u4ee5\u7522\u751f API \u91d1\u9470"
+            }
+        }
+    }
+}

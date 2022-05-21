@@ -17,32 +17,30 @@ from denonavr.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import ATTR_COMMAND, STATE_PAUSED, STATE_PLAYING
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_COMMAND,
+    CONF_HOST,
+    CONF_MODEL,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
 from .config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
@@ -56,21 +54,21 @@ ATTR_SOUND_MODE_RAW = "sound_mode_raw"
 ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 SUPPORT_DENON = (
-    SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_SET
+    MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.VOLUME_SET
 )
 
 SUPPORT_MEDIA_MODES = (
-    SUPPORT_PLAY_MEDIA
-    | SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.PLAY
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -84,9 +82,9 @@ SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities: entity_platform.EntityPlatform.async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -140,18 +138,28 @@ class DenonDevice(MediaPlayerEntity):
         self,
         receiver: DenonAVR,
         unique_id: str,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
+        self._attr_name = receiver.name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
+            identifiers={(DOMAIN, config_entry.unique_id)},
+            manufacturer=config_entry.data[CONF_MANUFACTURER],
+            model=f"{config_entry.data[CONF_MODEL]}-{config_entry.data[CONF_TYPE]}",
+            name=config_entry.title,
+        )
+        self._attr_sound_mode_list = receiver.sound_mode_list
+
         self._receiver = receiver
-        self._unique_id = unique_id
-        self._config_entry = config_entry
         self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
-            self._receiver.support_sound_mode and SUPPORT_SELECT_SOUND_MODE
+            self._receiver.support_sound_mode
+            and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
         self._available = True
 
@@ -231,34 +239,14 @@ class DenonDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def unique_id(self):
-        """Return the unique id of the zone."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info of the receiver."""
-        if self._config_entry.data[CONF_SERIAL_NUMBER] is None:
-            return None
-
-        device_info = {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
-            "name": self._config_entry.title,
-            "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
-        }
-
-        return device_info
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._receiver.name
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._receiver.state
+
+    @property
+    def source_list(self):
+        """Return a list of available input sources."""
+        return self._receiver.input_func_list
 
     @property
     def is_volume_muted(self):
@@ -280,19 +268,9 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.input_func
 
     @property
-    def source_list(self):
-        """Return a list of available input sources."""
-        return self._receiver.input_func_list
-
-    @property
     def sound_mode(self):
         """Return the current matched sound mode."""
         return self._receiver.sound_mode
-
-    @property
-    def sound_mode_list(self):
-        """Return a list of available sound modes."""
-        return self._receiver.sound_mode_list
 
     @property
     def supported_features(self):
@@ -309,10 +287,7 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if (
-            self._receiver.state == STATE_PLAYING
-            or self._receiver.state == STATE_PAUSED
-        ):
+        if self._receiver.state in (STATE_PLAYING, STATE_PAUSED):
             return MEDIA_TYPE_MUSIC
         return MEDIA_TYPE_CHANNEL
 

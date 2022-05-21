@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-# mypy: disallow-any-generics
-
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
 
@@ -102,5 +100,7 @@ class LegacyLoginFlow(LoginFlow):
                 return await self.async_finish({})
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema({"password": str}), errors=errors
+            step_id="init",
+            data_schema=vol.Schema({vol.Required("password"): str}),
+            errors=errors,
         )

@@ -1,6 +1,7 @@
 """Config flow for Vera."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 import re
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
@@ -41,7 +42,7 @@ def new_options(lights: list[int], exclude: list[int]) -> dict:
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 
 
-def options_schema(options: dict = None) -> dict:
+def options_schema(options: Mapping[str, Any] = None) -> dict:
     """Return options schema."""
     options = options or {}
     return {
@@ -118,9 +119,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If there are entities with the legacy unique_id, then this imported config
         # should also use the legacy unique_id for entity creation.
-        entity_registry: EntityRegistry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        entity_registry = er.async_get(self.hass)
         use_legacy_unique_id = (
             len(
                 [

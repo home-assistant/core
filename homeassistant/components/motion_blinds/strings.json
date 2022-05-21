@@ -1,15 +1,14 @@
 {
   "config": {
+    "flow_title": "{short_mac} ({ip_address})",
     "step": {
       "user": {
-        "title": "Motion Blinds",
         "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         }
       },
       "connect": {
-        "title": "Motion Blinds",
         "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -31,8 +30,14 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "wait_for_push": "Wait for multicast push on update"
+        }
+      }
+    }
   }
 }
-
-
-

@@ -1,6 +1,7 @@
 """Support for sending data to an Influx database."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -8,7 +9,7 @@ import math
 import queue
 import threading
 import time
-from typing import Any, Callable
+from typing import Any
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -29,7 +30,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
@@ -37,6 +38,7 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_VERSION_2,
@@ -334,6 +336,7 @@ def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C90
     precision = conf.get(CONF_PRECISION)
 
     if conf[CONF_API_VERSION] == API_VERSION_2:
+        kwargs[CONF_TIMEOUT] = TIMEOUT * 1000
         kwargs[CONF_URL] = conf[CONF_URL]
         kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
         kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]
@@ -467,7 +470,7 @@ def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C90
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
     conf = config[DOMAIN]
     try:

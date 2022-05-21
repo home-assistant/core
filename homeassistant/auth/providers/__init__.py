@@ -22,12 +22,10 @@ from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import Credentials, RefreshToken, User, UserMeta
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
 
-AUTH_PROVIDERS = Registry()
+AUTH_PROVIDERS: Registry[str, type[AuthProvider]] = Registry()
 
 AUTH_PROVIDER_SCHEMA = vol.Schema(
     {
@@ -64,7 +62,7 @@ class AuthProvider:
     @property
     def type(self) -> str:
         """Return type of the provider."""
-        return self.config[CONF_TYPE]  # type: ignore
+        return self.config[CONF_TYPE]  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:
@@ -138,11 +136,11 @@ async def auth_provider_from_config(
     hass: HomeAssistant, store: AuthStore, config: dict[str, Any]
 ) -> AuthProvider:
     """Initialize an auth provider from a config."""
-    provider_name = config[CONF_TYPE]
+    provider_name: str = config[CONF_TYPE]
     module = await load_auth_provider_module(hass, provider_name)
 
     try:
-        config = module.CONFIG_SCHEMA(config)  # type: ignore
+        config = module.CONFIG_SCHEMA(config)
     except vol.Invalid as err:
         _LOGGER.error(
             "Invalid configuration for auth provider %s: %s",
@@ -151,7 +149,7 @@ async def auth_provider_from_config(
         )
         raise
 
-    return AUTH_PROVIDERS[provider_name](hass, store, config)  # type: ignore
+    return AUTH_PROVIDERS[provider_name](hass, store, config)
 
 
 async def load_auth_provider_module(
@@ -169,15 +167,12 @@ async def load_auth_provider_module(
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
 
-    processed = hass.data.get(DATA_REQS)
-
-    if processed is None:
+    if (processed := hass.data.get(DATA_REQS)) is None:
         processed = hass.data[DATA_REQS] = set()
     elif provider in processed:
         return module
 
-    # https://github.com/python/mypy/issues/1424
-    reqs = module.REQUIREMENTS  # type: ignore
+    reqs = module.REQUIREMENTS
     await requirements.async_process_requirements(
         hass, f"auth provider {provider}", reqs
     )
@@ -255,7 +250,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             auth_module, "async_initialize_login_mfa_step"
         ):
             try:
-                await auth_module.async_initialize_login_mfa_step(  # type: ignore
+                await auth_module.async_initialize_login_mfa_step(  # type: ignore[attr-defined]
                     self.user.id
                 )
             except HomeAssistantError:

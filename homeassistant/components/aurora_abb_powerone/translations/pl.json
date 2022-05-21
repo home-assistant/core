@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "no_serial_ports": "Nie znaleziono port\u00f3w COM. Do komunikacji potrzebne jest prawid\u0142owe urz\u0105dzenie RS485."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, sprawd\u017a port szeregowy, adres, po\u0142\u0105czenie elektryczne i czy falownik jest w\u0142\u0105czony (w \u015bwietle dziennym)",
+            "cannot_open_serial_port": "Nie mo\u017cna otworzy\u0107 portu szeregowego, sprawd\u017a i spr\u00f3buj ponownie",
+            "invalid_serial_port": "Port szeregowy nie jest prawid\u0142owym urz\u0105dzeniem lub nie mo\u017cna go otworzy\u0107"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Adres falownika",
+                    "port": "Port RS485 lub adaptera USB-RS485"
+                },
+                "description": "Falownik musi by\u0107 pod\u0142\u0105czony przez adapter RS485. Wybierz port szeregowy i adres falownika zgodnie z konfiguracj\u0105 na panelu LCD."
+            }
+        }
+    }
+}

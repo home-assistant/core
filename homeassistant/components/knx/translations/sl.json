@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Storitev je \u017ee konfigurirana",
+            "single_instance_allowed": "\u017de konfigurirano. Mo\u017ena je samo ena konfiguracija."
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                }
+            },
+            "routing": {
+                "data": {
+                    "multicast_group": "Multicast skupina izbrana za usmerjanje",
+                    "multicast_port": "Multicast vrata izbrana za usmerjanje"
+                }
+            },
+            "tunnel": {
+                "description": "Prosimo, izberite prehod s seznama."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "individual_address": "Privzet individualni naslov"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                }
+            }
+        }
+    }
+}

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u88dd\u7f6e",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
@@ -39,7 +40,7 @@
                 "data": {
                     "inverse": "\u53cd\u8f49\u958b\u555f/\u95dc\u9589\u72c0\u614b",
                     "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
-                    "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u578b"
+                    "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u5225"
                 },
                 "description": "{zone}\u9078\u9805",
                 "title": "\u8a2d\u5b9a\u4e8c\u9032\u4f4d\u611f\u61c9\u5668"
@@ -48,7 +49,7 @@
                 "data": {
                     "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
                     "poll_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u5206\u9418\uff09\uff08\u9078\u9805\uff09",
-                    "type": "\u611f\u61c9\u5668\u985e\u578b"
+                    "type": "\u611f\u61c9\u5668\u985e\u5225"
                 },
                 "description": "{zone}\u9078\u9805",
                 "title": "\u8a2d\u5b9a\u6578\u4f4d\u611f\u61c9\u5668"

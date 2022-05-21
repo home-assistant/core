@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
         "error": {
-            "name_exists": "Bu ad zaten var",
             "wrong_location": "Konum sadece \u0130sve\u00e7"
         },
         "step": {
@@ -9,7 +11,8 @@
                 "data": {
                     "latitude": "Enlem",
                     "longitude": "Boylam"
-                }
+                },
+                "title": "\u0130sve\u00e7'teki konum"
             }
         }
     }

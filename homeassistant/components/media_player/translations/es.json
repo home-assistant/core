@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} se est\u00e1 cargando en memoria",
             "is_idle": "{entity_name} est\u00e1 inactivo",
             "is_off": "{entity_name} est\u00e1 apagado",
             "is_on": "{entity_name} est\u00e1 activado",
@@ -8,6 +9,8 @@
             "is_playing": "{entity_name} est\u00e1 reproduciendo"
         },
         "trigger_type": {
+            "buffering": "{entity_name} comienza a cargarse en memoria",
+            "changed_states": "{entity_name} ha cambiado de estado",
             "idle": "{entity_name} est\u00e1 inactivo",
             "paused": "{entity_name} est\u00e1 en pausa",
             "playing": "{entity_name} comienza a reproducirse",
@@ -17,12 +20,13 @@
     },
     "state": {
         "_": {
+            "buffering": "Cargando",
             "idle": "Inactivo",
             "off": "Apagado",
             "on": "Encendido",
             "paused": "En pausa",
             "playing": "Reproduciendo",
-            "standby": "Apagado"
+            "standby": "En espera"
         }
     },
     "title": "Reproductor multimedia"

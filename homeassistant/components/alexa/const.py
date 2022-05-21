@@ -28,7 +28,9 @@ ATTR_REDIRECTION_URL = "redirectionURL"
 
 SYN_RESOLUTION_MATCH = "ER_SUCCESS_MATCH"
 
-DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.0Z"
+# Alexa requires timestamps to be formatted according to ISO 8601, YYYY-MM-DDThh:mm:ssZ
+# https://developer.amazon.com/es-ES/docs/alexa/device-apis/alexa-scenecontroller.html#activate-response-event
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 API_DIRECTIVE = "directive"
 API_ENDPOINT = "endpoint"
@@ -77,6 +79,9 @@ API_THERMOSTAT_MODES = OrderedDict(
 )
 API_THERMOSTAT_MODES_CUSTOM = {climate.HVAC_MODE_DRY: "DEHUMIDIFY"}
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
+
+# AlexaModeController does not like a single mode for the fan preset, we add PRESET_MODE_NA if a fan has only one preset_mode
+PRESET_MODE_NA = "-"
 
 
 class Cause:

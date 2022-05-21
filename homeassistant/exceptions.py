@@ -9,8 +9,6 @@ import attr
 if TYPE_CHECKING:
     from .core import Context
 
-# mypy: disallow-any-generics
-
 
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
@@ -201,3 +199,15 @@ class RequiredParameterMissing(HomeAssistantError):
             ),
         )
         self.parameter_names = parameter_names
+
+
+class DependencyError(HomeAssistantError):
+    """Raised when dependencies can not be setup."""
+
+    def __init__(self, failed_dependencies: list[str]) -> None:
+        """Initialize error."""
+        super().__init__(
+            self,
+            f"Could not setup dependencies: {', '.join(failed_dependencies)}",
+        )
+        self.failed_dependencies = failed_dependencies

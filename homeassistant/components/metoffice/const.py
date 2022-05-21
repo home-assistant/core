@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -37,6 +38,7 @@ MODE_DAILY = "daily"
 MODE_DAILY_LABEL = "Daily"
 
 CONDITION_CLASSES = {
+    ATTR_CONDITION_CLEAR_NIGHT: ["0"],
     ATTR_CONDITION_CLOUDY: ["7", "8"],
     ATTR_CONDITION_FOG: ["5", "6"],
     ATTR_CONDITION_HAIL: ["19", "20", "21"],
@@ -47,7 +49,7 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_RAINY: ["9", "10", "11", "12"],
     ATTR_CONDITION_SNOWY: ["22", "23", "24", "25", "26", "27"],
     ATTR_CONDITION_SNOWY_RAINY: ["16", "17", "18"],
-    ATTR_CONDITION_SUNNY: ["0", "1"],
+    ATTR_CONDITION_SUNNY: ["1"],
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],

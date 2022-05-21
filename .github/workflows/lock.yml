@@ -7,14 +7,15 @@ on:
 
 jobs:
   lock:
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v2.1.2
+      - uses: dessant/lock-threads@v3
         with:
           github-token: ${{ github.token }}
-          issue-lock-inactive-days: "30"
-          issue-exclude-created-before: "2020-10-01T00:00:00Z"
+          issue-inactive-days: "30"
+          exclude-issue-created-before: "2020-10-01T00:00:00Z"
           issue-lock-reason: ""
-          pr-lock-inactive-days: "1"
-          pr-exclude-created-before: "2020-11-01T00:00:00Z"
+          pr-inactive-days: "1"
+          exclude-pr-created-before: "2020-11-01T00:00:00Z"
           pr-lock-reason: ""

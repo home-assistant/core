@@ -1,31 +1,29 @@
 """Support for Velux covers."""
+from __future__ import annotations
+
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
@@ -41,14 +39,17 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.STOP
         )
         if self.current_cover_tilt_position is not None:
             supported_features |= (
-                SUPPORT_OPEN_TILT
-                | SUPPORT_CLOSE_TILT
-                | SUPPORT_SET_TILT_POSITION
-                | SUPPORT_STOP_TILT
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+                | CoverEntityFeature.STOP_TILT
             )
         return supported_features
 
@@ -68,18 +69,18 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def device_class(self):
         """Define this cover as either awning, blind, garage, gate, shutter or window."""
         if isinstance(self.node, Awning):
-            return DEVICE_CLASS_AWNING
+            return CoverDeviceClass.AWNING
         if isinstance(self.node, Blind):
-            return DEVICE_CLASS_BLIND
+            return CoverDeviceClass.BLIND
         if isinstance(self.node, GarageDoor):
-            return DEVICE_CLASS_GARAGE
+            return CoverDeviceClass.GARAGE
         if isinstance(self.node, Gate):
-            return DEVICE_CLASS_GATE
+            return CoverDeviceClass.GATE
         if isinstance(self.node, RollerShutter):
-            return DEVICE_CLASS_SHUTTER
+            return CoverDeviceClass.SHUTTER
         if isinstance(self.node, Window):
-            return DEVICE_CLASS_WINDOW
-        return DEVICE_CLASS_WINDOW
+            return CoverDeviceClass.WINDOW
+        return CoverDeviceClass.WINDOW
 
     @property
     def is_closed(self):

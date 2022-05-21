@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "no_locations": "Nessuna posizione disponibile per questo utente, controlla le impostazioni di TotalConnect",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
@@ -11,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Posizione",
                     "usercode": "Codice utente"
                 },
                 "description": "Inserisci il codice utente per questo utente nella posizione {location_id}",
@@ -19,14 +19,13 @@
             },
             "reauth_confirm": {
                 "description": "Total Connect deve autenticare nuovamente il tuo account",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
-                },
-                "title": "Total Connect"
+                }
             }
         }
     }

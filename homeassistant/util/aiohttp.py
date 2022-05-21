@@ -1,14 +1,14 @@
 """Utilities to help with aiohttp."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import io
 import json
 from typing import Any
 from urllib.parse import parse_qsl
 
+from aiohttp import payload, web
 from multidict import CIMultiDict, MultiDict
-
-from homeassistant.const import HTTP_OK
 
 
 class MockStreamReader:
@@ -35,7 +35,7 @@ class MockRequest:
         content: bytes,
         mock_source: str,
         method: str = "GET",
-        status: int = HTTP_OK,
+        status: int = HTTPStatus.OK,
         headers: dict[str, str] | None = None,
         query_string: str | None = None,
         url: str = "",
@@ -75,3 +75,22 @@ class MockRequest:
     async def text(self) -> str:
         """Return the body as text."""
         return self._text
+
+
+def serialize_response(response: web.Response) -> dict[str, Any]:
+    """Serialize an aiohttp response to a dictionary."""
+    if (body := response.body) is None:
+        body_decoded = None
+    elif isinstance(body, payload.StringPayload):
+        # pylint: disable=protected-access
+        body_decoded = body._value.decode(body.encoding)
+    elif isinstance(body, bytes):
+        body_decoded = body.decode(response.charset or "utf-8")
+    else:
+        raise ValueError("Unknown payload encoding")
+
+    return {
+        "status": response.status,
+        "body": body_decoded,
+        "headers": dict(response.headers),
+    }

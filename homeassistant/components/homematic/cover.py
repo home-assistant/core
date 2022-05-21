@@ -1,10 +1,15 @@
 """Support for  HomeMatic covers."""
+from __future__ import annotations
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_GARAGE,
+    CoverDeviceClass,
     CoverEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DEVICE_TYPE, ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
@@ -12,18 +17,22 @@ from .entity import HMDevice
 HM_GARAGE = ("IPGarage",)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform."""
     if discovery_info is None:
         return
 
-    devices = []
+    devices: list[HMCover] = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         if conf[ATTR_DEVICE_TYPE] in HM_GARAGE:
-            new_device = HMGarage(conf)
+            devices.append(HMGarage(conf))
         else:
-            new_device = HMCover(conf)
-        devices.append(new_device)
+            devices.append(HMCover(conf))
 
     add_entities(devices, True)
 
@@ -80,10 +89,9 @@ class HMCover(HMDevice, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if "LEVEL_2" not in self._data:
+        if not (position := self._data.get("LEVEL_2", 0)):
             return None
-
-        return int(self._data.get("LEVEL_2", 0) * 100)
+        return int(position * 100)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -112,7 +120,7 @@ class HMCover(HMDevice, CoverEntity):
 class HMGarage(HMCover):
     """Represents a Homematic Garage cover. Homematic garage covers do not support position attributes."""
 
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
 
     @property
     def current_cover_position(self):

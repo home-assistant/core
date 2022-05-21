@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections import OrderedDict
 from collections.abc import Mapping
 import logging
 from typing import Any, cast
@@ -15,11 +14,10 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.storage import Store
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
-# mypy: disallow-any-generics
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -63,8 +61,8 @@ class Data:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the user data store."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+        self._store = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._data: dict[str, Any] | None = None
         # Legacy mode will allow usernames to start/end with whitespace
@@ -82,9 +80,9 @@ class Data:
 
     async def async_load(self) -> None:
         """Load stored data."""
-        data = await self._store.async_load()
-
-        if data is None:
+        if (data := await self._store.async_load()) is None or not isinstance(
+            data, dict
+        ):
             data = {"users": []}
 
         seen: set[str] = set()
@@ -93,9 +91,7 @@ class Data:
             username = user["username"]
 
             # check if we have duplicates
-            folded = username.casefold()
-
-            if folded in seen:
+            if (folded := username.casefold()) in seen:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
@@ -127,7 +123,7 @@ class Data:
     @property
     def users(self) -> list[dict[str, str]]:
         """Return users."""
-        return self._data["users"]  # type: ignore
+        return self._data["users"]  # type: ignore[index,no-any-return]
 
     def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.
@@ -154,9 +150,7 @@ class Data:
         if not bcrypt.checkpw(password.encode(), user_hash):
             raise InvalidAuth
 
-    def hash_password(  # pylint: disable=no-self-use
-        self, password: str, for_storage: bool = False
-    ) -> bytes:
+    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
         hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
 
@@ -212,7 +206,8 @@ class Data:
 
     async def async_save(self) -> None:
         """Save data."""
-        await self._store.async_save(self._data)
+        if self._data is not None:
+            await self._store.async_save(self._data)
 
 
 @AUTH_PROVIDERS.register("homeassistant")
@@ -339,10 +334,13 @@ class HassLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: dict[str, type] = OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )

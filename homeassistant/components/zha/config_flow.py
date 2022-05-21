@@ -8,9 +8,9 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.components import usb
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.components import usb, zeroconf
+from homeassistant.const import CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -94,14 +94,14 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
-    async def async_step_usb(self, discovery_info: DiscoveryInfoType):
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
-        vid = discovery_info["vid"]
-        pid = discovery_info["pid"]
-        serial_number = discovery_info["serial_number"]
-        device = discovery_info["device"]
-        manufacturer = discovery_info["manufacturer"]
-        description = discovery_info["description"]
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        device = discovery_info.device
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         if current_entry := await self.async_set_unique_id(unique_id):
@@ -120,9 +120,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If they already have a discovery for deconz
         # we ignore the usb discovery as they probably
         # want to use it there instead
-        for flow in self.hass.config_entries.flow.async_progress():
-            if flow["handler"] == DECONZ_DOMAIN:
-                return self.async_abort(reason="not_zha_device")
+        if self.hass.config_entries.flow.async_progress_by_handler(DECONZ_DOMAIN):
+            return self.async_abort(reason="not_zha_device")
         for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
             if entry.source != config_entries.SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
@@ -157,16 +156,23 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={CONF_NAME: self._title},
-            data_schema=vol.Schema({}),
         )
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = discovery_info["hostname"][:-1]
+        local_name = discovery_info.hostname[:-1]
+        radio_type = discovery_info.properties.get("radio_type") or local_name
         node_name = local_name[: -len(".local")]
-        host = discovery_info[CONF_HOST]
-        device_path = f"socket://{host}:6638"
+        host = discovery_info.host
+        if local_name.startswith("tube") or "efr32" in local_name:
+            # This is hard coded to work with legacy devices
+            port = 6638
+        else:
+            port = discovery_info.port
+        device_path = f"socket://{host}:{port}"
 
         if current_entry := await self.async_set_unique_id(node_name):
             self._abort_if_unique_id_configured(
@@ -187,9 +193,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._device_path = device_path
-        self._radio_type = (
-            RadioType.ezsp.name if "efr32" in local_name else RadioType.znp.name
-        )
+        if "efr32" in radio_type:
+            self._radio_type = RadioType.ezsp.name
+        elif "zigate" in radio_type:
+            self._radio_type = RadioType.zigate.name
+        else:
+            self._radio_type = RadioType.znp.name
 
         return await self.async_step_port_config()
 

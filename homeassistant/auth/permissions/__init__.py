@@ -1,21 +1,29 @@
 """Permissions for Home Assistant."""
 from __future__ import annotations
 
-import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import voluptuous as vol
 
 from .const import CAT_ENTITIES
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
-from .merge import merge_policies  # noqa: F401
+from .merge import merge_policies
 from .models import PermissionLookup
 from .types import PolicyType
 from .util import test_all
 
 POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
-_LOGGER = logging.getLogger(__name__)
+__all__ = [
+    "POLICY_SCHEMA",
+    "merge_policies",
+    "PermissionLookup",
+    "PolicyType",
+    "AbstractPermissions",
+    "PolicyPermissions",
+    "OwnerPermissions",
+]
 
 
 class AbstractPermissions:
@@ -33,9 +41,7 @@ class AbstractPermissions:
 
     def check_entity(self, entity_id: str, key: str) -> bool:
         """Check if we can access entity."""
-        entity_func = self._cached_entity_func
-
-        if entity_func is None:
+        if (entity_func := self._cached_entity_func) is None:
             entity_func = self._cached_entity_func = self._entity_func()
 
         return entity_func(entity_id, key)

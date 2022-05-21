@@ -1,19 +1,18 @@
-"""Support for International Space Station data sensor."""
+"""Support for iss binary sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import pyiss
 import requests
-import voluptuous as vol
+from requests.exceptions import HTTPError
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_NAME,
-    CONF_SHOW_ON_MAP,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,57 +25,42 @@ DEFAULT_DEVICE_CLASS = "visible"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ISS sensor."""
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform."""
+    name = entry.title
+    show_on_map = entry.options.get(CONF_SHOW_ON_MAP, False)
 
     try:
         iss_data = IssData(hass.config.latitude, hass.config.longitude)
-        iss_data.update()
-    except requests.exceptions.HTTPError as error:
+        await hass.async_add_executor_job(iss_data.update)
+    except HTTPError as error:
         _LOGGER.error(error)
-        return False
+        return
 
-    name = config.get(CONF_NAME)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
-
-    add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
+    async_add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
 
 
 class IssBinarySensor(BinarySensorEntity):
     """Implementation of the ISS binary sensor."""
 
+    _attr_device_class = DEFAULT_DEVICE_CLASS
+
     def __init__(self, iss_data, name, show):
         """Initialize the sensor."""
         self.iss_data = iss_data
         self._state = None
-        self._name = name
+        self._attr_name = name
         self._show_on_map = show
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.iss_data.is_above if self.iss_data else False
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
 
     @property
     def extra_state_attributes(self):
@@ -92,6 +76,7 @@ class IssBinarySensor(BinarySensorEntity):
             else:
                 attrs["long"] = self.iss_data.position.get("longitude")
                 attrs["lat"] = self.iss_data.position.get("latitude")
+
             return attrs
 
     def update(self):
@@ -120,6 +105,6 @@ class IssData:
             self.next_rise = iss.next_rise(self.latitude, self.longitude)
             self.number_of_people_in_space = iss.number_of_people_in_space()
             self.position = iss.current_location()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+        except (HTTPError, requests.exceptions.ConnectionError):
             _LOGGER.error("Unable to retrieve data")
             return False

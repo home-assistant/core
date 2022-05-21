@@ -1,15 +1,12 @@
 """Support for Ness D8X/D16X alarm panel."""
+from __future__ import annotations
 
 import logging
 
 from nessclient import ArmingState
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_TRIGGER,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
@@ -17,15 +14,22 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ness Alarm alarm control panel devices."""
     if discovery_info is None:
         return
@@ -36,6 +40,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
 
     def __init__(self, client, name):
         """Initialize the alarm panel."""
@@ -64,17 +74,12 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return the regex for code format or None if no code is required."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_TRIGGER
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

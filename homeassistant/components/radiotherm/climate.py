@@ -1,4 +1,6 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
+from __future__ import annotations
+
 import logging
 from socket import timeout
 
@@ -7,29 +9,25 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
+    FAN_AUTO,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    STATE_ON,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,9 +44,9 @@ STATE_CIRCULATE = "circulate"
 
 PRESET_MODES = [PRESET_HOME, PRESET_ALTERNATE, PRESET_AWAY, PRESET_HOLIDAY]
 
-OPERATION_LIST = [HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-CT30_FAN_OPERATION_LIST = [STATE_ON, HVAC_MODE_AUTO]
-CT80_FAN_OPERATION_LIST = [STATE_ON, STATE_CIRCULATE, HVAC_MODE_AUTO]
+OPERATION_LIST = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
+CT30_FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
+CT80_FAN_OPERATION_LIST = [FAN_ON, STATE_CIRCULATE, FAN_AUTO]
 
 # Mappings from radiotherm json data codes to and from Home Assistant state
 # flags.  CODE is the thermostat integer code and these map to and
@@ -56,21 +54,21 @@ CT80_FAN_OPERATION_LIST = [STATE_ON, STATE_CIRCULATE, HVAC_MODE_AUTO]
 
 # Programmed temperature mode of the thermostat.
 CODE_TO_TEMP_MODE = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
-    3: HVAC_MODE_AUTO,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
+    3: HVACMode.AUTO,
 }
 TEMP_MODE_TO_CODE = {v: k for k, v in CODE_TO_TEMP_MODE.items()}
 
 # Programmed fan mode (circulate is supported by CT80 models)
-CODE_TO_FAN_MODE = {0: HVAC_MODE_AUTO, 1: STATE_CIRCULATE, 2: STATE_ON}
+CODE_TO_FAN_MODE = {0: FAN_AUTO, 1: STATE_CIRCULATE, 2: FAN_ON}
 
 FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 
 # Active thermostat state (is it heating or cooling?).  In the future
 # this should probably made into heat and cool binary sensors.
-CODE_TO_TEMP_STATE = {0: CURRENT_HVAC_IDLE, 1: CURRENT_HVAC_HEAT, 2: CURRENT_HVAC_COOL}
+CODE_TO_TEMP_STATE = {0: HVACAction.IDLE, 1: HVACAction.HEATING, 2: HVACAction.COOLING}
 
 # Active fan state.  This is if the fan is actually on or not.  In the
 # future this should probably made into a binary sensor for the fan.
@@ -100,10 +98,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Radio Thermostat."""
     hosts = []
     if CONF_HOST in config:
@@ -131,18 +131,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RadioThermostat(ClimateEntity):
     """Representation of a Radio Thermostat."""
 
+    _attr_hvac_modes = OPERATION_LIST
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, device, hold_temp):
         """Initialize the thermostat."""
         self.device = device
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
-        self._current_operation = HVAC_MODE_OFF
+        self._current_operation = HVACMode.OFF
         self._name = None
         self._fmode = None
         self._fstate = None
         self._tmode = None
-        self._tstate = None
+        self._tstate: HVACAction | None = None
         self._hold_temp = hold_temp
         self._hold_set = False
         self._prev_temp = None
@@ -152,11 +159,6 @@ class RadioThermostat(ClimateEntity):
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -201,8 +203,7 @@ class RadioThermostat(ClimateEntity):
 
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        code = FAN_MODE_TO_CODE.get(fan_mode)
-        if code is not None:
+        if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
             self.device.fmode = code
 
     @property
@@ -216,19 +217,14 @@ class RadioThermostat(ClimateEntity):
         return self._current_humidity
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current operation. head, cool idle."""
         return self._current_operation
 
     @property
-    def hvac_modes(self):
-        """Return the operation modes list."""
-        return OPERATION_LIST
-
-    @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
-        if self.hvac_mode == HVAC_MODE_OFF:
+        if self.hvac_mode == HVACMode.OFF:
             return None
         return self._tstate
 
@@ -305,37 +301,36 @@ class RadioThermostat(ClimateEntity):
             self._hold_set = CODE_TO_HOLD_STATE[data["hold"]]
 
             self._current_operation = self._tmode
-            if self._tmode == HVAC_MODE_COOL:
+            if self._tmode == HVACMode.COOL:
                 self._target_temperature = data["t_cool"]
-            elif self._tmode == HVAC_MODE_HEAT:
+            elif self._tmode == HVACMode.HEAT:
                 self._target_temperature = data["t_heat"]
-            elif self._tmode == HVAC_MODE_AUTO:
+            elif self._tmode == HVACMode.AUTO:
                 # This doesn't really work - tstate is only set if the HVAC is
                 # active. If it's idle, we don't know what to do with the target
                 # temperature.
-                if self._tstate == CURRENT_HVAC_COOL:
+                if self._tstate == HVACAction.COOLING:
                     self._target_temperature = data["t_cool"]
-                elif self._tstate == CURRENT_HVAC_HEAT:
+                elif self._tstate == HVACAction.HEATING:
                     self._target_temperature = data["t_heat"]
             else:
-                self._current_operation = HVAC_MODE_OFF
+                self._current_operation = HVACMode.OFF
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         temperature = round_temp(temperature)
 
-        if self._current_operation == HVAC_MODE_COOL:
+        if self._current_operation == HVACMode.COOL:
             self.device.t_cool = temperature
-        elif self._current_operation == HVAC_MODE_HEAT:
+        elif self._current_operation == HVACMode.HEAT:
             self.device.t_heat = temperature
-        elif self._current_operation == HVAC_MODE_AUTO:
-            if self._tstate == CURRENT_HVAC_COOL:
+        elif self._current_operation == HVACMode.AUTO:
+            if self._tstate == HVACAction.COOLING:
                 self.device.t_cool = temperature
-            elif self._tstate == CURRENT_HVAC_HEAT:
+            elif self._tstate == HVACAction.HEATING:
                 self.device.t_heat = temperature
 
         # Only change the hold if requested or if hold mode was turned
@@ -358,20 +353,20 @@ class RadioThermostat(ClimateEntity):
             "minute": now.minute,
         }
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (auto, cool, heat, off)."""
-        if hvac_mode in (HVAC_MODE_OFF, HVAC_MODE_AUTO):
+        if hvac_mode in (HVACMode.OFF, HVACMode.AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.
-        elif hvac_mode == HVAC_MODE_COOL:
+        elif hvac_mode == HVACMode.COOL:
             self.device.t_cool = self._target_temperature
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             self.device.t_heat = self._target_temperature
 
     def set_preset_mode(self, preset_mode):
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
-        if preset_mode in (PRESET_MODES):
+        if preset_mode in PRESET_MODES:
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else:
             _LOGGER.error(

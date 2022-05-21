@@ -5,6 +5,7 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "error": {
+            "api_password": "Ung\u00fcltige Authentifizierung, verwende entweder den API-Schl\u00fcssel oder das Passwort.",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"

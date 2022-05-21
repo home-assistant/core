@@ -6,22 +6,23 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
 from .const import (
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -151,37 +152,39 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_dhcp(self, discovery_info: dict):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[IP_ADDRESS],
-                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS, "")),
-                CONF_NAME: discovery_info.get(HOSTNAME),
+                CONF_HOST: discovery_info.ip,
+                CONF_MAC: format_mac(discovery_info.macaddress),
+                CONF_NAME: discovery_info.hostname,
                 CONF_PORT: DEFAULT_PORT,
             }
         )
 
-    async def async_step_ssdp(self, discovery_info: dict):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Prepare configuration for a SSDP discovered Axis device."""
-        url = urlsplit(discovery_info["presentationURL"])
+        url = urlsplit(discovery_info.upnp[ssdp.ATTR_UPNP_PRESENTATION_URL])
         return await self._process_discovered_device(
             {
                 CONF_HOST: url.hostname,
-                CONF_MAC: format_mac(discovery_info["serialNumber"]),
-                CONF_NAME: f"{discovery_info['friendlyName']}",
+                CONF_MAC: format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]),
+                CONF_NAME: f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]}",
                 CONF_PORT: url.port,
             }
         )
 
-    async def async_step_zeroconf(self, discovery_info: dict):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[CONF_HOST],
-                CONF_MAC: format_mac(discovery_info["properties"]["macaddress"]),
-                CONF_NAME: discovery_info["name"].split(".", 1)[0],
-                CONF_PORT: discovery_info[CONF_PORT],
+                CONF_HOST: discovery_info.host,
+                CONF_MAC: format_mac(discovery_info.properties["macaddress"]),
+                CONF_NAME: discovery_info.name.split(".", 1)[0],
+                CONF_PORT: discovery_info.port,
             }
         )
 
@@ -202,10 +205,15 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        self.context["title_placeholders"] = {
-            CONF_NAME: device[CONF_NAME],
-            CONF_HOST: device[CONF_HOST],
-        }
+        self.context.update(
+            {
+                "title_placeholders": {
+                    CONF_NAME: device[CONF_NAME],
+                    CONF_HOST: device[CONF_HOST],
+                },
+                "configuration_url": f"http://{device[CONF_HOST]}:{device[CONF_PORT]}",
+            }
+        )
 
         self.discovery_schema = {
             vol.Required(CONF_HOST, default=device[CONF_HOST]): str,

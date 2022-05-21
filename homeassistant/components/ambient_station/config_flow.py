@@ -1,7 +1,7 @@
 """Config flow to configure the Ambient PWS component."""
 from __future__ import annotations
 
-from aioambient import Client
+from aioambient import API
 from aioambient.errors import AmbientError
 import voluptuous as vol
 
@@ -41,12 +41,10 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(
-            user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session=session
-        )
+        api = API(user_input[CONF_APP_KEY], user_input[CONF_API_KEY], session=session)
 
         try:
-            devices = await client.api.get_devices()
+            devices = await api.get_devices()
         except AmbientError:
             return await self._show_form({"base": "invalid_key"})
 

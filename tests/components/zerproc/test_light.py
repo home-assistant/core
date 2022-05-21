@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 import pyzerproc
 
-from homeassistant import setup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -12,10 +11,8 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_XY_COLOR,
-    COLOR_MODE_HS,
     SCAN_INTERVAL,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
 )
 from homeassistant.components.zerproc.const import (
     DATA_ADDRESSES,
@@ -45,7 +42,6 @@ async def mock_entry(hass):
 @pytest.fixture
 async def mock_light(hass, mock_entry):
     """Create a mock light entity."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry.add_to_hass(hass)
 
@@ -72,7 +68,6 @@ async def mock_light(hass, mock_entry):
 
 async def test_init(hass, mock_entry):
     """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry.add_to_hass(hass)
 
@@ -103,8 +98,8 @@ async def test_init(hass, mock_entry):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
-        ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+        ATTR_SUPPORTED_FEATURES: 0,
         ATTR_ICON: "mdi:string-lights",
     }
 
@@ -112,10 +107,10 @@ async def test_init(hass, mock_entry):
     assert state.state == STATE_ON
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
-        ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+        ATTR_SUPPORTED_FEATURES: 0,
         ATTR_ICON: "mdi:string-lights",
-        ATTR_COLOR_MODE: COLOR_MODE_HS,
+        ATTR_COLOR_MODE: ColorMode.HS,
         ATTR_BRIGHTNESS: 255,
         ATTR_HS_COLOR: (221.176, 100.0),
         ATTR_RGB_COLOR: (0, 80, 255),
@@ -133,7 +128,6 @@ async def test_init(hass, mock_entry):
 
 async def test_discovery_exception(hass, mock_entry):
     """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry.add_to_hass(hass)
 
@@ -283,8 +277,8 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
-        ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+        ATTR_SUPPORTED_FEATURES: 0,
         ATTR_ICON: "mdi:string-lights",
     }
 
@@ -302,8 +296,8 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_UNAVAILABLE
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
-            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+            ATTR_SUPPORTED_FEATURES: 0,
             ATTR_ICON: "mdi:string-lights",
         }
 
@@ -320,8 +314,8 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_OFF
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
-            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+            ATTR_SUPPORTED_FEATURES: 0,
             ATTR_ICON: "mdi:string-lights",
         }
 
@@ -338,10 +332,10 @@ async def test_light_update(hass, mock_light):
         assert state.state == STATE_ON
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
-            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+            ATTR_SUPPORTED_FEATURES: 0,
             ATTR_ICON: "mdi:string-lights",
-            ATTR_COLOR_MODE: COLOR_MODE_HS,
+            ATTR_COLOR_MODE: ColorMode.HS,
             ATTR_BRIGHTNESS: 220,
             ATTR_HS_COLOR: (261.429, 31.818),
             ATTR_RGB_COLOR: (202, 173, 255),

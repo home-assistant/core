@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "latitude_longitude_not_defined": "La latitud y la longitud no est\u00e1n definidas en Home Assistant."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfQuieres configurar Estaci\u00f3n Espacial Internacional (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostrar en el mapa"
+                }
+            }
+        }
+    }
+}

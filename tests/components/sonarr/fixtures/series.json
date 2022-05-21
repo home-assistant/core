@@ -1,0 +1,164 @@
+[
+  {
+    "title": "The Andy Griffith Show",
+    "alternateTitles": [],
+    "sortTitle": "andy griffith show",
+    "status": "ended",
+    "overview": "Down-home humor and an endearing cast of characters helped make The Andy Griffith Show one of the most beloved comedies in the history of TV. The show centered around widower Andy Taylor, who divided his time between raising his young son Opie, and his job as sheriff of the sleepy North Carolina town, Mayberry. Andy and Opie live with Andy's Aunt Bee, who serves as a surrogate mother to both father and son. Andy's nervous cousin, Barney Fife, is his deputy sheriff whose incompetence is tolerated because Mayberry is virtually crime-free.",
+    "network": "CBS",
+    "airTime": "21:30",
+    "images": [
+      {
+        "coverType": "fanart",
+        "url": "/MediaCover/105/fanart.jpg?lastWrite=637217160281262470",
+        "remoteUrl": "https://artworks.thetvdb.com/banners/fanart/original/77754-5.jpg"
+      },
+      {
+        "coverType": "banner",
+        "url": "/MediaCover/105/banner.jpg?lastWrite=637217160301222320",
+        "remoteUrl": "https://artworks.thetvdb.com/banners/graphical/77754-g.jpg"
+      },
+      {
+        "coverType": "poster",
+        "url": "/MediaCover/105/poster.jpg?lastWrite=637217160322182160",
+        "remoteUrl": "https://artworks.thetvdb.com/banners/posters/77754-1.jpg"
+      }
+    ],
+    "seasons": [
+      {
+        "seasonNumber": 0,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 4,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 1,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 32,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 2,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 31,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 3,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 8,
+          "episodeCount": 8,
+          "totalEpisodeCount": 32,
+          "sizeOnDisk": 8000000000,
+          "percentOfEpisodes": 100.0
+        }
+      },
+      {
+        "seasonNumber": 4,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 32,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 5,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 32,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 6,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 30,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 7,
+        "monitored": false,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 30,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      },
+      {
+        "seasonNumber": 8,
+        "monitored": true,
+        "statistics": {
+          "episodeFileCount": 0,
+          "episodeCount": 0,
+          "totalEpisodeCount": 30,
+          "sizeOnDisk": 0,
+          "percentOfEpisodes": 0.0
+        }
+      }
+    ],
+    "year": 1960,
+    "path": "F:\\The Andy Griffith Show",
+    "profileId": 2,
+    "languageProfileId": 1,
+    "seasonFolder": true,
+    "monitored": true,
+    "useSceneNumbering": false,
+    "runtime": 25,
+    "tvdbId": 77754,
+    "tvRageId": 5574,
+    "tvMazeId": 3853,
+    "firstAired": "1960-02-15T06:00:00Z",
+    "lastInfoSync": "2020-04-05T20:40:21.545669Z",
+    "seriesType": "standard",
+    "cleanTitle": "theandygriffithshow",
+    "imdbId": "tt0053479",
+    "titleSlug": "the-andy-griffith-show",
+    "certification": "TV-G",
+    "genres": ["Comedy"],
+    "tags": [],
+    "added": "2020-04-05T20:40:20.050044Z",
+    "ratings": {
+      "votes": 547,
+      "value": 8.6
+    },
+    "qualityProfileId": 2,
+    "statistics": {
+      "seasonCount": 8,
+      "episodeFileCount": 0,
+      "episodeCount": 0,
+      "totalEpisodeCount": 253,
+      "sizeOnDisk": 0,
+      "percentOfEpisodes": 0.0
+    },
+    "id": 105
+  }
+]

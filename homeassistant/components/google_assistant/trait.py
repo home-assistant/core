@@ -6,11 +6,13 @@ import logging
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
+    button,
     camera,
     cover,
     fan,
     group,
     input_boolean,
+    input_button,
     input_select,
     light,
     lock,
@@ -35,7 +37,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CAST_APP_ID_HOMEASSISTANT,
+    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -255,9 +257,7 @@ class BrightnessTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a brightness command."""
-        domain = self.state.domain
-
-        if domain == light.DOMAIN:
+        if self.state.domain == light.DOMAIN:
             await self.hass.services.async_call(
                 light.DOMAIN,
                 light.SERVICE_TURN_ON,
@@ -265,7 +265,7 @@ class BrightnessTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params["brightness"],
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -304,12 +304,10 @@ class CameraStreamTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a get camera stream command."""
-        url = await self.hass.components.camera.async_request_stream(
-            self.state.entity_id, "hls"
-        )
+        url = await camera.async_request_stream(self.hass, self.state.entity_id, "hls")
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
-            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT,
+            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
         }
 
 
@@ -348,9 +346,7 @@ class OnOffTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute an OnOff command."""
-        domain = self.state.domain
-
-        if domain == group.DOMAIN:
+        if (domain := self.state.domain) == group.DOMAIN:
             service_domain = HA_DOMAIN
             service = SERVICE_TURN_ON if params["on"] else SERVICE_TURN_OFF
 
@@ -362,7 +358,7 @@ class OnOffTrait(_Trait):
             service_domain,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -467,7 +463,7 @@ class ColorSettingTrait(_Trait):
                 light.DOMAIN,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_COLOR_TEMP: temp},
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -482,7 +478,7 @@ class ColorSettingTrait(_Trait):
                 light.DOMAIN,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_HS_COLOR: color},
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -499,7 +495,7 @@ class ColorSettingTrait(_Trait):
                     light.ATTR_HS_COLOR: [color["hue"], saturation],
                     light.ATTR_BRIGHTNESS: brightness,
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -517,11 +513,16 @@ class SceneTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain in (scene.DOMAIN, script.DOMAIN)
+        return domain in (
+            button.DOMAIN,
+            input_button.DOMAIN,
+            scene.DOMAIN,
+            script.DOMAIN,
+        )
 
     def sync_attributes(self):
         """Return scene attributes for a sync request."""
-        # Neither supported domain can support sceneReversible
+        # None of the supported domains can support sceneReversible
         return {}
 
     def query_attributes(self):
@@ -530,12 +531,20 @@ class SceneTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a scene command."""
-        # Don't block for scripts as they can be slow.
+        service = SERVICE_TURN_ON
+        if self.state.domain == button.DOMAIN:
+            service = button.SERVICE_PRESS
+        elif self.state.domain == input_button.DOMAIN:
+            service = input_button.SERVICE_PRESS
+
+        # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
             self.state.domain,
-            SERVICE_TURN_ON,
+            service,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=self.state.domain != script.DOMAIN,
+            blocking=(not self.config.should_report_state)
+            and self.state.domain
+            not in (button.DOMAIN, input_button.DOMAIN, script.DOMAIN),
             context=data.context,
         )
 
@@ -569,7 +578,7 @@ class DockTrait(_Trait):
             self.state.domain,
             vacuum.SERVICE_RETURN_TO_BASE,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -609,11 +618,12 @@ class LocatorTrait(_Trait):
             self.state.domain,
             vacuum.SERVICE_LOCATE,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
 
+@register_trait
 class EnergyStorageTrait(_Trait):
     """Trait to offer EnergyStorage functionality.
 
@@ -638,6 +648,8 @@ class EnergyStorageTrait(_Trait):
     def query_attributes(self):
         """Return EnergyStorage query attributes."""
         battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
+        if battery_level is None:
+            return {}
         if battery_level == 100:
             descriptive_capacity_remaining = "FULL"
         elif 75 <= battery_level < 100:
@@ -729,7 +741,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_START,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
             else:
@@ -737,7 +749,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_STOP,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
         elif command == COMMAND_PAUSEUNPAUSE:
@@ -746,7 +758,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_PAUSE,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
             else:
@@ -754,7 +766,7 @@ class StartStopTrait(_Trait):
                     self.state.domain,
                     vacuum.SERVICE_START,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
 
@@ -762,19 +774,15 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if (
-                    self.state.state
-                    in (
-                        cover.STATE_CLOSING,
-                        cover.STATE_OPENING,
-                    )
-                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
-                ):
+                if self.state.state in (
+                    cover.STATE_CLOSING,
+                    cover.STATE_OPENING,
+                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
                     await self.hass.services.async_call(
                         self.state.domain,
                         cover.SERVICE_STOP_COVER,
                         {ATTR_ENTITY_ID: self.state.entity_id},
-                        blocking=True,
+                        blocking=not self.config.should_report_state,
                         context=data.context,
                     )
                 else:
@@ -804,7 +812,8 @@ class TemperatureControlTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return (
-            domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_TEMPERATURE
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
     def sync_attributes(self):
@@ -953,16 +962,14 @@ class TemperatureSettingTrait(_Trait):
                     1,
                 )
             else:
-                target_temp = attrs.get(ATTR_TEMPERATURE)
-                if target_temp is not None:
+                if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                     target_temp = round(
                         temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                     )
                     response["thermostatTemperatureSetpointHigh"] = target_temp
                     response["thermostatTemperatureSetpointLow"] = target_temp
         else:
-            target_temp = attrs.get(ATTR_TEMPERATURE)
-            if target_temp is not None:
+            if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                 response["thermostatTemperatureSetpoint"] = round(
                     temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                 )
@@ -993,7 +1000,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN,
                 climate.SERVICE_SET_TEMPERATURE,
                 {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -1041,7 +1048,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN,
                 climate.SERVICE_SET_TEMPERATURE,
                 svc_data,
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -1054,7 +1061,7 @@ class TemperatureSettingTrait(_Trait):
                     climate.DOMAIN,
                     SERVICE_TURN_ON,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
                 return
@@ -1064,7 +1071,7 @@ class TemperatureSettingTrait(_Trait):
                     climate.DOMAIN,
                     SERVICE_TURN_OFF,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
                 return
@@ -1077,7 +1084,7 @@ class TemperatureSettingTrait(_Trait):
                         climate.ATTR_PRESET_MODE: self.google_to_preset[target_mode],
                         ATTR_ENTITY_ID: self.state.entity_id,
                     },
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
                 return
@@ -1089,7 +1096,7 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_HVAC_MODE: self.google_to_hvac[target_mode],
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -1110,7 +1117,10 @@ class HumiditySettingTrait(_Trait):
         if domain == humidifier.DOMAIN:
             return True
 
-        return domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_HUMIDITY
+        return (
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.HUMIDITY
+        )
 
     def sync_attributes(self):
         """Return humidity attributes for a sync request."""
@@ -1120,7 +1130,7 @@ class HumiditySettingTrait(_Trait):
 
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+            if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 response["queryOnlyHumiditySetting"] = True
 
         elif domain == humidifier.DOMAIN:
@@ -1143,7 +1153,7 @@ class HumiditySettingTrait(_Trait):
 
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+            if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 current_humidity = self.state.state
                 if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
@@ -1157,9 +1167,7 @@ class HumiditySettingTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a humidity command."""
-        domain = self.state.domain
-
-        if domain == sensor.DOMAIN:
+        if self.state.domain == sensor.DOMAIN:
             raise SmartHomeError(
                 ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
             )
@@ -1172,7 +1180,7 @@ class HumiditySettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     humidifier.ATTR_HUMIDITY: params["humidity"],
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -1221,7 +1229,7 @@ class LockUnlockTrait(_Trait):
             lock.DOMAIN,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -1305,11 +1313,9 @@ class ArmDisArmTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
         if params["arm"] and not params.get("cancel"):
-            arm_level = params.get("armLevel")
-
             # If no arm level given, we can only arm it if there is
             # only one supported arm type. We never default to triggered.
-            if not arm_level:
+            if not (arm_level := params.get("armLevel")):
                 states = self._supported_states()
 
                 if STATE_ALARM_TRIGGERED in states:
@@ -1346,7 +1352,7 @@ class ArmDisArmTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 ATTR_CODE: data.config.secure_devices_pin,
             },
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -1434,7 +1440,7 @@ class FanSpeedTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_FAN_MODE: params["fanSpeed"],
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -1446,14 +1452,13 @@ class FanSpeedTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     fan.ATTR_PERCENTAGE: params["fanSpeedPercent"],
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
     async def execute_reverse(self, data, params):
         """Execute a Reverse command."""
-        domain = self.state.domain
-        if domain == fan.DOMAIN:
+        if self.state.domain == fan.DOMAIN:
             if self.state.attributes.get(fan.ATTR_DIRECTION) == fan.DIRECTION_FORWARD:
                 direction = fan.DIRECTION_REVERSE
             else:
@@ -1463,7 +1468,7 @@ class FanSpeedTrait(_Trait):
                 fan.DOMAIN,
                 fan.SERVICE_SET_DIRECTION,
                 {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_DIRECTION: direction},
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
 
@@ -1553,9 +1558,7 @@ class ModesTrait(_Trait):
             if self.state.domain != domain:
                 continue
 
-            items = self.state.attributes.get(attr)
-
-            if items is not None:
+            if (items := self.state.attributes.get(attr)) is not None:
                 modes.append(self._generate(name, items))
 
             # Shortcut since all domains are currently unique
@@ -1606,7 +1609,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     fan.ATTR_PRESET_MODE: preset_mode,
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
             return
@@ -1620,7 +1623,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     input_select.ATTR_OPTION: option,
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
             return
@@ -1634,7 +1637,7 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     select.ATTR_OPTION: option,
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
             return
@@ -1648,7 +1651,7 @@ class ModesTrait(_Trait):
                     ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
             return
@@ -1662,24 +1665,24 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_EFFECT: requested_effect,
                 },
-                blocking=True,
+                blocking=not self.config.should_report_state,
                 context=data.context,
             )
             return
 
-        if self.state.domain == media_player.DOMAIN:
-            sound_mode = settings.get("sound mode")
-            if sound_mode:
-                await self.hass.services.async_call(
-                    media_player.DOMAIN,
-                    media_player.SERVICE_SELECT_SOUND_MODE,
-                    {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        media_player.ATTR_SOUND_MODE: sound_mode,
-                    },
-                    blocking=True,
-                    context=data.context,
-                )
+        if self.state.domain == media_player.DOMAIN and (
+            sound_mode := settings.get("sound mode")
+        ):
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOUND_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_SOUND_MODE: sound_mode,
+                },
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
         _LOGGER.info(
             "Received an Options command for unrecognised domain %s",
@@ -1751,7 +1754,7 @@ class InputSelectorTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_INPUT_SOURCE: requested_source,
             },
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -1765,9 +1768,9 @@ class OpenCloseTrait(_Trait):
 
     # Cover device classes that require 2FA
     COVER_2FA = (
-        cover.DEVICE_CLASS_DOOR,
-        cover.DEVICE_CLASS_GARAGE,
-        cover.DEVICE_CLASS_GATE,
+        cover.CoverDeviceClass.DOOR,
+        cover.CoverDeviceClass.GARAGE,
+        cover.CoverDeviceClass.GATE,
     )
 
     name = TRAIT_OPENCLOSE
@@ -1780,11 +1783,11 @@ class OpenCloseTrait(_Trait):
             return True
 
         return domain == binary_sensor.DOMAIN and device_class in (
-            binary_sensor.DEVICE_CLASS_DOOR,
-            binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
-            binary_sensor.DEVICE_CLASS_LOCK,
-            binary_sensor.DEVICE_CLASS_OPENING,
-            binary_sensor.DEVICE_CLASS_WINDOW,
+            binary_sensor.BinarySensorDeviceClass.DOOR,
+            binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+            binary_sensor.BinarySensorDeviceClass.LOCK,
+            binary_sensor.BinarySensorDeviceClass.OPENING,
+            binary_sensor.BinarySensorDeviceClass.WINDOW,
         )
 
     @staticmethod
@@ -1895,7 +1898,11 @@ class OpenCloseTrait(_Trait):
                 _verify_pin_challenge(data, self.state, challenge)
 
             await self.hass.services.async_call(
-                cover.DOMAIN, service, svc_params, blocking=True, context=data.context
+                cover.DOMAIN,
+                service,
+                svc_params,
+                blocking=not self.config.should_report_state,
+                context=data.context,
             )
 
 
@@ -1957,7 +1964,7 @@ class VolumeTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: level,
             },
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -1993,7 +2000,7 @@ class VolumeTrait(_Trait):
                     media_player.DOMAIN,
                     svc,
                     {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=True,
+                    blocking=not self.config.should_report_state,
                     context=data.context,
                 )
         else:
@@ -2015,7 +2022,7 @@ class VolumeTrait(_Trait):
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
             },
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -2041,9 +2048,7 @@ def _verify_pin_challenge(data, state, challenge):
     if not challenge:
         raise ChallengeNeeded(CHALLENGE_PIN_NEEDED)
 
-    pin = challenge.get("pin")
-
-    if pin != data.config.secure_devices_pin:
+    if challenge.get("pin") != data.config.secure_devices_pin:
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
@@ -2179,7 +2184,7 @@ class TransportControlTrait(_Trait):
             media_player.DOMAIN,
             service,
             service_attrs,
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -2249,7 +2254,7 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & media_player.SUPPORT_PLAY_MEDIA)
-            and device_class == media_player.DEVICE_CLASS_TV
+            and device_class == media_player.MediaPlayerDeviceClass.TV
         ):
             return True
 
@@ -2284,7 +2289,7 @@ class ChannelTrait(_Trait):
                 media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
                 media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
             },
-            blocking=True,
+            blocking=not self.config.should_report_state,
             context=data.context,
         )
 
@@ -2297,12 +2302,12 @@ class SensorStateTrait(_Trait):
     """
 
     sensor_types = {
-        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
-        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+        sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
+        sensor.SensorDeviceClass.CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
             "VolatileOrganicCompounds",
             "PARTS_PER_MILLION",
         ),
@@ -2319,8 +2324,7 @@ class SensorStateTrait(_Trait):
     def sync_attributes(self):
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
-        if data is not None:
+        if (data := self.sensor_types.get(device_class)) is not None:
             return {
                 "sensorStatesSupported": {
                     "name": data[0],
@@ -2331,8 +2335,7 @@ class SensorStateTrait(_Trait):
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
-        data = self.sensor_types.get(device_class)
-        if data is not None:
+        if (data := self.sensor_types.get(device_class)) is not None:
             return {
                 "currentSensorStateData": [
                     {"name": data[0], "rawValue": self.state.state}

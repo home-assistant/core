@@ -11,13 +11,14 @@ from pyControl4.light import C4Light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4Entity, get_items_of_category
@@ -32,8 +33,8 @@ CONTROL4_DIMMER_VAR = "LIGHT_LEVEL"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Control4 lights from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
@@ -122,7 +123,6 @@ async def async_setup_entry(
         entity_list.append(
             Control4Light(
                 entry_data,
-                entry,
                 item_coordinator,
                 item_name,
                 item_id,
@@ -143,7 +143,6 @@ class Control4Light(Control4Entity, LightEntity):
     def __init__(
         self,
         entry_data: dict,
-        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
@@ -156,7 +155,6 @@ class Control4Light(Control4Entity, LightEntity):
         """Initialize Control4 light entity."""
         super().__init__(
             entry_data,
-            entry,
             coordinator,
             name,
             idx,
@@ -166,6 +164,12 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
+        if is_dimmer:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     def create_api_object(self):
         """Create a pyControl4 device object.
@@ -190,7 +194,7 @@ class Control4Light(Control4Entity, LightEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         if self._is_dimmer:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            return LightEntityFeature.TRANSITION
         return 0
 
     async def async_turn_on(self, **kwargs) -> None:

@@ -1,4 +1,6 @@
 """Support for Schluter thermostats."""
+from __future__ import annotations
+
 import logging
 
 from requests import RequestException
@@ -11,12 +13,14 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -31,7 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Schluter thermostats."""
     if discovery_info is None:
         return
@@ -70,18 +79,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a Schluter thermostat."""
 
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
         super().__init__(coordinator)
         self._serial_number = serial_number
         self._api = api
         self._session_id = session_id
-        self._support_flags = SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     @property
     def unique_id(self):
@@ -104,28 +111,16 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         return self.coordinator.data[self._serial_number].temperature
 
     @property
-    def hvac_mode(self):
-        """Return current mode. Only heat available for floor thermostat."""
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current operation. Can only be heating or idle."""
-        return (
-            CURRENT_HVAC_HEAT
-            if self.coordinator.data[self._serial_number].is_heating
-            else CURRENT_HVAC_IDLE
-        )
+        if self.coordinator.data[self._serial_number].is_heating:
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self.coordinator.data[self._serial_number].set_point_temp
-
-    @property
-    def hvac_modes(self):
-        """List of available operation modes."""
-        return [HVAC_MODE_HEAT]
 
     @property
     def min_temp(self):
@@ -137,7 +132,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].max_temp
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Mode is always heating, so do nothing."""
 
     def set_temperature(self, **kwargs):

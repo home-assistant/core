@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API kulcs"
+                },
+                "description": "A Tailscale API kulcsok 90 napig \u00e9rv\u00e9nyesek. \u00daj Tailscale API kulcsot a https://login.tailscale.com/admin/settings/authkeys oldalon hozhat l\u00e9tre."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "tailnet": "Tailnet"
+                },
+                "description": "Ez az integr\u00e1ci\u00f3 figyeli a Tailscale h\u00e1l\u00f3zat\u00e1t, \u00e9s **NEM** teszi el\u00e9rhet\u0151v\u00e9 az otthoni asszisztenst a Tailscale VPN-en kereszt\u00fcl. \n\nA Tailscale-n\u00e1l t\u00f6rt\u00e9n\u0151 hiteles\u00edt\u00e9shez l\u00e9tre kell hoznia egy API-kulcsot a {authkeys_url} c\u00edmen.\n\nA Tailnet az \u00d6n Tailscale h\u00e1l\u00f3zat\u00e1nak neve. Ezt a Tailscale Admin Panel bal fels\u0151 sark\u00e1ban tal\u00e1lja (a Tailscale log\u00f3 mellett)."
+            }
+        }
+    }
+}

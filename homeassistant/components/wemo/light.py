@@ -1,6 +1,8 @@
 """Support for Belkin WeMo lights."""
+from __future__ import annotations
+
 import asyncio
-import logging
+from typing import Any, Optional, cast
 
 from pywemo.ouimeaux_device import bridge
 
@@ -9,35 +11,34 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity, WemoEntity
 from .wemo_device import DeviceCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORT_WEMO = (
-    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
-)
 
 # The WEMO_ constants below come from pywemo itself
 WEMO_OFF = 0
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo lights."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
         if isinstance(coordinator.wemo, bridge.Bridge):
             async_setup_bridge(hass, config_entry, async_add_entities, coordinator)
@@ -55,12 +56,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def async_setup_bridge(hass, config_entry, async_add_entities, coordinator):
+def async_setup_bridge(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    coordinator: DeviceCoordinator,
+) -> None:
     """Set up a WeMo link."""
     known_light_ids = set()
 
     @callback
-    def async_update_lights():
+    def async_update_lights() -> None:
         """Check to see if the bridge has any new lights."""
         new_lights = []
 
@@ -79,6 +85,8 @@ def async_setup_bridge(hass, config_entry, async_add_entities, coordinator):
 class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
     def __init__(self, coordinator: DeviceCoordinator, light: bridge.Light) -> None:
         """Initialize the WeMo light."""
         super().__init__(coordinator)
@@ -89,7 +97,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return self.light.name
+        return cast(str, self.light.name)
 
     @property
     def available(self) -> bool:
@@ -97,50 +105,70 @@ class WemoLight(WemoEntity, LightEntity):
         return super().available and self.light.state.get("available")
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the ID of this light."""
-        return self.light.uniqueID
+        return cast(str, self.light.uniqueID)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "connections": {(CONNECTION_ZIGBEE, self._unique_id)},
-            "identifiers": {(WEMO_DOMAIN, self._unique_id)},
-            "model": self._model_name,
-            "manufacturer": "Belkin",
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, self._unique_id)},
+            identifiers={(WEMO_DOMAIN, self._unique_id)},
+            manufacturer="Belkin",
+            model=self._model_name,
+            name=self.name,
+        )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return self.light.state.get("level", 255)
+        return cast(int, self.light.state.get("level", 255))
 
     @property
-    def hs_color(self):
-        """Return the hs color values of this light."""
-        xy_color = self.light.state.get("color_xy")
-        if xy_color:
-            return color_util.color_xy_to_hs(*xy_color)
-        return None
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value [float, float]."""
+        return self.light.state.get("color_xy")  # type:ignore[no-any-return]
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int | None:
         """Return the color temperature of this light in mireds."""
-        return self.light.state.get("temperature_mireds")
+        return cast(Optional[int], self.light.state.get("temperature_mireds"))
 
     @property
-    def is_on(self):
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if (
+            "colorcontrol" in self.light.capabilities
+            and self.light.state.get("color_xy") is not None
+        ):
+            return ColorMode.XY
+        if "colortemperature" in self.light.capabilities:
+            return ColorMode.COLOR_TEMP
+        if "levelcontrol" in self.light.capabilities:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        modes: set[ColorMode] = set()
+        if "colorcontrol" in self.light.capabilities:
+            modes.add(ColorMode.XY)
+        if "colortemperature" in self.light.capabilities:
+            modes.add(ColorMode.COLOR_TEMP)
+        if "levelcontrol" in self.light.capabilities and not modes:
+            modes.add(ColorMode.BRIGHTNESS)
+        if not modes:
+            modes.add(ColorMode.ONOFF)
+        return modes
+
+    @property
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.light.state.get("onoff") != WEMO_OFF
+        return cast(int, self.light.state.get("onoff")) != WEMO_OFF
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_WEMO
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         xy_color = None
 
@@ -158,7 +186,7 @@ class WemoLight(WemoEntity, LightEntity):
             "force_update": False,
         }
 
-        with self._wemo_exception_handler("turn on"):
+        with self._wemo_call_wrapper("turn on"):
             if xy_color is not None:
                 self.light.set_color(xy_color, transition=transition_time)
 
@@ -169,55 +197,40 @@ class WemoLight(WemoEntity, LightEntity):
 
             self.light.turn_on(**turn_on_kwargs)
 
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.light.turn_off(transition=transition_time)
 
-        self.schedule_update_ha_state()
 
-
-class WemoDimmer(WemoEntity, LightEntity):
+class WemoDimmer(WemoBinaryStateEntity, LightEntity):
     """Representation of a WeMo dimmer."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 1 and 100."""
-        wemo_brightness = int(self.wemo.get_brightness())
+        wemo_brightness: int = self.wemo.get_brightness()
         return int((wemo_brightness * 255) / 100)
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on."""
-        return self.wemo.get_state()
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         # Wemo dimmer switches use a range of [0, 100] to control
         # brightness. Level 255 might mean to set it to previous value
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int((brightness / 255) * 100)
-            with self._wemo_exception_handler("set brightness"):
+            with self._wemo_call_wrapper("set brightness"):
                 self.wemo.set_brightness(brightness)
         else:
-            with self._wemo_exception_handler("turn on"):
+            with self._wemo_call_wrapper("turn on"):
                 self.wemo.on()
 
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
-        with self._wemo_exception_handler("turn off"):
+        with self._wemo_call_wrapper("turn off"):
             self.wemo.off()
-
-        self.schedule_update_ha_state()

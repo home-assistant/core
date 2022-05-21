@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "no_devices_found": "Ingen gjenv\u00e6rende enheter funnet"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "usb_confirm": {
+                "description": "Dette er en integrasjon for fasttelefonsamtaler ved hjelp av et talemodem CX93001. Dette kan hente oppringer -ID -informasjon med et alternativ for \u00e5 avvise et innkommende anrop."
+            },
+            "user": {
+                "data": {
+                    "name": "Navn",
+                    "port": "Port"
+                },
+                "description": "Dette er en integrasjon for fasttelefonsamtaler ved hjelp av et talemodem CX93001. Dette kan hente oppringer -ID -informasjon med et alternativ for \u00e5 avvise et innkommende anrop."
+            }
+        }
+    }
+}

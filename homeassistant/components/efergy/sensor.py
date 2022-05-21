@@ -1,163 +1,178 @@
 """Support for Efergy sensors."""
-import logging
+from __future__ import annotations
 
-import requests
-import voluptuous as vol
+from re import sub
+from typing import cast
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_CURRENCY,
-    CONF_MONITORED_VARIABLES,
-    CONF_TYPE,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+from pyefergy import Efergy
+from pyefergy.exceptions import ConnectError, DataError, ServiceError
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.typing import StateType
 
-_LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://engage.efergy.com/mobile_proxy/"
+from . import EfergyEntity
+from .const import CONF_CURRENT_VALUES, DOMAIN, LOGGER
 
-CONF_APPTOKEN = "app_token"
-CONF_UTC_OFFSET = "utc_offset"
-
-CONF_PERIOD = "period"
-
-CONF_INSTANT = "instant_readings"
-CONF_AMOUNT = "amount"
-CONF_BUDGET = "budget"
-CONF_COST = "cost"
-CONF_CURRENT_VALUES = "current_values"
-
-DEFAULT_PERIOD = "year"
-DEFAULT_UTC_OFFSET = "0"
-
-SENSOR_TYPES = {
-    CONF_INSTANT: ["Energy Usage", POWER_WATT],
-    CONF_AMOUNT: ["Energy Consumed", ENERGY_KILO_WATT_HOUR],
-    CONF_BUDGET: ["Energy Budget", None],
-    CONF_COST: ["Energy Cost", None],
-    CONF_CURRENT_VALUES: ["Per-Device Usage", POWER_WATT],
-}
-
-TYPES_SCHEMA = vol.In(SENSOR_TYPES)
-
-SENSORS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TYPE): TYPES_SCHEMA,
-        vol.Optional(CONF_CURRENCY, default=""): cv.string,
-        vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.string,
-    }
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="instant_readings",
+        name="Power Usage",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="energy_day",
+        name="Daily Consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energy_week",
+        name="Weekly Consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energy_month",
+        name="Monthly Consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energy_year",
+        name="Yearly Consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="budget",
+        name="Energy Budget",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="cost_day",
+        name="Daily Energy Cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="cost_week",
+        name="Weekly Energy Cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="cost_month",
+        name="Monthly Energy Cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="cost_year",
+        name="Yearly Energy Cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key=CONF_CURRENT_VALUES,
+        name="Power Usage",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_APPTOKEN): cv.string,
-        vol.Optional(CONF_UTC_OFFSET, default=DEFAULT_UTC_OFFSET): cv.string,
-        vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Efergy sensor."""
-    app_token = config.get(CONF_APPTOKEN)
-    utc_offset = str(config.get(CONF_UTC_OFFSET))
-
-    dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
-            url_string = f"{_RESOURCE}getCurrentValuesSummary?token={app_token}"
-            response = requests.get(url_string, timeout=10)
-            for sensor in response.json():
-                sid = sensor["sid"]
-                dev.append(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
+    """Set up Efergy sensors."""
+    api: Efergy = hass.data[DOMAIN][entry.entry_id]
+    sensors = []
+    for description in SENSOR_TYPES:
+        if description.key != CONF_CURRENT_VALUES:
+            sensors.append(
+                EfergySensor(
+                    api,
+                    description,
+                    entry.entry_id,
+                    period=sub("^energy_|^cost_", "", description.key),
+                    currency=hass.config.currency,
+                )
+            )
+        else:
+            description.entity_registry_enabled_default = len(api.sids) > 1
+            for sid in api.sids:
+                sensors.append(
                     EfergySensor(
-                        variable[CONF_TYPE],
-                        app_token,
-                        utc_offset,
-                        variable[CONF_PERIOD],
-                        variable[CONF_CURRENCY],
-                        sid,
+                        api,
+                        description,
+                        entry.entry_id,
+                        sid=sid,
                     )
                 )
-        dev.append(
-            EfergySensor(
-                variable[CONF_TYPE],
-                app_token,
-                utc_offset,
-                variable[CONF_PERIOD],
-                variable[CONF_CURRENCY],
-            )
-        )
-
-    add_entities(dev, True)
+    async_add_entities(sensors, True)
 
 
-class EfergySensor(SensorEntity):
+class EfergySensor(EfergyEntity, SensorEntity):
     """Implementation of an Efergy sensor."""
 
-    def __init__(self, sensor_type, app_token, utc_offset, period, currency, sid=None):
+    def __init__(
+        self,
+        api: Efergy,
+        description: SensorEntityDescription,
+        server_unique_id: str,
+        period: str | None = None,
+        currency: str | None = None,
+        sid: int | None = None,
+    ) -> None:
         """Initialize the sensor."""
+        super().__init__(api, server_unique_id)
+        self.entity_description = description
+        if description.key == CONF_CURRENT_VALUES:
+            self._attr_name = f"{description.name}_{'' if sid is None else sid}"
+        self._attr_unique_id = (
+            f"{server_unique_id}/{description.key}_{'' if sid is None else sid}"
+        )
+        if "cost" in description.key:
+            self._attr_native_unit_of_measurement = currency
         self.sid = sid
-        if sid:
-            self._name = f"efergy_{sid}"
-        else:
-            self._name = SENSOR_TYPES[sensor_type][0]
-        self.type = sensor_type
-        self.app_token = app_token
-        self.utc_offset = utc_offset
-        self._state = None
         self.period = period
-        self.currency = currency
-        if self.type == "cost":
-            self._unit_of_measurement = f"{self.currency}/{self.period}"
-        else:
-            self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    def update(self):
+    async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""
         try:
-            if self.type == "instant_readings":
-                url_string = f"{_RESOURCE}getInstant?token={self.app_token}"
-                response = requests.get(url_string, timeout=10)
-                self._state = response.json()["reading"]
-            elif self.type == "amount":
-                url_string = f"{_RESOURCE}getEnergy?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
-                response = requests.get(url_string, timeout=10)
-                self._state = response.json()["sum"]
-            elif self.type == "budget":
-                url_string = f"{_RESOURCE}getBudget?token={self.app_token}"
-                response = requests.get(url_string, timeout=10)
-                self._state = response.json()["status"]
-            elif self.type == "cost":
-                url_string = f"{_RESOURCE}getCost?token={self.app_token}&offset={self.utc_offset}&period={self.period}"
-                response = requests.get(url_string, timeout=10)
-                self._state = response.json()["sum"]
-            elif self.type == "current_values":
-                url_string = (
-                    f"{_RESOURCE}getCurrentValuesSummary?token={self.app_token}"
-                )
-                response = requests.get(url_string, timeout=10)
-                for sensor in response.json():
-                    if self.sid == sensor["sid"]:
-                        measurement = next(iter(sensor["data"][0].values()))
-                        self._state = measurement
-            else:
-                self._state = None
-        except (requests.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update status for %s", self.name)
+            data = await self.api.async_get_reading(
+                self.entity_description.key, period=self.period, sid=self.sid
+            )
+            self._attr_native_value = cast(StateType, data)
+        except (ConnectError, DataError, ServiceError) as ex:
+            if self._attr_available:
+                self._attr_available = False
+                LOGGER.error("Error getting data: %s", ex)
+            return
+        if not self._attr_available:
+            self._attr_available = True
+            LOGGER.info("Connection has resumed")

@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import islamic_prayer_times
+from homeassistant.components.islamic_prayer_times import config_flow  # noqa: F401
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
 
 from tests.common import MockConfigEntry

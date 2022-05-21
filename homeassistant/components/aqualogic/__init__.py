@@ -13,7 +13,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up AquaLogic platform."""
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
@@ -68,7 +71,7 @@ class AquaLogicProcessor(threading.Thread):
 
     def data_changed(self, panel):
         """Aqualogic data changed callback."""
-        self._hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
+        dispatcher_send(self._hass, UPDATE_TOPIC)
 
     def run(self):
         """Event thread."""

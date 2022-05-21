@@ -11,7 +11,7 @@
         },
         "step": {
             "auth": {
-                "description": "Aby po\u0142\u0105czy\u0107 konto TelldusLive: \n 1. Kliknij poni\u017cszy link \n 2. Zaloguj si\u0119 do Telldus Live \n 3. Autoryzuj **{app_name}** (kliknij **Tak**). \n 4. Wr\u00f3\u0107 tutaj i kliknij **SUBMIT**. \n\n [Link do konta TelldusLive]({auth_url})",
+                "description": "Aby po\u0142\u0105czy\u0107 konto TelldusLive: \n 1. Kliknij poni\u017cszy link \n 2. Zaloguj si\u0119 do Telldus Live \n 3. Autoryzuj **{app_name}** (kliknij **Tak**). \n 4. Wr\u00f3\u0107 tutaj i kliknij **Zatwierd\u017a**. \n\n [Link do konta TelldusLive]({auth_url})",
                 "title": "Uwierzytelnienie na TelldusLive"
             },
             "user": {

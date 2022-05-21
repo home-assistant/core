@@ -10,35 +10,31 @@ from fjaraskupan import (
     State,
 )
 
-from homeassistant.components.fan import (
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
-from . import DeviceState, async_setup_entry_platform
+from . import Coordinator, async_setup_entry_platform
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 PRESET_MODE_NORMAL = "normal"
 PRESET_MODE_AFTER_COOKING_MANUAL = "after_cooking_manual"
 PRESET_MODE_AFTER_COOKING_AUTO = "after_cooking_auto"
+PRESET_MODE_PERIODIC_VENTILATION = "periodic_ventilation"
 PRESET_MODES = [
     PRESET_MODE_NORMAL,
     PRESET_MODE_AFTER_COOKING_AUTO,
     PRESET_MODE_AFTER_COOKING_MANUAL,
+    PRESET_MODE_PERIODIC_VENTILATION,
 ]
 
 PRESET_TO_COMMAND = {
@@ -48,6 +44,10 @@ PRESET_TO_COMMAND = {
 }
 
 
+class UnsupportedPreset(HomeAssistantError):
+    """The preset is unsupported."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -55,20 +55,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(device_state: DeviceState):
-        return [
-            Fan(device_state.coordinator, device_state.device, device_state.device_info)
-        ]
+    def _constructor(coordinator: Coordinator):
+        return [Fan(coordinator, coordinator.device, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Fan(CoordinatorEntity[State], FanEntity):
+class Fan(CoordinatorEntity[Coordinator], FanEntity):
     """Fan entity."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: Coordinator,
         device: Device,
         device_info: DeviceInfo,
     ) -> None:
@@ -93,7 +93,6 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,
@@ -112,7 +111,10 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
         async with self._device:
             if preset_mode != self._preset_mode:
-                await self._device.send_command(PRESET_TO_COMMAND[preset_mode])
+                if command := PRESET_TO_COMMAND.get(preset_mode):
+                    await self._device.send_command(command)
+                else:
+                    raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
             if preset_mode == PRESET_MODE_NORMAL:
                 await self._device.send_fan_speed(int(new_speed))
@@ -125,8 +127,11 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        await self._device.send_command(PRESET_TO_COMMAND[preset_mode])
-        self.coordinator.async_set_updated_data(self._device.state)
+        if command := PRESET_TO_COMMAND.get(preset_mode):
+            await self._device.send_command(command)
+            self.coordinator.async_set_updated_data(self._device.state)
+        else:
+            raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -142,11 +147,6 @@ class Fan(CoordinatorEntity[State], FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
 
     @property
     def is_on(self) -> bool:
@@ -181,6 +181,8 @@ class Fan(CoordinatorEntity[State], FanEntity):
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_MANUAL
             else:
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_AUTO
+        elif data.periodic_venting_on:
+            self._preset_mode = PRESET_MODE_PERIODIC_VENTILATION
         else:
             self._preset_mode = PRESET_MODE_NORMAL
 

@@ -7,8 +7,8 @@
             "user": {
                 "data": {
                     "advertise_ip": "IP para anunciar",
-                    "advertise_port": "Puerto para anunciar",
-                    "host_ip": "IP del host",
+                    "advertise_port": "Puerto de advertencias",
+                    "host_ip": "Direcci\u00f3n IP del host",
                     "listen_port": "Puerto de escucha",
                     "name": "Nombre",
                     "upnp_bind_multicast": "Enlazar multicast (verdadero/falso)"

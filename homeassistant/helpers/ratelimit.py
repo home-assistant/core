@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
@@ -78,8 +78,7 @@ class KeyedRateLimit:
         if rate_limit is None:
             return None
 
-        last_triggered = self._last_triggered.get(key)
-        if not last_triggered:
+        if not (last_triggered := self._last_triggered.get(key)):
             return None
 
         next_call_time = last_triggered + rate_limit

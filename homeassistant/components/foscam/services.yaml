@@ -12,14 +12,14 @@ ptz:
       selector:
         select:
           options:
-            - 'bottom_left'
-            - 'bottom_right'
-            - 'down'
-            - 'left'
-            - 'right'
-            - 'top_left'
-            - 'top_right'
-            - 'up'
+            - "bottom_left"
+            - "bottom_right"
+            - "down"
+            - "left"
+            - "right"
+            - "top_left"
+            - "top_right"
+            - "up"
     travel_time:
       description: "Travel time in seconds."
       default: 0.125

@@ -15,14 +15,22 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Nyomja meg \u00e9s tartsa lenyomva a Nanoleaf bekapcsol\u00f3gombj\u00e1t 5 m\u00e1sodpercig, am\u00edg a gomb LED-je villogni nem kezd, majd kattintson a **SUBMIT** gombra 30 m\u00e1sodpercen bel\u00fcl.",
+                "description": "Nyomja meg \u00e9s tartsa lenyomva a Nanoleaf bekapcsol\u00f3gombj\u00e1t 5 m\u00e1sodpercig, am\u00edg a gomb LED-je villogni nem kezd, majd kattintson a **Mehet** gombra 30 m\u00e1sodpercen bel\u00fcl.",
                 "title": "Nanoleaf link"
             },
             "user": {
                 "data": {
-                    "host": "Gazdag\u00e9p"
+                    "host": "C\u00edm"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "P\u00f6ccint\u00e9s lefel\u00e9",
+            "swipe_left": "P\u00f6ccint\u00e9s balra",
+            "swipe_right": "P\u00f6ccint\u00e9s jobbra",
+            "swipe_up": "P\u00f6ccint\u00e9s felfel\u00e9"
         }
     }
 }

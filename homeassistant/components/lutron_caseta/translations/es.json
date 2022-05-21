@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "No se puede configurar bridge (host: {host}) importado desde configuration.yaml.",
+                "description": "No se ha podido configurar el enlace (anfitri\u00f3n: {host}) importado de configuration.yaml.",
                 "title": "Error al importar la configuraci\u00f3n del bridge Cas\u00e9ta."
             },
             "link": {
@@ -69,8 +69,8 @@
             "stop_all": "Detener todo"
         },
         "trigger_type": {
-            "press": "\"{subtipo}\" presionado",
-            "release": "\"{subtipo}\" liberado"
+            "press": "\"{subtype}\" presionado",
+            "release": "\"{subtype}\" liberado"
         }
     }
 }

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.plaato.const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
@@ -12,7 +12,12 @@ from homeassistant.components.plaato.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +39,7 @@ def mock_webhook_id():
 
 async def test_show_config_form(hass):
     """Test show configuration form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -95,12 +100,16 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "api_method"
 
-    hass.config.components.add("cloud")
+    assert await async_setup_component(hass, "cloud", {})
     with patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook",
-        return_value="https://hooks.nabu.casa/ABCD",
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
+    ), patch(
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -112,6 +121,50 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "webhook"
+
+
+async def test_show_config_form_validate_webhook_not_connected(hass, webhook_id):
+    """Test validating webhook when not connected aborts."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+            CONF_DEVICE_NAME: "device_name",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "api_method"
+
+    assert await async_setup_component(hass, "cloud", {})
+    with patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=False
+    ), patch(
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://hooks.nabu.casa/ABCD"},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_TOKEN: "",
+                CONF_USE_WEBHOOK: True,
+            },
+        )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cloud_not_connected"
 
 
 async def test_show_config_form_validate_token(hass):

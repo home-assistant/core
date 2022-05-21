@@ -6,13 +6,19 @@ from pymfy.api.devices.category import Category
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_OPTIMISTIC,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import COORDINATOR, DOMAIN
@@ -39,10 +45,15 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["climate", "cover", "sensor", "switch"]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Somfy component."""
     hass.data[DOMAIN] = {}
     domain_config = config.get(DOMAIN, {})
@@ -66,6 +77,14 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Somfy from a config entry."""
+
+    _LOGGER.warning(
+        "The Somfy integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.7; due to the Somfy Open API deprecation."
+        "The Somfy Open API will shutdown June 21st 2022, migrate to the "
+        "Overkiz integration to control your Somfy devices"
+    )
+
     # Backwards compat
     if "auth_implementation" not in entry.data:
         hass.config_entries.async_update_entry(
@@ -97,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = SCAN_INTERVAL_ALL_ASSUMED_STATE
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     hubs = [
         device
@@ -119,6 +138,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

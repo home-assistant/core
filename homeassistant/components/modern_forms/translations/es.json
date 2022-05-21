@@ -1,10 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
         "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n"
+                    "host": "Host"
                 },
                 "description": "Configura tu ventilador de Modern Forms para que se integre con Home Assistant."
             },
@@ -13,6 +20,5 @@
                 "title": "Dispositivo de ventilador de Modern Forms descubierto"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

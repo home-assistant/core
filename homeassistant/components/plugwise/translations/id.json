@@ -6,9 +6,10 @@
         "error": {
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
+            "invalid_setup": "Tambahkan Adam Anda, alih-alih Anna. Baca dokumentasi integrasi Plugwise Home Assistant untuk informasi lebih lanjut",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

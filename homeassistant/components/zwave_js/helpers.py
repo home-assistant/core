@@ -1,7 +1,10 @@
 """Helper functions for Z-Wave JS integration."""
 from __future__ import annotations
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from dataclasses import astuple, dataclass
+import logging
+from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -13,9 +16,16 @@ from zwave_js_server.model.value import (
     get_value_id,
 )
 
+from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_TYPE, __version__ as HA_VERSION
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_TYPE,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -29,7 +39,51 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
 )
+
+
+@dataclass
+class ZwaveValueID:
+    """Class to represent a value ID."""
+
+    property_: str | int | None = None
+    command_class: int | None = None
+    endpoint: int | None = None
+    property_key: str | int | None = None
+
+    def __post_init__(self) -> None:
+        """Post initialization check."""
+        if all(val is None for val in astuple(self)):
+            raise ValueError("At least one of the fields must be set.")
+
+
+@callback
+def get_value_id_from_unique_id(unique_id: str) -> str | None:
+    """
+    Get the value ID and optional state key from a unique ID.
+
+    Raises ValueError
+    """
+    split_unique_id = unique_id.split(".")
+    # If the unique ID contains a `-` in its second part, the unique ID contains
+    # a value ID and we can return it.
+    if "-" in (value_id := split_unique_id[1]):
+        return value_id
+    return None
+
+
+@callback
+def get_state_key_from_unique_id(unique_id: str) -> int | None:
+    """Get the state key from a unique ID."""
+    # If the unique ID has more than two parts, it's a special unique ID. If the last
+    # part of the unique ID is an int, then it's a state key and we return it.
+    if len(split_unique_id := unique_id.split(".")) > 2:
+        try:
+            return int(split_unique_id[-1])
+        except ValueError:
+            pass
+    return None
 
 
 @callback
@@ -41,6 +95,7 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(client: ZwaveClient) -> None:
     """Enable statistics on the driver."""
     await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
+    await client.driver.async_enable_error_reporting()
 
 
 @callback
@@ -54,9 +109,14 @@ def update_data_collection_preference(
 
 
 @callback
-def get_unique_id(home_id: str, value_id: str) -> str:
-    """Get unique ID from home ID and value ID."""
-    return f"{home_id}.{value_id}"
+def get_valueless_base_unique_id(client: ZwaveClient, node: ZwaveNode) -> str:
+    """Return the base unique ID for an entity that is not based on a value."""
+    return f"{client.driver.controller.home_id}.{node.node_id}"
+
+
+def get_unique_id(client: ZwaveClient, value_id: str) -> str:
+    """Get unique ID from client and value ID."""
+    return f"{client.driver.controller.home_id}.{value_id}"
 
 
 @callback
@@ -66,13 +126,39 @@ def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
 
 
 @callback
-def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]:
+def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] | None:
+    """Get extended device registry identifier for Z-Wave node."""
+    if None in (node.manufacturer_id, node.product_type, node.product_id):
+        return None
+
+    domain, dev_id = get_device_id(client, node)
+    return (
+        domain,
+        f"{dev_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}",
+    )
+
+
+@callback
+def get_home_and_node_id_from_device_entry(
+    device_entry: dr.DeviceEntry,
+) -> tuple[str, int] | None:
     """
     Get home ID and node ID for Z-Wave device registry entry.
 
-    Returns [home_id, node_id]
+    Returns (home_id, node_id) or None if not found.
     """
-    return device_id[1].split("-")
+    device_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if device_id is None:
+        return None
+    id_ = device_id.split("-")
+    return (id_[0], int(id_[1]))
 
 
 @callback
@@ -86,45 +172,35 @@ def async_get_node_from_device_id(
     """
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
 
-    if not device_entry:
+    if not (device_entry := dev_reg.async_get(device_id)):
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
     config_entry_ids = device_entry.config_entries
-    config_entry_id = next(
+    entry = next(
         (
-            config_entry_id
-            for config_entry_id in config_entry_ids
-            if cast(
-                ConfigEntry,
-                hass.config_entries.async_get_entry(config_entry_id),
-            ).domain
-            == DOMAIN
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in config_entry_ids
         ),
         None,
     )
-    if config_entry_id is None or config_entry_id not in hass.data[DOMAIN]:
+    if entry and entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
+    if entry is None or entry.entry_id not in hass.data[DOMAIN]:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
 
-    client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+    client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
-    identifier = next(
-        (
-            get_home_and_node_id_from_device_id(identifier)
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
-        None,
-    )
+    identifiers = get_home_and_node_id_from_device_entry(device_entry)
 
-    node_id = int(identifier[1]) if identifier is not None else None
+    node_id = identifiers[1] if identifiers else None
 
     if node_id is None or node_id not in client.driver.controller.nodes:
         raise ValueError(f"Node for device {device_id} can't be found")
@@ -197,6 +273,41 @@ def async_get_nodes_from_area_id(
     return nodes
 
 
+@callback
+def async_get_nodes_from_targets(
+    hass: HomeAssistant,
+    val: dict[str, Any],
+    ent_reg: er.EntityRegistry | None = None,
+    dev_reg: dr.DeviceRegistry | None = None,
+    logger: logging.Logger = LOGGER,
+) -> set[ZwaveNode]:
+    """
+    Get nodes for all targets.
+
+    Supports entity_id with group expansion, area_id, and device_id.
+    """
+    nodes: set[ZwaveNode] = set()
+    # Convert all entity IDs to nodes
+    for entity_id in expand_entity_ids(hass, val.get(ATTR_ENTITY_ID, [])):
+        try:
+            nodes.add(async_get_node_from_entity_id(hass, entity_id, ent_reg, dev_reg))
+        except ValueError as err:
+            logger.warning(err.args[0])
+
+    # Convert all area IDs to nodes
+    for area_id in val.get(ATTR_AREA_ID, []):
+        nodes.update(async_get_nodes_from_area_id(hass, area_id, ent_reg, dev_reg))
+
+    # Convert all device IDs to nodes
+    for device_id in val.get(ATTR_DEVICE_ID, []):
+        try:
+            nodes.add(async_get_node_from_device_id(hass, device_id, dev_reg))
+        except ValueError as err:
+            logger.warning(err.args[0])
+
+    return nodes
+
+
 def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveValue:
     """Get a Z-Wave JS Value from a config."""
     endpoint = None
@@ -217,36 +328,40 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     return node.values[value_id]
 
 
+def _zwave_js_config_entry(hass: HomeAssistant, device: dr.DeviceEntry) -> str | None:
+    """Find zwave_js config entry from a device."""
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry and entry.domain == DOMAIN:
+            return entry_id
+    return None
+
+
 @callback
 def async_get_node_status_sensor_entity_id(
     hass: HomeAssistant,
     device_id: str,
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
-) -> str:
+) -> str | None:
     """Get the node status sensor entity ID for a given Z-Wave JS device."""
     if not ent_reg:
         ent_reg = er.async_get(hass)
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    if not device:
+    if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
-    entry_id = next(entry_id for entry_id in device.config_entries)
+    if not (entry_id := _zwave_js_config_entry(hass, device)):
+        return None
+
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
-    entity_id = ent_reg.async_get_entity_id(
+    return ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
         f"{client.driver.controller.home_id}.{node.node_id}.node_status",
     )
-    if not entity_id:
-        raise HomeAssistantError(
-            "Node status sensor entity not found. Device may not be a zwave_js device"
-        )
-
-    return entity_id
 
 
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
@@ -270,21 +385,6 @@ def copy_available_params(
     """Copy available params from input into output."""
     output_dict.update(
         {param: input_dict[param] for param in params if param in input_dict}
-    )
-
-
-@callback
-def async_is_device_config_entry_not_loaded(
-    hass: HomeAssistant, device_id: str
-) -> bool:
-    """Return whether device's config entries are not loaded."""
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    assert device
-    return any(
-        (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.state != ConfigEntryState.LOADED
-        for entry_id in device.config_entries
     )
 
 

@@ -55,8 +55,7 @@ def item_payload(roon_server, item, list_image_id):
     """Create response payload for a single media item."""
 
     title = item["title"]
-    subtitle = item.get("subtitle")
-    if subtitle is None:
+    if (subtitle := item.get("subtitle")) is None:
         display_title = title
     else:
         display_title = f"{title} ({subtitle})"
@@ -123,8 +122,7 @@ def library_payload(roon_server, zone_id, media_content_id):
     header = result_header["list"]
     title = header.get("title")
 
-    subtitle = header.get("subtitle")
-    if subtitle is None:
+    if (subtitle := header.get("subtitle")) is None:
         list_title = title
     else:
         list_title = f"{title} ({subtitle})"

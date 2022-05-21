@@ -1,11 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from hyperion import client, const
 
@@ -13,10 +13,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -74,8 +73,6 @@ DEFAULT_PORT = const.DEFAULT_PORT_JSON
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST: list[str] = []
 
-SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
-
 ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
@@ -85,7 +82,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up a Hyperion platform from config entry."""
 
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -122,11 +119,14 @@ async def async_setup_entry(
             )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
-    return True
 
 
 class HyperionBaseLight(LightEntity):
     """A Hyperion light base class."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
         self,
@@ -223,11 +223,6 @@ class HyperionBaseLight(LightEntity):
         return self._effect_list
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_HYPERION
-
-    @property
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
@@ -240,12 +235,13 @@ class HyperionBaseLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+            configuration_url=self._client.remote_url,
+        )
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""
@@ -489,7 +485,6 @@ class HyperionBaseLight(LightEntity):
         priority: dict[str, Any] | None = self._client.visible_priority
         return priority
 
-    # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
         """Determine whether to allow a priority to update internal state."""
         return True

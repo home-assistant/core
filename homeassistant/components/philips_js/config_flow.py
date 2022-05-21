@@ -47,17 +47,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hub: PhilipsTV | None = None
         self._pair_state: Any = None
 
-    async def async_step_import(self, conf: dict) -> dict:
-        """Import a configuration from config.yaml."""
-        self._async_abort_entries_match({CONF_HOST: conf[CONF_HOST]})
-
-        return await self.async_step_user(
-            {
-                CONF_HOST: conf[CONF_HOST],
-                CONF_API_VERSION: conf[CONF_API_VERSION],
-            }
-        )
-
     async def _async_create_current(self):
 
         system = self._current[CONF_SYSTEM]
@@ -133,9 +122,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-
-                await self.async_set_unique_id(hub.system["serialnumber"])
-                self._abort_if_unique_id_configured()
+                if serialnumber := hub.system.get("serialnumber"):
+                    await self.async_set_unique_id(serialnumber)
+                    self._abort_if_unique_id_configured()
 
                 self._current[CONF_SYSTEM] = hub.system
                 self._current[CONF_API_VERSION] = hub.api_version

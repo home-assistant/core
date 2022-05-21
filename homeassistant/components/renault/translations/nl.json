@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "kamereon_no_account": "Kan Kamereon-account niet vinden."
+            "kamereon_no_account": "Kan Kamereon-account niet vinden.",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_credentials": "Ongeldige authenticatie"
@@ -15,7 +16,11 @@
                 "title": "Selecteer Kamereon-account-ID"
             },
             "reauth_confirm": {
-                "description": "Werk uw wachtwoord voor {gebruikersnaam} bij"
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Werk uw wachtwoord voor {gebruikersnaam} bij",
+                "title": "Integratie herauthentiseren"
             },
             "user": {
                 "data": {

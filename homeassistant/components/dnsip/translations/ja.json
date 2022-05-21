@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "\u7121\u52b9\u306a\u30db\u30b9\u30c8\u540d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "DNS\u30af\u30a8\u30ea\u3092\u5b9f\u884c\u3059\u308b\u30db\u30b9\u30c8\u540d",
+                    "resolver": "IPV4\u30eb\u30c3\u30af\u30a2\u30c3\u30d7\u7528\u306e\u30ea\u30be\u30eb\u30d0\u30fc",
+                    "resolver_ipv6": "IPV6\u30eb\u30c3\u30af\u30a2\u30c3\u30d7\u7528\u306e\u30ea\u30be\u30eb\u30d0\u30fc"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "\u30ea\u30be\u30eb\u30d0\u306eIP\u30a2\u30c9\u30ec\u30b9\u304c\u7121\u52b9"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "IPV4\u30eb\u30c3\u30af\u30a2\u30c3\u30d7\u7528\u306e\u30ea\u30be\u30eb\u30d0\u30fc",
+                    "resolver_ipv6": "IPV6\u30eb\u30c3\u30af\u30a2\u30c3\u30d7\u7528\u306e\u30ea\u30be\u30eb\u30d0\u30fc"
+                }
+            }
+        }
+    }
+}

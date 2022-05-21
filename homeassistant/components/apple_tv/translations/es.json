@@ -1,25 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "El dispositivo ya est\u00e1 configurado",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "backoff": "El dispositivo no acepta solicitudes de emparejamiento en este momento (es posible que hayas introducido un c\u00f3digo PIN no v\u00e1lido demasiadas veces), int\u00e9ntalo de nuevo m\u00e1s tarde.",
             "device_did_not_pair": "No se ha intentado finalizar el proceso de emparejamiento desde el dispositivo.",
-            "invalid_config": "La configuraci\u00f3n para este dispositivo est\u00e1 incompleta. Intenta a\u00f1adirlo de nuevo.",
+            "device_not_found": "No se ha encontrado el dispositivo durante la detecci\u00f3n, por favor, intente a\u00f1adirlo de nuevo.",
+            "inconsistent_device": "No se encontraron los protocolos esperados durante el descubrimiento. Esto normalmente indica un problema con el DNS de multidifusi\u00f3n (Zeroconf). Por favor, intente a\u00f1adir el dispositivo de nuevo.",
             "no_devices_found": "No se encontraron dispositivos en la red",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "setup_failed": "No se ha podido configurar el dispositivo.",
             "unknown": "Error inesperado"
         },
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "no_devices_found": "No se encontraron dispositivos en la red",
-            "no_usable_service": "Se encontr\u00f3 un dispositivo, pero no se pudo identificar ninguna manera de establecer una conexi\u00f3n con \u00e9l. Si sigues viendo este mensaje, intenta especificar su direcci\u00f3n IP o reiniciar el Apple TV.",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name} ({type})",
         "step": {
             "confirm": {
-                "description": "Est\u00e1s a punto de a\u00f1adir el Apple TV con nombre `{name}` a Home Assistant.\n\n**Para completar el proceso, puede que tengas que introducir varios c\u00f3digos PIN.**\n\nTen en cuenta que *no* podr\u00e1s apagar tu Apple TV con esta integraci\u00f3n. \u00a1S\u00f3lo se apagar\u00e1 el reproductor de medios de Home Assistant!",
+                "description": "Est\u00e1s a punto de a\u00f1adir `{name}` con el tipo `{type}` en Home Assistant.\n\n**Para completar el proceso, puede que tengas que introducir varios c\u00f3digos PIN.**\n\nTen en cuenta que *no* podr\u00e1s apagar tu Apple TV con esta integraci\u00f3n. \u00a1S\u00f3lo se apagar\u00e1 el reproductor de medios de Home Assistant!",
                 "title": "Confirma la adici\u00f3n del Apple TV"
             },
             "pair_no_pin": {
@@ -33,8 +35,16 @@
                 "description": "El emparejamiento es necesario para el protocolo `{protocol}`. Introduce el c\u00f3digo PIN que aparece en la pantalla. Los ceros iniciales deben ser omitidos, es decir, introduce 123 si el c\u00f3digo mostrado es 0123.",
                 "title": "Emparejamiento"
             },
+            "password": {
+                "description": "Una contrase\u00f1a es requerida por '{protocolo}'. Esto a\u00fan no es compatible, deshabilite la contrase\u00f1a para continuar.",
+                "title": "Se requiere una contrase\u00f1a"
+            },
+            "protocol_disabled": {
+                "description": "El emparejamiento es necesario para `{protocol}` pero est\u00e1 desactivado en el dispositivo. Revise las posibles restricciones de acceso (por ejemplo, permitir que se conecten todos los dispositivos de la red local) en el dispositivo.\n\nPuede continuar sin emparejar este protocolo, pero algunas funciones estar\u00e1n limitadas.",
+                "title": "No es posible el emparejamiento"
+            },
             "reconfigure": {
-                "description": "Este Apple TV est\u00e1 experimentando algunos problemas de conexi\u00f3n y debe ser reconfigurado.",
+                "description": "Vuelve a configurar este dispositivo para restablecer su funcionamiento.",
                 "title": "Reconfiguraci\u00f3n del dispositivo"
             },
             "service_problem": {
@@ -59,6 +69,5 @@
                 "description": "Configurar los ajustes generales del dispositivo"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }
