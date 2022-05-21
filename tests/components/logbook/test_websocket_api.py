@@ -158,33 +158,29 @@ async def test_subscribe_unsubscribe_logbook_stream(
         id="ac5bd62de45711eaaeb351041eec8dd9",
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
-    with patch.object(
-        core, "_LOGGER"
-    ):  # the logger will hold a reference to the event since its logged
-        # An Automation
-        automation_entity_id_test = "automation.alarm"
-        hass.bus.async_fire(
-            EVENT_AUTOMATION_TRIGGERED,
-            {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
-            context=context,
-        )
-        hass.bus.async_fire(
-            EVENT_SCRIPT_STARTED,
-            {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
-            context=context,
-        )
-        hass.states.async_set(
-            automation_entity_id_test,
-            STATE_ON,
-            {ATTR_FRIENDLY_NAME: "Alarm Automation"},
-            context=context,
-        )
-        entity_id_test = "alarm_control_panel.area_001"
-        hass.states.async_set(entity_id_test, STATE_OFF, context=context)
-        hass.states.async_set(entity_id_test, STATE_ON, context=context)
-        entity_id_second = "alarm_control_panel.area_002"
-        hass.states.async_set(entity_id_second, STATE_OFF, context=context)
-        hass.states.async_set(entity_id_second, STATE_ON, context=context)
+    automation_entity_id_test = "automation.alarm"
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=context,
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+        context=context,
+    )
+    hass.states.async_set(
+        automation_entity_id_test,
+        STATE_ON,
+        {ATTR_FRIENDLY_NAME: "Alarm Automation"},
+        context=context,
+    )
+    entity_id_test = "alarm_control_panel.area_001"
+    hass.states.async_set(entity_id_test, STATE_OFF, context=context)
+    hass.states.async_set(entity_id_test, STATE_ON, context=context)
+    entity_id_second = "alarm_control_panel.area_002"
+    hass.states.async_set(entity_id_second, STATE_OFF, context=context)
+    hass.states.async_set(entity_id_second, STATE_ON, context=context)
 
     await hass.async_block_till_done()
 
@@ -239,14 +235,11 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "when": ANY,
         },
     ]
-    with patch.object(
-        core, "_LOGGER"
-    ):  # the logger will hold a reference to the event since its logged
-        hass.bus.async_fire(
-            EVENT_AUTOMATION_TRIGGERED,
-            {ATTR_NAME: "Mock automation 2", ATTR_ENTITY_ID: automation_entity_id_test},
-            context=context,
-        )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation 2", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=context,
+    )
 
     await hass.async_block_till_done()
 
@@ -272,14 +265,11 @@ async def test_subscribe_unsubscribe_logbook_stream(
     ]
 
     await async_wait_recording_done(hass)
-    with patch.object(
-        core, "_LOGGER"
-    ):  # the logger will hold a reference to the event since its logged
-        hass.bus.async_fire(
-            EVENT_AUTOMATION_TRIGGERED,
-            {ATTR_NAME: "Mock automation 3", ATTR_ENTITY_ID: automation_entity_id_test},
-            context=context,
-        )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation 3", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=context,
+    )
 
     await hass.async_block_till_done()
     msg = await websocket_client.receive_json()
