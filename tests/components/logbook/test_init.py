@@ -14,7 +14,9 @@ import voluptuous as vol
 from homeassistant.components import logbook
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook.models import LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
+from homeassistant.components.logbook.queries.common import PSUEDO_EVENT_STATE_CHANGED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.components.websocket_api.const import TYPE_RESULT
@@ -330,7 +332,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = logbook.PSUEDO_EVENT_STATE_CHANGED
+    row.event_type = PSUEDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
@@ -348,7 +350,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row, {})
+    return LazyEventPartialState(row, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
@@ -2798,7 +2800,7 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert "context_event_type" not in results[3]
 
 
-@patch("homeassistant.components.logbook.EVENT_COALESCE_TIME", 0)
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
     """Test subscribe/unsubscribe logbook stream."""
     now = dt_util.utcnow()

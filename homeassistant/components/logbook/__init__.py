@@ -39,6 +39,8 @@ from .const import (
     LOGBOOK_ENTRY_NAME,
     LOGBOOK_FILTERS,
 )
+from .const import LOGBOOK_ENTRY_ICON  # noqa: F401
+from .models import LazyEventPartialState  # noqa: F401
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
