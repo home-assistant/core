@@ -136,9 +136,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: DataUpdateCoordinator[dict[str, MeaterProbe]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]["coordinator"]
 
     @callback
     def async_update_data():
@@ -151,17 +151,17 @@ async def async_setup_entry(
         known_probes: set = hass.data[DOMAIN]["known_probes"]
 
         # Add entities for temperature probes which we've not yet seen
-        for dev in devices:
-            if dev.id in known_probes:
+        for device_id in devices:
+            if device_id in known_probes:
                 continue
 
             entities.extend(
                 [
-                    MeaterProbeTemperature(coordinator, dev, sensor_description)
+                    MeaterProbeTemperature(coordinator, device_id, sensor_description)
                     for sensor_description in SENSOR_TYPES
                 ]
             )
-            known_probes.add(dev.id)
+            known_probes.add(device_id)
 
         async_add_entities(entities)
 
@@ -176,8 +176,6 @@ class MeaterProbeTemperature(
 ):
     """Meater Temperature Sensor Entity."""
 
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
     entity_description: MeaterSensorEntityDescription
 
     def __init__(

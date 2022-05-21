@@ -156,14 +156,12 @@ class EightSleepBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
         eight: EightSleep,
         user_id: str | None,
         sensor: str,
-        units: str | None = None,
     ) -> None:
         """Initialize the data object."""
         super().__init__(coordinator)
         self._eight = eight
         self._user_id = user_id
         self._sensor = sensor
-        self._units = units
         self._user_obj: EightUser | None = None
         if self._user_id:
             self._user_obj = self._eight.users[user_id]

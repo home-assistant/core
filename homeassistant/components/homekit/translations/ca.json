@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)",
                     "devices": "Dispositius (disparadors)"
                 },
                 "description": "Els interruptors programables es creen per cada dispositiu seleccionat. HomeKit pot ser programat per a que executi una automatitzaci\u00f3 o escena quan un dispositiu es dispari.",

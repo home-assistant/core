@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Service is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -12,15 +12,15 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "De Steam-integratie moet handmatig opnieuw worden geauthenticeerd.\n\nU vind uw API-sleutel hier: https://steamcommunity.com/dev/apikey",
-                "title": "Verifieer de integratie opnieuw"
+                "description": "De Steam integratie moet handmatig opnieuw geauthenticeerd worden\n\nU kunt uw sleutel hier vinden: {api_key_url}",
+                "title": "Integratie herauthentiseren"
             },
             "user": {
                 "data": {
                     "account": "Steam Account-ID",
                     "api_key": "API-sleutel"
                 },
-                "description": "Gebruik https://steamid.io om je Steam Account-ID te vinden."
+                "description": "Gebruik {account_id_url} om uw Steam account ID te vinden"
             }
         }
     },

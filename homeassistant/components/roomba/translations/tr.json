@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Ana Bilgisayar"
-                },
-                "description": "Roomba veya Braava'y\u0131 se\u00e7in.",
-                "title": "Cihaza otomatik olarak ba\u011flan"
-            },
             "link": {
                 "description": "Cihaz bir ses \u00e7\u0131karana kadar (yakla\u015f\u0131k iki saniye) {name} \u00fczerindeki Ana Sayfa d\u00fc\u011fmesini bas\u0131l\u0131 tutun, ard\u0131ndan 30 saniye i\u00e7inde g\u00f6nderin.",
                 "title": "\u015eifre Al"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Sunucu"
                 },
                 "description": "A\u011f\u0131n\u0131zda Roomba veya Braava bulunamad\u0131.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "S\u00fcrekli",
-                    "delay": "Gecikme",
-                    "host": "Sunucu",
-                    "password": "Parola"
+                    "host": "Sunucu"
                 },
                 "description": "Roomba veya Braava'y\u0131 se\u00e7in.",
                 "title": "Cihaza ba\u011flan\u0131n"

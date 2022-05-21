@@ -4,12 +4,23 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException
 from oauth2client.client import Credentials
 
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import DeviceFlow, OAuthError, async_create_device_flow
+from .api import (
+    DEVICE_AUTH_CREDS,
+    AccessTokenAuthImpl,
+    DeviceAuth,
+    DeviceFlow,
+    OAuthError,
+    async_create_device_flow,
+    get_feature_access,
+)
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,15 +78,28 @@ class OAuth2FlowHandler(
 
         if not self._device_flow:
             _LOGGER.debug("Creating DeviceAuth flow")
+            if not isinstance(self.flow_impl, DeviceAuth):
+                _LOGGER.error(
+                    "Unexpected OAuth implementation does not support device auth: %s",
+                    self.flow_impl,
+                )
+                return self.async_abort(reason="oauth_error")
             try:
-                device_flow = await async_create_device_flow(self.hass)
+                device_flow = await async_create_device_flow(
+                    self.hass,
+                    self.flow_impl.client_id,
+                    self.flow_impl.client_secret,
+                    get_feature_access(self.hass),
+                )
             except OAuthError as err:
                 _LOGGER.error("Error initializing device flow: %s", str(err))
                 return self.async_abort(reason="oauth_error")
             self._device_flow = device_flow
 
             async def _exchange_finished(creds: Credentials | None) -> None:
-                self.external_data = {"creds": creds}  # is None on timeout/expiration
+                self.external_data = {
+                    DEVICE_AUTH_CREDS: creds
+                }  # is None on timeout/expiration
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_configure(
                         flow_id=self.flow_id, user_input={}
@@ -97,7 +121,7 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle external yaml configuration."""
-        if self.external_data.get("creds") is None:
+        if self.external_data.get(DEVICE_AUTH_CREDS) is None:
             return self.async_abort(reason="code_expired")
         return await super().async_step_creation(user_input)
 
@@ -110,7 +134,19 @@ class OAuth2FlowHandler(
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
-        return self.async_create_entry(title=self.flow_impl.name, data=data)
+
+        calendar_service = GoogleCalendarService(
+            AccessTokenAuthImpl(
+                async_get_clientsession(self.hass), data["token"]["access_token"]
+            )
+        )
+        try:
+            primary_calendar = await calendar_service.async_get_calendar("primary")
+        except ApiException as err:
+            _LOGGER.debug("Error reading calendar primary calendar: %s", err)
+            primary_calendar = None
+        title = primary_calendar.id if primary_calendar else self.flow_impl.name
+        return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None

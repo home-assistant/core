@@ -4,9 +4,9 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado."
         },
         "error": {
-            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
             "register_failed": "No se pudo registrar, int\u00e9ntalo de nuevo",
-            "unknown": "Error desconocido: por favor, int\u00e9ntalo de nuevo m\u00e1s"
+            "unknown": "Error inesperado"
         },
         "step": {
             "link": {
@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Puerto"
-                },
-                "title": "Freebox"
+                }
             }
         }
     }

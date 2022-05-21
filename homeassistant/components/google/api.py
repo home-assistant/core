@@ -10,7 +10,6 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.auth import AbstractAuth
-import oauth2client
 from oauth2client.client import (
     Credentials,
     DeviceFlowInfo,
@@ -19,41 +18,37 @@ from oauth2client.client import (
     OAuth2WebServerFlow,
 )
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt
 
-from .const import CONF_CALENDAR_ACCESS, DATA_CONFIG, DEVICE_AUTH_IMPL, DOMAIN
+from .const import (
+    CONF_CALENDAR_ACCESS,
+    DATA_CONFIG,
+    DEFAULT_FEATURE_ACCESS,
+    DOMAIN,
+    FeatureAccess,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_PAGE_SIZE = 100
 EXCHANGE_TIMEOUT_SECONDS = 60
+DEVICE_AUTH_CREDS = "creds"
 
 
 class OAuthError(Exception):
     """OAuth related error."""
 
 
-class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class DeviceAuth(AuthImplementation):
     """OAuth implementation for Device Auth."""
-
-    def __init__(self, hass: HomeAssistant, client_id: str, client_secret: str) -> None:
-        """Initialize InstalledAppAuth."""
-        super().__init__(
-            hass,
-            DEVICE_AUTH_IMPL,
-            client_id,
-            client_secret,
-            oauth2client.GOOGLE_AUTH_URI,
-            oauth2client.GOOGLE_TOKEN_URI,
-        )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
-        creds: Credentials = external_data["creds"]
+        creds: Credentials = external_data[DEVICE_AUTH_CREDS]
         return {
             "access_token": creds.access_token,
             "refresh_token": creds.refresh_token,
@@ -132,13 +127,25 @@ class DeviceFlow:
         )
 
 
-async def async_create_device_flow(hass: HomeAssistant) -> DeviceFlow:
+def get_feature_access(hass: HomeAssistant) -> FeatureAccess:
+    """Return the desired calendar feature access."""
+    # This may be called during config entry setup without integration setup running when there
+    # is no google entry in configuration.yaml
+    return (
+        hass.data.get(DOMAIN, {})
+        .get(DATA_CONFIG, {})
+        .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
+    )
+
+
+async def async_create_device_flow(
+    hass: HomeAssistant, client_id: str, client_secret: str, access: FeatureAccess
+) -> DeviceFlow:
     """Create a new Device flow."""
-    conf = hass.data[DOMAIN][DATA_CONFIG]
     oauth_flow = OAuth2WebServerFlow(
-        client_id=conf[CONF_CLIENT_ID],
-        client_secret=conf[CONF_CLIENT_SECRET],
-        scope=conf[CONF_CALENDAR_ACCESS].scope,
+        client_id=client_id,
+        client_secret=client_secret,
+        scope=access.scope,
         redirect_uri="",
     )
     try:
@@ -166,3 +173,25 @@ class ApiAuthImpl(AbstractAuth):
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
         return self._session.token["access_token"]
+
+
+class AccessTokenAuthImpl(AbstractAuth):
+    """Authentication implementation used during config flow, without refresh.
+
+    This exists to allow the config flow to use the API before it has fully
+    created a config entry required by OAuth2Session. This does not support
+    refreshing tokens, which is fine since it should have been just created.
+    """
+
+    def __init__(
+        self,
+        websession: aiohttp.ClientSession,
+        access_token: str,
+    ) -> None:
+        """Init the Google Calendar client library auth implementation."""
+        super().__init__(websession)
+        self._access_token = access_token
+
+    async def async_get_access_token(self) -> str:
+        """Return the access token."""
+        return self._access_token

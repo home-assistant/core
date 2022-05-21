@@ -6,9 +6,9 @@
   },
   {
     "e950c7d5e1ee407a858e2a8b5016c8b3": {
-      "class": "gateway",
-      "fw": "3.3.9",
-      "hw": "AME Smile 2.0 board",
+      "dev_class": "gateway",
+      "firmware": "3.3.9",
+      "hardware": "AME Smile 2.0 board",
       "location": "cd3e822288064775a7c4afcdd70bdda2",
       "mac_address": "012345670001",
       "model": "P1",

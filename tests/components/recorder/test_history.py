@@ -14,6 +14,7 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import (
     Events,
+    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
@@ -21,12 +22,15 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
-from tests.components.recorder.common import wait_recording_done
+from tests.components.recorder.common import (
+    async_wait_recording_done,
+    wait_recording_done,
+)
 
 
 async def _async_get_states(
@@ -40,9 +44,19 @@ async def _async_get_states(
 
     def _get_states_with_session():
         with session_scope(hass=hass) as session:
-            return history._get_states_with_session(
-                hass, session, utc_point_in_time, entity_ids, run, None, no_attributes
-            )
+            attr_cache = {}
+            return [
+                LazyState(row, attr_cache)
+                for row in history._get_rows_with_session(
+                    hass,
+                    session,
+                    utc_point_in_time,
+                    entity_ids,
+                    run,
+                    None,
+                    no_attributes,
+                )
+            ]
 
     return await recorder.get_instance(hass).async_add_executor_job(
         _get_states_with_session
@@ -68,7 +82,7 @@ def _add_db_entries(
                     entity_id=entity_id,
                     state="on",
                     attributes='{"name":"the light"}',
-                    last_changed=point,
+                    last_changed=None,
                     last_updated=point,
                     event_id=1001 + idx,
                     attributes_id=1002 + idx,
@@ -374,23 +388,30 @@ def test_get_significant_states_minimal_response(hass_recorder):
     hass = hass_recorder()
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four, minimal_response=True)
+    entites_with_reducable_states = [
+        "media_player.test",
+        "media_player.test3",
+    ]
 
-    # The second media_player.test state is reduced
+    # All states for media_player.test state are reduced
     # down to last_changed and state when minimal_response
+    # is set except for the first state.
     # is set.  We use JSONEncoder to make sure that are
     # pre-encoded last_changed is always the same as what
     # will happen with encoding a native state
-    input_state = states["media_player.test"][1]
-    orig_last_changed = json.dumps(
-        process_timestamp(input_state.last_changed),
-        cls=JSONEncoder,
-    ).replace('"', "")
-    orig_state = input_state.state
-    states["media_player.test"][1] = {
-        "last_changed": orig_last_changed,
-        "state": orig_state,
-    }
-
+    for entity_id in entites_with_reducable_states:
+        entity_states = states[entity_id]
+        for state_idx in range(1, len(entity_states)):
+            input_state = entity_states[state_idx]
+            orig_last_changed = orig_last_changed = json.dumps(
+                process_timestamp(input_state.last_changed),
+                cls=JSONEncoder,
+            ).replace('"', "")
+            orig_state = input_state.state
+            entity_states[state_idx] = {
+                "last_changed": orig_last_changed,
+                "state": orig_state,
+            }
     assert states == hist
 
 
@@ -551,7 +572,7 @@ def test_get_significant_states_only(hass_recorder):
     assert states == hist[entity_id]
 
 
-def record_states(hass):
+def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and
@@ -774,3 +795,86 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
         )
         assert hist[0].attributes == {"name": "the light"}
         assert hist[1].attributes == {"name": "the light"}
+
+
+async def test_get_full_significant_states_handles_empty_last_changed(
+    hass: ha.HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+):
+    """Test getting states when last_changed is null."""
+    await async_setup_recorder_instance(hass, {})
+
+    now = dt_util.utcnow()
+    hass.states.async_set("sensor.one", "on", {"attr": "original"})
+    state0 = hass.states.get("sensor.one")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.one", "on", {"attr": "new"})
+    state1 = hass.states.get("sensor.one")
+
+    assert state0.last_changed == state1.last_changed
+    assert state0.last_updated != state1.last_updated
+    await async_wait_recording_done(hass)
+
+    def _get_entries():
+        with session_scope(hass=hass) as session:
+            return history.get_full_significant_states_with_session(
+                hass,
+                session,
+                now,
+                dt_util.utcnow(),
+                entity_ids=["sensor.one"],
+                significant_changes_only=False,
+            )
+
+    states = await recorder.get_instance(hass).async_add_executor_job(_get_entries)
+    sensor_one_states: list[State] = states["sensor.one"]
+    assert sensor_one_states[0] == state0
+    assert sensor_one_states[1] == state1
+    assert sensor_one_states[0].last_changed == sensor_one_states[1].last_changed
+    assert sensor_one_states[0].last_updated != sensor_one_states[1].last_updated
+
+    def _fetch_native_states() -> list[State]:
+        with session_scope(hass=hass) as session:
+            native_states = []
+            db_state_attributes = {
+                state_attributes.attributes_id: state_attributes
+                for state_attributes in session.query(StateAttributes)
+            }
+            for db_state in session.query(States):
+                state = db_state.to_native()
+                state.attributes = db_state_attributes[
+                    db_state.attributes_id
+                ].to_native()
+                native_states.append(state)
+            return native_states
+
+    native_sensor_one_states = await recorder.get_instance(hass).async_add_executor_job(
+        _fetch_native_states
+    )
+    assert native_sensor_one_states[0] == state0
+    assert native_sensor_one_states[1] == state1
+    assert (
+        native_sensor_one_states[0].last_changed
+        == native_sensor_one_states[1].last_changed
+    )
+    assert (
+        native_sensor_one_states[0].last_updated
+        != native_sensor_one_states[1].last_updated
+    )
+
+    def _fetch_db_states() -> list[State]:
+        with session_scope(hass=hass) as session:
+            states = list(session.query(States))
+            session.expunge_all()
+            return states
+
+    db_sensor_one_states = await recorder.get_instance(hass).async_add_executor_job(
+        _fetch_db_states
+    )
+    assert db_sensor_one_states[0].last_changed is None
+    assert (
+        process_timestamp(db_sensor_one_states[1].last_changed) == state0.last_changed
+    )
+    assert db_sensor_one_states[0].last_updated is not None
+    assert db_sensor_one_states[1].last_updated is not None
+    assert db_sensor_one_states[0].last_updated != db_sensor_one_states[1].last_updated

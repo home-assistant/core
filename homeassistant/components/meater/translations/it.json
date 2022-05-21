@@ -7,6 +7,9 @@
         },
         "step": {
             "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
                 "description": "Conferma la password per l'account Meater Cloud {username}."
             },
             "user": {

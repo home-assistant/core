@@ -29,12 +29,12 @@ from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
     NODE_STATUSES,
+    async_bypass_dynamic_config_validation,
     generate_config_parameter_subtype,
     get_config_parameter_value_schema,
 )
 from .helpers import (
     async_get_node_from_device_id,
-    async_is_device_config_entry_not_loaded,
     check_type_schema_map,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
@@ -101,7 +101,7 @@ async def async_validate_condition_config(
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
     try:
-        device_config_entry_not_loaded = async_is_device_config_entry_not_loaded(
+        bypass_dynamic_config_validation = async_bypass_dynamic_config_validation(
             hass, config[CONF_DEVICE_ID]
         )
     except ValueError as err:
@@ -109,7 +109,7 @@ async def async_validate_condition_config(
             f"Device {config[CONF_DEVICE_ID]} not found"
         ) from err
 
-    if device_config_entry_not_loaded:
+    if bypass_dynamic_config_validation:
         return config
 
     if config[CONF_TYPE] == VALUE_TYPE:

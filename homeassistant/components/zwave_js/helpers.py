@@ -95,6 +95,7 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
 async def async_enable_statistics(client: ZwaveClient) -> None:
     """Enable statistics on the driver."""
     await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
+    await client.driver.async_enable_error_reporting()
 
 
 @callback
@@ -178,24 +179,22 @@ def async_get_node_from_device_id(
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
     config_entry_ids = device_entry.config_entries
-    config_entry_id = next(
+    entry = next(
         (
-            config_entry_id
-            for config_entry_id in config_entry_ids
-            if cast(
-                ConfigEntry,
-                hass.config_entries.async_get_entry(config_entry_id),
-            ).domain
-            == DOMAIN
+            entry
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in config_entry_ids
         ),
         None,
     )
-    if config_entry_id is None or config_entry_id not in hass.data[DOMAIN]:
+    if entry and entry.state != ConfigEntryState.LOADED:
+        raise ValueError(f"Device {device_id} config entry is not loaded")
+    if entry is None or entry.entry_id not in hass.data[DOMAIN]:
         raise ValueError(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
 
-    client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+    client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
@@ -386,21 +385,6 @@ def copy_available_params(
     """Copy available params from input into output."""
     output_dict.update(
         {param: input_dict[param] for param in params if param in input_dict}
-    )
-
-
-@callback
-def async_is_device_config_entry_not_loaded(
-    hass: HomeAssistant, device_id: str
-) -> bool:
-    """Return whether device's config entries are not loaded."""
-    dev_reg = dr.async_get(hass)
-    if (device := dev_reg.async_get(device_id)) is None:
-        raise ValueError(f"Device {device_id} not found")
-    return any(
-        (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.state != ConfigEntryState.LOADED
-        for entry_id in device.config_entries
     )
 
 

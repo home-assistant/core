@@ -6,6 +6,7 @@ import datetime
 from typing import Any, Generator, TypeVar
 from unittest.mock import mock_open, patch
 
+from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import Credentials, OAuth2Credentials
 import pytest
@@ -171,7 +172,8 @@ def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
 
 @pytest.fixture
 def config_entry(
-    token_scopes: list[str], config_entry_token_expiry: float
+    token_scopes: list[str],
+    config_entry_token_expiry: float,
 ) -> MockConfigEntry:
     """Fixture to create a config entry for the integration."""
     return MockConfigEntry(
@@ -206,7 +208,9 @@ def mock_events_list(
     """Fixture to construct a fake event list API response."""
 
     def _put_result(
-        response: dict[str, Any], calendar_id: str = None, exc: Exception = None
+        response: dict[str, Any],
+        calendar_id: str = None,
+        exc: ClientError | None = None,
     ) -> None:
         if calendar_id is None:
             calendar_id = CALENDAR_ID
@@ -239,7 +243,7 @@ def mock_calendars_list(
 ) -> ApiResult:
     """Fixture to construct a fake calendar list API response."""
 
-    def _put_result(response: dict[str, Any], exc=None) -> None:
+    def _result(response: dict[str, Any], exc: ClientError | None = None) -> None:
         aioclient_mock.get(
             f"{API_BASE_URL}/users/me/calendarList",
             json=response,
@@ -247,13 +251,32 @@ def mock_calendars_list(
         )
         return
 
-    return _put_result
+    return _result
+
+
+@pytest.fixture
+def mock_calendar_get(
+    aioclient_mock: AiohttpClientMocker,
+) -> Callable[[...], None]:
+    """Fixture for returning a calendar get response."""
+
+    def _result(
+        calendar_id: str, response: dict[str, Any], exc: ClientError | None = None
+    ) -> None:
+        aioclient_mock.get(
+            f"{API_BASE_URL}/calendars/{calendar_id}",
+            json=response,
+            exc=exc,
+        )
+        return
+
+    return _result
 
 
 @pytest.fixture
 def mock_insert_event(
     aioclient_mock: AiohttpClientMocker,
-) -> Callable[[..., dict[str, Any]], None]:
+) -> Callable[[...], None]:
     """Fixture for capturing event creation."""
 
     def _expect_result(calendar_id: str = CALENDAR_ID) -> None:
@@ -291,7 +314,7 @@ def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
 @pytest.fixture
 def config(google_config: dict[str, Any]) -> dict[str, Any]:
     """Fixture for overriding component config."""
-    return {DOMAIN: google_config}
+    return {DOMAIN: google_config} if google_config else {}
 
 
 @pytest.fixture

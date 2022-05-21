@@ -237,7 +237,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
                 stats = item.statistics
                 attrs[
                     item.title
-                ] = f"{stats.episodeFileCount}/{stats.episodeCount} Episodes"
+                ] = f"{getattr(stats,'episodeFileCount', 0)}/{getattr(stats, 'episodeCount', 0)} Episodes"
         elif key == "upcoming" and self.data.get(key) is not None:
             for episode in self.data[key]:
                 identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"

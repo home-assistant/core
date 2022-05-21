@@ -80,7 +80,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -301,7 +301,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -353,7 +353,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -391,7 +391,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},

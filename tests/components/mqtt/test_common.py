@@ -1690,3 +1690,24 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     assert hass.states.get(f"{domain}.test_new_1")
     assert hass.states.get(f"{domain}.test_new_2")
     assert hass.states.get(f"{domain}.test_new_3")
+
+
+async def help_test_setup_manual_entity_from_yaml(
+    hass,
+    caplog,
+    tmp_path,
+    platform,
+    config,
+):
+    """Help to test setup from yaml through configuration entry."""
+    config_structure = {mqtt.DOMAIN: {platform: config}}
+
+    await async_setup_component(hass, mqtt.DOMAIN, config_structure)
+    # Mock config entry
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()

@@ -11,13 +11,6 @@
             "unknown": "Uventet feil"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Passord"
-                },
-                "description": "Oppdater passordet for {username}",
-                "title": "Godkjenne integrering p\u00e5 nytt"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passord"

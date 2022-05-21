@@ -187,11 +187,16 @@ class HangoutsBot:
                 if not (match := matcher.match(text)):
                     continue
                 if intent_type == INTENT_HELP:
-                    return await self.hass.helpers.intent.async_handle(
-                        DOMAIN, intent_type, {"conv_id": {"value": conv_id}}, text
+                    return await intent.async_handle(
+                        self.hass,
+                        DOMAIN,
+                        intent_type,
+                        {"conv_id": {"value": conv_id}},
+                        text,
                     )
 
-                return await self.hass.helpers.intent.async_handle(
+                return await intent.async_handle(
+                    self.hass,
                     DOMAIN,
                     intent_type,
                     {"conv_id": {"value": conv_id}}
