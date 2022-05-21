@@ -128,12 +128,9 @@ async def ws_event_stream(
 
     if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
-    else:
-        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
-        return
 
-    if start_time > utc_now:
-        connection.send_result(msg["id"], [])
+    if not start_time or start_time > utc_now:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
         return
 
     device_ids = msg.get("device_ids")
