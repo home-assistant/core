@@ -269,6 +269,38 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
         }
     ]
 
+    await async_wait_recording_done(hass)
+    with patch.object(
+        core, "_LOGGER"
+    ):  # the logger will hold a reference to the event since its logged
+        hass.bus.async_fire(
+            EVENT_AUTOMATION_TRIGGERED,
+            {ATTR_NAME: "Mock automation 3", ATTR_ENTITY_ID: automation_entity_id_test},
+            context=context,
+        )
+
+    await hass.async_block_till_done()
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "context_domain": "automation",
+            "context_entity_id": "automation.alarm",
+            "context_event_type": "automation_triggered",
+            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_message": "triggered",
+            "context_name": "Mock automation",
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "domain": "automation",
+            "entity_id": "automation.alarm",
+            "message": "triggered",
+            "name": "Mock automation 3",
+            "source": None,
+            "when": ANY,
+        }
+    ]
+
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
     )
