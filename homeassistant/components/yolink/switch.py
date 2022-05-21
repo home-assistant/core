@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from yolink.device import YoLinkDevice
+from yolink.exception import YoLinkAuthFailError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -14,6 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_COORDINATOR, ATTR_DEVICE_OUTLET, DOMAIN
@@ -29,7 +31,7 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     value: Callable[[str], bool | None] = lambda _: None
 
 
-SENSOR_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
+DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
     YoLinkSwitchEntityDescription(
         key="state",
         device_class=SwitchDeviceClass.OUTLET,
@@ -49,16 +51,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
-    sensor_devices = [
+    devices = [
         device for device in coordinator.yl_devices if device.device_type in DEVICE_TYPE
     ]
     entities = []
-    for sensor_device in sensor_devices:
-        for description in SENSOR_TYPES:
-            if description.exists_fn(sensor_device):
-                entities.append(
-                    YoLinkSwitchEntity(coordinator, description, sensor_device)
-                )
+    for device in devices:
+        for description in DEVICE_TYPES:
+            if description.exists_fn(device):
+                entities.append(YoLinkSwitchEntity(coordinator, description, device))
     async_add_entities(entities)
 
 
@@ -89,12 +89,16 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        result = await self.device.call_device_http_api("setState", {"state": "open"})
-        result.check_response()
-        self.async_write_ha_state()
+        try:
+            await self.device.call_device_http_api("setState", {"state": "open"})
+            self.async_write_ha_state()
+        except YoLinkAuthFailError as yl_auth_err:
+            raise ConfigEntryAuthFailed from yl_auth_err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        result = await self.device.call_device_http_api("setState", {"state": "close"})
-        result.check_response()
-        self.async_write_ha_state()
+        try:
+            await self.device.call_device_http_api("setState", {"state": "close"})
+            self.async_write_ha_state()
+        except YoLinkAuthFailError as yl_auth_err:
+            raise ConfigEntryAuthFailed from yl_auth_err
