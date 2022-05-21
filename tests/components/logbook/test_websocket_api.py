@@ -1,7 +1,7 @@
 """The tests for the logbook component."""
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
-from typing import Callable
 from unittest.mock import ANY, patch
 
 import pytest
@@ -976,6 +976,59 @@ async def test_live_stream_with_one_second_commit_interval(
     assert msg["id"] == 8
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
+    """Test subscribe/unsubscribe logbook stream gets disconnected."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    await async_wait_recording_done(hass)
+
+    init_count = sum(hass.bus.async_listeners().values())
+    hass.states.async_set("light.small", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    state: State = hass.states.get("binary_sensor.is_light")
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["light.small", "binary_sensor.is_light"],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "binary_sensor.is_light",
+            "state": "off",
+            "when": state.last_updated.timestamp(),
+        }
+    ]
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
     assert sum(hass.bus.async_listeners().values()) == init_count
