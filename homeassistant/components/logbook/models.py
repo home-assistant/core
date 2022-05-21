@@ -65,9 +65,9 @@ class EventAsRow:
     context: Context
     context_id: str
     time_fired: dt
-    event_id: int
+    state_id: int
     old_format_icon: None = None
-    state_id: None = None
+    event_id: None = None
     entity_id: str | None = None
     icon: str | None = None
     context_user_id: str | None = None
@@ -90,7 +90,7 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
             time_fired=event.time_fired,
-            event_id=hash(event),
+            state_id=hash(event),
         )
     # States are prefiltered so we never get states
     # that are missing new_state or old_state
@@ -105,6 +105,6 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
         context_user_id=new_state.context.user_id,
         context_parent_id=new_state.context.parent_id,
         time_fired=new_state.last_updated,
-        event_id=hash(event),
+        state_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),
     )

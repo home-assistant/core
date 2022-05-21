@@ -21,10 +21,10 @@ def is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
     """Check if the logbook should filter a state.
 
     Used when we are in live mode to ensure
-    we only get significant changes (state.last_changed != state.last_changed)
+    we only get significant changes (state.last_changed != state.last_updated)
     """
     return bool(
-        state.last_changed != state.last_changed
+        state.last_changed != state.last_updated
         or ATTR_UNIT_OF_MEASUREMENT in state.attributes
         or is_sensor_continuous(ent_reg, state.entity_id)
     )
