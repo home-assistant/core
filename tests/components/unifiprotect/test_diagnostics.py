@@ -1,4 +1,4 @@
-"""Test august diagnostics."""
+"""Test UniFi Protect diagnostics."""
 
 from pyunifiprotect.data import NVR, Light
 
