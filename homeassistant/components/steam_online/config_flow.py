@@ -23,11 +23,16 @@ from .const import (
 )
 
 
-def validate_input(user_input: dict[str, str | int]) -> list[dict[str, str | int]]:
+def validate_input(
+    user_input: dict[str, str | int], multi: bool = False
+) -> list[dict[str, str | int]]:
     """Handle common flow input validation."""
     steam.api.key.set(user_input[CONF_API_KEY])
     interface = steam.api.interface("ISteamUser")
-    names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
+    if multi:
+        names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNTS])
+    else:
+        names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
     return names["response"]["players"]["player"]
 
 
@@ -75,6 +80,9 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
                 if self.source == config_entries.SOURCE_IMPORT:
+                    res = await self.hass.async_add_executor_job(
+                        validate_input, user_input, True
+                    )
                     accounts_data = {
                         CONF_ACCOUNTS: {
                             acc["steamid"]: acc["personaname"] for acc in res
