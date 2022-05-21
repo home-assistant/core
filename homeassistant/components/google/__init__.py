@@ -261,16 +261,15 @@ async def async_setup_services(
                 CONF_TRACK: track_new,
             },
         )
-        # Only use the external calendar config file if it already exists
-        if calendars:
-            if calendar_item.id not in calendars:
-                calendars[calendar_item.id] = calendar
-                await hass.async_add_executor_job(
-                    update_config, hass.config.path(YAML_DEVICES), calendar
-                )
-            else:
-                # Prefer entity/name information from yaml, overriding api
-                calendar = calendars[calendar_item.id]
+        # Populate the yaml file with all discovered calendars
+        if calendar_item.id not in calendars:
+            calendars[calendar_item.id] = calendar
+            await hass.async_add_executor_job(
+                update_config, hass.config.path(YAML_DEVICES), calendar
+            )
+        else:
+            # Prefer entity/name information from yaml, overriding api
+            calendar = calendars[calendar_item.id]
         async_dispatcher_send(hass, DISCOVER_CALENDAR, calendar)
 
     created_calendars = set()
