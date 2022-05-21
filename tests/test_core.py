@@ -6,6 +6,7 @@ import array
 import asyncio
 from datetime import datetime, timedelta
 import functools
+import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
@@ -14,6 +15,7 @@ from unittest.mock import MagicMock, Mock, PropertyMock, patch
 import pytest
 import voluptuous as vol
 
+from homeassistant import core
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_UNIT_SYSTEM,
@@ -1799,3 +1801,47 @@ async def test_state_firing_event_matches_context_id_ulid_time(hass):
     assert _ulid_timestamp(event.context.id) == int(
         events[0].time_fired.timestamp() * 1000
     )
+
+
+async def test_event_context(hass):
+    """Test we can lookup the origin of a context as long as its still alive."""
+    events = []
+
+    @ha.callback
+    def capture_events(event):
+        nonlocal events
+        events.append(event)
+
+    cancel = hass.bus.async_listen("dummy_event", capture_events)
+    cancel2 = hass.bus.async_listen("dummy_event_2", capture_events)
+
+    with patch.object(
+        core, "_LOGGER"
+    ):  # the logger will hold a strong reference to the event since its logged
+        hass.bus.async_fire("dummy_event")
+        await hass.async_block_till_done()
+
+    dummy_event = events[0]
+
+    with patch.object(
+        core, "_LOGGER"
+    ):  # the logger will hold a strong reference to the event since its logged
+        hass.bus.async_fire("dummy_event_2", context=dummy_event.context)
+        await hass.async_block_till_done()
+    context_id = dummy_event.context.id
+
+    assert hass.bus.context_origin(context_id) == dummy_event
+
+    dummy_event2 = events[1]
+    assert dummy_event2.context == dummy_event.context
+    del events
+    del dummy_event
+    assert dummy_event2.context.id == context_id
+    del dummy_event2
+    cancel()
+    cancel2()
+    await hass.async_block_till_done()
+
+    # Make sure we do not leak events
+    gc.collect()
+    assert hass.bus.context_origin(context_id) is None
