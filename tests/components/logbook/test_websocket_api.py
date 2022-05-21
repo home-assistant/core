@@ -16,7 +16,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -153,7 +152,7 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
         },
     ]
 
-    context = ha.Context(
+    context = core.Context(
         id="ac5bd62de45711eaaeb351041eec8dd9",
         user_id="b400facee45711eaa9308bfd3d19e474",
     )
