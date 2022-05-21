@@ -10,7 +10,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "credential_timeout": "Time-out van inlog service. Druk op Submit om opnieuw te starten.",
-            "login_failed": "Kan Playstation 4 niet koppelen. Controleer of de PIN-code correct is.",
+            "login_failed": "Kan Playstation 4 niet koppelen. Controleer of de Pincode correct is.",
             "no_ipaddress": "Voer het IP-adres in van de PlayStation 4 die u wilt configureren."
         },
         "step": {
@@ -19,7 +19,7 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN-code",
+                    "code": "Pincode",
                     "ip_address": "IP-adres",
                     "name": "Naam",
                     "region": "Regio"

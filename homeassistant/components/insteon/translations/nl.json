@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "not_insteon_device": "Ontdekt apparaat is geen Insteon apparaat",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "select_single": "Selecteer een optie."
         },
         "flow_title": "{name}",
@@ -49,7 +49,7 @@
     },
     "options": {
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "input_error": "Ongeldige invoer, controleer uw waarden.",
             "select_single": "Selecteer \u00e9\u00e9n optie."
         },
