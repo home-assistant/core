@@ -10,7 +10,7 @@ from typing import Any
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import DateOrDatetime, Event
+from gcal_sync.model import Calendar, DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
@@ -87,7 +87,6 @@ NOTIFICATION_TITLE = "Google Calendar Setup"
 GROUP_NAME_ALL_CALENDARS = "Google Calendar Sensors"
 
 SERVICE_SCAN_CALENDARS = "scan_for_calendars"
-SERVICE_FOUND_CALENDARS = "found_calendar"
 SERVICE_ADD_EVENT = "add_event"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
@@ -250,19 +249,19 @@ async def async_setup_services(
 ) -> None:
     """Set up the service listeners."""
 
-    created_calendars = set()
     calendars = await hass.async_add_executor_job(
         load_config, hass.config.path(YAML_DEVICES)
     )
 
-    async def _found_calendar(call: ServiceCall) -> None:
-        calendar = get_calendar_info(hass, call.data)
-        calendar_id = calendar[CONF_CAL_ID]
-
-        if calendar_id in created_calendars:
-            return
-        created_calendars.add(calendar_id)
-
+    async def _found_calendar(calendar_item: Calendar) -> None:
+        calendar = get_calendar_info(
+            hass,
+            {
+                **calendar_item.dict(exclude_unset=True),
+                CONF_TRACK: track_new,
+            },
+        )
+        calendar_id = calendar_item.id
         # Populate the yaml file with all discovered calendars
         if calendar_id not in calendars:
             calendars[calendar_id] = calendar
@@ -274,7 +273,7 @@ async def async_setup_services(
             calendar = calendars[calendar_id]
         async_dispatcher_send(hass, DISCOVER_CALENDAR, calendar)
 
-    hass.services.async_register(DOMAIN, SERVICE_FOUND_CALENDARS, _found_calendar)
+    created_calendars = set()
 
     async def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
@@ -284,11 +283,10 @@ async def async_setup_services(
             raise HomeAssistantError(str(err)) from err
         tasks = []
         for calendar_item in result.items:
-            calendar = calendar_item.dict(exclude_unset=True)
-            calendar[CONF_TRACK] = track_new
-            tasks.append(
-                hass.services.async_call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
-            )
+            if calendar_item.id in created_calendars:
+                continue
+            created_calendars.add(calendar_item.id)
+            tasks.append(_found_calendar(calendar_item))
         await asyncio.gather(*tasks)
 
     hass.services.async_register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
