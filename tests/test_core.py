@@ -1802,7 +1802,7 @@ async def test_state_firing_event_matches_context_id_ulid_time(hass):
 
 
 async def test_event_context(hass):
-    """Test we can lookup the origin of a context as long as its still alive."""
+    """Test we can lookup the origin of a context from an event."""
     events = []
 
     @ha.callback
