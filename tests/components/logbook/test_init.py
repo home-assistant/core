@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import logbook
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.components.websocket_api.const import TYPE_RESULT
@@ -96,10 +97,10 @@ async def test_service_call_create_logbook_entry(hass_):
     # Our service call will unblock when the event listeners have been
     # scheduled. This means that they may not have been processed yet.
     await async_wait_recording_done(hass_)
-    event_stream = logbook.EventStream(hass_, (EVENT_LOGBOOK_ENTRY,))
+    event_processor = EventProcessor(hass_, (EVENT_LOGBOOK_ENTRY,))
 
     events = list(
-        event_stream.get_events(
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
         )
@@ -135,9 +136,9 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorde
         },
     )
     await async_wait_recording_done(hass)
-    event_stream = logbook.EventStream(hass, (EVENT_LOGBOOK_ENTRY,))
+    event_processor = EventProcessor(hass, (EVENT_LOGBOOK_ENTRY,))
     events = list(
-        event_stream.get_events(
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
         )
