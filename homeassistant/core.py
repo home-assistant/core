@@ -36,9 +36,9 @@ from typing import (
     overload,
 )
 from urllib.parse import urlparse
-from weakref import WeakValueDictionary
 
 import attr
+from lru import LRU  # pylint: disable=no-name-in-module
 import voluptuous as vol
 import yarl
 
@@ -815,12 +815,12 @@ class EventBus:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
-        self._context_origin: WeakValueDictionary[str, Event] = WeakValueDictionary()
+        self._context_origin: LRU = LRU(256)
 
     @callback
     def context_origin(self, context_id: str) -> Event | None:
         """Get the origin of an event by context."""
-        return self._context_origin.get(context_id)
+        return self._context_origin.get(context_id)  # type: ignore[no-any-return]
 
     @callback
     def async_listeners(self) -> dict[str, int]:
