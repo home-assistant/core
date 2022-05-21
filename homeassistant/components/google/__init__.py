@@ -261,15 +261,16 @@ async def async_setup_services(
                 CONF_TRACK: track_new,
             },
         )
+        calendar_id = calendar_item.id
         # Populate the yaml file with all discovered calendars
-        if calendar_item.id not in calendars:
-            calendars[calendar_item.id] = calendar
+        if calendar_id not in calendars:
+            calendars[calendar_id] = calendar
             await hass.async_add_executor_job(
                 update_config, hass.config.path(YAML_DEVICES), calendar
             )
         else:
             # Prefer entity/name information from yaml, overriding api
-            calendar = calendars[calendar_item.id]
+            calendar = calendars[calendar_id]
         async_dispatcher_send(hass, DISCOVER_CALENDAR, calendar)
 
     created_calendars = set()
