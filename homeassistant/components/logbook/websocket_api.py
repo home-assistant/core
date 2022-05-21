@@ -26,7 +26,7 @@ from .models import async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
-EVENT_COALESCE_TIME = 1
+EVENT_COALESCE_TIME = 0.5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,11 @@ async def _async_events_consumer(
         # If the event is older than the last db
         # event we already sent it so we skip it.
         if events[0].time_fired > subscriptions_setup_complete_time:
-            await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
+            # We sleep for the EVENT_COALESCE_TIME so
+            # we can group events together to minimize
+            # the number of websocket messages when the
+            # system is overloaded with an event storm
+            await asyncio.sleep(EVENT_COALESCE_TIME)
             while True:
                 try:
                     events.append(stream_queue.get_nowait())
