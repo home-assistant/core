@@ -7,11 +7,14 @@ from unittest.mock import patch
 from pytest import LogCaptureFixture
 
 from homeassistant import setup
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+import homeassistant.util.dt as dt_util
 
 from . import setup_test_entity_entry
+
+from tests.common import async_fire_time_changed
 
 
 async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
@@ -93,6 +96,8 @@ async def test_template_render(hass: HomeAssistant) -> None:
             "command": "echo {{ states.sensor.template_sensor.state }}",
         },
     )
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "template_value"
@@ -111,7 +116,8 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
                 "command": 'echo "{{ states.sensor.template_sensor.state }}" "3 4"',
             },
         )
-
+        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
         check_output.assert_called_once_with(
             'echo "template_value" "3 4"',
             shell=True,  # nosec # shell by design
@@ -130,7 +136,8 @@ async def test_bad_template_render(
             "command": "echo {{ this template doesn't parse",
         },
     )
-
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
     assert "Error rendering command template" in caplog.text
 
 
