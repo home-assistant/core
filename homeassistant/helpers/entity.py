@@ -48,14 +48,13 @@ from homeassistant.util import dt as dt_util
 
 from . import entity_registry as er
 from .device_registry import DeviceEntryType
-
-# quick and dirty hack to resolv circular import problem without
-# breaking existing code.
 from .entity_id import async_generate_entity_id as id_generator
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
 
+# quick and dirty hack to resolv circular import problem without
+# breaking existing code.
 async_generate_entity_id = id_generator
 
 _LOGGER = logging.getLogger(__name__)
