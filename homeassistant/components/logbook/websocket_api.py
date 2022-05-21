@@ -67,6 +67,7 @@ async def async_stream_events(
         # If the event is older than the last db
         # event we already sent it so we skip it.
         if events[0].time_fired <= last_time_from_db:
+            stream_queue.task_done()
             continue
         await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
         while True:
