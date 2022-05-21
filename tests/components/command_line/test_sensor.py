@@ -37,6 +37,8 @@ async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) 
         },
     )
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -96,8 +98,7 @@ async def test_template_render(hass: HomeAssistant) -> None:
             "command": "echo {{ states.sensor.template_sensor.state }}",
         },
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "template_value"
@@ -116,8 +117,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
                 "command": 'echo "{{ states.sensor.template_sensor.state }}" "3 4"',
             },
         )
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+
         check_output.assert_called_once_with(
             'echo "template_value" "3 4"',
             shell=True,  # nosec # shell by design
@@ -136,8 +136,7 @@ async def test_bad_template_render(
             "command": "echo {{ this template doesn't parse",
         },
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+
     assert "Error rendering command template" in caplog.text
 
 
