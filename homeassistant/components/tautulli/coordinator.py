@@ -44,9 +44,9 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.host_configuration = host_configuration
         self.api_client = api_client
-        self.activity: PyTautulliApiActivity | None = None
-        self.home_stats: list[PyTautulliApiHomeStats] | None = None
-        self.users: list[PyTautulliApiUser] | None = None
+        self.activity: PyTautulliApiActivity = PyTautulliApiActivity({"": ""})
+        self.home_stats: list[PyTautulliApiHomeStats] = []
+        self.users: list[PyTautulliApiUser] = []
 
     async def _async_update_data(self) -> None:
         """Get the latest data from Tautulli."""
@@ -62,3 +62,4 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(ex) from ex
         except PyTautulliAuthenticationException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
+        self.users = [user for user in self.users if user.username != "Local"]
