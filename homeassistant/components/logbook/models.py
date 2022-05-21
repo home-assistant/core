@@ -92,8 +92,9 @@ def async_event_to_row(event: Event) -> EventAsRow | None:
             time_fired=event.time_fired,
             event_id=hash(event),
         )
-    if event.data.get("old_state") is None or event.data.get("new_state") is None:
-        return None
+    # States are prefiltered so we never get states
+    # that are missing new_state or old_state
+    # since the logbook does not show these
     new_state: State = event.data["new_state"]
     return EventAsRow(
         event_data=event.data,
