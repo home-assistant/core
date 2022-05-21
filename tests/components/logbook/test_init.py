@@ -2920,6 +2920,89 @@ async def test_subscribe_unsubscribe_logbook_stream(hass, hass_ws_client):
         },
     ]
 
+    context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+
+    # An Automation
+    automation_entity_id_test = "automation.alarm"
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
+        context=context,
+    )
+    hass.bus.async_fire(
+        EVENT_SCRIPT_STARTED,
+        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+        context=context,
+    )
+    hass.states.async_set(
+        automation_entity_id_test,
+        STATE_ON,
+        {ATTR_FRIENDLY_NAME: "Alarm Automation"},
+        context=context,
+    )
+    entity_id_test = "alarm_control_panel.area_001"
+    hass.states.async_set(entity_id_test, STATE_OFF, context=context)
+    hass.states.async_set(entity_id_test, STATE_ON, context=context)
+    entity_id_second = "alarm_control_panel.area_002"
+    hass.states.async_set(entity_id_second, STATE_OFF, context=context)
+    hass.states.async_set(entity_id_second, STATE_ON, context=context)
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "domain": "automation",
+            "entity_id": "automation.alarm",
+            "message": "triggered",
+            "name": "Mock automation",
+            "source": None,
+            "when": ANY,
+        },
+        {
+            "context_domain": "automation",
+            "context_entity_id": "automation.alarm",
+            "context_event_type": "automation_triggered",
+            "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
+            "context_message": "triggered",
+            "context_name": "Mock automation",
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "domain": "script",
+            "entity_id": "script.mock_script",
+            "message": "started",
+            "name": "Mock script",
+            "when": ANY,
+        },
+        {
+            "context_domain": "automation",
+            "context_entity_id": "automation.alarm",
+            "context_event_type": "automation_triggered",
+            "context_message": "triggered",
+            "context_name": "Mock automation",
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "entity_id": "alarm_control_panel.area_001",
+            "state": "on",
+            "when": ANY,
+        },
+        {
+            "context_domain": "automation",
+            "context_entity_id": "automation.alarm",
+            "context_event_type": "automation_triggered",
+            "context_message": "triggered",
+            "context_name": "Mock automation",
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "entity_id": "alarm_control_panel.area_002",
+            "state": "on",
+            "when": ANY,
+        },
+    ]
+
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
     )
