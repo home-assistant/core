@@ -80,6 +80,20 @@ from .queries.common import PSUEDO_EVENT_STATE_CHANGED
 
 
 @dataclass
+class LogbookRun:
+    """A logbook run which may be a long running event stream or single request."""
+
+    context_lookup: ContextLookup
+    external_events: dict[
+        str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
+    ]
+    event_cache: EventCache
+    entity_name_cache: EntityNameCache
+    include_entity_name: bool
+    format_time: Callable[[Row], Any]
+
+
+@dataclass
 class EventAsRow:
     """Convert an event to a row."""
 
@@ -679,17 +693,18 @@ def _humanify(
     rows: Generator[Row | EventAsRow, None, None],
     entities_filter: EntityFilter | Callable[[str], bool] | None,
     ent_reg: er.EntityRegistry,
+    logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
-    format_time: Callable[[Row], Any],
 ) -> Generator[dict[str, Any], None, None]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
     continuous_sensors: dict[str, bool] = {}
-    context_lookup = context_augmenter.context_lookup
-    external_events = context_augmenter.external_events
-    event_cache = context_augmenter.event_cache
-    entity_name_cache = context_augmenter.entity_name_cache
-    include_entity_name = context_augmenter.include_entity_name
+    context_lookup = logbook_run.context_lookup
+    external_events = logbook_run.external_events
+    event_cache = logbook_run.event_cache
+    entity_name_cache = logbook_run.entity_name_cache
+    include_entity_name = logbook_run.include_entity_name
+    format_time = logbook_run.format_time
 
     def _keep_row(row: Row | EventAsRow, event_type: str) -> bool:
         """Check if the entity_filter rejects a row."""
@@ -802,21 +817,21 @@ class EventStream:
             self.entities_filter: EntityFilter | Callable[[str], bool] | None = None
         else:
             self.entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
-        self.timestamp = timestamp
-        self.format_time = (
-            _row_time_fired_timestamp if self.timestamp else _row_time_fired_isoformat
+        format_time = (
+            _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
         external_events: dict[
             str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
         ] = hass.data.get(DOMAIN, {})
-        event_data_cache: dict[str, dict[str, Any]] = {}
-        self.context_augmenter = ContextAugmenter(
-            ContextLookup(hass),
-            EntityNameCache(self.hass),
-            external_events,
-            EventCache(event_data_cache),
-            include_entity_name,
+        self.logbook_run = LogbookRun(
+            context_lookup=ContextLookup(hass),
+            external_events=external_events,
+            event_cache=EventCache({}),
+            entity_name_cache=EntityNameCache(self.hass),
+            include_entity_name=include_entity_name,
+            format_time=format_time,
         )
+        self.context_augmenter = ContextAugmenter(self.logbook_run)
 
     @property
     def limited_select(self) -> bool:
@@ -830,8 +845,8 @@ class EventStream:
         object so we do not leak memory during
         streaming.
         """
-        self.context_augmenter.event_cache = LiveEventCache({})
-        self.context_augmenter.context_lookup.clear()
+        self.logbook_run.event_cache = LiveEventCache({})
+        self.logbook_run.context_lookup.clear()
 
     def get_events(
         self,
@@ -885,8 +900,8 @@ class EventStream:
                 row_generator,
                 self.entities_filter,
                 self.ent_reg,
+                self.logbook_run,
                 self.context_augmenter,
-                self.format_time,
             )
         )
 
@@ -894,22 +909,13 @@ class EventStream:
 class ContextAugmenter:
     """Augment data with context trace."""
 
-    def __init__(
-        self,
-        context_lookup: ContextLookup,
-        entity_name_cache: EntityNameCache,
-        external_events: dict[
-            str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
-        ],
-        event_cache: EventCache,
-        include_entity_name: bool,
-    ) -> None:
+    def __init__(self, logbook_run: LogbookRun) -> None:
         """Init the augmenter."""
-        self.context_lookup = context_lookup
-        self.entity_name_cache = entity_name_cache
-        self.external_events = external_events
-        self.event_cache = event_cache
-        self.include_entity_name = include_entity_name
+        self.context_lookup = logbook_run.context_lookup
+        self.entity_name_cache = logbook_run.entity_name_cache
+        self.external_events = logbook_run.external_events
+        self.event_cache = logbook_run.event_cache
+        self.include_entity_name = logbook_run.include_entity_name
 
     def augment(
         self, data: dict[str, Any], row: Row | EventAsRow, context_id: str

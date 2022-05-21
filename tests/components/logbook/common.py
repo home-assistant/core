@@ -55,19 +55,21 @@ def mock_humanify(hass_, rows):
     event_cache = logbook.EventCache({})
     context_lookup = logbook.ContextLookup(hass_)
     external_events = hass_.data.get(logbook.DOMAIN, {})
-    context_augmenter = logbook.ContextAugmenter(
+    logbook_run = logbook.LogbookRun(
         context_lookup,
-        entity_name_cache,
         external_events,
         event_cache,
+        entity_name_cache,
         include_entity_name=True,
+        format_time=logbook._row_time_fired_isoformat,
     )
+    context_augmenter = logbook.ContextAugmenter(logbook_run)
     return list(
         logbook._humanify(
             rows,
             None,
             ent_reg,
+            logbook_run,
             context_augmenter,
-            logbook._row_time_fired_isoformat,
         ),
     )
