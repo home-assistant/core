@@ -77,20 +77,21 @@ def _ws_formatted_get_events(
 
 
 async def async_stream_events(
+    setup_complete_future: asyncio.Future[dt],
     connection: ActiveConnection,
     msg_id: int,
     stream_queue: asyncio.Queue[Event],
     event_processor: EventProcessor,
-    last_time_from_db: dt,
 ) -> None:
     """Stream events from the queue."""
+    subscriptions_setup_complete_time = await setup_complete_future
     event_processor.switch_to_live()
 
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= last_time_from_db:
+        if events[0].time_fired <= subscriptions_setup_complete_time:
             stream_queue.task_done()
             continue
         await asyncio.sleep(EVENT_COALESCE_TIME)  # try to group events
@@ -218,10 +219,19 @@ async def ws_event_stream(
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
     task: asyncio.Task | None = None
     subscriptions: list[CALLBACK_TYPE] = []
+    setup_complete_future: asyncio.Future[dt] = asyncio.Future()
+    task = asyncio.create_task(
+        async_stream_events(
+            setup_complete_future,
+            connection,
+            msg["id"],
+            stream_queue,
+            event_processor,
+        )
+    )
 
     def _unsub() -> None:
         """Unsubscribe from all events."""
-        nonlocal task
         for subscription in subscriptions:
             subscription()
         if task:
@@ -284,15 +294,7 @@ async def ws_event_stream(
         if final_cutoff_time:  # Only sends results if we have them
             connection.send_message(message)
 
-    task = asyncio.create_task(
-        async_stream_events(
-            connection,
-            msg["id"],
-            stream_queue,
-            event_processor,
-            subscriptions_setup_complete_time,
-        )
-    )
+    setup_complete_future.set_result(subscriptions_setup_complete_time)
 
 
 @websocket_api.websocket_command(
