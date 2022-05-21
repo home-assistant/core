@@ -30,6 +30,7 @@ def _retry(
         while update_retries > 0:
             try:
                 result = await func()
+                break
             except HTTPError as error:
                 update_retries -= 1
                 if update_retries == 0:
