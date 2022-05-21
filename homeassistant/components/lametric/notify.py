@@ -97,8 +97,12 @@ class LaMetricNotificationService(BaseNotificationService):
                 icon = data["icon"]
             if "sound" in data:
                 try:
-                    sound = Sound(category="notifications", sound_id=data["sound"])
-                    LOGGER.debug("Adding notification sound %s", data["sound"])
+                    if "alarm" in data["sound"]:
+                        sound = Sound(category="alarms", sound_id=data["sound"])
+                        LOGGER.debug("Adding alarm sound %s", data["sound"])
+                    else:
+                        sound = Sound(category="notifications", sound_id=data["sound"])
+                        LOGGER.debug("Adding notification sound %s", data["sound"])
                 except AssertionError:
                     LOGGER.error("Sound ID %s unknown, ignoring", data["sound"])
             if "cycles" in data:
