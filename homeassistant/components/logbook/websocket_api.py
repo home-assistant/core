@@ -19,8 +19,8 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 import homeassistant.util.dt as dt_util
 
-from .event_as_row import async_event_to_row
 from .helpers import async_determine_event_types
+from .models import async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048

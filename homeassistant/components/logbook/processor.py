@@ -55,8 +55,7 @@ from .const import (
     LOGBOOK_ENTRY_WHEN,
     LOGBOOK_FILTERS,
 )
-from .event_as_row import EventAsRow, async_event_to_row
-from .models import LazyEventPartialState
+from .models import EventAsRow, LazyEventPartialState, async_event_to_row
 from .queries import statement_for_request
 from .queries.common import PSUEDO_EVENT_STATE_CHANGED
 
