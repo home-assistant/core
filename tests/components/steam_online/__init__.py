@@ -101,7 +101,7 @@ class MockedInterface(dict):
 class MockedInterfacePrivate(MockedInterface):
     """Mocked interface for private friends list."""
 
-    def GetFriendList(self, steamid: str) -> dict:
+    def GetFriendList(self, steamid: str) -> None:
         """Get friend list."""
         raise steam.api.HTTPError
 
