@@ -24,34 +24,6 @@ from .const import (
 from .models import LazyEventPartialState
 
 
-def _is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
-    """Check if the logbook should filter a state.
-
-    Used when we are in live mode to ensure
-    we only get significant changes (state.last_changed != state.last_updated)
-    """
-    return bool(
-        state.last_changed != state.last_updated
-        or ATTR_UNIT_OF_MEASUREMENT in state.attributes
-        or is_sensor_continuous(ent_reg, state.entity_id)
-    )
-
-
-def _is_entity_id_filtered(
-    hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
-) -> bool:
-    """Check if the logbook should filter an entity.
-
-    Used to setup listeners and which entities to select
-    from the database when a list of entities is requested.
-    """
-    return bool(
-        (state := hass.states.get(entity_id))
-        and (ATTR_UNIT_OF_MEASUREMENT in state.attributes)
-        or is_sensor_continuous(ent_reg, entity_id)
-    )
-
-
 def async_filter_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[str]:
     """Filter out any entities that logbook will not produce results for."""
     ent_reg = er.async_get(hass)
@@ -183,4 +155,32 @@ def is_sensor_continuous(ent_reg: er.EntityRegistry, entity_id: str) -> bool:
     return (
         entry.capabilities is not None
         and entry.capabilities.get(ATTR_STATE_CLASS) is not None
+    )
+
+
+def _is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
+    """Check if the logbook should filter a state.
+
+    Used when we are in live mode to ensure
+    we only get significant changes (state.last_changed != state.last_updated)
+    """
+    return bool(
+        state.last_changed != state.last_updated
+        or ATTR_UNIT_OF_MEASUREMENT in state.attributes
+        or is_sensor_continuous(ent_reg, state.entity_id)
+    )
+
+
+def _is_entity_id_filtered(
+    hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
+) -> bool:
+    """Check if the logbook should filter an entity.
+
+    Used to setup listeners and which entities to select
+    from the database when a list of entities is requested.
+    """
+    return bool(
+        (state := hass.states.get(entity_id))
+        and (ATTR_UNIT_OF_MEASUREMENT in state.attributes)
+        or is_sensor_continuous(ent_reg, entity_id)
     )
