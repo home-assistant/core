@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     HomeAssistant,
+    Context,
     State,
     callback,
     split_entity_id,
@@ -708,7 +709,7 @@ class StateTranslated:
         translations = get_cached_translations(self._hass, language, "state", domain)
         key = f"component.{domain}.state.{device_class}.{state.state}"
         if len(translations) > 0 and key in translations:
-            return translations[key]
+            return str(translations[key])
         return state.state
 
     def __repr__(self) -> str:
@@ -792,7 +793,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @property
-    def entity_id(self):
+    def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
         Intentionally does not collect state
@@ -800,49 +801,49 @@ class TemplateStateBase(State):
         return self._entity_id
 
     @property
-    def state(self):
+    def state(self) -> str:  # type: ignore[override]
         """Wrap State.state."""
         self._collect_state()
         return self._state.state
 
     @property
-    def attributes(self):
+    def attributes(self) -> dict:  # type: ignore[override]
         """Wrap State.attributes."""
         self._collect_state()
         return self._state.attributes
 
     @property
-    def last_changed(self):
+    def last_changed(self) -> datetime | None:  # type: ignore[override]
         """Wrap State.last_changed."""
         self._collect_state()
         return self._state.last_changed
 
     @property
-    def last_updated(self):
+    def last_updated(self) -> datetime | None:  # type: ignore[override]
         """Wrap State.last_updated."""
         self._collect_state()
         return self._state.last_updated
 
     @property
-    def context(self):
+    def context(self) -> Context:  # type: ignore[override]
         """Wrap State.context."""
         self._collect_state()
         return self._state.context
 
     @property
-    def domain(self):
+    def domain(self) -> str:  # type: ignore[override]
         """Wrap State.domain."""
         self._collect_state()
         return self._state.domain
 
     @property
-    def object_id(self):
+    def object_id(self) -> str:  # type: ignore[override]
         """Wrap State.object_id."""
         self._collect_state()
         return self._state.object_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1061,7 +1062,7 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     """Get the device specific attribute."""
     device_reg = device_registry.async_get(hass)
     if not isinstance(device_or_entity_id, str):
-        raise TemplateError("Must provide a device or entity ID")  # type: ignore[arg-type]
+        raise TemplateError("Must provide a device or entity ID")
     device = None
     if (
         "." in device_or_entity_id
@@ -2052,7 +2053,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             def unsupported(name):
                 def warn_unsupported(*args, **kwargs):
                     raise TemplateError(
-                        f"Use of '{name}' is not supported in limited templates"  # type: ignore[arg-type]
+                        f"Use of '{name}' is not supported in limited templates"
                     )
 
                 return warn_unsupported
