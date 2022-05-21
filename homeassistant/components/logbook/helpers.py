@@ -24,7 +24,7 @@ from .const import (
 from .models import LazyEventPartialState
 
 
-def is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
+def _is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
     """Check if the logbook should filter a state.
 
     Used when we are in live mode to ensure
@@ -37,7 +37,7 @@ def is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
     )
 
 
-def is_entity_id_filtered(
+def _is_entity_id_filtered(
     hass: HomeAssistant, ent_reg: er.EntityRegistry, entity_id: str
 ) -> bool:
     """Check if the logbook should filter an entity.
@@ -58,7 +58,7 @@ def async_filter_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[st
     return [
         entity_id
         for entity_id in entity_ids
-        if not is_entity_id_filtered(hass, ent_reg, entity_id)
+        if not _is_entity_id_filtered(hass, ent_reg, entity_id)
     ]
 
 
@@ -104,7 +104,7 @@ def async_subscribe_events(
         if event.data.get("old_state") is None or event.data.get("new_state") is None:
             return
         state: State = event.data["new_state"]
-        if not is_state_filtered(ent_reg, state):
+        if not _is_state_filtered(ent_reg, state):
             target(event)
 
     if entity_ids:
