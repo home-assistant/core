@@ -137,8 +137,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bluesound/ @thrawnarn
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
-/homeassistant/components/bond/ @bdraco @prystupa @joshs85
-/tests/components/bond/ @bdraco @prystupa @joshs85
+/homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
+/tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_shc/ @tschamm
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
