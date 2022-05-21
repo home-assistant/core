@@ -724,7 +724,7 @@ class Context:
     user_id: str | None = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=ulid_util.ulid)
-    origin_event: Event | None = attr.ib(default=None)
+    origin_event: Event | None = attr.ib(default=None, eq=False)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
