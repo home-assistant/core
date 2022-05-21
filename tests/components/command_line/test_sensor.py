@@ -37,7 +37,7 @@ async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) 
         },
     )
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
     await hass.async_block_till_done()
 
 
@@ -118,11 +118,12 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
             },
         )
 
-        check_output.assert_called_once_with(
+        check_output.assert_called_with(
             'echo "template_value" "3 4"',
             shell=True,  # nosec # shell by design
             timeout=15,
         )
+        assert len(check_output.mock_calls) == 2
 
 
 async def test_bad_template_render(
