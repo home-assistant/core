@@ -131,11 +131,9 @@ class EventProcessor:
     def switch_to_live(self) -> None:
         """Switch to live stream.
 
-        Replaces the event cache with a mapping
-        object so we do not leak memory during
-        streaming.
+        Clear caches so we can reduce memory pressure.
         """
-        self.logbook_run.event_cache = LiveEventCache({})
+        self.logbook_run.event_cache.clear()
         self.logbook_run.context_lookup.clear()
 
     def get_events(
@@ -482,10 +480,7 @@ class EventCache:
         lazy_event = LazyEventPartialState(row, self._event_data_cache)
         return lazy_event
 
-
-class LiveEventCache(EventCache):
-    """A dummy event cache for live events since we do not need to decode."""
-
-    def get(self, row: EventAsRow) -> LazyEventPartialState:
-        """Return the event."""
-        return LazyEventPartialState(row, self._event_data_cache)
+    def clear(self) -> None:
+        """Clear the event cache."""
+        self._event_data_cache = {}
+        self.event_cache = {}
