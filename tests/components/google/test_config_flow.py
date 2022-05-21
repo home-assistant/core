@@ -1,9 +1,13 @@
 """Test the google config flow."""
 
+from __future__ import annotations
+
+from collections.abc import Callable
 import datetime
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp.client_exceptions import ClientError
 from oauth2client.client import (
     FlowExchangeError,
     OAuth2Credentials,
@@ -27,6 +31,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 CODE_CHECK_INTERVAL = 1
 CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
+EMAIL_ADDRESS = "user@gmail.com"
 
 
 @pytest.fixture(autouse=True)
@@ -61,6 +66,24 @@ async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
         "oauth2client.client.OAuth2WebServerFlow.step2_exchange", return_value=creds
     ) as mock:
         yield mock
+
+
+@pytest.fixture
+async def primary_calendar_error() -> ClientError | None:
+    """Fixture for tests to inject an error during calendar lookup."""
+    return None
+
+
+@pytest.fixture(autouse=True)
+async def primary_calendar(
+    mock_calendar_get: Callable[[...], None], primary_calendar_error: ClientError | None
+) -> None:
+    """Fixture to return the primary calendar."""
+    mock_calendar_get(
+        "primary",
+        {"id": EMAIL_ADDRESS, "summary": "Personal"},
+        exc=primary_calendar_error,
+    )
 
 
 async def fire_alarm(hass, point_in_time):
@@ -99,7 +122,7 @@ async def test_full_flow_yaml_creds(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "Import from configuration.yaml"
+    assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -161,7 +184,7 @@ async def test_full_flow_application_creds(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "Import from configuration.yaml"
+    assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -278,7 +301,7 @@ async def test_exchange_error(
         )
 
     assert result.get("type") == "create_entry"
-    assert result.get("title") == "Import from configuration.yaml"
+    assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
     data = result["data"]
     assert "token" in data
@@ -463,3 +486,40 @@ async def test_reauth_flow(
     }
 
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize("primary_calendar_error", [ClientError()])
+async def test_title_lookup_failure(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    component_setup: ComponentSetup,
+) -> None:
+    """Test successful config flow and title fetch fails gracefully."""
+    assert await component_setup()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "progress"
+    assert result.get("step_id") == "auth"
+    assert "description_placeholders" in result
+    assert "url" in result["description_placeholders"]
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        # Run one tick to invoke the credential exchange check
+        now = utcnow()
+        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"]
+        )
+
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == "Import from configuration.yaml"
+
+    assert len(mock_setup.mock_calls) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
