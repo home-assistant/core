@@ -7,7 +7,7 @@ from aladdin_connect import AladdinConnectClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN
 
@@ -21,11 +21,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password)
-    try:
-        if not await hass.async_add_executor_job(acc.login):
-            raise ConfigEntryAuthFailed("Incorrect Password")
-    except ValueError as ex:
-        raise ConfigEntryNotReady(f"Error from Aladdin Connect: {ex}") from ex
+    if not await hass.async_add_executor_job(acc.login):
+        raise ConfigEntryAuthFailed("Incorrect Password")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
