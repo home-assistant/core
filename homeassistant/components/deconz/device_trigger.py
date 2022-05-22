@@ -1,5 +1,8 @@
 """Provides device automations for deconz events."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -7,10 +10,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -642,8 +642,9 @@ def _get_deconz_event_from_device(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
+    hass: HomeAssistant,
+    config: dict[str, Any],
+) -> vol.Schema:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
@@ -702,7 +703,7 @@ async def async_attach_trigger(
 async def async_get_triggers(
     hass: HomeAssistant,
     device_id: str,
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers.
 
     Make sure device is a supported remote model.
