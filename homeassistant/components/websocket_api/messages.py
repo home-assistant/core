@@ -16,6 +16,13 @@ from homeassistant.util.json import (
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import const
+from .const import (
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_CONTEXT,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -30,12 +37,6 @@ BASE_COMMAND_MESSAGE_SCHEMA: Final = vol.Schema({vol.Required("id"): cv.positive
 
 IDEN_TEMPLATE: Final = "__IDEN__"
 IDEN_JSON_TEMPLATE: Final = '"__IDEN__"'
-
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 STATE_DIFF_ADDITIONS = "+"
 STATE_DIFF_REMOVALS = "-"

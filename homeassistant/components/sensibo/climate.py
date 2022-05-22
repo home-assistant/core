@@ -4,15 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
@@ -40,12 +32,12 @@ FIELD_TO_FLAG = {
 }
 
 SENSIBO_TO_HA = {
-    "cool": HVAC_MODE_COOL,
-    "heat": HVAC_MODE_HEAT,
-    "fan": HVAC_MODE_FAN_ONLY,
-    "auto": HVAC_MODE_HEAT_COOL,
-    "dry": HVAC_MODE_DRY,
-    "off": HVAC_MODE_OFF,
+    "cool": HVACMode.COOL,
+    "heat": HVACMode.HEAT,
+    "fan": HVACMode.FAN_ONLY,
+    "auto": HVACMode.HEAT_COOL,
+    "dry": HVACMode.DRY,
+    "off": HVACMode.OFF,
 }
 
 HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
@@ -53,7 +45,7 @@ HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
 AC_STATE_TO_DATA = {
     "targetTemperature": "target_temp",
     "fanLevel": "fan_mode",
-    "on": "on",
+    "on": "device_on",
     "mode": "hvac_mode",
     "swing": "swing_mode",
 }
@@ -113,16 +105,14 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         return self.device_data.humidity
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation."""
-        return (
-            SENSIBO_TO_HA[self.device_data.hvac_mode]
-            if self.device_data.device_on
-            else HVAC_MODE_OFF
-        )
+        if self.device_data.device_on:
+            return SENSIBO_TO_HA[self.device_data.hvac_mode]
+        return HVACMode.OFF
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
 
@@ -188,7 +178,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             )
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
+            raise ValueError("No target temperature provided")
 
         if temperature == self.target_temperature:
             return
@@ -202,7 +192,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 temperature = self.device_data.temp_list[0]
 
             else:
-                return
+                raise ValueError(
+                    f"Target temperature has to be one off {str(self.device_data.temp_list)}"
+                )
 
         await self._async_set_ac_state_property("targetTemperature", int(temperature))
 
@@ -213,9 +205,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
         await self._async_set_ac_state_property("fanLevel", fan_mode)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._async_set_ac_state_property("on", False)
             return
 
@@ -265,5 +257,5 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_assume_state(self, state) -> None:
         """Sync state with api."""
-        await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
+        await self._async_set_ac_state_property("on", state != HVACMode.OFF, True)
         await self.coordinator.async_refresh()

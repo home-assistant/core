@@ -4,7 +4,7 @@ import logging
 
 from pyinsteon import devices
 from pyinsteon.address import Address
-from pyinsteon.constants import ALDBStatus
+from pyinsteon.constants import ALDBStatus, DeviceAction
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
@@ -28,6 +28,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
 )
 from homeassistant.core import ServiceCall, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -137,9 +138,10 @@ def register_new_device_callback(hass):
     """Register callback for new Insteon device."""
 
     @callback
-    def async_new_insteon_device(address=None):
+    def async_new_insteon_device(address, action: DeviceAction):
         """Detect device from transport to be delegated to platform."""
-        hass.async_create_task(async_create_new_entities(address))
+        if action == DeviceAction.ADDED:
+            hass.async_create_task(async_create_new_entities(address))
 
     async def async_create_new_entities(address):
         _LOGGER.debug(
@@ -293,7 +295,7 @@ def async_register_services(hass):
         """Remove the device and all entities from hass."""
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
-        dev_registry = await hass.helpers.device_registry.async_get_registry()
+        dev_registry = dr.async_get(hass)
         device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
         if device:
             dev_registry.async_remove_device(device.id)

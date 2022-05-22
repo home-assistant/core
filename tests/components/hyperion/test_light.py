@@ -22,9 +22,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_EFFECT,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import (
     RELOAD_AFTER_UPDATE_DELAY,
@@ -259,9 +259,9 @@ async def test_light_basic_properties(hass: HomeAssistant) -> None:
     # By default the effect list is the 3 external sources + 'Solid'.
     assert len(entity_state.attributes["effect_list"]) == 4
 
-    assert entity_state.attributes["color_mode"] == COLOR_MODE_HS
-    assert entity_state.attributes["supported_color_modes"] == [COLOR_MODE_HS]
-    assert entity_state.attributes["supported_features"] == SUPPORT_EFFECT
+    assert entity_state.attributes["color_mode"] == ColorMode.HS
+    assert entity_state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert entity_state.attributes["supported_features"] == LightEntityFeature.EFFECT
 
 
 async def test_light_async_turn_on(hass: HomeAssistant) -> None:
@@ -1331,7 +1331,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

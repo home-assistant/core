@@ -1,9 +1,11 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 import functools
 import logging
+from typing import Any, TypeVar
 
 from adb_shell.exceptions import (
     AdbTimeoutError,
@@ -14,6 +16,7 @@ from adb_shell.exceptions import (
 )
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -61,6 +64,10 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 
+_ADBDeviceT = TypeVar("_ADBDeviceT", bound="ADBDevice")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADB_RESPONSE = "adb_response"
@@ -73,7 +80,8 @@ SERVICE_DOWNLOAD = "download"
 SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
-DEFAULT_NAME = "Android TV"
+PREFIX_ANDROIDTV = "Android TV"
+PREFIX_FIRETV = "Fire TV"
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
@@ -93,7 +101,9 @@ async def async_setup_entry(
     """Set up the Android TV entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
-    device_type = "Android TV" if device_class == DEVICE_ANDROIDTV else "Fire TV"
+    device_type = (
+        PREFIX_ANDROIDTV if device_class == DEVICE_ANDROIDTV else PREFIX_FIRETV
+    )
     # CONF_NAME may be present in entry.data for configuration imported from YAML
     device_name = entry.data.get(CONF_NAME) or f"{device_type} {entry.data[CONF_HOST]}"
 
@@ -141,18 +151,27 @@ async def async_setup_entry(
     )
 
 
-def adb_decorator(override_available=False):
+def adb_decorator(
+    override_available: bool = False,
+) -> Callable[
+    [Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]],
+    Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]],
+]:
     """Wrap ADB methods and catch exceptions.
 
     Allows for overriding the available status of the ADB connection via the
     `override_available` parameter.
     """
 
-    def _adb_decorator(func):
+    def _adb_decorator(
+        func: Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
+    ) -> Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]:
         """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
-        async def _adb_exception_catcher(self, *args, **kwargs):
+        async def _adb_exception_catcher(
+            self: _ADBDeviceT, *args: _P.args, **kwargs: _P.kwargs
+        ) -> _R | None:
             """Call an ADB-related method and catch exceptions."""
             # pylint: disable=protected-access
             if not self.available and not override_available:
@@ -165,7 +184,7 @@ def adb_decorator(override_available=False):
                 _LOGGER.info(
                     "ADB command not executed because the connection is currently in use"
                 )
-                return
+                return None
             except self.exceptions as err:
                 _LOGGER.error(
                     "Failed to execute an ADB command. ADB connection re-"
@@ -250,6 +269,9 @@ class ADBDevice(MediaPlayerEntity):
             ATTR_ADB_RESPONSE: None,
             ATTR_HDMI_INPUT: None,
         }
+
+        # The number of consecutive failed connect attempts
+        self._failed_connect_count = 0
 
     def _process_config(self):
         """Load the config options."""
@@ -450,9 +472,13 @@ class AndroidTVDevice(ADBDevice):
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self.available:
+        if not self._attr_available:
             # Try to connect
-            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
+            if await self.aftv.adb_connect(log_errors=self._failed_connect_count == 0):
+                self._failed_connect_count = 0
+                self._attr_available = True
+            else:
+                self._failed_connect_count += 1
 
         # If the ADB connection is not intact, don't update.
         if not self.available:
@@ -535,9 +561,13 @@ class FireTVDevice(ADBDevice):
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
         # Check if device is disconnected.
-        if not self.available:
+        if not self._attr_available:
             # Try to connect
-            self._attr_available = await self.aftv.adb_connect(always_log_errors=False)
+            if await self.aftv.adb_connect(log_errors=self._failed_connect_count == 0):
+                self._failed_connect_count = 0
+                self._attr_available = True
+            else:
+                self._failed_connect_count += 1
 
         # If the ADB connection is not intact, don't update.
         if not self.available:

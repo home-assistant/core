@@ -20,11 +20,11 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
-    LENGTH_INCHES,
-    LENGTH_MILES,
-    PRESSURE_INHG,
-    SPEED_MILES_PER_HOUR,
-    TEMP_FAHRENHEIT,
+    LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,11 +73,11 @@ async def async_setup_entry(
 class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
-    _attr_temperature_unit = TEMP_FAHRENHEIT
-    _attr_pressure_unit = PRESSURE_INHG
-    _attr_wind_speed_unit = SPEED_MILES_PER_HOUR
-    _attr_visibility_unit = LENGTH_MILES
-    _attr_precipitation_unit = LENGTH_INCHES
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_visibility_unit = LENGTH_KILOMETERS
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
 
     def __init__(
         self,

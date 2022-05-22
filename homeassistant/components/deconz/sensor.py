@@ -5,20 +5,18 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from pydeconz.sensor import (
-    AirQuality,
-    Consumption,
-    Daylight,
-    GenericStatus,
-    Humidity,
-    LightLevel,
-    Power,
-    Pressure,
-    SensorBase as PydeconzSensor,
-    Switch,
-    Temperature,
-    Time,
-)
+from pydeconz.interfaces.sensors import SensorResources
+from pydeconz.models.sensor.air_quality import AirQuality
+from pydeconz.models.sensor.consumption import Consumption
+from pydeconz.models.sensor.daylight import Daylight
+from pydeconz.models.sensor.generic_status import GenericStatus
+from pydeconz.models.sensor.humidity import Humidity
+from pydeconz.models.sensor.light_level import LightLevel
+from pydeconz.models.sensor.power import Power
+from pydeconz.models.sensor.pressure import Pressure
+from pydeconz.models.sensor.switch import Switch
+from pydeconz.models.sensor.temperature import Temperature
+from pydeconz.models.sensor.time import Time
 
 from homeassistant.components.sensor import (
     DOMAIN,
@@ -75,7 +73,7 @@ class DeconzSensorDescriptionMixin:
     """Required values when describing secondary sensor attributes."""
 
     update_key: str
-    value_fn: Callable[[PydeconzSensor], float | int | str | None]
+    value_fn: Callable[[SensorResources], float | int | str | None]
 
 
 @dataclass
@@ -92,13 +90,17 @@ ENTITY_DESCRIPTIONS = {
     AirQuality: [
         DeconzSensorDescription(
             key="air_quality",
-            value_fn=lambda device: device.air_quality,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.air_quality
+            if isinstance(device, AirQuality)
+            else None,
             update_key="airquality",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         DeconzSensorDescription(
             key="air_quality_ppb",
-            value_fn=lambda device: device.air_quality_ppb,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.air_quality_ppb
+            if isinstance(device, AirQuality)
+            else None,
             suffix="PPB",
             update_key="airqualityppb",
             device_class=SensorDeviceClass.AQI,
@@ -109,7 +111,9 @@ ENTITY_DESCRIPTIONS = {
     Consumption: [
         DeconzSensorDescription(
             key="consumption",
-            value_fn=lambda device: device.scaled_consumption,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.scaled_consumption
+            if isinstance(device, Consumption) and isinstance(device.consumption, int)
+            else None,
             update_key="consumption",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -119,7 +123,9 @@ ENTITY_DESCRIPTIONS = {
     Daylight: [
         DeconzSensorDescription(
             key="status",
-            value_fn=lambda device: device.status,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.status
+            if isinstance(device, Daylight)
+            else None,
             update_key="status",
             icon="mdi:white-balance-sunny",
             entity_registry_enabled_default=False,
@@ -128,14 +134,18 @@ ENTITY_DESCRIPTIONS = {
     GenericStatus: [
         DeconzSensorDescription(
             key="status",
-            value_fn=lambda device: device.status,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.status
+            if isinstance(device, GenericStatus)
+            else None,
             update_key="status",
         )
     ],
     Humidity: [
         DeconzSensorDescription(
             key="humidity",
-            value_fn=lambda device: device.scaled_humidity,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.scaled_humidity
+            if isinstance(device, Humidity) and isinstance(device.humidity, int)
+            else None,
             update_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -145,16 +155,19 @@ ENTITY_DESCRIPTIONS = {
     LightLevel: [
         DeconzSensorDescription(
             key="light_level",
-            value_fn=lambda device: device.scaled_light_level,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.scaled_light_level
+            if isinstance(device, LightLevel) and isinstance(device.light_level, int)
+            else None,
             update_key="lightlevel",
             device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=LIGHT_LUX,
         )
     ],
     Power: [
         DeconzSensorDescription(
             key="power",
-            value_fn=lambda device: device.power,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.power if isinstance(device, Power) else None,
             update_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -164,7 +177,9 @@ ENTITY_DESCRIPTIONS = {
     Pressure: [
         DeconzSensorDescription(
             key="pressure",
-            value_fn=lambda device: device.pressure,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.pressure
+            if isinstance(device, Pressure)
+            else None,
             update_key="pressure",
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -174,7 +189,9 @@ ENTITY_DESCRIPTIONS = {
     Temperature: [
         DeconzSensorDescription(
             key="temperature",
-            value_fn=lambda device: device.scaled_temperature,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.scaled_temperature
+            if isinstance(device, Temperature) and isinstance(device.temperature, int)
+            else None,
             update_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -184,7 +201,9 @@ ENTITY_DESCRIPTIONS = {
     Time: [
         DeconzSensorDescription(
             key="last_set",
-            value_fn=lambda device: device.last_set,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.last_set
+            if isinstance(device, Time)
+            else None,
             update_key="lastset",
             device_class=SensorDeviceClass.TIMESTAMP,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -192,10 +211,11 @@ ENTITY_DESCRIPTIONS = {
     ],
 }
 
+
 SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="battery",
-        value_fn=lambda device: device.battery,  # type: ignore[no-any-return]
+        value_fn=lambda device: device.battery,
         suffix="Battery",
         update_key="battery",
         device_class=SensorDeviceClass.BATTERY,
@@ -205,7 +225,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     DeconzSensorDescription(
         key="secondary_temperature",
-        value_fn=lambda device: device.secondary_temperature,  # type: ignore[no-any-return]
+        value_fn=lambda device: device.secondary_temperature,
         suffix="Temperature",
         update_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -227,7 +247,7 @@ async def async_setup_entry(
     battery_handler = DeconzBatteryHandler(gateway)
 
     @callback
-    def async_add_sensor(sensors: list[PydeconzSensor] | None = None) -> None:
+    def async_add_sensor(sensors: list[SensorResources] | None = None) -> None:
         """Add sensors from deCONZ.
 
         Create DeconzBattery if sensor has a battery attribute.
@@ -284,12 +304,12 @@ class DeconzSensor(DeconzDevice, SensorEntity):
     """Representation of a deCONZ sensor."""
 
     TYPE = DOMAIN
-    _device: PydeconzSensor
+    _device: SensorResources
     entity_description: DeconzSensorDescription
 
     def __init__(
         self,
-        device: PydeconzSensor,
+        device: SensorResources,
         gateway: DeconzGateway,
         description: DeconzSensorDescription,
     ) -> None:
@@ -333,9 +353,9 @@ class DeconzSensor(DeconzDevice, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            return dt_util.parse_datetime(
-                self.entity_description.value_fn(self._device)  # type: ignore[arg-type]
-            )
+            value = self.entity_description.value_fn(self._device)
+            assert isinstance(value, str)
+            return dt_util.parse_datetime(value)
         return self.entity_description.value_fn(self._device)
 
     @property
@@ -381,7 +401,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
 class DeconzSensorStateTracker:
     """Track sensors without a battery state and signal when battery state exist."""
 
-    def __init__(self, sensor: PydeconzSensor, gateway: DeconzGateway) -> None:
+    def __init__(self, sensor: SensorResources, gateway: DeconzGateway) -> None:
         """Set up tracker."""
         self.sensor = sensor
         self.gateway = gateway
@@ -391,7 +411,6 @@ class DeconzSensorStateTracker:
     def close(self) -> None:
         """Clean up tracker."""
         self.sensor.remove_callback(self.async_update_callback)
-        self.sensor = None
 
     @callback
     def async_update_callback(self) -> None:
@@ -413,7 +432,7 @@ class DeconzBatteryHandler:
         self._trackers: set[DeconzSensorStateTracker] = set()
 
     @callback
-    def create_tracker(self, sensor: PydeconzSensor) -> None:
+    def create_tracker(self, sensor: SensorResources) -> None:
         """Create new tracker for battery state."""
         for tracker in self._trackers:
             if sensor == tracker.sensor:
@@ -421,7 +440,7 @@ class DeconzBatteryHandler:
         self._trackers.add(DeconzSensorStateTracker(sensor, self.gateway))
 
     @callback
-    def remove_tracker(self, sensor: PydeconzSensor) -> None:
+    def remove_tracker(self, sensor: SensorResources) -> None:
         """Remove tracker of battery state."""
         for tracker in self._trackers:
             if sensor == tracker.sensor:

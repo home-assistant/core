@@ -6,9 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -145,7 +145,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     @property
     def state(self):

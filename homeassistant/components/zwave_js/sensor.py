@@ -63,6 +63,8 @@ from .discovery_data_template import (
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_id, get_valueless_base_unique_id
 
+PARALLEL_UPDATES = 0
+
 LOGGER = logging.getLogger(__name__)
 
 STATUS_ICON: dict[NodeStatus, str] = {
@@ -487,7 +489,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
-        # pylint: disable=no-self-use
         LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value "
             "service won't work for it"

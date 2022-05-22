@@ -54,7 +54,6 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -82,6 +81,8 @@ from .const import (
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
@@ -172,7 +173,6 @@ PLATFORMS = [
     Platform.VACUUM,
 ]
 
-
 CLIENT_KEY_AUTH_MSG = (
     "client_key and client_cert must both be present in "
     "the MQTT broker configuration"
@@ -188,7 +188,24 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     required=True,
 )
 
-CONFIG_SCHEMA_BASE = vol.Schema(
+PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+    {
+        vol.Optional(Platform.ALARM_CONTROL_PANEL.value): cv.ensure_list,
+        vol.Optional(Platform.BINARY_SENSOR.value): cv.ensure_list,
+        vol.Optional(Platform.BUTTON.value): cv.ensure_list,
+        vol.Optional(Platform.CAMERA.value): cv.ensure_list,
+        vol.Optional(Platform.CLIMATE.value): cv.ensure_list,
+        vol.Optional(Platform.COVER.value): cv.ensure_list,
+        vol.Optional(Platform.FAN.value): cv.ensure_list,
+        vol.Optional(Platform.HUMIDIFIER.value): cv.ensure_list,
+        vol.Optional(Platform.LIGHT.value): cv.ensure_list,
+        vol.Optional(Platform.LOCK.value): cv.ensure_list,
+        vol.Optional(Platform.SWITCH.value): cv.ensure_list,
+        vol.Optional(Platform.VACUUM.value): cv.ensure_list,
+    }
+)
+
+CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
     {
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
@@ -254,10 +271,28 @@ SCHEMA_BASE = {
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }
 
+MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
+
+# Will be removed when all platforms support a modern platform schema
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
+# Will be removed when all platforms support a modern platform schema
+MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
+# Will be removed when all platforms support a modern platform schema
+MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    }
+)
 
 # Sensor type platforms subscribe to MQTT events
-MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+MQTT_RO_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -265,7 +300,7 @@ MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 # Switch type platforms publish to MQTT and may subscribe
-MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+MQTT_RW_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
@@ -418,20 +453,6 @@ class MqttServiceInfo(BaseServiceInfo):
     retain: bool
     subscribed_topic: str
     timestamp: dt.datetime
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        return getattr(self, name)
 
 
 def publish(
@@ -788,6 +809,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         ),
     )
+
+    # setup platforms and discovery
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
+    async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+        for component in PLATFORMS:
+            config_entries_key = f"{component}.mqtt"
+            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                hass.async_create_task(
+                    hass.config_entries.async_forward_entry_setup(entry, component)
+                )
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)

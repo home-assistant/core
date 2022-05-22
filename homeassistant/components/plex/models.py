@@ -1,5 +1,4 @@
 """Models to represent various Plex objects used in the integration."""
-from distutils.util import strtobool
 import logging
 
 from homeassistant.components.media_player.const import (
@@ -8,6 +7,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
 )
+from homeassistant.helpers.template import result_as_boolean
 from homeassistant.util import dt as dt_util
 
 LIVE_TV_SECTION = "Live TV"
@@ -162,7 +162,7 @@ class PlexMediaSearchResult:
             return offset * 1000
         resume = self._params.get("resume", False)
         if isinstance(resume, str):
-            resume = bool(strtobool(resume))
+            resume = result_as_boolean(resume)
         if resume:
             return self.media.viewOffset
         return 0
@@ -172,5 +172,5 @@ class PlexMediaSearchResult:
         """Return value of shuffle parameter."""
         shuffle = self._params.get("shuffle", False)
         if isinstance(shuffle, str):
-            shuffle = bool(strtobool(shuffle))
+            shuffle = result_as_boolean(shuffle)
         return shuffle

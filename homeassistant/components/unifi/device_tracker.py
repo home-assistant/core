@@ -1,5 +1,7 @@
 """Track both clients and devices using UniFi Network."""
+
 from datetime import timedelta
+import logging
 
 from aiounifi.api import SOURCE_DATA
 from aiounifi.events import (
@@ -27,6 +29,8 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
+
+LOGGER = logging.getLogger(__name__)
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"
@@ -103,10 +107,10 @@ def add_client_entities(controller, async_add_entities, clients):
     trackers = []
 
     for mac in clients:
-        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE]:
+        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE] or not (
+            client := controller.api.clients.get(mac)
+        ):
             continue
-
-        client = controller.api.clients[mac]
 
         if mac not in controller.wireless_clients:
             if not controller.option_track_wired_clients:
@@ -150,14 +154,31 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
-        self.heartbeat_check = False
         self._controller_connection_state_changed = False
 
-        self._last_seen = client.last_seen or 0
+        last_seen = client.last_seen or 0
         self.schedule_update = self._is_connected = (
             self.is_wired == client.is_wired
-            and dt_util.utcnow() - dt_util.utc_from_timestamp(float(self._last_seen))
+            and dt_util.utcnow() - dt_util.utc_from_timestamp(float(last_seen))
             < controller.option_detection_time
+        )
+
+    @callback
+    def _async_log_debug_data(self, method: str) -> None:
+        """Print debug data about entity."""
+        if not LOGGER.isEnabledFor(logging.DEBUG):
+            return
+        last_seen = self.client.last_seen or 0
+        LOGGER.debug(
+            "%s [%s, %s] [%s %s] [%s] %s (%s)",
+            method,
+            self.entity_id,
+            self.client.mac,
+            self.schedule_update,
+            self._is_connected,
+            dt_util.utc_from_timestamp(float(last_seen)),
+            dt_util.utcnow() - dt_util.utc_from_timestamp(float(last_seen)),
+            last_seen,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -170,6 +191,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             )
         )
         await super().async_added_to_hass()
+        self._async_log_debug_data("added_to_hass")
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
@@ -200,16 +222,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             self.client.last_updated == SOURCE_DATA
             and self.is_wired == self.client.is_wired
         ):
-            self._last_seen = self.client.last_seen
             self._is_connected = True
             self.schedule_update = True
+
+        self._async_log_debug_data("update_callback")
 
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heartbeat(
                 self.unique_id, dt_util.utcnow() + self.controller.option_detection_time
             )
-            self.heartbeat_check = True
 
             super().async_update_callback()
 
@@ -218,6 +240,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()
+        self._async_log_debug_data("make_disconnected")
 
     @property
     def device_info(self) -> None:
@@ -405,6 +428,16 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             attributes["upgradable"] = self.device.upgradable
 
         return attributes
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.device.ip
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.device.mac
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

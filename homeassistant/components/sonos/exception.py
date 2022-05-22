@@ -9,3 +9,7 @@ class UnknownMediaType(BrowseError):
 
 class SonosUpdateError(HomeAssistantError):
     """Update failed."""
+
+
+class S1BatteryMissing(SonosUpdateError):
+    """Battery update failed on S1 firmware."""

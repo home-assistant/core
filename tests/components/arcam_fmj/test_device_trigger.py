@@ -52,6 +52,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": "media_player.arcam_fmj_5678",
+            "metadata": {"secondary": False},
         },
     ]
     triggers = await async_get_device_automations(

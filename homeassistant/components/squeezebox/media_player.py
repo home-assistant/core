@@ -20,6 +20,9 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import (
@@ -52,7 +55,13 @@ from .browse_media import (
     library_payload,
     media_source_content_filter,
 )
-from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
+from .const import (
+    DISCOVERY_TASK,
+    DOMAIN,
+    KNOWN_PLAYERS,
+    PLAYER_DISCOVERY_UNSUB,
+    SQUEEZEBOX_SOURCE_STRINGS,
+)
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -225,9 +234,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.GROUPING
     )
 
     def __init__(self, player):
@@ -368,12 +379,22 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.album
 
     @property
-    def shuffle(self):
-        """Boolean if shuffle is enabled."""
-        return self._player.shuffle
+    def repeat(self):
+        """Repeat setting."""
+        if self._player.repeat == "song":
+            return REPEAT_MODE_ONE
+        if self._player.repeat == "playlist":
+            return REPEAT_MODE_ALL
+        return REPEAT_MODE_OFF
 
     @property
-    def sync_group(self):
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        # Squeezebox has a third shuffle mode (album) not recognized by Home Assistant
+        return self._player.shuffle == "song"
+
+    @property
+    def group_members(self):
         """List players we are synced with."""
         player_ids = {
             p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
@@ -383,6 +404,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if player in player_ids:
                 sync_group.append(player_ids[player])
         return sync_group
+
+    @property
+    def sync_group(self):
+        """List players we are synced with. Deprecated."""
+        return self.group_members
 
     @property
     def query_result(self):
@@ -460,7 +486,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             media_id = play_item.url
 
         if media_type in MEDIA_TYPE_MUSIC:
-            media_id = async_process_play_media_url(self.hass, media_id)
+            if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
+                # do not process special squeezebox "source" media ids
+                media_id = async_process_play_media_url(self.hass, media_id)
 
             await self._player.async_load_url(media_id, cmd)
             return
@@ -490,6 +518,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_load_playlist(playlist, cmd)
         if index is not None:
             await self._player.async_index(index)
+
+    async def async_set_repeat(self, repeat):
+        """Set the repeat mode."""
+        if repeat == REPEAT_MODE_ALL:
+            repeat_mode = "playlist"
+        elif repeat == REPEAT_MODE_ONE:
+            repeat_mode = "song"
+        else:
+            repeat_mode = "none"
+
+        await self._player.async_set_repeat(repeat_mode)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -527,9 +566,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
 
-    async def async_sync(self, other_player):
+    async def async_join_players(self, group_members):
         """
-        Add another Squeezebox player to this player's sync group.
+        Add other Squeezebox players to this player's sync group.
 
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
@@ -537,14 +576,32 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        if other_player_id := player_ids.get(other_player):
-            await self._player.async_sync(other_player_id)
-        else:
-            _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)
 
-    async def async_unsync(self):
+        for other_player in group_members:
+            if other_player_id := player_ids.get(other_player):
+                await self._player.async_sync(other_player_id)
+            else:
+                _LOGGER.info(
+                    "Could not find player_id for %s. Not syncing", other_player
+                )
+
+    async def async_sync(self, other_player):
+        """Sync this Squeezebox player to another. Deprecated."""
+        _LOGGER.warning(
+            "Service squeezebox.sync is deprecated; use media_player.join_players instead"
+        )
+        await self.async_join_players([other_player])
+
+    async def async_unjoin_player(self):
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
+
+    async def async_unsync(self):
+        """Unsync this Squeezebox player. Deprecated."""
+        _LOGGER.warning(
+            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player instead"
+        )
+        await self.async_unjoin_player()
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""

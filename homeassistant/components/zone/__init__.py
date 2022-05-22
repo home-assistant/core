@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -292,8 +293,8 @@ class Zone(entity.Entity):
         self.editable = True
         self._attrs: dict | None = None
         self._remove_listener: Callable[[], None] | None = None
-        self._generate_attrs()
         self._persons_in_zone: set[str] = set()
+        self._generate_attrs()
 
     @classmethod
     def from_yaml(cls, config: dict) -> Zone:
@@ -346,6 +347,7 @@ class Zone(entity.Entity):
             self._persons_in_zone.remove(person_entity_id)
 
         if len(self._persons_in_zone) != cur_count:
+            self._generate_attrs()
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -356,6 +358,7 @@ class Zone(entity.Entity):
         for person in persons:
             if self._state_is_in_zone(self.hass.states.get(person)):
                 self._persons_in_zone.add(person)
+        self._generate_attrs()
 
         self.async_on_remove(
             event.async_track_state_change_filtered(
@@ -373,6 +376,7 @@ class Zone(entity.Entity):
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
+            ATTR_PERSONS: sorted(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
 

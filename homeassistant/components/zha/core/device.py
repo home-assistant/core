@@ -351,11 +351,15 @@ class ZHADevice(LogMixin):
         if self.is_coordinator:
             return
         if self.last_seen is None:
+            self.debug("last_seen is None, marking the device unavailable")
             self.update_available(False)
             return
 
         difference = time.time() - self.last_seen
         if difference < self.consider_unavailable_time:
+            self.debug(
+                "Device seen - marking the device available and resetting counter"
+            )
             self.update_available(True)
             self._checkins_missed_count = 0
             return
@@ -365,6 +369,10 @@ class ZHADevice(LogMixin):
             or self.manufacturer == "LUMI"
             or not self._channels.pools
         ):
+            self.debug(
+                "last_seen is %s seconds ago and ping attempts have been exhausted, marking the device unavailable",
+                difference,
+            )
             self.update_available(False)
             return
 
@@ -386,13 +394,23 @@ class ZHADevice(LogMixin):
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""
+        self.debug(
+            "Update device availability -  device available: %s - new availability: %s - changed: %s",
+            self.available,
+            available,
+            self.available ^ available,
+        )
         availability_changed = self.available ^ available
         self.available = available
         if availability_changed and available:
             # reinit channels then signal entities
+            self.debug(
+                "Device availability changed and device became available, reinitializing channels"
+            )
             self.hass.async_create_task(self._async_became_available())
             return
         if availability_changed and not available:
+            self.debug("Device availability changed and device became unavailable")
             self._channels.zha_send_event(
                 {
                     "device_event_type": "device_offline",

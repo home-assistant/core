@@ -1,13 +1,11 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 import logging
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -44,7 +42,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
 
@@ -52,6 +50,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         """Initialize Alpha2 ClimateEntity."""
         super().__init__(coordinator)
         self.heat_area_id = heat_area_id
+        self._attr_unique_id = heat_area_id
 
     @property
     def name(self) -> str:
@@ -74,24 +73,24 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
         return float(self.coordinator.data[self.heat_area_id].get("T_ACTUAL", 0.0))
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return current hvac mode."""
         if self.coordinator.get_cooling():
-            return HVAC_MODE_COOL
-        return HVAC_MODE_HEAT
+            return HVACMode.COOL
+        return HVACMode.HEAT
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self.coordinator.async_set_cooling(hvac_mode == HVAC_MODE_COOL)
+        await self.coordinator.async_set_cooling(hvac_mode == HVACMode.COOL)
 
     @property
-    def hvac_action(self) -> str:
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         if not self.coordinator.data[self.heat_area_id]["_HEATCTRL_STATE"]:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         if self.coordinator.get_cooling():
-            return CURRENT_HVAC_COOL
-        return CURRENT_HVAC_HEAT
+            return HVACAction.COOLING
+        return HVACAction.HEATING
 
     @property
     def target_temperature(self) -> float:

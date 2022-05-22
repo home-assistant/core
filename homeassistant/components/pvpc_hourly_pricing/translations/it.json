@@ -10,9 +10,7 @@
                     "power": "Potenza contrattuale (kW)",
                     "power_p3": "Potenza contrattuale per il periodo di valle P3 (kW)",
                     "tariff": "Tariffa applicabile per zona geografica"
-                },
-                "description": "Questo sensore utilizza l'API ufficiale per ottenere il [prezzo orario dell'elettricit\u00e0 (PVPC)](https://www.esios.ree.es/es/pvpc) in Spagna.\nPer una spiegazione pi\u00f9 precisa, visita i [documenti di integrazione](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
-                "title": "Configurazione del sensore"
+                }
             }
         }
     },
@@ -23,9 +21,7 @@
                     "power": "Potenza contrattuale (kW)",
                     "power_p3": "Potenza contrattuale per il periodo di valle P3 (kW)",
                     "tariff": "Tariffa applicabile per zona geografica"
-                },
-                "description": "Questo sensore utilizza l'API ufficiale per ottenere il [prezzo orario dell'elettricit\u00e0 (PVPC)](https://www.esios.ree.es/es/pvpc) in Spagna.\nPer una spiegazione pi\u00f9 precisa, visita i [documenti di integrazione](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).",
-                "title": "Configurazione del sensore"
+                }
             }
         }
     }

@@ -24,11 +24,19 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by AlarmControlPanelEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by CodeFormat enum",
+            constant=re.compile(r"^FORMAT_(\w*)$"),
+        ),
     ],
     "homeassistant.components.alarm_control_panel.const": [
         ObsoleteImportMatch(
             reason="replaced by AlarmControlPanelEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by CodeFormat enum",
+            constant=re.compile(r"^FORMAT_(\w*)$"),
         ),
     ],
     "homeassistant.components.binarysensor": [
@@ -42,6 +50,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by CameraEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by StreamType enum",
+            constant=re.compile(r"^STREAM_TYPE_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.camera.const": [
+        ObsoleteImportMatch(
+            reason="replaced by StreamType enum",
+            constant=re.compile(r"^STREAM_TYPE_(\w*)$"),
+        ),
     ],
     "homeassistant.components.climate": [
         ObsoleteImportMatch(
@@ -50,6 +68,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ),
     ],
     "homeassistant.components.climate.const": [
+        ObsoleteImportMatch(
+            reason="replaced by HVACAction enum",
+            constant=re.compile(r"^CURRENT_HVAC_(\w*)$"),
+        ),
         ObsoleteImportMatch(
             reason="replaced by ClimateEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
@@ -97,6 +119,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
+    "homeassistant.components.light": [
+        ObsoleteImportMatch(
+            reason="replaced by ColorMode enum",
+            constant=re.compile(r"^COLOR_MODE_(\w*)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by LightEntityFeature enum",
+            constant=re.compile("^SUPPORT_(EFFECT|FLASH|TRANSITION)$"),
+        ),
+    ],
     "homeassistant.components.media_player": [
         ObsoleteImportMatch(
             reason="replaced by MediaPlayerDeviceClass enum",
@@ -129,10 +161,28 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^STATE_CLASS_(\w*)$"),
         ),
     ],
+    "homeassistant.components.siren": [
+        ObsoleteImportMatch(
+            reason="replaced by SirenEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.siren.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SirenEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
     "homeassistant.components.switch": [
         ObsoleteImportMatch(
             reason="replaced by SwitchDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.vacuum": [
+        ObsoleteImportMatch(
+            reason="replaced by VacuumEntityFeature enum",
+            constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
     "homeassistant.components.water_heater": [

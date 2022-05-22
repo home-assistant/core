@@ -57,7 +57,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Alarm control panel devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     actions = []
 
     # Get all the integrations entities for this device
@@ -67,7 +67,7 @@ async def async_get_actions(
 
         supported_features = get_supported_features(hass, entry.entity_id)
 
-        base_action = {
+        base_action: dict = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_ENTITY_ID: entry.entity_id,

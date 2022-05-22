@@ -28,12 +28,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return await async_setup_block_entry(hass, config_entry, async_add_entities)
+    return async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
-async def async_setup_block_entry(
+@callback
+def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -48,7 +49,8 @@ async def async_setup_block_entry(
     async_add_entities(BlockShellyCover(wrapper, block) for block in blocks)
 
 
-async def async_setup_rpc_entry(
+@callback
+def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -158,9 +160,6 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if not self.status["pos_control"]:
-            return None
-
         return cast(bool, self.status["state"] == "closed")
 
     @property

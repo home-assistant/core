@@ -16,9 +16,14 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityFeature,
 )
-from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
 
-from .generic_cover import COMMANDS_STOP, OverkizGenericCover
+from ..coordinator import OverkizDataUpdateCoordinator
+from .generic_cover import (
+    COMMANDS_CLOSE_TILT,
+    COMMANDS_OPEN_TILT,
+    COMMANDS_STOP,
+    OverkizGenericCover,
+)
 
 COMMANDS_OPEN = [OverkizCommand.OPEN, OverkizCommand.UP, OverkizCommand.CYCLE]
 COMMANDS_CLOSE = [OverkizCommand.CLOSE, OverkizCommand.DOWN, OverkizCommand.CYCLE]
@@ -103,6 +108,38 @@ class VerticalCover(OverkizGenericCover):
         """Close the cover."""
         if command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening or not."""
+        if self.is_running(COMMANDS_OPEN + COMMANDS_OPEN_TILT):
+            return True
+
+        # Check if cover is moving based on current state
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) > cast(int, target_closure.value)
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing or not."""
+        if self.is_running(COMMANDS_CLOSE + COMMANDS_CLOSE_TILT):
+            return True
+
+        # Check if cover is moving based on current state
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) < cast(int, target_closure.value)
 
 
 class LowSpeedCover(VerticalCover):

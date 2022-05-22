@@ -58,6 +58,7 @@ TILT_DEVICE_MAP = {
     BlindType.VenetianBlind: CoverDeviceClass.BLIND,
     BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.DualShade: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
@@ -70,6 +71,7 @@ TDBU_DEVICE_MAP = {
 
 SET_ABSOLUTE_POSITION_SCHEMA = {
     vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
+    vol.Optional(ATTR_TILT_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
     vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 
@@ -155,12 +157,14 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_ABSOLUTE_POSITION,
         SET_ABSOLUTE_POSITION_SCHEMA,
-        SERVICE_SET_ABSOLUTE_POSITION,
+        "async_set_absolute_position",
     )
 
 
 class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
+
+    _restore_tilt = False
 
     def __init__(self, coordinator, blind, device_class, sw_version):
         """Initialize the blind."""
@@ -286,16 +290,25 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         position = kwargs[ATTR_POSITION]
         async with self._api_lock:
             await self.hass.async_add_executor_job(
-                self._blind.Set_position, 100 - position
+                self._blind.Set_position,
+                100 - position,
+                None,
+                self._restore_tilt,
             )
         await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
         position = kwargs[ATTR_ABSOLUTE_POSITION]
+        angle = kwargs.get(ATTR_TILT_POSITION)
+        if angle is not None:
+            angle = angle * 180 / 100
         async with self._api_lock:
             await self.hass.async_add_executor_job(
-                self._blind.Set_position, 100 - position
+                self._blind.Set_position,
+                100 - position,
+                angle,
+                self._restore_tilt,
             )
         await self.async_request_position_till_stop()
 
@@ -307,6 +320,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
 class MotionTiltDevice(MotionPositionDevice):
     """Representation of a Motion Blind Device."""
+
+    _restore_tilt = True
 
     @property
     def current_cover_tilt_position(self):
