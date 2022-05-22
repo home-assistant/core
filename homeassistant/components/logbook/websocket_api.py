@@ -202,7 +202,7 @@ async def ws_event_stream(
         messages.event_message,
         event_processor,
     )
-    # If there is not last_time there are not historical
+    # If there is no last_time there are no historical
     # results, but we still send an empty message so
     # consumers of the api know their request was
     # answered but there were no results
