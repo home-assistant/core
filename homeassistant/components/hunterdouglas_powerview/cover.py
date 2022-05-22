@@ -237,11 +237,17 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._async_update_from_command(await self._shade.stop())
         await self._async_force_refresh_state()
 
+    @callback
+    def _clamp_cover_limit(self, target_hass_position):
+        """Dont allow a cover to go into an impossbile position."""
+        # no override required in base
+        return target_hass_position
+
     async def async_set_cover_position(self, **kwargs):
         """Move the shade to a specific position."""
         if ATTR_POSITION not in kwargs:
             return
-        await self._async_move(kwargs[ATTR_POSITION])
+        await self._async_move(self._clamp_cover_limit(kwargs[ATTR_POSITION]))
 
     @callback
     def _set_shade_postion(self, target_hass_position):
@@ -431,18 +437,6 @@ class PowerViewShadeTDBU(PowerViewShade):
         return current_hass_pos1 + current_hass_pos2
 
     @callback
-    def _clamp_cover_limit(self, target_hass_position):
-        """Dont allow a cover to go past the position of the opposite motor."""
-        return target_hass_position
-
-    async def async_set_cover_position(self, **kwargs):
-        """Move the shade to a specific position."""
-        if ATTR_POSITION not in kwargs:
-            return
-        target_hass_position = self._clamp_cover_limit(kwargs[ATTR_POSITION])
-        await self._async_move(target_hass_position)
-
-    @callback
     def _async_process_updated_position_data(self, position_data):
         """Process position data."""
         if ATTR_POSITION1 in position_data:
@@ -478,11 +472,9 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
 
     @callback
     def _clamp_cover_limit(self, target_hass_position):
-        """Dont allow a cover to go past the position of the opposite motor."""
-        cover_top = 100 - self.current_cover_position_secondary
-        if target_hass_position > cover_top:
-            target_hass_position = cover_top - 1
-
+        """Dont allow a cover to go into an impossbile position."""
+        cover_top = self.current_cover_position_secondary
+        target_hass_position = min(target_hass_position, (100 - cover_top))
         self.set_position_primary(hass_position_to_hd(target_hass_position))
         _LOGGER.debug(self.position_data)
         return target_hass_position
@@ -539,11 +531,10 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
 
     @callback
     def _clamp_cover_limit(self, target_hass_position):
-        """Dont allow a cover to go past the position of the opposite motor."""
+        """Dont allow a cover to go into an impossbile position."""
         cover_bottom = self.current_cover_position_primary
         if (100 - target_hass_position) < cover_bottom:
-            target_hass_position = (100 - cover_bottom) - 1
-
+            target_hass_position = 100 - cover_bottom
         self.set_position_secondary(hass_position_to_hd(target_hass_position))
         _LOGGER.debug(self.position_data)
         return target_hass_position
