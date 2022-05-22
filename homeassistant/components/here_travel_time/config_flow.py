@@ -255,7 +255,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _transform_import_input(
-        self, import_input
+        self, import_input: dict[str, Any]
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Transform platform schema input to new model."""
         options: dict[str, Any] = {}
