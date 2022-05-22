@@ -96,14 +96,14 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         try:
             # call_device_http_api will check result, fail by raise YoLinkClientError
             await self.device.call_device_http_api("setState", {"state": state})
-            self._attr_is_on = self.entity_description.value(state)
-            self.async_write_ha_state()
         except YoLinkAuthFailError as yl_auth_err:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(yl_auth_err) from yl_auth_err
         except YoLinkClientError as yl_client_err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(yl_client_err) from yl_client_err
+        self._attr_is_on = self.entity_description.value(state)
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
