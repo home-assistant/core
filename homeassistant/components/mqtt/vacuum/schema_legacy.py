@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
+    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     VacuumEntity,
     VacuumEntityFeature,
@@ -18,7 +19,7 @@ from .. import MqttValueTemplate, subscription
 from ... import mqtt
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -94,8 +95,8 @@ MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED = MQTT_VACUUM_ATTRIBUTES_BLOCKED | frozens
     {ATTR_STATUS}
 )
 
-PLATFORM_SCHEMA_LEGACY = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_LEGACY_MODERN = (
+    mqtt.MQTT_BASE_SCHEMA.extend(
         {
             vol.Inclusive(CONF_BATTERY_LEVEL_TEMPLATE, "battery"): cv.template,
             vol.Inclusive(
@@ -147,7 +148,15 @@ PLATFORM_SCHEMA_LEGACY = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA_LEGACY = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_LEGACY_MODERN.schema),
+    warn_for_legacy_schema(VACUUM_DOMAIN),
+)
+
+DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY_MODERN.extend(
+    {}, extra=vol.REMOVE_EXTRA
+)
 
 
 async def async_setup_entity_legacy(

@@ -13,8 +13,7 @@
         "flow_title": "Denon AVR Netzwierk Empf\u00e4nger: {name}",
         "step": {
             "confirm": {
-                "description": "Best\u00e4teg dob\u00e4isetzen vum Receiver",
-                "title": "Denon AVR Netzwierk Empf\u00e4nger"
+                "description": "Best\u00e4teg dob\u00e4isetzen vum Receiver"
             },
             "select": {
                 "data": {
@@ -26,9 +25,7 @@
             "user": {
                 "data": {
                     "host": "IP Adress"
-                },
-                "description": "Mam Receiver verbannen, falls keng IP Adress uginn ass g\u00ebtt auto-discovery benotzt",
-                "title": "Denon AVR Netzwierk Empf\u00e4nger"
+                }
             }
         }
     },
@@ -40,8 +37,7 @@
                     "zone2": "Zone 2 ariichten",
                     "zone3": "Zone 3 ariichten"
                 },
-                "description": "Optionell Astellungen uginn",
-                "title": "Denon AVR Netzwierk Empf\u00e4nger"
+                "description": "Optionell Astellungen uginn"
             }
         }
     }

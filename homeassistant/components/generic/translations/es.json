@@ -24,7 +24,6 @@
             "user": {
                 "data": {
                     "authentication": "Autenticaci\u00f3n",
-                    "content_type": "Tipo de contenido",
                     "framerate": "Frecuencia de visualizaci\u00f3n (Hz)",
                     "limit_refetch_to_url_change": "Limita la lectura al cambio de URL",
                     "still_image_url": "URL de imagen fija (ej. http://...)",
@@ -53,7 +52,6 @@
             "init": {
                 "data": {
                     "authentication": "Autenticaci\u00f3n",
-                    "content_type": "Tipo de contenido",
                     "framerate": "Frecuencia de visualizaci\u00f3n (Hz)",
                     "limit_refetch_to_url_change": "Limita la lectura al cambio de URL",
                     "password": "Contrase\u00f1a",

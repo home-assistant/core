@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Invert the open/close state",
-                    "name": "Name (optional)",
+                    "name": "Name",
                     "type": "Binary Sensor Type"
                 },
                 "description": "{zone} options",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Name (optional)",
-                    "poll_interval": "Poll Interval (minutes) (optional)",
+                    "name": "Name",
+                    "poll_interval": "Poll Interval (minutes)",
                     "type": "Sensor Type"
                 },
                 "description": "{zone} options",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Override API host URL (optional)",
+                    "api_host": "Override API host URL",
                     "blink": "Blink panel LED on when sending state change",
                     "discovery": "Respond to discovery requests on your network",
                     "override_api_host": "Override default Home Assistant API host panel URL"
@@ -95,11 +95,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Output when on",
-                    "momentary": "Pulse duration (ms) (optional)",
+                    "momentary": "Pulse duration (ms)",
                     "more_states": "Configure additional states for this zone",
-                    "name": "Name (optional)",
-                    "pause": "Pause between pulses (ms) (optional)",
-                    "repeat": "Times to repeat (-1=infinite) (optional)"
+                    "name": "Name",
+                    "pause": "Pause between pulses (ms)",
+                    "repeat": "Times to repeat (-1=infinite)"
                 },
                 "description": "{zone} options: state {state}",
                 "title": "Configure Switchable Output"

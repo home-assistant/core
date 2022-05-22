@@ -5,8 +5,7 @@
         },
         "error": {
             "db_url_invalid": "Database URL ongeldig",
-            "query_invalid": "SQL Query ongeldig",
-            "value_template_invalid": "Waarde Template ongeldig"
+            "query_invalid": "SQL Query ongeldig"
         },
         "step": {
             "user": {
@@ -16,7 +15,7 @@
                     "name": "Naam",
                     "query": "Selecteer Query",
                     "unit_of_measurement": "Meeteenheid",
-                    "value_template": "Waarde Template"
+                    "value_template": "Waardesjabloon"
                 },
                 "data_description": {
                     "column": "Kolom voor teruggestuurde query om als status te presenteren",
@@ -24,7 +23,7 @@
                     "name": "Naam die zal worden gebruikt voor Config Entry en ook de Sensor",
                     "query": "Query die moet worden uitgevoerd, moet beginnen met 'SELECT'",
                     "unit_of_measurement": "Meeteenheid (optioneel)",
-                    "value_template": "Waarde Template (optioneel)"
+                    "value_template": "Waardesjabloon (optioneel)"
                 }
             }
         }
@@ -32,8 +31,7 @@
     "options": {
         "error": {
             "db_url_invalid": "Database URL ongeldig",
-            "query_invalid": "SQL Query ongeldig",
-            "value_template_invalid": "Waarde Template ongeldig"
+            "query_invalid": "SQL Query ongeldig"
         },
         "step": {
             "init": {
@@ -43,7 +41,7 @@
                     "name": "Naam",
                     "query": "Selecteer Query",
                     "unit_of_measurement": "Meeteenheid",
-                    "value_template": "Waarde Template"
+                    "value_template": "Waardesjabloon"
                 },
                 "data_description": {
                     "column": "Kolom voor teruggestuurde query om als status te presenteren",
@@ -51,7 +49,7 @@
                     "name": "Naam die zal worden gebruikt voor Config Entry en ook de Sensor",
                     "query": "Query die moet worden uitgevoerd, moet beginnen met 'SELECT'",
                     "unit_of_measurement": "Meeteenheid (optioneel)",
-                    "value_template": "Waarde Template (optioneel)"
+                    "value_template": "Waardesjabloon (optioneel)"
                 }
             }
         }

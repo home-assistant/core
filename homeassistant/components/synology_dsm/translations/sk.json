@@ -13,11 +13,6 @@
                     "port": "Port"
                 }
             },
-            "reauth": {
-                "data": {
-                    "password": "Heslo"
-                }
-            },
             "user": {
                 "data": {
                     "port": "Port"

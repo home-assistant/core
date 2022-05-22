@@ -160,7 +160,8 @@ def async_cluster_exists(hass, cluster_id):
     return False
 
 
-async def async_get_zha_device(hass, device_id):
+@callback
+def async_get_zha_device(hass, device_id):
     """Get a ZHA device for the given device registry id."""
     device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)

@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Por favor confirma la adici\u00f3n del receptor",
-                "title": "Receptores AVR Denon en Red"
+                "description": "Por favor confirma la adici\u00f3n del receptor"
             },
             "select": {
                 "data": {
@@ -26,9 +25,7 @@
             "user": {
                 "data": {
                     "host": "Direcci\u00f3n IP"
-                },
-                "description": "Con\u00e9ctar con tu receptor, si la direcci\u00f3n IP no est\u00e1 configurada, se utilizar\u00e1 la detecci\u00f3n autom\u00e1tica",
-                "title": "Receptores AVR Denon en Red"
+                }
             }
         }
     },
@@ -41,8 +38,7 @@
                     "zone2": "Configurar la Zona 2",
                     "zone3": "Configurar la Zona 3"
                 },
-                "description": "Especificar configuraciones opcionales",
-                "title": "Receptores AVR Denon en Red"
+                "description": "Especificar configuraciones opcionales"
             }
         }
     }

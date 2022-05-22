@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "ipv6_not_supported": "IPv6 wordt niet ondersteund"
+            "ipv6_not_supported": "IPv6 wordt niet ondersteund."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -11,7 +11,7 @@
         "flow_title": "{name} - {model} ({ip_address})",
         "step": {
             "discovery_confirm": {
-                "description": "Wilt u {name} - {model} ({ip_address}) instellen?"
+                "description": "Wilt je {name} - {model} ({ip_address}) instellen?"
             },
             "user": {
                 "data": {

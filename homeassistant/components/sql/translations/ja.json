@@ -5,8 +5,7 @@
         },
         "error": {
             "db_url_invalid": "\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u306eURL\u304c\u7121\u52b9\u3067\u3059",
-            "query_invalid": "SQL\u30af\u30a8\u30ea\u304c\u7121\u52b9\u3067\u3059",
-            "value_template_invalid": "\u5024\u306e\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u304c\u7121\u52b9\u3067\u3059"
+            "query_invalid": "SQL\u30af\u30a8\u30ea\u304c\u7121\u52b9\u3067\u3059"
         },
         "step": {
             "user": {
@@ -32,8 +31,7 @@
     "options": {
         "error": {
             "db_url_invalid": "\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u306eURL\u304c\u7121\u52b9\u3067\u3059",
-            "query_invalid": "SQL\u30af\u30a8\u30ea\u304c\u7121\u52b9\u3067\u3059",
-            "value_template_invalid": "\u5024\u306e\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u304c\u7121\u52b9\u3067\u3059"
+            "query_invalid": "SQL\u30af\u30a8\u30ea\u304c\u7121\u52b9\u3067\u3059"
         },
         "step": {
             "init": {

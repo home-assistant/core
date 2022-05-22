@@ -2442,6 +2442,34 @@ async def test_get_events_bad_end_time(hass, hass_ws_client, recorder_mock):
     assert response["error"]["code"] == "invalid_end_time"
 
 
+async def test_get_events_invalid_filters(hass, hass_ws_client, recorder_mock):
+    """Test get_events invalid filters."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "entity_ids": [],
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/get_events",
+            "device_ids": [],
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
 async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
     """Test logbook get_events for device ids."""
     now = dt_util.utcnow()
@@ -2546,10 +2574,13 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
     assert response["id"] == 2
 
     results = response["result"]
-    assert results[0]["entity_id"] == "light.kitchen"
-    assert results[0]["state"] == "on"
+    assert results[0]["domain"] == "test"
+    assert results[0]["message"] == "is on fire"
+    assert results[0]["name"] == "device name"
     assert results[1]["entity_id"] == "light.kitchen"
-    assert results[1]["state"] == "off"
+    assert results[1]["state"] == "on"
+    assert results[2]["entity_id"] == "light.kitchen"
+    assert results[2]["state"] == "off"
 
     await client.send_json(
         {
@@ -2707,3 +2738,66 @@ async def test_logbook_select_entities_context_id(hass, recorder_mock, hass_clie
     assert json_dict[3]["context_domain"] == "light"
     assert json_dict[3]["context_service"] == "turn_off"
     assert json_dict[3]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+
+async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock):
+    """Test logbook get_events with a context state."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("light.kitchen1", STATE_OFF)
+    hass.states.async_set("light.kitchen2", STATE_OFF)
+
+    context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "light.kitchen1", STATE_ON, {"brightness": 100}, context=context
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "light.kitchen2", STATE_ON, {"brightness": 200}, context=context
+    )
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    results = response["result"]
+    assert results[1]["entity_id"] == "binary_sensor.is_light"
+    assert results[1]["state"] == "off"
+    assert "context_state" not in results[1]
+    assert results[2]["entity_id"] == "light.kitchen1"
+    assert results[2]["state"] == "on"
+    assert results[2]["context_entity_id"] == "binary_sensor.is_light"
+    assert results[2]["context_state"] == "off"
+    assert results[2]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert "context_event_type" not in results[2]
+    assert results[3]["entity_id"] == "light.kitchen2"
+    assert results[3]["state"] == "on"
+    assert results[3]["context_entity_id"] == "binary_sensor.is_light"
+    assert results[3]["context_state"] == "off"
+    assert results[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert "context_event_type" not in results[3]
