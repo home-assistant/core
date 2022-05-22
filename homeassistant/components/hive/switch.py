@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
@@ -13,6 +14,16 @@ from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
+
+
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="activeplug",
+    ),
+    SwitchEntityDescription(
+        key="Heating_Heat_On_Demand", entity_category=EntityCategory.CONFIG
+    ),
+)
 
 
 async def async_setup_entry(
@@ -24,13 +35,20 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("switch")
     entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveDevicePlug(hive, dev))
+        for description in SWITCH_TYPES:
+            for dev in devices:
+                if dev["hiveType"] == description.key:
+                    entities.append(HiveSwitch(hive, dev, description))
     async_add_entities(entities, True)
 
 
-class HiveDevicePlug(HiveEntity, SwitchEntity):
+class HiveSwitch(HiveEntity, SwitchEntity, SwitchEntityDescription):
     """Hive Active Plug."""
+
+    def __init__(self, hive, hive_device, entity_description):
+        """Initialise hive switch."""
+        super().__init__(hive, hive_device)
+        self.entity_description = entity_description
 
     @refresh_system
     async def async_turn_on(self, **kwargs):
@@ -47,6 +65,8 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.switch.getSwitch(self.device)
         self._attr_available = self.device["deviceData"].get("online")
-        self._attr_current_power_w = self.device["status"].get("power_usage")
-        self._attr_is_on = self.device["status"]["state"]
-        self.attributes.update(self.device.get("attributes", {}))
+        if self._attr_available:
+            self._attr_is_on = self.device["status"]["state"]
+            if self.entity_description.key == "activeplug":
+                self._attr_current_power_w = self.device["status"].get("power_usage")
+            self.attributes.update(self.device.get("attributes", {}))

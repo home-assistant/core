@@ -45,8 +45,6 @@ HIVE_TO_HASS_HVAC_ACTION = {
 }
 
 TEMP_UNIT = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
-
-SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger()
@@ -104,6 +102,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     """Hive Climate Device."""
 
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+    _attr_preset_modes = [PRESET_BOOST, PRESET_NONE]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
@@ -159,14 +158,18 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.heating.getClimate(self.device)
         self._attr_available = self.device["deviceData"].get("online")
-        self._attr_hvac_mode = HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
-        self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION[
-            self.device["status"]["action"]
-        ]
-        self._attr_current_temperature = self.device["status"]["current_temperature"]
-        self._attr_target_temperature = self.device["status"]["target_temperature"]
-        self._attr_min_temp = self.device["min_temp"]
-        self._attr_max_temp = self.device["max_temp"]
-        if self.device["status"]["boost"] == "ON":
-            self._attr_preset_mode = PRESET_BOOST
-        self._attr_preset_mode = PRESET_NONE
+        if self._attr_available:
+            self._attr_hvac_mode = HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
+            self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION[
+                self.device["status"]["action"]
+            ]
+            self._attr_current_temperature = self.device["status"][
+                "current_temperature"
+            ]
+            self._attr_target_temperature = self.device["status"]["target_temperature"]
+            self._attr_min_temp = self.device["min_temp"]
+            self._attr_max_temp = self.device["max_temp"]
+            if self.device["status"]["boost"] == "ON":
+                self._attr_preset_mode = PRESET_BOOST
+            else:
+                self._attr_preset_mode = PRESET_NONE

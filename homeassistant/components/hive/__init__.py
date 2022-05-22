@@ -8,16 +8,8 @@ from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    POWER_WATT,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -29,52 +21,6 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
-
-DEVICETYPE = {
-    "contactsensor": {"device_class": BinarySensorDeviceClass.OPENING},
-    "motionsensor": {"device_class": BinarySensorDeviceClass.MOTION},
-    "Connectivity": {"device_class": BinarySensorDeviceClass.CONNECTIVITY},
-    "SMOKE_CO": {"device_class": BinarySensorDeviceClass.SMOKE},
-    "DOG_BARK": {"device_class": BinarySensorDeviceClass.SOUND},
-    "GLASS_BREAK": {"device_class": BinarySensorDeviceClass.SOUND},
-    "Heating_Current_Temperature": {
-        "device_class": SensorDeviceClass.TEMPERATURE,
-        "state_class": SensorStateClass.MEASUREMENT,
-        "unit": TEMP_CELSIUS,
-    },
-    "Heating_Target_Temperature": {
-        "device_class": SensorDeviceClass.TEMPERATURE,
-        "state_class": SensorStateClass.MEASUREMENT,
-        "unit": TEMP_CELSIUS,
-    },
-    "Heating_State": {"icon": "mdi:radiator"},
-    "Heating_Mode": {"icon": "mdi:radiator"},
-    "Heating_Boost": {"icon": "mdi:radiator"},
-    "Hotwater_State": {"icon": "mdi:water-pump"},
-    "Hotwater_Mode": {"icon": "mdi:water-pump"},
-    "Hotwater_Boost": {"icon": "mdi:water-pump"},
-    "Heating_Heat_On_Demand": {},
-    "Mode": {
-        "icon": "mdi:eye",
-    },
-    "Availability": {"icon": "mdi:check-circle"},
-    "warmwhitelight": {},
-    "tuneablelight": {},
-    "colourtunablelight": {},
-    "activeplug": {},
-    "trvcontrol": {},
-    "heating": {},
-    "siren": {},
-    "Battery": {
-        "device_class": SensorDeviceClass.BATTERY,
-        "state_class": SensorStateClass.MEASUREMENT,
-    },
-    "Power": {
-        "device_class": SensorDeviceClass.ENERGY,
-        "state_class": SensorStateClass.MEASUREMENT,
-        "unit": POWER_WATT,
-    },
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,14 +124,6 @@ class HiveEntity(Entity):
         self.device = hive_device
         self._attr_name = self.device["haName"]
         self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
-        self._attr_entity_category = self.device.get("category")
-        self._attr_device_class = DEVICETYPE.get(self.device["hiveType"])
-        self._attr_state_class = DEVICETYPE[self.device.get("hiveType")].get(
-            "state_class"
-        )
-        self._attr_native_unit_of_measurement = DEVICETYPE[
-            self.device.get("hiveType")
-        ].get("unit")
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device["device_id"])},
             model=self.device["deviceData"]["model"],

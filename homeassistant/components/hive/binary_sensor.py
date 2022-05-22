@@ -4,6 +4,7 @@ from datetime import timedelta
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,6 +17,33 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="contactsensor", device_class=BinarySensorDeviceClass.OPENING
+    ),
+    BinarySensorEntityDescription(
+        key="motionsensor",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    BinarySensorEntityDescription(
+        key="Connectivity",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    BinarySensorEntityDescription(
+        key="SMOKE_CO",
+        device_class=BinarySensorDeviceClass.SOUND,
+    ),
+    BinarySensorEntityDescription(
+        key="DOG_BARK",
+        device_class=BinarySensorDeviceClass.SOUND,
+    ),
+    BinarySensorEntityDescription(
+        key="GLASS_BREAK",
+        device_class=BinarySensorDeviceClass.SOUND,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -25,13 +53,20 @@ async def async_setup_entry(
     devices = hive.session.deviceList.get("binary_sensor")
     entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveBinarySensorEntity(hive, dev))
+        for description in BINARY_SENSOR_TYPES:
+            for dev in devices:
+                if dev["hiveType"] == description.key:
+                    entities.append(HiveBinarySensorEntity(hive, dev, description))
     async_add_entities(entities, True)
 
 
 class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     """Representation of a Hive binary sensor."""
+
+    def __init__(self, hive, hive_device, entity_description):
+        """Initialise hive binary sensor."""
+        super().__init__(hive, hive_device)
+        self.entity_description = entity_description
 
     async def async_update(self):
         """Update all Node data from Hive."""

@@ -44,7 +44,10 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     """Representation of a Hive alarm."""
 
     _attr_icon = ICON
-    _attr_supported_features = SUPPORT_ALARM_ARM_NIGHT | SUPPORT_ALARM_ARM_AWAY
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -63,7 +66,8 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.alarm.getAlarm(self.device)
         self._attr_available = self.device["deviceData"].get("online")
-        if self.device["status"]["state"]:
-            self._attr_state = STATE_ALARM_TRIGGERED
-        else:
-            self._attr_state = HIVETOHA[self.device["status"]["mode"]]
+        if self._attr_available:
+            if self.device["status"]["state"]:
+                self._attr_state = STATE_ALARM_TRIGGERED
+            else:
+                self._attr_state = HIVETOHA[self.device["status"]["mode"]]
