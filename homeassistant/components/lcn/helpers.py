@@ -255,8 +255,8 @@ def purge_entity_registry(
 
     # Find all entities that are referenced in the config entry.
     references_config_entry = {
-        entity.entity_id
-        for entity in er.async_entries_for_config_entry(entity_registry, entry_id)
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_config_entry(entity_registry, entry_id)
     }
 
     # Find all entities that are referenced by the entry_data.
