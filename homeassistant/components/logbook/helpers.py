@@ -12,7 +12,14 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    is_callback,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -95,6 +102,9 @@ def async_subscribe_events(
     the live logbook stream.
     """
     ent_reg = er.async_get(hass)
+    assert is_callback(target), "target must be a callback"
+    event_forwarder = target
+
     if entity_ids or device_ids:
         entity_ids_set = set(entity_ids) if entity_ids else set()
         device_ids_set = set(device_ids) if device_ids else set()
@@ -108,13 +118,6 @@ def async_subscribe_events(
                 target(event)
 
         event_forwarder = _forward_events_filtered
-    else:
-
-        @callback
-        def _forward_events(event: Event) -> None:
-            target(event)
-
-        event_forwarder = _forward_events
 
     for event_type in event_types:
         subscriptions.append(
