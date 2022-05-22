@@ -1,4 +1,5 @@
 """Support for Google Calendar Search binary sensors."""
+
 from __future__ import annotations
 
 import copy
@@ -91,7 +92,7 @@ def _async_setup_entities(
     entities = []
     num_entities = len(disc_info[CONF_ENTITIES])
     for data in disc_info[CONF_ENTITIES]:
-        entity_enabled = data[CONF_TRACK]
+        entity_enabled = data.get(CONF_TRACK, True)
         entity_name = data[CONF_DEVICE_ID]
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass)
         calendar_id = disc_info[CONF_CAL_ID]
@@ -167,7 +168,7 @@ class GoogleCalendarEntity(CalendarEntity):
         """Return True if the event is visible."""
         if self._ignore_availability:
             return True
-        return event.transparency == OPAQUE
+        return event.transparency == OPAQUE  # type: ignore[no-any-return]
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

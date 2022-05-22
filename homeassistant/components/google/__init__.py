@@ -117,6 +117,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 _SINGLE_CALSEARCH_CONFIG = vol.All(
     cv.deprecated(CONF_MAX_RESULTS),
+    cv.deprecated(CONF_TRACK),
     vol.Schema(
         {
             vol.Required(CONF_NAME): cv.string,
@@ -409,7 +410,6 @@ def get_calendar_info(
             CONF_CAL_ID: calendar["id"],
             CONF_ENTITIES: [
                 {
-                    CONF_TRACK: True,
                     CONF_NAME: calendar["summary"],
                     CONF_DEVICE_ID: generate_entity_id(
                         "{}", calendar["summary"], hass=hass

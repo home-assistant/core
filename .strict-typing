@@ -101,6 +101,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.google.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
