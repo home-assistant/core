@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import core
 from homeassistant.components import logbook, recorder
-from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook import websocket_api
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
@@ -535,11 +535,19 @@ async def test_subscribe_unsubscribe_logbook_stream(
 
     hass.bus.async_fire(
         EVENT_AUTOMATION_TRIGGERED,
-        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: "automation.mock_automation"},
+        {
+            ATTR_NAME: "Mock automation",
+            ATTR_ENTITY_ID: "automation.mock_automation",
+            ATTR_SOURCE: "numeric state of sensor.hungry_dogs",
+        },
     )
     hass.bus.async_fire(
         EVENT_SCRIPT_STARTED,
-        {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+        {
+            ATTR_NAME: "Mock script",
+            ATTR_ENTITY_ID: "script.mock_script",
+            ATTR_SOURCE: "numeric state of sensor.hungry_dogs",
+        },
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -552,9 +560,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_id": ANY,
             "domain": "automation",
             "entity_id": "automation.mock_automation",
-            "message": "triggered",
+            "message": "triggered by numeric state of sensor.hungry_dogs",
             "name": "Mock automation",
-            "source": None,
+            "source": "numeric state of sensor.hungry_dogs",
             "when": ANY,
         },
         {
@@ -581,7 +589,11 @@ async def test_subscribe_unsubscribe_logbook_stream(
     automation_entity_id_test = "automation.alarm"
     hass.bus.async_fire(
         EVENT_AUTOMATION_TRIGGERED,
-        {ATTR_NAME: "Mock automation", ATTR_ENTITY_ID: automation_entity_id_test},
+        {
+            ATTR_NAME: "Mock automation",
+            ATTR_ENTITY_ID: automation_entity_id_test,
+            ATTR_SOURCE: "state of binary_sensor.dog_food_ready",
+        },
         context=context,
     )
     hass.bus.async_fire(
@@ -613,9 +625,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "domain": "automation",
             "entity_id": "automation.alarm",
-            "message": "triggered",
+            "message": "triggered by state of binary_sensor.dog_food_ready",
             "name": "Mock automation",
-            "source": None,
+            "source": "state of binary_sensor.dog_food_ready",
             "when": ANY,
         },
         {
@@ -623,8 +635,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
             "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
-            "context_message": "triggered",
+            "context_message": "triggered by state of " "binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
+            "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "domain": "script",
             "entity_id": "script.mock_script",
@@ -636,8 +649,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_message": "triggered",
+            "context_message": "triggered by state of " "binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
+            "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "entity_id": "alarm_control_panel.area_001",
             "state": "on",
@@ -647,8 +661,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_message": "triggered",
+            "context_message": "triggered by state of " "binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
+            "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "entity_id": "alarm_control_panel.area_002",
             "state": "on",
@@ -672,8 +687,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
             "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
-            "context_message": "triggered",
+            "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
+            "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "domain": "automation",
             "entity_id": "automation.alarm",
@@ -701,8 +717,9 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
             "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
-            "context_message": "triggered",
+            "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
+            "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
             "domain": "automation",
             "entity_id": "automation.alarm",
