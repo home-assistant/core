@@ -47,8 +47,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+async def test_form_failed_auth(hass: HomeAssistant) -> None:
+    """Test we handle failed authentication error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -198,7 +198,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
-    """Test a successful reauth flow."""
+    """Test an authorization error reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
