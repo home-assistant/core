@@ -25,12 +25,6 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     state = hass.states.get("sensor.radarr_disk_space_downloads")
     assert state.state == "263.10"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GB"
-    state = hass.states.get("sensor.radarr_commands")
-    assert state.state == "1"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Commands"
-    state = hass.states.get("sensor.radarr_status")
-    assert state.state == "10.0.0.34882"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Status"
     state = hass.states.get("sensor.radarr_movies")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"

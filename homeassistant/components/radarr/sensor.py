@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
 
 import voluptuous as vol
@@ -32,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import RadarrEntity
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import RadarrDataUpdateCoordinator
 
 
@@ -61,20 +60,6 @@ SENSOR_TYPES: tuple[RadarrSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value=lambda coordinator, _: coordinator.movies,
     ),
-    RadarrSensorEntityDescription(
-        key="commands",
-        name="Commands",
-        native_unit_of_measurement="Commands",
-        icon="mdi:code-braces",
-        value=lambda coordinator, _: len(coordinator.commands),
-    ),
-    RadarrSensorEntityDescription(
-        key="status",
-        name="Status",
-        native_unit_of_measurement="Status",
-        icon="mdi:information",
-        value=lambda coordinator, _: coordinator.system_status.version,
-    ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
@@ -85,7 +70,7 @@ BYTE_SIZES = [
     DATA_MEGABYTES,
     DATA_GIGABYTES,
 ]
-# Deprecated in Home Assistant 2022.5
+# Deprecated in Home Assistant 2022.7
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -112,7 +97,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radarr platform."""
-    # deprecated in 2022.5
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -144,7 +128,6 @@ async def async_setup_entry(
 class RadarrSensor(RadarrEntity, SensorEntity):
     """Implementation of the Radarr sensor."""
 
-    coordinator: RadarrDataUpdateCoordinator
     entity_description: RadarrSensorEntityDescription
 
     def __init__(
@@ -156,16 +139,9 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         """Create Radarr entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"Radarr {description.name}"
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self.folder_name = folder_name
-
-    @property
-    def extra_state_attributes(self) -> dict[str, StateType | datetime] | None:
-        """Return the state attributes of the sensor."""
-        if self.entity_description.key == "status":
-            return self.coordinator.system_status.attributes
-        return None
 
     @property
     def native_value(self) -> StateType:
