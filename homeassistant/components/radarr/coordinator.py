@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import cast
 
-from aiopyarr import Command, RootFolder, exceptions
+from aiopyarr import RootFolder, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.models.request import SystemStatus
 from aiopyarr.radarr_client import RadarrClient
@@ -38,7 +38,6 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.api_client = api_client
-        self.commands: list[Command] = []
         self.disk_space: list[RootFolder] = []
         self.host_configuration = host_configuration
         self.movies: int = 0
@@ -48,15 +47,10 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
         """Get the latest data from Radarr."""
         reg = er.async_get(self.hass)
         try:
-            [
-                self.system_status,
-                self.disk_space,
-                self.commands,
-            ] = await asyncio.gather(
+            [self.system_status, self.disk_space] = await asyncio.gather(
                 *[
                     self.api_client.async_get_system_status(),
                     self.api_client.async_get_root_folders(),
-                    self.api_client.async_get_commands(),
                 ]
             )
             if (entry := reg.async_get("sensor.radarr_movies")) and not entry.disabled:
