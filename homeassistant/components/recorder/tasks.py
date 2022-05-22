@@ -253,3 +253,17 @@ class AddRecorderPlatformTask(RecorderTask):
         platforms[domain] = platform
         if hasattr(self.platform, "exclude_attributes"):
             hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+
+
+@dataclass
+class SynchronizeTask(RecorderTask):
+    """Ensure all pending data has been committed."""
+
+    # commit_before is the default
+    event: asyncio.Event
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        # Does not use a tracked task to avoid
+        # blocking shutdown if the recorder is broken
+        instance.hass.loop.call_soon_threadsafe(self.event.set)

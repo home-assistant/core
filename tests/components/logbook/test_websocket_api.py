@@ -28,6 +28,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, SetupRecorderInstanceT
 from tests.components.recorder.common import (
+    async_block_recorder,
     async_recorder_block_till_done,
     async_wait_recording_done,
 )
@@ -898,7 +899,7 @@ async def test_live_stream_with_one_second_commit_interval(
     hass_ws_client,
 ):
     """Test the recorder with a 1s commit interval."""
-    config = {recorder.CONF_COMMIT_INTERVAL: 1}
+    config = {recorder.CONF_COMMIT_INTERVAL: 0.5}
     await async_setup_recorder_instance(hass, config)
     now = dt_util.utcnow()
     await asyncio.gather(
@@ -1086,3 +1087,80 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
     assert sum(hass.bus.async_listeners().values()) == after_ws_created_count
     await websocket_client.close()
     assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+@patch("homeassistant.components.logbook.websocket_api.MAX_RECORDER_WAIT", 0.15)
+async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplog):
+    """Test we still start live streaming if the recorder is far behind."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    await async_wait_recording_done(hass)
+    device = await _async_mock_device_with_logbook_platform(hass)
+    await async_wait_recording_done(hass)
+
+    # Block the recorder queue
+    await async_block_recorder(hass, 0.3)
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "device_ids": [device.id],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # There are no answers to our initial query
+    # so we get an empty reply. This is to ensure
+    # consumers of the api know there are no results
+    # and its not a failure case. This is useful
+    # in the frontend so we can tell the user there
+    # are no results vs waiting for them to appear
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == []
+
+    hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "1"})
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {"domain": "test", "message": "1", "name": "device name", "when": ANY}
+    ]
+
+    hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "2"})
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {"domain": "test", "message": "2", "name": "device name", "when": ANY}
+    ]
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert "Recorder is behind" in caplog.text

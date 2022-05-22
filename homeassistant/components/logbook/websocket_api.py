@@ -27,6 +27,7 @@ from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
 EVENT_COALESCE_TIME = 0.5
+MAX_RECORDER_WAIT = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,29 +205,39 @@ async def ws_event_stream(
     # consumers of the api know their request was
     # answered but there were no results
     connection.send_message(message)
-
-    if commit_interval := get_instance(hass).commit_interval:
-        # Fetch any events from the database that have
-        # not been committed since the original fetch
-        # so we can switch over to using the subscriptions
-        await asyncio.sleep(commit_interval)
-        # We only want events that happened after the last event
-        # we had from the last database query or the length
-        # of the commit interval (with a 1 second safety)
-        commit_start_window = dt_util.utcnow() - timedelta(seconds=commit_interval + 1)
-        second_fetch_start_time = max(
-            last_event_time or commit_start_window, commit_start_window
+    try:
+        await asyncio.wait_for(
+            get_instance(hass).async_block_till_done(), MAX_RECORDER_WAIT
         )
-        message, final_cutoff_time = await _async_get_ws_formatted_events(
-            hass,
-            msg["id"],
-            second_fetch_start_time,
-            subscriptions_setup_complete_time,
-            messages.event_message,
-            event_processor,
+    except asyncio.TimeoutError:
+        _LOGGER.debug(
+            "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
         )
-        if final_cutoff_time:  # Only sends results if we have them
-            connection.send_message(message)
+    #
+    # Fetch any events from the database that have
+    # not been committed since the original fetch
+    # so we can switch over to using the subscriptions
+    #
+    # We only want events that happened after the last event
+    # we had from the last database query or the maximum
+    # time we allow the recorder to be behind
+    #
+    max_recorder_behind = subscriptions_setup_complete_time - timedelta(
+        seconds=MAX_RECORDER_WAIT
+    )
+    second_fetch_start_time = max(
+        last_event_time or max_recorder_behind, max_recorder_behind
+    )
+    message, final_cutoff_time = await _async_get_ws_formatted_events(
+        hass,
+        msg["id"],
+        second_fetch_start_time,
+        subscriptions_setup_complete_time,
+        messages.event_message,
+        event_processor,
+    )
+    if final_cutoff_time:  # Only sends results if we have them
+        connection.send_message(message)
 
     setup_complete_future.set_result(subscriptions_setup_complete_time)
 
