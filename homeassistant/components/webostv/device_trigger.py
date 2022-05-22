@@ -7,10 +7,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -61,7 +58,7 @@ async def async_validate_trigger_config(
 
 async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers for device."""
     triggers = []
     base_trigger = {
@@ -80,7 +77,7 @@ async def async_attach_trigger(
     config: ConfigType,
     action: AutomationActionType,
     automation_info: AutomationTriggerInfo,
-) -> CALLBACK_TYPE:
+) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
     if (trigger_type := config[CONF_TYPE]) == TURN_ON_PLATFORM_TYPE:
         trigger_config = {
