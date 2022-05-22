@@ -106,13 +106,13 @@ async def test_options_flow_implementation(hass):
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_READ_ONLY: False},
+            user_input={CONF_READ_ONLY: True},
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
-            CONF_READ_ONLY: False,
+            CONF_READ_ONLY: True,
         }
 
         assert len(mock_setup_entry.mock_calls) == 1
