@@ -54,6 +54,7 @@ from . import api, config_flow
 from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
+    DATA_DEVICE_MANAGER,
     DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
@@ -63,8 +64,8 @@ from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 from .media_source import (
     async_get_media_event_store,
+    async_get_media_source_devices,
     async_get_transcoder,
-    get_media_source_devices,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -205,7 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     try:
-        await subscriber.async_get_device_manager()
+        device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
@@ -215,6 +216,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
+    hass.data[DOMAIN][DATA_DEVICE_MANAGER] = device_manager
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -232,6 +234,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
+        hass.data[DOMAIN].pop(DATA_DEVICE_MANAGER)
         hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
 
     return unload_ok
@@ -275,7 +278,7 @@ class NestEventViewBase(HomeAssistantView, ABC):
             if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
                 raise Unauthorized(entity_id=entry.entity_id)
 
-        devices = await get_media_source_devices(self.hass)
+        devices = async_get_media_source_devices(self.hass)
         if not (nest_device := devices.get(device_id)):
             return self._json_error(
                 f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND

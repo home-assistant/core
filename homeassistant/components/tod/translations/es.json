@@ -16,8 +16,7 @@
             "init": {
                 "data": {
                     "after_time": "Tiempo de activaci\u00f3n"
-                },
-                "description": "Crea un sensor binario que se activa o desactiva en funci\u00f3n de la hora."
+                }
             }
         }
     },

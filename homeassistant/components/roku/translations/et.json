@@ -11,12 +11,7 @@
         "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
-                "description": "Kas soovid seadistada {name}?",
-                "title": ""
-            },
-            "ssdp_confirm": {
-                "description": "Kas soovid seadistada {name}?",
-                "title": ""
+                "description": "Kas soovid seadistada {name}?"
             },
             "user": {
                 "data": {

@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Authentifizierung",
-                    "content_type": "Inhaltstyp",
                     "framerate": "Bildfrequenz (Hz)",
                     "limit_refetch_to_url_change": "Neuabruf auf URL-\u00c4nderung beschr\u00e4nken",
                     "password": "Passwort",
@@ -72,7 +71,6 @@
             "init": {
                 "data": {
                     "authentication": "Authentifizierung",
-                    "content_type": "Inhaltstyp",
                     "framerate": "Bildfrequenz (Hz)",
                     "limit_refetch_to_url_change": "Neuabruf auf URL-\u00c4nderung beschr\u00e4nken",
                     "password": "Passwort",
