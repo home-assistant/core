@@ -4,6 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
 from .const import DOMAIN
@@ -12,7 +15,9 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
