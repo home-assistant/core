@@ -126,7 +126,7 @@ async def _async_events_consumer(
 async def ws_event_stream(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Handle logbook get events websocket command."""
+    """Handle logbook stream events websocket command."""
     start_time_str = msg["start_time"]
     utc_now = dt_util.utcnow()
 
