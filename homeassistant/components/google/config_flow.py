@@ -7,7 +7,10 @@ from typing import Any
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException
 from oauth2client.client import Credentials
+import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,7 +24,7 @@ from .api import (
     async_create_device_flow,
     get_feature_access,
 )
-from .const import DOMAIN
+from .const import CONF_CALENDAR_ACCESS, DOMAIN, FeatureAccess
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +39,7 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Set up instance."""
         super().__init__()
-        self._reauth = False
+        self._reauth_config_entry: config_entries.ConfigEntry | None = None
         self._device_flow: DeviceFlow | None = None
 
     @property
@@ -60,7 +63,7 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle external yaml configuration."""
-        if not self._reauth and self._async_current_entries():
+        if not self._reauth_config_entry and self._async_current_entries():
             return self.async_abort(reason="already_configured")
         return await super().async_step_user(user_input)
 
@@ -84,12 +87,17 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
+            calendar_access = get_feature_access(self.hass)
+            if self._reauth_config_entry and self._reauth_config_entry.options:
+                calendar_access = FeatureAccess[
+                    self._reauth_config_entry.options[CONF_CALENDAR_ACCESS]
+                ]
             try:
                 device_flow = await async_create_device_flow(
                     self.hass,
                     self.flow_impl.client_id,
                     self.flow_impl.client_secret,
-                    get_feature_access(self.hass),
+                    calendar_access,
                 )
             except OAuthError as err:
                 _LOGGER.error("Error initializing device flow: %s", str(err))
@@ -146,13 +154,21 @@ class OAuth2FlowHandler(
             _LOGGER.debug("Error reading calendar primary calendar: %s", err)
             primary_calendar = None
         title = primary_calendar.id if primary_calendar else self.flow_impl.name
-        return self.async_create_entry(title=title, data=data)
+        return self.async_create_entry(
+            title=title,
+            data=data,
+            options={
+                CONF_CALENDAR_ACCESS: get_feature_access(self.hass).name,
+            },
+        )
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth = True
+        self._reauth_config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -162,3 +178,39 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Create an options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Google Calendar options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CALENDAR_ACCESS,
+                        default=self.config_entry.options.get(CONF_CALENDAR_ACCESS),
+                    ): vol.In(
+                        {
+                            "read_write": "Read/Write access (can create events)",
+                            "read_only": "Read-only access",
+                        }
+                    )
+                }
+            ),
+        )
