@@ -500,12 +500,12 @@ class StartUpCurrentLevelConfigurationEntity(
 
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names="tuya_manufacturer",
-    manufacturers={"_TZE200_htnnfasr", },
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
     stop_on_match_group="tuya_manufacturer",
 )
-class TimerDuration(
-    ZHANumberConfigurationEntity, id_suffix="timer_duration"
-):
+class TimerDuration(ZHANumberConfigurationEntity, id_suffix="timer_duration"):
     """Representation of a ZHA timer duration configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG

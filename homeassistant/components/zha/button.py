@@ -147,7 +147,7 @@ class ZHAButtonAttribute(ZhaEntity, ButtonEntity):
     },
     stop_on_match_group="tuya_manufacturer",
 )
-class FrostLockResetButton(ZHAButtonAttribute, id_suffix="reset frost lock"):
+class FrostLockResetButton(ZHAButtonAttribute, id_suffix="reset_frost_lock"):
     """Defines a ZHA identify button."""
 
     _attribute_name = "frost_lock_reset"
