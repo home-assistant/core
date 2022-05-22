@@ -248,7 +248,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
 
 
 def purge_entity_registry(
-    hass: HomeAssistant, entry_id: str, entry_data: ConfigType
+    hass: HomeAssistant, entry_id: str, imported_entry_data: ConfigType
 ) -> None:
     """Remove orphans from entity registry which are not in entry data."""
     entity_registry = er.async_get(hass)
@@ -256,18 +256,17 @@ def purge_entity_registry(
     # Find all entities that are referenced in the config entry.
     references_config_entry = {
         entity.entity_id
-        for entity in entity_registry.entities.values()
-        if entity.config_entry_id == entry_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry_id)
     }
 
     # Find all entities that are referenced by the entry_data.
     references_entry_data = set()
-    for entity_data in entry_data[CONF_ENTITIES]:
-        unique_entity_id = generate_unique_id(
+    for entity_data in imported_entry_data[CONF_ENTITIES]:
+        entity_unique_id = generate_unique_id(
             entry_id, entity_data[CONF_ADDRESS], entity_data[CONF_RESOURCE]
         )
         entity_id = entity_registry.async_get_entity_id(
-            entity_data[CONF_DOMAIN], DOMAIN, unique_entity_id
+            entity_data[CONF_DOMAIN], DOMAIN, entity_unique_id
         )
         if entity_id is not None:
             references_entry_data.add(entity_id)
@@ -278,7 +277,7 @@ def purge_entity_registry(
 
 
 def purge_device_registry(
-    hass: HomeAssistant, entry_id: str, entry_data: ConfigType
+    hass: HomeAssistant, entry_id: str, imported_entry_data: ConfigType
 ) -> None:
     """Remove orphans from device registry which are not in entry data."""
     device_registry = dr.async_get(hass)
@@ -297,9 +296,9 @@ def purge_device_registry(
 
     # Find all devices that are referenced by the entry_data.
     references_entry_data = set()
-    for device_data in entry_data[CONF_DEVICES]:
-        unique_device_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
-        device = device_registry.async_get_device({(DOMAIN, unique_device_id)})
+    for device_data in imported_entry_data[CONF_DEVICES]:
+        device_unique_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
+        device = device_registry.async_get_device({(DOMAIN, device_unique_id)})
         if device is not None:
             references_entry_data.add(device.id)
 
