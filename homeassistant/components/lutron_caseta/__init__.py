@@ -312,16 +312,16 @@ class LutronCasetaDevice(Entity):
         self._bridge_device = bridge_device
         if "serial" not in self._device:
             return
+        area, name = _area_and_name_from_name(device["name"])
+        self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
             identifiers={(DOMAIN, self.serial)},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
-            name=self.name,
+            name=full_name,
             via_device=(DOMAIN, self._bridge_device["serial"]),
             configuration_url=CONFIG_URL,
         )
-        area, name = _area_and_name_from_name(device["name"])
-        self._attr_name = f"{area} {name}"
         if area != UNASSIGNED_AREA:
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
