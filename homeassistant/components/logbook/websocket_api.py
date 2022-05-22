@@ -88,30 +88,27 @@ async def _async_events_consumer(
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired > subscriptions_setup_complete_time:
-            # We sleep for the EVENT_COALESCE_TIME so
-            # we can group events together to minimize
-            # the number of websocket messages when the
-            # system is overloaded with an event storm
-            await asyncio.sleep(EVENT_COALESCE_TIME)
-            while True:
-                try:
-                    events.append(stream_queue.get_nowait())
-                except asyncio.QueueEmpty:
-                    break
+        if events[0].time_fired <= subscriptions_setup_complete_time:
+            continue
+        # We sleep for the EVENT_COALESCE_TIME so
+        # we can group events together to minimize
+        # the number of websocket messages when the
+        # system is overloaded with an event storm
+        await asyncio.sleep(EVENT_COALESCE_TIME)
+        while not stream_queue.empty():
+            events.append(stream_queue.get_nowait())
 
-            if logbook_events := event_processor.humanify(
-                async_event_to_row(e) for e in events
-            ):
-                connection.send_message(
-                    JSON_DUMP(
-                        messages.event_message(
-                            msg_id,
-                            logbook_events,
-                        )
+        if logbook_events := event_processor.humanify(
+            async_event_to_row(e) for e in events
+        ):
+            connection.send_message(
+                JSON_DUMP(
+                    messages.event_message(
+                        msg_id,
+                        logbook_events,
                     )
                 )
-        stream_queue.task_done()
+            )
 
 
 @websocket_api.websocket_command(
@@ -126,7 +123,7 @@ async def _async_events_consumer(
 async def ws_event_stream(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Handle logbook get events websocket command."""
+    """Handle logbook stream events websocket command."""
     start_time_str = msg["start_time"]
     utc_now = dt_util.utcnow()
 
@@ -181,7 +178,7 @@ async def ws_event_stream(
             stream_queue.put_nowait(event)
         except asyncio.QueueFull:
             _LOGGER.debug(
-                "Client exceeded max pending messages of %s (likely disconnected without unsubscribe)",
+                "Client exceeded max pending messages of %s",
                 MAX_PENDING_LOGBOOK_EVENTS,
             )
             _unsub()
@@ -202,7 +199,7 @@ async def ws_event_stream(
         messages.event_message,
         event_processor,
     )
-    # If there is not last_time there are not historical
+    # If there is no last_time there are no historical
     # results, but we still send an empty message so
     # consumers of the api know their request was
     # answered but there were no results
