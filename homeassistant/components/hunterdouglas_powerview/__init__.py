@@ -72,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
+            device_info["hub_address"] = hub_address
 
         async with async_timeout.timeout(10):
             rooms = Rooms(pv_request)

@@ -30,7 +30,13 @@ class HDEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._room_name = room_name
         self._attr_unique_id = unique_id
+        self._hub_address = device_info["hub_address"]
         self._device_info = device_info
+
+    @property
+    def hub_address(self):
+        """Return the ip of the hub."""
+        return self._hub_address
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -70,6 +76,7 @@ class ShadeEntity(HDEntity):
             manufacturer=MANUFACTURER,
             model=str(self._shade.raw_data[ATTR_TYPE]),
             via_device=(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
+            configuration_url=f"http://{self.hub_address}/api/shades/{self._shade.id}?refresh=true",
         )
 
         for shade in self._shade.shade_types:
