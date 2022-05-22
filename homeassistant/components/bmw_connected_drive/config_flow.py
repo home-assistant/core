@@ -108,13 +108,12 @@ class BMWOptionsFlow(config_entries.OptionsFlow):
             # Required as each successful login will store the latest refresh_token
             # using async_update_entry, which would otherwise trigger a full reload
             # if the options would be refreshed using a listener.
-            if entry := self.hass.config_entries.async_get_entry(self.handler):
-                changed = self.hass.config_entries.async_update_entry(
-                    entry,
-                    options=user_input,
-                )
-                if changed:
-                    await self.hass.config_entries.async_reload(entry.entry_id)
+            changed = self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options=user_input,
+            )
+            if changed:
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="account_options",
