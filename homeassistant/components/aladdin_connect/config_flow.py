@@ -124,7 +124,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

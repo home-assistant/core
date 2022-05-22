@@ -24,8 +24,7 @@ async def test_unload_entry(hass: HomeAssistant):
         return_value=True,
     ):
 
-        assert (await async_setup_component(hass, DOMAIN, entry)) is True
-
+        await async_setup_component(hass, DOMAIN, entry)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
 

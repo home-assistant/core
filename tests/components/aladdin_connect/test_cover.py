@@ -89,7 +89,7 @@ async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        side_effect=ValueError,
+        return_value=None,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
@@ -106,11 +106,9 @@ async def test_setup_login_error(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        side_effect=ValueError,
+        return_value=False,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-        await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
 
 
 async def test_setup_component_noerror(hass: HomeAssistant) -> None:
