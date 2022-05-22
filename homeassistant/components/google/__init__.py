@@ -164,8 +164,6 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google component."""
-    hass.data.setdefault(DOMAIN, {})
-
     if DOMAIN not in config:
         return True
 
@@ -212,8 +210,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     async_upgrade_entry(hass, entry)
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
