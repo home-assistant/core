@@ -1,7 +1,4 @@
 """Offer device oriented automation."""
-from __future__ import annotations
-
-from collections.abc import Awaitable
 from typing import Protocol, cast
 
 import voluptuous as vol
@@ -17,8 +14,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     DeviceAutomationType,
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
     async_get_device_automation_platform,
 )
 from .exceptions import InvalidDeviceAutomationConfig
@@ -38,6 +33,7 @@ class DeviceAutomationTriggerProtocol(Protocol):
         self, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
+        raise NotImplementedError
 
     async def async_attach_trigger(
         self,
@@ -47,16 +43,7 @@ class DeviceAutomationTriggerProtocol(Protocol):
         automation_info: AutomationTriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-
-    def async_get_trigger_capabilities(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> GetAutomationCapabilitiesResult | Awaitable[GetAutomationCapabilitiesResult]:
-        """List trigger capabilities."""
-
-    def async_get_triggers(
-        self, hass: HomeAssistant, device_id: str
-    ) -> GetAutomationsResult | Awaitable[GetAutomationsResult]:
-        """List triggers."""
+        raise NotImplementedError
 
 
 async def async_validate_trigger_config(
