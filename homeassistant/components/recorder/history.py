@@ -695,8 +695,6 @@ def _sorted_states_to_dict(
             prev_state = first_state.state
             ent_results.append(state_class(first_state, attr_cache))
 
-        initial_state_count = len(ent_results)
-        row = None
         for row in group:
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
@@ -715,12 +713,6 @@ def _sorted_states_to_dict(
                 }
             )
             prev_state = state
-
-        if row and len(ent_results) != initial_state_count:
-            # There was at least one state change
-            # replace the last minimal state with
-            # a full state
-            ent_results[-1] = state_class(row, attr_cache)
 
     # If there are no states beyond the initial state,
     # the state a was never popped from initial_states

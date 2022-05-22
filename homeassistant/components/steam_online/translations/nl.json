@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "already_configured": "Dienst is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "De Steam integratie moet handmatig opnieuw geauthenticeerd worden\n\nU kunt uw sleutel hier vinden: {api_key_url}",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthentiseren"
             },
             "user": {
                 "data": {
