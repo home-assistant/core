@@ -1477,6 +1477,7 @@ omit =
     homeassistant/components/yolink/coordinator.py
     homeassistant/components/yolink/entity.py
     homeassistant/components/yolink/sensor.py
+    homeassistant/components/yolink/switch.py
     homeassistant/components/youless/__init__.py
     homeassistant/components/youless/const.py
     homeassistant/components/youless/sensor.py
