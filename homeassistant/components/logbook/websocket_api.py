@@ -94,11 +94,8 @@ async def _async_events_consumer(
             # the number of websocket messages when the
             # system is overloaded with an event storm
             await asyncio.sleep(EVENT_COALESCE_TIME)
-            while True:
-                try:
-                    events.append(stream_queue.get_nowait())
-                except asyncio.QueueEmpty:
-                    break
+            while not stream_queue.empty():
+                events.append(stream_queue.get_nowait())
 
             if logbook_events := event_processor.humanify(
                 async_event_to_row(e) for e in events
