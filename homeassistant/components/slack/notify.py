@@ -121,7 +121,7 @@ async def async_get_service(
 
     return SlackNotificationService(
         hass,
-        discovery_info.pop(DATA_CLIENT),
+        discovery_info[DATA_CLIENT],
         discovery_info,
     )
 
