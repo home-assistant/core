@@ -88,27 +88,27 @@ async def _async_events_consumer(
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired > subscriptions_setup_complete_time:
-            # We sleep for the EVENT_COALESCE_TIME so
-            # we can group events together to minimize
-            # the number of websocket messages when the
-            # system is overloaded with an event storm
-            await asyncio.sleep(EVENT_COALESCE_TIME)
-            while not stream_queue.empty():
-                events.append(stream_queue.get_nowait())
+        if events[0].time_fired <= subscriptions_setup_complete_time:
+            continue
+        # We sleep for the EVENT_COALESCE_TIME so
+        # we can group events together to minimize
+        # the number of websocket messages when the
+        # system is overloaded with an event storm
+        await asyncio.sleep(EVENT_COALESCE_TIME)
+        while not stream_queue.empty():
+            events.append(stream_queue.get_nowait())
 
-            if logbook_events := event_processor.humanify(
-                async_event_to_row(e) for e in events
-            ):
-                connection.send_message(
-                    JSON_DUMP(
-                        messages.event_message(
-                            msg_id,
-                            logbook_events,
-                        )
+        if logbook_events := event_processor.humanify(
+            async_event_to_row(e) for e in events
+        ):
+            connection.send_message(
+                JSON_DUMP(
+                    messages.event_message(
+                        msg_id,
+                        logbook_events,
                     )
                 )
-        stream_queue.task_done()
+            )
 
 
 @websocket_api.websocket_command(
