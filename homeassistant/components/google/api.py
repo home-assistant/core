@@ -173,3 +173,25 @@ class ApiAuthImpl(AbstractAuth):
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
         return self._session.token["access_token"]
+
+
+class AccessTokenAuthImpl(AbstractAuth):
+    """Authentication implementation used during config flow, without refresh.
+
+    This exists to allow the config flow to use the API before it has fully
+    created a config entry required by OAuth2Session. This does not support
+    refreshing tokens, which is fine since it should have been just created.
+    """
+
+    def __init__(
+        self,
+        websession: aiohttp.ClientSession,
+        access_token: str,
+    ) -> None:
+        """Init the Google Calendar client library auth implementation."""
+        super().__init__(websession)
+        self._access_token = access_token
+
+    async def async_get_access_token(self) -> str:
+        """Return the access token."""
+        return self._access_token

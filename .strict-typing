@@ -138,6 +138,7 @@ homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lametric.*
+homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
