@@ -8,9 +8,12 @@ from datetime import datetime
 from typing import Any
 
 from aiopyarr import LidarrQueueItem
-from aiopyarr.models.lidarr import LidarrAlbum, LidarrCalendar
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.core import HomeAssistant
@@ -18,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import LidarrEntity
-from .const import BYTE_SIZES, DEFAULT_NAME, DOMAIN
+from .const import BYTE_SIZES, DOMAIN
 from .coordinator import LidarrDataUpdateCoordinator
 
 
@@ -31,13 +34,6 @@ class LidarrSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
     LidarrSensorEntityDescription(
-        key="commands",
-        name="Commands",
-        native_unit_of_measurement="Commands",
-        icon="mdi:code-braces",
-        value=lambda coordinator, _: coordinator.commands,
-    ),
-    LidarrSensorEntityDescription(
         key="diskspace",
         name="Disk Space",
         native_unit_of_measurement=DATA_GIGABYTES,
@@ -45,6 +41,7 @@ SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
         value=lambda coordinator, name: get_space(  # pylint:disable=unnecessary-lambda
             coordinator, name
         ),
+        state_class=SensorStateClass.TOTAL,
     ),
     LidarrSensorEntityDescription(
         key="queue",
@@ -52,13 +49,7 @@ SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
         native_unit_of_measurement="Albums",
         icon="mdi:music",
         value=lambda coordinator, _: coordinator.queue.totalRecords,
-    ),
-    LidarrSensorEntityDescription(
-        key="status",
-        name="Status",
-        native_unit_of_measurement="Status",
-        icon="mdi:information",
-        value=lambda coordinator, _: coordinator.system_status.version,
+        state_class=SensorStateClass.TOTAL,
     ),
     LidarrSensorEntityDescription(
         key="wanted",
@@ -66,10 +57,10 @@ SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
         native_unit_of_measurement="Albums",
         icon="mdi:music",
         value=lambda coordinator, _: coordinator.wanted.totalRecords,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
 )
-
-PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -105,10 +96,7 @@ class LidarrSensor(LidarrEntity, SensorEntity):
         ext_name: str = "",
     ) -> None:
         """Create Lidarr entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        super().__init__(coordinator, description)
         self.ext_name = ext_name
 
     @property
@@ -116,10 +104,11 @@ class LidarrSensor(LidarrEntity, SensorEntity):
         """Return the state attributes of the sensor."""
         if self.entity_description.key == "queue":
             return {i.title: queue_str(i) for i in self.coordinator.queue.records}
-        if self.entity_description.key == "status":
-            return self.coordinator.system_status.attributes
         if self.entity_description.key == "wanted":
-            return to_attr(self.coordinator.wanted.records)
+            return {
+                album.title: album.artist.artistName
+                for album in self.coordinator.wanted.records
+            }
         return None
 
     @property
@@ -136,25 +125,6 @@ def get_space(coordinator: LidarrDataUpdateCoordinator, name: str) -> str:
         if name in mount.path
     ]
     return f"{space[0]:.2f}"
-
-
-def to_attr(
-    albums: list[LidarrCalendar] | list[LidarrAlbum],
-) -> dict[str, StateType | datetime]:
-    """Get attributes."""
-    if len(albums) > 0 and isinstance(albums[0], LidarrCalendar):
-        return {
-            f"{album.title} ({album.artist.artistName})": album.releaseDate
-            for album in albums
-        }
-    return {
-        "{} ({})".format(
-            album.title,
-            album.artist.artistName,
-        ): f"{album.statistics.trackFileCount}/{album.statistics.trackCount}"
-        for album in albums
-        if hasattr(album.statistics, "trackFileCount")
-    }
 
 
 def queue_str(item: LidarrQueueItem) -> str:

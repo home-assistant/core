@@ -41,7 +41,6 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.api_client = api_client
-        self.commands: int = 0
         self.disk_space: list[RootFolder] = []
         self.host_configuration = host_configuration
         self.queue: LidarrQueue = LidarrQueue({"records": []})
@@ -53,14 +52,12 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
         records = self.config_entry.options[CONF_MAX_RECORDS]
         try:
             [
-                commands,
                 self.disk_space,
                 self.queue,
                 self.system_status,
                 self.wanted,
             ] = await asyncio.gather(
                 *[
-                    self.api_client.async_get_commands(),
                     self.api_client.async_get_root_folders(),
                     self.api_client.async_get_queue(page_size=records),
                     self.api_client.async_get_system_status(),
@@ -74,4 +71,3 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed(
                 "API Key is no longer valid. Please reauthenticate"
             ) from ex
-        self.commands = len({c.name: c.status for c in commands})

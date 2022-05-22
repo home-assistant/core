@@ -9,7 +9,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -55,9 +55,14 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator]):
     """Defines a base Lidarr entity."""
 
-    def __init__(self, coordinator: LidarrDataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: LidarrDataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize the Lidarr entity."""
         super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_name = f"{DEFAULT_NAME} {description.name}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,

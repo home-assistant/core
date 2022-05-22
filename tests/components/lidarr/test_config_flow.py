@@ -40,7 +40,7 @@ async def test_flow_user_form(
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
-    assert result["options"] == {CONF_MAX_RECORDS: 1000}
+    assert result["options"] == {CONF_MAX_RECORDS: 50}
 
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
