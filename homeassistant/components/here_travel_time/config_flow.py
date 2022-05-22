@@ -237,9 +237,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import from configuration.yaml."""
         options: dict[str, Any] = {}
         user_input, options = self._transform_import_input(user_input)
