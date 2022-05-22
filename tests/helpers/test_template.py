@@ -1380,6 +1380,19 @@ async def test_state_translated(hass):
     )
     assert tpl3.async_render() == "Detected"
 
+    tpl4 = template.Template('{{ state_translated("contextfunction", "en") }}', hass)
+    assert tpl4.async_render() is None
+
+    tpl5 = template.Template('{{ state_translated("switch.invalid", "en") }}', hass)
+    assert tpl5.async_render() == "unknown"
+
+    tpl6 = template.Template('{{ state_translated("-invalid", "en") }}', hass)
+    try:
+        tpl6.async_render()
+        assert False
+    except TemplateError:
+        assert True
+
 
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
