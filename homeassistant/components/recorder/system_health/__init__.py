@@ -68,11 +68,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         db_stats = await instance.async_add_executor_job(
             _get_db_stats, instance, database_name
         )
-    return (
-        {
+        db_runs = {
             "oldest_recorder_run": run_history.first.start,
             "current_recorder_run": run_history.current.start,
         }
-        | db_stats
-        | db_engine_info
-    )
+    return db_runs | db_stats | db_engine_info
