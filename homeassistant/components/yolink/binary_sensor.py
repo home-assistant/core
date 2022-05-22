@@ -43,7 +43,7 @@ SENSOR_DEVICE_TYPE = [
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
-        key="doorState",
+        key="door_state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
@@ -51,14 +51,14 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
-        key="motionState",
+        key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
         value=lambda value: value == "alert",
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
-        key="leakState",
+        key="leak_state",
         name="Leak",
         icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
