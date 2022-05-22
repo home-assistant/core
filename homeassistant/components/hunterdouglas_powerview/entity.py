@@ -19,6 +19,7 @@ from .const import (
     FIRMWARE_REVISION,
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
+    PV_HUB_ADDRESS,
 )
 
 
@@ -30,7 +31,7 @@ class HDEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._room_name = room_name
         self._attr_unique_id = unique_id
-        self._hub_address = device_info["hub_address"]
+        self._hub_address = device_info[PV_HUB_ADDRESS]
         self._device_info = device_info
 
     @property
@@ -53,6 +54,7 @@ class HDEntity(CoordinatorEntity):
             name=self._device_info[DEVICE_NAME],
             suggested_area=self._room_name,
             sw_version=sw_version,
+            configuration_url=f"http://{self.hub_address}/api/shades",
         )
 
 

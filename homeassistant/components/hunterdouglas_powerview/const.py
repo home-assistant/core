@@ -55,6 +55,7 @@ STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 
 PV_API = "pv_api"
 PV_HUB = "pv_hub"
+PV_HUB_ADDRESS = "pv_hub_address"
 PV_SHADES = "pv_shades"
 PV_SCENE_DATA = "pv_scene_data"
 PV_SHADE_DATA = "pv_shade_data"

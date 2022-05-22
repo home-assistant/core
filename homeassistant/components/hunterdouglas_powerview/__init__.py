@@ -40,6 +40,7 @@ from .const import (
     HUB_NAME,
     MAC_ADDRESS_IN_USERDATA,
     PV_API,
+    PV_HUB_ADDRESS,
     PV_ROOM_DATA,
     PV_SCENE_DATA,
     PV_SHADE_DATA,
@@ -72,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with async_timeout.timeout(10):
             device_info = await async_get_device_info(pv_request)
-            device_info["hub_address"] = hub_address
+            device_info[PV_HUB_ADDRESS] = hub_address
 
         async with async_timeout.timeout(10):
             rooms = Rooms(pv_request)
