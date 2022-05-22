@@ -197,15 +197,15 @@ def _async_register_button_devices(
         if "serial" not in device or device["serial"] in seen:
             continue
         seen.add(device["serial"])
+        area, name = _area_and_name_from_name(device["name"])
         device_args = {
-            "name": device["name"],
+            "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
             "identifiers": {(DOMAIN, device["serial"])},
             "model": f"{device['model']} ({device['type']})",
             "via_device": (DOMAIN, bridge_device["serial"]),
         }
-        area, _ = _area_and_name_from_name(device["name"])
         if area != UNASSIGNED_AREA:
             device_args["suggested_area"] = area
 
@@ -321,7 +321,8 @@ class LutronCasetaDevice(Entity):
             via_device=(DOMAIN, self._bridge_device["serial"]),
             configuration_url=CONFIG_URL,
         )
-        area, _ = _area_and_name_from_name(device["name"])
+        area, name = _area_and_name_from_name(device["name"])
+        self._attr_name = f"{area} {name}"
         if area != UNASSIGNED_AREA:
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
@@ -334,11 +335,6 @@ class LutronCasetaDevice(Entity):
     def device_id(self):
         """Return the device ID used for calling pylutron_caseta."""
         return self._device["device_id"]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device["name"]
 
     @property
     def serial(self):
