@@ -743,7 +743,7 @@ class DomainStates:
         if entity_collect is not None:
             entity_collect.domains_lifecycle.add(self._domain)
 
-    def __iter__(self):
+    def __iter__(self) -> Generator:
         """Return the iteration over all the states."""
         self._collect_domain()
         return _state_generator(self._hass, self._domain)
