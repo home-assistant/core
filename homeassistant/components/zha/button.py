@@ -108,20 +108,29 @@ class ZHAIdentifyButton(ZHAButton):
         return [DEFAULT_DURATION]
 
 
-@MULTI_MATCH(
-    channel_names="tuya_manufacturer",
-    manufacturers={"_TZE200_htnnfasr",},
-    stop_on_match_group="tuya_manufacturer",
-)
-class FrostLockResetButton(ZHAButton, id_suffix="reset frost lock"):
-    """Defines a ZHA identify button."""
+class ZHAButtonAttribute(ZhaEntity, ButtonEntity):
+    """Defines a ZHA button, which stes value to an attribute."""
 
-    _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.RESTART
-    _attr_entity_category = EntityCategory.CONFIG
+    _attribute_name: str = None
+    _attribute_value: Any = None
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> None:
+        """Init this button."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._channel: ChannelType = channels[0]
 
     async def async_press(self) -> None:
+        """Write attribute with defined value."""
         try:
-            result = await self._channel.cluster.write_attributes({"frost_lock_reset": 0})
+            result = await self._channel.cluster.write_attributes(
+                {self._attribute_name: self._attribute_value}
+            )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
             return
@@ -130,7 +139,18 @@ class FrostLockResetButton(ZHAButton, id_suffix="reset frost lock"):
         ):
             self.async_write_ha_state()
 
-    def get_args(self) -> list[Any]:
-        """Return the arguments to use in the command."""
 
-        return [0]
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+    stop_on_match_group="tuya_manufacturer",
+)
+class FrostLockResetButton(ZHAButtonAttribute, id_suffix="reset frost lock"):
+    """Defines a ZHA identify button."""
+
+    _attribute_name = "frost_lock_reset"
+    _attribute_value = 0
+    _attr_device_class = ButtonDeviceClass.RESTART
+    _attr_entity_category = EntityCategory.CONFIG
