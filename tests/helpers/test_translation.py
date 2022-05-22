@@ -384,3 +384,40 @@ async def test_custom_component_translations(hass, enable_custom_integrations):
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
     assert await translation.async_get_translations(hass, "en", "state") == {}
+
+
+async def test_get_cached_translations(
+    hass, mock_config_flows, enable_custom_integrations
+):
+    """Test the get cached translations helper."""
+    translations = translation.get_cached_translations(hass, "en", "state")
+    assert translations == {}
+
+    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    await translation.load_translations_to_cache(hass, "en")
+    translations = translation.get_cached_translations(hass, "en", "state")
+
+    assert translations["component.switch.state.string1"] == "Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
+
+    await translation.load_translations_to_cache(hass, "de")
+    translations = translation.get_cached_translations(hass, "de", "state")
+    assert "component.switch.something" not in translations
+    assert translations["component.switch.state.string1"] == "German Value 1"
+    assert translations["component.switch.state.string2"] == "German Value 2"
+
+    # Test a partial translation
+    await translation.load_translations_to_cache(hass, "es")
+    translations = translation.get_cached_translations(hass, "es", "state")
+    assert translations["component.switch.state.string1"] == "Spanish Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
+
+    # Test that an untranslated language falls back to English.
+    await translation.load_translations_to_cache(hass, "invalid-language")
+    translations = translation.get_cached_translations(
+        hass, "invalid-language", "state"
+    )
+    assert translations["component.switch.state.string1"] == "Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
