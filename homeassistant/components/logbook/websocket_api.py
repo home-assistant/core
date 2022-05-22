@@ -213,6 +213,11 @@ async def ws_event_stream(
         _LOGGER.debug(
             "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
         )
+
+    if setup_complete_future.cancelled():
+        # Unsubscribe happened while waiting for recorder
+        return
+
     #
     # Fetch any events from the database that have
     # not been committed since the original fetch
@@ -239,7 +244,9 @@ async def ws_event_stream(
     if final_cutoff_time:  # Only sends results if we have them
         connection.send_message(message)
 
-    setup_complete_future.set_result(subscriptions_setup_complete_time)
+    if not setup_complete_future.cancelled():
+        # Unsubscribe happened while waiting for formatted events
+        setup_complete_future.set_result(subscriptions_setup_complete_time)
 
 
 @websocket_api.websocket_command(
