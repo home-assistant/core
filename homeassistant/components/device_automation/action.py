@@ -12,7 +12,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import (
     DeviceAutomationType,
-    GetAutomationCapabilitiesResult,
     GetAutomationsResult,
     async_get_device_automation_platform,
 )
@@ -43,7 +42,7 @@ class DeviceAutomationActionProtocol(Protocol):
 
     def async_get_action_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> GetAutomationCapabilitiesResult | Awaitable[GetAutomationCapabilitiesResult]:
+    ) -> dict[str, vol.Schema] | Awaitable[dict[str, vol.Schema]]:
         """List action capabilities."""
 
     def async_get_actions(
