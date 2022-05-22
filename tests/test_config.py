@@ -4,7 +4,7 @@ from collections import OrderedDict
 import copy
 import os
 from unittest import mock
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -21,10 +21,12 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_PRELOAD_TRANSLATIONS,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_STARTED,
     __version__,
 )
 from homeassistant.core import ConfigSource, HomeAssistantError
@@ -552,6 +554,39 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source is ConfigSource.YAML
     assert hass.config.currency == "EUR"
+
+
+async def test_loading_configuration_preload_translations_waits_for_ha_started(hass):
+    """Test listening for HA start event when there are translations to preload."""
+    hass.bus.async_listen_once = MagicMock()
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            CONF_PRELOAD_TRANSLATIONS: ["en", "nl"],
+        },
+    )
+
+    assert hass.bus.async_listen_once.called
+    assert (
+        hass.bus.async_listen_once.call_args_list[0][0][0]
+        == EVENT_HOMEASSISTANT_STARTED
+    )
+
+
+async def test_loading_configuration_preload_translations_run_after_ha_started(hass):
+    """Test preloading translations after HA started event."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            CONF_PRELOAD_TRANSLATIONS: ["en", "nl"],
+        },
+    )
+
+    with patch("homeassistant.config.load_translations_to_cache") as loader:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+    assert loader.call_count == 2
+    loader.assert_has_calls([call(ANY, "en"), call(ANY, "nl")], any_order=True)
 
 
 async def test_loading_configuration_default_media_dirs_docker(hass):
