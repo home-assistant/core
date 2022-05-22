@@ -2,6 +2,13 @@
 
 import logging
 
+from arrow import utcnow
+from miio.airfresh_t2017 import (
+    DisplayOrientation as AirfreshT2017DisplayOrientation,
+    PtcLevel as AirfreshT2017PtcLevel,
+)
+from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
+from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
 from miio.tests.test_airfresh_t2017 import DummyAirFreshT2017
 from miio.tests.test_airhumidifier import DummyAirHumidifier
 from miio.tests.test_airhumidifier_miot import DummyAirHumidifierMiot
@@ -31,7 +38,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_TOKE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.xiaomi_miio import TEST_MAC
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,28 +87,30 @@ async def setup_xiaomi_miio_select(hass: HomeAssistant, model, device) -> None:
 
 
 @pytest.fixture()
-async def setup_xiaomi_miio_airfresh_select(hass: HomeAssistant) -> None:
+async def setup_xiaomi_miio_airfresh_select(hass: HomeAssistant):
     """Initialize setup xiaomi_miio airfresh select entity."""
 
-    await setup_xiaomi_miio_select(hass, MODEL_AIRFRESH_T2017, DummyAirFreshT2017())
+    dummy_device = DummyAirFreshT2017()
+    await setup_xiaomi_miio_select(hass, MODEL_AIRFRESH_T2017, dummy_device)
+    return dummy_device
 
 
 @pytest.fixture()
-async def setup_xiaomi_miio_airhumidifier_select(hass: HomeAssistant) -> None:
+async def setup_xiaomi_miio_airhumidifier_select(hass: HomeAssistant):
     """Initialize setup xiaomi_miio airhumidifier select entity."""
 
-    await setup_xiaomi_miio_select(
-        hass, MODEL_AIRHUMIDIFIER_CA1, DummyAirHumidifier(MODEL_AIRHUMIDIFIER_CA1)
-    )
+    dummy_device = DummyAirHumidifier(MODEL_AIRHUMIDIFIER_CA1)
+    await setup_xiaomi_miio_select(hass, MODEL_AIRHUMIDIFIER_CA1, dummy_device)
+    return dummy_device
 
 
 @pytest.fixture()
-async def setup_xiaomi_miio_airhumidifier_miot_select(hass: HomeAssistant) -> None:
+async def setup_xiaomi_miio_airhumidifier_miot_select(hass: HomeAssistant):
     """Initialize setup xiaomi_miio select entity."""
 
-    await setup_xiaomi_miio_select(
-        hass, MODEL_AIRHUMIDIFIER_CA4, DummyAirHumidifierMiot()
-    )
+    dummy_device = DummyAirHumidifierMiot()
+    await setup_xiaomi_miio_select(hass, MODEL_AIRHUMIDIFIER_CA4, dummy_device)
+    return dummy_device
 
 
 def test_setup_display_orientation_params(
@@ -322,6 +331,78 @@ async def test_select_led_brightness_miot_option(
         {ATTR_OPTION: "bright", ATTR_ENTITY_ID: "select.mock_title_led_brightness"},
         blocking=True,
     )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.mock_title_led_brightness")
+    assert state
+    assert state.state == "bright"
+
+
+async def test_select_airfresh_coordinator_update(
+    hass: HomeAssistant, setup_xiaomi_miio_airfresh_select
+) -> None:
+    """Test coordinator update of a option."""
+    display_orientation = hass.states.get("select.mock_title_display_orientation")
+    assert display_orientation
+    assert display_orientation.state == "forward"
+
+    auxiliary_heat_level = hass.states.get("select.mock_title_auxiliary_heat_level")
+    assert auxiliary_heat_level
+    assert auxiliary_heat_level.state == "low"
+
+    # emulate someone change state from device maybe used app
+    setup_xiaomi_miio_airfresh_select.set_display_orientation(
+        AirfreshT2017DisplayOrientation.LandscapeLeft
+    )
+    setup_xiaomi_miio_airfresh_select.set_ptc_level(AirfreshT2017PtcLevel.High)
+
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    display_orientation = hass.states.get("select.mock_title_display_orientation")
+    assert display_orientation
+    assert display_orientation.state == "left"
+
+    auxiliary_heat_level = hass.states.get("select.mock_title_auxiliary_heat_level")
+    assert auxiliary_heat_level
+    assert auxiliary_heat_level.state == "high"
+
+
+async def test_select_airhumidifier_coordinator_update(
+    hass: HomeAssistant, setup_xiaomi_miio_airhumidifier_select
+) -> None:
+    """Test coordinator update of a option."""
+    state = hass.states.get("select.mock_title_led_brightness")
+    assert state
+    assert state.state == "off"
+
+    # emulate someone change state from device maybe used app
+    setup_xiaomi_miio_airhumidifier_select.set_led_brightness(
+        AirhumidifierLedBrightness.Bright
+    )
+
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.mock_title_led_brightness")
+    assert state
+    assert state.state == "bright"
+
+
+async def test_select_airhumidifier_miot_coordinator_update(
+    hass: HomeAssistant, setup_xiaomi_miio_airhumidifier_miot_select
+) -> None:
+    """Test coordinator update of a option."""
+    state = hass.states.get("select.mock_title_led_brightness")
+    assert state
+    assert state.state == "dim"
+
+    # emulate someone change state from device maybe used app
+    setup_xiaomi_miio_airhumidifier_miot_select.set_led_brightness(
+        AirhumidifierMiotLedBrightness.Bright
+    )
+
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get("select.mock_title_led_brightness")
