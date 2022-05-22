@@ -75,6 +75,7 @@ from .tasks import (
     RecorderTask,
     StatisticsTask,
     StopTask,
+    SynchronizeTask,
     UpdateStatisticsMetadataTask,
     WaitTask,
 )
@@ -927,6 +928,12 @@ class Recorder(threading.Thread):
         """Listen for new events and put them in the process queue."""
         if self._async_event_filter(event):
             self.queue_task(EventTask(event))
+
+    async def async_block_till_done(self) -> None:
+        """Async version of block_till_done."""
+        event = asyncio.Event()
+        self.queue_task(SynchronizeTask(event))
+        await event.wait()
 
     def block_till_done(self) -> None:
         """Block till all events processed.
