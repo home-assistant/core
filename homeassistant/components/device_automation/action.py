@@ -10,11 +10,7 @@ from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    DeviceAutomationType,
-    GetAutomationsResult,
-    async_get_device_automation_platform,
-)
+from . import DeviceAutomationType, async_get_device_automation_platform
 from .exceptions import InvalidDeviceAutomationConfig
 
 
@@ -47,7 +43,7 @@ class DeviceAutomationActionProtocol(Protocol):
 
     def async_get_actions(
         self, hass: HomeAssistant, device_id: str
-    ) -> GetAutomationsResult | Awaitable[GetAutomationsResult]:
+    ) -> list[dict[str, Any]] | Awaitable[list[dict[str, Any]]]:
         """List actions."""
 
 

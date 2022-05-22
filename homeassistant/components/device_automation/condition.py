@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -11,11 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    DeviceAutomationType,
-    GetAutomationsResult,
-    async_get_device_automation_platform,
-)
+from . import DeviceAutomationType, async_get_device_automation_platform
 from .exceptions import InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:
@@ -47,7 +43,7 @@ class DeviceAutomationConditionProtocol(Protocol):
 
     def async_get_conditions(
         self, hass: HomeAssistant, device_id: str
-    ) -> GetAutomationsResult | Awaitable[GetAutomationsResult]:
+    ) -> list[dict[str, Any]] | Awaitable[list[dict[str, Any]]]:
         """List conditions."""
 
 

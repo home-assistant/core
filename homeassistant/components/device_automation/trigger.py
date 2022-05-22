@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -17,7 +17,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     DeviceAutomationType,
-    GetAutomationsResult,
     async_get_device_automation_platform,
 )
 from .exceptions import InvalidDeviceAutomationConfig
@@ -54,7 +53,7 @@ class DeviceAutomationTriggerProtocol(Protocol):
 
     def async_get_triggers(
         self, hass: HomeAssistant, device_id: str
-    ) -> GetAutomationsResult | Awaitable[GetAutomationsResult]:
+    ) -> list[dict[str, Any]] | Awaitable[list[dict[str, Any]]]:
         """List triggers."""
 
 
