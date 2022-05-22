@@ -195,6 +195,7 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         vol.Optional(Platform.BUTTON.value): cv.ensure_list,
         vol.Optional(Platform.CAMERA.value): cv.ensure_list,
         vol.Optional(Platform.CLIMATE.value): cv.ensure_list,
+        vol.Optional(Platform.COVER.value): cv.ensure_list,
         vol.Optional(Platform.FAN.value): cv.ensure_list,
         vol.Optional(Platform.LIGHT.value): cv.ensure_list,
         vol.Optional(Platform.LOCK.value): cv.ensure_list,
