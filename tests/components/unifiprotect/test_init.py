@@ -202,11 +202,11 @@ async def test_migrate_reboot_button(
 
     registry = er.async_get(hass)
     registry.async_get_or_create(
-        Platform.BUTTON, Platform.BUTTON, light1.id, config_entry=mock_entry.entry
+        Platform.BUTTON, DOMAIN, light1.id, config_entry=mock_entry.entry
     )
     registry.async_get_or_create(
         Platform.BUTTON,
-        Platform.BUTTON,
+        DOMAIN,
         f"{light2.id}_reboot",
         config_entry=mock_entry.entry,
     )
@@ -218,23 +218,66 @@ async def test_migrate_reboot_button(
     assert mock_entry.api.update.called
     assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
 
+    buttons = []
+    for entity in er.async_entries_for_config_entry(
+        registry, mock_entry.entry.entry_id
+    ):
+        if entity.domain == Platform.BUTTON.value:
+            buttons.append(entity)
+            print(entity.entity_id)
+    assert len(buttons) == 2
+
+    assert registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device") is None
     assert registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device_2") is None
-    light = registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device")
+    light = registry.async_get(f"{Platform.BUTTON}.unifiprotect_lightid1")
     assert light is not None
     assert light.unique_id == f"{light1.id}_reboot"
 
+    assert registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device") is None
     assert registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device_2") is None
-    light = registry.async_get(f"{Platform.BUTTON}.test_light_2_reboot_device")
+    light = registry.async_get(f"{Platform.BUTTON}.unifiprotect_lightid2_reboot")
     assert light is not None
     assert light.unique_id == f"{light2.id}_reboot"
+
+
+async def test_migrate_reboot_button_no_device(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
+):
+    """Test migrating unique ID of reboot button if UniFi Protect device ID changed."""
+
+    light1 = mock_light.copy()
+    light1._api = mock_entry.api
+    light1.name = "Test Light 1"
+    light1.id = "lightid1"
+
+    mock_entry.api.bootstrap.lights = {
+        light1.id: light1,
+    }
+    mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        Platform.BUTTON, DOMAIN, "lightid2", config_entry=mock_entry.entry
+    )
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.entry.state == ConfigEntryState.LOADED
+    assert mock_entry.api.update.called
+    assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
 
     buttons = []
     for entity in er.async_entries_for_config_entry(
         registry, mock_entry.entry.entry_id
     ):
-        if entity.platform == Platform.BUTTON.value:
+        if entity.domain == Platform.BUTTON.value:
             buttons.append(entity)
     assert len(buttons) == 2
+
+    light = registry.async_get(f"{Platform.BUTTON}.unifiprotect_lightid2")
+    assert light is not None
+    assert light.unique_id == "lightid2"
 
 
 async def test_migrate_reboot_button_fail(
@@ -255,14 +298,14 @@ async def test_migrate_reboot_button_fail(
     registry = er.async_get(hass)
     registry.async_get_or_create(
         Platform.BUTTON,
-        Platform.BUTTON,
+        DOMAIN,
         light1.id,
         config_entry=mock_entry.entry,
         suggested_object_id=light1.name,
     )
     registry.async_get_or_create(
         Platform.BUTTON,
-        Platform.BUTTON,
+        DOMAIN,
         f"{light1.id}_reboot",
         config_entry=mock_entry.entry,
         suggested_object_id=light1.name,

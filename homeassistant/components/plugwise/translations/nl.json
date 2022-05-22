@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "De service is al geconfigureerd"
+            "already_configured": "Dienst is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -23,7 +23,7 @@
                     "host": "IP-adres",
                     "password": "Smile-ID",
                     "port": "Poort",
-                    "username": "Smile Gebruikersnaam"
+                    "username": "Smile gebruikersnaam"
                 },
                 "description": "Voer in",
                 "title": "Maak verbinding met de Smile"

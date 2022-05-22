@@ -1,4 +1,4 @@
-"""Component to embed TP-Link smart home devices."""
+"""Component to embed nexia devices."""
 from __future__ import annotations
 
 from datetime import timedelta
