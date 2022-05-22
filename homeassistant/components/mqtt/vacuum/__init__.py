@@ -1,6 +1,7 @@
 """Support for MQTT vacuums."""
 from __future__ import annotations
 
+import asyncio
 import functools
 
 import voluptuous as vol
@@ -11,16 +12,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ..mixins import async_setup_entry_helper, async_setup_platform_helper
+from ..mixins import (
+    async_get_platform_config_from_yaml,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+)
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
     PLATFORM_SCHEMA_LEGACY,
+    PLATFORM_SCHEMA_LEGACY_MODERN,
     async_setup_entity_legacy,
 )
 from .schema_state import (
     DISCOVERY_SCHEMA_STATE,
     PLATFORM_SCHEMA_STATE,
+    PLATFORM_SCHEMA_STATE_MODERN,
     async_setup_entity_state,
 )
 
@@ -31,9 +38,19 @@ def validate_mqtt_vacuum_discovery(value):
     return schemas[value[CONF_SCHEMA]](value)
 
 
+# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
 def validate_mqtt_vacuum(value):
-    """Validate MQTT vacuum schema."""
+    """Validate MQTT vacuum schema (deprecated)."""
     schemas = {LEGACY: PLATFORM_SCHEMA_LEGACY, STATE: PLATFORM_SCHEMA_STATE}
+    return schemas[value[CONF_SCHEMA]](value)
+
+
+def validate_mqtt_vacuum_modern(value):
+    """Validate MQTT vacuum modern schema."""
+    schemas = {
+        LEGACY: PLATFORM_SCHEMA_LEGACY_MODERN,
+        STATE: PLATFORM_SCHEMA_STATE_MODERN,
+    }
     return schemas[value[CONF_SCHEMA]](value)
 
 
@@ -41,8 +58,13 @@ DISCOVERY_SCHEMA = vol.All(
     MQTT_VACUUM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_vacuum_discovery
 )
 
+# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     MQTT_VACUUM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_vacuum
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
+    MQTT_VACUUM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_vacuum_modern
 )
 
 
@@ -53,6 +75,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT vacuum through configuration.yaml."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, vacuum.DOMAIN, config, async_add_entities, _async_setup_entity
     )
@@ -63,7 +86,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT vacuum dynamically through MQTT discovery."""
+    """Set up MQTT vacuum through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, vacuum.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

@@ -4,6 +4,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -31,7 +32,7 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -103,8 +104,8 @@ DEFAULT_PAYLOAD_LOCATE = "locate"
 DEFAULT_PAYLOAD_START = "start"
 DEFAULT_PAYLOAD_PAUSE = "pause"
 
-PLATFORM_SCHEMA_STATE = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_STATE_MODERN = (
+    mqtt.MQTT_BASE_SCHEMA.extend(
         {
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
@@ -136,8 +137,13 @@ PLATFORM_SCHEMA_STATE = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
+# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA_STATE = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_STATE_MODERN.schema),
+    warn_for_legacy_schema(VACUUM_DOMAIN),
+)
 
-DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entity_state(
