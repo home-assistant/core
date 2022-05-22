@@ -1,4 +1,5 @@
 """Support for Google Calendar Search binary sensors."""
+
 from __future__ import annotations
 
 import copy
@@ -89,14 +90,25 @@ def _async_setup_entities(
 ) -> None:
     calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     entities = []
+    num_entities = len(disc_info[CONF_ENTITIES])
     for data in disc_info[CONF_ENTITIES]:
-        if not data[CONF_TRACK]:
-            continue
-        entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
-        )
+        entity_enabled = data.get(CONF_TRACK, True)
+        entity_name = data[CONF_DEVICE_ID]
+        entity_id = generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass)
+        calendar_id = disc_info[CONF_CAL_ID]
+        if num_entities > 1:
+            # The google_calendars.yaml file lets users add multiple entities for
+            # the same calendar id and needs additional disambiguation
+            unique_id = f"{calendar_id}-{entity_name}"
+        else:
+            unique_id = calendar_id
         entity = GoogleCalendarEntity(
-            calendar_service, disc_info[CONF_CAL_ID], data, entity_id
+            calendar_service,
+            disc_info[CONF_CAL_ID],
+            data,
+            entity_id,
+            unique_id,
+            entity_enabled,
         )
         entities.append(entity)
 
@@ -112,6 +124,8 @@ class GoogleCalendarEntity(CalendarEntity):
         calendar_id: str,
         data: dict[str, Any],
         entity_id: str,
+        unique_id: str,
+        entity_enabled: bool,
     ) -> None:
         """Create the Calendar event device."""
         self._calendar_service = calendar_service
@@ -123,6 +137,8 @@ class GoogleCalendarEntity(CalendarEntity):
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_value: timedelta | None = None
         self.entity_id = entity_id
+        self._attr_unique_id = unique_id
+        self._attr_entity_registry_enabled_default = entity_enabled
 
     @property
     def extra_state_attributes(self) -> dict[str, bool]:
@@ -152,7 +168,7 @@ class GoogleCalendarEntity(CalendarEntity):
         """Return True if the event is visible."""
         if self._ignore_availability:
             return True
-        return event.transparency == OPAQUE
+        return event.transparency == OPAQUE  # type: ignore[no-any-return]
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

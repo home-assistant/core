@@ -21,6 +21,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.google.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
@@ -143,6 +144,7 @@ async def test_full_flow_yaml_creds(
             "token_type": "Bearer",
         },
     }
+    assert result.get("options") == {"calendar_access": "read_write"}
 
     assert len(mock_setup.mock_calls) == 1
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -205,6 +207,7 @@ async def test_full_flow_application_creds(
             "token_type": "Bearer",
         },
     }
+    assert result.get("options") == {"calendar_access": "read_write"}
 
     assert len(mock_setup.mock_calls) == 1
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -441,7 +444,12 @@ async def test_reauth_flow(
     assert await component_setup()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=config_entry.data
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
@@ -523,3 +531,66 @@ async def test_title_lookup_failure(
     assert len(mock_setup.mock_calls) == 1
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
+
+
+async def test_options_flow_triggers_reauth(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test load and unload of a ConfigEntry."""
+    config_entry.add_to_hass(hass)
+    await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {"calendar_access": "read_write"}
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"calendar_access"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "calendar_access": "read_only",
+        },
+    )
+    assert result["type"] == "create_entry"
+
+    await hass.async_block_till_done()
+    assert config_entry.options == {"calendar_access": "read_only"}
+    # Re-auth flow was initiated because access level changed
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_options_flow_no_changes(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test load and unload of a ConfigEntry."""
+    config_entry.add_to_hass(hass)
+    await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {"calendar_access": "read_write"}
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "calendar_access": "read_write",
+        },
+    )
+    assert result["type"] == "create_entry"
+
+    await hass.async_block_till_done()
+    assert config_entry.options == {"calendar_access": "read_write"}
+    # Re-auth flow was initiated because access level changed
+    assert config_entry.state is ConfigEntryState.LOADED
