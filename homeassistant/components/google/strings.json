@@ -32,9 +32,7 @@
     "step": {
       "init": {
         "data": {
-          "calendar_access": "Home Assistant access to Google Calendar",
-          "read_only": "Read-only access",
-          "read_write": "Read/Write access"
+          "calendar_access": "Home Assistant access to Google Calendar"
         }
       }
     }
