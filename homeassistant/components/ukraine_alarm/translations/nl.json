@@ -25,7 +25,7 @@
                 "data": {
                     "region": "Regio"
                 },
-                "description": "Kies staat om te monitoren"
+                "description": "De status kiezen om te monitoren"
             }
         }
     }

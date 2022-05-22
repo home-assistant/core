@@ -558,6 +558,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
+/homeassistant/components/laundrify/ @xLarry
+/tests/components/laundrify/ @xLarry
 /homeassistant/components/lcn/ @alengwenus
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/lg_netcast/ @Drafteed

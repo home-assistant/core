@@ -10,7 +10,7 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "progress": {
-            "email_2fa": "Adja meg a k\u00e9tfaktoros hiteles\u00edt\u00e9si k\u00f3dot amelyet e-mailben kapott."
+            "email_2fa": "Ellen\u0151rizze az e-mailj\u00e9t a Simplisafe \u00e1ltal k\u00fcld\u00f6tt ellen\u0151rz\u0151 link\u00e9rt."
         },
         "step": {
             "reauth_confirm": {
