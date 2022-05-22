@@ -933,6 +933,8 @@ class BaseTelegramBotEntity:
             ATTR_DATA: callback_query.data,
             ATTR_MSG: None,
             ATTR_CHAT_ID: None,
+            ATTR_FROM_FIRST: callback_query.from_user.first_name,
+            ATTR_FROM_LAST: callback_query.from_user.last_name,
         }
         if callback_query.message:
             event_data[ATTR_MSG] = callback_query.message.to_dict()
