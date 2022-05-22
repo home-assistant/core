@@ -209,15 +209,3 @@ async def test_anna_climate_entity_climate_changes(
     mock_smile_anna.set_schedule_state.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5", "standaard", "off"
     )
-
-    # Auto mode is not available, no schedules
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "climate",
-            "set_hvac_mode",
-            {"entity_id": "climate.anna", "hvac_mode": "dry"},
-            blocking=True,
-        )
-
-    assert mock_smile_anna.set_temperature.call_count == 1
-    assert mock_smile_anna.set_schedule_state.call_count == 1
