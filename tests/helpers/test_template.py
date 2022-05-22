@@ -1353,21 +1353,31 @@ def test_states_function(hass):
 
 async def test_state_translated(hass):
     """Test state_translated method."""
-    assert await async_setup_component(hass, "binary_sensor", {"binary_sensor": {"platform": "test"}})
+    assert await async_setup_component(
+        hass, "binary_sensor", {"binary_sensor": {"platform": "test"}}
+    )
     await hass.async_block_till_done()
     await translation.load_translations_to_cache(hass, "en")
 
     hass.states.async_set("switch.without_translations", "on", attributes={})
     hass.states.async_set("binary_sensor.without_device_class", "on", attributes={})
-    hass.states.async_set("binary_sensor.with_device_class", "on", attributes={"device_class": "motion"})
+    hass.states.async_set(
+        "binary_sensor.with_device_class", "on", attributes={"device_class": "motion"}
+    )
 
-    tpl = template.Template('{{ state_translated("switch.without_translations", "en") }}', hass)
+    tpl = template.Template(
+        '{{ state_translated("switch.without_translations", "en") }}', hass
+    )
     assert tpl.async_render() == "on"
 
-    tp2 = template.Template('{{ state_translated("binary_sensor.without_device_class", "en") }}', hass)
+    tp2 = template.Template(
+        '{{ state_translated("binary_sensor.without_device_class", "en") }}', hass
+    )
     assert tp2.async_render() == "On"
 
-    tpl3 = template.Template('{{ state_translated("binary_sensor.with_device_class", "en") }}', hass)
+    tpl3 = template.Template(
+        '{{ state_translated("binary_sensor.with_device_class", "en") }}', hass
+    )
     assert tpl3.async_render() == "Detected"
 
 
