@@ -9,7 +9,6 @@
                     "entity_id": "Invoer sensor",
                     "hysteresis": "Hyseterise",
                     "lower": "Ondergrens",
-                    "mode": "Drempelmodus",
                     "name": "Naam",
                     "upper": "Bovengrens"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Invoer sensor",
                     "hysteresis": "Hyseterise",
                     "lower": "Ondergrens",
-                    "mode": "Drempelmodus",
                     "name": "Naam",
                     "upper": "Bovengrens"
                 },

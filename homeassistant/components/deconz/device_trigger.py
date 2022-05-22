@@ -703,7 +703,7 @@ async def async_attach_trigger(
 async def async_get_triggers(
     hass: HomeAssistant,
     device_id: str,
-) -> list | None:
+) -> list[dict[str, str]]:
     """List device triggers.
 
     Make sure device is a supported remote model.
@@ -714,7 +714,7 @@ async def async_get_triggers(
     device = device_registry.devices[device_id]
 
     if device.model not in REMOTES:
-        return None
+        return []
 
     triggers = []
     for trigger, subtype in REMOTES[device.model].keys():

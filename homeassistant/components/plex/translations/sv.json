@@ -25,14 +25,10 @@
                 "description": "V\u00e4lj flera servrar tillg\u00e4ngliga, v\u00e4lj en:",
                 "title": "V\u00e4lj Plex-server"
             },
-            "user": {
-                "title": "Plex Media Server"
-            },
             "user_advanced": {
                 "data": {
                     "setup_method": "Inst\u00e4llningsmetod"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

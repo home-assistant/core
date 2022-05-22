@@ -8,7 +8,7 @@ from sqlalchemy import Column, lambda_stmt, select, union_all
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.models import Events, States
 
@@ -28,7 +28,7 @@ def _select_device_id_context_ids_sub_query(
     end_day: dt,
     event_types: tuple[str, ...],
     json_quotable_device_ids: list[str],
-) -> Select:
+) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple devices."""
     return select(
         union_all(
@@ -45,17 +45,17 @@ def _apply_devices_context_union(
     end_day: dt,
     event_types: tuple[str, ...],
     json_quotable_device_ids: list[str],
-) -> StatementLambdaElement:
+) -> CompoundSelect:
     """Generate a CTE to find the device context ids and a query to find linked row."""
-    devices_cte = _select_device_id_context_ids_sub_query(
+    devices_cte: CTE = _select_device_id_context_ids_sub_query(
         start_day,
         end_day,
         event_types,
         json_quotable_device_ids,
     ).cte()
     return query.union_all(
-        select_events_context_only().where(Events.context_id.in_(devices_cte)),
-        select_states_context_only().where(States.context_id.in_(devices_cte)),
+        select_events_context_only().where(Events.context_id.in_(devices_cte.select())),
+        select_states_context_only().where(States.context_id.in_(devices_cte.select())),
     )
 
 

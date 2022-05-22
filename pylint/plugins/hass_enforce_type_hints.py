@@ -40,12 +40,16 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     "any_platform": re.compile(
         f"^homeassistant\\.components\\.\\w+\\.({'|'.join([platform.value for platform in Platform])})$"
     ),
+    # application_credentials matches only in the package root (application_credentials.py)
+    "application_credentials": re.compile(
+        r"^homeassistant\.components\.\w+\.(application_credentials)$"
+    ),
     # device_tracker matches only in the package root (device_tracker.py)
     "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
     # diagnostics matches only in the package root (diagnostics.py)
     "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
     # config_flow matches only in the package root (config_flow.py)
-    "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$")
+    "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$"),
 }
 
 _METHOD_MATCH: list[TypeHintMatch] = [
@@ -134,6 +138,24 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             2: "AddEntitiesCallback",
         },
         return_type=None,
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["application_credentials"],
+        function_name="async_get_auth_implementation",
+        arg_types={
+            0: "HomeAssistant",
+            1: "str",
+            2: "ClientCredential",
+        },
+        return_type="AbstractOAuth2Implementation",
+    ),
+    TypeHintMatch(
+        module_filter=_MODULE_FILTERS["application_credentials"],
+        function_name="async_get_authorization_server",
+        arg_types={
+            0: "HomeAssistant",
+        },
+        return_type="AuthorizationServer",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_tracker"],

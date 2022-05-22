@@ -75,6 +75,7 @@ from .tasks import (
     RecorderTask,
     StatisticsTask,
     StopTask,
+    SynchronizeTask,
     UpdateStatisticsMetadataTask,
     WaitTask,
 )
@@ -180,7 +181,6 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
-        self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
@@ -928,6 +928,12 @@ class Recorder(threading.Thread):
         """Listen for new events and put them in the process queue."""
         if self._async_event_filter(event):
             self.queue_task(EventTask(event))
+
+    async def async_block_till_done(self) -> None:
+        """Async version of block_till_done."""
+        event = asyncio.Event()
+        self.queue_task(SynchronizeTask(event))
+        await event.wait()
 
     def block_till_done(self) -> None:
         """Block till all events processed.

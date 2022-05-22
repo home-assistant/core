@@ -5,7 +5,6 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "no_bridges": "Keine deCONZ-Bridges entdeckt",
             "no_hardware_available": "Keine Funkhardware an deCONZ angeschlossen",
-            "not_deconz_bridge": "Keine deCONZ Bridge entdeckt",
             "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
         },
         "error": {
