@@ -178,7 +178,7 @@ async def ws_event_stream(
             stream_queue.put_nowait(event)
         except asyncio.QueueFull:
             _LOGGER.debug(
-                "Client exceeded max pending messages of %s (likely disconnected without unsubscribe)",
+                "Client exceeded max pending messages of %s",
                 MAX_PENDING_LOGBOOK_EVENTS,
             )
             _unsub()
