@@ -98,9 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    # Add event listener for option flow changes
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
     return True
 
 
@@ -114,11 +111,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
