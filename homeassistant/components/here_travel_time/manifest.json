@@ -6,5 +6,6 @@
   "requirements": ["herepy==2.0.0"],
   "codeowners": ["@eifinger"],
   "iot_class": "cloud_polling",
-  "loggers": ["herepy"]
+  "loggers": ["herepy"],
+  "quality_scale": "gold"
 }
