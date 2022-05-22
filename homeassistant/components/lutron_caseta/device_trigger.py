@@ -1,16 +1,15 @@
 """Provides device triggers for lutron caseta."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -330,9 +329,7 @@ TRIGGER_SCHEMA = vol.Any(
 )
 
 
-async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
+async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
     """Validate config."""
     # if device is available verify parameters against device capabilities
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
@@ -350,14 +347,14 @@ async def async_validate_trigger_config(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, Any]]:
     """List device triggers for lutron caseta devices."""
     triggers = []
 
     if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], {})
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], [])
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
         for subtype in valid_buttons:
