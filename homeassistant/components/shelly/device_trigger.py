@@ -1,7 +1,7 @@
 """Provides device triggers for Shelly."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 
@@ -72,8 +72,8 @@ def append_input_triggers(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> dict[str, Any]:
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 

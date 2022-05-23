@@ -716,13 +716,14 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True, frozen=False)
 class Context:
     """The context that triggered something."""
 
     user_id: str | None = attr.ib(default=None)
     parent_id: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=ulid_util.ulid)
+    origin_event: Event | None = attr.ib(default=None, eq=False)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -866,6 +867,8 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
+        if not event.context.origin_event:
+            event.context.origin_event = event
 
         _LOGGER.debug("Bus:Handling %s", event)
 

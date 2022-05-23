@@ -30,14 +30,9 @@ class LutronCasetaScene(Scene):
 
     def __init__(self, scene, bridge):
         """Initialize the Lutron Caseta scene."""
-        self._scene_name = scene["name"]
+        self._attr_name = scene["name"]
         self._scene_id = scene["scene_id"]
         self._bridge = bridge
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene_name
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

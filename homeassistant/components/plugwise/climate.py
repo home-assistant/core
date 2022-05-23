@@ -105,6 +105,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 return HVACAction.HEATING
             if heater_central_data["binary_sensors"].get("cooling_state"):
                 return HVACAction.COOLING
+
         return HVACAction.IDLE
 
     @property
@@ -132,9 +133,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        if hvac_mode == HVACMode.AUTO and not self.device.get("schedule_temperature"):
-            raise ValueError("Cannot set HVAC mode to Auto: No schedule available")
-
         await self.coordinator.api.set_schedule_state(
             self.device["location"],
             self.device.get("last_used"),

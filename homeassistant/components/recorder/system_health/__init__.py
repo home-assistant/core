@@ -44,17 +44,32 @@ def _get_db_stats(instance: Recorder, database_name: str) -> dict[str, Any]:
     return db_stats
 
 
+@callback
+def _async_get_db_engine_info(instance: Recorder) -> dict[str, Any]:
+    """Get database engine info."""
+    db_engine_info: dict[str, Any] = {}
+    if dialect_name := instance.dialect_name:
+        db_engine_info["database_engine"] = dialect_name.value
+    if engine_version := instance.engine_version:
+        db_engine_info["database_version"] = str(engine_version)
+    return db_engine_info
+
+
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     instance = get_instance(hass)
+
     run_history = instance.run_history
     database_name = URL(instance.db_url).path.lstrip("/")
+    db_engine_info = _async_get_db_engine_info(instance)
     db_stats: dict[str, Any] = {}
+
     if instance.async_db_ready.done():
         db_stats = await instance.async_add_executor_job(
             _get_db_stats, instance, database_name
         )
-    return {
-        "oldest_recorder_run": run_history.first.start,
-        "current_recorder_run": run_history.current.start,
-    } | db_stats
+        db_runs = {
+            "oldest_recorder_run": run_history.first.start,
+            "current_recorder_run": run_history.current.start,
+        }
+    return db_runs | db_stats | db_engine_info

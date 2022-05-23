@@ -27,7 +27,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import VALUE_SCHEMA
 from .const import (
@@ -141,7 +141,9 @@ ACTION_SCHEMA = vol.Any(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -238,7 +240,10 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
     action_type = service = config[CONF_TYPE]

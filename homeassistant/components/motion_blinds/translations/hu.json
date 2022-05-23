@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van, a csatlakoz\u00e1si be\u00e1ll\u00edt\u00e1sai friss\u00edtve vannak",
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "connection_error": "Sikertelen csatlakoz\u00e1s"
         },
