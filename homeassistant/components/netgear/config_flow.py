@@ -23,7 +23,6 @@ from homeassistant.util.network import is_ipv4_address
 
 from .const import (
     CONF_CONSIDER_HOME,
-    CONF_NOT_TRACK,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
@@ -53,9 +52,6 @@ def _ordered_shared_schema(schema_input):
     return {
         vol.Optional(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
-        vol.Optional(
-            CONF_NOT_TRACK, default=schema_input.get(CONF_NOT_TRACK, False)
-        ): bool,
     }
 
 
@@ -78,11 +74,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
-                ): int,
-                vol.Optional(
-                    CONF_NOT_TRACK,
-                    default=self.config_entry.options.get(CONF_NOT_TRACK, False),
-                ): bool,
+                ): int
             }
         )
 
@@ -185,7 +177,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ssl = self.placeholders[CONF_SSL]
         username = user_input.get(CONF_USERNAME, self.placeholders[CONF_USERNAME])
         password = user_input[CONF_PASSWORD]
-        not_track = user_input.get(CONF_NOT_TRACK, False)
         if not username:
             username = self.placeholders[CONF_USERNAME]
 
@@ -213,15 +204,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=config_data)
 
-        config_options = {
-            CONF_NOT_TRACK: not_track,
-        }
-
         if info.get("ModelName") is not None and info.get("DeviceName") is not None:
             name = f"{info['ModelName']} - {info['DeviceName']}"
         else:
             name = info.get("ModelName", DEFAULT_NAME)
 
-        return self.async_create_entry(
-            title=name, data=config_data, options=config_options
-        )
+        return self.async_create_entry(title=name, data=config_data)

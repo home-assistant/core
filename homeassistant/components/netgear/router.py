@@ -29,7 +29,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CONSIDER_HOME,
-    CONF_NOT_TRACK,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
@@ -85,7 +84,6 @@ class NetgearRouter:
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
         self._consider_home = timedelta(seconds=consider_home_int)
-        self._track_devices = not entry.options.get(CONF_NOT_TRACK, False)
 
         self._api: Netgear = None
         self._api_lock = asyncio.Lock()
@@ -117,7 +115,7 @@ class NetgearRouter:
             if self.model.startswith(model):
                 self.method_version = 2
 
-        if self.method_version == 2 and self._track_devices:
+        if self.method_version == 2 and self.mode == MODE_ROUTER:
             if not self._api.get_attached_devices_2():
                 _LOGGER.error(
                     "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
@@ -134,7 +132,7 @@ class NetgearRouter:
                 return False
 
         # set already known devices to away instead of unavailable
-        if self._track_devices:
+        if self.mode == MODE_ROUTER:
             device_registry = dr.async_get(self.hass)
             devices = dr.async_entries_for_config_entry(device_registry, self.entry_id)
             for device_entry in devices:

@@ -13,7 +13,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_NOT_TRACK,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_COORDINATOR_TRAFFIC,
@@ -68,11 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
-    track_devices = not entry.options.get(CONF_NOT_TRACK, False)
-
     async def async_update_devices() -> bool:
         """Fetch data from the router."""
-        if track_devices:
+        if router.mode == MODE_ROUTER:
             return await router.async_update_device_trackers()
         return False
 
@@ -96,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=SCAN_INTERVAL,
     )
 
-    if track_devices:
+    if router.mode == MODE_ROUTER:
         await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
 

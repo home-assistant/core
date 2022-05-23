@@ -6,8 +6,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%] (Optional)",
           "username": "[%key:common::config_flow::data::username%] (Optional)",
-          "password": "[%key:common::config_flow::data::password%]",
-          "not_track": "Do not track devices"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -23,8 +22,7 @@
       "init": {
         "description": "Specify optional settings",
         "data": {
-          "consider_home": "Consider home time (seconds)",
-          "not_track": "Do not track devices"
+          "consider_home": "Consider home time (seconds)"
         }
       }
     }

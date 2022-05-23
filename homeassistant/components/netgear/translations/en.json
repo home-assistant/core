@@ -11,8 +11,7 @@
                 "data": {
                     "host": "Host (Optional)",
                     "password": "Password",
-                    "username": "Username (Optional)",
-                    "not_track": "Do not track devices"
+                    "username": "Username (Optional)"
                 },
                 "description": "Default host: {host}\nDefault username: {username}"
             }
@@ -22,8 +21,7 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Consider home time (seconds)",
-                    "not_track": "Do not track devices"
+                    "consider_home": "Consider home time (seconds)"
                 },
                 "description": "Specify optional settings"
             }

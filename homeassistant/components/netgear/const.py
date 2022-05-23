@@ -8,7 +8,6 @@ DOMAIN = "netgear"
 PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 CONF_CONSIDER_HOME = "consider_home"
-CONF_NOT_TRACK = "not_track"
 
 KEY_ROUTER = "router"
 KEY_COORDINATOR = "coordinator"
