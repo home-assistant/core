@@ -15,6 +15,32 @@ from . import assert_adds_messages, assert_no_messages
 
 
 @pytest.mark.parametrize(
+    ("string", "expected_x", "expected_y", "expected_z", "expected_a"),
+    [
+        ("list[dict[str, str]]", "list", "dict", "str", "str"),
+        ("list[dict[str, Any]]", "list", "dict", "str", "Any"),
+    ],
+)
+def test_regex_x_of_y_of_z_comma_a(
+    hass_enforce_type_hints: ModuleType,
+    string: str,
+    expected_x: str,
+    expected_y: str,
+    expected_z: str,
+    expected_a: str,
+) -> None:
+    """Test x_of_y_of_z_comma_a regexes."""
+    matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
+
+    assert (match := matchers["x_of_y_of_z_comma_a"].match(string))
+    assert match.group(0) == string
+    assert match.group(1) == expected_x
+    assert match.group(2) == expected_y
+    assert match.group(3) == expected_z
+    assert match.group(4) == expected_a
+
+
+@pytest.mark.parametrize(
     ("string", "expected_x", "expected_y", "expected_z"),
     [
         ("Callable[..., None]", "Callable", "...", "None"),
