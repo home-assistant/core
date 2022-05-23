@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class LogbookLiveStream:
-    """The a logbook live stream."""
+    """Track a logbook live stream."""
 
     stream_queue: asyncio.Queue[Event]
     subscriptions: list[CALLBACK_TYPE]
