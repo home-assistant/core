@@ -1,7 +1,9 @@
 """Support for Big Ass Fans number."""
 from __future__ import annotations
 
-from typing import cast
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Optional, cast
 
 from aiobafi6 import Device
 
@@ -20,69 +22,95 @@ from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANG
 from .entity import BAFEntity
 from .models import BAFData
 
-MODES = {
-    "return_to_auto_timeout": NumberMode.SLIDER,
-    "motion_sense_timeout": NumberMode.SLIDER,
-    "light_return_to_auto_timeout": NumberMode.SLIDER,
-    "light_auto_motion_timeout": NumberMode.SLIDER,
-}
+
+@dataclass
+class BAFNumberDescriptionMixin:
+    """Required values for BAF sensors."""
+
+    value_fn: Callable[[Device], int | None]
+    mode: NumberMode
+
+
+@dataclass
+class BAFNumberDescription(
+    NumberEntityDescription,
+    BAFNumberDescriptionMixin,
+):
+    """Class describing BAF sensor entities."""
+
 
 FAN_NUMBER_DESCRIPTIONS = (
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="return_to_auto_timeout",
         name="Return to Auto Timeout",
         min_value=ONE_MIN_SECS,
         max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         unit_of_measurement=TIME_SECONDS,
+        value_fn=lambda device: cast(Optional[int], device.return_to_auto_timeout),
+        mode=NumberMode.SLIDER,
     ),
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="motion_sense_timeout",
         name="Motion Sense Timeout",
         min_value=ONE_MIN_SECS,
         max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         unit_of_measurement=TIME_SECONDS,
+        value_fn=lambda device: cast(Optional[int], device.motion_sense_timeout),
+        mode=NumberMode.SLIDER,
     ),
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="comfort_min_speed",
         name="Auto Comfort Minimum Speed",
         min_value=0,
         max_value=SPEED_RANGE[1] - 1,
         entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: cast(Optional[int], device.comfort_min_speed),
+        mode=NumberMode.BOX,
     ),
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="comfort_max_speed",
         name="Auto Comfort Maximum Speed",
         min_value=1,
         max_value=SPEED_RANGE[1],
         entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: cast(Optional[int], device.comfort_max_speed),
+        mode=NumberMode.BOX,
     ),
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="comfort_heat_assist_speed",
         name="Auto Comfort Heat Assist Speed",
         min_value=SPEED_RANGE[0],
         max_value=SPEED_RANGE[1],
         entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: cast(Optional[int], device.comfort_heat_assist_speed),
+        mode=NumberMode.BOX,
     ),
 )
 
 LIGHT_NUMBER_DESCRIPTIONS = (
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="light_return_to_auto_timeout",
         name="Light Return to Auto Timeout",
         min_value=ONE_MIN_SECS,
         max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         unit_of_measurement=TIME_SECONDS,
+        value_fn=lambda device: cast(
+            Optional[int], device.light_return_to_auto_timeout
+        ),
+        mode=NumberMode.SLIDER,
     ),
-    NumberEntityDescription(
+    BAFNumberDescriptionMixin(
         key="light_auto_motion_timeout",
         name="Light Motion Sense Timeout",
         min_value=ONE_MIN_SECS,
         max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
         unit_of_measurement=TIME_SECONDS,
+        value_fn=lambda device: cast(Optional[int], device.light_auto_motion_timeout),
+        mode=NumberMode.SLIDER,
     ),
 )
 
@@ -95,7 +123,7 @@ async def async_setup_entry(
     """Set up BAF numbers."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
     device = data.device
-    descriptions: list[NumberEntityDescription] = []
+    descriptions: list[BAFNumberDescription] = []
     if device.has_fan:
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)
     if device.has_light:
@@ -106,21 +134,19 @@ async def async_setup_entry(
 class BAFNumber(BAFEntity, NumberEntity):
     """BAF number."""
 
-    entity_description: NumberEntityDescription
+    entity_description: BAFNumberDescription
 
-    def __init__(self, device: Device, description: NumberEntityDescription) -> None:
+    def __init__(self, device: Device, description: BAFNumberDescription) -> None:
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(device, f"{device.name} {description.name}")
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
-        self._attr_mode = MODES.get(description.key, NumberMode.BOX)
+        self._attr_mode = description.mode
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_value = cast(
-            float, getattr(self._device, self.entity_description.key)
-        )
+        self._attr_value = self.entity_description.value_fn(self._device)
 
     async def async_set_value(self, value: float) -> None:
         """Set the value."""
