@@ -31,7 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up BAF lights."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if not data.device.has_light:
+    if data.device.has_light:
         klass = BAFFanLight if data.device.has_fan else BAFStandaloneLight
         async_add_entities([klass(data.device)])
 
