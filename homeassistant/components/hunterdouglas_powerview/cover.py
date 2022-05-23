@@ -1,5 +1,4 @@
 """Support for hunter douglas shades."""
-from abc import abstractmethod
 import asyncio
 from contextlib import suppress
 import logging
@@ -160,6 +159,12 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
+        # these are used to store the value to be returned in the case
+        # coordinator data is unavailable. Serve as a fallback for key missing
+        # ie shades that only send 1 position when they have 2
+        self._cached_primary = MIN_POSITION
+        self._cached_secondary = MIN_POSITION
+        self._cached_vane = MIN_POSITION
 
     @property
     def extra_state_attributes(self):
@@ -171,29 +176,69 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Return the position data."""
         return self.coordinator.data[self._shade.id][ATTR_POSITION_DATA]
 
-    @property
-    def get_position_primary(self):
-        """Access shade position directly from co-ordinator."""
-        return self.position_data[ATTR_POSITION1]
+    def get_position(self, pos_kind):
+        """Return position data from the co-ordinator."""
+        if self.position_data.get(ATTR_POSKIND1) == pos_kind:
+            return self.position_data[ATTR_POSITION1]
+        if self.position_data.get(ATTR_POSKIND2) == pos_kind:
+            return self.position_data[ATTR_POSITION2]
+        # cache value used if data not in co-ordinator (vanes/type8+9)
+        if pos_kind == POS_KIND_PRIMARY:
+            return self._cached_primary
+        if pos_kind == POS_KIND_SECONDARY:
+            return self._cached_secondary
+        if pos_kind == POS_KIND_VANE:
+            return self._cached_vane
 
     @property
-    def get_position_secondary(self):
-        """Access shade position directly from co-ordinator."""
-        return self.position_data[ATTR_POSITION2]
+    def position_primary(self):
+        """Return primary shade position."""
+        return self.get_position(POS_KIND_PRIMARY)
 
-    def set_position_primary(self, val):
-        """Set shade position directly into co-ordinator."""
-        self.position_data[ATTR_POSITION1] = val
+    @property
+    def position_secondary(self):
+        """Return secondary shade position."""
+        return self.get_position(POS_KIND_SECONDARY)
 
-    def set_position_secondary(self, val):
-        """Set shade position directly into co-ordinator."""
-        self.position_data[ATTR_POSITION2] = val
+    @property
+    def position_vane(self):
+        """Return vane position."""
+        return self.get_position(POS_KIND_VANE)
+
+    def set_position(self, value, pos_kind):
+        """Store position into coordinator and local cache."""
+        # confirm the shade attribute in case position1/2 are inverted
+        if self.position_data.get(ATTR_POSKIND1) == pos_kind:
+            self.position_data[ATTR_POSITION1] = value
+        if self.position_data.get(ATTR_POSKIND2) == pos_kind:
+            self.position_data[ATTR_POSITION2] = value
+        # always store the last copy of information we received
+        # should not be required but will limit chance of an edge case error
+        if pos_kind == POS_KIND_PRIMARY:
+            self._cached_primary = value
+        if pos_kind == POS_KIND_SECONDARY:
+            self._cached_secondary = value
+        if pos_kind == POS_KIND_VANE:
+            self._cached_vane = value
+        _LOGGER.debug("%s - Update Position: %s", self.name, self.position_data)
+
+    def set_position_primary(self, value):
+        """Store position of primary shade."""
+        self.set_position(value, POS_KIND_PRIMARY)
+
+    def set_position_secondary(self, value):
+        """Store position of secondary shade."""
+        self.set_position(value, POS_KIND_SECONDARY)
+
+    def set_position_vane(self, value):
+        """Store position of vane."""
+        self.set_position(value, POS_KIND_VANE)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         # treat anything below 75% of 1% of total position as closed due to conversion of powerview to hass
-        return self.get_position_primary <= CLOSED_POSITION
+        return self.position_primary <= CLOSED_POSITION
 
     @property
     def is_opening(self):
@@ -208,7 +253,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self.get_position_primary)
+        return hd_position_to_hass(self.position_primary)
 
     @property
     def device_class(self):
@@ -317,9 +362,22 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._is_closing = False
 
     @callback
-    @abstractmethod
     def _async_process_updated_position_data(self, position_data):
-        """Process position data."""
+        """Process position data and update into the model."""
+        if ATTR_POSITION1 in position_data:
+            if position_data[ATTR_POSKIND1] == POS_KIND_PRIMARY:
+                self.set_position_primary(position_data[ATTR_POSITION1])
+            if position_data[ATTR_POSKIND1] == POS_KIND_SECONDARY:
+                self.set_position_secondary(position_data[ATTR_POSITION1])
+            if position_data[ATTR_POSKIND1] == POS_KIND_VANE:
+                self.set_position_vane(position_data[ATTR_POSITION1])
+        if ATTR_POSITION2 in position_data:
+            if position_data[ATTR_POSKIND2] == POS_KIND_PRIMARY:
+                self.set_position_primary(position_data[ATTR_POSITION2])
+            if position_data[ATTR_POSKIND2] == POS_KIND_SECONDARY:
+                self.set_position_secondary(position_data[ATTR_POSITION2])
+            if position_data[ATTR_POSKIND2] == POS_KIND_VANE:
+                self.set_position_vane(position_data[ATTR_POSITION2])
 
     @callback
     def _async_cancel_scheduled_transition_update(self):
@@ -409,12 +467,6 @@ class PowerViewShade(PowerViewShadeBase):
         | CoverEntityFeature.SET_POSITION
     )
 
-    @callback
-    def _async_process_updated_position_data(self, position_data):
-        """Process position data."""
-        if ATTR_POSITION1 in position_data:
-            self.set_position_primary(int(position_data[ATTR_POSITION1]))
-
 
 class PowerViewShadeTDBU(PowerViewShade):
     """Representation of a PowerView shade with top/down bottom/up capabilities."""
@@ -422,12 +474,12 @@ class PowerViewShadeTDBU(PowerViewShade):
     @property
     def current_cover_position_primary(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self.get_position_primary)
+        return hd_position_to_hass(self.position_primary)
 
     @property
     def current_cover_position_secondary(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self.get_position_secondary)
+        return hd_position_to_hass(self.position_secondary)
 
     @property
     def get_transition_steps(self):
@@ -435,16 +487,6 @@ class PowerViewShadeTDBU(PowerViewShade):
         current_hass_pos1 = self.current_cover_position
         current_hass_pos2 = self.current_cover_position_secondary
         return current_hass_pos1 + current_hass_pos2
-
-    @callback
-    def _async_process_updated_position_data(self, position_data):
-        """Process position data."""
-        if ATTR_POSITION1 in position_data:
-            if int(position_data[ATTR_POSKIND1]) == POS_KIND_PRIMARY:
-                self.set_position_primary(int(position_data[ATTR_POSITION1]))
-        if ATTR_POSITION2 in position_data:
-            if int(position_data[ATTR_POSKIND2]) == POS_KIND_SECONDARY:
-                self.set_position_secondary(int(position_data[ATTR_POSITION2]))
 
     async def _async_move(self, target_hass_position):
         """Move the shade to a position."""
@@ -482,7 +524,7 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
     @callback
     def _set_shade_postion(self, target_hass_position):
         motor_position_bottom = hass_position_to_hd(target_hass_position)
-        motor_position_top = self.get_position_secondary
+        motor_position_top = self.position_secondary
         self.set_position_primary(motor_position_bottom)
         return {
             ATTR_POSITION1: motor_position_bottom,
@@ -506,13 +548,13 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         """Return if the cover is closed."""
         # these need to be inverted to report state correctly in HA
         # treat anything below 75% of 1% of total position as closed due to conversion of powerview to hass
-        return self.get_position_secondary <= CLOSED_POSITION
+        return self.position_secondary <= CLOSED_POSITION
 
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
         # these need to be inverted to report state correctly in HA
-        return hd_position_to_hass(self.get_position_secondary)
+        return hd_position_to_hass(self.position_secondary)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
@@ -541,7 +583,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
 
     @callback
     def _set_shade_postion(self, target_hass_position):
-        motor_position_bottom = self.get_position_primary
+        motor_position_bottom = self.position_primary
         motor_position_top = hass_position_to_hd(target_hass_position)
         self.set_position_secondary(motor_position_top)
         return {
@@ -568,20 +610,15 @@ class PowerViewShadeWithTilt(PowerViewShade):
     _max_tilt = MAX_POSITION
     _tilt_steps = 10
 
-    def __init__(self, coordinator, device_info, room_name, shade, name):
-        """Initialize the shade."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._current_hd_cover_vane = MIN_POSITION
-
     @property
     def current_cover_tilt_position(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self._current_hd_cover_vane, self._max_tilt)
+        return hd_position_to_hass(self.position_vane, self._max_tilt)
 
     @property
     def get_transition_steps(self):
         """Return the steps to make a move."""
-        return hd_position_to_hass(self.get_position_primary) + self._tilt_steps
+        return hd_position_to_hass(self.position_primary) + self._tilt_steps
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
@@ -620,21 +657,16 @@ class PowerViewShadeWithTilt(PowerViewShade):
     @callback
     def _async_process_updated_position_data(self, position_data):
         """Process position data."""
+        # shades must be closed to tilt and vane must be closed to lift
+        # shade position needs to be assumed as only 1 poskind is returned
+        # this is not a guess, it is impossible for any other state
         if ATTR_POSITION1 in position_data:
-            if int(position_data[ATTR_POSKIND1]) == POS_KIND_PRIMARY:
-                self.set_position_primary(int(position_data[ATTR_POSITION1]))
-                self._current_hd_cover_vane = MIN_POSITION
-            if int(position_data[ATTR_POSKIND2]) == POS_KIND_VANE:
+            if position_data[ATTR_POSKIND1] == POS_KIND_PRIMARY:
+                self.set_position_primary(position_data[ATTR_POSITION1])
+                self.set_position_vane(MIN_POSITION)
+            if position_data[ATTR_POSKIND1] == POS_KIND_VANE:
                 self.set_position_primary(MIN_POSITION)
-                self._current_hd_cover_vane = hd_position_to_hass(
-                    int(position_data[ATTR_POSITION1]), self._max_tilt
-                )
-        if ATTR_POSITION2 in position_data:
-            if int(position_data[ATTR_POSKIND2]) == POS_KIND_VANE:
-                self.set_position_primary(MIN_POSITION)
-                self._current_hd_cover_vane = hd_position_to_hass(
-                    int(position_data[ATTR_POSITION1]), self._max_tilt
-                )
+                self.set_position_vane(position_data[ATTR_POSITION1])
 
 
 class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
@@ -644,4 +676,4 @@ class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._max_tilt = 32767
-        self._tilt_steps = 4
+        self._tilt_steps = 5  # 10 steps is 180° - these are 90°
