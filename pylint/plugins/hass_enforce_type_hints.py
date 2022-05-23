@@ -379,8 +379,23 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
+            base_class="OptionsFlow",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="FlowResult",
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
             base_class="ConfigFlow",
             matches=[
+                TypeHintMatch(
+                    function_name="async_get_options_flow",
+                    arg_types={0: "ConfigEntry"},
+                    return_type=UNDEFINED,
+                ),
                 TypeHintMatch(
                     function_name="async_step_dhcp",
                     arg_types={
@@ -595,6 +610,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             for function_node in node.mymethods():
                 function_name: str | None = function_node.name
                 if match.function_name == function_name:
+                    self._check_function(function_node, match)
+                elif (
+                    function_name is not None
+                    and match.function_name.endswith("*")
+                    and function_name.startswith(match.function_name[:-1])
+                ):
                     self._check_function(function_node, match)
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
