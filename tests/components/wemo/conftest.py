@@ -1,5 +1,6 @@
 """Fixtures for pywemo."""
 import asyncio
+import contextlib
 from unittest.mock import create_autospec, patch
 
 import pytest
@@ -52,9 +53,9 @@ def pywemo_discovery_responder_fixture():
         yield
 
 
-@pytest.fixture(name="pywemo_device")
-def pywemo_device_fixture(pywemo_registry, pywemo_model):
-    """Fixture for WeMoDevice instances."""
+@contextlib.contextmanager
+def create_pywemo_device(pywemo_registry, pywemo_model):
+    """Create a WeMoDevice instance."""
     cls = getattr(pywemo, pywemo_model)
     device = create_autospec(cls, instance=True)
     device.host = MOCK_HOST
@@ -83,15 +84,21 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
         yield device
 
 
+@pytest.fixture(name="pywemo_device")
+def pywemo_device_fixture(pywemo_registry, pywemo_model):
+    """Fixture for WeMoDevice instances."""
+    with create_pywemo_device(pywemo_registry, pywemo_model) as pywemo_device:
+        yield pywemo_device
+
+
 @pytest.fixture(name="wemo_entity_suffix")
 def wemo_entity_suffix_fixture():
     """Fixture to select a specific entity for wemo_entity."""
     return ""
 
 
-@pytest.fixture(name="wemo_entity")
-async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
-    """Fixture for a Wemo entity in hass."""
+async def async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix):
+    """Create a hass entity for a wemo device."""
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -106,7 +113,13 @@ async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
 
     entity_registry = er.async_get(hass)
     for entry in entity_registry.entities.values():
-        if entry.entity_id.endswith(wemo_entity_suffix):
+        if entry.entity_id.endswith(wemo_entity_suffix or pywemo_device.name.lower()):
             return entry
 
     return None
+
+
+@pytest.fixture(name="wemo_entity")
+async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
+    """Fixture for a Wemo entity in hass."""
+    return await async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix)
