@@ -364,20 +364,22 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @callback
     def _async_process_updated_position_data(self, position_data):
         """Process position data and update into the model."""
-        if ATTR_POSITION1 in position_data:
-            if position_data[ATTR_POSKIND1] == POS_KIND_PRIMARY:
-                self.set_position_primary(position_data[ATTR_POSITION1])
-            if position_data[ATTR_POSKIND1] == POS_KIND_SECONDARY:
-                self.set_position_secondary(position_data[ATTR_POSITION1])
-            if position_data[ATTR_POSKIND1] == POS_KIND_VANE:
-                self.set_position_vane(position_data[ATTR_POSITION1])
-        if ATTR_POSITION2 in position_data:
-            if position_data[ATTR_POSKIND2] == POS_KIND_PRIMARY:
-                self.set_position_primary(position_data[ATTR_POSITION2])
-            if position_data[ATTR_POSKIND2] == POS_KIND_SECONDARY:
-                self.set_position_secondary(position_data[ATTR_POSITION2])
-            if position_data[ATTR_POSKIND2] == POS_KIND_VANE:
-                self.set_position_vane(position_data[ATTR_POSITION2])
+        if (position1 := position_data.get(ATTR_POSITION1)) is not None:
+            position1_kind = position_data[ATTR_POSKIND1]
+            if position1_kind == POS_KIND_PRIMARY:
+                self.set_position_primary(position1)
+            elif position1_kind == POS_KIND_SECONDARY:
+                self.set_position_secondary(position1)
+            elif position1_kind == POS_KIND_VANE:
+                self.set_position_vane(position1)
+        if (position2 := position_data.get(ATTR_POSITION2)) is not None:
+            position2_kind = position_data[ATTR_POSKIND2]
+            if position2_kind == POS_KIND_PRIMARY:
+                self.set_position_primary(position2)
+            if position2_kind == POS_KIND_SECONDARY:
+                self.set_position_secondary(position2)
+            if position2_kind == POS_KIND_VANE:
+                self.set_position_vane(position2)
 
     @callback
     def _async_cancel_scheduled_transition_update(self):
@@ -484,9 +486,9 @@ class PowerViewShadeTDBU(PowerViewShade):
     @property
     def get_transition_steps(self):
         """Return the steps to make a move."""
-        current_hass_pos1 = self.current_cover_position
-        current_hass_pos2 = self.current_cover_position_secondary
-        return current_hass_pos1 + current_hass_pos2
+        return (
+            self.current_cover_position_primary + self.current_cover_position_secondary
+        )
 
     async def _async_move(self, target_hass_position):
         """Move the shade to a position."""
@@ -660,13 +662,14 @@ class PowerViewShadeWithTilt(PowerViewShade):
         # shades must be closed to tilt and vane must be closed to lift
         # shade position needs to be assumed as only 1 poskind is returned
         # this is not a guess, it is impossible for any other state
-        if ATTR_POSITION1 in position_data:
-            if position_data[ATTR_POSKIND1] == POS_KIND_PRIMARY:
-                self.set_position_primary(position_data[ATTR_POSITION1])
+        if (position1 := position_data.get(ATTR_POSITION1)) is not None:
+            position1_kind = position_data[ATTR_POSKIND1]
+            if position1_kind == POS_KIND_PRIMARY:
+                self.set_position_primary(position1)
                 self.set_position_vane(MIN_POSITION)
-            if position_data[ATTR_POSKIND1] == POS_KIND_VANE:
+            elif position1_kind == POS_KIND_VANE:
                 self.set_position_primary(MIN_POSITION)
-                self.set_position_vane(position_data[ATTR_POSITION1])
+                self.set_position_vane(position1)
 
 
 class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
