@@ -42,8 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     slack = WebClient(token=entry.data[CONF_API_KEY], run_async=True, session=session)
 
     try:
-        slack.url = (await slack.auth_test())["url"]
-        slack.user_id = (await slack.auth_test())["user_id"]
+        res = await slack.auth_test()
+        slack.url = res["url"]
+        slack.user_id = res["user_id"]
     except (SlackApiError, ClientError) as ex:
         if isinstance(ex, SlackApiError) and ex.response["error"] == "invalid_auth":
             _LOGGER.error("Invalid API key")
