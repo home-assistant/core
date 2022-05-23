@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-    toggle_entity,
-)
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -93,7 +89,7 @@ async def async_call_action_from_config(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device actions."""
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
@@ -128,7 +124,7 @@ async def async_get_actions(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}

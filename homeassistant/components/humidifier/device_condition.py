@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-    toggle_entity,
-)
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -43,7 +39,7 @@ CONDITION_SCHEMA = vol.Any(TOGGLE_CONDITION, MODE_CONDITION)
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device conditions for Humidifier devices."""
     registry = entity_registry.async_get(hass)
     conditions = await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
@@ -91,7 +87,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 

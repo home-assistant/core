@@ -9,8 +9,6 @@ from homeassistant.components.automation import (
 )
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
     toggle_entity,
 )
 from homeassistant.components.homeassistant.triggers import (
@@ -59,7 +57,7 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers for Humidifier devices."""
     registry = entity_registry.async_get(hass)
     triggers = await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
@@ -118,7 +116,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] == "target_humidity_changed":
         return {

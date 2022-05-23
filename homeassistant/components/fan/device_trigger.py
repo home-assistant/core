@@ -7,11 +7,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-    toggle_entity,
-)
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
@@ -26,14 +22,14 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers for Fan devices."""
     return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
 
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return await toggle_entity.async_get_trigger_capabilities(hass, config)
 
