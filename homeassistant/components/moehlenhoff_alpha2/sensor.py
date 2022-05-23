@@ -44,8 +44,6 @@ async def async_setup_entry(
 class Alpha2IODeviceBatterySensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
     """Alpha2 IO device battery sensor."""
 
-    coordinator: Alpha2BaseCoordinator
-
     device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
