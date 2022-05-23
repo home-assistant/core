@@ -30,14 +30,6 @@
                 },
                 "description": "Masuk ke Akun Vulcan Anda menggunakan halaman pendaftaran aplikasi seluler."
             },
-            "reauth": {
-                "data": {
-                    "pin": "PIN",
-                    "region": "Simbol",
-                    "token": "Token"
-                },
-                "description": "Masuk ke Akun Vulcan Anda menggunakan halaman pendaftaran aplikasi seluler."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
@@ -57,21 +49,6 @@
                     "student_name": "Pilih siswa"
                 },
                 "description": "Pilih siswa, Anda dapat menambahkan lebih banyak siswa dengan menambahkan integrasi lagi."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Terjadi kesalahan"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Tampilkan notifikasi tentang entri kehadiran terbaru",
-                    "grade_notify": "Tampilkan notifikasi tentang nilai terbaru",
-                    "message_notify": "Tampilkan  saat pesan baru diterima",
-                    "scan_interval": "Interval pembaruan (dalam menit)"
-                }
             }
         }
     }

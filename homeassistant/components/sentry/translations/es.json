@@ -11,9 +11,7 @@
             "user": {
                 "data": {
                     "dsn": "DSN"
-                },
-                "description": "Introduzca su DSN Sentry",
-                "title": "Sentry"
+                }
             }
         }
     },

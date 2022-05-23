@@ -9,12 +9,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
 from pydeconz import DeconzSession, errors
-from pydeconz.models import ResourceGroup
-from pydeconz.models.alarm_system import AlarmSystem as DeconzAlarmSystem
 from pydeconz.models.event import EventType
-from pydeconz.models.group import Group as DeconzGroup
-from pydeconz.models.light import LightBase as DeconzLight
-from pydeconz.models.sensor import SensorBase as DeconzSensor
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -57,7 +52,6 @@ class DeconzGateway:
         self.config_entry = config_entry
         self.api = api
 
-        api.add_device_callback = self.async_add_device_callback
         api.connection_status_callback = self.async_connection_status_callback
 
         self.available = True
@@ -66,14 +60,6 @@ class DeconzGateway:
         self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
         self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
         self.signal_reload_clip_sensors = f"deconz_reload_clip_{config_entry.entry_id}"
-
-        self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
-        self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
-
-        self.deconz_resource_type_to_signal_new_device = {
-            ResourceGroup.LIGHT.value: self.signal_new_light,
-            ResourceGroup.SENSOR.value: self.signal_new_sensor,
-        }
 
         self.deconz_ids: dict[str, str] = {}
         self.entities: dict[str, set[str]] = {}
@@ -153,37 +139,6 @@ class DeconzGateway:
         self.ignore_state_updates = False
         async_dispatcher_send(self.hass, self.signal_reachable)
 
-    @callback
-    def async_add_device_callback(
-        self,
-        resource_type: str,
-        device: DeconzAlarmSystem
-        | DeconzGroup
-        | DeconzLight
-        | DeconzSensor
-        | list[DeconzAlarmSystem | DeconzGroup | DeconzLight | DeconzSensor]
-        | None = None,
-        force: bool = False,
-    ) -> None:
-        """Handle event of new device creation in deCONZ."""
-        if (
-            not force
-            and not self.option_allow_new_devices
-            or resource_type not in self.deconz_resource_type_to_signal_new_device
-        ):
-            return
-
-        args = []
-
-        if device is not None and not isinstance(device, list):
-            args.append([device])
-
-        async_dispatcher_send(
-            self.hass,
-            self.deconz_resource_type_to_signal_new_device[resource_type],
-            *args,  # Don't send device if None, it would override default value in listeners
-        )
-
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         if self.api.config.mac is None:
@@ -237,7 +192,6 @@ class DeconzGateway:
         deconz_ids = []
 
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(ResourceGroup.SENSOR.value)
             async_dispatcher_send(self.hass, self.signal_reload_clip_sensors)
 
         else:
@@ -314,6 +268,7 @@ async def get_deconz_session(
         config[CONF_HOST],
         config[CONF_PORT],
         config[CONF_API_KEY],
+        legacy_add_device=False,
     )
     try:
         async with async_timeout.timeout(10):

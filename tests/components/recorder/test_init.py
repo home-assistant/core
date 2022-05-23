@@ -55,6 +55,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    async_block_recorder,
     async_wait_recording_done,
     corrupt_db_file,
     run_information_with_session,
@@ -1537,3 +1538,25 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
         first_attributes_id = states[0].attributes_id
         last_attributes_id = states[-1].attributes_id
         assert first_attributes_id == last_attributes_id
+
+
+async def test_async_block_till_done(hass, async_setup_recorder_instance):
+    """Test we can block until recordering is done."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    hass.states.async_set(entity_id, "on", attributes)
+    hass.states.async_set(entity_id, "off", attributes)
+
+    def _fetch_states():
+        with session_scope(hass=hass) as session:
+            return list(session.query(States).filter(States.entity_id == entity_id))
+
+    await async_block_recorder(hass, 0.1)
+    await instance.async_block_till_done()
+    states = await instance.async_add_executor_job(_fetch_states)
+    assert len(states) == 2
+    await hass.async_block_till_done()

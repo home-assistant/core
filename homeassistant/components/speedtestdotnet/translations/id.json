@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
-            "wrong_server_id": "ID server tidak valid"
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "step": {
             "user": {

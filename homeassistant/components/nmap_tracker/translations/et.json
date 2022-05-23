@@ -30,8 +30,7 @@
                     "home_interval": "Minimaalne sk\u00e4nnimiste intervall minutites (eeldus on aku s\u00e4\u00e4stmine)",
                     "hosts": "V\u00f5rguaadresside vahemik (komaga eraldatud)",
                     "interval_seconds": "P\u00e4ringute intervall",
-                    "scan_options": "Vaikimisi Nmap sk\u00e4nnimise valikud",
-                    "track_new_devices": "Uute seadmete j\u00e4lgimine"
+                    "scan_options": "Vaikimisi Nmap sk\u00e4nnimise valikud"
                 },
                 "description": "Vali Nmap poolt sk\u00e4nnitavad hostid. Valikuks on IP aadressid (192.168.1.1), v\u00f5rgud (192.168.0.0/24)  v\u00f5i IP vahemikud (192.168.1.0-32)."
             }

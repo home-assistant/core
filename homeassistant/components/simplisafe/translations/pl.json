@@ -3,23 +3,16 @@
         "abort": {
             "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu",
             "email_2fa_timed_out": "Przekroczono limit czasu oczekiwania na e-mailowe uwierzytelnianie dwusk\u0142adnikowe.",
-            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
-            "wrong_account": "Podane dane uwierzytelniaj\u0105ce u\u017cytkownika nie pasuj\u0105 do tego konta SimpliSafe."
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "2fa_timed_out": "Przekroczono limit czasu oczekiwania na uwierzytelnianie dwusk\u0142adnikowe",
-            "identifier_exists": "Konto jest ju\u017c zarejestrowane",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "still_awaiting_mfa": "Wci\u0105\u017c nie potwierdzono linka w e-mailu od SimpliSafe",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "progress": {
             "email_2fa": "Sprawd\u017a e-mail z linkiem weryfikacyjnym od Simplisafe."
         },
         "step": {
-            "mfa": {
-                "title": "Uwierzytelnianie wielosk\u0142adnikowe SimpliSafe"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o"
@@ -35,13 +28,10 @@
             },
             "user": {
                 "data": {
-                    "auth_code": "Kod autoryzacji",
-                    "code": "Kod (u\u017cywany w interfejsie Home Assistant)",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a swoj\u0105 nazw\u0119 u\u017cytkownika i has\u0142o.",
-                "title": "Wprowad\u017a dane"
+                "description": "Wprowad\u017a swoj\u0105 nazw\u0119 u\u017cytkownika i has\u0142o."
             }
         }
     },

@@ -18,12 +18,6 @@
             "link": {
                 "description": "Debes autorizar Home Assistant en Roon. Despu\u00e9s de pulsar en Enviar, ve a la aplicaci\u00f3n Roon Core, abre Configuraci\u00f3n y activa HomeAssistant en la pesta\u00f1a Extensiones.",
                 "title": "Autorizar HomeAssistant en Roon"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "No se ha podido descubrir el servidor Roon, introduce el nombre de host o la IP."
             }
         }
     }

@@ -12,7 +12,7 @@
         "step": {
             "pair": {
                 "data": {
-                    "pin": "PIN-code"
+                    "pin": "Pincode"
                 },
                 "description": "Voer de pincode in die op uw tv wordt weergegeven",
                 "title": "Koppel"

@@ -52,12 +52,9 @@ SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
 MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", AwesomeVersionStrategy.SIMPLEVER)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -399,8 +396,9 @@ def setup_connection_for_dialect(
     dialect_name: str,
     dbapi_connection: Any,
     first_connection: bool,
-) -> None:
+) -> AwesomeVersion | None:
     """Execute statements needed for dialect connection."""
+    version: AwesomeVersion | None = None
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
@@ -414,10 +412,6 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
 
-            if version and version < MIN_VERSION_SQLITE_ROWNUM:
-                instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                    False
-                )
             if not version or version < MIN_VERSION_SQLITE:
                 _fail_unsupported_version(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
@@ -448,19 +442,11 @@ def setup_connection_for_dialect(
             is_maria_db = "mariadb" in version_string.lower()
 
             if is_maria_db:
-                if version and version < MIN_VERSION_MARIA_DB_ROWNUM:
-                    instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                        False
-                    )
                 if not version or version < MIN_VERSION_MARIA_DB:
                     _fail_unsupported_version(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
             else:
-                if version and version < MIN_VERSION_MYSQL_ROWNUM:
-                    instance._db_supports_row_number = (  # pylint: disable=[protected-access]
-                        False
-                    )
                 if not version or version < MIN_VERSION_MYSQL:
                     _fail_unsupported_version(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
@@ -479,6 +465,8 @@ def setup_connection_for_dialect(
 
     else:
         _fail_unsupported_dialect(dialect_name)
+
+    return version
 
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:

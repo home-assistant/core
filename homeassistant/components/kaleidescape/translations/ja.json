@@ -13,14 +13,12 @@
         "flow_title": "{model} ({name})",
         "step": {
             "discovery_confirm": {
-                "description": "{model} \u30d7\u30ec\u30a4\u30e4\u30fc\u540d {name} \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f",
-                "title": "\u30ab\u30ec\u30a4\u30c9\u30b9\u30b1\u30fc\u30d7(Kaleidescape)"
+                "description": "{model} \u30d7\u30ec\u30a4\u30e4\u30fc\u540d {name} \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
             },
             "user": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8"
-                },
-                "title": "\u30ab\u30ec\u30a4\u30c9\u30b9\u30b1\u30fc\u30d7(Kaleidescape)\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+                }
             }
         }
     }
