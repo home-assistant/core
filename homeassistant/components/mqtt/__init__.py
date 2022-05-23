@@ -386,25 +386,33 @@ async def async_setup_entry(  # noqa: C901
         hass.data[DATA_MQTT_UPDATED_CONFIG] = config_yaml.get(DOMAIN, {})
         async_dispatcher_send(hass, MQTT_RELOADED)
 
-    async def async_forward_entry_setup():
-        """Forward the config entry setup to the platforms."""
-        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-            for component in PLATFORMS:
-                config_entries_key = f"{component}.mqtt"
-                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                    await hass.config_entries.async_forward_entry_setup(
-                        entry, component
-                    )
+    async def async_forward_entry_setup_and_setup_discovery(config_entry):
+        """Forward the config entry setup to the platforms and set up discovery."""
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation, tag
+
+        await asyncio.gather(
+            *(
+                [
+                    device_automation.async_setup_entry(hass, config_entry),
+                    tag.async_setup_entry(hass, config_entry),
+                ]
+                + [
+                    hass.config_entries.async_forward_entry_setup(entry, component)
+                    for component in PLATFORMS
+                ]
+            )
+        )
+        # Setup discovery
+        if conf.get(CONF_DISCOVERY):
+            await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
         entry.async_on_unload(
             hass.bus.async_listen("event_mqtt_reloaded", _async_reload_platforms)
         )
 
-    hass.async_create_task(async_forward_entry_setup())
-
-    if conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, conf, entry)
+    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
 
     if DATA_MQTT_RELOAD_NEEDED in hass.data:
         hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
