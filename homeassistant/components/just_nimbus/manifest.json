@@ -3,7 +3,7 @@
   "name": "Just Nimbus",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/just_nimbus",
-  "requirements": ["justnimbus==0.4.0"],
+  "requirements": ["justnimbus==0.5.0"],
   "codeowners": ["@kvanzuijlen"],
   "iot_class": "cloud_polling"
 }

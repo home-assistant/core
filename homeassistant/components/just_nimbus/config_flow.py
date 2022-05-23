@@ -8,9 +8,10 @@ import justnimbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CLIENT_ID, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_CLIENT_ID, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
 
 from . import CannotConnect, InvalidClientId
 from .const import DOMAIN
@@ -28,7 +29,8 @@ scan_interval_options = vol.In(
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CLIENT_ID): str,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_CLIENT_ID): cv.string,
         scan_interval: scan_interval_options,
     },
 )
@@ -44,7 +46,7 @@ class JustNimbus:
         """Initialize."""
         self.client_id = client_id
 
-    async def authenticate(self) -> bool:
+    def authenticate(self) -> bool:
         """Test if we can authenticate with the host."""
         justnimbus.JustNimbusClient(client_id=self.client_id).get_data()
         return True
@@ -64,7 +66,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except justnimbus.InvalidClientID as error:
         raise InvalidClientId from error
 
-    return {"title": "Just Nimbus"}
+    return {"name": data.get(CONF_NAME) or "Just Nimbus"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -83,10 +85,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        try:
-            await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
+        self._abort_if_unique_id_configured()
 
+        try:
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
@@ -96,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=info["name"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -126,7 +128,7 @@ class JustNimbusOptionFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id="init",
             data_schema=vol.Schema(
                 {
                     scan_interval: scan_interval_options,
