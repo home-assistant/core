@@ -69,7 +69,6 @@ async def _async_wait_for_recorder_sync(hass: HomeAssistant) -> None:
 
 async def _async_send_historical_events(
     hass: HomeAssistant,
-    is_big_query: bool,
     connection: ActiveConnection,
     msg_id: int,
     start_time: dt,
@@ -88,6 +87,12 @@ async def _async_send_historical_events(
     This function returns the time of the most recent event we sent to the
     websocket.
     """
+    is_big_query = (
+        not event_processor.entity_ids
+        and not event_processor.device_ids
+        and ((end_time - start_time) > timedelta(hours=BIG_QUERY_HOURS))
+    )
+
     if not is_big_query:
         message, last_event_time = await _async_get_ws_formatted_events(
             hass,
@@ -107,7 +112,7 @@ async def _async_send_historical_events(
     # This is a big query so we deliver
     # the first three hours and then
     # we fetch the old data
-    recent_query_start = start_time - timedelta(hours=BIG_QUERY_RECENT_HOURS)
+    recent_query_start = end_time - timedelta(hours=BIG_QUERY_RECENT_HOURS)
     recent_message, recent_query_last_event_time = await _async_get_ws_formatted_events(
         hass,
         msg_id,
@@ -116,9 +121,9 @@ async def _async_send_historical_events(
         formatter,
         event_processor,
     )
-
     if recent_query_last_event_time:
         connection.send_message(recent_message)
+
     older_message, older_query_last_event_time = await _async_get_ws_formatted_events(
         hass,
         msg_id,
@@ -249,11 +254,6 @@ async def ws_event_stream(
     if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
-    is_big_query = (
-        not entity_ids
-        and not device_ids
-        and ((end_time or utc_now) - start_time) > timedelta(hours=BIG_QUERY_HOURS)
-    )
     event_processor = EventProcessor(
         hass,
         event_types,
@@ -271,7 +271,6 @@ async def ws_event_stream(
         # Fetch everything from history
         await _async_send_historical_events(
             hass,
-            is_big_query,
             connection,
             msg_id,
             start_time,
@@ -324,7 +323,6 @@ async def ws_event_stream(
     # Fetch everything from history
     last_event_time = await _async_send_historical_events(
         hass,
-        is_big_query,
         connection,
         msg_id,
         start_time,
