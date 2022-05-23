@@ -1,17 +1,14 @@
 """Provides device automations for Philips Hue events."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.button import ButtonEvent
 from aiohue.v2.models.resource import ResourceTypes
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -125,7 +122,7 @@ async def async_attach_trigger(
 @callback
 def async_get_triggers(
     bridge: HueBridge, device_entry: DeviceEntry
-) -> GetAutomationsResult:
+) -> list[dict[str, Any]]:
     """Return device triggers for device on `v2` bridge."""
     api: HueBridgeV2 = bridge.api
 

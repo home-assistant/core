@@ -7,10 +7,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -181,7 +178,7 @@ async def async_attach_trigger(
 @callback
 def async_get_triggers(
     bridge: "HueBridge", device: DeviceEntry
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """Return device triggers for device on `v1` bridge.
 
     Make sure device is a supported remote model.
