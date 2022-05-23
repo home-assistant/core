@@ -1056,6 +1056,7 @@ omit =
     homeassistant/components/skybell/*
     homeassistant/components/slack/__init__.py
     homeassistant/components/slack/notify.py
+    homeassistant/components/slack/sensor.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py
     homeassistant/components/sia/binary_sensor.py
