@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
+class Alpha2IODeviceBatterySensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
     """Alpha2 IO device battery sensor."""
 
     coordinator: Alpha2BaseCoordinator
