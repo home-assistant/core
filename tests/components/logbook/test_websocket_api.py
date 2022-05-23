@@ -27,7 +27,11 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, SetupRecorderInstanceT
+from tests.common import (
+    MockConfigEntry,
+    SetupRecorderInstanceT,
+    async_fire_time_changed,
+)
 from tests.components.recorder.common import (
     async_block_recorder,
     async_recorder_block_till_done,
@@ -854,7 +858,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "end_time": (now + timedelta(seconds=0.25)).isoformat(),
+            "end_time": (now + timedelta(minutes=10)).isoformat(),
             "entity_ids": ["light.small", "binary_sensor.is_light"],
         }
     )
@@ -896,7 +900,9 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     hass.states.async_remove("light.small")
     await hass.async_block_till_done()
 
-    await asyncio.sleep(0.5)
+    async_fire_time_changed(hass, now + timedelta(minutes=11))
+    await hass.async_block_till_done()
+
     # These states should not be sent since we should be unsubscribed
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("light.small", STATE_OFF)
@@ -912,7 +918,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert sum(hass.bus.async_listeners().values()) <= init_count
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
