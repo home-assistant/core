@@ -28,7 +28,7 @@ from .models import async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
-EVENT_COALESCE_TIME = 0.5
+EVENT_COALESCE_TIME = 0.35
 MAX_RECORDER_WAIT = 10
 # minimum size that we will split the query
 BIG_QUERY_HOURS = 25
