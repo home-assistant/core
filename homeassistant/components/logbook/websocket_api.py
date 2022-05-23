@@ -242,12 +242,14 @@ async def ws_event_stream(
 
     end_time_str = msg.get("end_time")
     end_time: dt | None = None
-    if end_time_str and (end_time := dt_util.parse_datetime(end_time_str)):
+    if end_time_str:
+        if not (end_time := dt_util.parse_datetime(end_time_str)):
+            connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
+            return
         end_time = dt_util.as_utc(end_time)
-
-    if end_time and end_time < start_time:
-        connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
-        return
+        if end_time < start_time:
+            connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
+            return
 
     device_ids = msg.get("device_ids")
     entity_ids = msg.get("entity_ids")

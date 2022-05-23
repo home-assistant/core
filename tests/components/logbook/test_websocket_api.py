@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant import core
@@ -826,6 +827,255 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test subscribe/unsubscribe logbook stream with specific entities and an end_time."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+
+    await hass.async_block_till_done()
+    init_count = sum(hass.bus.async_listeners().values())
+    hass.states.async_set("light.small", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    state: State = hass.states.get("binary_sensor.is_light")
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "end_time": (now + timedelta(seconds=0.5)).isoformat(),
+            "entity_ids": ["light.small", "binary_sensor.is_light"],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "binary_sensor.is_light",
+            "state": "off",
+            "when": state.last_updated.timestamp(),
+        }
+    ]
+
+    hass.states.async_set("light.alpha", STATE_ON)
+    hass.states.async_set("light.alpha", STATE_OFF)
+    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
+
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "light.small",
+            "state": "off",
+            "when": ANY,
+        },
+    ]
+
+    hass.states.async_remove("light.alpha")
+    hass.states.async_remove("light.small")
+    await hass.async_block_till_done()
+
+    await asyncio.sleep(0.5)
+    # These states should not be sent since we should be unsubscribed
+    hass.states.async_set("light.small", STATE_ON)
+    hass.states.async_set("light.small", STATE_OFF)
+    await hass.async_block_till_done()
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test subscribe/unsubscribe logbook stream with specific entities in the past."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+
+    await hass.async_block_till_done()
+    init_count = sum(hass.bus.async_listeners().values())
+    hass.states.async_set("light.small", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    state: State = hass.states.get("binary_sensor.is_light")
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "end_time": (dt_util.utcnow() - timedelta(microseconds=1)).isoformat(),
+            "entity_ids": ["light.small", "binary_sensor.is_light"],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "binary_sensor.is_light",
+            "state": "off",
+            "when": state.last_updated.timestamp(),
+        }
+    ]
+
+    # These states should not be sent since we should be unsubscribed
+    # since we only asked for the past
+    hass.states.async_set("light.small", STATE_ON)
+    hass.states.async_set("light.small", STATE_OFF)
+    await hass.async_block_till_done()
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_unsubscribe_logbook_stream_big_query(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test subscribe/unsubscribe logbook stream and ask for a large time frame.
+
+    We should get the data for the first 24 hours in the first message, and
+    anything older will come in a followup message.
+    """
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+
+    await hass.async_block_till_done()
+    init_count = sum(hass.bus.async_listeners().values())
+    four_days_ago = now - timedelta(days=4)
+    five_days_ago = now - timedelta(days=5)
+
+    with freeze_time(four_days_ago):
+        hass.states.async_set("binary_sensor.four_days_ago", STATE_ON)
+        hass.states.async_set("binary_sensor.four_days_ago", STATE_OFF)
+        four_day_old_state: State = hass.states.get("binary_sensor.four_days_ago")
+        await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+    # Verify our state was recorded in the past
+    assert (now - four_day_old_state.last_updated).total_seconds() > 86400 * 3
+
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    current_state: State = hass.states.get("binary_sensor.is_light")
+
+    # Verify our new state was recorded in the recent timeframe
+    assert (now - current_state.last_updated).total_seconds() < 2
+
+    await async_wait_recording_done(hass)
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": five_days_ago.isoformat(),
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # With a big query we get the current state first
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "binary_sensor.is_light",
+            "state": "on",
+            "when": current_state.last_updated.timestamp(),
+        }
+    ]
+
+    # With a big query we get the old states second
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == [
+        {
+            "entity_id": "binary_sensor.four_days_ago",
+            "state": "off",
+            "when": four_day_old_state.last_updated.timestamp(),
+        }
+    ]
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_unsubscribe_logbook_stream_device(
     hass, recorder_mock, hass_ws_client
 ):
@@ -908,6 +1158,38 @@ async def test_event_stream_bad_start_time(hass, hass_ws_client, recorder_mock):
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_event_stream_bad_end_time(hass, hass_ws_client, recorder_mock):
+    """Test event_stream bad end time."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    utc_now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/event_stream",
+            "start_time": utc_now.isoformat(),
+            "end_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/event_stream",
+            "start_time": utc_now.isoformat(),
+            "end_time": (utc_now - timedelta(hours=5)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
 
 
 async def test_live_stream_with_one_second_commit_interval(
