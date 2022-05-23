@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from slack import WebClient
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -45,17 +43,6 @@ async def async_setup_entry(
 
 class SlackSensorEntity(SlackEntity, SensorEntity):
     """Representation of a Slack sensor."""
-
-    def __init__(
-        self,
-        client: WebClient,
-        description: SensorEntityDescription,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize a Slack sensor entity."""
-        super().__init__(client, entry)
-        self.entity_description = description
-        self._attr_unique_id = f"dnd_{client.user_id}"
 
     async def async_update(self) -> None:
         """Get the latest status."""
