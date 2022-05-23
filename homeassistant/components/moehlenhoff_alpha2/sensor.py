@@ -1,7 +1,6 @@
-"""Support for Alpha2 base and IO device sensors."""
-import logging
+"""Support for Alpha2 heat control valve opening sensors."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
@@ -10,8 +9,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import Alpha2BaseCoordinator
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -23,14 +20,8 @@ async def async_setup_entry(
 
     coordinator: Alpha2BaseCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = [
-        Alpha2IODeviceBatterySensor(coordinator, io_device_id)
-        for io_device_id, io_device in coordinator.data["io_devices"].items()
-        if io_device["_HEATAREA_ID"]
-    ]
-
     # HEATCTRL attribute ACTOR_PERCENT is not available in older firmware versions
-    entities.extend(
+    async_add_entities(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
         if heat_control["INUSE"]
@@ -38,49 +29,10 @@ async def async_setup_entry(
         and heat_control.get("ACTOR_PERCENT") is not None
     )
 
-    async_add_entities(entities)
 
-
-class Alpha2IODeviceBatterySensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
-    """Alpha2 IO device battery sensor."""
-
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    def __init__(self, coordinator: Alpha2BaseCoordinator, io_device_id: str) -> None:
-        """Initialize Alpha2IODeviceBatterySensor."""
-        super().__init__(coordinator)
-        self.io_device_id = io_device_id
-        self._attr_unique_id = f"{io_device_id}:battery"
-        io_device = self.coordinator.data["io_devices"][io_device_id]
-        heat_area = self.coordinator.data["heat_areas"][io_device["_HEATAREA_ID"]]
-        self._attr_name = (
-            f"{heat_area['HEATAREA_NAME']} IO device {io_device['NR']} battery"
-        )
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        battery = self.coordinator.data["io_devices"][self.io_device_id]["BATTERY"]
-        if battery == 0:
-            return "mdi:battery-alert-variant-outline"
-        if battery == 1:
-            return "mdi:battery-low"
-        return "mdi:battery"
-
-    @property
-    def native_value(self) -> str:
-        """Return the current battery level."""
-        battery = self.coordinator.data["io_devices"][self.io_device_id]["BATTERY"]
-        # 0=empty, 1=weak, 2=good
-        if battery == 0:
-            return "empty"
-        if battery == 1:
-            return "weak"
-        return "good"
-
-
-class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
+class Alpha2HeatControlValveOpeningSensor(
+    CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity
+):
     """Alpha2 heat control valve opening sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
