@@ -32,15 +32,12 @@ class BAFNumberDescriptionMixin:
 
 
 @dataclass
-class BAFNumberDescription(
-    NumberEntityDescription,
-    BAFNumberDescriptionMixin,
-):
+class BAFNumberDescription(NumberEntityDescription, BAFNumberDescriptionMixin):
     """Class describing BAF sensor entities."""
 
 
 FAN_NUMBER_DESCRIPTIONS = (
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="return_to_auto_timeout",
         name="Return to Auto Timeout",
         min_value=ONE_MIN_SECS,
@@ -50,7 +47,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         value_fn=lambda device: cast(Optional[int], device.return_to_auto_timeout),
         mode=NumberMode.SLIDER,
     ),
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="motion_sense_timeout",
         name="Motion Sense Timeout",
         min_value=ONE_MIN_SECS,
@@ -60,7 +57,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         value_fn=lambda device: cast(Optional[int], device.motion_sense_timeout),
         mode=NumberMode.SLIDER,
     ),
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="comfort_min_speed",
         name="Auto Comfort Minimum Speed",
         min_value=0,
@@ -69,7 +66,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         value_fn=lambda device: cast(Optional[int], device.comfort_min_speed),
         mode=NumberMode.BOX,
     ),
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="comfort_max_speed",
         name="Auto Comfort Maximum Speed",
         min_value=1,
@@ -78,7 +75,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         value_fn=lambda device: cast(Optional[int], device.comfort_max_speed),
         mode=NumberMode.BOX,
     ),
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="comfort_heat_assist_speed",
         name="Auto Comfort Heat Assist Speed",
         min_value=SPEED_RANGE[0],
@@ -90,7 +87,7 @@ FAN_NUMBER_DESCRIPTIONS = (
 )
 
 LIGHT_NUMBER_DESCRIPTIONS = (
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="light_return_to_auto_timeout",
         name="Light Return to Auto Timeout",
         min_value=ONE_MIN_SECS,
@@ -102,7 +99,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         ),
         mode=NumberMode.SLIDER,
     ),
-    BAFNumberDescriptionMixin(
+    BAFNumberDescription(
         key="light_auto_motion_timeout",
         name="Light Motion Sense Timeout",
         min_value=ONE_MIN_SECS,
