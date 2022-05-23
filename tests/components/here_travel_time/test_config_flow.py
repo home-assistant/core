@@ -128,7 +128,7 @@ async def origin_step_result_fixture(
             }
         },
     )
-    yield location_selector_result
+    return location_selector_result
 
 
 @pytest.mark.parametrize(
