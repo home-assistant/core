@@ -264,7 +264,7 @@ async def ws_event_stream(
     )
 
     if end_time and end_time <= utc_now:
-        # Not live stream
+        # Not live stream but we it might be a big query
         connection.subscriptions[msg["id"]] = callback(lambda: None)
         connection.send_result(msg["id"])
         # Fetch everything from history
