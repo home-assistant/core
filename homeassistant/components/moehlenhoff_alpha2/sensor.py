@@ -70,7 +70,7 @@ class Alpha2IODeviceBatterySensor(CoordinatorEntity[Alpha2BaseCoordinator], Sens
         return 100
 
 
-class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity, SensorEntity):
+class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
     """Alpha2 heat control valve opening sensor."""
 
     coordinator: Alpha2BaseCoordinator
