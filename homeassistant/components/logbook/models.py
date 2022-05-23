@@ -59,7 +59,7 @@ class LazyEventPartialState:
             )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EventAsRow:
     """Convert an event to a row."""
 
