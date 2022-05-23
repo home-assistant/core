@@ -130,7 +130,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user(self, user_input: dict | None = None):
+    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -151,7 +151,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_zone(self, user_input: dict | None = None):
+    async def async_step_zone(self, user_input: dict | None = None) -> FlowResult:
         """Handle the picking the zone."""
         errors = {}
 
@@ -171,7 +171,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_records(self, user_input: dict | None = None):
+    async def async_step_records(self, user_input: dict | None = None) -> FlowResult:
         """Handle the picking the zone records."""
 
         if user_input is not None:
