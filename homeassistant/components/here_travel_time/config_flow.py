@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_SYSTEM,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
@@ -128,6 +128,17 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     )
 
 
+def default_options(hass: HomeAssistant) -> dict[str, str | None]:
+    """Get the default options."""
+    return {
+        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_ARRIVAL_TIME: None,
+        CONF_DEPARTURE_TIME: None,
+        CONF_UNIT_SYSTEM: hass.config.units.name,
+    }
+
+
 class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HERE Travel Time."""
 
@@ -213,7 +224,9 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "longitude"
             ]
             return self.async_create_entry(
-                title=self._config[CONF_NAME], data=self._config
+                title=self._config[CONF_NAME],
+                data=self._config,
+                options=default_options(self.hass),
             )
         schema = vol.Schema(
             {"destination": selector({LocationSelector.selector_type: {}})}
@@ -232,7 +245,9 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DESTINATION_ENTITY_ID
             ]
             return self.async_create_entry(
-                title=self._config[CONF_NAME], data=self._config
+                title=self._config[CONF_NAME],
+                data=self._config,
+                options=default_options(self.hass),
             )
         schema = vol.Schema(
             {CONF_DESTINATION_ENTITY_ID: selector({EntitySelector.selector_type: {}})}
