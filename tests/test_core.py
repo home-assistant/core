@@ -1799,3 +1799,33 @@ async def test_state_firing_event_matches_context_id_ulid_time(hass):
     assert _ulid_timestamp(event.context.id) == int(
         events[0].time_fired.timestamp() * 1000
     )
+
+
+async def test_event_context(hass):
+    """Test we can lookup the origin of a context from an event."""
+    events = []
+
+    @ha.callback
+    def capture_events(event):
+        nonlocal events
+        events.append(event)
+
+    cancel = hass.bus.async_listen("dummy_event", capture_events)
+    cancel2 = hass.bus.async_listen("dummy_event_2", capture_events)
+
+    hass.bus.async_fire("dummy_event")
+    await hass.async_block_till_done()
+
+    dummy_event: ha.Event = events[0]
+
+    hass.bus.async_fire("dummy_event_2", context=dummy_event.context)
+    await hass.async_block_till_done()
+    context_id = dummy_event.context.id
+
+    dummy_event2: ha.Event = events[1]
+    assert dummy_event2.context == dummy_event.context
+    assert dummy_event2.context.id == context_id
+    cancel()
+    cancel2()
+
+    assert dummy_event2.context.origin_event == dummy_event
