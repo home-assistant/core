@@ -81,5 +81,5 @@ class SlackEntity(Entity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
+            name=entry.title,
         )
