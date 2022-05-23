@@ -81,19 +81,6 @@ class TestMaker(EntityTestHelpers):
         """Select the MakerBinarySensor entity."""
         return MakerBinarySensor._name_suffix.lower()
 
-    @pytest.fixture(name="pywemo_device")
-    def pywemo_device_fixture(self, pywemo_device):
-        """Fixture for WeMoDevice instances."""
-        pywemo_device.maker_params = {
-            "hassensor": 1,
-            "sensorstate": 1,
-            "switchmode": 1,
-            "switchstate": 0,
-        }
-        pywemo_device.has_sensor = pywemo_device.maker_params["hassensor"]
-        pywemo_device.sensor_state = pywemo_device.maker_params["sensorstate"]
-        yield pywemo_device
-
     async def test_registry_state_callback(
         self, hass, pywemo_registry, pywemo_device, wemo_entity
     ):
