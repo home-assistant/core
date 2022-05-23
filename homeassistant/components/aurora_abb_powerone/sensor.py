@@ -92,4 +92,4 @@ class AuroraSensor(
     @property
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
-        return self.coordinator.data[self.entity_description.key]
+        return self.coordinator.data.get(self.entity_description.key)

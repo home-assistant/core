@@ -19,7 +19,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -61,7 +61,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
         self.available_prev: bool = False
         self.available: bool = False
         self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-        super().__init__(hass, _LOGGER, name=DOMAIN)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self) -> dict[str, float]:
         """Fetch new state data for the sensor.

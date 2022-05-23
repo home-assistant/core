@@ -1,8 +1,8 @@
 """Test the Aurora ABB PowerOne Solar PV sensors."""
-from datetime import timedelta
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
+from datetime import timedelta
 
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
@@ -11,6 +11,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_SERIAL_NUMBER,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
+    SCAN_INTERVAL,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -132,16 +133,22 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=AuroraTimeoutError("No response after 10 seconds"),
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=AuroraError("No response after 10 seconds"),
     ):
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.power_output")
         assert power.state == "unknown"
     # sun rose again
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=_simulated_returns,
     ):
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.power_output")
         assert power is not None
@@ -150,11 +157,14 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=AuroraTimeoutError("No response after 10 seconds"),
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=AuroraError("No response after 10 seconds"),
     ):
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.power_output")
-        assert power.state == "unknown"  # should this be 'available'?
+        assert power.state == "unknown"
 
 
 async def test_sensor_unknown_error(hass: HomeAssistant) -> None:
