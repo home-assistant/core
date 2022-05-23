@@ -61,15 +61,25 @@ class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int:
-        """Return the current battery level percentage."""
+    def icon(self) -> str:
+        """Return the icon of the sensor."""
+        battery = self.coordinator.data["io_devices"][self.io_device_id]["BATTERY"]
+        if battery == 0:
+            return "mdi:battery-alert-variant-outline"
+        if battery == 1:
+            return "mdi:battery-low"
+        return "mdi:battery"
+
+    @property
+    def native_value(self) -> str:
+        """Return the current battery level."""
         battery = self.coordinator.data["io_devices"][self.io_device_id]["BATTERY"]
         # 0=empty, 1=weak, 2=good
         if battery == 0:
-            return 0
+            return "empty"
         if battery == 1:
-            return 20
-        return 100
+            return "weak"
+        return "good"
 
 
 class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity, SensorEntity):
