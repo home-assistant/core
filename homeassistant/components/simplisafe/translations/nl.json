@@ -18,7 +18,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Voer het wachtwoord voor {username} opnieuw in.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "sms_2fa": {
                 "data": {

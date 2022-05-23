@@ -10,7 +10,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "De SmartTub-integratie moet uw account opnieuw verifi\u00ebren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

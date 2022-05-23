@@ -8,7 +8,13 @@ from herepy import HEREError, InvalidCredentialsError, RouteMode, RoutingApi
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME, CONF_UNIT_SYSTEM
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_ENTITY_NAMESPACE,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_UNIT_SYSTEM,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -231,9 +237,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import from configuration.yaml."""
         options: dict[str, Any] = {}
         user_input, options = self._transform_import_input(user_input)
@@ -249,39 +253,47 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _transform_import_input(
-        self, user_input
+        self, import_input: dict[str, Any]
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Transform platform schema input to new model."""
         options: dict[str, Any] = {}
-        if user_input.get(CONF_ORIGIN_LATITUDE) is not None:
-            user_input[CONF_ORIGIN_LATITUDE] = user_input.pop(CONF_ORIGIN_LATITUDE)
-            user_input[CONF_ORIGIN_LONGITUDE] = user_input.pop(CONF_ORIGIN_LONGITUDE)
-        else:
-            user_input[CONF_ORIGIN_ENTITY_ID] = user_input.pop(CONF_ORIGIN_ENTITY_ID)
+        user_input: dict[str, Any] = {}
 
-        if user_input.get(CONF_DESTINATION_LATITUDE) is not None:
-            user_input[CONF_DESTINATION_LATITUDE] = user_input.pop(
-                CONF_DESTINATION_LATITUDE
-            )
-            user_input[CONF_DESTINATION_LONGITUDE] = user_input.pop(
-                CONF_DESTINATION_LONGITUDE
-            )
+        if import_input.get(CONF_ORIGIN_LATITUDE) is not None:
+            user_input[CONF_ORIGIN_LATITUDE] = import_input[CONF_ORIGIN_LATITUDE]
+            user_input[CONF_ORIGIN_LONGITUDE] = import_input[CONF_ORIGIN_LONGITUDE]
         else:
-            user_input[CONF_DESTINATION_ENTITY_ID] = user_input.pop(
+            user_input[CONF_ORIGIN_ENTITY_ID] = import_input[CONF_ORIGIN_ENTITY_ID]
+
+        if import_input.get(CONF_DESTINATION_LATITUDE) is not None:
+            user_input[CONF_DESTINATION_LATITUDE] = import_input[
+                CONF_DESTINATION_LATITUDE
+            ]
+            user_input[CONF_DESTINATION_LONGITUDE] = import_input[
+                CONF_DESTINATION_LONGITUDE
+            ]
+        else:
+            user_input[CONF_DESTINATION_ENTITY_ID] = import_input[
                 CONF_DESTINATION_ENTITY_ID
-            )
+            ]
+
+        user_input[CONF_API_KEY] = import_input[CONF_API_KEY]
+        user_input[CONF_MODE] = import_input[CONF_MODE]
+        user_input[CONF_NAME] = import_input[CONF_NAME]
+        if (namespace := import_input.get(CONF_ENTITY_NAMESPACE)) is not None:
+            user_input[CONF_NAME] = f"{namespace} {user_input[CONF_NAME]}"
 
         options[CONF_TRAFFIC_MODE] = (
             TRAFFIC_MODE_ENABLED
-            if user_input.pop(CONF_TRAFFIC_MODE, False)
+            if import_input.get(CONF_TRAFFIC_MODE, False)
             else TRAFFIC_MODE_DISABLED
         )
-        options[CONF_ROUTE_MODE] = user_input.pop(CONF_ROUTE_MODE)
-        options[CONF_UNIT_SYSTEM] = user_input.pop(
+        options[CONF_ROUTE_MODE] = import_input.get(CONF_ROUTE_MODE)
+        options[CONF_UNIT_SYSTEM] = import_input.get(
             CONF_UNIT_SYSTEM, self.hass.config.units.name
         )
-        options[CONF_ARRIVAL_TIME] = user_input.pop(CONF_ARRIVAL, None)
-        options[CONF_DEPARTURE_TIME] = user_input.pop(CONF_DEPARTURE, None)
+        options[CONF_ARRIVAL_TIME] = import_input.get(CONF_ARRIVAL, None)
+        options[CONF_DEPARTURE_TIME] = import_input.get(CONF_DEPARTURE, None)
 
         return user_input, options
 

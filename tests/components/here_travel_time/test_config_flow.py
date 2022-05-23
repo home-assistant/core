@@ -29,8 +29,10 @@ from homeassistant.components.here_travel_time.sensor import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_ENTITY_NAMESPACE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
@@ -416,16 +418,18 @@ async def test_import_flow_entity_id(hass: HomeAssistant) -> None:
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+            CONF_ENTITY_NAMESPACE: "namespace",
+            CONF_SCAN_INTERVAL: 2678400,
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test_name"
+    assert result["title"] == "namespace test_name"
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data == {
-        CONF_NAME: "test_name",
+        CONF_NAME: "namespace test_name",
         CONF_API_KEY: CONF_API_KEY,
         CONF_ORIGIN_ENTITY_ID: "sensor.origin",
         CONF_DESTINATION_ENTITY_ID: "sensor.destination",
