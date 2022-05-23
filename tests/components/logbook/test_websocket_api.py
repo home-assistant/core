@@ -837,7 +837,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "end_time": (now + timedelta(seconds=0.5)).isoformat(),
+            "end_time": (now + timedelta(seconds=0.25)).isoformat(),
             "entity_ids": ["light.small", "binary_sensor.is_light"],
         }
     )
