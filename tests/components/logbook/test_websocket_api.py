@@ -970,7 +970,11 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
 async def test_subscribe_unsubscribe_logbook_stream_big_query(
     hass, recorder_mock, hass_ws_client
 ):
-    """Test subscribe/unsubscribe logbook stream with specific entities."""
+    """Test subscribe/unsubscribe logbook stream and ask for a large time frame.
+
+    We should get the data for the first 24 hours in the first message, and
+    anything older will come in a followup message.
+    """
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
