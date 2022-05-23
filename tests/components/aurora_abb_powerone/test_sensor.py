@@ -100,7 +100,6 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
-    utcnow = dt_util.utcnow()
     # sun is up
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
@@ -128,6 +127,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         power = hass.states.get("sensor.power_output")
         assert power is not None
         assert power.state == "45.7"
+    utcnow = dt_util.utcnow()
 
     # sunset
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
@@ -137,7 +137,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=AuroraError("No response after 10 seconds"),
     ):
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.power_output")
         assert power.state == "unknown"
@@ -148,7 +148,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
     ):
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 3)
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 4)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.power_output")
         assert power is not None
@@ -161,7 +161,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=AuroraError("No response after 10 seconds"),
     ):
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 5)
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 6)
         await hass.async_block_till_done()
         power = hass.states.get("sensor.power_output")
         assert power.state == "unknown"
