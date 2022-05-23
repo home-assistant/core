@@ -53,13 +53,18 @@ class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
     REPORT_CONFIG = []
+    ZCL_INIT_ATTRS = {
+        "detection_interval": True,
+        "motion_sensitivity": True,
+        "trigger_indicator": True,
+    }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
         if self.cluster.endpoint.model == "lumi.motion.ac02":
             interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
-            self.warning("interval at startup: %s", interval)
             if interval is not None:
+                self.debug("Loaded detection interval at startup: %s", interval)
                 self.cluster.endpoint.ias_zone.reset_s = int(interval)
 
 
