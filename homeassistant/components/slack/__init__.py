@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, discovery
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CLIENT, DEFAULT_NAME, DOMAIN
@@ -74,8 +74,13 @@ class SlackEntity(Entity):
 
     _attr_attribution = "Data provided by Slack"
 
-    def __init__(self, client: WebClient, entry: ConfigEntry) -> None:
+    def __init__(
+        self, client: WebClient, description: EntityDescription, entry: ConfigEntry
+    ) -> None:
         """Initialize a Slack entity."""
+        self._client = client
+        self.entity_description = description
+        self._attr_unique_id = f"{description.key}_{client.user_id}"
         self._attr_device_info = DeviceInfo(
             configuration_url=client.url,
             entry_type=DeviceEntryType.SERVICE,

@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from slack import WebClient
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,18 +33,6 @@ async def async_setup_entry(
 
 class SlackSwitchEntity(SlackEntity, SwitchEntity):
     """Representation of a Slack switch."""
-
-    def __init__(
-        self,
-        client: WebClient,
-        description: SwitchEntityDescription,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize a Slack switch entity."""
-        super().__init__(client, entry)
-        self._client = client
-        self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{client.user_id}"
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
