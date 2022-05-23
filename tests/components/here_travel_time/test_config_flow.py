@@ -50,6 +50,16 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def bypass_setup_fixture():
+    """Prevent setup."""
+    with patch(
+        "homeassistant.components.here_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture(name="user_step_result")
 async def user_step_result_fixture(hass: HomeAssistant) -> data_entry_flow.FlowResult:
     """Provide the result of a completed user step."""
