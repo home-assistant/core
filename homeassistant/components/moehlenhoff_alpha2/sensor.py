@@ -41,12 +41,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
+class Alpha2IODeviceBatterySensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
     """Alpha2 IO device battery sensor."""
 
-    coordinator: Alpha2BaseCoordinator
-
-    device_class = SensorDeviceClass.BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, io_device_id: str) -> None:
@@ -82,10 +80,8 @@ class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
         return "good"
 
 
-class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity, SensorEntity):
+class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
     """Alpha2 heat control valve opening sensor."""
-
-    coordinator: Alpha2BaseCoordinator
 
     _attr_native_unit_of_measurement = PERCENTAGE
 
