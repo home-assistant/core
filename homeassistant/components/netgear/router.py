@@ -74,6 +74,7 @@ class NetgearRouter:
 
         self._info = None
         self.model = ""
+        self.mode = ""
         self.device_name = ""
         self.firmware_version = ""
         self.hardware_version = ""
@@ -110,6 +111,7 @@ class NetgearRouter:
         self.firmware_version = self._info.get("Firmwareversion")
         self.hardware_version = self._info.get("Hardwareversion")
         self.serial_number = self._info["SerialNumber"]
+        self.mode = self._info.get("DeviceMode", MODE_ROUTER)
 
         for model in MODELS_V2:
             if self.model.startswith(model):
