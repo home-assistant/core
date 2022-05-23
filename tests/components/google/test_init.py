@@ -19,6 +19,7 @@ from homeassistant.components.google import (
     SERVICE_ADD_EVENT,
     SERVICE_SCAN_CALENDARS,
 )
+from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
@@ -229,7 +230,10 @@ async def test_found_calendar_from_api(
     assert not hass.states.get(TEST_YAML_ENTITY)
 
 
-@pytest.mark.parametrize("calendars_config,google_config", [([], {})])
+@pytest.mark.parametrize(
+    "calendars_config,google_config,config_entry_options",
+    [([], {}, {CONF_CALENDAR_ACCESS: "read_write"})],
+)
 async def test_load_application_credentials(
     hass: HomeAssistant,
     component_setup: ComponentSetup,

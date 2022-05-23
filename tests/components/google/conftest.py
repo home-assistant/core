@@ -171,9 +171,16 @@ def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
 
 
 @pytest.fixture
+def config_entry_options() -> dict[str, Any] | None:
+    """Fixture to set initial config entry options."""
+    return None
+
+
+@pytest.fixture
 def config_entry(
     token_scopes: list[str],
     config_entry_token_expiry: float,
+    config_entry_options: dict[str, Any] | None,
 ) -> MockConfigEntry:
     """Fixture to create a config entry for the integration."""
     return MockConfigEntry(
@@ -188,6 +195,7 @@ def config_entry(
                 "expires_at": config_entry_token_expiry,
             },
         },
+        options=config_entry_options,
     )
 
 
