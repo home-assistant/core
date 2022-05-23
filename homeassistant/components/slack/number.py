@@ -48,9 +48,8 @@ class SlackNumberEntity(SlackEntity, NumberEntity):
     ) -> None:
         """Initialize a Slack number entity."""
         super().__init__(client, entry)
-        self._client = client
         self.entity_description = description
-        self._attr_unique_id = f"dnd_{client.user_id}"
+        self._attr_unique_id = f"{description.key}_{client.user_id}"
         self._attr_value = 60
 
     async def async_set_value(self, value: float) -> None:

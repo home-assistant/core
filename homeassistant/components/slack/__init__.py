@@ -76,6 +76,7 @@ class SlackEntity(Entity):
 
     def __init__(self, client: WebClient, entry: ConfigEntry) -> None:
         """Initialize a Slack entity."""
+        self._client = client
         self._attr_device_info = DeviceInfo(
             configuration_url=client.url,
             entry_type=DeviceEntryType.SERVICE,
