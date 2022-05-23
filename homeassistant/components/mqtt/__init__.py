@@ -203,6 +203,7 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         vol.Optional(Platform.SCENE.value): cv.ensure_list,
         vol.Optional(Platform.SELECT.value): cv.ensure_list,
         vol.Optional(Platform.SIREN.value): cv.ensure_list,
+        vol.Optional(Platform.SENSOR.value): cv.ensure_list,
         vol.Optional(Platform.SWITCH.value): cv.ensure_list,
         vol.Optional(Platform.VACUUM.value): cv.ensure_list,
         vol.Optional(Platform.NUMBER.value): cv.ensure_list,
