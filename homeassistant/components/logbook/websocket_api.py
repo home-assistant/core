@@ -289,9 +289,9 @@ async def ws_event_stream(
     @callback
     def _unsub(*time: Any) -> None:
         """Unsubscribe from all events."""
-        for subscription in live_stream.subscriptions:
+        for subscription in subscriptions:
             subscription()
-        live_stream.subscriptions.clear()
+        subscriptions.clear()
         if live_stream.task:
             live_stream.task.cancel()
         if live_stream.end_time_unsub:
