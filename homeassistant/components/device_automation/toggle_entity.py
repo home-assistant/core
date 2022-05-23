@@ -25,12 +25,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-    entity,
-)
+from . import DEVICE_TRIGGER_BASE_SCHEMA, entity
 from .const import (
     CONF_IS_OFF,
     CONF_IS_ON,
@@ -190,9 +185,9 @@ async def _async_get_automations(
     device_id: str,
     automation_templates: list[dict[str, str]],
     domain: str,
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device automations."""
-    automations: GetAutomationsResult = []
+    automations: list[dict[str, str]] = []
     entity_registry = er.async_get(hass)
 
     entries = [
@@ -217,21 +212,21 @@ async def _async_get_automations(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str, domain: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device actions."""
     return await _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
 
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str, domain: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device conditions."""
     return await _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers."""
     triggers = await entity.async_get_triggers(hass, device_id, domain)
     triggers.extend(
@@ -242,7 +237,7 @@ async def async_get_triggers(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     return {
         "extra_fields": vol.Schema(
@@ -253,7 +248,7 @@ async def async_get_condition_capabilities(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     if config[CONF_TYPE] not in [CONF_TURNED_ON, CONF_TURNED_OFF]:
         return await entity.async_get_trigger_capabilities(hass, config)
