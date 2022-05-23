@@ -23,19 +23,22 @@ async def async_setup_entry(
 
     coordinator: Alpha2BaseCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
+    entities = [
         Alpha2IODeviceBatterySensor(coordinator, io_device_id)
         for io_device_id, io_device in coordinator.data["io_devices"].items()
         if io_device["_HEATAREA_ID"]
-    )
+    ]
+
     # HEATCTRL attribute ACTOR_PERCENT is not available in older firmware versions
-    async_add_entities(
+    entities.extend(
         Alpha2HeatControlValveOpeningSensor(coordinator, heat_control_id)
         for heat_control_id, heat_control in coordinator.data["heat_controls"].items()
         if heat_control["INUSE"]
         and heat_control["_HEATAREA_ID"]
         and heat_control.get("ACTOR_PERCENT") is not None
     )
+
+    async_add_entities(entities)
 
 
 class Alpha2IODeviceBatterySensor(CoordinatorEntity, SensorEntity):
