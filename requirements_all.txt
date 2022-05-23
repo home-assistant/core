@@ -339,7 +339,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.29.0
+async-upnp-client==0.30.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -433,7 +433,7 @@ boto3==1.20.24
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.1
+broadlink==0.18.2
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -822,7 +822,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220518.0
+home-assistant-frontend==20220521.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -925,6 +925,9 @@ krakenex==2.1.0
 
 # homeassistant.components.eufy
 lakeside==0.12
+
+# homeassistant.components.laundrify
+laundrify_aio==1.1.1
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1227,7 +1230,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.0
+pillow==9.1.1
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1242,7 +1245,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.18.2
+plugwise==0.18.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2381,7 +2384,7 @@ vallox-websocket-api==2.11.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.2.4
+velbus-aio==2022.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15

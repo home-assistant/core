@@ -396,8 +396,9 @@ def setup_connection_for_dialect(
     dialect_name: str,
     dbapi_connection: Any,
     first_connection: bool,
-) -> None:
+) -> AwesomeVersion | None:
     """Execute statements needed for dialect connection."""
+    version: AwesomeVersion | None = None
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
@@ -464,6 +465,8 @@ def setup_connection_for_dialect(
 
     else:
         _fail_unsupported_dialect(dialect_name)
+
+    return version
 
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
