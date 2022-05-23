@@ -330,7 +330,7 @@ boschshcpy==0.2.30
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.1
+broadlink==0.18.2
 
 # homeassistant.components.brother
 brother==1.1.0
