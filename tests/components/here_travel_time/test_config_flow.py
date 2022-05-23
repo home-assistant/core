@@ -50,6 +50,16 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def bypass_setup_fixture():
+    """Prevent setup."""
+    with patch(
+        "homeassistant.components.here_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture(name="user_step_result")
 async def user_step_result_fixture(hass: HomeAssistant) -> data_entry_flow.FlowResult:
     """Provide the result of a completed user step."""
@@ -65,7 +75,7 @@ async def user_step_result_fixture(hass: HomeAssistant) -> data_entry_flow.FlowR
         },
     )
     await hass.async_block_till_done()
-    yield user_step_result
+    return user_step_result
 
 
 @pytest.fixture(name="option_init_result")
@@ -96,7 +106,7 @@ async def option_init_result_fixture(hass: HomeAssistant) -> data_entry_flow.Flo
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         },
     )
-    yield result
+    return result
 
 
 @pytest.fixture(name="origin_step_result")
@@ -118,7 +128,7 @@ async def origin_step_result_fixture(
             }
         },
     )
-    yield location_selector_result
+    return location_selector_result
 
 
 @pytest.mark.parametrize(
