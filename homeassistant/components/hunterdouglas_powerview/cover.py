@@ -551,8 +551,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
     def _clamp_cover_limit(self, target_hass_position):
         """Dont allow a cover to go into an impossbile position."""
         cover_bottom = self.current_cover_position_primary
-        if (100 - target_hass_position) < cover_bottom:
-            target_hass_position = 100 - cover_bottom
+        target_hass_position = min(target_hass_position, (100 - cover_bottom))
         return target_hass_position
 
     @callback
