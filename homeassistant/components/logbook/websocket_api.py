@@ -39,8 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class StreamState:
-    """The current state of the live stream."""
+class LogbookLiveStream:
+    """The a logbook live stream."""
 
     stream_queue: asyncio.Queue[Event]
     subscriptions: list[CALLBACK_TYPE]
@@ -282,21 +282,23 @@ async def ws_event_stream(
 
     subscriptions: list[CALLBACK_TYPE] = []
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
-    stream_state = StreamState(subscriptions=subscriptions, stream_queue=stream_queue)
+    live_stream = LogbookLiveStream(
+        subscriptions=subscriptions, stream_queue=stream_queue
+    )
 
     @callback
     def _unsub(*time: Any) -> None:
         """Unsubscribe from all events."""
-        for subscription in stream_state.subscriptions:
+        for subscription in live_stream.subscriptions:
             subscription()
-        stream_state.subscriptions.clear()
-        if stream_state.task:
-            stream_state.task.cancel()
-        if stream_state.end_time_unsub:
-            stream_state.end_time_unsub()
+        live_stream.subscriptions.clear()
+        if live_stream.task:
+            live_stream.task.cancel()
+        if live_stream.end_time_unsub:
+            live_stream.end_time_unsub()
 
     if end_time:
-        stream_state.end_time_unsub = async_track_point_in_utc_time(
+        live_stream.end_time_unsub = async_track_point_in_utc_time(
             hass, _unsub, end_time
         )
 
@@ -366,7 +368,7 @@ async def ws_event_stream(
         # Unsubscribe happened while waiting for formatted events
         return
 
-    stream_state.task = asyncio.create_task(
+    live_stream.task = asyncio.create_task(
         _async_events_consumer(
             subscriptions_setup_complete_time,
             connection,
