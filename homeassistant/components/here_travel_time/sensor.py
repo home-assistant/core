@@ -172,7 +172,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id_prefix
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, unique_id_prefix)},
             entry_type=DeviceEntryType.SERVICE,
             name=name,
             manufacturer="HERE Technologies",
