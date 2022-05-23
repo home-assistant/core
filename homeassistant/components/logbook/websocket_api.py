@@ -75,6 +75,7 @@ async def _async_send_historical_events(
     end_time: dt,
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
+    partial: bool,
 ) -> dt | None:
     """Select historical data from the database and deliver it to the websocket.
 
@@ -94,88 +95,107 @@ async def _async_send_historical_events(
     )
 
     if not is_big_query:
-        message, last_event_time = await _async_get_ws_formatted_events(
+        message, last_event_time = await _async_get_ws_stream_events(
             hass,
             msg_id,
             start_time,
             end_time,
             formatter,
             event_processor,
+            partial,
         )
-        # If there is no last_time, there are no historical
-        # results, but we still send an empty message so
+        # If there is no last_event_time, there are no historical
+        # results, but we still send an empty message
+        # if its the last one (not partial) so
         # consumers of the api know their request was
         # answered but there were no results
-        connection.send_message(message)
+        if last_event_time or not partial:
+            connection.send_message(message)
         return last_event_time
 
     # This is a big query so we deliver
     # the first three hours and then
     # we fetch the old data
     recent_query_start = end_time - timedelta(hours=BIG_QUERY_RECENT_HOURS)
-    recent_message, recent_query_last_event_time = await _async_get_ws_formatted_events(
+    recent_message, recent_query_last_event_time = await _async_get_ws_stream_events(
         hass,
         msg_id,
         recent_query_start,
         end_time,
         formatter,
         event_processor,
+        partial=True,
     )
     if recent_query_last_event_time:
         connection.send_message(recent_message)
 
-    older_message, older_query_last_event_time = await _async_get_ws_formatted_events(
+    older_message, older_query_last_event_time = await _async_get_ws_stream_events(
         hass,
         msg_id,
         start_time,
         recent_query_start,
         formatter,
         event_processor,
+        partial,
     )
-    # If there is no last_time, there are no historical
-    # results, but we still send an empty message so
+    # If there is no last_event_time, there are no historical
+    # results, but we still send an empty message
+    # if its the last one (not partial) so
     # consumers of the api know their request was
     # answered but there were no results
-    if older_query_last_event_time or not recent_query_last_event_time:
+    if older_query_last_event_time or not partial:
         connection.send_message(older_message)
 
     # Returns the time of the newest event
     return recent_query_last_event_time or older_query_last_event_time
 
 
-async def _async_get_ws_formatted_events(
+async def _async_get_ws_stream_events(
     hass: HomeAssistant,
     msg_id: int,
     start_time: dt,
     end_time: dt,
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
+    partial: bool,
 ) -> tuple[str, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
     return await get_instance(hass).async_add_executor_job(
-        _ws_formatted_get_events,
+        _ws_stream_get_events,
         msg_id,
         start_time,
         end_time,
         formatter,
         event_processor,
+        partial,
     )
 
 
-def _ws_formatted_get_events(
+def _ws_stream_get_events(
     msg_id: int,
     start_day: dt,
     end_day: dt,
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
+    partial: bool,
 ) -> tuple[str, dt | None]:
     """Fetch events and convert them to json in the executor."""
     events = event_processor.get_events(start_day, end_day)
     last_time = None
     if events:
         last_time = dt_util.utc_from_timestamp(events[-1]["when"])
-    result = formatter(msg_id, events)
-    return JSON_DUMP(result), last_time
+    message = {
+        "events": events,
+        "start_time": dt_util.utc_to_timestamp(start_day),
+        "end_time": dt_util.utc_to_timestamp(end_day),
+    }
+    if partial:
+        # This is a hint to consumers of the api that
+        # we are about to send a another block of historical
+        # data in case the UI needs to show that historical
+        # data is still loading in the future
+        message["partial"] = True
+    return JSON_DUMP(formatter(msg_id, message)), last_time
 
 
 async def _async_events_consumer(
@@ -209,7 +229,7 @@ async def _async_events_consumer(
                 JSON_DUMP(
                     messages.event_message(
                         msg_id,
-                        logbook_events,
+                        {"events": logbook_events},
                     )
                 )
             )
@@ -279,6 +299,7 @@ async def ws_event_stream(
             end_time,
             messages.event_message,
             event_processor,
+            partial=False,
         )
         return
 
@@ -331,6 +352,7 @@ async def ws_event_stream(
         subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,
+        partial=True,
     )
 
     await _async_wait_for_recorder_sync(hass)
@@ -353,16 +375,16 @@ async def ws_event_stream(
     second_fetch_start_time = max(
         last_event_time or max_recorder_behind, max_recorder_behind
     )
-    message, final_cutoff_time = await _async_get_ws_formatted_events(
+    await _async_send_historical_events(
         hass,
+        connection,
         msg_id,
         second_fetch_start_time,
         subscriptions_setup_complete_time,
         messages.event_message,
         event_processor,
+        partial=False,
     )
-    if final_cutoff_time:  # Only sends results if we have them
-        connection.send_message(message)
 
     if not subscriptions:
         # Unsubscribe happened while waiting for formatted events
@@ -375,6 +397,20 @@ async def ws_event_stream(
             msg_id,
             stream_queue,
             event_processor,
+        )
+    )
+
+
+def _ws_formatted_get_events(
+    msg_id: int,
+    start_time: dt,
+    end_time: dt,
+    event_processor: EventProcessor,
+) -> str:
+    """Fetch events and convert them to json in the executor."""
+    return JSON_DUMP(
+        messages.result_message(
+            msg_id, event_processor.get_events(start_time, end_time)
         )
     )
 
@@ -438,12 +474,12 @@ async def ws_get_events(
         include_entity_name=False,
     )
 
-    message, _ = await _async_get_ws_formatted_events(
-        hass,
-        msg["id"],
-        start_time,
-        end_time,
-        messages.result_message,
-        event_processor,
+    connection.send_message(
+        await hass.async_add_executor_job(
+            _ws_formatted_get_events,
+            msg["id"],
+            start_time,
+            end_time,
+            event_processor,
+        )
     )
-    connection.send_message(message)
