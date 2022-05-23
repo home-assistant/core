@@ -1,10 +1,8 @@
 """The Hunter Douglas PowerView integration."""
-from datetime import timedelta
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiEntryPoint
-from aiopvapi.helpers.constants import ATTR_ID
 from aiopvapi.helpers.tools import base64_to_unicode
 from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
@@ -14,11 +12,10 @@ import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     API_PATH_FWVERSION,
@@ -50,6 +47,7 @@ from .const import (
     SHADE_DATA,
     USER_DATA,
 )
+from .coordinator import PowerviewShadeUpdateCoordinator, async_map_data_by_id
 
 PARALLEL_UPDATES = 1
 
@@ -64,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     config = entry.data
 
-    hub_address = config.get(CONF_HOST)
+    hub_address = config[CONF_HOST]
     websession = async_get_clientsession(hass)
 
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
@@ -75,17 +73,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async with async_timeout.timeout(10):
             rooms = Rooms(pv_request)
-            room_data = _async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
+            room_data = async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
 
         async with async_timeout.timeout(10):
             scenes = Scenes(pv_request)
-            scene_data = _async_map_data_by_id(
+            scene_data = async_map_data_by_id(
                 (await scenes.get_resources())[SCENE_DATA]
             )
 
         async with async_timeout.timeout(10):
             shades = Shades(pv_request)
-            shade_data = _async_map_data_by_id(
+            shade_data = async_map_data_by_id(
                 (await shades.get_resources())[SHADE_DATA]
             )
     except HUB_EXCEPTIONS as err:
@@ -95,24 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not device_info:
         raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
-    async def async_update_data():
-        """Fetch data from shade endpoint."""
-        async with async_timeout.timeout(10):
-            shade_entries = await shades.get_resources()
-        if not shade_entries:
-            raise UpdateFailed("Failed to fetch new shade data.")
-        return _async_map_data_by_id(shade_entries[SHADE_DATA])
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="powerview hub",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
+    coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub_address)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         PV_API: pv_request,
         PV_ROOM_DATA: room_data,
         PV_SCENE_DATA: scene_data,
@@ -153,12 +135,6 @@ async def async_get_device_info(pv_request):
         DEVICE_FIRMWARE: main_processor_info,
         DEVICE_MODEL: main_processor_info[FIRMWARE_NAME],
     }
-
-
-@callback
-def _async_map_data_by_id(data):
-    """Return a dict with the key being the id for a list of entries."""
-    return {entry[ATTR_ID]: entry for entry in data}
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
