@@ -20,7 +20,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Werk uw wachtwoord voor {gebruikersnaam} bij",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {
