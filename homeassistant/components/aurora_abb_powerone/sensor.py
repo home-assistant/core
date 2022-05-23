@@ -5,8 +5,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,7 +20,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AuroraAbbDataUpdateCoordinator
 from .aurora_device import AuroraEntity
 from .const import DOMAIN
 
@@ -62,68 +63,33 @@ async def async_setup_entry(
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
-    client = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     data = config_entry.data
 
     for sens in SENSOR_TYPES:
-        entities.append(AuroraSensor(client, data, sens))
+        entities.append(AuroraSensor(coordinator, data, sens))
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
 
 
-class AuroraSensor(AuroraEntity, SensorEntity):
+class AuroraSensor(
+    CoordinatorEntity[AuroraAbbDataUpdateCoordinator], AuroraEntity, SensorEntity
+):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
     def __init__(
         self,
-        client: AuroraSerialClient,
+        coordinator: AuroraAbbDataUpdateCoordinator,
         data: Mapping[str, Any],
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(client, data)
+        super().__init__(coordinator)
+        self._data = data
         self.entity_description = entity_description
-        self.available_prev = True
 
-    def update(self) -> None:
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        try:
-            self.available_prev = self._attr_available
-            self.client.connect()
-            if self.entity_description.key == "instantaneouspower":
-                # read ADC channel 3 (grid power output)
-                power_watts = self.client.measure(3, True)
-                self._attr_native_value = round(power_watts, 1)
-            elif self.entity_description.key == "temp":
-                temperature_c = self.client.measure(21)
-                self._attr_native_value = round(temperature_c, 1)
-            elif self.entity_description.key == "totalenergy":
-                energy_wh = self.client.cumulated_energy(5)
-                self._attr_native_value = round(energy_wh / 1000, 2)
-            self._attr_available = True
-
-        except AuroraTimeoutError:
-            self._attr_state = None
-            self._attr_native_value = None
-            self._attr_available = False
-            _LOGGER.debug("No response from inverter (could be dark)")
-        except AuroraError as error:
-            self._attr_state = None
-            self._attr_native_value = None
-            self._attr_available = False
-            raise error
-        finally:
-            if self._attr_available != self.available_prev:
-                if self._attr_available:
-                    _LOGGER.info("Communication with %s back online", self.name)
-                else:
-                    _LOGGER.warning(
-                        "Communication with %s lost",
-                        self.name,
-                    )
-            if self.client.serline.isOpen():
-                self.client.close()
+    @property
+    def native_value(self) -> StateType:
+        """Get the value of the sensor from previously collected data."""
+        return self.coordinator.data[self.entity_description.key]

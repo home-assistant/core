@@ -104,6 +104,9 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
     ), patch(
+        "aurorapy.client.AuroraSerialClient.cumulated_energy",
+        side_effect=_simulated_returns,
+    ), patch(
         "aurorapy.client.AuroraSerialClient.serial_number",
         return_value="9876543",
     ), patch(
@@ -120,6 +123,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         power = hass.states.get("sensor.power_output")
         assert power is not None
         assert power.state == "45.7"

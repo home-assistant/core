@@ -5,8 +5,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraSerialClient
-
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -25,12 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 class AuroraEntity(Entity):
     """Representation of an Aurora ABB PowerOne device."""
 
-    def __init__(self, client: AuroraSerialClient, data: Mapping[str, Any]) -> None:
+    def __init__(self, data: Mapping[str, Any]) -> None:
         """Initialise the basic device."""
         self._data = data
-        self.type = "device"
-        self.client = client
-        self._available = True
 
     @property
     def unique_id(self) -> str | None:
@@ -38,11 +33,6 @@ class AuroraEntity(Entity):
         if (serial := self._data.get(ATTR_SERIAL_NUMBER)) is None:
             return None
         return f"{serial}_{self.entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def device_info(self) -> DeviceInfo:
