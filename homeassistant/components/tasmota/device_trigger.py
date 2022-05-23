@@ -291,7 +291,7 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: Callable,
+    action: AutomationActionType,
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a device trigger."""
