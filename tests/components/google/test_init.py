@@ -46,7 +46,7 @@ HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 def assert_state(actual: State | None, expected: State | None) -> None:
     """Assert that the two states are equal."""
-    if actual is None:
+    if actual is None or expected is None:
         assert actual == expected
         return
     assert actual.entity_id == expected.entity_id

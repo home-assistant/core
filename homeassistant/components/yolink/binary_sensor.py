@@ -31,7 +31,7 @@ class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    key: str = "state"
+    state_key: str = "state"
     value: Callable[[str], bool | None] = lambda _: None
 
 
@@ -43,6 +43,7 @@ SENSOR_DEVICE_TYPE = [
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
+        key="door_state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
@@ -50,12 +51,14 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
+        key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
         value=lambda value: value == "alert",
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
+        key="leak_state",
         name="Leak",
         icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
@@ -108,6 +111,6 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         self._attr_is_on = self.entity_description.value(
-            state[self.entity_description.key]
+            state[self.entity_description.state_key]
         )
         self.async_write_ha_state()

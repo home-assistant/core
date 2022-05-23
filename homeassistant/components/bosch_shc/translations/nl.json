@@ -23,7 +23,7 @@
             },
             "reauth_confirm": {
                 "description": "De bosch_shc integratie moet uw account herauthenticeren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

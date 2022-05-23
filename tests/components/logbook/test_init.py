@@ -14,6 +14,9 @@ import voluptuous as vol
 from homeassistant.components import logbook
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook.models import LazyEventPartialState
+from homeassistant.components.logbook.processor import EventProcessor
+from homeassistant.components.logbook.queries.common import PSUEDO_EVENT_STATE_CHANGED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -95,15 +98,12 @@ async def test_service_call_create_logbook_entry(hass_):
     # Our service call will unblock when the event listeners have been
     # scheduled. This means that they may not have been processed yet.
     await async_wait_recording_done(hass_)
-    ent_reg = er.async_get(hass_)
+    event_processor = EventProcessor(hass_, (EVENT_LOGBOOK_ENTRY,))
 
     events = list(
-        logbook._get_events(
-            hass_,
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 2
@@ -137,15 +137,11 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorde
         },
     )
     await async_wait_recording_done(hass)
-    ent_reg = er.async_get(hass)
-
+    event_processor = EventProcessor(hass, (EVENT_LOGBOOK_ENTRY,))
     events = list(
-        logbook._get_events(
-            hass,
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 1
@@ -335,7 +331,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = logbook.PSUEDO_EVENT_STATE_CHANGED
+    row.event_type = PSUEDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
@@ -353,7 +349,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row, {})
+    return LazyEventPartialState(row, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
