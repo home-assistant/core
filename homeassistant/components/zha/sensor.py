@@ -762,7 +762,6 @@ class LQISensor(RSSISensor, id_suffix="lqi"):
     manufacturers={
         "_TZE200_htnnfasr",
     },
-    stop_on_match_group="tuya_manufacturer",
 )
 class TimeLeft(Sensor, id_suffix="time_left"):
     """Sensor that displays time left value."""

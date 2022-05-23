@@ -3,9 +3,17 @@ from unittest.mock import call, patch
 
 from freezegun import freeze_time
 import pytest
+from zhaquirks.const import (
+    DEVICE_TYPE,
+    ENDPOINTS,
+    INPUT_CLUSTERS,
+    OUTPUT_CLUSTERS,
+    PROFILE_ID,
+)
 from zigpy.const import SIG_EP_PROFILE
 from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha as zha
+from zigpy.quirks import CustomCluster, CustomDevice
 import zigpy.types as t
 import zigpy.zcl.clusters.general as general
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
@@ -52,29 +60,43 @@ async def contact_sensor(hass, zigpy_device_mock, zha_device_joined_restored):
     return zha_device, zigpy_device.endpoints[1].identify
 
 
-@pytest.fixture
-async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
-    """Tuya Water Valve fixture."""
+class FrostLockQuirk(CustomDevice):
+    """Quirk with frost lock attribute."""
 
-    class TuyaManufCluster(ManufacturerSpecificCluster):
+    class TuyaManufCluster(CustomCluster, ManufacturerSpecificCluster):
         """Tuya manufacturer specific cluster."""
 
         cluster_id = 0xEF00
         ep_attribute = "tuya_manufacturer"
 
-        attributes = {
-            0xEF01: ("frost_lock_reset", t.Bool),
+        attributes = {0xEF01: ("frost_lock_reset", t.Bool)}
+
+    replacement = {
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                INPUT_CLUSTERS: [general.Basic.cluster_id, TuyaManufCluster],
+                OUTPUT_CLUSTERS: [],
+            },
         }
+    }
+
+
+@pytest.fixture
+async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
+    """Tuya Water Valve fixture."""
 
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                SIG_EP_INPUT: [general.Basic.cluster_id, TuyaManufCluster.cluster_id],
+                SIG_EP_INPUT: [general.Basic.cluster_id],
                 SIG_EP_OUTPUT: [],
                 SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
             }
         },
         manufacturer="_TZE200_htnnfasr",
+        quirk=FrostLockQuirk,
     )
 
     zha_device = await zha_device_joined_restored(zigpy_device)

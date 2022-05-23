@@ -24,6 +24,9 @@ from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BUTTON)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.BUTTON
+)
 DEFAULT_DURATION = 5  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +111,7 @@ class ZHAIdentifyButton(ZHAButton):
         return [DEFAULT_DURATION]
 
 
-class ZHAButtonAttribute(ZhaEntity, ButtonEntity):
+class ZHAAttributeButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button, which stes value to an attribute."""
 
     _attribute_name: str = None
@@ -140,14 +143,13 @@ class ZHAButtonAttribute(ZhaEntity, ButtonEntity):
             self.async_write_ha_state()
 
 
-@MULTI_MATCH(
+@CONFIG_DIAGNOSTIC_MATCH(
     channel_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_htnnfasr",
     },
-    stop_on_match_group="tuya_manufacturer",
 )
-class FrostLockResetButton(ZHAButtonAttribute, id_suffix="reset_frost_lock"):
+class FrostLockResetButton(ZHAAttributeButton, id_suffix="reset_frost_lock"):
     """Defines a ZHA identify button."""
 
     _attribute_name = "frost_lock_reset"
