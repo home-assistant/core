@@ -30,9 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if board not in BOARD_MAP:
         _LOGGER.error(
-            f'Board {board} is (no longer) valid. Removing Version integration "{entry.title}".'
+            'Board "%s" is (no longer) valid. Please remove the integration "%s".',
+            board,
+            entry.title,
         )
-        await hass.config_entries.async_remove(entry.entry_id)
         return False
 
     coordinator = VersionDataUpdateCoordinator(
