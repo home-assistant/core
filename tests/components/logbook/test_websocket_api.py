@@ -1090,6 +1090,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    assert msg["event"]["partial"] is True
     assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.four_days_ago",
@@ -1097,6 +1098,13 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
             "when": four_day_old_state.last_updated.timestamp(),
         }
     ]
+
+    # And finally a response without partial set to indicate no more
+    # historical data is coming
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
 
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
