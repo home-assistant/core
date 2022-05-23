@@ -188,11 +188,10 @@ async def async_setup_trigger(
         _LOGGER.debug(
             "Got update for trigger with hash: %s '%s'", discovery_hash, trigger_config
         )
-        device_triggers: dict[str, Trigger]
+        device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
         if not trigger_config.is_active:
             # Empty trigger_config: Remove trigger
             _LOGGER.debug("Removing trigger: %s", discovery_hash)
-            device_triggers = hass.data[DEVICE_TRIGGERS]
             if discovery_id in device_triggers:
                 device_trigger = device_triggers[discovery_id]
                 assert device_trigger.tasmota_trigger
@@ -203,7 +202,6 @@ async def async_setup_trigger(
                     remove_update_signal()
             return
 
-        device_triggers = hass.data[DEVICE_TRIGGERS]
         device_trigger = device_triggers[discovery_id]
         assert device_trigger.tasmota_trigger
         if device_trigger.tasmota_trigger.config_same(trigger_config):
