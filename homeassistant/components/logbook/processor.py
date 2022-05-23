@@ -42,6 +42,7 @@ from .const import (
     CONTEXT_MESSAGE,
     CONTEXT_NAME,
     CONTEXT_SERVICE,
+    CONTEXT_SOURCE,
     CONTEXT_STATE,
     CONTEXT_USER_ID,
     DOMAIN,
@@ -51,6 +52,7 @@ from .const import (
     LOGBOOK_ENTRY_ICON,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
+    LOGBOOK_ENTRY_SOURCE,
     LOGBOOK_ENTRY_STATE,
     LOGBOOK_ENTRY_WHEN,
     LOGBOOK_FILTERS,
@@ -398,11 +400,14 @@ class ContextAugmenter:
         data[CONTEXT_DOMAIN] = domain
         event = self.event_cache.get(context_row)
         described = describe_event(event)
-        if name := described.get(ATTR_NAME):
+        if name := described.get(LOGBOOK_ENTRY_NAME):
             data[CONTEXT_NAME] = name
-        if message := described.get(ATTR_MESSAGE):
+        if message := described.get(LOGBOOK_ENTRY_MESSAGE):
             data[CONTEXT_MESSAGE] = message
-        if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
+        # In 2022.12 and later drop `CONTEXT_MESSAGE` if `CONTEXT_SOURCE` is available
+        if source := described.get(LOGBOOK_ENTRY_SOURCE):
+            data[CONTEXT_SOURCE] = source
+        if not (attr_entity_id := described.get(LOGBOOK_ENTRY_ENTITY_ID)):
             return
         data[CONTEXT_ENTITY_ID] = attr_entity_id
         if self.include_entity_name:
