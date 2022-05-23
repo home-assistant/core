@@ -2,8 +2,16 @@
 from unittest.mock import call, patch
 
 import pytest
+from zhaquirks.const import (
+    DEVICE_TYPE,
+    ENDPOINTS,
+    INPUT_CLUSTERS,
+    OUTPUT_CLUSTERS,
+    PROFILE_ID,
+)
 from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha as zha
+from zigpy.quirks import CustomCluster, CustomDevice
 import zigpy.types as t
 import zigpy.zcl.clusters.general as general
 from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
@@ -31,42 +39,6 @@ ON = 1
 OFF = 0
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
-
-
-@pytest.fixture
-async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
-    """Device tracker zigpy tuya device."""
-
-    class TuyaManufCluster(ManufacturerSpecificCluster):
-        """Tuya manufacturer specific cluster."""
-
-        name = "Tuya Manufacturer Specicific"
-        cluster_id = 0xEF00
-        ep_attribute = "tuya_manufacturer"
-
-        attributes = {
-            0xEF01: ("window_detection_function", t.Bool),
-        }
-
-        def __init__(self, endpoint, is_server):
-            super().__init__(endpoint, is_server)
-            self._attr_cache.update({0xEF01: 0})  # entity won't be created without this
-
-    zigpy_device = zigpy_device_mock(
-        {
-            1: {
-                SIG_EP_INPUT: [general.Basic.cluster_id, TuyaManufCluster.cluster_id],
-                SIG_EP_OUTPUT: [],
-                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
-            }
-        },
-        manufacturer="_TZE200_b6wax7g0",
-    )
-
-    zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    await hass.async_block_till_done()
-    return zigpy_device
 
 
 @pytest.fixture
@@ -212,6 +184,58 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
 
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
+
+
+class WindowDetectionFunctionQuirk(CustomDevice):
+    """Quirk with window detection function attribute."""
+
+    class TuyaManufCluster(CustomCluster, ManufacturerSpecificCluster):
+        """Tuya manufacturer specific cluster."""
+
+        cluster_id = 0xEF00
+        ep_attribute = "tuya_manufacturer"
+
+        attributes = {0xEF01: ("window_detection_function", t.Bool)}
+
+        def __init__(self, *args, **kwargs):
+            """Initialize with task."""
+            super().__init__(*args, **kwargs)
+            self._attr_cache.update(
+                {0xEF01: False}
+            )  # entity won't be created without this
+
+    replacement = {
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                INPUT_CLUSTERS: [general.Basic.cluster_id, TuyaManufCluster],
+                OUTPUT_CLUSTERS: [],
+            },
+        }
+    }
+
+
+@pytest.fixture
+async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
+    """Device tracker zigpy tuya device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        manufacturer="_TZE200_b6wax7g0",
+        quirk=WindowDetectionFunctionQuirk,
+    )
+
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    await hass.async_block_till_done()
+    return zigpy_device
 
 
 @patch(
