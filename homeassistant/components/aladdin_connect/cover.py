@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -63,13 +63,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Aladdin Connect platform."""
     acc = hass.data[DOMAIN][config_entry.entry_id]
-    try:
-        doors = await hass.async_add_executor_job(acc.get_doors)
+    doors = await hass.async_add_executor_job(acc.get_doors)
 
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        raise ConfigEntryNotReady from ex
-
+    if doors is None:
+        raise PlatformNotReady("Error from Aladdin Connect getting doors")
     async_add_entities(
         (AladdinDevice(acc, door) for door in doors),
         update_before_add=True,
