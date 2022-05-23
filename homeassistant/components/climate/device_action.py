@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -46,7 +42,7 @@ ACTION_SCHEMA = vol.Any(SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device actions for Climate devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -94,7 +90,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     action_type = config[CONF_TYPE]
 

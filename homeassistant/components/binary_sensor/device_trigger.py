@@ -5,11 +5,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
@@ -293,9 +289,9 @@ async def async_attach_trigger(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers: GetAutomationsResult = []
+    triggers: list[dict[str, str]] = []
     entity_registry = er.async_get(hass)
 
     entries = [
@@ -327,7 +323,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

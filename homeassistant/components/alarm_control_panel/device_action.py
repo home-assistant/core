@@ -5,10 +5,6 @@ from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -59,7 +55,7 @@ ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device actions for Alarm control panel devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -124,7 +120,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
     # capability attribute

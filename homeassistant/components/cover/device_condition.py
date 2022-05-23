@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ABOVE,
@@ -68,7 +64,7 @@ CONDITION_SCHEMA = vol.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device conditions for Cover devices."""
     registry = entity_registry.async_get(hass)
     conditions: list[dict[str, str]] = []
@@ -103,7 +99,7 @@ async def async_get_conditions(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     if config[CONF_TYPE] not in ["is_position", "is_tilt_position"]:
         return {}
