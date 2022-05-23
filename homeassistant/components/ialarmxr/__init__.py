@@ -1,4 +1,6 @@
 """iAlarmXR integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -12,7 +14,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -20,6 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, IALARMXR_TO_HASS
+from .utils import async_get_ialarmxr_mac
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
 _LOGGER = logging.getLogger(__name__)
@@ -36,11 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with timeout(10):
-            mac = await hass.async_add_executor_job(ialarmxr.get_mac)
+            ialarmxr_mac = await async_get_ialarmxr_mac(hass, ialarmxr)
     except (asyncio.TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarmxr, mac)
+    coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarmxr, ialarmxr_mac)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -63,7 +65,7 @@ class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, ialarmxr: IAlarmXR, mac: str) -> None:
         """Initialize global iAlarm data updater."""
         self.ialarmxr: IAlarmXR = ialarmxr
-        self.state: str = STATE_UNKNOWN
+        self.state: str | None = None
         self.host: str = ialarmxr.host
         self.mac: str = mac
 

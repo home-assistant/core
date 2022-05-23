@@ -4,18 +4,16 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "ialarmxr_no_user_input_data_form": "No user input data form",
             "cannot_connect": "Failed to connect",
-            "ialarmxr_generic_exception": "iAlarmXR generic error, please read the logs",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
+                    "password": "Password",
                     "port": "Port",
-                    "username": "Username",
-                    "password": "Password"
+                    "username": "Username"
                 }
             }
         }
