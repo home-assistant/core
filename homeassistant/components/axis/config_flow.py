@@ -136,7 +136,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {self.serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_reauth(self, device_config: dict):
+    async def async_step_reauth(self, device_config: dict) -> FlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
             CONF_NAME: device_config[CONF_NAME],
