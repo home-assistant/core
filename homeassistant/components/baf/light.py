@@ -31,13 +31,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up BAF lights."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
-    if not device.has_light:
-        return
-    if not device.has_fan:
-        async_add_entities([BAFStandaloneLight(device)])
-    else:
-        async_add_entities([BAFFanLight(device)])
+    if not data.device.has_light:
+        klass = BAFFanLight if data.device.has_fan else BAFStandaloneLight
+        async_add_entities([klass(data.device)])
 
 
 class BAFLight(BAFEntity, LightEntity):
@@ -46,8 +42,7 @@ class BAFLight(BAFEntity, LightEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        device = self._device
-        self._attr_is_on = device.light_mode == OffOnAuto.ON
+        self._attr_is_on = self._device.light_mode == OffOnAuto.ON
         if self._device.light_brightness_level is not None:
             self._attr_brightness = int(
                 min(255, self._device.light_brightness_level * 16)
