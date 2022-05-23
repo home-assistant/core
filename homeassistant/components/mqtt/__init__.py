@@ -814,14 +814,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-        for component in PLATFORMS:
-            config_entries_key = f"{component}.mqtt"
-            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, component)
-                )
+    async def async_forward_entry_setup():
+        """Forward the config entry setup to the platforms."""
+        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+            for component in PLATFORMS:
+                config_entries_key = f"{component}.mqtt"
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                    await hass.config_entries.async_forward_entry_setup(
+                        entry, component
+                    )
+
+    hass.async_create_task(async_forward_entry_setup())
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)
