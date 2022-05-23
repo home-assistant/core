@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from slack import WebClient
-
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MINUTES
@@ -40,17 +38,7 @@ async def async_setup_entry(
 class SlackNumberEntity(SlackEntity, NumberEntity):
     """Representation of a Slack number entity."""
 
-    def __init__(
-        self,
-        client: WebClient,
-        description: NumberEntityDescription,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize a Slack number entity."""
-        super().__init__(client, entry)
-        self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{client.user_id}"
-        self._attr_value = 60
+    _attr_value = 60
 
     async def async_set_value(self, value: float) -> None:
         """Select lamp mode."""
