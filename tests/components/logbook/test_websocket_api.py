@@ -893,6 +893,38 @@ async def test_event_stream_bad_start_time(hass, hass_ws_client, recorder_mock):
     assert response["error"]["code"] == "invalid_start_time"
 
 
+async def test_event_stream_bad_end_time(hass, hass_ws_client, recorder_mock):
+    """Test event_stream bad end time."""
+    await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+    utc_now = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/event_stream",
+            "start_time": utc_now.isoformat(),
+            "end_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "logbook/event_stream",
+            "start_time": utc_now.isoformat(),
+            "end_time": (utc_now - timedelta(hours=5)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
+
+
 async def test_live_stream_with_one_second_commit_interval(
     hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
