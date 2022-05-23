@@ -133,7 +133,9 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _config: dict[str, Any] = {}
+    def __init__(self) -> None:
+        """Init Config Flow."""
+        self._config: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -301,11 +303,10 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
     """Handle HERE Travel Time options."""
 
-    _config: dict[str, Any] = {}
-
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize HERE Travel Time options flow."""
         self.config_entry = config_entry
+        self._config: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
