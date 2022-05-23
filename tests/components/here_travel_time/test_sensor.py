@@ -5,6 +5,7 @@ from herepy.here_enum import RouteMode
 from herepy.routing_api import NoRouteFoundError
 import pytest
 
+from homeassistant.components.here_travel_time.config_flow import default_options
 from homeassistant.components.here_travel_time.const import (
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
@@ -224,6 +225,7 @@ async def test_circular_ref(hass: HomeAssistant, caplog):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -250,6 +252,7 @@ async def test_no_attribution(hass: HomeAssistant):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -293,6 +296,7 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -332,6 +336,7 @@ async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -357,6 +362,7 @@ async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -386,6 +392,7 @@ async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -415,6 +422,7 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
             CONF_MODE: TRAVEL_MODE_TRUCK,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -444,6 +452,7 @@ async def test_route_not_found(hass: HomeAssistant, caplog):
                 CONF_MODE: TRAVEL_MODE_TRUCK,
                 CONF_NAME: "test",
             },
+            options=default_options(hass),
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

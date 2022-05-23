@@ -41,11 +41,9 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
-    CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     NO_ROUTE_ERROR_MESSAGE,
-    ROUTE_MODE_FASTEST,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
 )
@@ -60,7 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up HERE Travel Time from a config entry."""
     api_key = config_entry.data[CONF_API_KEY]
     here_client = RoutingApi(api_key)
-    setup_options(hass, config_entry)
 
     arrival = (
         dt.parse_time(config_entry.options[CONF_ARRIVAL_TIME])
@@ -96,21 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
-
-
-def setup_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Set up options for a config entry if not set."""
-    if not config_entry.options:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={
-                CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-                CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-                CONF_ARRIVAL_TIME: None,
-                CONF_DEPARTURE_TIME: None,
-                CONF_UNIT_SYSTEM: hass.config.units.name,
-            },
-        )
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
