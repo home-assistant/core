@@ -27,6 +27,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -548,7 +549,10 @@ def mqtt_client_mock(hass):
 
 @pytest.fixture
 async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
-    """Fixture to mock MQTT component."""
+    """Mock MQTT component using old manual MQTT item setup approach (deprecated).
+
+    This fixture will be replaced by `mqtt_mock_entry`
+    """
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
@@ -580,6 +584,49 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     component = hass.data["mqtt"]
     component.reset_mock()
     return component
+
+
+@pytest.fixture
+async def mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
+    """Fixture to mock a delayed setup of the  MQTT config entry."""
+    if mqtt_config is None:
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
+
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        data=mqtt_config,
+        domain=mqtt.DOMAIN,
+        title="MQTT",
+    )
+    entry.add_to_hass(hass)
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        if entry.state == ConfigEntryState.NOT_LOADED:
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+
+        mqtt_component_mock = MagicMock(
+            return_value=hass.data["mqtt"],
+            spec_set=hass.data["mqtt"],
+            wraps=hass.data["mqtt"],
+        )
+        mqtt_component_mock.conf = hass.data["mqtt"].conf  # For diagnostics
+        mqtt_component_mock._mqttc = mqtt_client_mock
+        # connected set to True to get a more realistic behavior when subscribing
+        hass.data["mqtt"].connected = True
+
+        hass.data["mqtt"] = mqtt_component_mock
+        component = hass.data["mqtt"]
+        component.reset_mock()
+
+        hass.helpers.dispatcher.async_dispatcher_send("mqtt_connected")
+        await hass.async_block_till_done()
+
+        return component
+
+    return _setup_mqtt_entry
 
 
 @pytest.fixture(autouse=True)
