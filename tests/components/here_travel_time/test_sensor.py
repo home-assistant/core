@@ -53,7 +53,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
 from .const import (
     API_KEY,
@@ -264,62 +263,59 @@ async def test_no_attribution(hass: HomeAssistant):
 
 async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
     """Test that origin/destination supplied by entities works."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
-        zone_config = {
-            "zone": [
-                {
-                    "name": "Origin",
-                    "latitude": CAR_ORIGIN_LATITUDE,
-                    "longitude": CAR_ORIGIN_LONGITUDE,
-                    "radius": 250,
-                    "passive": False,
-                },
-            ]
-        }
-        assert await async_setup_component(hass, "zone", zone_config)
-        hass.states.async_set(
-            "device_tracker.test",
-            "not_home",
+    zone_config = {
+        "zone": [
             {
-                "latitude": float(CAR_DESTINATION_LATITUDE),
-                "longitude": float(CAR_DESTINATION_LONGITUDE),
+                "name": "Origin",
+                "latitude": CAR_ORIGIN_LATITUDE,
+                "longitude": CAR_ORIGIN_LONGITUDE,
+                "radius": 250,
+                "passive": False,
             },
-        )
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id="0123456789",
-            data={
-                CONF_ORIGIN_ENTITY_ID: "zone.origin",
-                CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
-                CONF_API_KEY: API_KEY,
-                CONF_MODE: TRAVEL_MODE_TRUCK,
-                CONF_NAME: "test",
-            },
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        ]
+    }
+    assert await async_setup_component(hass, "zone", zone_config)
+    hass.states.async_set(
+        "device_tracker.test",
+        "not_home",
+        {
+            "latitude": float(CAR_DESTINATION_LATITUDE),
+            "longitude": float(CAR_DESTINATION_LONGITUDE),
+        },
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_ENTITY_ID: "zone.origin",
+            CONF_DESTINATION_ENTITY_ID: "device_tracker.test",
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
-        sensor = hass.states.get("sensor.test")
-        assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
+    sensor = hass.states.get("sensor.test")
+    assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
 
-        valid_response.assert_called_with(
-            [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE],
-            [CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE],
-            True,
-            [
-                RouteMode[ROUTE_MODE_FASTEST],
-                RouteMode[TRAVEL_MODE_TRUCK],
-                RouteMode[TRAFFIC_MODE_ENABLED],
-            ],
-            arrival=None,
-            departure="now",
-        )
+    valid_response.assert_called_with(
+        [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE],
+        [CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE],
+        True,
+        [
+            RouteMode[ROUTE_MODE_FASTEST],
+            RouteMode[TRAVEL_MODE_TRUCK],
+            RouteMode[TRAFFIC_MODE_ENABLED],
+        ],
+        arrival=None,
+        departure="now",
+    )
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -433,9 +429,6 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
 async def test_route_not_found(hass: HomeAssistant, caplog):
     """Test that route not found error is correctly handled."""
     with patch(
-        "homeassistant.components.here_travel_time.config_flow.validate_api_key",
-        return_value=None,
-    ), patch(
         "herepy.RoutingApi.public_transport_timetable",
         side_effect=NoRouteFoundError,
     ):
