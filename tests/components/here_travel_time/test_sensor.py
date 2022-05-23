@@ -429,9 +429,6 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
 async def test_route_not_found(hass: HomeAssistant, caplog):
     """Test that route not found error is correctly handled."""
     with patch(
-        "homeassistant.components.here_travel_time.config_flow.validate_api_key",
-        return_value=None,
-    ), patch(
         "herepy.RoutingApi.public_transport_timetable",
         side_effect=NoRouteFoundError,
     ):
