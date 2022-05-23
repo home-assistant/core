@@ -12,10 +12,6 @@ from zwave_js_server.const.command_class.meter import CC_SPECIFIC_METER_TYPE
 from zwave_js_server.model.value import get_value_id
 from zwave_js_server.util.command_class.meter import get_meter_type
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-)
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -147,7 +143,7 @@ ACTION_SCHEMA = vol.Any(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -277,7 +273,7 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     action_type = config[CONF_TYPE]
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])

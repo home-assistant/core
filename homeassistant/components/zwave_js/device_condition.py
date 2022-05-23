@@ -7,10 +7,6 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import ConfigurationValue
 
-from homeassistant.components.device_automation import (
-    GetAutomationCapabilitiesResult,
-    GetAutomationsResult,
-)
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -128,7 +124,7 @@ async def async_validate_condition_config(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
     conditions = []
     base_condition = {
@@ -203,7 +199,7 @@ def async_condition_from_config(
 @callback
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> GetAutomationCapabilitiesResult:
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     device_id = config[CONF_DEVICE_ID]
     node = async_get_node_from_device_id(hass, device_id)
