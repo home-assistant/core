@@ -2,7 +2,7 @@
 import asyncio
 from typing import cast
 
-from pywemo import Insight, Maker
+from pywemo import Insight, Maker, StandbyState
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -64,4 +64,5 @@ class InsightBinarySensor(WemoBinarySensor):
     @property
     def is_on(self) -> bool:
         """Return true device connected to the Insight Switch is on."""
-        return super().is_on and self.wemo.insight_params["state"] == "1"
+        # Note: wemo.get_standby_state is a @property.
+        return super().is_on and self.wemo.get_standby_state == StandbyState.ON
