@@ -202,7 +202,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigType",
         },
-        return_type="GetAutomationCapabilitiesResult",
+        return_type="dict[str, Schema]",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_action"],
@@ -211,7 +211,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "str",
         },
-        return_type="GetAutomationsResult",
+        return_type="list[dict[str, str]] | list[dict[str, Any]]",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_condition"],
@@ -238,7 +238,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigType",
         },
-        return_type="GetAutomationCapabilitiesResult",
+        return_type="dict[str, Schema]",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_condition"],
@@ -247,7 +247,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "str",
         },
-        return_type="GetAutomationsResult",
+        return_type="list[dict[str, str]] | list[dict[str, Any]]",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_tracker"],
@@ -316,7 +316,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "ConfigType",
         },
-        return_type="GetAutomationCapabilitiesResult",
+        return_type="dict[str, Schema]",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["device_trigger"],
@@ -325,7 +325,7 @@ _METHOD_MATCH: list[TypeHintMatch] = [
             0: "HomeAssistant",
             1: "str",
         },
-        return_type="GetAutomationsResult",
+        return_type="list[dict[str, str]] | list[dict[str, Any]]",
     ),
     TypeHintMatch(
         module_filter=_MODULE_FILTERS["diagnostics"],
