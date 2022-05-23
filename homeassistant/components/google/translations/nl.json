@@ -24,7 +24,7 @@
             },
             "reauth_confirm": {
                 "description": "De Google Agenda-integratie moet uw account opnieuw verifi\u00ebren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
         }
     }
