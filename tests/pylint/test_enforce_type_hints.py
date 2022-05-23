@@ -191,3 +191,52 @@ def test_valid_discovery_info(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_invalid_list_dict_str_any(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for discovery_info."""
+    type_hint_checker.module = "homeassistant.components.pylint_test.device_trigger"
+    func_node = astroid.extract_node(
+        """
+    async def async_get_triggers( #@
+        hass: HomeAssistant,
+        device_id: str
+    ) -> list:
+        pass
+    """
+    )
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args=["list[dict[str, str]]", "list[dict[str, Any]]"],
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=28,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_valid_list_dict_str_any(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for discovery_info."""
+    type_hint_checker.module = "homeassistant.components.pylint_test.device_trigger"
+    func_node = astroid.extract_node(
+        """
+    async def async_get_triggers( #@
+        hass: HomeAssistant,
+        device_id: str
+    ) -> list[dict[str, Any]]:
+        pass
+    """
+    )
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
