@@ -210,29 +210,17 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         # confirm the shade attribute in case position1/2 are inverted
         if self.position_data.get(ATTR_POSKIND1) == pos_kind:
             self.position_data[ATTR_POSITION1] = value
-        if self.position_data.get(ATTR_POSKIND2) == pos_kind:
+        elif self.position_data.get(ATTR_POSKIND2) == pos_kind:
             self.position_data[ATTR_POSITION2] = value
         # always store the last copy of information we received
         # should not be required but will limit chance of an edge case error
-        if pos_kind == POS_KIND_PRIMARY:
+        elif pos_kind == POS_KIND_PRIMARY:
             self._cached_primary = value
-        if pos_kind == POS_KIND_SECONDARY:
+        elif pos_kind == POS_KIND_SECONDARY:
             self._cached_secondary = value
-        if pos_kind == POS_KIND_VANE:
+        elif pos_kind == POS_KIND_VANE:
             self._cached_vane = value
         _LOGGER.debug("%s - Update Position: %s", self.name, self.position_data)
-
-    def set_position_primary(self, value):
-        """Store position of primary shade."""
-        self.set_position(value, POS_KIND_PRIMARY)
-
-    def set_position_secondary(self, value):
-        """Store position of secondary shade."""
-        self.set_position(value, POS_KIND_SECONDARY)
-
-    def set_position_vane(self, value):
-        """Store position of vane."""
-        self.set_position(value, POS_KIND_VANE)
 
     @property
     def is_closed(self):
@@ -297,7 +285,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @callback
     def _set_shade_postion(self, target_hass_position):
         position_one = hass_position_to_hd(target_hass_position)
-        self.set_position_primary(position_one)
+        self.set_position(position_one, POS_KIND_PRIMARY)
         return {
             ATTR_POSITION1: position_one,
             ATTR_POSKIND1: POS_KIND_PRIMARY,
@@ -365,21 +353,9 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     def _async_process_updated_position_data(self, position_data):
         """Process position data and update into the model."""
         if (position1 := position_data.get(ATTR_POSITION1)) is not None:
-            position1_kind = position_data[ATTR_POSKIND1]
-            if position1_kind == POS_KIND_PRIMARY:
-                self.set_position_primary(position1)
-            elif position1_kind == POS_KIND_SECONDARY:
-                self.set_position_secondary(position1)
-            elif position1_kind == POS_KIND_VANE:
-                self.set_position_vane(position1)
+            self.set_position(position1, position_data[ATTR_POSKIND1])
         if (position2 := position_data.get(ATTR_POSITION2)) is not None:
-            position2_kind = position_data[ATTR_POSKIND2]
-            if position2_kind == POS_KIND_PRIMARY:
-                self.set_position_primary(position2)
-            if position2_kind == POS_KIND_SECONDARY:
-                self.set_position_secondary(position2)
-            if position2_kind == POS_KIND_VANE:
-                self.set_position_vane(position2)
+            self.set_position(position2, position_data[ATTR_POSKIND2])
 
     @callback
     def _async_cancel_scheduled_transition_update(self):
@@ -519,15 +495,13 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
         """Dont allow a cover to go into an impossbile position."""
         cover_top = self.current_cover_position_secondary
         target_hass_position = min(target_hass_position, (100 - cover_top))
-        self.set_position_primary(hass_position_to_hd(target_hass_position))
-        _LOGGER.debug(self.position_data)
         return target_hass_position
 
     @callback
     def _set_shade_postion(self, target_hass_position):
         motor_position_bottom = hass_position_to_hd(target_hass_position)
         motor_position_top = self.position_secondary
-        self.set_position_primary(motor_position_bottom)
+        self.set_position(motor_position_bottom, POS_KIND_PRIMARY)
         return {
             ATTR_POSITION1: motor_position_bottom,
             ATTR_POSITION2: motor_position_top,
@@ -579,15 +553,13 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         cover_bottom = self.current_cover_position_primary
         if (100 - target_hass_position) < cover_bottom:
             target_hass_position = 100 - cover_bottom
-        self.set_position_secondary(hass_position_to_hd(target_hass_position))
-        _LOGGER.debug(self.position_data)
         return target_hass_position
 
     @callback
     def _set_shade_postion(self, target_hass_position):
         motor_position_bottom = self.position_primary
         motor_position_top = hass_position_to_hd(target_hass_position)
-        self.set_position_secondary(motor_position_top)
+        self.set_position(motor_position_top, POS_KIND_SECONDARY)
         return {
             ATTR_POSITION1: motor_position_bottom,
             ATTR_POSITION2: motor_position_top,
@@ -662,14 +634,15 @@ class PowerViewShadeWithTilt(PowerViewShade):
         # shades must be closed to tilt and vane must be closed to lift
         # shade position needs to be assumed as only 1 poskind is returned
         # this is not a guess, it is impossible for any other state
-        if (position1 := position_data.get(ATTR_POSITION1)) is not None:
-            position1_kind = position_data[ATTR_POSKIND1]
-            if position1_kind == POS_KIND_PRIMARY:
-                self.set_position_primary(position1)
-                self.set_position_vane(MIN_POSITION)
-            elif position1_kind == POS_KIND_VANE:
-                self.set_position_primary(MIN_POSITION)
-                self.set_position_vane(position1)
+        if (position1 := position_data.get(ATTR_POSITION1)) is None:
+            return
+        position1_kind = position_data[ATTR_POSKIND1]
+        if position1_kind == POS_KIND_PRIMARY:
+            self.set_position(position1, POS_KIND_PRIMARY)
+            self.set_position(MIN_POSITION, POS_KIND_VANE)
+        elif position1_kind == POS_KIND_VANE:
+            self.set_position(MIN_POSITION, POS_KIND_PRIMARY)
+            self.set_position(position1, POS_KIND_VANE)
 
 
 class PowerViewShadeSilhouette(PowerViewShadeWithTilt):
