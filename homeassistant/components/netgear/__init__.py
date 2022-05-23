@@ -17,6 +17,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_COORDINATOR_TRAFFIC,
     KEY_ROUTER,
+    MODE_ROUTER,
     PLATFORMS,
 )
 from .errors import CannotLoginException

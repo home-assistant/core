@@ -33,6 +33,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MODELS_V2,
+    MODE_ROUTER,
 )
 from .errors import CannotLoginException
 
