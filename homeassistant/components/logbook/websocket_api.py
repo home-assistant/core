@@ -31,9 +31,9 @@ MAX_PENDING_LOGBOOK_EVENTS = 2048
 EVENT_COALESCE_TIME = 0.5
 MAX_RECORDER_WAIT = 10
 # minimum size that we will split the query
-BIG_QUERY_HOURS = 13
+BIG_QUERY_HOURS = 25
 # how many hours to deliver in the first chunk when we split the query
-BIG_QUERY_RECENT_HOURS = 12
+BIG_QUERY_RECENT_HOURS = 24
 
 _LOGGER = logging.getLogger(__name__)
 
