@@ -94,6 +94,7 @@ omit =
     homeassistant/components/azure_devops/sensor.py
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baf/__init__.py
+    homeassistant/components/baf/climate.py
     homeassistant/components/baf/entity.py
     homeassistant/components/baf/fan.py
     homeassistant/components/baf/sensor.py
@@ -207,12 +208,9 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/climate.py
-    homeassistant/components/devolo_home_control/const.py
     homeassistant/components/devolo_home_control/cover.py
     homeassistant/components/devolo_home_control/light.py
     homeassistant/components/devolo_home_control/sensor.py
-    homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/discogs/sensor.py
@@ -1478,6 +1476,7 @@ omit =
     homeassistant/components/yolink/coordinator.py
     homeassistant/components/yolink/entity.py
     homeassistant/components/yolink/sensor.py
+    homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
     homeassistant/components/youless/__init__.py
     homeassistant/components/youless/const.py

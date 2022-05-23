@@ -1,7 +1,7 @@
 """Provides device automations for Device Tracker."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 
@@ -39,7 +39,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Device Tracker devices."""
     registry = entity_registry.async_get(hass)
     triggers = []

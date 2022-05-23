@@ -64,15 +64,15 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         attr: dict[str, Any] = {}
         if isinstance(self.wemo, Maker):
             # Is the maker sensor on or off.
-            if self.wemo.maker_params["hassensor"]:
+            if self.wemo.has_sensor:
                 # Note a state of 1 matches the WeMo app 'not triggered'!
-                if self.wemo.maker_params["sensorstate"]:
+                if self.wemo.sensor_state:
                     attr[ATTR_SENSOR_STATE] = STATE_OFF
                 else:
                     attr[ATTR_SENSOR_STATE] = STATE_ON
 
             # Is the maker switch configured as toggle(0) or momentary (1).
-            if self.wemo.maker_params["switchmode"]:
+            if self.wemo.switch_mode:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE

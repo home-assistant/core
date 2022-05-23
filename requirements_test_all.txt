@@ -330,7 +330,7 @@ boschshcpy==0.2.30
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.1
+broadlink==0.18.2
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -835,7 +835,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.0
+pillow==9.1.1
 
 # homeassistant.components.plex
 plexapi==4.11.1
@@ -847,7 +847,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.18.2
+plugwise==0.18.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1569,7 +1569,7 @@ vallox-websocket-api==2.11.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.2.4
+velbus-aio==2022.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15

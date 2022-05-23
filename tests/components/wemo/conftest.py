@@ -77,6 +77,12 @@ def create_pywemo_device(pywemo_registry, pywemo_model):
         device.today_on_time = 5678
         device.total_on_time = 9012
 
+    if issubclass(cls, pywemo.Maker):
+        device.has_sensor = 1
+        device.sensor_state = 1
+        device.switch_mode = 1
+        device.switch_state = 0
+
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
     with patch("pywemo.setup_url_for_address", return_value=url), patch(
         "pywemo.discovery.device_from_description", return_value=device

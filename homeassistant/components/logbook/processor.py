@@ -404,6 +404,7 @@ class ContextAugmenter:
             data[CONTEXT_NAME] = name
         if message := described.get(LOGBOOK_ENTRY_MESSAGE):
             data[CONTEXT_MESSAGE] = message
+        # In 2022.12 and later drop `CONTEXT_MESSAGE` if `CONTEXT_SOURCE` is available
         if source := described.get(LOGBOOK_ENTRY_SOURCE):
             data[CONTEXT_SOURCE] = source
         if not (attr_entity_id := described.get(LOGBOOK_ENTRY_ENTITY_ID)):
