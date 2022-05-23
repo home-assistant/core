@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Balikkan status buka/tutup",
-                    "name": "Nama (opsional)",
+                    "name": "Nama",
                     "type": "Jenis Sensor Biner"
                 },
                 "description": "Opsi {zone}",
@@ -47,7 +47,7 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nama (opsional)",
+                    "name": "Nama",
                     "poll_interval": "Interval Polling (dalam menit) (opsional)",
                     "type": "Jenis Sensor"
                 },
