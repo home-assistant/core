@@ -73,8 +73,6 @@ class Alpha2IODeviceBatterySensor(CoordinatorEntity[Alpha2BaseCoordinator], Sens
 class Alpha2HeatControlValveOpeningSensor(CoordinatorEntity[Alpha2BaseCoordinator], SensorEntity):
     """Alpha2 heat control valve opening sensor."""
 
-    coordinator: Alpha2BaseCoordinator
-
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
