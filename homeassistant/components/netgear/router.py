@@ -32,8 +32,8 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    MODELS_V2,
     MODE_ROUTER,
+    MODELS_V2,
 )
 from .errors import CannotLoginException
 
