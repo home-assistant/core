@@ -74,7 +74,7 @@ class NetgearRouter:
 
         self._info = None
         self.model = ""
-        self.mode = ""
+        self.mode = MODE_ROUTER
         self.device_name = ""
         self.firmware_version = ""
         self.hardware_version = ""

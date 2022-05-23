@@ -74,7 +74,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
-                ): int
+                ): int,
             }
         )
 
@@ -209,4 +209,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             name = info.get("ModelName", DEFAULT_NAME)
 
-        return self.async_create_entry(title=name, data=config_data)
+        return self.async_create_entry(
+            title=name,
+            data=config_data,
+        )

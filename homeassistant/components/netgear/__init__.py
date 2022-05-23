@@ -113,12 +113,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
-    if entry.options.get(CONF_NOT_TRACK, False):
+    if router.mode != MODE_ROUTER:
         router_id = None
         # Remove devices that are no longer tracked
         device_registry = dr.async_get(hass)
