@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime as dt, timedelta
 import logging
 from typing import Any
@@ -37,11 +38,33 @@ BIG_QUERY_RECENT_HOURS = 3
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class StreamState:
+    """The current state of the live stream."""
+
+    stream_queue: asyncio.Queue[Event]
+    subscriptions: list[CALLBACK_TYPE]
+    end_time_unsub: CALLBACK_TYPE | None = None
+    task: asyncio.Task | None = None
+
+
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the logbook websocket API."""
     websocket_api.async_register_command(hass, ws_get_events)
     websocket_api.async_register_command(hass, ws_event_stream)
+
+
+async def _async_wait_for_recorder_sync(hass: HomeAssistant) -> None:
+    """Wait for the recorder to sync."""
+    try:
+        await asyncio.wait_for(
+            get_instance(hass).async_block_till_done(), MAX_RECORDER_WAIT
+        )
+    except asyncio.TimeoutError:
+        _LOGGER.debug(
+            "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
+        )
 
 
 async def _async_send_historical_events(
@@ -151,14 +174,13 @@ def _ws_formatted_get_events(
 
 
 async def _async_events_consumer(
-    setup_complete_future: asyncio.Future[dt],
+    subscriptions_setup_complete_time: dt,
     connection: ActiveConnection,
     msg_id: int,
     stream_queue: asyncio.Queue[Event],
     event_processor: EventProcessor,
 ) -> None:
     """Stream events from the queue."""
-    subscriptions_setup_complete_time = await setup_complete_future
     event_processor.switch_to_live()
 
     while True:
@@ -231,7 +253,6 @@ async def ws_event_stream(
         and not device_ids
         and ((end_time or utc_now) - start_time) > timedelta(hours=BIG_QUERY_HOURS)
     )
-
     event_processor = EventProcessor(
         hass,
         event_types,
@@ -243,6 +264,7 @@ async def ws_event_stream(
     )
 
     if end_time and end_time <= utc_now:
+        # Not live stream
         connection.subscriptions[msg["id"]] = callback(lambda: None)
         connection.send_result(msg["id"])
         # Fetch everything from history
@@ -260,32 +282,23 @@ async def ws_event_stream(
 
     subscriptions: list[CALLBACK_TYPE] = []
     stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_LOGBOOK_EVENTS)
-    setup_complete_future: asyncio.Future[dt] = asyncio.Future()
-    end_time_unsub: CALLBACK_TYPE | None = None
-
-    task = asyncio.create_task(
-        _async_events_consumer(
-            setup_complete_future,
-            connection,
-            msg["id"],
-            stream_queue,
-            event_processor,
-        )
-    )
+    stream_state = StreamState(subscriptions=subscriptions, stream_queue=stream_queue)
 
     @callback
     def _unsub(*time: Any) -> None:
         """Unsubscribe from all events."""
-        for subscription in subscriptions:
+        for subscription in stream_state.subscriptions:
             subscription()
-        subscriptions.clear()
-        if task:
-            task.cancel()
-        if end_time_unsub:
-            end_time_unsub()
+        stream_state.subscriptions.clear()
+        if stream_state.task:
+            stream_state.task.cancel()
+        if stream_state.end_time_unsub:
+            stream_state.end_time_unsub()
 
     if end_time:
-        end_time_unsub = async_track_point_in_utc_time(hass, _unsub, end_time)
+        stream_state.end_time_unsub = async_track_point_in_utc_time(
+            hass, _unsub, end_time
+        )
 
     @callback
     def _queue_or_cancel(event: Event) -> None:
@@ -299,10 +312,9 @@ async def ws_event_stream(
             )
             _unsub()
 
-        async_subscribe_events(
-            hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
-        )
-
+    async_subscribe_events(
+        hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
+    )
     subscriptions_setup_complete_time = dt_util.utcnow()
     connection.subscriptions[msg["id"]] = _unsub
     connection.send_result(msg["id"])
@@ -318,16 +330,9 @@ async def ws_event_stream(
         event_processor,
     )
 
-    try:
-        await asyncio.wait_for(
-            get_instance(hass).async_block_till_done(), MAX_RECORDER_WAIT
-        )
-    except asyncio.TimeoutError:
-        _LOGGER.debug(
-            "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
-        )
+    await _async_wait_for_recorder_sync(hass)
 
-    if setup_complete_future.cancelled():
+    if not subscriptions:
         # Unsubscribe happened while waiting for recorder
         return
 
@@ -357,9 +362,19 @@ async def ws_event_stream(
     if final_cutoff_time:  # Only sends results if we have them
         connection.send_message(message)
 
-    if not setup_complete_future.cancelled():
+    if not subscriptions:
         # Unsubscribe happened while waiting for formatted events
-        setup_complete_future.set_result(subscriptions_setup_complete_time)
+        return
+
+    stream_state.task = asyncio.create_task(
+        _async_events_consumer(
+            subscriptions_setup_complete_time,
+            connection,
+            msg["id"],
+            stream_queue,
+            event_processor,
+        )
+    )
 
 
 @websocket_api.websocket_command(
