@@ -1,6 +1,8 @@
 """Reads vehicle status from MyBMW portal."""
 from __future__ import annotations
 
+from collections.abc import Callable
+import logging
 from typing import Any
 
 from bimmer_connected.vehicle import MyBMWVehicle
@@ -12,11 +14,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_registry import RegistryEntry, async_get
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -71,6 +77,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_migrate_options_from_data_if_missing(hass, entry)
 
+    @callback
+    def update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
+        replacements = {
+            "charging_level_hv": "remaining_battery_percent",
+            "fuel_percent": "remaining_fuel_percent",
+        }
+        if (key := entry.unique_id.split("-")[-1]) in replacements:
+            new_unique_id = entry.unique_id.replace(key, replacements[key])
+            _LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            return {
+                "new_unique_id": new_unique_id,
+            }
+        return None
+
+    await async_migrate_entries(hass, entry.entry_id, update_unique_id)
+
     # Set up one data coordinator per account/config entry
     coordinator = BMWDataUpdateCoordinator(
         hass,
@@ -111,6 +138,35 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entries(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
+) -> None:
+    """Migrator of unique IDs.
+
+    Copied and adjusted from `homeassistant.helpers.entity_registry.async_migrate_entries`
+    as migration will fail (and therefore component will not load) if the new unique_id
+    has already been created (i.e. using a custom component or dev version).
+    """
+    ent_reg = async_get(hass)
+
+    entries_to_remove: list[RegistryEntry] = []
+    for entry in ent_reg.entities.values():
+        if entry.config_entry_id != config_entry_id:
+            continue
+
+        updates = entry_callback(entry)
+
+        if updates is not None:
+            try:
+                ent_reg.async_update_entity(entry.entity_id, **updates)
+            except ValueError:
+                entries_to_remove.append(entry)
+    for entry in entries_to_remove:
+        ent_reg.async_remove(entry.entity_id)
 
 
 class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
