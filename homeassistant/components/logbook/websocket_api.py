@@ -225,13 +225,14 @@ async def ws_event_stream(
 ) -> None:
     """Handle logbook stream events websocket command."""
     start_time_str = msg["start_time"]
+    msg_id: int = msg["id"]
     utc_now = dt_util.utcnow()
 
     if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
 
     if not start_time or start_time > utc_now:
-        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        connection.send_error(msg_id, "invalid_start_time", "Invalid start_time")
         return
 
     end_time_str = msg.get("end_time")
@@ -240,7 +241,7 @@ async def ws_event_stream(
         end_time = dt_util.as_utc(end_time)
 
     if end_time and end_time < start_time:
-        connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+        connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
         return
 
     device_ids = msg.get("device_ids")
@@ -265,14 +266,14 @@ async def ws_event_stream(
 
     if end_time and end_time <= utc_now:
         # Not live stream but we it might be a big query
-        connection.subscriptions[msg["id"]] = callback(lambda: None)
-        connection.send_result(msg["id"])
+        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.send_result(msg_id)
         # Fetch everything from history
         await _async_send_historical_events(
             hass,
             is_big_query,
             connection,
-            msg["id"],
+            msg_id,
             start_time,
             end_time,
             messages.event_message,
@@ -318,14 +319,14 @@ async def ws_event_stream(
         hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
-    connection.subscriptions[msg["id"]] = _unsub
-    connection.send_result(msg["id"])
+    connection.subscriptions[msg_id] = _unsub
+    connection.send_result(msg_id)
     # Fetch everything from history
     last_event_time = await _async_send_historical_events(
         hass,
         is_big_query,
         connection,
-        msg["id"],
+        msg_id,
         start_time,
         subscriptions_setup_complete_time,
         messages.event_message,
@@ -333,7 +334,6 @@ async def ws_event_stream(
     )
 
     await _async_wait_for_recorder_sync(hass)
-
     if not subscriptions:
         # Unsubscribe happened while waiting for recorder
         return
@@ -355,7 +355,7 @@ async def ws_event_stream(
     )
     message, final_cutoff_time = await _async_get_ws_formatted_events(
         hass,
-        msg["id"],
+        msg_id,
         second_fetch_start_time,
         subscriptions_setup_complete_time,
         messages.event_message,
@@ -372,7 +372,7 @@ async def ws_event_stream(
         _async_events_consumer(
             subscriptions_setup_complete_time,
             connection,
-            msg["id"],
+            msg_id,
             stream_queue,
             event_processor,
         )
