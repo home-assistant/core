@@ -7,10 +7,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import DeviceNotFound
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
@@ -39,7 +36,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers for Nanoleaf devices."""
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
