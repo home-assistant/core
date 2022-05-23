@@ -94,7 +94,7 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
         self.async_write_ha_state()
 
     async def call_state_change(self, state: bool) -> None:
-        """Call setState api to change outlet state."""
+        """Call setState api to change siren state."""
         try:
             # call_device_http_api will check result, fail by raise YoLinkClientError
             await self.device.call_device_http_api(
