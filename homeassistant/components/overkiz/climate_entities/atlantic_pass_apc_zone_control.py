@@ -4,20 +4,15 @@ from typing import cast
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-)
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.overkiz.entity import OverkizEntity
 from homeassistant.const import TEMP_CELSIUS
 
 OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
-    OverkizCommandParam.HEATING: HVAC_MODE_HEAT,
-    OverkizCommandParam.DRYING: HVAC_MODE_DRY,
-    OverkizCommandParam.COOLING: HVAC_MODE_COOL,
-    OverkizCommandParam.STOP: HVAC_MODE_OFF,
+    OverkizCommandParam.HEATING: HVACMode.HEAT,
+    OverkizCommandParam.DRYING: HVACMode.DRY,
+    OverkizCommandParam.COOLING: HVACMode.COOL,
+    OverkizCommandParam.STOP: HVACMode.OFF,
 }
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
