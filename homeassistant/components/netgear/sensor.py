@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -350,7 +351,7 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
         self._name = f"{router.device_name} {entity_description.name}"
         self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
-        self._value: str | None = None
+        self._value: StateType = None
         self.async_update_device()
 
     @property
