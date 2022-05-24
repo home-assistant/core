@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import SkybellDataUpdateCoordinator
 from .entity import DOMAIN, SkybellEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -51,17 +50,6 @@ async def async_setup_entry(
 
 class SkybellSensor(SkybellEntity, SensorEntity):
     """A sensor implementation for Skybell devices."""
-
-    def __init__(
-        self,
-        coordinator: SkybellDataUpdateCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize a sensor for a Skybell device."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_name = f"{self._device.name} {description.name}"
-        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     @property
     def native_value(self) -> int:

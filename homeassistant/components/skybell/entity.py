@@ -5,7 +5,7 @@ from aioskybell import SkybellDevice
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -17,9 +17,15 @@ class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
 
     _attr_attribution = "Data provided by Skybell.com"
 
-    def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: SkybellDataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
+        self.entity_description = description
+        if description.name != coordinator.device.name:
+            self._attr_name = f"{self._device.name} {description.name}"
+        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.device_id)},
             manufacturer=DEFAULT_NAME,

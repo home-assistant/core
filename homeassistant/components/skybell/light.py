@@ -8,13 +8,13 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
 
 
@@ -23,7 +23,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Skybell switch."""
     async_add_entities(
-        SkybellLight(coordinator) for coordinator in hass.data[DOMAIN][entry.entry_id]
+        SkybellLight(
+            coordinator,
+            LightEntityDescription(
+                key=coordinator.device.name,
+                name=coordinator.device.name,
+            ),
+        )
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
     )
 
 
@@ -31,12 +38,6 @@ class SkybellLight(SkybellEntity, LightEntity):
     """A light implementation for Skybell devices."""
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS, ColorMode.RGB}
-
-    def __init__(self, coordinator: SkybellDataUpdateCoordinator) -> None:
-        """Initialize a light for a Skybell device."""
-        super().__init__(coordinator)
-        self._attr_name = self._device.name
-        self._attr_unique_id = f"{self._device.device_id}_{self.name}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

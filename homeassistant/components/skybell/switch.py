@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -55,17 +54,6 @@ async def async_setup_entry(
 
 class SkybellSwitch(SkybellEntity, SwitchEntity):
     """A switch implementation for Skybell devices."""
-
-    def __init__(
-        self,
-        coordinator: SkybellDataUpdateCoordinator,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize a light for a Skybell device."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_name = f"{self._device.name} {description.name}"
-        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

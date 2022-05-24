@@ -62,11 +62,8 @@ class SkybellCamera(SkybellEntity, Camera):
         description: EntityDescription,
     ) -> None:
         """Initialize a camera for a Skybell device."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description)
         Camera.__init__(self)
-        self.entity_description = description
-        self._attr_name = f"{self._device.name} {description.name}"
-        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

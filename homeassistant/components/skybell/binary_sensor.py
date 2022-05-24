@@ -64,11 +64,8 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize a binary sensor for a Skybell device."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_name = f"{self._device.name} {description.name}"
+        super().__init__(coordinator, description)
         self._event: dict[str, str] = {}
-        self._attr_unique_id = f"{self._device.device_id}_{description.key}"
 
     @property
     def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
