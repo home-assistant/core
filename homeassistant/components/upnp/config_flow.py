@@ -54,7 +54,7 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
 
     async def device_discovered(info: SsdpServiceInfo, change: SsdpChange) -> None:
         if change != SsdpChange.BYEBYE:
-            LOGGER.info(
+            LOGGER.debug(
                 "Device discovered: %s, at: %s",
                 info.ssdp_usn,
                 info.ssdp_location,
