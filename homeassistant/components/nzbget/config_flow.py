@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -33,7 +33,7 @@ from .coordinator import NZBGetAPI, NZBGetAPIException
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
+def _validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -49,8 +49,6 @@ def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
 
     nzbget_api.version()
 
-    return True
-
 
 class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NZBGet."""
@@ -59,7 +57,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> NZBGetOptionsFlowHandler:
         """Get the options flow for this handler."""
         return NZBGetOptionsFlowHandler(config_entry)
 
@@ -89,7 +87,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(
-                    validate_input, self.hass, user_input
+                    _validate_input, self.hass, user_input
                 )
             except NZBGetAPIException:
                 errors["base"] = "cannot_connect"
@@ -126,11 +124,13 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 class NZBGetOptionsFlowHandler(OptionsFlow):
     """Handle NZBGet client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage NZBGet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
