@@ -51,7 +51,7 @@ async def test_device_diagnostics(
 ):
     """Test the device level diagnostics data dump."""
     dev_reg = async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, multisensor_6)})
+    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
     assert device
 
     # Update a value and ensure it is reflected in the node state

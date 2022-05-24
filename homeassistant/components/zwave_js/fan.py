@@ -10,6 +10,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_FAN_OFF_PROPERTY,
     THERMOSTAT_FAN_STATE_PROPERTY,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.fan import (
@@ -53,13 +54,15 @@ async def async_setup_entry(
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave fan."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "has_fan_value_mapping":
-            entities.append(ValueMappingZwaveFan(config_entry, client, info))
+            entities.append(ValueMappingZwaveFan(config_entry, driver, info))
         elif info.platform_hint == "thermostat_fan":
-            entities.append(ZwaveThermostatFan(config_entry, client, info))
+            entities.append(ZwaveThermostatFan(config_entry, driver, info))
         else:
-            entities.append(ZwaveFan(config_entry, client, info))
+            entities.append(ZwaveFan(config_entry, driver, info))
 
         async_add_entities(entities)
 
@@ -78,10 +81,10 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the fan."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -147,10 +150,10 @@ class ValueMappingZwaveFan(ZwaveFan):
     """A Zwave fan with a value mapping data (e.g., 1-24 is low)."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the fan."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.data_template = cast(
             FanValueMappingDataTemplate, self.info.platform_data_template
         )
@@ -300,10 +303,10 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     _fan_state: ZwaveValue | None = None
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the thermostat fan."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         self._fan_mode = self.info.primary_value
 
