@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
@@ -469,15 +470,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_set_power(True)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
-        """
-        Send the play_media command to the media player.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
-        """
+        """Send the play_media command to the media player."""
         cmd = "play"
         index = None
 
-        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+        if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
             cmd = "add"
 
         if media_source.is_media_source_id(media_id):

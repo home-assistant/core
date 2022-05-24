@@ -7,9 +7,11 @@ import voluptuous as vol
 
 from homeassistant.components import media_source, tts
 from homeassistant.components.demo.tts import DemoProvider
+from homeassistant.components.media_player import MediaPlayerEnqueue
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_ENQUEUE,
     DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
@@ -91,6 +93,7 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
     )
 
     assert len(calls) == 1
+    assert calls[0].data[ATTR_MEDIA_ENQUEUE] == MediaPlayerEnqueue.ALERT
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])

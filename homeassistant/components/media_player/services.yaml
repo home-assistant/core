@@ -151,6 +151,22 @@ play_media:
       selector:
         text:
 
+    enqueue:
+      name: Enqueue
+      description: If the content should be played now or be added to the queue.
+      required: false
+      selector:
+        select:
+          options:
+            - label: "Play now"
+              value: "play"
+            - label: "Play next"
+              value: "next"
+            - label: "Play as alert"
+              value: "alert"
+            - label: "Add to queue"
+              value: "add"
+
 select_source:
   name: Select source
   description: Send the media player the command to change input source.
