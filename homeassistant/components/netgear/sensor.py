@@ -332,7 +332,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity, RestoreSensor):
+class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
