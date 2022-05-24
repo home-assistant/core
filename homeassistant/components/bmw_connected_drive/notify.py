@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle import MyBMWVehicle
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -52,14 +52,14 @@ def get_service(
 class BMWNotificationService(BaseNotificationService):
     """Send Notifications to BMW."""
 
-    def __init__(self, targets: dict[str, ConnectedDriveVehicle]) -> None:
+    def __init__(self, targets: dict[str, MyBMWVehicle]) -> None:
         """Set up the notification service."""
-        self.targets: dict[str, ConnectedDriveVehicle] = targets
+        self.targets: dict[str, MyBMWVehicle] = targets
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message or POI to the car."""
         for vehicle in kwargs[ATTR_TARGET]:
-            vehicle = cast(ConnectedDriveVehicle, vehicle)
+            vehicle = cast(MyBMWVehicle, vehicle)
             _LOGGER.debug("Sending message to %s", vehicle.name)
 
             # Extract params from data dict
