@@ -9,6 +9,7 @@ from typing import Any, cast
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import ConfigurationValueType
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
@@ -92,10 +93,10 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     return value.value if value else None
 
 
-async def async_enable_statistics(client: ZwaveClient) -> None:
+async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
-    await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
-    await client.driver.async_enable_error_reporting()
+    await driver.async_enable_statistics("Home Assistant", HA_VERSION)
+    await driver.async_enable_error_reporting()
 
 
 @callback
@@ -194,7 +195,11 @@ def async_get_node_from_device_id(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
 
-    client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    driver = client.driver
+
+    if driver is None:
+        raise ValueError("Driver is not ready.")
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
@@ -202,10 +207,10 @@ def async_get_node_from_device_id(
 
     node_id = identifiers[1] if identifiers else None
 
-    if node_id is None or node_id not in client.driver.controller.nodes:
+    if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device_id} can't be found")
 
-    return client.driver.controller.nodes[node_id]
+    return driver.controller.nodes[node_id]
 
 
 @callback

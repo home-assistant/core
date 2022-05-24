@@ -566,7 +566,7 @@ async def setup_driver(  # noqa: C901
     # If opt in preference hasn't been specified yet, we do nothing, otherwise
     # we apply the preference
     if opted_in := entry.data.get(CONF_DATA_COLLECTION_OPTED_IN):
-        await async_enable_statistics(client)
+        await async_enable_statistics(driver)
     elif opted_in is False:
         await driver.async_disable_statistics()
 
