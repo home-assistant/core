@@ -24,8 +24,6 @@ CONF_DEPARTURE_TIME = "departure_time"
 
 DEFAULT_NAME = "HERE Travel Time"
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
-
 TRAVEL_MODE_BICYCLE = "bicycle"
 TRAVEL_MODE_CAR = "car"
 TRAVEL_MODE_PEDESTRIAN = "pedestrian"

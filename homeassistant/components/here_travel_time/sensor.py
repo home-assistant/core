@@ -6,11 +6,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_MODE,
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
@@ -28,10 +32,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HereTravelTimeDataUpdateCoordinator
 from .const import (
+    ATTR_DESTINATION,
+    ATTR_DESTINATION_NAME,
+    ATTR_DISTANCE,
     ATTR_DURATION,
     ATTR_DURATION_IN_TRAFFIC,
-    ATTR_TRAFFIC_MODE,
-    ATTR_UNIT_SYSTEM,
+    ATTR_ORIGIN,
+    ATTR_ORIGIN_NAME,
+    ATTR_ROUTE,
     CONF_ARRIVAL,
     CONF_DEPARTURE,
     CONF_DESTINATION_ENTITY_ID,
@@ -51,7 +59,6 @@ from .const import (
     ICON_TRUCK,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
-    TRAFFIC_MODE_ENABLED,
     TRAVEL_MODE_BICYCLE,
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PEDESTRIAN,
@@ -115,6 +122,70 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
+def icon_for_travel_mode(travel_mode: str) -> str:
+    """Icon to use in the frontend depending on travel_mode."""
+    if travel_mode == TRAVEL_MODE_BICYCLE:
+        return ICON_BICYCLE
+    if travel_mode == TRAVEL_MODE_PEDESTRIAN:
+        return ICON_PEDESTRIAN
+    if travel_mode in TRAVEL_MODES_PUBLIC:
+        return ICON_PUBLIC
+    if travel_mode == TRAVEL_MODE_TRUCK:
+        return ICON_TRUCK
+    return ICON_CAR
+
+
+def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]:
+    """Construct SensorEntityDescriptions."""
+    return (
+        SensorEntityDescription(
+            name="Duration",
+            icon=icon_for_travel_mode(travel_mode),
+            key=ATTR_DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=TIME_MINUTES,
+        ),
+        SensorEntityDescription(
+            name="Duration in Traffic",
+            icon=icon_for_travel_mode(travel_mode),
+            key=ATTR_DURATION_IN_TRAFFIC,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=TIME_MINUTES,
+        ),
+        SensorEntityDescription(
+            name="Distance",
+            icon=icon_for_travel_mode(travel_mode),
+            key=ATTR_DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            name="Route",
+            icon="mdi:directions",
+            key=ATTR_ROUTE,
+        ),
+        SensorEntityDescription(
+            name="Origin",
+            icon="mdi:map-marker",
+            key=ATTR_ORIGIN,
+        ),
+        SensorEntityDescription(
+            name="Origin Name",
+            icon="mdi:store-marker",
+            key=ATTR_ORIGIN_NAME,
+        ),
+        SensorEntityDescription(
+            name="Destination",
+            icon="mdi:map-marker",
+            key=ATTR_DESTINATION,
+        ),
+        SensorEntityDescription(
+            name="Destination Name",
+            icon="mdi:store-marker",
+            key=ATTR_DESTINATION_NAME,
+        ),
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -143,16 +214,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add HERE travel time entities from a config_entry."""
-    async_add_entities(
-        [
+
+    sensors: list[HERETravelTimeSensor] = []
+    for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE]):
+        sensors.append(
             HERETravelTimeSensor(
                 config_entry.entry_id,
                 config_entry.data[CONF_NAME],
-                config_entry.options[CONF_TRAFFIC_MODE],
+                sensor_description,
                 hass.data[DOMAIN][config_entry.entry_id],
             )
-        ],
-    )
+        )
+    async_add_entities(sensors)
 
 
 class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
@@ -162,15 +235,14 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self,
         unique_id_prefix: str,
         name: str,
-        traffic_mode: str,
+        sensor_description: SensorEntityDescription,
         coordinator: HereTravelTimeDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._traffic_mode = traffic_mode == TRAFFIC_MODE_ENABLED
-        self._attr_native_unit_of_measurement = TIME_MINUTES
-        self._attr_name = name
-        self._attr_unique_id = unique_id_prefix
+        self.entity_description = sensor_description
+        self._attr_name = f"{name} {sensor_description.name}"
+        self._attr_unique_id = f"{unique_id_prefix}_{sensor_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id_prefix)},
             entry_type=DeviceEntryType.SERVICE,
@@ -188,34 +260,10 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self.async_on_remove(async_at_start(self.hass, _update_at_start))
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | float | None:
         """Return the state of the sensor."""
         if self.coordinator.data is not None:
-            return str(
-                round(
-                    self.coordinator.data.get(
-                        ATTR_DURATION_IN_TRAFFIC
-                        if self._traffic_mode
-                        else ATTR_DURATION
-                    )
-                )
-            )
-        return None
-
-    @property
-    def extra_state_attributes(
-        self,
-    ) -> dict[str, None | float | str | bool] | None:
-        """Return the state attributes."""
-        if self.coordinator.data is not None:
-            res = {
-                ATTR_UNIT_SYSTEM: self.coordinator.config.units,
-                ATTR_MODE: self.coordinator.config.travel_mode,
-                ATTR_TRAFFIC_MODE: self._traffic_mode,
-                **self.coordinator.data,
-            }
-            res.pop(ATTR_ATTRIBUTION)
-            return res
+            return self.coordinator.data.get(self.entity_description.key)
         return None
 
     @property
@@ -224,16 +272,3 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         if self.coordinator.data is not None:
             return self.coordinator.data.get(ATTR_ATTRIBUTION)
         return None
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend depending on travel_mode."""
-        if self.coordinator.config.travel_mode == TRAVEL_MODE_BICYCLE:
-            return ICON_BICYCLE
-        if self.coordinator.config.travel_mode == TRAVEL_MODE_PEDESTRIAN:
-            return ICON_PEDESTRIAN
-        if self.coordinator.config.travel_mode in TRAVEL_MODES_PUBLIC:
-            return ICON_PUBLIC
-        if self.coordinator.config.travel_mode == TRAVEL_MODE_TRUCK:
-            return ICON_TRUCK
-        return ICON_CAR
