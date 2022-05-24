@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Metode integrasi",
+                    "name": "Nama",
+                    "round": "Presisi",
+                    "source": "Sensor input",
+                    "unit_prefix": "Prefiks metrik",
+                    "unit_time": "Unit waktu"
+                },
+                "data_description": {
+                    "round": "Mengontrol jumlah digit desimal dalam output.",
+                    "unit_prefix": "Output akan diskalakan sesuai dengan prefiks metrik yang dipilih.",
+                    "unit_time": "Output akan diskalakan sesuai dengan unit waktu dipilih."
+                },
+                "description": "Buat sensor yang menghitung jumlah Riemann untuk memperkirakan integral dari sebuah sensor.",
+                "title": "Tambahkan sensor integral penjumlahan Riemann"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "Presisi"
+                },
+                "data_description": {
+                    "round": "Mengontrol jumlah digit desimal dalam output."
+                }
+            }
+        }
+    },
+    "title": "Integrasi - Sensor jumlah integral Riemann"
+}

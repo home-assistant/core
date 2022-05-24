@@ -23,7 +23,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import cast
+from typing import Any, Final, cast
 
 import voluptuous as vol
 
@@ -39,19 +39,38 @@ from .const import (
     ATTR_STREAMS,
     CONF_LL_HLS,
     CONF_PART_DURATION,
+    CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DOMAIN,
+    FORMAT_CONTENT_TYPE,
     HLS_PROVIDER,
     MAX_SEGMENTS,
+    OUTPUT_FORMATS,
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
+    RTSP_TRANSPORTS,
     SEGMENT_DURATION_ADJUSTER,
+    SOURCE_TIMEOUT,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
+from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
+
+__all__ = [
+    "CONF_RTSP_TRANSPORT",
+    "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
+    "FORMAT_CONTENT_TYPE",
+    "HLS_PROVIDER",
+    "OUTPUT_FORMATS",
+    "RTSP_TRANSPORTS",
+    "SOURCE_TIMEOUT",
+    "Stream",
+    "create_stream",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,28 +90,32 @@ def redact_credentials(data: str) -> str:
 def create_stream(
     hass: HomeAssistant,
     stream_source: str,
-    options: dict[str, str],
+    options: dict[str, str | bool],
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
 
     The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
-    options are passed into pyav / ffmpeg as options.
+    options (see STREAM_OPTIONS_SCHEMA) are converted and passed into pyav / ffmpeg.
 
     The stream_label is a string used as an additional message in logging.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
+    # Convert extra stream options into PyAV options
+    pyav_options = convert_stream_options(options)
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-        options = {
+        pyav_options = {
             "rtsp_flags": "prefer_tcp",
             "stimeout": "5000000",
-            **options,
+            **pyav_options,
         }
 
-    stream = Stream(hass, stream_source, options=options, stream_label=stream_label)
+    stream = Stream(
+        hass, stream_source, options=pyav_options, stream_label=stream_label
+    )
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
 
@@ -225,6 +248,7 @@ class Stream:
             if stream_label
             else _LOGGER
         )
+        self._diagnostics = Diagnostics()
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -259,6 +283,7 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
+
         return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
@@ -310,6 +335,7 @@ class Stream:
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
+        self._diagnostics.increment("update_source")
         self._logger.debug(
             "Updating stream source %s", redact_credentials(str(new_source))
         )
@@ -323,11 +349,13 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import StreamState, StreamWorkerError, stream_worker
 
-        stream_state = StreamState(self.hass, self.outputs)
+        stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
+            self._diagnostics.set_value("keepalive", self.keepalive)
+            self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
                     self.source,
@@ -337,6 +365,7 @@ class Stream:
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
+                self._diagnostics.increment("worker_error")
                 self._logger.error("Error from stream worker: %s", str(err))
 
             stream_state.discontinuity()
@@ -358,22 +387,24 @@ class Stream:
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
             wait_timeout += STREAM_RESTART_INCREMENT
+            self._diagnostics.set_value("retry_timeout", wait_timeout)
             self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
                 redact_credentials(str(self.source)),
             )
-        self._worker_finished()
-
-    def _worker_finished(self) -> None:
-        """Schedule cleanup of all outputs."""
 
         @callback
-        def remove_outputs() -> None:
+        def worker_finished() -> None:
+            # The worker is no checking availability of the stream and can no longer track
+            # availability so mark it as available, otherwise the frontend may not be able to
+            # interact with the stream.
+            if not self.available:
+                self._async_update_state(True)
             for provider in self.outputs().values():
                 self.remove_provider(provider)
 
-        self.hass.loop.call_soon_threadsafe(remove_outputs)
+        self.hass.loop.call_soon_threadsafe(worker_finished)
 
     def stop(self) -> None:
         """Remove outputs and access token."""
@@ -447,7 +478,36 @@ class Stream:
             width=width, height=height
         )
 
+    def get_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostics information for the stream."""
+        return self._diagnostics.as_dict()
+
 
 def _should_retry() -> bool:
     """Return true if worker failures should be retried, for disabling during tests."""
     return True
+
+
+STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
+    {
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
+        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
+    }
+)
+
+
+def convert_stream_options(stream_options: dict[str, str | bool]) -> dict[str, str]:
+    """Convert options from stream options into PyAV options."""
+    pyav_options: dict[str, str] = {}
+    try:
+        STREAM_OPTIONS_SCHEMA(stream_options)
+    except vol.Invalid as exc:
+        raise HomeAssistantError("Invalid stream options") from exc
+
+    if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
+        assert isinstance(rtsp_transport, str)
+        pyav_options["rtsp_transport"] = rtsp_transport
+    if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+        pyav_options["use_wallclock_as_timestamps"] = "1"
+
+    return pyav_options

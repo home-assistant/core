@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Network Key",
                     "s0_legacy_key": "S0 Key (Legacy)",
                     "s2_access_control_key": "S2 Access Control Key",
                     "s2_authenticated_key": "S2 Authenticated Key",
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Z-Wave JS Server with home ID {home_id} found at {url} to Home Assistant?",
+                "title": "Discovered Z-Wave JS Server"
             }
         }
     },
@@ -113,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Emulate Hardware",
                     "log_level": "Log level",
-                    "network_key": "Network Key",
                     "s0_legacy_key": "S0 Key (Legacy)",
                     "s2_access_control_key": "S2 Access Control Key",
                     "s2_authenticated_key": "S2 Authenticated Key",
@@ -142,6 +144,5 @@
                 "title": "The Z-Wave JS add-on is starting."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

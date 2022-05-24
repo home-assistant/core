@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "register_failed": "Errore in fase di registrazione, si prega di riprovare",
+            "register_failed": "Errore in fase di registrazione, riprova",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Porta"
-                },
-                "title": "Freebox"
+                }
             }
         }
     }

@@ -6,22 +6,20 @@ from typing import Any
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
+from aiohue.v2.models.feature import EffectStatus, TimedEffectStatus
 from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
     FLASH_SHORT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -36,10 +34,7 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-ALLOWED_ERRORS = [
-    "device (light) has communication issues, command (on) may not have effect",
-    'device (light) is "soft off", command (on) may not have effect',
-]
+EFFECT_NONE = "None"
 
 
 async def async_setup_entry(
@@ -77,23 +72,35 @@ class HueLight(HueBaseEntity, LightEntity):
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
         if self.resource.alert and self.resource.alert.action_values:
-            self._attr_supported_features |= SUPPORT_FLASH
+            self._attr_supported_features |= LightEntityFeature.FLASH
         self.resource = resource
         self.controller = controller
-        self._supported_color_modes = set()
+        self._supported_color_modes: set[ColorMode | str] = set()
         if self.resource.supports_color:
-            self._supported_color_modes.add(COLOR_MODE_XY)
+            self._supported_color_modes.add(ColorMode.XY)
         if self.resource.supports_color_temperature:
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if self.resource.supports_dimming:
             if len(self._supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
-                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
-            self._attr_supported_features |= SUPPORT_TRANSITION
-        self._last_xy: tuple[float, float] | None = self.xy_color
-        self._last_color_temp: int = self.color_temp
-        self._set_color_mode()
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
+        # get list of supported effects (combine effects and timed_effects)
+        self._attr_effect_list = []
+        if effects := resource.effects:
+            self._attr_effect_list = [
+                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
+            ]
+        if timed_effects := resource.timed_effects:
+            self._attr_effect_list += [
+                x.value
+                for x in timed_effects.status_values
+                if x != TimedEffectStatus.NO_EFFECT
+            ]
+        if len(self._attr_effect_list) > 0:
+            self._attr_effect_list.insert(0, EFFECT_NONE)
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
     def brightness(self) -> int | None:
@@ -107,6 +114,20 @@ class HueLight(HueBaseEntity, LightEntity):
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self.resource.on.on
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if color_temp := self.resource.color_temperature:
+            # Hue lights return `mired_valid` to indicate CT is active
+            if color_temp.mirek_valid and color_temp.mirek is not None:
+                return ColorMode.COLOR_TEMP
+        if self.resource.supports_color:
+            return ColorMode.XY
+        if self.resource.supports_dimming:
+            return ColorMode.BRIGHTNESS
+        # fallback to on_off
+        return ColorMode.ONOFF
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
@@ -149,10 +170,16 @@ class HueLight(HueBaseEntity, LightEntity):
             "dynamics": self.resource.dynamics.status.value,
         }
 
-    @callback
-    def on_update(self) -> None:
-        """Call on update event."""
-        self._set_color_mode()
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if effects := self.resource.effects:
+            if effects.status != EffectStatus.NO_EFFECT:
+                return effects.status.value
+        if timed_effects := self.resource.timed_effects:
+            if timed_effects.status != TimedEffectStatus.NO_EFFECT:
+                return timed_effects.status.value
+        return EFFECT_NONE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -161,6 +188,17 @@ class HueLight(HueBaseEntity, LightEntity):
         color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
+        effect = effect_str = kwargs.get(ATTR_EFFECT)
+        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
+            effect = EffectStatus.NO_EFFECT
+        elif effect_str is not None:
+            # work out if we got a regular effect or timed effect
+            effect = EffectStatus(effect_str)
+            if effect == EffectStatus.UNKNOWN:
+                effect = TimedEffectStatus(effect_str)
+                if transition is None:
+                    # a transition is required for timed effect, default to 10 minutes
+                    transition = 600000
 
         if flash is not None:
             await self.async_set_flash(flash)
@@ -178,7 +216,7 @@ class HueLight(HueBaseEntity, LightEntity):
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
+            effect=effect,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -198,7 +236,6 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             on=False,
             transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
         )
 
     async def async_set_flash(self, flash: str) -> None:
@@ -208,43 +245,3 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             short=flash == FLASH_SHORT,
         )
-
-    @callback
-    def _set_color_mode(self) -> None:
-        """Set current colormode of light."""
-        last_xy = self._last_xy
-        last_color_temp = self._last_color_temp
-        self._last_xy = self.xy_color
-        self._last_color_temp = self.color_temp
-
-        # Certified Hue lights return `mired_valid` to indicate CT is active
-        if color_temp := self.resource.color_temperature:
-            if color_temp.mirek_valid and color_temp.mirek is not None:
-                self._attr_color_mode = COLOR_MODE_COLOR_TEMP
-                return
-
-        # Non-certified lights do not report their current color mode correctly
-        # so we keep track of the color values to determine which is active
-        if last_color_temp != self.color_temp:
-            self._attr_color_mode = COLOR_MODE_COLOR_TEMP
-            return
-        if last_xy != self.xy_color:
-            self._attr_color_mode = COLOR_MODE_XY
-            return
-
-        # if we didn't detect any changes, abort and use previous values
-        if self._attr_color_mode is not None:
-            return
-
-        # color mode not yet determined, work it out here
-        # Note that for lights that do not correctly report `mirek_valid`
-        # we might have an invalid startup state which will be auto corrected
-        if self.resource.supports_color:
-            self._attr_color_mode = COLOR_MODE_XY
-        elif self.resource.supports_color_temperature:
-            self._attr_color_mode = COLOR_MODE_COLOR_TEMP
-        elif self.resource.supports_dimming:
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        else:
-            # fallback to on_off
-            self._attr_color_mode = COLOR_MODE_ONOFF

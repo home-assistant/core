@@ -7,35 +7,29 @@ import requests_mock
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.const import (
-    CONF_ADDED_ENERGY_KEY,
-    CONF_ADDED_RANGE_KEY,
-    CONF_CHARGING_POWER_KEY,
-    CONF_CHARGING_SPEED_KEY,
-    CONF_DATA_KEY,
-    CONF_MAX_AVAILABLE_POWER_KEY,
-    CONF_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_ADDED_ENERGY_KEY,
+    CHARGER_ADDED_RANGE_KEY,
+    CHARGER_CHARGING_POWER_KEY,
+    CHARGER_CHARGING_SPEED_KEY,
+    CHARGER_DATA_KEY,
+    CHARGER_MAX_AVAILABLE_POWER_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_KEY,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import entry, setup_integration
-from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
-)
+from tests.components.wallbox.const import ERROR, JWT, STATUS, TTL, USER_ID
 
 test_response = json.loads(
     json.dumps(
         {
-            CONF_CHARGING_POWER_KEY: 0,
-            CONF_MAX_AVAILABLE_POWER_KEY: "xx",
-            CONF_CHARGING_SPEED_KEY: 0,
-            CONF_ADDED_RANGE_KEY: "xx",
-            CONF_ADDED_ENERGY_KEY: "44.697",
-            CONF_DATA_KEY: {CONF_MAX_CHARGING_CURRENT_KEY: 24},
+            CHARGER_CHARGING_POWER_KEY: 0,
+            CHARGER_MAX_AVAILABLE_POWER_KEY: "xx",
+            CHARGER_CHARGING_SPEED_KEY: 0,
+            CHARGER_ADDED_RANGE_KEY: "xx",
+            CHARGER_ADDED_ENERGY_KEY: "44.697",
+            CHARGER_DATA_KEY: {CHARGER_MAX_CHARGING_CURRENT_KEY: 24},
         }
     )
 )
@@ -43,11 +37,11 @@ test_response = json.loads(
 authorisation_response = json.loads(
     json.dumps(
         {
-            CONF_JWT: "fakekeyhere",
-            CONF_USER_ID: 12345,
-            CONF_TTL: 145656758,
-            CONF_ERROR: "false",
-            CONF_STATUS: 200,
+            JWT: "fakekeyhere",
+            USER_ID: 12345,
+            TTL: 145656758,
+            ERROR: "false",
+            STATUS: 200,
         }
     )
 )
@@ -55,11 +49,11 @@ authorisation_response = json.loads(
 authorisation_response_unauthorised = json.loads(
     json.dumps(
         {
-            CONF_JWT: "fakekeyhere",
-            CONF_USER_ID: 12345,
-            CONF_TTL: 145656758,
-            CONF_ERROR: "false",
-            CONF_STATUS: 404,
+            JWT: "fakekeyhere",
+            USER_ID: 12345,
+            TTL: 145656758,
+            ERROR: "false",
+            STATUS: 404,
         }
     )
 )
@@ -75,7 +69,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_form_cannot_authenticate(hass):
+async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,7 +99,7 @@ async def test_form_cannot_authenticate(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -135,7 +129,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_validate_input(hass):
+async def test_form_validate_input(hass: HomeAssistant) -> None:
     """Test we can validate input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -165,7 +159,7 @@ async def test_form_validate_input(hass):
     assert result2["data"]["station"] == "12345"
 
 
-async def test_form_reauth(hass):
+async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test we handle reauth flow."""
     await setup_integration(hass)
     assert entry.state == config_entries.ConfigEntryState.LOADED
@@ -205,7 +199,7 @@ async def test_form_reauth(hass):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_form_reauth_invalid(hass):
+async def test_form_reauth_invalid(hass: HomeAssistant) -> None:
     """Test we handle reauth invalid flow."""
     await setup_integration(hass)
     assert entry.state == config_entries.ConfigEntryState.LOADED

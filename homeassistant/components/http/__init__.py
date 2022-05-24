@@ -365,10 +365,10 @@ class HomeAssistantHTTP:
             )
             try:
                 context = self._create_emergency_ssl_context()
-            except OSError as error:
+            except OSError as error2:
                 _LOGGER.error(
                     "Could not create an emergency self signed ssl certificate: %s",
-                    error,
+                    error2,
                 )
                 context = None
             else:

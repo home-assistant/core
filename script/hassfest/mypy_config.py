@@ -23,18 +23,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cloud.http_api",
     "homeassistant.components.conversation",
     "homeassistant.components.conversation.default_agent",
-    "homeassistant.components.deconz.alarm_control_panel",
-    "homeassistant.components.deconz.binary_sensor",
-    "homeassistant.components.deconz.climate",
-    "homeassistant.components.deconz.cover",
-    "homeassistant.components.deconz.fan",
-    "homeassistant.components.deconz.light",
-    "homeassistant.components.deconz.lock",
-    "homeassistant.components.deconz.logbook",
-    "homeassistant.components.deconz.number",
-    "homeassistant.components.deconz.sensor",
-    "homeassistant.components.deconz.siren",
-    "homeassistant.components.deconz.switch",
     "homeassistant.components.denonavr.config_flow",
     "homeassistant.components.denonavr.media_player",
     "homeassistant.components.denonavr.receiver",
@@ -57,13 +45,8 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.hassio.sensor",
     "homeassistant.components.hassio.system_health",
     "homeassistant.components.hassio.websocket_api",
-    "homeassistant.components.here_travel_time.sensor",
     "homeassistant.components.home_plus_control",
     "homeassistant.components.home_plus_control.api",
-    "homeassistant.components.homekit.aidmanager",
-    "homeassistant.components.homekit.config_flow",
-    "homeassistant.components.homekit.util",
-    "homeassistant.components.honeywell.climate",
     "homeassistant.components.icloud",
     "homeassistant.components.icloud.account",
     "homeassistant.components.icloud.device_tracker",
@@ -172,9 +155,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xiaomi_miio.light",
     "homeassistant.components.xiaomi_miio.sensor",
     "homeassistant.components.xiaomi_miio.switch",
-    "homeassistant.components.yeelight",
-    "homeassistant.components.yeelight.light",
-    "homeassistant.components.yeelight.scanner",
     "homeassistant.components.zha.alarm_control_panel",
     "homeassistant.components.zha.api",
     "homeassistant.components.zha.binary_sensor",
@@ -214,15 +194,16 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.sensor",
     "homeassistant.components.zha.siren",
     "homeassistant.components.zha.switch",
-    "homeassistant.components.zwave",
-    "homeassistant.components.zwave.migration",
-    "homeassistant.components.zwave.node_entity",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
+    "homeassistant.components.application_credentials.*",
     "homeassistant.components.diagnostics.*",
+    "homeassistant.components.spotify.*",
+    "homeassistant.components.stream.*",
+    "homeassistant.components.update.*",
 }
 
 HEADER: Final = """
@@ -244,6 +225,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
     "enable_error_code": "ignore-without-code",
+    # Strict_concatenate breaks passthrough ParamSpec typing
+    "strict_concatenate": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -384,7 +367,9 @@ def generate_and_validate(config: Config) -> str:
         if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
-    for reexport_module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
+    for reexport_module in sorted(
+        NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules)
+    ):
         reexport_section = f"mypy-{reexport_module}"
         mypy_config.add_section(reexport_section)
         mypy_config.set(reexport_section, "no_implicit_reexport", "true")

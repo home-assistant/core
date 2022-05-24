@@ -54,7 +54,6 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -82,6 +81,8 @@ from .const import (
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
@@ -111,7 +112,7 @@ from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+    import paho.mqtt.client as mqtt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,11 +132,14 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
 
 DEFAULT_VALUES = {
-    CONF_PORT: DEFAULT_PORT,
-    CONF_WILL_MESSAGE: DEFAULT_WILL,
     CONF_BIRTH_MESSAGE: DEFAULT_BIRTH,
     CONF_DISCOVERY: DEFAULT_DISCOVERY,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_TLS_VERSION: DEFAULT_TLS_PROTOCOL,
+    CONF_WILL_MESSAGE: DEFAULT_WILL,
 }
+
+MANDATORY_DEFAULT_VALUES = (CONF_PORT,)
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
@@ -160,7 +164,6 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.LOCK,
-    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SCENE,
@@ -169,7 +172,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
-
 
 CLIENT_KEY_AUTH_MSG = (
     "client_key and client_cert must both be present in "
@@ -186,7 +188,29 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     required=True,
 )
 
-CONFIG_SCHEMA_BASE = vol.Schema(
+PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+    {
+        vol.Optional(Platform.ALARM_CONTROL_PANEL.value): cv.ensure_list,
+        vol.Optional(Platform.BINARY_SENSOR.value): cv.ensure_list,
+        vol.Optional(Platform.BUTTON.value): cv.ensure_list,
+        vol.Optional(Platform.CAMERA.value): cv.ensure_list,
+        vol.Optional(Platform.CLIMATE.value): cv.ensure_list,
+        vol.Optional(Platform.COVER.value): cv.ensure_list,
+        vol.Optional(Platform.FAN.value): cv.ensure_list,
+        vol.Optional(Platform.HUMIDIFIER.value): cv.ensure_list,
+        vol.Optional(Platform.LIGHT.value): cv.ensure_list,
+        vol.Optional(Platform.LOCK.value): cv.ensure_list,
+        vol.Optional(Platform.SCENE.value): cv.ensure_list,
+        vol.Optional(Platform.SELECT.value): cv.ensure_list,
+        vol.Optional(Platform.SIREN.value): cv.ensure_list,
+        vol.Optional(Platform.SENSOR.value): cv.ensure_list,
+        vol.Optional(Platform.SWITCH.value): cv.ensure_list,
+        vol.Optional(Platform.VACUUM.value): cv.ensure_list,
+        vol.Optional(Platform.NUMBER.value): cv.ensure_list,
+    }
+)
+
+CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
     {
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
@@ -204,9 +228,7 @@ CONFIG_SCHEMA_BASE = vol.Schema(
             CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
         ): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL): vol.Any(
-            "auto", "1.0", "1.1", "1.2"
-        ),
+        vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
             cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
         ),
@@ -220,6 +242,17 @@ CONFIG_SCHEMA_BASE = vol.Schema(
         ): valid_publish_topic,
     }
 )
+
+DEPRECATED_CONFIG_KEYS = [
+    CONF_BIRTH_MESSAGE,
+    CONF_BROKER,
+    CONF_DISCOVERY,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TLS_VERSION,
+    CONF_USERNAME,
+    CONF_WILL_MESSAGE,
+]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -243,10 +276,28 @@ SCHEMA_BASE = {
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }
 
+MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
+
+# Will be removed when all platforms support a modern platform schema
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
+# Will be removed when all platforms support a modern platform schema
+MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
+# Will be removed when all platforms support a modern platform schema
+MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    }
+)
 
 # Sensor type platforms subscribe to MQTT events
-MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+MQTT_RO_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -254,7 +305,7 @@ MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 # Switch type platforms publish to MQTT and may subscribe
-MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+MQTT_RW_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
@@ -407,20 +458,6 @@ class MqttServiceInfo(BaseServiceInfo):
     retain: bool
     subscribed_topic: str
     timestamp: dt.datetime
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        return getattr(self, name)
 
 
 def publish(
@@ -603,6 +640,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DATA_MQTT_CONFIG] = conf
 
     if not bool(hass.config_entries.async_entries(DOMAIN)):
+        # Create an import flow if the user has yaml configured entities etc.
+        # but no broker configuration. Note: The intention is not for this to
+        # import broker configuration from YAML because that has been deprecated.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -613,18 +653,53 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _merge_config(entry, conf):
-    """Merge configuration.yaml config with config entry."""
-    # Base config on default values
+def _merge_basic_config(
+    hass: HomeAssistant, entry: ConfigEntry, yaml_config: dict[str, Any]
+) -> None:
+    """Merge basic options in configuration.yaml config with config entry.
+
+    This mends incomplete migration from old version of HA Core.
+    """
+
+    entry_updated = False
+    entry_config = {**entry.data}
+    for key in DEPRECATED_CONFIG_KEYS:
+        if key in yaml_config and key not in entry_config:
+            entry_config[key] = yaml_config[key]
+            entry_updated = True
+
+    for key in MANDATORY_DEFAULT_VALUES:
+        if key not in entry_config:
+            entry_config[key] = DEFAULT_VALUES[key]
+            entry_updated = True
+
+    if entry_updated:
+        hass.config_entries.async_update_entry(entry, data=entry_config)
+
+
+def _merge_extended_config(entry, conf):
+    """Merge advanced options in configuration.yaml config with config entry."""
+    # Add default values
     conf = {**DEFAULT_VALUES, **conf}
     return {**conf, **entry.data}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # If user didn't have configuration.yaml config, generate defaults
+    # Merge basic configuration, and add missing defaults for basic options
+    _merge_basic_config(hass, entry, hass.data.get(DATA_MQTT_CONFIG, {}))
+
+    # Bail out if broker setting is missing
+    if CONF_BROKER not in entry.data:
+        _LOGGER.error("MQTT broker is not configured, please configure it")
+        return False
+
+    # If user doesn't have configuration.yaml config, generate default values
+    # for options not in config entry data
     if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
         conf = CONFIG_SCHEMA_BASE(dict(entry.data))
+
+    # User has configuration.yaml config, warn about config entry overrides
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
         override = {k: entry.data[k] for k in shared_keys}
@@ -636,8 +711,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             override,
         )
 
-    # Merge the configuration values from configuration.yaml
-    conf = _merge_config(entry, conf)
+    # Merge advanced configuration values from configuration.yaml
+    conf = _merge_extended_config(entry, conf)
 
     hass.data[DATA_MQTT] = MQTT(
         hass,
@@ -739,6 +814,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         ),
     )
+
+    # setup platforms and discovery
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
+    async def async_forward_entry_setup():
+        """Forward the config entry setup to the platforms."""
+        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+            for component in PLATFORMS:
+                config_entries_key = f"{component}.mqtt"
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                    await hass.config_entries.async_forward_entry_setup(
+                        entry, component
+                    )
+
+    hass.async_create_task(async_forward_entry_setup())
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)
@@ -871,7 +963,7 @@ class MQTT:
         if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
             conf = CONFIG_SCHEMA_BASE(dict(entry.data))
 
-        self.conf = _merge_config(entry, conf)
+        self.conf = _merge_extended_config(entry, conf)
         await self.async_disconnect()
         self.init_client()
         await self.async_connect()

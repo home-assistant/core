@@ -17,6 +17,10 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -146,8 +150,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_handle_callback(tellcore_id, tellcore_command, tellcore_data, cid):
         """Handle the actual callback from Tellcore."""
-        hass.helpers.dispatcher.async_dispatcher_send(
-            SIGNAL_TELLCORE_CALLBACK, tellcore_id, tellcore_command, tellcore_data
+        async_dispatcher_send(
+            hass, SIGNAL_TELLCORE_CALLBACK, tellcore_id, tellcore_command, tellcore_data
         )
 
     # Register callback
@@ -188,8 +192,8 @@ class TellstickDevice(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_TELLCORE_CALLBACK, self.update_from_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_TELLCORE_CALLBACK, self.update_from_callback
             )
         )
 

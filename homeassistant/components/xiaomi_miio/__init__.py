@@ -32,7 +32,7 @@ from miio import (
 from miio.gateway.gateway import GatewayException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -43,7 +43,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -406,36 +405,35 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hw_version=gateway_info.hardware_version,
     )
 
-    def update_data():
-        """Fetch data from the subdevice."""
-        data = {}
-        for sub_device in gateway.gateway_device.devices.values():
+    def update_data_factory(sub_device):
+        """Create update function for a subdevice."""
+
+        async def async_update_data():
+            """Fetch data from the subdevice."""
             try:
-                sub_device.update()
+                await hass.async_add_executor_job(sub_device.update)
             except GatewayException as ex:
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
-                data[sub_device.sid] = {ATTR_AVAILABLE: False}
-            else:
-                data[sub_device.sid] = {ATTR_AVAILABLE: True}
-        return data
+                return {ATTR_AVAILABLE: False}
+            return {ATTR_AVAILABLE: True}
 
-    async def async_update_data():
-        """Fetch data from the subdevice using async_add_executor_job."""
-        return await hass.async_add_executor_job(update_data)
+        return async_update_data
 
-    # Create update coordinator
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=name,
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=UPDATE_INTERVAL,
-    )
+    coordinator_dict = {}
+    for sub_device in gateway.gateway_device.devices.values():
+        # Create update coordinator
+        coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=name,
+            update_method=update_data_factory(sub_device),
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=UPDATE_INTERVAL,
+        )
 
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_GATEWAY: gateway.gateway_device,
-        KEY_COORDINATOR: coordinator,
+        KEY_COORDINATOR: coordinator_dict,
     }
 
     for platform in GATEWAY_PLATFORMS:

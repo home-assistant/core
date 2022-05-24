@@ -17,8 +17,8 @@ add_all_link:
       selector:
         select:
           options:
-            - 'controller'
-            - 'responder'
+            - "controller"
+            - "responder"
 delete_all_link:
   name: Delete all link
   description: Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.
@@ -73,22 +73,22 @@ x10_all_units_off:
       selector:
         select:
           options:
-            - 'a'
-            - 'b'
-            - 'c'
-            - 'd'
-            - 'e'
-            - 'f'
-            - 'g'
-            - 'h'
-            - 'i'
-            - 'j'
-            - 'k'
-            - 'l'
-            - 'm'
-            - 'n'
-            - 'o'
-            - 'p'
+            - "a"
+            - "b"
+            - "c"
+            - "d"
+            - "e"
+            - "f"
+            - "g"
+            - "h"
+            - "i"
+            - "j"
+            - "k"
+            - "l"
+            - "m"
+            - "n"
+            - "o"
+            - "p"
 x10_all_lights_on:
   name: X10 all lights on
   description: Send X10 All Lights On command
@@ -100,22 +100,22 @@ x10_all_lights_on:
       selector:
         select:
           options:
-            - 'a'
-            - 'b'
-            - 'c'
-            - 'd'
-            - 'e'
-            - 'f'
-            - 'g'
-            - 'h'
-            - 'i'
-            - 'j'
-            - 'k'
-            - 'l'
-            - 'm'
-            - 'n'
-            - 'o'
-            - 'p'
+            - "a"
+            - "b"
+            - "c"
+            - "d"
+            - "e"
+            - "f"
+            - "g"
+            - "h"
+            - "i"
+            - "j"
+            - "k"
+            - "l"
+            - "m"
+            - "n"
+            - "o"
+            - "p"
 x10_all_lights_off:
   name: X10 all lights off
   description: Send X10 All Lights Off command
@@ -127,22 +127,22 @@ x10_all_lights_off:
       selector:
         select:
           options:
-            - 'a'
-            - 'b'
-            - 'c'
-            - 'd'
-            - 'e'
-            - 'f'
-            - 'g'
-            - 'h'
-            - 'i'
-            - 'j'
-            - 'k'
-            - 'l'
-            - 'm'
-            - 'n'
-            - 'o'
-            - 'p'
+            - "a"
+            - "b"
+            - "c"
+            - "d"
+            - "e"
+            - "f"
+            - "g"
+            - "h"
+            - "i"
+            - "j"
+            - "k"
+            - "l"
+            - "m"
+            - "n"
+            - "o"
+            - "p"
 scene_on:
   name: Scene on
   description: Trigger an INSTEON scene to turn ON.

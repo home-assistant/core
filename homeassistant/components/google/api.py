@@ -5,60 +5,56 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 import logging
-from typing import Any
+import time
+from typing import Any, cast
 
-from googleapiclient import discovery as google_discovery
-import oauth2client
+import aiohttp
+from gcal_sync.auth import AbstractAuth
 from oauth2client.client import (
     Credentials,
     DeviceFlowInfo,
     FlowExchangeError,
-    OAuth2Credentials,
     OAuth2DeviceCodeError,
     OAuth2WebServerFlow,
 )
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt
 
-from .const import CONF_CALENDAR_ACCESS, DATA_CONFIG, DEVICE_AUTH_IMPL, DOMAIN
+from .const import (
+    CONF_CALENDAR_ACCESS,
+    DATA_CONFIG,
+    DEFAULT_FEATURE_ACCESS,
+    DOMAIN,
+    FeatureAccess,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_PAGE_SIZE = 100
 EXCHANGE_TIMEOUT_SECONDS = 60
+DEVICE_AUTH_CREDS = "creds"
 
 
 class OAuthError(Exception):
     """OAuth related error."""
 
 
-class DeviceAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class DeviceAuth(AuthImplementation):
     """OAuth implementation for Device Auth."""
-
-    def __init__(self, hass: HomeAssistant, client_id: str, client_secret: str) -> None:
-        """Initialize InstalledAppAuth."""
-        super().__init__(
-            hass,
-            DEVICE_AUTH_IMPL,
-            client_id,
-            client_secret,
-            oauth2client.GOOGLE_AUTH_URI,
-            oauth2client.GOOGLE_TOKEN_URI,
-        )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
-        creds: Credentials = external_data["creds"]
+        creds: Credentials = external_data[DEVICE_AUTH_CREDS]
         return {
             "access_token": creds.access_token,
             "refresh_token": creds.refresh_token,
             "scope": " ".join(creds.scopes),
             "token_type": "Bearer",
-            "expires_in": creds.token_expiry.timestamp(),
+            "expires_in": creds.token_expiry.timestamp() - time.time(),
         }
 
 
@@ -80,12 +76,12 @@ class DeviceFlow:
     @property
     def verification_url(self) -> str:
         """Return the verification url that the user should visit to enter the code."""
-        return self._device_flow_info.verification_url
+        return self._device_flow_info.verification_url  # type: ignore[no-any-return]
 
     @property
     def user_code(self) -> str:
         """Return the code that the user should enter at the verification url."""
-        return self._device_flow_info.user_code
+        return self._device_flow_info.user_code  # type: ignore[no-any-return]
 
     async def start_exchange_task(
         self, finished_cb: Callable[[Credentials | None], Awaitable[None]]
@@ -131,13 +127,28 @@ class DeviceFlow:
         )
 
 
-async def async_create_device_flow(hass: HomeAssistant) -> DeviceFlow:
+def get_feature_access(hass: HomeAssistant) -> FeatureAccess:
+    """Return the desired calendar feature access."""
+    # This may be called during config entry setup without integration setup running when there
+    # is no google entry in configuration.yaml
+    return cast(
+        FeatureAccess,
+        (
+            hass.data.get(DOMAIN, {})
+            .get(DATA_CONFIG, {})
+            .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
+        ),
+    )
+
+
+async def async_create_device_flow(
+    hass: HomeAssistant, client_id: str, client_secret: str, access: FeatureAccess
+) -> DeviceFlow:
     """Create a new Device flow."""
-    conf = hass.data[DOMAIN][DATA_CONFIG]
     oauth_flow = OAuth2WebServerFlow(
-        client_id=conf[CONF_CLIENT_ID],
-        client_secret=conf[CONF_CLIENT_SECRET],
-        scope=conf[CONF_CALENDAR_ACCESS].scope,
+        client_id=client_id,
+        client_secret=client_secret,
+        scope=access.scope,
         redirect_uri="",
     )
     try:
@@ -149,91 +160,41 @@ async def async_create_device_flow(hass: HomeAssistant) -> DeviceFlow:
     return DeviceFlow(hass, oauth_flow, device_flow_info)
 
 
-def _async_google_creds(hass: HomeAssistant, token: dict[str, Any]) -> Credentials:
-    """Convert a Home Assistant token to a Google API Credentials object."""
-    conf = hass.data[DOMAIN][DATA_CONFIG]
-    return OAuth2Credentials(
-        access_token=token["access_token"],
-        client_id=conf[CONF_CLIENT_ID],
-        client_secret=conf[CONF_CLIENT_SECRET],
-        refresh_token=token["refresh_token"],
-        token_expiry=token["expires_at"],
-        token_uri=oauth2client.GOOGLE_TOKEN_URI,
-        scopes=[conf[CONF_CALENDAR_ACCESS].scope],
-        user_agent=None,
-    )
-
-
-def _api_time_format(time: datetime.datetime | None) -> str | None:
-    """Convert a datetime to the api string format."""
-    return time.isoformat("T") if time else None
-
-
-class GoogleCalendarService:
-    """Calendar service interface to Google."""
+class ApiAuthImpl(AbstractAuth):  # type: ignore[misc]
+    """Authentication implementation for google calendar api library."""
 
     def __init__(
-        self, hass: HomeAssistant, session: config_entry_oauth2_flow.OAuth2Session
+        self,
+        websession: aiohttp.ClientSession,
+        session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
-        """Init the Google Calendar service."""
-        self._hass = hass
+        """Init the Google Calendar client library auth implementation."""
+        super().__init__(websession)
         self._session = session
 
-    async def _async_get_service(self) -> google_discovery.Resource:
-        """Get the calendar service with valid credetnails."""
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
         await self._session.async_ensure_token_valid()
-        creds = _async_google_creds(self._hass, self._session.token)
-        return google_discovery.build(
-            "calendar", "v3", credentials=creds, cache_discovery=False
-        )
+        return cast(str, self._session.token["access_token"])
 
-    async def async_list_calendars(
+
+class AccessTokenAuthImpl(AbstractAuth):  # type: ignore[misc]
+    """Authentication implementation used during config flow, without refresh.
+
+    This exists to allow the config flow to use the API before it has fully
+    created a config entry required by OAuth2Session. This does not support
+    refreshing tokens, which is fine since it should have been just created.
+    """
+
+    def __init__(
         self,
-    ) -> list[dict[str, Any]]:
-        """Return the list of calendars the user has added to their list."""
-        service = await self._async_get_service()
+        websession: aiohttp.ClientSession,
+        access_token: str,
+    ) -> None:
+        """Init the Google Calendar client library auth implementation."""
+        super().__init__(websession)
+        self._access_token = access_token
 
-        def _list_calendars() -> list[dict[str, Any]]:
-            cal_list = service.calendarList()  # pylint: disable=no-member
-            return cal_list.list().execute()["items"]
-
-        return await self._hass.async_add_executor_job(_list_calendars)
-
-    async def async_create_event(
-        self, calendar_id: str, event: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Return the list of calendars the user has added to their list."""
-        service = await self._async_get_service()
-
-        def _create_event() -> dict[str, Any]:
-            events = service.events()  # pylint: disable=no-member
-            return events.insert(calendarId=calendar_id, body=event).execute()
-
-        return await self._hass.async_add_executor_job(_create_event)
-
-    async def async_list_events(
-        self,
-        calendar_id: str,
-        start_time: datetime.datetime | None = None,
-        end_time: datetime.datetime | None = None,
-        search: str | None = None,
-        page_token: str | None = None,
-    ) -> tuple[list[dict[str, Any]], str | None]:
-        """Return the list of events."""
-        service = await self._async_get_service()
-
-        def _list_events() -> tuple[list[dict[str, Any]], str | None]:
-            events = service.events()  # pylint: disable=no-member
-            result = events.list(
-                calendarId=calendar_id,
-                timeMin=_api_time_format(start_time if start_time else dt.now()),
-                timeMax=_api_time_format(end_time),
-                q=search,
-                maxResults=EVENT_PAGE_SIZE,
-                pageToken=page_token,
-                singleEvents=True,  # Flattens recurring events
-                orderBy="startTime",
-            ).execute()
-            return (result["items"], result.get("nextPageToken"))
-
-        return await self._hass.async_add_executor_job(_list_events)
+    async def async_get_access_token(self) -> str:
+        """Return the access token."""
+        return self._access_token

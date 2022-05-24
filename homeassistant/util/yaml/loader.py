@@ -19,7 +19,7 @@ from .objects import Input, NodeListClass, NodeStrClass
 # mypy: allow-untyped-calls, no-warn-return-any
 
 JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
-DICT_T = TypeVar("DICT_T", bound=dict)  # pylint: disable=invalid-name
+_DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,8 +144,8 @@ def _add_reference(
 
 @overload
 def _add_reference(
-    obj: DICT_T, loader: SafeLineLoader, node: yaml.nodes.Node
-) -> DICT_T:
+    obj: _DictT, loader: SafeLineLoader, node: yaml.nodes.Node
+) -> _DictT:
     ...
 
 

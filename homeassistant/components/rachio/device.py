@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -125,12 +126,18 @@ class RachioPerson:
         rachio = self.rachio
 
         response = rachio.person.info()
-        assert int(response[0][KEY_STATUS]) == HTTPStatus.OK, "API key error"
+        if is_invalid_auth_code(int(response[0][KEY_STATUS])):
+            raise ConfigEntryAuthFailed(f"API key error: {response}")
+        if int(response[0][KEY_STATUS]) != HTTPStatus.OK:
+            raise ConfigEntryNotReady(f"API Error: {response}")
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == HTTPStatus.OK, "User ID error"
+        if is_invalid_auth_code(int(data[0][KEY_STATUS])):
+            raise ConfigEntryAuthFailed(f"User ID error: {data}")
+        if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
+            raise ConfigEntryNotReady(f"API Error: {data}")
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
@@ -297,3 +304,11 @@ class RachioIro:
         """Resume paused watering on this controller."""
         self.rachio.device.resume_zone_run(self.controller_id)
         _LOGGER.debug("Resuming watering on %s", self)
+
+
+def is_invalid_auth_code(http_status_code):
+    """HTTP status codes that mean invalid auth."""
+    if http_status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+        return True
+
+    return False

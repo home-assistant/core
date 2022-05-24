@@ -27,6 +27,21 @@ def _mock_socket(sockname):
     return mock_socket
 
 
+def _mock_cond_socket(sockname):
+    class CondMockSock(MagicMock):
+        def connect(self, addr):
+            """Mock connect that stores addr."""
+            self._addr = addr[0]
+
+        def getsockname(self):
+            """Return addr if it matches the mock sockname."""
+            if self._addr == sockname:
+                return [sockname]
+            raise AttributeError()
+
+    return CondMockSock()
+
+
 def _mock_socket_exception(exc):
     mock_socket = MagicMock()
     mock_socket.getsockname = Mock(side_effect=exc)
@@ -650,3 +665,24 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         await hass.async_block_till_done()
         with pytest.raises(HomeAssistantError):
             await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+
+
+async def test_async_get_source_ip_no_ip_loopback(hass, hass_storage, caplog):
+    """Test getting the source ip address when all adapters are disabled no target is specified."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
+    }
+
+    with patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[],
+    ), patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_cond_socket(_LOOPBACK_IPADDR),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+
+        assert await network.async_get_source_ip(hass) == "127.0.0.1"

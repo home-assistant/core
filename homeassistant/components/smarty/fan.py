@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import math
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +40,8 @@ async def async_setup_platform(
 class SmartyFan(FanEntity):
     """Representation of a Smarty Fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     def __init__(self, name, smarty):
         """Initialize the entity."""
         self._name = name
@@ -60,11 +62,6 @@ class SmartyFan(FanEntity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return "mdi:air-conditioner"
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_SET_SPEED
 
     @property
     def is_on(self):

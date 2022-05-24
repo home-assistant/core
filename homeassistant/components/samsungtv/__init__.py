@@ -1,19 +1,23 @@
 """The Samsung TV integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import socket
 from typing import Any
+from urllib.parse import urlparse
 
 import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_METHOD,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
@@ -21,19 +25,32 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    async_get_device_info,
+    mac_from_device_info,
+    model_requires_encryption,
+)
 from .const import (
-    CONF_MODEL,
     CONF_ON_ACTION,
+    CONF_SESSION_ID,
+    CONF_SSDP_MAIN_TV_AGENT_LOCATION,
+    CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_NAME,
     DOMAIN,
+    ENTRY_RELOAD_COOLDOWN,
     LEGACY_PORT,
     LOGGER,
+    METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
+    UPNP_SVC_MAIN_TV_AGENT,
+    UPNP_SVC_RENDERING_CONTROL,
 )
 
 
@@ -102,25 +119,82 @@ def _async_get_device_bridge(
         data[CONF_METHOD],
         data[CONF_HOST],
         data[CONF_PORT],
-        data.get(CONF_TOKEN),
+        data,
     )
+
+
+class DebouncedEntryReloader:
+    """Reload only after the timer expires."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Init the debounced entry reloader."""
+        self.hass = hass
+        self.entry = entry
+        self.token = self.entry.data.get(CONF_TOKEN)
+        self._debounced_reload = Debouncer(
+            hass,
+            LOGGER,
+            cooldown=ENTRY_RELOAD_COOLDOWN,
+            immediate=False,
+            function=self._async_reload_entry,
+        )
+
+    async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Start the countdown for a reload."""
+        if (new_token := entry.data.get(CONF_TOKEN)) != self.token:
+            LOGGER.debug("Skipping reload as its a token update")
+            self.token = new_token
+            return  # Token updates should not trigger a reload
+        LOGGER.debug("Calling debouncer to get a reload after cooldown")
+        await self._debounced_reload.async_call()
+
+    @callback
+    def async_cancel(self) -> None:
+        """Cancel any pending reload."""
+        self._debounced_reload.async_cancel()
+
+    async def _async_reload_entry(self) -> None:
+        """Reload entry."""
+        LOGGER.debug("Reloading entry %s", self.entry.title)
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
+
+
+async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update ssdp locations from discovery cache."""
+    updates = {}
+    for ssdp_st, key in (
+        (UPNP_SVC_RENDERING_CONTROL, CONF_SSDP_RENDERING_CONTROL_LOCATION),
+        (UPNP_SVC_MAIN_TV_AGENT, CONF_SSDP_MAIN_TV_AGENT_LOCATION),
+    ):
+        for discovery_info in await ssdp.async_get_discovery_info_by_st(hass, ssdp_st):
+            location = discovery_info.ssdp_location
+            host = urlparse(location).hostname
+            if host == entry.data[CONF_HOST]:
+                updates[key] = location
+                break
+
+    if updates:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
 
     # Initialize bridge
+    if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
+        if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
+            raise ConfigEntryAuthFailed(
+                "Token and session id are required in encrypted mode"
+            )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
-    # Ensure new token gets saved against the config_entry
+    # Ensure updates get saved against the config_entry
     @callback
-    def _update_token() -> None:
+    def _update_config_entry(updates: Mapping[str, Any]) -> None:
         """Update config entry with the new token."""
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_TOKEN: bridge.token}
-        )
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
-    bridge.register_new_token_callback(_update_token)
+    bridge.register_update_config_entry_callback(_update_config_entry)
 
     async def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
@@ -131,8 +205,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
 
+    await _async_update_ssdp_locations(hass, entry)
+
+    # We must not await after we setup the reload or there
+    # will be a race where the config flow will see the entry
+    # as not loaded and may reload it
+    debounced_reloader = DebouncedEntryReloader(hass, entry)
+    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
+
     hass.data[DOMAIN][entry.entry_id] = bridge
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
@@ -154,7 +238,7 @@ async def _async_create_bridge_with_updated_data(
         else:
             # When we imported from yaml we didn't setup the method
             # because we didn't know it
-            port, method, info = await async_get_device_info(hass, None, host)
+            _result, port, method, info = await async_get_device_info(hass, host)
             load_info_attempted = True
             if not port or not method:
                 raise ConfigEntryNotReady(
@@ -196,12 +280,13 @@ async def _async_create_bridge_with_updated_data(
                 LOGGER.info("Updated model to %s for %s", model, host)
                 updated_data[CONF_MODEL] = model
 
-    if model and len(model) > 4 and model[4] in ("H", "J"):
+    if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
             "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol that may not be supported in this integration",
+            "an encrypted protocol but you are using %s which may not be supported",
             model,
             host,
+            method,
         )
 
     if updated_data:
@@ -229,11 +314,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
-        dev_reg = await hass.helpers.device_registry.async_get_registry()
-        dev_reg.async_clear_config_entry(config_entry)
+        dev_reg = dr.async_get(hass)
+        dev_reg.async_clear_config_entry(config_entry.entry_id)
 
-        en_reg = await hass.helpers.entity_registry.async_get_registry()
-        en_reg.async_clear_config_entry(config_entry)
+        en_reg = er.async_get(hass)
+        en_reg.async_clear_config_entry(config_entry.entry_id)
 
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)

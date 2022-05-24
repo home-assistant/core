@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "incorrect_api_key": "Clave API inv\u00e1lida para la cuenta seleccionada",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "from": "Desde la estaci\u00f3n",
+                    "time": "Hora (opcional)"
+                }
+            }
+        }
+    }
+}

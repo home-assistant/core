@@ -17,6 +17,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -86,6 +88,26 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
         native_value=lambda device: device.power / 1000 if device.power else 0.0,
+    ),
+    FritzSensorEntityDescription(
+        key="voltage",
+        name="Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
+        native_value=lambda device: device.voltage / 1000 if device.voltage else 0.0,
+    ),
+    FritzSensorEntityDescription(
+        key="electric_current",
+        name="Electric Current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
+        native_value=lambda device: device.power / device.voltage
+        if device.power and device.voltage
+        else 0.0,
     ),
     FritzSensorEntityDescription(
         key="total_energy",

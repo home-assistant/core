@@ -256,6 +256,8 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi Network options."""
+        if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
+            return self.async_abort(reason="integration_not_setup")
         self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
 

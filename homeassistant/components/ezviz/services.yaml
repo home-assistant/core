@@ -61,8 +61,8 @@ set_alarm_detection_sensibility:
   fields:
     level:
       name: Sensitivity Level
-      description: 'Sensibility level (1-6) for type 0 (Normal camera)
-      or (1-100) for type 3 (PIR sensor camera).'
+      description: "Sensibility level (1-6) for type 0 (Normal camera)
+        or (1-100) for type 3 (PIR sensor camera)."
       required: true
       example: 3
       default: 3
@@ -74,15 +74,15 @@ set_alarm_detection_sensibility:
           mode: box
     type_value:
       name: Detection type
-      description: 'Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera'
+      description: "Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera"
       required: true
-      example: '0'
-      default: '0'
+      example: "0"
+      default: "0"
       selector:
         select:
           options:
-            - '0'
-            - '3'
+            - "0"
+            - "3"
 sound_alarm:
   name: Sound Alarm
   description: Sounds the alarm on your camera.

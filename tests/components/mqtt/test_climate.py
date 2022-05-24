@@ -19,23 +19,14 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -62,6 +53,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -171,12 +163,12 @@ async def test_supported_features(hass, mqtt_mock):
 
     state = hass.states.get(ENTITY_CLIMATE)
     support = (
-        SUPPORT_TARGET_TEMPERATURE
-        | SUPPORT_SWING_MODE
-        | SUPPORT_FAN_MODE
-        | SUPPORT_PRESET_MODE
-        | SUPPORT_AUX_HEAT
-        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.AUX_HEAT
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 
     assert state.attributes.get("supported_features") == support
@@ -190,12 +182,12 @@ async def test_get_hvac_modes(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     modes = state.attributes.get("hvac_modes")
     assert [
-        HVAC_MODE_AUTO,
-        STATE_OFF,
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
+        HVACMode.AUTO,
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
     ] == modes
 
 
@@ -212,7 +204,7 @@ async def test_set_operation_bad_attr_and_state(hass, mqtt_mock, caplog):
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
     assert (
-        "value must be one of ['auto', 'cool', 'dry', 'fan_only', 'heat', 'heat_cool', 'off'] for dictionary value @ data['hvac_mode']"
+        "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only' for dictionary value @ data['hvac_mode']"
     ) in str(excinfo.value)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
@@ -1161,7 +1153,7 @@ async def test_get_with_templates(hass, mqtt_mock, caplog):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("hvac_action") == "cooling"
     assert (
-        "Invalid ['off', 'heating', 'cooling', 'drying', 'idle', 'fan'] action: None, ignoring"
+        "Invalid ['cooling', 'drying', 'fan', 'heating', 'idle', 'off'] action: None, ignoring"
         in caplog.text
     )
 
@@ -1770,3 +1762,15 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     domain = CLIMATE_DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = CLIMATE_DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

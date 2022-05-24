@@ -9,18 +9,18 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ValloxDataUpdateCoordinator
+from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN
 
 
-class ValloxBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ValloxBinarySensor(ValloxEntity, BinarySensorEntity):
     """Representation of a Vallox binary sensor."""
 
     entity_description: ValloxBinarySensorEntityDescription
-    coordinator: ValloxDataUpdateCoordinator
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -29,14 +29,12 @@ class ValloxBinarySensor(CoordinatorEntity, BinarySensorEntity):
         description: ValloxBinarySensorEntityDescription,
     ) -> None:
         """Initialize the Vallox binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(name, coordinator)
 
         self.entity_description = description
 
         self._attr_name = f"{name} {description.name}"
-
-        uuid = self.coordinator.data.get_uuid()
-        self._attr_unique_id = f"{uuid}-{description.key}"
+        self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
     def is_on(self) -> bool | None:

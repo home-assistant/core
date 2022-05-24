@@ -23,7 +23,6 @@ COMMENT_REQUIREMENTS = (
     "decora_wifi",
     "evdev",
     "face_recognition",
-    "homeassistant-pyozw",
     "opencv-python-headless",
     "pybluez",
     "pycups",
@@ -33,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "RPi.GPIO",
     "tensorflow",
     "tf-models-official",
 )
@@ -68,7 +66,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.44.0
+grpcio==1.46.1
+grpcio-status==1.46.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -119,6 +118,10 @@ multidict>=6.0.2
 # Required for compatibility with point integration - ensure_active_token
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
+
+# Pin backoff for compatibility until most libraries have been updated
+# https://github.com/home-assistant/core/pull/70817
+backoff<2.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

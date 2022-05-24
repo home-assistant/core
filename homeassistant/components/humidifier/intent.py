@@ -13,7 +13,7 @@ from . import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SERVICE_TURN_ON,
-    SUPPORT_MODES,
+    HumidifierEntityFeature,
 )
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
@@ -22,8 +22,8 @@ INTENT_MODE = "HassHumidifierMode"
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the humidifier intents."""
-    hass.helpers.intent.async_register(HumidityHandler())
-    hass.helpers.intent.async_register(SetModeHandler())
+    intent.async_register(hass, HumidityHandler())
+    intent.async_register(hass, SetModeHandler())
 
 
 class HumidityHandler(intent.IntentHandler):
@@ -39,8 +39,8 @@ class HumidityHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = hass.helpers.intent.async_match_state(
-            slots["name"]["value"], hass.states.async_all(DOMAIN)
+        state = intent.async_match_state(
+            hass, slots["name"]["value"], hass.states.async_all(DOMAIN)
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}
@@ -83,14 +83,15 @@ class SetModeHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = hass.helpers.intent.async_match_state(
+        state = intent.async_match_state(
+            hass,
             slots["name"]["value"],
             hass.states.async_all(DOMAIN),
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-        intent.async_test_feature(state, SUPPORT_MODES, "modes")
+        intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]
 
         if mode not in state.attributes.get(ATTR_AVAILABLE_MODES, []):

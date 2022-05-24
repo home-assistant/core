@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Awaitable, Callable, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
 from enum import Enum
@@ -19,7 +19,7 @@ from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
-from .helpers import device_registry, entity_registry
+from .helpers import device_registry, entity_registry, storage
 from .helpers.event import async_call_later
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
@@ -160,7 +160,7 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Awaitable[None]]
+UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
 
 
 class ConfigEntry:
@@ -803,7 +803,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
         self._domain_index: dict[str, list[str]] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -863,10 +863,8 @@ class ConfigEntries:
             del self._domain_index[entry.domain]
         self._async_schedule_save()
 
-        dev_reg, ent_reg = await asyncio.gather(
-            self.hass.helpers.device_registry.async_get_registry(),
-            self.hass.helpers.entity_registry.async_get_registry(),
-        )
+        dev_reg = device_registry.async_get(self.hass)
+        ent_reg = entity_registry.async_get(self.hass)
 
         dev_reg.async_clear_config_entry(entry_id)
         ent_reg.async_clear_config_entry(entry_id)
@@ -911,7 +909,8 @@ class ConfigEntries:
     async def async_initialize(self) -> None:
         """Initialize config entry config."""
         # Migrating for config entries stored before 0.73
-        config = await self.hass.helpers.storage.async_migrator(
+        config = await storage.async_migrator(
+            self.hass,
             self.hass.config.path(PATH_CONFIG),
             self._store,
             old_conf_migrate_func=_old_conf_migrator,
@@ -1187,7 +1186,7 @@ async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
-    def __init_subclass__(cls, domain: str | None = None, **kwargs: Any) -> None:
+    def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
         if domain is not None:
@@ -1230,7 +1229,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @callback
     def _abort_if_unique_id_configured(
         self,
-        updates: dict[Any, Any] | None = None,
+        updates: dict[str, Any] | None = None,
         reload_on_update: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured."""
@@ -1455,7 +1454,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
-    def async_create_entry(  # pylint: disable=arguments-differ
+    def async_create_entry(
         self,
         *,
         title: str,
@@ -1550,7 +1549,7 @@ class EntityRegistryDisabledHandler:
     async def _handle_entry_updated(self, event: Event) -> None:
         """Handle entity registry entry update."""
         if self.registry is None:
-            self.registry = await entity_registry.async_get_registry(self.hass)
+            self.registry = entity_registry.async_get(self.hass)
 
         entity_entry = self.registry.async_get(event.data["entity_id"])
 

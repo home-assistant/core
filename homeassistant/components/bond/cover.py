@@ -6,14 +6,10 @@ from typing import Any
 from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
+    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +19,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
+
+
+def _bond_to_hass_position(bond_position: int) -> int:
+    """Convert bond 0-open 100-closed to hass 0-closed 100-open."""
+    return abs(bond_position - 100)
+
+
+def _hass_to_bond_position(hass_position: int) -> int:
+    """Convert hass 0-closed 100-open to bond 0-open 100-closed."""
+    return 100 - hass_position
 
 
 async def async_setup_entry(
@@ -55,25 +61,34 @@ class BondCover(BondEntity, CoverEntity):
         """Create HA entity representing Bond cover."""
         super().__init__(hub, device, bpup_subs)
         supported_features = 0
+        if self._device.supports_set_position():
+            supported_features |= CoverEntityFeature.SET_POSITION
         if self._device.supports_open():
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
         if self._device.supports_close():
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
         if self._device.supports_tilt_open():
-            supported_features |= SUPPORT_OPEN_TILT
+            supported_features |= CoverEntityFeature.OPEN_TILT
         if self._device.supports_tilt_close():
-            supported_features |= SUPPORT_CLOSE_TILT
+            supported_features |= CoverEntityFeature.CLOSE_TILT
         if self._device.supports_hold():
             if self._device.supports_open() or self._device.supports_close():
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
             if self._device.supports_tilt_open() or self._device.supports_tilt_close():
-                supported_features |= SUPPORT_STOP_TILT
+                supported_features |= CoverEntityFeature.STOP_TILT
         self._attr_supported_features = supported_features
 
     def _apply_state(self, state: dict) -> None:
         cover_open = state.get("open")
-        self._attr_is_closed = (
-            True if cover_open == 0 else False if cover_open == 1 else None
+        self._attr_is_closed = None if cover_open is None else cover_open == 0
+        if (bond_position := state.get("position")) is not None:
+            self._attr_current_cover_position = _bond_to_hass_position(bond_position)
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Set the cover position."""
+        await self._hub.bond.action(
+            self._device.device_id,
+            Action.set_position(_hass_to_bond_position(kwargs[ATTR_POSITION])),
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:

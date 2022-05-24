@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from unittest.mock import ANY, Mock, patch
 
-from async_upnp_client import UpnpEventHandler
 from async_upnp_client.aiohttp import AiohttpNotifyServer
+from async_upnp_client.event_handler import UpnpEventHandler
 import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN

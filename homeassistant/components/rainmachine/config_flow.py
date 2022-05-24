@@ -132,7 +132,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # access token without using the IP address and password, so we have to
                 # store it:
                 return self.async_create_entry(
-                    title=controller.name,
+                    title=str(controller.name),
                     data={
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],

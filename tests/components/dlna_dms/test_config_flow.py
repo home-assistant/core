@@ -1,16 +1,17 @@
 """Test the DLNA DMS config flow."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import dataclasses
 from typing import Final
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from async_upnp_client import UpnpError
+from async_upnp_client.exceptions import UpnpError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.dlna_dms.const import DOMAIN
+from homeassistant.components.dlna_dms.const import CONF_SOURCE_ID, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 
@@ -21,16 +22,11 @@ from .conftest import (
     MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
+    MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
 
 from tests.common import MockConfigEntry
-
-# Auto-use the domain_data_mock and dms_device_mock fixtures for every test in this module
-pytestmark = [
-    pytest.mark.usefixtures("domain_data_mock"),
-    pytest.mark.usefixtures("dms_device_mock"),
-]
 
 WRONG_DEVICE_TYPE: Final = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
@@ -68,6 +64,16 @@ MOCK_DISCOVERY: Final = ssdp.SsdpServiceInfo(
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Iterable[Mock]:
+    """Avoid setting up the entire integration."""
+    with patch(
+        "homeassistant.components.dlna_dms.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
 async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     """Test user-init'd flow, user selects discovered device."""
     ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
@@ -87,16 +93,16 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_HOST}
     )
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
+        CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
-
-    await hass.async_block_till_done()
 
 
 async def test_user_flow_no_devices(
@@ -137,12 +143,13 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
+        CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
 
 
 async def test_ssdp_flow_unavailable(
-    hass: HomeAssistant, domain_data_mock: Mock
+    hass: HomeAssistant, upnp_factory_mock: Mock
 ) -> None:
     """Test that SSDP discovery with an unavailable device still succeeds.
 
@@ -157,7 +164,7 @@ async def test_ssdp_flow_unavailable(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
+    upnp_factory_mock.async_create_device.side_effect = UpnpError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -169,6 +176,7 @@ async def test_ssdp_flow_unavailable(
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
         CONF_DEVICE_ID: MOCK_DEVICE_USN,
+        CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
 
@@ -213,9 +221,7 @@ async def test_ssdp_flow_duplicate_location(
     assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
 
 
-async def test_ssdp_flow_bad_data(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry
-) -> None:
+async def test_ssdp_flow_bad_data(hass: HomeAssistant) -> None:
     """Test bad SSDP discovery information is rejected cleanly."""
     # Missing location
     discovery = dataclasses.replace(MOCK_DISCOVERY, ssdp_location="")
@@ -241,15 +247,16 @@ async def test_ssdp_flow_bad_data(
 async def test_duplicate_name(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:
-    """Test device with name same as another results in no error."""
+    """Test device with name same as other devices results in no error."""
+    # Add two entries to test generate_source_id() tries for no collisions
     config_entry_mock.add_to_hass(hass)
-
     mock_entry_1 = MockConfigEntry(
         unique_id="mock_entry_1",
         domain=DOMAIN,
         data={
             CONF_URL: "not-important",
             CONF_DEVICE_ID: "not-important",
+            CONF_SOURCE_ID: f"{MOCK_SOURCE_ID}_1",
         },
         title=MOCK_DEVICE_NAME,
     )
@@ -286,6 +293,7 @@ async def test_duplicate_name(
     assert result["data"] == {
         CONF_URL: new_device_location,
         CONF_DEVICE_ID: new_device_usn,
+        CONF_SOURCE_ID: f"{MOCK_SOURCE_ID}_2",
     }
     assert result["options"] == {}
 
@@ -317,10 +325,22 @@ async def test_ssdp_flow_upnp_udn(
 
 async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     """Test SSDP ignores devices that are missing required services."""
-    # No services defined at all
+    # No service list at all
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = dict(discovery.upnp)
     del discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_dms"
+
+    # Service list does not contain services
+    discovery = dataclasses.replace(MOCK_DISCOVERY)
+    discovery.upnp = dict(discovery.upnp)
+    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {"bad_key": "bad_value"}
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -341,6 +361,28 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_dms"
+
+
+async def test_ssdp_single_service(hass: HomeAssistant) -> None:
+    """Test SSDP discovery info with only one service defined.
+
+    THe etree_to_dict function turns multiple services into a list of dicts, but
+    a single service into only a dict.
+    """
+    discovery = dataclasses.replace(MOCK_DISCOVERY)
+    discovery.upnp = dict(discovery.upnp)
+    service_list = dict(discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST])
+    # Turn mock's list of service dicts into a single dict
+    service_list["service"] = service_list["service"][0]
+    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = service_list
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "not_dms"

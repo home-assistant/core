@@ -13,12 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    STATE_CLASSES as SENSOR_STATE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -262,7 +263,10 @@ class SensorFilter(SensorEntity):
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if self._attr_state_class is None:
+        if (
+            self._attr_state_class is None
+            and new_state.attributes.get(ATTR_STATE_CLASS) in SENSOR_STATE_CLASSES
+        ):
             self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
@@ -296,7 +300,7 @@ class SensorFilter(SensorEntity):
 
             # Retrieve the largest window_size of each type
             if largest_window_items > 0:
-                filter_history = await self.hass.async_add_executor_job(
+                filter_history = await get_instance(self.hass).async_add_executor_job(
                     partial(
                         history.get_last_state_changes,
                         self.hass,
@@ -308,7 +312,7 @@ class SensorFilter(SensorEntity):
                     history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
-                filter_history = await self.hass.async_add_executor_job(
+                filter_history = await get_instance(self.hass).async_add_executor_job(
                     partial(
                         history.state_changes_during_period,
                         self.hass,

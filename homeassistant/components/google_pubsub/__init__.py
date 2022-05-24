@@ -54,9 +54,7 @@ def setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     publisher = PublisherClient.from_service_account_json(service_principal_path)
 
-    topic_path = publisher.topic_path(  # pylint: disable=no-member
-        project_id, topic_name
-    )
+    topic_path = publisher.topic_path(project_id, topic_name)
 
     encoder = DateTimeJSONEncoder()
 

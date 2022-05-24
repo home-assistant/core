@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.entity_component import async_update_entity
 
 ROLLER_BLOCK_ID = 1
@@ -189,4 +189,4 @@ async def test_rpc_device_no_position_control(hass, rpc_wrapper, monkeypatch):
 
     await async_update_entity(hass, "cover.test_cover_0")
     await hass.async_block_till_done()
-    assert hass.states.get("cover.test_cover_0").state == STATE_UNKNOWN
+    assert hass.states.get("cover.test_cover_0").state == STATE_OPEN

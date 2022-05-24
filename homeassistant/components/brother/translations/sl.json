@@ -14,8 +14,7 @@
                 "data": {
                     "host": "Gostiteljsko ime tiskalnika ali naslov IP",
                     "type": "Vrsta tiskalnika"
-                },
-                "description": "Nastavite integracijo tiskalnika Brother. \u010ce imate te\u017eave s konfiguracijo, pojdite na: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {

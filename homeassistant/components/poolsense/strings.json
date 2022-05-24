@@ -2,8 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "PoolSense",
-        "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"

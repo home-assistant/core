@@ -27,7 +27,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import VALUE_SCHEMA
 from .const import (
@@ -141,7 +141,9 @@ ACTION_SCHEMA = vol.Any(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
     registry = entity_registry.async_get(hass)
     actions = []
@@ -238,10 +240,13 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
-    action_type = service = config.pop(CONF_TYPE)
+    action_type = service = config[CONF_TYPE]
     if action_type not in ACTION_TYPES:
         raise HomeAssistantError(f"Unhandled action type {action_type}")
 
@@ -249,10 +254,10 @@ async def async_call_action_from_config(
     service_data = {
         k: v
         for k, v in config.items()
-        if k not in (ATTR_DOMAIN, CONF_SUBTYPE) and v not in (None, "")
+        if k not in (ATTR_DOMAIN, CONF_TYPE, CONF_SUBTYPE) and v not in (None, "")
     }
 
-    # Entity services (including refresh value which is a fake entity service) expects
+    # Entity services (including refresh value which is a fake entity service) expect
     # just an entity ID
     if action_type in (
         SERVICE_REFRESH_VALUE,

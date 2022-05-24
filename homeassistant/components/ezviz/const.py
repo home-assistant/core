@@ -5,7 +5,6 @@ MANUFACTURER = "Ezviz"
 
 # Configuration
 ATTR_SERIAL = "serial"
-CONF_CAMERAS = "cameras"
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 ATTR_HOME = "HOME_MODE"
 ATTR_AWAY = "AWAY_MODE"

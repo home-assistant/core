@@ -286,6 +286,7 @@ async def test_get_deconz_session(hass):
     [
         (asyncio.TimeoutError, CannotConnect),
         (pydeconz.RequestError, CannotConnect),
+        (pydeconz.ResponseError, CannotConnect),
         (pydeconz.Unauthorized, AuthenticationRequired),
     ],
 )

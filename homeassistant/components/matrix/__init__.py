@@ -243,7 +243,10 @@ class MatrixBot:
                 room.update_aliases()
                 self._aliases_fetched_for.add(room.room_id)
 
-            if room_id_or_alias in room.aliases:
+            if (
+                room_id_or_alias in room.aliases
+                or room_id_or_alias == room.canonical_alias
+            ):
                 _LOGGER.debug(
                     "Already in room %s (known as %s)", room.room_id, room_id_or_alias
                 )
@@ -359,7 +362,7 @@ class MatrixBot:
         for target_room in target_rooms:
             try:
                 room = self._join_or_get_room(target_room)
-                room.send_image(mxc, img)
+                room.send_image(mxc, img, mimetype=content_type)
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': %d, %s",
