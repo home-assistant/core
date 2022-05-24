@@ -420,6 +420,9 @@ dsmr_parser==0.33
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
 
+# homeassistant.components.rainforest_eagle
+eagle100==0.1.1
+
 # homeassistant.components.elgato
 elgato==3.0.0
 
@@ -1543,9 +1546,6 @@ twilio==6.32.0
 
 # homeassistant.components.twitch
 twitchAPI==2.5.2
-
-# homeassistant.components.rainforest_eagle
-uEagle==0.0.2
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
