@@ -1,6 +1,9 @@
 """Config flow for Awair."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from python_awair import Awair
 from python_awair.exceptions import AuthError, AwairError
 import voluptuous as vol
@@ -46,7 +49,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: dict[str, str] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
         """Handle re-auth if token invalid."""
         errors = {}
