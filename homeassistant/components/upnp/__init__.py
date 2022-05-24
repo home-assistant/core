@@ -253,10 +253,9 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             name=device.name,
             update_interval=update_interval,
-            update_method=self._async_fetch_data,
         )
 
-    async def _async_fetch_data(self) -> Mapping[str, Any]:
+    async def _async_update_data(self) -> Mapping[str, Any]:
         """Update data."""
         try:
             update_values = await asyncio.gather(
