@@ -45,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.entry_id)
 
+    hass.data.setdefault(DOMAIN, {})
+
     udn = entry.data[CONFIG_ENTRY_UDN]
     st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
     usn = f"{udn}::{st}"
