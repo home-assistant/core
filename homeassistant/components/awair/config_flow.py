@@ -18,7 +18,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -43,7 +45,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle re-auth if token invalid."""
         errors = {}
 
