@@ -52,7 +52,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
         old_refresh_token = self.account.refresh_token
 
         try:
-            async with async_timeout.timeout(15):
+            async with async_timeout.timeout(60):
                 await self.account.get_vehicles()
         except HTTPError as err:
             self._update_config_entry_refresh_token(None)
