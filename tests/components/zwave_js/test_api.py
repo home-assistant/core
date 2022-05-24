@@ -78,7 +78,7 @@ from homeassistant.helpers import device_registry as dr
 def get_device(hass, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
-    device_id = get_device_id(node.client, node)
+    device_id = get_device_id(node.client.driver, node)
     return dev_reg.async_get_device({device_id})
 
 
@@ -124,11 +124,12 @@ async def test_node_ready(
     node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
     node = Node(client, node_data)
     node.data["ready"] = False
-    client.driver.controller.nodes[node.node_id] = node
+    driver = client.driver
+    driver.controller.nodes[node.node_id] = node
 
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={get_device_id(client, node)}
+        config_entry_id=entry.entry_id, identifiers={get_device_id(driver, node)}
     )
 
     await ws_client.send_json(

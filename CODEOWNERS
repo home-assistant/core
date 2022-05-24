@@ -823,8 +823,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
-/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert
-/tests/components/rainforest_eagle/ @gtdiehl @jcalbert
+/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /homeassistant/components/rainmachine/ @bachya
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
