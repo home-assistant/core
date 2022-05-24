@@ -12,7 +12,7 @@ from .const import DEFAULT_INTERFACE
 _LOGGER = logging.getLogger(__name__)
 
 
-def device_name(blind)
+def device_name(blind):
     """Construct common name part of a device"""
     if blind.device_type in DEVICE_TYPES_WIFI:
         return blind.blind_type
