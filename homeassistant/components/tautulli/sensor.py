@@ -283,14 +283,6 @@ class TautulliSensor(TautulliEntity, SensorEntity):
 
     entity_description: TautulliSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TautulliDataUpdateCoordinator,
-        description: TautulliSensorEntityDescription,
-    ) -> None:
-        """Initialize the Tautulli entity."""
-        super().__init__(coordinator, description)
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
