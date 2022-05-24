@@ -17,9 +17,7 @@ async def test_already_configured(hass, config_entry, config_data):
     flow.hass = hass
     flow.context = {}
 
-    fname = "async_step_user"
-    func = getattr(flow, fname)
-    result = await func(config_data)
+    result = await flow.async_step_user(config_data)
 
     assert result["type"] == "abort"
 
@@ -30,9 +28,7 @@ async def test_without_config(hass):
     flow.hass = hass
     flow.context = {}
 
-    fname = "async_step_user"
-    func = getattr(flow, fname)
-    result = await func()
+    result = await flow.async_step_user()
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -44,13 +40,11 @@ async def test_with_invalid_credentials(hass, config_data):
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
-    fname = "async_step_user"
-    func = getattr(flow, fname)
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceUnauthorizedException,
     ):
-        result = await func(config_data)
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -62,13 +56,11 @@ async def test_service_exception(hass, config_data):
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
-    fname = "async_step_user"
-    func = getattr(flow, fname)
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceException,
     ):
-        result = await func(config_data)
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -81,13 +73,11 @@ async def test_with_existing_config(hass, config_data):
     flow.hass = hass
     flow.context = {}
 
-    fname = "async_step_user"
-    func = getattr(flow, fname)
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         return_value=None,
     ):
-        result = await func(config_data)
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] == "create_entry"
     assert result["title"] == config_data["username"]
