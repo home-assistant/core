@@ -89,7 +89,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    # flake8: noqa: C901
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
