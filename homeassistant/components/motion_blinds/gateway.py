@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def device_name(blind):
-    """Construct common name part of a device"""
+    """Construct common name part of a device."""
     if blind.device_type in DEVICE_TYPES_WIFI:
         return blind.blind_type
     return f"{blind.blind_type} {blind.mac[12:]}"

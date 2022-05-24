@@ -1,7 +1,7 @@
 """Support for Motion Blinds using their WLAN API."""
 import logging
 
-from motionblinds import BlindType
+from motionblinds import BlindType, DEVICE_TYPES_WIFI
 import voluptuous as vol
 
 from homeassistant.components.cover import (
