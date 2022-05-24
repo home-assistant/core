@@ -92,7 +92,7 @@ async def test_form_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_cannot_connect_throwing_connectionError(hass):
+async def test_form_cannot_connect_throwing_connection_error(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
