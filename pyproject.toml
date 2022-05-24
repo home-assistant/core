@@ -12,7 +12,7 @@ authors     = [
 ]
 keywords    = ["home", "automation"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
@@ -27,7 +27,7 @@ dynamic = ["version", "requires-python", "dependencies"]
 "Source Code" = "https://github.com/home-assistant/core"
 "Bug Reports" = "https://github.com/home-assistant/core/issues"
 "Docs: Dev"   = "https://developers.home-assistant.io/"
-"Discord"     = "https://discordapp.com/invite/c5DvZ4e"
+"Discord"     = "https://www.home-assistant.io/join-chat/"
 "Forum"       = "https://community.home-assistant.io/"
 
 [project.scripts]
