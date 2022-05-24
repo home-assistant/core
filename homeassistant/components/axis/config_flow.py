@@ -1,6 +1,7 @@
 """Config flow to configure Axis devices."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import ip_address
 from typing import Any
 from urllib.parse import urlsplit
@@ -138,7 +139,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_reauth(self, device_config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, device_config: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
             CONF_NAME: device_config[CONF_NAME],
