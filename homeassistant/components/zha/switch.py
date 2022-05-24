@@ -155,10 +155,8 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
 class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     """Representation of a ZHA switch configuration entity."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute: str
     _zcl_inverter_attribute: str = ""
-    _inverted = False
 
     @classmethod
     def create_entity(
@@ -264,5 +262,6 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute = "window_detection_function"
     _zcl_inverter_attribute = "window_detection_function_inverter"
