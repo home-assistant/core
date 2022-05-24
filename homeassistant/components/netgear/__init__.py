@@ -17,6 +17,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
+    KEY_COORDINATOR_FIRMWARE,
     KEY_ROUTER,
     PLATFORMS,
 )
@@ -27,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 SPEED_TEST_INTERVAL = timedelta(seconds=1800)
+SCAN_INTERVAL_FIRMWARE = timedelta(seconds=18000)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,6 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from the router."""
         return await router.async_get_speed_test()
 
+    async def async_check_firmware() -> dict[str, Any] | None:
+        """Check for new firmware of the router."""
+        return await router.async_check_new_firmware()
+
     # Create update coordinators
     coordinator = DataUpdateCoordinator(
         hass,
@@ -105,16 +111,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_speed_test,
         update_interval=SPEED_TEST_INTERVAL,
     )
+    coordinator_firmware = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{router.device_name} Firmware",
+        update_method=async_check_firmware,
+        update_interval=SCAN_INTERVAL_FIRMWARE,
+    )
 
     if router.track_devices:
         await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
+    await coordinator_firmware.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,
         KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
         KEY_COORDINATOR_SPEED: coordinator_speed_test,
+        KEY_COORDINATOR_FIRMWARE: coordinator_firmware,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

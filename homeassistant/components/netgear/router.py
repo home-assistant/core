@@ -240,6 +240,16 @@ class NetgearRouter:
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._api.reboot)
 
+    async def async_check_new_firmware(self) -> None:
+        """Check for new firmware of the router."""
+        async with self._api_lock:
+            return await self.hass.async_add_executor_job(self._api.check_new_firmware)
+
+    async def async_update_new_firmware(self) -> None:
+        """Update the router to the latest firmware."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._api.update_new_firmware)
+
     @property
     def port(self) -> int:
         """Port used by the API."""
