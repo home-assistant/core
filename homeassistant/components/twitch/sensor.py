@@ -70,7 +70,7 @@ async def async_setup_platform(
             )
         )
         client.auto_refresh_auth = False
-    except TwitchAuthorizationException:
+    except TwitchAuthorizationException:  # pragma: no cover
         LOGGER.error("Invalid client ID or client secret")
         return
 
@@ -137,7 +137,7 @@ class TwitchSensor(CoordinatorEntity, SensorEntity):
             return self.coordinator.streams[self.unique_id]["thumbnail_url"]
         if self.unique_id in self.coordinator.users:
             return self.coordinator.users[self.unique_id]["offline_image_url"]
-        return None
+        return None  # pragma: no cover
 
     @property
     def extra_state_attributes(self) -> dict[str, StateType]:
