@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -33,7 +33,7 @@ from .coordinator import NZBGetAPI, NZBGetAPIException
 _LOGGER = logging.getLogger(__name__)
 
 
-def _validate_input(hass: HomeAssistant, data: dict[str, Any]):
+def _validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -75,9 +75,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
             try:
-                await self.hass.async_add_executor_job(
-                    _validate_input, self.hass, user_input
-                )
+                await self.hass.async_add_executor_job(_validate_input, user_input)
             except NZBGetAPIException:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
