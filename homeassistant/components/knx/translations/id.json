@@ -41,7 +41,7 @@
             },
             "secure_knxkeys": {
                 "data": {
-                    "knxkeys_filename": "Nama file '.knxkeys' Anda (termasuk ekstensi)",
+                    "knxkeys_filename": "Nama file `.knxkeys` Anda (termasuk ekstensi)",
                     "knxkeys_password": "Kata sandi untuk mendekripsi file `.knxkeys`"
                 },
                 "data_description": {
@@ -102,7 +102,7 @@
                     "multicast_group": "Digunakan untuk perutean dan penemuan. Bawaan: `224.0.23.12`",
                     "multicast_port": "Digunakan untuk perutean dan penemuan. Bawaan: `3671`",
                     "rate_limit": "Telegram keluar maksimum per detik.\nDirekomendasikan: 20 hingga 40",
-                    "state_updater": "Menyetel default untuk status pembacaan KNX Bus. Saat dinonaktifkan, Home Assistant tidak akan secara aktif mengambil status entitas dari KNX Bus. Hal ini bisa ditimpa dengan opsi entitas 'sync_state'."
+                    "state_updater": "Menyetel default untuk status pembacaan KNX Bus. Saat dinonaktifkan, Home Assistant tidak akan secara aktif mengambil status entitas dari KNX Bus. Hal ini bisa ditimpa dengan opsi entitas `sync_state`."
                 }
             },
             "tunnel": {

@@ -281,7 +281,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.29.0
+async-upnp-client==0.30.1
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.2.3
@@ -321,7 +321,7 @@ blebox_uniapi==1.3.3
 blinkpy==0.19.0
 
 # homeassistant.components.bond
-bond-api==0.1.16
+bond-api==0.1.18
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.30
@@ -330,7 +330,7 @@ boschshcpy==0.2.30
 bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
-broadlink==0.18.1
+broadlink==0.18.2
 
 # homeassistant.components.brother
 brother==1.1.0
@@ -492,7 +492,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.8.1
+gcal-sync==0.9.0
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -589,7 +589,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220518.0
+home-assistant-frontend==20220523.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -654,6 +654,9 @@ kostal_plenticore==0.2.0
 # homeassistant.components.kraken
 krakenex==2.1.0
 
+# homeassistant.components.laundrify
+laundrify_aio==1.1.1
+
 # homeassistant.components.foscam
 libpyfoscam==1.0
 
@@ -709,7 +712,7 @@ millheater==0.9.0
 minio==5.0.10
 
 # homeassistant.components.moehlenhoff_alpha2
-moehlenhoff-alpha2==1.1.2
+moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.7
@@ -742,7 +745,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.2.4
 
 # homeassistant.components.nexia
-nexia==1.0.0
+nexia==1.0.1
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
@@ -832,10 +835,10 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.0
+pillow==9.1.1
 
 # homeassistant.components.plex
-plexapi==4.10.1
+plexapi==4.11.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -844,7 +847,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.18.2
+plugwise==0.18.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1313,7 +1316,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.5.1
+pyunifiprotect==3.6.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1334,7 +1337,7 @@ pyvolumio==0.1.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.7.0
+pywemo==0.8.1
 
 # homeassistant.components.wilight
 pywilight==0.0.70
@@ -1563,7 +1566,7 @@ vallox-websocket-api==2.11.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.2.4
+velbus-aio==2022.5.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15

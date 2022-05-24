@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
@@ -65,10 +65,16 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, dict[str, dict]]:
         """Fetch the latest data from the source."""
         await self.base.update_data()
-        return {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")}
+        return {
+            "heat_areas": {ha["ID"]: ha for ha in self.base.heat_areas if ha.get("ID")},
+            "heat_controls": {
+                hc["ID"]: hc for hc in self.base.heat_controls if hc.get("ID")
+            },
+            "io_devices": {io["ID"]: io for io in self.base.io_devices if io.get("ID")},
+        }
 
     def get_cooling(self) -> bool:
         """Return if cooling mode is enabled."""

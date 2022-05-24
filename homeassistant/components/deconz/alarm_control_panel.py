@@ -1,7 +1,7 @@
 """Support for deCONZ alarm control panel devices."""
 from __future__ import annotations
 
-from pydeconz.models.alarm_system import AlarmSystem
+from pydeconz.interfaces.alarm_systems import ArmAction
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
@@ -53,13 +53,13 @@ DECONZ_TO_ALARM_STATE = {
 }
 
 
-def get_alarm_system_for_unique_id(
+def get_alarm_system_id_for_unique_id(
     gateway: DeconzGateway, unique_id: str
-) -> AlarmSystem | None:
-    """Retrieve alarm system unique ID is registered to."""
+) -> str | None:
+    """Retrieve alarm system ID the unique ID is registered to."""
     for alarm_system in gateway.api.alarmsystems.values():
         if unique_id in alarm_system.devices:
-            return alarm_system
+            return alarm_system.resource_id
     return None
 
 
@@ -76,8 +76,12 @@ async def async_setup_entry(
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add alarm control panel devices from deCONZ."""
         sensor = gateway.api.sensors.ancillary_control[sensor_id]
-        if alarm_system := get_alarm_system_for_unique_id(gateway, sensor.unique_id):
-            async_add_entities([DeconzAlarmControlPanel(sensor, gateway, alarm_system)])
+        if alarm_system_id := get_alarm_system_id_for_unique_id(
+            gateway, sensor.unique_id
+        ):
+            async_add_entities(
+                [DeconzAlarmControlPanel(sensor, gateway, alarm_system_id)]
+            )
 
     config_entry.async_on_unload(
         gateway.api.sensors.ancillary_control.subscribe(
@@ -107,11 +111,11 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         self,
         device: AncillaryControl,
         gateway: DeconzGateway,
-        alarm_system: AlarmSystem,
+        alarm_system_id: str,
     ) -> None:
         """Set up alarm control panel device."""
         super().__init__(device, gateway)
-        self.alarm_system = alarm_system
+        self.alarm_system_id = alarm_system_id
 
     @callback
     def async_update_callback(self) -> None:
@@ -133,19 +137,27 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code:
-            await self.alarm_system.arm_away(code)
+            await self.gateway.api.alarmsystems.arm(
+                self.alarm_system_id, ArmAction.AWAY, code
+            )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code:
-            await self.alarm_system.arm_stay(code)
+            await self.gateway.api.alarmsystems.arm(
+                self.alarm_system_id, ArmAction.STAY, code
+            )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if code:
-            await self.alarm_system.arm_night(code)
+            await self.gateway.api.alarmsystems.arm(
+                self.alarm_system_id, ArmAction.NIGHT, code
+            )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:
-            await self.alarm_system.disarm(code)
+            await self.gateway.api.alarmsystems.arm(
+                self.alarm_system_id, ArmAction.DISARM, code
+            )

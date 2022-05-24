@@ -24,20 +24,18 @@ async def async_setup_entry(
     """Set up automations for a Nexia device."""
     coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home = coordinator.nexia_home
-
-    entities = []
-
-    # Automation switches
-    for automation_id in nexia_home.get_automation_ids():
-        automation = nexia_home.get_automation_by_id(automation_id)
-
-        entities.append(NexiaAutomationScene(coordinator, automation))
-
-    async_add_entities(entities)
+    async_add_entities(
+        NexiaAutomationScene(
+            coordinator, nexia_home.get_automation_by_id(automation_id)
+        )
+        for automation_id in nexia_home.get_automation_ids()
+    )
 
 
 class NexiaAutomationScene(NexiaEntity, Scene):
     """Provides Nexia automation support."""
+
+    _attr_icon = "mdi:script-text-outline"
 
     def __init__(
         self, coordinator: NexiaDataUpdateCoordinator, automation: NexiaAutomation
@@ -48,19 +46,8 @@ class NexiaAutomationScene(NexiaEntity, Scene):
             name=automation.name,
             unique_id=automation.automation_id,
         )
-        self._automation = automation
-
-    @property
-    def extra_state_attributes(self):
-        """Return the scene specific state attributes."""
-        data = super().extra_state_attributes
-        data[ATTR_DESCRIPTION] = self._automation.description
-        return data
-
-    @property
-    def icon(self):
-        """Return the icon of the automation scene."""
-        return "mdi:script-text-outline"
+        self._automation: NexiaAutomation = automation
+        self._attr_extra_state_attributes = {ATTR_DESCRIPTION: automation.description}
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate an automation scene."""

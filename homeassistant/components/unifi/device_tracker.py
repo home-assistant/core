@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aiounifi.api import SOURCE_DATA
+from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.events import (
     ACCESS_POINT_UPGRADED,
     GATEWAY_UPGRADED,
@@ -156,6 +156,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         self._controller_connection_state_changed = False
 
+        self._only_listen_to_data_source = False
+
         last_seen = client.last_seen or 0
         self.schedule_update = self._is_connected = (
             self.is_wired == client.is_wired
@@ -224,6 +226,23 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         ):
             self._is_connected = True
             self.schedule_update = True
+            self._only_listen_to_data_source = True
+
+        elif (
+            self.client.last_updated == SOURCE_EVENT
+            and not self._only_listen_to_data_source
+        ):
+
+            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
+                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
+            ):
+                self._is_connected = True
+                self.schedule_update = False
+                self.controller.async_heartbeat(self.unique_id)
+                super().async_update_callback()
+
+            else:
+                self.schedule_update = True
 
         self._async_log_debug_data("update_callback")
 

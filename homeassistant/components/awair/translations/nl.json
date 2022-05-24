@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "no_devices_found": "Geen apparaten op het netwerk gevonden",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_access_token": "Ongeldig toegangstoken",

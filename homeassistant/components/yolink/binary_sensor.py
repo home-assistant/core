@@ -15,7 +15,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATOR, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
+from .const import (
+    ATTR_COORDINATOR,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -25,19 +31,39 @@ class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
+    state_key: str = "state"
     value: Callable[[str], bool | None] = lambda _: None
 
 
-SENSOR_DEVICE_TYPE = [ATTR_DEVICE_DOOR_SENSOR]
+SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+]
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
-        key="state",
+        key="door_state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
-        name="state",
+        name="State",
         value=lambda value: value == "open",
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="motion_state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        name="Motion",
+        value=lambda value: value == "alert",
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="leak_state",
+        name="Leak",
+        icon="mdi:water",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        value=lambda value: value == "alert",
+        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
     ),
 )
 
@@ -85,6 +111,6 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         self._attr_is_on = self.entity_description.value(
-            state[self.entity_description.key]
+            state[self.entity_description.state_key]
         )
         self.async_write_ha_state()
