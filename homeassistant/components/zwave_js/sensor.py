@@ -26,6 +26,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -224,7 +225,7 @@ async def async_setup_entry(
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
                 info.platform_hint,
-                info.primary_value.propertyname,
+                info.primary_value.property_name,
             )
             return
 
@@ -352,13 +353,15 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         """Reset meter(s) on device."""
         node = self.info.node
         primary_value = self.info.primary_value
+        if (endpoint := primary_value.endpoint) is None:
+            raise HomeAssistantError("Missing endpoint on device.")
         options = {}
         if meter_type is not None:
             options[RESET_METER_OPTION_TYPE] = meter_type
         if value is not None:
             options[RESET_METER_OPTION_TARGET_VALUE] = value
         args = [options] if options else []
-        await node.endpoints[primary_value.endpoint].async_invoke_cc_api(
+        await node.endpoints[endpoint].async_invoke_cc_api(
             CommandClass.METER, "reset", *args, wait_for_result=False
         )
         LOGGER.debug(
@@ -385,11 +388,12 @@ class ZWaveListSensor(ZwaveSensorBase):
             config_entry, driver, info, entity_description, unit_of_measurement
         )
 
+        property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
         self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[self.info.primary_value.property_key_name],
+            additional_info=[property_key_name] if property_key_name else None,
         )
 
     @property
@@ -409,8 +413,10 @@ class ZWaveListSensor(ZwaveSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
+        if (value := self.info.primary_value.value) is None:
+            return None
         # add the value's int value as property for multi-value (list) items
-        return {ATTR_VALUE: self.info.primary_value.value}
+        return {ATTR_VALUE: value}
 
 
 class ZWaveConfigParameterSensor(ZwaveSensorBase):
@@ -430,11 +436,12 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         )
         self._primary_value = cast(ConfigurationValue, self.info.primary_value)
 
+        property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
         self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[self.info.primary_value.property_key_name],
+            additional_info=[property_key_name] if property_key_name else None,
             name_suffix="Config Parameter",
         )
 
@@ -458,10 +465,13 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
-        if self._primary_value.configuration_value_type == ConfigurationValueType.RANGE:
+        if (
+            self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
+            or (value := self.info.primary_value.value) is None
+        ):
             return None
         # add the value's int value as property for multi-value (list) items
-        return {ATTR_VALUE: self.info.primary_value.value}
+        return {ATTR_VALUE: value}
 
 
 class ZWaveNodeStatusSensor(SensorEntity):
