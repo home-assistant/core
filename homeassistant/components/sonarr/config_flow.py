@@ -1,7 +1,6 @@
 """Config flow for Sonarr."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -63,7 +62,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
