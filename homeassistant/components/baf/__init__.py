@@ -17,6 +17,7 @@ from .models import BAFData
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.FAN,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
