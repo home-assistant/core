@@ -195,6 +195,7 @@ homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
+homeassistant.components.sensibo.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
 homeassistant.components.senz.*

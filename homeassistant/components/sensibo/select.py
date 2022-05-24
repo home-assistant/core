@@ -82,7 +82,10 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return getattr(self.device_data, self.entity_description.remote_key)
+        option: str | None = getattr(
+            self.device_data, self.entity_description.remote_key
+        )
+        return option
 
     @property
     def options(self) -> list[str]:

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Optional, cast
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -56,21 +57,21 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Alive",
         icon="mdi:wifi",
-        value_fn=lambda data: data.alive,
+        value_fn=lambda data: cast(Optional[bool], data.alive),
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Main Sensor",
         icon="mdi:connection",
-        value_fn=lambda data: data.is_main_sensor,
+        value_fn=lambda data: cast(Optional[bool], data.is_main_sensor),
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
         icon="mdi:motion-sensor",
-        value_fn=lambda data: data.motion,
+        value_fn=lambda data: cast(Optional[bool], data.motion),
     ),
 )
 
@@ -80,7 +81,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         name="Room Occupied",
         icon="mdi:motion-sensor",
-        value_fn=lambda data: data.room_occupied,
+        value_fn=lambda data: cast(Optional[bool], data.room_occupied),
     ),
 )
 

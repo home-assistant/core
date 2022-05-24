@@ -1,6 +1,8 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -102,7 +104,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return self.device_data.humidity
+        humidity: int = self.device_data.humidity
+        return humidity
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -128,49 +131,57 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.device_data.target_temp
+        target_temp: int | None = self.device_data.target_temp
+        return target_temp
 
     @property
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
-        return self.device_data.temp_step
+        target_temp_step: int = self.device_data.temp_step
+        return target_temp_step
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self.device_data.fan_mode
+        fan_mode: str | None = self.device_data.fan_mode
+        return fan_mode
 
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        return self.device_data.fan_modes
+        fan_modes: list[str] | None = self.device_data.fan_modes
+        return fan_modes
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        return self.device_data.swing_mode
+        swing_mode: str | None = self.device_data.swing_mode
+        return swing_mode
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        return self.device_data.swing_modes
+        swing_modes: list[str] | None = self.device_data.swing_modes
+        return swing_modes
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self.device_data.temp_list[0]
+        min_temp: int = self.device_data.temp_list[0]
+        return min_temp
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.device_data.temp_list[-1]
+        max_temp: int = self.device_data.temp_list[-1]
+        return max_temp
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.device_data.available and super().available
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if "targetTemperature" not in self.device_data.active_features:
             raise HomeAssistantError(
@@ -255,7 +266,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             f"Could not set state for device {self.name} due to reason {failure}"
         )
 
-    async def async_assume_state(self, state) -> None:
+    async def async_assume_state(self, state: str) -> None:
         """Sync state with api."""
         await self._async_set_ac_state_property("on", state != HVACMode.OFF, True)
         await self.coordinator.async_refresh()

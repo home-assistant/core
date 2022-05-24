@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Optional, cast
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -67,7 +68,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="rssi",
         icon="mdi:wifi",
-        value_fn=lambda data: data.rssi,
+        value_fn=lambda data: cast(Optional[int], data.rssi),
         entity_registry_enabled_default=False,
     ),
     SensiboMotionSensorEntityDescription(
@@ -78,7 +79,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Battery Voltage",
         icon="mdi:battery",
-        value_fn=lambda data: data.battery_voltage,
+        value_fn=lambda data: cast(Optional[int], data.battery_voltage),
     ),
     SensiboMotionSensorEntityDescription(
         key="humidity",
@@ -87,7 +88,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Humidity",
         icon="mdi:water",
-        value_fn=lambda data: data.humidity,
+        value_fn=lambda data: cast(Optional[int], data.humidity),
     ),
     SensiboMotionSensorEntityDescription(
         key="temperature",
@@ -96,7 +97,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
         icon="mdi:thermometer",
-        value_fn=lambda data: data.temperature,
+        value_fn=lambda data: cast(Optional[float], data.temperature),
     ),
 )
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
@@ -107,13 +108,13 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="PM2.5",
         icon="mdi:air-filter",
-        value_fn=lambda data: data.pm25,
+        value_fn=lambda data: cast(Optional[int], data.pm25),
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
         name="Pure Sensitivity",
         icon="mdi:air-filter",
-        value_fn=lambda data: data.pure_sensitivity,
+        value_fn=lambda data: cast(Optional[str], data.pure_sensitivity),
     ),
 )
 
