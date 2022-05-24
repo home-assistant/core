@@ -34,11 +34,12 @@ from homeassistant.util.dt import utc_from_timestamp
 from .common import (
     ControllerData,
     SubscriptionRegistry,
+    fix_device_id_list,
     get_configured_platforms,
     get_controller_data,
+    new_options,
     set_controller_data,
 )
-from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN, VERA_ID_FORMAT
 
 _LOGGER = logging.getLogger(__name__)

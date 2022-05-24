@@ -3,16 +3,19 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
-from typing import NamedTuple
+import re
+from typing import Any, NamedTuple
 
 import pyvera as pv
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.event import call_later
 
 from .const import DOMAIN
+
+_LIST_REGEX = re.compile("[^0-9]+")
 
 
 class ControllerData(NamedTuple):
@@ -83,3 +86,23 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
             delay = 60
 
         self._schedule_poll(delay)
+
+
+def fix_device_id_list(data: list[Any]) -> list[int]:
+    """Fix the id list by converting it to a supported int list."""
+    return str_to_int_list(list_to_str(data))
+
+
+def str_to_int_list(data: str) -> list[int]:
+    """Convert a string to an int list."""
+    return [int(s) for s in _LIST_REGEX.split(data) if len(s) > 0]
+
+
+def list_to_str(data: list[Any]) -> str:
+    """Convert an int list to a string."""
+    return " ".join([str(i) for i in data])
+
+
+def new_options(lights: list[int], exclude: list[int]) -> dict[str, list[int]]:
+    """Create a standard options object."""
+    return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
