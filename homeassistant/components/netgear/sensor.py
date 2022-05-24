@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import RestoreSensor
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -332,7 +332,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity, RestoreEntity):
+class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity, RestoreSensor):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
