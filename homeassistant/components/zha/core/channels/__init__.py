@@ -277,7 +277,8 @@ class ChannelPool:
         pool = cls(channels, ep_id)
         pool.add_all_channels()
         pool.add_client_channels()
-        zha_disc.PROBE.discover_entities(pool)
+        if not channels.zha_device.is_coordinator:
+            zha_disc.PROBE.discover_entities(pool)
         return pool
 
     @callback
