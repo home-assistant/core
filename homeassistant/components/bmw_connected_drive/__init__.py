@@ -10,14 +10,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_get,
-    async_migrate_entries,
-)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -79,10 +74,10 @@ async def _async_migrate_entries(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
 
     @callback
-    def update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
         replacements = {
             "charging_level_hv": "remaining_battery_percent",
             "fuel_percent": "remaining_fuel_percent",
@@ -109,7 +104,7 @@ async def _async_migrate_entries(
             }
         return None
 
-    await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     return True
 
