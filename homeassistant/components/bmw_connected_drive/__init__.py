@@ -95,13 +95,13 @@ async def _async_migrate_entries(
                 entry.unique_id,
                 new_unique_id,
             )
-            if existing_entry := entity_registry.async_get_entity_id(
+            if existing_entity_id := entity_registry.async_get_entity_id(
                 entry.domain, entry.platform, new_unique_id
             ):
                 _LOGGER.debug(
                     "Cannot migrate to unique_id '%s', already exists for '%s'",
                     new_unique_id,
-                    existing_entry,
+                    existing_entity_id,
                 )
                 return None
             return {
