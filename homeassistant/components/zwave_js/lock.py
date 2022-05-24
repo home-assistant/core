@@ -61,8 +61,10 @@ async def async_setup_entry(
     @callback
     def async_add_lock(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Lock."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
-        entities.append(ZWaveLock(config_entry, client, info))
+        entities.append(ZWaveLock(config_entry, driver, info))
 
         async_add_entities(entities)
 

@@ -162,7 +162,9 @@ async def async_attach_trigger(
 
     dev_reg = dr.async_get(hass)
     for node in nodes:
-        device_identifier = get_device_id(node.client, node)
+        driver = node.client.driver
+        assert driver is not None  # The node comes from the driver.
+        device_identifier = get_device_id(driver, node)
         device = dev_reg.async_get_device({device_identifier})
         assert device
         value_id = get_value_id(node, command_class, property_, endpoint, property_key)
