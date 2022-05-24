@@ -37,7 +37,7 @@ DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
-MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/callback"
+MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
