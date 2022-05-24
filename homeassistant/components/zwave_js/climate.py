@@ -17,6 +17,7 @@ from zwave_js_server.const.command_class.thermostat import (
     ThermostatOperatingState,
     ThermostatSetpointType,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.climate import (
@@ -103,11 +104,13 @@ async def async_setup_entry(
     @callback
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Climate."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "dynamic_current_temp":
-            entities.append(DynamicCurrentTempClimate(config_entry, client, info))
+            entities.append(DynamicCurrentTempClimate(config_entry, driver, info))
         else:
-            entities.append(ZWaveClimate(config_entry, client, info))
+            entities.append(ZWaveClimate(config_entry, driver, info))
 
         async_add_entities(entities)
 
@@ -124,10 +127,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize thermostat."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._hvac_modes: dict[HVACMode, int | None] = {}
         self._hvac_presets: dict[str, int | None] = {}
         self._unit_value: ZwaveValue | None = None
@@ -479,10 +482,10 @@ class DynamicCurrentTempClimate(ZWaveClimate):
     """Representation of a thermostat that can dynamically use a different Zwave Value for current temp."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize thermostat."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.data_template = cast(
             DynamicCurrentTempClimateDataTemplate, self.info.platform_data_template
         )
