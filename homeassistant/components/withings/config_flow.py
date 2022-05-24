@@ -1,6 +1,7 @@
 """Config flow for Withings."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -79,7 +80,7 @@ class WithingsFlowHandler(
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Prompt user to re-authenticate."""
         if data is not None:
             return await self.async_step_user()
