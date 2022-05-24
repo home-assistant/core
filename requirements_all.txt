@@ -1035,7 +1035,7 @@ minio==5.0.10
 mitemp_bt==0.0.5
 
 # homeassistant.components.moehlenhoff_alpha2
-moehlenhoff-alpha2==1.1.2
+moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.7
@@ -2020,7 +2020,7 @@ pyvolumio==0.1.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.7.0
+pywemo==0.8.1
 
 # homeassistant.components.wilight
 pywilight==0.0.70
