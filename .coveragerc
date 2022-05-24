@@ -98,6 +98,7 @@ omit =
     homeassistant/components/baf/entity.py
     homeassistant/components/baf/fan.py
     homeassistant/components/baf/light.py
+    homeassistant/components/baf/number.py
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
