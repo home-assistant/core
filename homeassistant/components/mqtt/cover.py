@@ -1,6 +1,7 @@
 """Support for MQTT cover devices."""
 from __future__ import annotations
 
+import asyncio
 import functools
 from json import JSONDecodeError, loads as json_loads
 import logging
@@ -45,8 +46,10 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,7 +152,7 @@ def validate_options(value):
     return value
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -194,9 +197,16 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     validate_options,
+)
+
+# Configuring MQTT Covers under the cover platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    validate_options,
+    warn_for_legacy_schema(cover.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -212,7 +222,8 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT cover through configuration.yaml."""
+    """Set up MQTT covers configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, cover.DOMAIN, config, async_add_entities, _async_setup_entity
     )
@@ -223,7 +234,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT cover dynamically through MQTT discovery."""
+    """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, cover.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

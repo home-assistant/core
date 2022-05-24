@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from nexia.const import UNIT_CELSIUS
+from nexia.thermostat import NexiaThermostat
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +33,7 @@ async def async_setup_entry(
 
     # Thermostat / System Sensors
     for thermostat_id in nexia_home.get_thermostat_ids():
-        thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
 
         entities.append(
             NexiaThermostatSensor(

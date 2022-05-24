@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "\u8a8d\u8a3c",
-                    "content_type": "\u30b3\u30f3\u30c6\u30f3\u30c4\u306e\u7a2e\u985e",
                     "framerate": "\u30d5\u30ec\u30fc\u30e0\u30ec\u30fc\u30c8\uff08Hz\uff09",
                     "limit_refetch_to_url_change": "URL\u5909\u66f4\u6642\u306e\u518d\u53d6\u5f97\u3092\u5236\u9650\u3059\u308b",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "\u8a8d\u8a3c",
-                    "content_type": "\u30b3\u30f3\u30c6\u30f3\u30c4\u306e\u7a2e\u985e",
                     "framerate": "\u30d5\u30ec\u30fc\u30e0\u30ec\u30fc\u30c8\uff08Hz\uff09",
                     "limit_refetch_to_url_change": "URL\u5909\u66f4\u6642\u306e\u518d\u53d6\u5f97\u3092\u5236\u9650\u3059\u308b",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "rtsp_transport": "RTSP\u30c8\u30e9\u30f3\u30b9\u30dd\u30fc\u30c8\u30d7\u30ed\u30c8\u30b3\u30eb",
                     "still_image_url": "\u9759\u6b62\u753b\u50cf\u306eURL(\u4f8b: http://...)",
                     "stream_source": "\u30b9\u30c8\u30ea\u30fc\u30e0\u30bd\u30fc\u30b9\u306eURL(\u4f8b: rtsp://...)",
+                    "use_wallclock_as_timestamps": "\u30bf\u30a4\u30e0\u30b9\u30bf\u30f3\u30d7\u306bwallclock\u3092\u4f7f\u7528",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d",
                     "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "\u3053\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u306f\u3001\u4e00\u90e8\u306e\u30ab\u30e1\u30e9\u306e\u30bf\u30a4\u30e0\u30b9\u30bf\u30f3\u30d7\u5b9f\u88c5\u306e\u30d0\u30b0\u304b\u3089\u767a\u751f\u3059\u308b\u30bb\u30b0\u30e1\u30f3\u30c6\u30fc\u30b7\u30e7\u30f3\u3084\u30af\u30e9\u30c3\u30b7\u30e5\u306e\u554f\u984c\u3092\u4fee\u6b63\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059"
                 }
             }
         }

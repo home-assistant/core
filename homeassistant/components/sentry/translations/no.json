@@ -11,9 +11,7 @@
             "user": {
                 "data": {
                     "dsn": "Sentry DSN"
-                },
-                "description": "Fyll inn din Sentry DNS",
-                "title": ""
+                }
             }
         }
     },

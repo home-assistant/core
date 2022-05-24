@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API",
-                    "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "location": "Lokalizacja",
-                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa"
                 },
                 "description": "Aby uzyska\u0107 klucz API, zarejestruj si\u0119 na [Tomorrow.io](https://app.tomorrow.io/signup)."

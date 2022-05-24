@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, Event, State, callback
+from homeassistant.core import Context, CoreState, Event, State, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -28,6 +28,7 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
+from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import (
     Template,
     TemplateStateFromEntityId,
@@ -455,3 +456,21 @@ class TemplateEntity(Entity):
     async def async_update(self) -> None:
         """Call for forced update."""
         self._async_update()
+
+    async def async_run_script(
+        self,
+        script: Script,
+        *,
+        run_variables: _VarsType | None = None,
+        context: Context | None = None,
+    ) -> None:
+        """Run an action script."""
+        if run_variables is None:
+            run_variables = {}
+        return await script.async_run(
+            run_variables={
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                **run_variables,
+            },
+            context=context,
+        )

@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.camera.const import StreamType
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE
+from homeassistant.components.stream import FORMAT_CONTENT_TYPE
 from homeassistant.setup import async_setup_component
 
 

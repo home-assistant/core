@@ -15,16 +15,13 @@
                     "one": "Vuoto",
                     "other": "Vuoti"
                 },
-                "description": "Vuoi configurare {name}?",
-                "title": "Roku"
+                "description": "Vuoi configurare {name}?"
             },
             "ssdp_confirm": {
                 "data": {
                     "one": "Vuoto",
                     "other": "Vuoti"
-                },
-                "description": "Vuoi impostare {name}?",
-                "title": "Roku"
+                }
             },
             "user": {
                 "data": {

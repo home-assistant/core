@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -17,15 +17,11 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import history, statistics, websocket_api
+from . import statistics, websocket_api
 from .const import (
-    ATTR_APPLY_FILTER,
-    ATTR_KEEP_DAYS,
-    ATTR_REPACK,
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
     DOMAIN,
@@ -33,38 +29,11 @@ from .const import (
     SQLITE_URL_PREFIX,
 )
 from .core import Recorder
+from .services import async_register_services
 from .tasks import AddRecorderPlatformTask
 
 _LOGGER = logging.getLogger(__name__)
 
-
-SERVICE_PURGE = "purge"
-SERVICE_PURGE_ENTITIES = "purge_entities"
-SERVICE_ENABLE = "enable"
-SERVICE_DISABLE = "disable"
-
-
-SERVICE_PURGE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
-        vol.Optional(ATTR_REPACK, default=False): cv.boolean,
-        vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
-    }
-)
-
-ATTR_DOMAINS = "domains"
-ATTR_ENTITY_GLOBS = "entity_globs"
-
-SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
-).extend(cv.ENTITY_SERVICE_FIELDS)
-SERVICE_ENABLE_SCHEMA = vol.Schema({})
-SERVICE_DISABLE_SCHEMA = vol.Schema({})
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
@@ -196,8 +165,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.async_register()
     instance.start()
-    _async_register_services(hass, instance)
-    history.async_setup(hass)
+    async_register_services(hass, instance)
     statistics.async_setup(hass)
     websocket_api.async_setup(hass)
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
@@ -210,52 +178,4 @@ async def _process_recorder_platform(
 ) -> None:
     """Process a recorder platform."""
     instance: Recorder = hass.data[DATA_INSTANCE]
-    instance.queue.put(AddRecorderPlatformTask(domain, platform))
-
-
-@callback
-def _async_register_services(hass: HomeAssistant, instance: Recorder) -> None:
-    """Register recorder services."""
-
-    async def async_handle_purge_service(service: ServiceCall) -> None:
-        """Handle calls to the purge service."""
-        instance.do_adhoc_purge(**service.data)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
-    )
-
-    async def async_handle_purge_entities_service(service: ServiceCall) -> None:
-        """Handle calls to the purge entities service."""
-        entity_ids = await async_extract_entity_ids(hass, service)
-        domains = service.data.get(ATTR_DOMAINS, [])
-        entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
-
-        instance.do_adhoc_purge_entities(entity_ids, domains, entity_globs)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PURGE_ENTITIES,
-        async_handle_purge_entities_service,
-        schema=SERVICE_PURGE_ENTITIES_SCHEMA,
-    )
-
-    async def async_handle_enable_service(service: ServiceCall) -> None:
-        instance.set_enable(True)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_ENABLE,
-        async_handle_enable_service,
-        schema=SERVICE_ENABLE_SCHEMA,
-    )
-
-    async def async_handle_disable_service(service: ServiceCall) -> None:
-        instance.set_enable(False)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DISABLE,
-        async_handle_disable_service,
-        schema=SERVICE_DISABLE_SCHEMA,
-    )
+    instance.queue_task(AddRecorderPlatformTask(domain, platform))

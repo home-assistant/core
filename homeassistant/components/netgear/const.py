@@ -16,6 +16,9 @@ KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
 
+MODE_ROUTER = "0"
+MODE_AP = "1"
+
 # models using port 80 instead of 5000
 MODELS_PORT_80 = [
     "Orbi",
