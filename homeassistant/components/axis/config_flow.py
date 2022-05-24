@@ -52,7 +52,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
     def __init__(self) -> None:
         """Initialize the Axis config flow."""
         self.device_config: dict[str, Any] = {}
-        self.discovery_schema: vol.Schema | None = None
+        self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
         self.serial: str | None = None
 
     async def async_step_user(
@@ -102,19 +102,17 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
-        data_schema = self.discovery_schema or vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
+        data = self.discovery_schema or {
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        }
 
         return self.async_show_form(
             step_id="user",
             description_placeholders=self.device_config,
-            data_schema=data_schema,
+            data_schema=vol.Schema(data),
             errors=errors,
         )
 
@@ -148,14 +146,12 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             CONF_HOST: device_config[CONF_HOST],
         }
 
-        self.discovery_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
-                vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
-            }
-        )
+        self.discovery_schema = {
+            vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
+        }
 
         return await self.async_step_user()
 
@@ -222,14 +218,12 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        self.discovery_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_PORT, default=device[CONF_PORT]): int,
-            }
-        )
+        self.discovery_schema = {
+            vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=device[CONF_PORT]): int,
+        }
 
         return await self.async_step_user()
 
