@@ -110,7 +110,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         def logout() -> None:
             try:
-                connection.user_session.user.logout()  # type: ignore[union-attr]
+                conn.user_session.user.logout()  # type: ignore[union-attr]
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not logout", exc_info=True)
 
@@ -118,16 +118,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME) or ""
             password = user_input.get(CONF_PASSWORD) or ""
-            return Connection(
+            conn = Connection(
                 user_input[CONF_URL],
                 username=username,
                 password=password,
                 timeout=CONNECTION_TIMEOUT,
             )
+            return conn
 
         def get_device_info() -> tuple[GetResponseType, GetResponseType]:
             """Get router info."""
-            client = Client(connection)
+            client = Client(conn)
             try:
                 device_info = client.device.information()
             except Exception:  # pylint: disable=broad-except
@@ -147,7 +148,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return device_info, wlan_settings
 
         try:
-            connection = await self.hass.async_add_executor_job(try_connect, user_input)
+            conn = await self.hass.async_add_executor_job(try_connect, user_input)
         except LoginErrorUsernameWrongException:
             errors[CONF_USERNAME] = "incorrect_username"
         except LoginErrorPasswordWrongException:
