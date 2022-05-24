@@ -27,5 +27,14 @@
                 "title": "Integratie herauthenticeren"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant-toegang tot Google Agenda"
+                }
+            }
+        }
     }
 }
