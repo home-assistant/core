@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY
+from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -28,11 +29,13 @@ async def async_setup_entry(
     @callback
     def async_add_number(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave number entity."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "volume":
-            entities.append(ZwaveVolumeNumberEntity(config_entry, client, info))
+            entities.append(ZwaveVolumeNumberEntity(config_entry, driver, info))
         else:
-            entities.append(ZwaveNumberEntity(config_entry, client, info))
+            entities.append(ZwaveNumberEntity(config_entry, driver, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -48,10 +51,10 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     """Representation of a Z-Wave number entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveNumberEntity entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         if self.info.primary_value.metadata.writeable:
             self._target_value = self.info.primary_value
         else:
@@ -99,10 +102,10 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
     """Representation of a volume number entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveVolumeNumberEntity entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.correction_factor = int(
             self.info.primary_value.metadata.max - self.info.primary_value.metadata.min
         )

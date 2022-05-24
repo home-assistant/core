@@ -15,6 +15,7 @@ from zwave_js_server.const.command_class.multilevel_switch import (
     COVER_OPEN_PROPERTY,
     COVER_UP_PROPERTY,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
@@ -51,13 +52,15 @@ async def async_setup_entry(
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave cover."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "motorized_barrier":
-            entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
+            entities.append(ZwaveMotorizedBarrier(config_entry, driver, info))
         elif info.platform_hint == "window_shutter_tilt":
-            entities.append(ZWaveTiltCover(config_entry, client, info))
+            entities.append(ZWaveTiltCover(config_entry, driver, info))
         else:
-            entities.append(ZWaveCover(config_entry, client, info))
+            entities.append(ZWaveCover(config_entry, driver, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -105,11 +108,11 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZWaveCover entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         # Entity class attributes
         self._attr_device_class = CoverDeviceClass.WINDOW
@@ -188,11 +191,11 @@ class ZWaveTiltCover(ZWaveCover):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZWaveCover entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.data_template = cast(
             CoverTiltDataTemplate, self.info.platform_data_template
         )
@@ -233,11 +236,11 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZwaveMotorizedBarrier entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._target_state: ZwaveValue = self.get_zwave_value(
             TARGET_STATE_PROPERTY, add_to_watched_value_ids=False
         )

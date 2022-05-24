@@ -23,6 +23,7 @@ from zwave_js_server.const.command_class.color_switch import (
     TARGET_COLOR_PROPERTY,
     ColorComponent,
 )
+from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -72,11 +73,13 @@ async def async_setup_entry(
     @callback
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Light."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
 
         if info.platform_hint == "black_is_off":
-            async_add_entities([ZwaveBlackIsOffLight(config_entry, client, info)])
+            async_add_entities([ZwaveBlackIsOffLight(config_entry, driver, info)])
         else:
-            async_add_entities([ZwaveLight(config_entry, client, info)])
+            async_add_entities([ZwaveLight(config_entry, driver, info)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -101,10 +104,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     """Representation of a Z-Wave light."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._supports_color = False
         self._supports_rgbw = False
         self._supports_color_temp = False
@@ -445,10 +448,10 @@ class ZwaveBlackIsOffLight(ZwaveLight):
     """
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         self._last_color: dict[str, int] | None = None
         self._supported_color_modes.discard(ColorMode.BRIGHTNESS)

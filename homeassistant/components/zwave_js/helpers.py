@@ -110,29 +110,29 @@ def update_data_collection_preference(
 
 
 @callback
-def get_valueless_base_unique_id(client: ZwaveClient, node: ZwaveNode) -> str:
+def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
     """Return the base unique ID for an entity that is not based on a value."""
-    return f"{client.driver.controller.home_id}.{node.node_id}"
+    return f"{driver.controller.home_id}.{node.node_id}"
 
 
-def get_unique_id(client: ZwaveClient, value_id: str) -> str:
+def get_unique_id(driver: Driver, value_id: str) -> str:
     """Get unique ID from client and value ID."""
-    return f"{client.driver.controller.home_id}.{value_id}"
+    return f"{driver.controller.home_id}.{value_id}"
 
 
 @callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
+def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
     """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
+    return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
 @callback
-def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] | None:
+def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
     """Get extended device registry identifier for Z-Wave node."""
     if None in (node.manufacturer_id, node.product_type, node.product_id):
         return None
 
-    domain, dev_id = get_device_id(client, node)
+    domain, dev_id = get_device_id(driver, node)
     return (
         domain,
         f"{dev_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}",
