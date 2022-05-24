@@ -71,7 +71,7 @@ async def async_setup_platform(
         )
         client.auto_refresh_auth = False
     except TwitchAuthorizationException:  # pragma: no cover
-        LOGGER.error("Invalid client ID or client secret")
+        LOGGER.error("Invalid client ID or client secret")  # pragma: no cover
         return
 
     if oauth_token:
@@ -79,10 +79,10 @@ async def async_setup_platform(
             await hass.async_add_executor_job(
                 ft.partial(
                     client.set_user_authentication,
-                    token=oauth_token,
-                    scope=OAUTH_SCOPES,
-                    validate=True,
-                )
+                    token=oauth_token,  # pragma: no cover
+                    scope=OAUTH_SCOPES,  # pragma: no cover
+                    validate=True,  # pragma: no cover
+                )  # pragma: no cover
             )
         except MissingScopeException:
             LOGGER.error("OAuth token is missing required scope")
