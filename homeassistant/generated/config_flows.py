@@ -391,5 +391,6 @@ FLOWS = [
     "gardena_smart_system",
     "alexa_media",
     "samsungtv_smart",
-    "zwave_me"
+    "zwave_me",
+    "sonoff"
 ]
