@@ -492,13 +492,16 @@ async def test_subscribe_unsubscribe_logbook_stream(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
             "when": state.last_updated.timestamp(),
         }
     ]
+    assert msg["event"]["start_time"] == now.timestamp()
+    assert msg["event"]["end_time"] > msg["event"]["start_time"]
+    assert msg["event"]["partial"] is True
 
     hass.states.async_set("light.alpha", "on")
     hass.states.async_set("light.alpha", "off")
@@ -520,7 +523,14 @@ async def test_subscribe_unsubscribe_logbook_stream(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == [
         {
             "entity_id": "light.alpha",
             "state": "off",
@@ -560,7 +570,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "context_id": ANY,
             "domain": "automation",
@@ -624,7 +634,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
@@ -686,7 +696,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
@@ -716,7 +726,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
@@ -788,7 +798,10 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert "start_time" in msg["event"]
+    assert "end_time" in msg["event"]
+    assert msg["event"]["partial"] is True
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
@@ -805,7 +818,16 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert "start_time" in msg["event"]
+    assert "end_time" in msg["event"]
+    assert "partial" not in msg["event"]
+    assert msg["event"]["events"] == []
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]
+    assert msg["event"]["events"] == [
         {
             "entity_id": "light.small",
             "state": "off",
@@ -871,7 +893,8 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["partial"] is True
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
@@ -888,7 +911,14 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert "partial" not in msg["event"]
+    assert msg["event"]["events"] == []
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]
+    assert msg["event"]["events"] == [
         {
             "entity_id": "light.small",
             "state": "off",
@@ -962,7 +992,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
@@ -1048,7 +1078,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.is_light",
             "state": "on",
@@ -1060,13 +1090,21 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["partial"] is True
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.four_days_ago",
             "state": "off",
             "when": four_day_old_state.last_updated.timestamp(),
         }
     ]
+
+    # And finally a response without partial set to indicate no more
+    # historical data is coming
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
 
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
@@ -1123,7 +1161,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == []
+    assert msg["event"]["events"] == []
 
     hass.bus.async_fire("mock_event", {"device_id": device.id})
     await hass.async_block_till_done()
@@ -1131,7 +1169,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY}
     ]
 
@@ -1250,7 +1288,7 @@ async def test_live_stream_with_one_second_commit_interval(
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    recieved_rows.extend(msg["event"])
+    recieved_rows.extend(msg["event"]["events"])
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "6"})
 
@@ -1262,7 +1300,7 @@ async def test_live_stream_with_one_second_commit_interval(
         msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
         assert msg["id"] == 7
         assert msg["type"] == "event"
-        recieved_rows.extend(msg["event"])
+        recieved_rows.extend(msg["event"]["events"])
 
     # Make sure we get rows back in order
     assert recieved_rows == [
@@ -1326,7 +1364,7 @@ async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {
             "entity_id": "binary_sensor.is_light",
             "state": "off",
@@ -1437,7 +1475,7 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == []
+    assert msg["event"]["events"] == []
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "1"})
     await hass.async_block_till_done()
@@ -1445,7 +1483,7 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {"domain": "test", "message": "1", "name": "device name", "when": ANY}
     ]
 
@@ -1455,7 +1493,7 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    assert msg["event"] == [
+    assert msg["event"]["events"] == [
         {"domain": "test", "message": "2", "name": "device name", "when": ANY}
     ]
 
