@@ -507,11 +507,8 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     """Representation of a ZHA timer duration configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[14]
     _attr_min_value: float = 0x00
     _attr_max_value: float = 0x257
+    _attr_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return UNITS[72]

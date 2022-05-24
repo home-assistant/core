@@ -768,4 +768,5 @@ class TimeLeft(Sensor, id_suffix="time_left"):
 
     SENSOR_ATTR = "timer_time_left"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
     _unit = TIME_MINUTES
