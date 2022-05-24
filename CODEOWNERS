@@ -1005,6 +1005,7 @@ homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
 tests/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
+tests/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 tests/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne @home-assistant/core

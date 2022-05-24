@@ -1,6 +1,8 @@
 """The tests for an update of the Twitch component."""
 from unittest.mock import MagicMock, patch
 
+from twitchAPI.twitch import InvalidTokenException, MissingScopeException
+
 from homeassistant.components import sensor
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.setup import async_setup_component
@@ -78,6 +80,32 @@ async def test_init(hass):
     assert sensor_state.attributes["friendly_name"] == "channel123"
     assert sensor_state.attributes["views"] == 42
     assert sensor_state.attributes["followers"] == 24
+
+
+async def test_init_missing_scope(hass):
+    """Test initial config missing scope."""
+
+    twitch_mock = MagicMock()
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch", return_value=twitch_mock
+    ):
+        twitch_mock.set_user_authentication.side_effect = MissingScopeException
+        assert (
+            await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
+        )
+
+
+async def test_init_invalid_token(hass):
+    """Test initial config invalid token."""
+
+    twitch_mock = MagicMock()
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch", return_value=twitch_mock
+    ):
+        twitch_mock.set_user_authentication.side_effect = InvalidTokenException
+        assert (
+            await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
+        )
 
 
 async def test_offline(hass):
