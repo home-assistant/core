@@ -285,7 +285,7 @@ class Router:
                     .get("Ssids", {})
                     .get("Ssid", []),
                 ),
-                {"WifiEnable": "0"},
+                {},
             ),
         )
 

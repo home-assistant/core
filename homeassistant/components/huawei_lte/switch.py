@@ -37,7 +37,7 @@ async def async_setup_entry(
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
 
-    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH):
+    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH).get("WifiEnable"):
         switches.append(HuaweiLteWifiGuestNetworkSwitch(router))
 
     async_add_entities(switches, True)
