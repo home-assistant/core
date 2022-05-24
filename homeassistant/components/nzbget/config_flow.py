@@ -61,17 +61,6 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return NZBGetOptionsFlowHandler(config_entry)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initiated by configuration file."""
-        if CONF_SCAN_INTERVAL in user_input:
-            user_input[CONF_SCAN_INTERVAL] = user_input[
-                CONF_SCAN_INTERVAL
-            ].total_seconds()
-
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
