@@ -467,6 +467,7 @@ FLOWS = {
         "gardena_smart_system",
         "alexa_media",
         "samsungtv_smart",
+        "sonoff",
     ],
     "helper": [
         "derivative",
