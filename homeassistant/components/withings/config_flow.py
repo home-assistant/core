@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from withings_api.common import AuthScope
 
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 
@@ -29,7 +31,7 @@ class WithingsFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> dict:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": ",".join(
@@ -42,12 +44,12 @@ class WithingsFlowHandler(
             )
         }
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Override the create entry so user can select a profile."""
         self._current_data = data
         return await self.async_step_profile(data)
 
-    async def async_step_profile(self, data: dict) -> dict:
+    async def async_step_profile(self, data: dict[str, Any]) -> FlowResult:
         """Prompt the user to select a user profile."""
         errors = {}
         reauth_profile = (
@@ -77,7 +79,7 @@ class WithingsFlowHandler(
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict = None) -> dict:
+    async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Prompt user to re-authenticate."""
         if data is not None:
             return await self.async_step_user()
@@ -91,7 +93,7 @@ class WithingsFlowHandler(
             description_placeholders=placeholders,
         )
 
-    async def async_step_finish(self, data: dict) -> dict:
+    async def async_step_finish(self, data: dict[str, Any]) -> FlowResult:
         """Finish the flow."""
         self._current_data = {}
 
