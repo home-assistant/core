@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .test_common_new import (
+from .test_common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
