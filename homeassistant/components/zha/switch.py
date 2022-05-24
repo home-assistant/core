@@ -157,6 +157,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute: str
+    _zcl_inverter_attribute: str = ""
     _inverted = False
 
     @classmethod
@@ -211,14 +212,16 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        val = self._channel.cluster.get(self._zcl_attribute)
-        return bool(val) if not self._inverted else (not bool(val))
+        val = bool(self._channel.cluster.get(self._zcl_attribute))
+        invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
+        return (not val) if invert else val
 
     async def async_turn_on_off(self, state) -> None:
         """Turn the entity on or off."""
         try:
+            invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
             result = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: state if not self._inverted else not state}
+                {self._zcl_attribute: not state if invert else state}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -244,7 +247,10 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
             value = await self._channel.get_attribute_value(
                 self._zcl_attribute, from_cache=False
             )
-            _LOGGER.debug("read value=%s", value)
+            invert = await self._channel.get_attribute_value(
+                self._zcl_inverter_attribute, from_cache=False
+            )
+            _LOGGER.debug("read value=%s, inverter=%s", value, bool(invert))
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -258,4 +264,5 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    _zcl_attribute: str = "window_detection_function"
+    _zcl_attribute = "window_detection_function"
+    _zcl_inverter_attribute = "window_detection_function_inverter"
