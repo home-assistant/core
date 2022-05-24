@@ -74,9 +74,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     password=user_input[CONF_PASSWORD],
                 )
 
-                self.serial = device.vapix.serial_number
-                assert self.serial
-                await self.async_set_unique_id(format_mac(self.serial))
+                self.serial = serial_number = device.vapix.serial_number
+                await self.async_set_unique_id(format_mac(serial_number))
 
                 self._abort_if_unique_id_configured(
                     updates={
