@@ -53,7 +53,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         """Initialize the Axis config flow."""
         self.device_config: dict[str, Any] = {}
         self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
-        self.serial: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -74,8 +73,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     password=user_input[CONF_PASSWORD],
                 )
 
-                self.serial = serial_number = device.vapix.serial_number
-                await self.async_set_unique_id(format_mac(serial_number))
+                serial = device.vapix.serial_number
+                await self.async_set_unique_id(format_mac(serial))
 
                 self._abort_if_unique_id_configured(
                     updates={
@@ -94,7 +93,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     CONF_MODEL: device.vapix.product_number,
                 }
 
-                return await self._create_entry()
+                return await self._create_entry(serial)
 
             except AuthenticationRequired:
                 errors["base"] = "invalid_auth"
@@ -116,7 +115,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             errors=errors,
         )
 
-    async def _create_entry(self) -> FlowResult:
+    async def _create_entry(self, serial: str) -> FlowResult:
         """Create entry for device.
 
         Generate a name to be used as a prefix for device entities.
@@ -136,7 +135,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         self.device_config[CONF_NAME] = name
 
-        title = f"{model} - {self.serial}"
+        title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_reauth(self, device_config: dict[str, Any]) -> FlowResult:
