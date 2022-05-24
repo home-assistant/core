@@ -10,7 +10,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -75,3 +75,7 @@ class NetgearUpdateEntity(NetgearRouterEntity, UpdateEntity):
     ) -> None:
         """Install the latest firmware version."""
         await self._router.async_update_new_firmware()
+
+    @callback
+    def async_update_device(self) -> None:
+        """Update the Netgear device."""
