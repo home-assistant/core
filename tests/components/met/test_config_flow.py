@@ -125,21 +125,3 @@ async def test_onboarding_step_abort_no_home(hass, latitude, longitude):
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_home"
-
-
-async def test_import_step(hass):
-    """Test initializing via import step."""
-    test_data = {
-        "name": "home",
-        CONF_LONGITUDE: None,
-        CONF_LATITUDE: None,
-        CONF_ELEVATION: 0,
-        "track_home": True,
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=test_data
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "home"
-    assert result["data"] == test_data

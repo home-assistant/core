@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "code_expired": "Il codice di autenticazione \u00e8 scaduto o la configurazione delle credenziali non \u00e8 valida, riprova.",
+            "invalid_access_token": "Token di accesso non valido",
+            "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",
+            "oauth_error": "Ricevuti dati token non validi.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
+        },
+        "progress": {
+            "exchange": "Per collegare il tuo account Google, visita [{url}]({url}) e inserisci il codice: \n\n {user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Collega l'account Google"
+            },
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione di Google Calendar deve riautenticare il tuo account",
+                "title": "Autentica nuovamente l'integrazione"
+            }
+        }
+    }
+}

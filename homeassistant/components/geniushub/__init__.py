@@ -335,7 +335,6 @@ class GeniusHeatingZone(GeniusZone):
 
     _max_temp: float
     _min_temp: float
-    _supported_features: int
 
     @property
     def current_temperature(self) -> float | None:
@@ -361,11 +360,6 @@ class GeniusHeatingZone(GeniusZone):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the bitmask of supported features."""
-        return self._supported_features
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""

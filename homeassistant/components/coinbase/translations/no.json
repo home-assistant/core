@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Lommeboksaldoer som skal rapporteres.",
                     "exchange_base": "Standardvaluta for valutakurssensorer.",
-                    "exchange_rate_currencies": "Valutakurser som skal rapporteres."
+                    "exchange_rate_currencies": "Valutakurser som skal rapporteres.",
+                    "exchnage_rate_precision": "Antall desimaler for valutakurser."
                 },
                 "description": "Juster Coinbase-alternativer"
             }

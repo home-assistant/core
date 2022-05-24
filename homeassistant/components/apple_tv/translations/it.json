@@ -9,6 +9,7 @@
             "device_not_found": "Il dispositivo non \u00e8 stato trovato durante il rilevamento, prova ad aggiungerlo di nuovo.",
             "inconsistent_device": "I protocolli previsti non sono stati trovati durante il rilevamento. Questo normalmente indica un problema con DNS multicast (Zeroconf). Prova ad aggiungere di nuovo il dispositivo.",
             "invalid_config": "La configurazione per questo dispositivo \u00e8 incompleta. Prova ad aggiungerlo di nuovo.",
+            "ipv6_not_supported": "IPv6 non \u00e8 supportato.",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "setup_failed": "Impossibile configurare il dispositivo.",

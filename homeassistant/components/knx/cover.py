@@ -12,16 +12,9 @@ from homeassistant import config_entries
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -84,20 +77,24 @@ class KNXCover(KnxEntity, CoverEntity):
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         _supports_tilt = False
         self._attr_supported_features = (
-            SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
+            CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.SET_POSITION
         )
         if self._device.step.writable:
             _supports_tilt = True
             self._attr_supported_features |= (
-                SUPPORT_CLOSE_TILT | SUPPORT_OPEN_TILT | SUPPORT_STOP_TILT
+                CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.STOP_TILT
             )
         if self._device.supports_angle:
             _supports_tilt = True
-            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
         if self._device.supports_stop:
-            self._attr_supported_features |= SUPPORT_STOP
+            self._attr_supported_features |= CoverEntityFeature.STOP
             if _supports_tilt:
-                self._attr_supported_features |= SUPPORT_STOP_TILT
+                self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
             CoverDeviceClass.BLIND if _supports_tilt else None
@@ -163,10 +160,10 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
-        if not self._device.supports_angle:
-            return None
-        ang = self._device.current_angle()
-        return 100 - ang if ang is not None else None
+        if self._device.supports_angle:
+            ang = self._device.current_angle()
+            return 100 - ang if ang is not None else None
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""

@@ -327,6 +327,7 @@ async def test_camera_event(hass, auth, hass_client):
     assert browse.children[0].identifier == device.id
     assert browse.children[0].title == "Front: Recent Events"
     assert browse.children[0].can_expand
+    assert browse.children[0].can_play
     # Expanding the root does not expand the device
     assert len(browse.children[0].children) == 0
 
@@ -370,6 +371,13 @@ async def test_camera_event(hass, auth, hass_client):
     assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
+
+    # Resolving the device id points to the most recent event
+    media = await media_source.async_resolve_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}"
+    )
+    assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
+    assert media.mime_type == "image/jpeg"
 
 
 async def test_event_order(hass, auth):
@@ -787,6 +795,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client, mp4):
         browse.children[0].thumbnail
         == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
     )
+    assert browse.children[0].can_play
     # Browse to the device
     browse = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}"
@@ -805,7 +814,6 @@ async def test_camera_event_clip_preview(hass, auth, hass_client, mp4):
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
     assert browse.children[0].can_play
-    # No thumbnail support for mp4 clips yet
     assert (
         browse.children[0].thumbnail
         == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
@@ -867,7 +875,7 @@ async def test_event_media_render_invalid_event_id(hass, auth, hass_client):
     assert device.name == DEVICE_NAME
 
     client = await hass_client()
-    response = await client.get("/api/nest/event_media/{device.id}/invalid-event-id")
+    response = await client.get(f"/api/nest/event_media/{device.id}/invalid-event-id")
     assert response.status == HTTPStatus.NOT_FOUND, (
         "Response not matched: %s" % response
     )
@@ -878,7 +886,9 @@ async def test_event_media_failure(hass, auth, hass_client):
     subscriber = await async_setup_devices(
         hass, auth, CAMERA_DEVICE_TYPE, CAMERA_TRAITS
     )
+    received_events = async_capture_events(hass, NEST_EVENT)
 
+    # Failure from server when fetching media
     auth.responses = [
         aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
     ]
@@ -902,16 +912,24 @@ async def test_event_media_failure(hass, auth, hass_client):
     assert device
     assert device.name == DEVICE_NAME
 
+    # Verify events are published correctly
+    assert len(received_events) == 1
+    received_event = received_events[0]
+    assert received_event.data["device_id"] == device.id
+    assert received_event.data["type"] == "camera_person"
+    event_identifier = received_event.data["nest_event_id"]
+
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{EVENT_SESSION_ID}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
     )
-    assert media.url == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}"
+    assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
     assert media.mime_type == "image/jpeg"
 
+    # Media is not available to be fetched
     client = await hass_client()
     response = await client.get(media.url)
-    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR, (
+    assert response.status == HTTPStatus.NOT_FOUND, (
         "Response not matched: %s" % response
     )
 
@@ -973,6 +991,10 @@ async def test_multiple_devices(hass, auth, hass_client):
     assert device2
 
     # Very no events have been received yet
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert len(browse.children) == 2
+    assert not browse.children[0].can_play
+    assert not browse.children[1].can_play
     browse = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device1.id}"
     )
@@ -998,6 +1020,10 @@ async def test_multiple_devices(hass, auth, hass_client):
         )
         await hass.async_block_till_done()
 
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert len(browse.children) == 2
+    assert browse.children[0].can_play
+    assert not browse.children[1].can_play
     browse = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device1.id}"
     )
@@ -1020,6 +1046,10 @@ async def test_multiple_devices(hass, auth, hass_client):
         )
         await hass.async_block_till_done()
 
+    browse = await media_source.async_browse_media(hass, f"{const.URI_SCHEME}{DOMAIN}")
+    assert len(browse.children) == 2
+    assert browse.children[0].can_play
+    assert browse.children[1].can_play
     browse = await media_source.async_browse_media(
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device1.id}"
     )
@@ -1427,6 +1457,7 @@ async def test_camera_image_resize(hass, auth, hass_client):
         browse.children[0].thumbnail
         == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
     )
+    assert browse.children[0].can_play
 
     # Browse to device. No thumbnail is needed for the device on the device page
     browse = await media_source.async_browse_media(

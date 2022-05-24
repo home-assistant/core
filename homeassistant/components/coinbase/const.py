@@ -3,6 +3,8 @@
 CONF_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_BASE = "exchange_base"
 CONF_EXCHANGE_RATES = "exchange_rate_currencies"
+CONF_EXCHANGE_PRECISION = "exchange_rate_precision"
+CONF_EXCHANGE_PRECISION_DEFAULT = 2
 CONF_OPTIONS = "options"
 CONF_TITLE = "title"
 DOMAIN = "coinbase"

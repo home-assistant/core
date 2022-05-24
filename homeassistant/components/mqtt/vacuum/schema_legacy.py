@@ -6,18 +6,8 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
     ENTITY_ID_FORMAT,
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     VacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
@@ -33,36 +23,36 @@ from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 SERVICE_TO_STRING = {
-    SUPPORT_TURN_ON: "turn_on",
-    SUPPORT_TURN_OFF: "turn_off",
-    SUPPORT_PAUSE: "pause",
-    SUPPORT_STOP: "stop",
-    SUPPORT_RETURN_HOME: "return_home",
-    SUPPORT_FAN_SPEED: "fan_speed",
-    SUPPORT_BATTERY: "battery",
-    SUPPORT_STATUS: "status",
-    SUPPORT_SEND_COMMAND: "send_command",
-    SUPPORT_LOCATE: "locate",
-    SUPPORT_CLEAN_SPOT: "clean_spot",
+    VacuumEntityFeature.TURN_ON: "turn_on",
+    VacuumEntityFeature.TURN_OFF: "turn_off",
+    VacuumEntityFeature.PAUSE: "pause",
+    VacuumEntityFeature.STOP: "stop",
+    VacuumEntityFeature.RETURN_HOME: "return_home",
+    VacuumEntityFeature.FAN_SPEED: "fan_speed",
+    VacuumEntityFeature.BATTERY: "battery",
+    VacuumEntityFeature.STATUS: "status",
+    VacuumEntityFeature.SEND_COMMAND: "send_command",
+    VacuumEntityFeature.LOCATE: "locate",
+    VacuumEntityFeature.CLEAN_SPOT: "clean_spot",
 }
 
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 DEFAULT_SERVICES = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_STOP
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_STATUS
-    | SUPPORT_BATTERY
-    | SUPPORT_CLEAN_SPOT
+    VacuumEntityFeature.TURN_ON
+    | VacuumEntityFeature.TURN_OFF
+    | VacuumEntityFeature.STOP
+    | VacuumEntityFeature.RETURN_HOME
+    | VacuumEntityFeature.STATUS
+    | VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.CLEAN_SPOT
 )
 ALL_SERVICES = (
     DEFAULT_SERVICES
-    | SUPPORT_PAUSE
-    | SUPPORT_LOCATE
-    | SUPPORT_FAN_SPEED
-    | SUPPORT_SEND_COMMAND
+    | VacuumEntityFeature.PAUSE
+    | VacuumEntityFeature.LOCATE
+    | VacuumEntityFeature.FAN_SPEED
+    | VacuumEntityFeature.SEND_COMMAND
 )
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -372,7 +362,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner.
 
-        No need to check SUPPORT_BATTERY, this won't be called if battery_level is None.
+        No need to check VacuumEntityFeature.BATTERY, this won't be called if battery_level is None.
         """
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self._charging
@@ -385,7 +375,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
-        if self.supported_features & SUPPORT_TURN_ON == 0:
+        if self.supported_features & VacuumEntityFeature.TURN_ON == 0:
             return
 
         await self.async_publish(
@@ -400,7 +390,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off."""
-        if self.supported_features & SUPPORT_TURN_OFF == 0:
+        if self.supported_features & VacuumEntityFeature.TURN_OFF == 0:
             return None
 
         await self.async_publish(
@@ -415,7 +405,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
-        if self.supported_features & SUPPORT_STOP == 0:
+        if self.supported_features & VacuumEntityFeature.STOP == 0:
             return None
 
         await self.async_publish(
@@ -430,7 +420,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
-        if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
+        if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
             return None
 
         await self.async_publish(
@@ -445,7 +435,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
-        if self.supported_features & SUPPORT_LOCATE == 0:
+        if self.supported_features & VacuumEntityFeature.LOCATE == 0:
             return None
 
         await self.async_publish(
@@ -460,7 +450,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
-        if self.supported_features & SUPPORT_PAUSE == 0:
+        if self.supported_features & VacuumEntityFeature.PAUSE == 0:
             return None
 
         await self.async_publish(
@@ -475,7 +465,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
-        if self.supported_features & SUPPORT_RETURN_HOME == 0:
+        if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
             return None
 
         await self.async_publish(
@@ -491,7 +481,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         if (
-            self.supported_features & SUPPORT_FAN_SPEED == 0
+            self.supported_features & VacuumEntityFeature.FAN_SPEED == 0
         ) or fan_speed not in self._fan_speed_list:
             return None
 
@@ -507,7 +497,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
-        if self.supported_features & SUPPORT_SEND_COMMAND == 0:
+        if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
             return
         if params:
             message = {"command": command}

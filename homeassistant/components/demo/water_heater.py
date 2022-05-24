@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.components.water_heater import (
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -14,7 +12,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_FLAGS_HEATER = (
-    SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
+    WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    | WaterHeaterEntityFeature.OPERATION_MODE
+    | WaterHeaterEntityFeature.AWAY_MODE
 )
 
 
@@ -55,13 +55,15 @@ class DemoWaterHeater(WaterHeaterEntity):
         self._attr_name = name
         if target_temperature is not None:
             self._attr_supported_features = (
-                self.supported_features | SUPPORT_TARGET_TEMPERATURE
+                self.supported_features | WaterHeaterEntityFeature.TARGET_TEMPERATURE
             )
         if away is not None:
-            self._attr_supported_features = self.supported_features | SUPPORT_AWAY_MODE
+            self._attr_supported_features = (
+                self.supported_features | WaterHeaterEntityFeature.AWAY_MODE
+            )
         if current_operation is not None:
             self._attr_supported_features = (
-                self.supported_features | SUPPORT_OPERATION_MODE
+                self.supported_features | WaterHeaterEntityFeature.OPERATION_MODE
             )
         self._attr_target_temperature = target_temperature
         self._attr_temperature_unit = unit_of_measurement

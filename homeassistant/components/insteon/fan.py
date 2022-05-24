@@ -5,8 +5,8 @@ import math
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -46,6 +46,8 @@ async def async_setup_entry(
 class InsteonFanEntity(InsteonEntity, FanEntity):
     """An INSTEON fan entity."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
@@ -54,18 +56,12 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self._insteon_device_group.value)
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
-
-    @property
     def speed_count(self) -> int:
         """Flag supported features."""
         return 3
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

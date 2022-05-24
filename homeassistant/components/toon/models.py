@@ -10,10 +10,8 @@ from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
 
 
-class ToonEntity(CoordinatorEntity):
+class ToonEntity(CoordinatorEntity[ToonDataUpdateCoordinator]):
     """Defines a base Toon entity."""
-
-    coordinator: ToonDataUpdateCoordinator
 
 
 class ToonDisplayDeviceEntity(ToonEntity):

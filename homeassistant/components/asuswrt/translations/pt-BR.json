@@ -18,7 +18,7 @@
                     "mode": "Modo",
                     "name": "Nome",
                     "password": "Senha",
-                    "port": "Porta",
+                    "port": "Porta (deixe em branco para o protocolo padr\u00e3o)",
                     "protocol": "Protocolo de comunica\u00e7\u00e3o a ser usado",
                     "ssh_key": "Caminho para seu arquivo de chave SSH (em vez de senha)",
                     "username": "Usu\u00e1rio"

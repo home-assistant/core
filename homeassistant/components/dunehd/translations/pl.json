@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Konfiguracja integracji odtwarzacza Dune HD. Je\u015bli masz problemy z konfiguracj\u0105, przejd\u017a do strony: https://www.home-assistant.io/integrations/dunehd\n\nUpewnij si\u0119, \u017ce odtwarzacz jest w\u0142\u0105czony.",
+                "description": "Upewnij si\u0119, \u017ce odtwarzacz jest w\u0142\u0105czony.",
                 "title": "Dune HD"
             }
         }

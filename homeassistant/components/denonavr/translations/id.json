@@ -27,6 +27,9 @@
                 "data": {
                     "host": "Alamat IP"
                 },
+                "data_description": {
+                    "host": "Kosongkan untuk menggunakan penemuan otomatis"
+                },
                 "description": "Hubungkan ke Receiver Anda. Jika alamat IP tidak ditentukan, penemuan otomatis akan digunakan",
                 "title": "Network Receiver Denon AVR"
             }

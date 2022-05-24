@@ -69,7 +69,7 @@ async def async_browse_media(hass, media_content_type, media_content_id, platfor
     return await hass.async_add_executor_job(
         partial(
             browse_media,
-            plex_server,
+            hass,
             is_internal,
             media_content_type,
             media_content_id,
@@ -159,7 +159,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_SERVER],
             error,
         )
-        return False
+        # Retry as setups behind a proxy can return transient 404 or 502 errors
+        raise ConfigEntryNotReady from error
 
     _LOGGER.debug(
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use

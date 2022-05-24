@@ -6,9 +6,10 @@ from unittest.mock import patch
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3
+from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3, remove_device
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
@@ -366,8 +367,11 @@ async def test_device_remove_multiple_config_entries_2(
     mqtt_mock.async_publish.assert_not_called()
 
 
-async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg, setup_tasmota):
+async def test_device_remove_stale(
+    hass, hass_ws_client, mqtt_mock, caplog, device_reg, setup_tasmota
+):
     """Test removing a stale (undiscovered) device does not throw."""
+    assert await async_setup_component(hass, "config", {})
     mac = "00000049A3BC"
 
     config_entry = hass.config_entries.async_entries("tasmota")[0]
@@ -385,7 +389,7 @@ async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg, setup_ta
     assert device_entry is not None
 
     # Remove the device
-    device_reg.async_remove_device(device_entry.id)
+    await remove_device(hass, await hass_ws_client(hass), device_entry.id)
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(

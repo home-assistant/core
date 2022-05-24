@@ -13,12 +13,8 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
     STATE_PAUSED,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
@@ -32,9 +28,6 @@ from .hub import LitterRobotHub
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_LITTERROBOT = (
-    SUPPORT_START | SUPPORT_STATE | SUPPORT_STATUS | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
-)
 TYPE_LITTER_BOX = "Litter Box"
 
 SERVICE_RESET_WASTE_DRAWER = "reset_waste_drawer"
@@ -81,10 +74,13 @@ async def async_setup_entry(
 class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
-    @property
-    def supported_features(self) -> int:
-        """Flag cleaner robot features that are supported."""
-        return SUPPORT_LITTERROBOT
+    _attr_supported_features = (
+        VacuumEntityFeature.START
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.TURN_OFF
+        | VacuumEntityFeature.TURN_ON
+    )
 
     @property
     def state(self) -> str:

@@ -152,6 +152,7 @@ SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
 SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
+SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
 SONOS_CREATE_MIC_SENSOR = "sonos_create_mic_sensor"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"
@@ -170,6 +171,20 @@ SOURCE_AIRPLAY = "AirPlay"
 SOURCE_LINEIN = "Line-in"
 SOURCE_SPOTIFY_CONNECT = "Spotify Connect"
 SOURCE_TV = "TV"
+
+MODELS_LINEIN_ONLY = (
+    "CONNECT",
+    "CONNECT:AMP",
+    "PORT",
+    "PLAY:5",
+)
+MODELS_TV_ONLY = (
+    "ARC",
+    "BEAM",
+    "PLAYBAR",
+    "PLAYBASE",
+)
+MODELS_LINEIN_AND_TV = ("AMP",)
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5

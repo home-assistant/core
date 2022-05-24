@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus",
+            "service_unavailable_error": "API pole praegu saadaval, proovi hiljem uuesti.",
+            "unknown_auth_error": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Seadista Meater Cloudi konto."
+            }
+        }
+    }
+}

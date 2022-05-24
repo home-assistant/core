@@ -61,6 +61,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -166,6 +167,7 @@ async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -210,6 +212,7 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
     ]
     expected_triggers2 = [dict(expected_triggers1[0])]
@@ -692,10 +695,12 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
     # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await ws_client.send_json(
         {
             "id": 6,
-            "type": "mqtt/device/remove",
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
             "device_id": device_entry.id,
         }
     )
@@ -1005,10 +1010,12 @@ async def test_cleanup_trigger(hass, hass_ws_client, device_reg, entity_reg, mqt
     assert triggers[0]["type"] == "foo"
 
     # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await ws_client.send_json(
         {
             "id": 6,
-            "type": "mqtt/device/remove",
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
             "device_id": device_entry.id,
         }
     )

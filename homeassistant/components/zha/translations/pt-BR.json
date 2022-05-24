@@ -15,10 +15,10 @@
             },
             "pick_radio": {
                 "data": {
-                    "radio_type": "Tipo de r\u00e1dio"
+                    "radio_type": "Tipo de hub zigbee"
                 },
-                "description": "Escolha o tipo de seu r\u00e1dio Zigbee",
-                "title": "Tipo de r\u00e1dio"
+                "description": "Escolha o tipo de seu hub Zigbee",
+                "title": "Tipo de hub zigbee"
             },
             "port_config": {
                 "data": {
@@ -33,7 +33,7 @@
                 "data": {
                     "path": "Caminho do dispositivo serial"
                 },
-                "description": "Selecione a porta serial para o r\u00e1dio Zigbee",
+                "description": "Selecione a porta serial para o hub Zigbee",
                 "title": "ZHA"
             }
         }

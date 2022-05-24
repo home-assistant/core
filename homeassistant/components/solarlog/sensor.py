@@ -2,9 +2,9 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SolarlogData
 from .const import DOMAIN, SENSOR_TYPES, SolarLogSensorEntityDescription
@@ -20,7 +20,7 @@ async def async_setup_entry(
     )
 
 
-class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+class SolarlogSensor(CoordinatorEntity[SolarlogData], SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: SolarLogSensorEntityDescription

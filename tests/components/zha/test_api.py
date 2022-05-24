@@ -145,7 +145,7 @@ async def test_device_cluster_attributes(zha_client):
     msg = await zha_client.receive_json()
 
     attributes = msg["result"]
-    assert len(attributes) == 5
+    assert len(attributes) == 7
 
     for attribute in attributes:
         assert attribute[ID] is not None

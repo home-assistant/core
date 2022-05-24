@@ -6,6 +6,7 @@ from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
@@ -21,7 +22,6 @@ class _BaseFlowManagerView(HomeAssistantView):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
-    # pylint: disable=no-self-use
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
@@ -32,10 +32,8 @@ class _BaseFlowManagerView(HomeAssistantView):
             data.pop("data")
             return data
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
+        if "data_schema" not in result:
             return result
-
-        import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
         data = result.copy()
 

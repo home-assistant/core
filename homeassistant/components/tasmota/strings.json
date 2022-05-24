@@ -5,8 +5,6 @@
         "description": "Do you want to set up Tasmota?"
       },
       "config": {
-        "title": "Tasmota",
-        "description": "Please enter the Tasmota configuration.",
         "data": {
           "discovery_prefix": "Discovery topic prefix"
         }

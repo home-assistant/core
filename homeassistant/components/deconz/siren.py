@@ -1,19 +1,15 @@
 """Support for deCONZ siren."""
-
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.light import Siren
+from pydeconz.models.light.siren import Siren
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
     DOMAIN,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -21,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(
@@ -34,11 +30,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_siren(
-        lights: list[Siren] | ValuesView[Siren] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_siren(lights: list[Siren] | None = None) -> None:
         """Add siren from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.sirens.values())
 
         for light in lights:
 
@@ -66,20 +63,17 @@ class DeconzSiren(DeconzDevice, SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.DURATION
+    )
     _device: Siren
-
-    def __init__(self, device: Siren, gateway: DeconzGateway) -> None:
-        """Set up siren."""
-        super().__init__(device, gateway)
-
-        self._attr_supported_features = (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_DURATION
-        )
 
     @property
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return self._device.is_on  # type: ignore[no-any-return]
+        return self._device.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""

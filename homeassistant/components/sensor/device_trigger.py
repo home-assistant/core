@@ -17,10 +17,14 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
+from homeassistant.helpers.entity import (
+    get_capability,
+    get_device_class,
+    get_unit_of_measurement,
+)
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from . import DOMAIN, SensorDeviceClass
+from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -165,9 +169,10 @@ async def async_get_triggers(hass, device_id):
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not unit_of_measurement:
+        if not unit_of_measurement and not state_class:
             continue
 
         templates = ENTITY_TRIGGERS.get(

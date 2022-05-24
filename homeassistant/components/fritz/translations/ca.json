@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "ignore_ip6_link_local": "L'enlla\u00e7 amb adreces IPv6 locals no est\u00e0 perm\u00e8s",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "connection_error": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "upnp_not_configured": "Falta la configuraci\u00f3 UPnP al dispositiu."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Segons d'espera abans de considerar un dispositiu a 'casa'"
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu a 'casa'",
+                    "old_discovery": "Activa el m\u00e8tode de descobriment antic"
                 }
             }
         }

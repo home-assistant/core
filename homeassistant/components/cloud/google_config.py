@@ -9,8 +9,8 @@ from hass_nabucasa.google_report_state import ErrorResponse
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import CoreState, split_entity_id
-from homeassistant.helpers import entity_registry as er, start
+from homeassistant.core import CoreState, Event, callback, split_entity_id
+from homeassistant.helpers import device_registry as dr, entity_registry as er, start
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -103,6 +103,10 @@ class CloudGoogleConfig(AbstractConfig):
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
         )
+        self.hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            self._handle_device_registry_updated,
+        )
 
     def should_expose(self, state):
         """If a state object should be exposed."""
@@ -124,7 +128,10 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category is not None
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
 
@@ -214,9 +221,14 @@ class CloudGoogleConfig(AbstractConfig):
         self._cur_entity_prefs = prefs.google_entity_configs
         self._cur_default_expose = prefs.google_default_expose
 
-    async def _handle_entity_registry_updated(self, event):
+    @callback
+    def _handle_entity_registry_updated(self, event: Event) -> None:
         """Handle when entity registry updated."""
-        if not self.enabled or not self._cloud.is_logged_in:
+        if (
+            not self.enabled
+            or not self._cloud.is_logged_in
+            or self.hass.state != CoreState.running
+        ):
             return
 
         # Only consider entity registry updates if info relevant for Google has changed
@@ -230,7 +242,30 @@ class CloudGoogleConfig(AbstractConfig):
         if not self._should_expose_entity_id(entity_id):
             return
 
-        if self.hass.state != CoreState.running:
+        self.async_schedule_google_sync_all()
+
+    @callback
+    def _handle_device_registry_updated(self, event: Event) -> None:
+        """Handle when device registry updated."""
+        if (
+            not self.enabled
+            or not self._cloud.is_logged_in
+            or self.hass.state != CoreState.running
+        ):
+            return
+
+        # Device registry is only used for area changes. All other changes are ignored.
+        if event.data["action"] != "update" or "area_id" not in event.data["changes"]:
+            return
+
+        # Check if any exposed entity uses the device area
+        if not any(
+            entity_entry.area_id is None
+            and self._should_expose_entity_id(entity_entry.entity_id)
+            for entity_entry in er.async_entries_for_device(
+                er.async_get(self.hass), event.data["device_id"]
+            )
+        ):
             return
 
         self.async_schedule_google_sync_all()

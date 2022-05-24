@@ -4,7 +4,9 @@
             "address_already_configured": "Een ElkM1 met dit adres is al geconfigureerd",
             "already_configured": "Een ElkM1 met dit voorvoegsel is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "Het IP-adres of domein of seri\u00eble poort bij verbinding via serieel.",
-                    "device": "Apparaat",
-                    "password": "Wachtwoord",
-                    "prefix": "Een uniek voorvoegsel (laat dit leeg als u maar \u00e9\u00e9n ElkM1 heeft).",
-                    "protocol": "Protocol",
-                    "temperature_unit": "De temperatuureenheid die ElkM1 gebruikt.",
-                    "username": "Gebruikersnaam"
+                    "device": "Apparaat"
                 },
                 "description": "Kies een ontdekt systeem of 'Handmatige invoer' als er geen apparaten zijn ontdekt.",
                 "title": "Maak verbinding met Elk-M1 Control"

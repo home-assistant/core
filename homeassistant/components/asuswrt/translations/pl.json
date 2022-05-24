@@ -18,7 +18,7 @@
                     "mode": "Tryb",
                     "name": "Nazwa",
                     "password": "Has\u0142o",
-                    "port": "Port",
+                    "port": "Port (pozostaw puste dla domy\u015blnego protoko\u0142u)",
                     "protocol": "Wybierz protok\u00f3\u0142 komunikacyjny",
                     "ssh_key": "\u015acie\u017cka do pliku z kluczem SSH (zamiast has\u0142a)",
                     "username": "Nazwa u\u017cytkownika"

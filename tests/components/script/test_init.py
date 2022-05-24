@@ -1,6 +1,7 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import asyncio
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
@@ -25,13 +26,21 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import template
+from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.script import (
+    SCRIPT_MODE_CHOICES,
+    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_QUEUED,
+    SCRIPT_MODE_RESTART,
+    SCRIPT_MODE_SINGLE,
+    _async_stop_scripts_at_shutdown,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service, mock_restore_cache
+from tests.common import async_fire_time_changed, async_mock_service, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
@@ -198,7 +207,8 @@ async def test_reload_service(hass, running):
         await hass.async_block_till_done()
 
     if running != "same":
-        assert hass.states.get(ENTITY_ID) is None
+        state = hass.states.get(ENTITY_ID)
+        assert state.attributes["restored"] is True
         assert not hass.services.has_service(script.DOMAIN, "test")
 
         assert hass.states.get("script.test2") is not None
@@ -474,6 +484,11 @@ async def test_config_basic(hass):
     test_script = hass.states.get("script.test_script")
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
+
+    registry = er.async_get(hass)
+    entry = registry.async_get("script.test_script")
+    assert entry
+    assert entry.unique_id == "test_script"
 
 
 async def test_config_multiple_domains(hass):
@@ -790,3 +805,226 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
     state = hass.states.get("script.last_triggered")
     assert state
     assert state.attributes["last_triggered"] == time
+
+
+@pytest.mark.parametrize(
+    "script_mode,warning_msg",
+    (
+        (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
+        (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
+        (SCRIPT_MODE_RESTART, "Disallowed recursion detected"),
+        (SCRIPT_MODE_SINGLE, "Already running"),
+    ),
+)
+async def test_recursive_script(hass, script_mode, warning_msg, caplog):
+    """Test recursive script calls does not deadlock."""
+    # Make sure we cover all script modes
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script1"},
+                        {"service": "test.script"},
+                    ],
+                },
+            }
+        },
+    )
+
+    service_called = asyncio.Event()
+
+    async def async_service_handler(service):
+        service_called.set()
+
+    hass.services.async_register("test", "script", async_service_handler)
+
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(service_called.wait(), 1)
+
+    assert warning_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    "script_mode,warning_msg",
+    (
+        (SCRIPT_MODE_PARALLEL, "Maximum number of runs exceeded"),
+        (SCRIPT_MODE_QUEUED, "Disallowed recursion detected"),
+        (SCRIPT_MODE_RESTART, "Disallowed recursion detected"),
+        (SCRIPT_MODE_SINGLE, "Already running"),
+    ),
+)
+async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog):
+    """Test recursive script calls does not deadlock."""
+    # Make sure we cover all script modes
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script2"},
+                    ],
+                },
+                "script2": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script3"},
+                    ],
+                },
+                "script3": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script4"},
+                    ],
+                },
+                "script4": {
+                    "mode": script_mode,
+                    "sequence": [
+                        {"service": "script.script1"},
+                        {"service": "test.script"},
+                    ],
+                },
+            }
+        },
+    )
+
+    service_called = asyncio.Event()
+
+    async def async_service_handler(service):
+        service_called.set()
+
+    hass.services.async_register("test", "script", async_service_handler)
+
+    await hass.services.async_call("script", "script1")
+    await asyncio.wait_for(service_called.wait(), 1)
+
+    assert warning_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    "script_mode", [SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED, SCRIPT_MODE_RESTART]
+)
+async def test_recursive_script_turn_on(hass: HomeAssistant, script_mode, caplog):
+    """Test script turning itself on.
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    - SCRIPT_MODE_SINGLE is not relevant because suca script can't turn itself on
+    """
+    # Make sure we cover all script modes
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            script.DOMAIN,
+            {
+                script.DOMAIN: {
+                    "script1": {
+                        "mode": script_mode,
+                        "sequence": [
+                            {
+                                "choose": {
+                                    "conditions": {
+                                        "condition": "template",
+                                        "value_template": "{{ request == 'step_2' }}",
+                                    },
+                                    "sequence": {"service": "test.script_done"},
+                                },
+                                "default": {
+                                    "service": "script.turn_on",
+                                    "data": {
+                                        "entity_id": "script.script1",
+                                        "variables": {"request": "step_2"},
+                                    },
+                                },
+                            },
+                            {
+                                "service": "script.turn_on",
+                                "data": {"entity_id": "script.script1"},
+                            },
+                        ],
+                    }
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "script_done":
+                service_called.set()
+
+        hass.services.async_register("test", "script_done", async_service_handler)
+
+        await hass.services.async_call("script", "script1")
+        await asyncio.wait_for(service_called.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.state = CoreState.stopping
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text
+
+
+async def test_setup_with_duplicate_scripts(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup with duplicate configs."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script one": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+            "script two": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+        },
+    )
+    assert "Duplicate script detected with name: 'duplicate'" in caplog.text
+    assert len(hass.states.async_entity_ids("script")) == 1

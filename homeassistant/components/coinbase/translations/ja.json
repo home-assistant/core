@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "\u30a6\u30a9\u30ec\u30c3\u30c8\u306e\u6b8b\u9ad8\u3092\u5831\u544a\u3059\u308b\u3002",
                     "exchange_base": "\u70ba\u66ff\u30ec\u30fc\u30c8\u30bb\u30f3\u30b5\u30fc\u306e\u57fa\u6e96\u901a\u8ca8\u3002",
-                    "exchange_rate_currencies": "\u30ec\u30dd\u30fc\u30c8\u3059\u3079\u304d\u70ba\u66ff\u30ec\u30fc\u30c8"
+                    "exchange_rate_currencies": "\u30ec\u30dd\u30fc\u30c8\u3059\u3079\u304d\u70ba\u66ff\u30ec\u30fc\u30c8",
+                    "exchnage_rate_precision": "\u70ba\u66ff\u30ec\u30fc\u30c8\u306e\u5c0f\u6570\u70b9\u4ee5\u4e0b\u306e\u6841\u6570\u3002"
                 },
                 "description": "Coinbase\u30aa\u30d7\u30b7\u30e7\u30f3\u306e\u8abf\u6574"
             }

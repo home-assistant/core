@@ -11,29 +11,21 @@ import mpd
 from mpd.asyncio import MPDClient
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -59,18 +51,19 @@ DEFAULT_PORT = 6600
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
 SUPPORT_MPD = (
-    SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_CLEAR_PLAYLIST
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_SEEK
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -221,8 +214,14 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        # Time does not exist for streams
-        return self._currentsong.get("time")
+        if currentsong_time := self._currentsong.get("time"):
+            return currentsong_time
+
+        time_from_status = self._status.get("time")
+        if isinstance(time_from_status, str) and ":" in time_from_status:
+            return time_from_status.split(":")[1]
+
+        return None
 
     @property
     def media_position(self):
@@ -259,7 +258,10 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self._currentsong.get("artist")
+        artists = self._currentsong.get("artist")
+        if isinstance(artists, list):
+            return ", ".join(artists)
+        return artists
 
     @property
     def media_album_name(self):
@@ -358,9 +360,13 @@ class MpdDevice(MediaPlayerEntity):
 
         supported = SUPPORT_MPD
         if "volume" in self._status:
-            supported |= SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE
+            supported |= (
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_MUTE
+            )
         if self._playlists is not None:
-            supported |= SUPPORT_SELECT_SOURCE
+            supported |= MediaPlayerEntityFeature.SELECT_SOURCE
 
         return supported
 
@@ -445,8 +451,13 @@ class MpdDevice(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
-        _LOGGER.debug("Playing playlist: %s", media_id)
+        if media_source.is_media_source_id(media_id):
+            media_type = MEDIA_TYPE_MUSIC
+            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            media_id = async_process_play_media_url(self.hass, play_item.url)
+
         if media_type == MEDIA_TYPE_PLAYLIST:
+            _LOGGER.debug("Playing playlist: %s", media_id)
             if media_id in self._playlists:
                 self._currentplaylist = media_id
             else:
@@ -507,3 +518,11 @@ class MpdDevice(MediaPlayerEntity):
     async def async_media_seek(self, position):
         """Send seek command."""
         await self._client.seekcur(position)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )

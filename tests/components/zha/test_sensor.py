@@ -307,7 +307,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
                 "metering_device_type": 0x00,
                 "multiplier": 1,
                 "status": 0x00,
-                "summa_formatting": 0b1_0111_010,
+                "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x01,
             },
             {"instaneneous_demand"},
@@ -604,7 +604,11 @@ async def test_electrical_measurement_init(
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_voltage", "rms_current"},
-            {"electrical_measurement"},
+            {
+                "electrical_measurement",
+                "electrical_measurement_ac_frequency",
+                "electrical_measurement_power_factor",
+            },
             {
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_voltage",
@@ -613,11 +617,13 @@ async def test_electrical_measurement_init(
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            {"apparent_power", "rms_current"},
+            {"apparent_power", "rms_current", "ac_frequency", "power_factor"},
             {"electrical_measurement_rms_voltage", "electrical_measurement"},
             {
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_current",
+                "electrical_measurement_ac_frequency",
+                "electrical_measurement_power_factor",
             },
         ),
         (
@@ -628,6 +634,8 @@ async def test_electrical_measurement_init(
                 "electrical_measurement",
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_current",
+                "electrical_measurement_ac_frequency",
+                "electrical_measurement_power_factor",
             },
             set(),
         ),
@@ -814,7 +822,7 @@ async def test_se_summation_uom(
         "metering_device_type": 0x00,
         "multiplier": 1,
         "status": 0x00,
-        "summa_formatting": 0b1_0111_010,
+        "summation_formatting": 0b1_0111_010,
         "unit_of_measure": raw_uom,
     }
     await zha_device_joined(zigpy_device)
@@ -905,6 +913,9 @@ async def test_elec_measurement_skip_unsupported_attribute(
         "rms_current_max",
         "rms_voltage",
         "rms_voltage_max",
+        "power_factor",
+        "ac_frequency",
+        "ac_frequency_max",
     }
     for attr in all_attrs - supported_attributes:
         cluster.add_unsupported_attribute(attr)

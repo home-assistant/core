@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
+                    "dsn": "Sentry DSN"
                 },
                 "description": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0412\u0430\u0448 DSN Sentry",
                 "title": "Sentry"

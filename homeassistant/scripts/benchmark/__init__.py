@@ -6,7 +6,6 @@ import asyncio
 import collections
 from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime
 import json
 import logging
 from timeit import default_timer as timer
@@ -14,7 +13,7 @@ from typing import TypeVar
 
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
-from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
@@ -22,7 +21,7 @@ from homeassistant.util import dt as dt_util
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 BENCHMARKS: dict[str, Callable] = {}
 
@@ -54,7 +53,7 @@ async def run_benchmark(bench):
     await hass.async_stop()
 
 
-def benchmark(func: CALLABLE_T) -> CALLABLE_T:
+def benchmark(func: _CallableT) -> _CallableT:
     """Decorate to mark a benchmark."""
     BENCHMARKS[func.__name__] = func
     return func
@@ -115,34 +114,6 @@ async def fire_events_with_filter(hass):
     await hass.async_block_till_done()
 
     assert count == 0
-
-    return timer() - start
-
-
-@benchmark
-async def time_changed_helper(hass):
-    """Run a million events through time changed helper."""
-    count = 0
-    event = asyncio.Event()
-
-    @core.callback
-    def listener(_):
-        """Handle event."""
-        nonlocal count
-        count += 1
-
-        if count == 10**6:
-            event.set()
-
-    hass.helpers.event.async_track_time_change(listener, minute=0, second=0)
-    event_data = {ATTR_NOW: datetime(2017, 10, 10, 15, 0, 0, tzinfo=dt_util.UTC)}
-
-    for _ in range(10**6):
-        hass.bus.async_fire(EVENT_TIME_CHANGED, event_data)
-
-    start = timer()
-
-    await event.wait()
 
     return timer() - start
 

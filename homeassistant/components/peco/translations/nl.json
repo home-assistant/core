@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "county": "County"
+                },
+                "description": "Kies hieronder uw county",
+                "title": "PECO Uitval Teller"
+            }
+        }
+    }
+}

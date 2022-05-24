@@ -7,7 +7,18 @@
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
+        "flow_title": "{serial} ({host})",
         "step": {
+            "manual_device_entry": {
+                "data": {
+                    "host": "Hostitel"
+                }
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Hostitel"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostitel"

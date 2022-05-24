@@ -5,16 +5,9 @@ from pyvizio.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -48,7 +41,7 @@ CONF_NAME_SPACE = "NAME_SPACE"
 CONF_MESSAGE = "MESSAGE"
 CONF_VOLUME_STEP = "volume_step"
 
-DEFAULT_DEVICE_CLASS = DEVICE_CLASS_TV
+DEFAULT_DEVICE_CLASS = MediaPlayerDeviceClass.TV
 DEFAULT_NAME = "Vizio SmartCast"
 DEFAULT_TIMEOUT = 8
 DEFAULT_VOLUME_STEP = 1
@@ -56,21 +49,26 @@ DEFAULT_VOLUME_STEP = 1
 DEVICE_ID = "pyvizio"
 
 DOMAIN = "vizio"
-ICON = {DEVICE_CLASS_TV: "mdi:television", DEVICE_CLASS_SPEAKER: "mdi:speaker"}
+ICON = {
+    MediaPlayerDeviceClass.TV: "mdi:television",
+    MediaPlayerDeviceClass.SPEAKER: "mdi:speaker",
+}
 
 COMMON_SUPPORTED_COMMANDS = (
-    SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
+    MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 SUPPORTED_COMMANDS = {
-    DEVICE_CLASS_SPEAKER: COMMON_SUPPORTED_COMMANDS,
-    DEVICE_CLASS_TV: (
-        COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+    MediaPlayerDeviceClass.SPEAKER: COMMON_SUPPORTED_COMMANDS,
+    MediaPlayerDeviceClass.TV: (
+        COMMON_SUPPORTED_COMMANDS
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
     ),
 }
 
@@ -83,8 +81,8 @@ VIZIO_MUTE = "mute"
 # Since Vizio component relies on device class, this dict will ensure that changes to
 # the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
 VIZIO_DEVICE_CLASSES = {
-    DEVICE_CLASS_SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV: VIZIO_DEVICE_CLASS_TV,
+    MediaPlayerDeviceClass.SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
+    MediaPlayerDeviceClass.TV: VIZIO_DEVICE_CLASS_TV,
 }
 
 VIZIO_SCHEMA = {
@@ -92,7 +90,9 @@ VIZIO_SCHEMA = {
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.All(
-        cv.string, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])
+        cv.string,
+        vol.Lower,
+        vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
     ),
     vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=10)

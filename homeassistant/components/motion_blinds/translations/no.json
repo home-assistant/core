@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert",
+            "already_configured": "Enheten er allerede konfigurert , tilkoblingsinnstillingene er oppdatert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "connection_error": "Tilkobling mislyktes"
         },
@@ -9,7 +9,7 @@
             "discovery_error": "Kunne ikke oppdage en Motion Gateway",
             "invalid_interface": "Ugyldig nettverksgrensesnitt"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ( {ip_address} )",
         "step": {
             "connect": {
                 "data": {

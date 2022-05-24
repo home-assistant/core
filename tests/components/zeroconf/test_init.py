@@ -504,7 +504,7 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.object(
+    ), patch.dict(zc_gen.HOMEKIT, {"LIFX": "lifx"}, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -530,6 +530,10 @@ async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
     with patch.dict(
         zc_gen.ZEROCONF,
         {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"Smart Bridge": "lutron_caseta"},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -558,7 +562,7 @@ async def test_homekit_match_partial_fnmatch(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"YLDP*": "yeelight"}, clear=True,), patch.object(
+    ), patch.dict(zc_gen.HOMEKIT, {"YLDP*": "yeelight"}, clear=True), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -585,7 +589,7 @@ async def test_homekit_match_full(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.object(
+    ), patch.dict(zc_gen.HOMEKIT, {"BSB002": "hue"}, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -611,6 +615,10 @@ async def test_homekit_already_paired(hass, mock_async_zeroconf):
     with patch.dict(
         zc_gen.ZEROCONF,
         {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"AC02": "tado", "tado": "tado"},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -639,6 +647,10 @@ async def test_homekit_invalid_paring_status(hass, mock_async_zeroconf):
     with patch.dict(
         zc_gen.ZEROCONF,
         {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"Smart Bridge": "lutron_caseta"},
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -698,7 +710,7 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
         zc_gen.ZEROCONF,
         {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.object(
+    ), patch.dict(zc_gen.HOMEKIT, {"Rachio": "rachio"}, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -955,11 +967,11 @@ async def test_async_detect_interfaces_setting_empty_route_linux(
         await hass.async_block_till_done()
     assert mock_zc.mock_calls[0] == call(
         interfaces=[
-            "2001:db8::",
-            "fe80::1234:5678:9abc:def0",
+            "2001:db8::%1",
+            "fe80::1234:5678:9abc:def0%1",
             "192.168.1.5",
             "172.16.1.5",
-            "fe80::dead:beef:dead:beef",
+            "fe80::dead:beef:dead:beef%3",
         ],
         ip_version=IPVersion.All,
     )
@@ -1053,7 +1065,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
-        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef"],
+        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef%3"],
         ip_version=IPVersion.All,
     )
 

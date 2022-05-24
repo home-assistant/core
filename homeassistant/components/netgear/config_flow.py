@@ -1,5 +1,8 @@
 """Config flow to configure the Netgear integration."""
+from __future__ import annotations
+
 import logging
+from typing import cast
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -16,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.network import is_ipv4_address
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -119,11 +123,15 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Initialize flow from ssdp."""
-        updated_data = {}
+        updated_data: dict[str, str | int | bool] = {}
 
         device_url = urlparse(discovery_info.ssdp_location)
-        if device_url.hostname:
-            updated_data[CONF_HOST] = device_url.hostname
+        if hostname := device_url.hostname:
+            hostname = cast(str, hostname)
+            updated_data[CONF_HOST] = hostname
+
+        if not is_ipv4_address(str(hostname)):
+            return self.async_abort(reason="not_ipv4_address")
 
         _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
 

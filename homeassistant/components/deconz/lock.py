@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.light import Lock
-from pydeconz.sensor import DoorLock
+from pydeconz.models.light.lock import Lock
+from pydeconz.models.sensor.door_lock import DoorLock
 
 from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -28,11 +27,12 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock_from_light(
-        lights: list[Lock] | ValuesView[Lock] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_lock_from_light(lights: list[Lock] | None = None) -> None:
         """Add lock from deCONZ."""
         entities = []
+
+        if lights is None:
+            lights = list(gateway.api.lights.locks.values())
 
         for light in lights:
 
@@ -54,11 +54,12 @@ async def async_setup_entry(
     )
 
     @callback
-    def async_add_lock_from_sensor(
-        sensors: list[DoorLock] | ValuesView[DoorLock] = gateway.api.sensors.values(),
-    ) -> None:
+    def async_add_lock_from_sensor(sensors: list[DoorLock] | None = None) -> None:
         """Add lock from deCONZ."""
         entities = []
+
+        if sensors is None:
+            sensors = list(gateway.api.sensors.door_lock.values())
 
         for sensor in sensors:
 
@@ -92,7 +93,7 @@ class DeconzLock(DeconzDevice, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._device.is_locked  # type: ignore[no-any-return]
+        return self._device.is_locked
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""

@@ -16,7 +16,7 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -35,9 +35,7 @@ from .util.async_ import gather_with_concurrency
 if TYPE_CHECKING:
     from .core import HomeAssistant
 
-CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
-    "CALLABLE_T", bound=Callable[..., Any]
-)
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +58,24 @@ MAX_LOAD_CONCURRENTLY = 4
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
 
+class DHCPMatcherRequired(TypedDict, total=True):
+    """Matcher for the dhcp integration for required fields."""
+
+    domain: str
+
+
+class DHCPMatcherOptional(TypedDict, total=False):
+    """Matcher for the dhcp integration for optional fields."""
+
+    macaddress: str
+    hostname: str
+    registered_devices: bool
+
+
+class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
+    """Matcher for the dhcp integration."""
+
+
 class Manifest(TypedDict, total=False):
     """
     Integration manifest.
@@ -71,6 +87,7 @@ class Manifest(TypedDict, total=False):
     name: str
     disabled: str
     domain: str
+    integration_type: Literal["integration", "helper"]
     dependencies: list[str]
     after_dependencies: list[str]
     requirements: list[str]
@@ -164,20 +181,29 @@ async def async_get_custom_components(
     return cast(dict[str, "Integration"], reg_or_evt)
 
 
-async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
+async def async_get_config_flows(
+    hass: HomeAssistant,
+    type_filter: Literal["helper", "integration"] | None = None,
+) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
-    flows: set[str] = set()
-    flows.update(FLOWS)
-
     integrations = await async_get_custom_components(hass)
+    flows: set[str] = set()
+
+    if type_filter is not None:
+        flows.update(FLOWS[type_filter])
+    else:
+        for type_flows in FLOWS.values():
+            flows.update(type_flows)
+
     flows.update(
         [
             integration.domain
             for integration in integrations.values()
             if integration.config_flow
+            and (type_filter is None or integration.integration_type == type_filter)
         ]
     )
 
@@ -228,16 +254,16 @@ async def async_get_zeroconf(
     return zeroconf
 
 
-async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str | bool]]:
+async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
-    dhcp: list[dict[str, str | bool]] = DHCP.copy()
+    dhcp = cast(list[DHCPMatcher], DHCP.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.dhcp:
             continue
         for entry in integration.dhcp:
-            dhcp.append({"domain": integration.domain, **entry})
+            dhcp.append(cast(DHCPMatcher, {"domain": integration.domain, **entry}))
 
     return dhcp
 
@@ -457,6 +483,11 @@ class Integration:
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
+
+    @property
+    def integration_type(self) -> Literal["integration", "helper"]:
+        """Return the integration type."""
+        return self.manifest.get("integration_type", "integration")
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -787,7 +818,7 @@ class Helpers:
         return wrapped
 
 
-def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
+def bind_hass(func: _CallableT) -> _CallableT:
     """Decorate function to indicate that first argument is hass."""
     setattr(func, "__bind_hass", True)
     return func

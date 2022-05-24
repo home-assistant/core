@@ -57,18 +57,21 @@ async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_re
             "type": "turn_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": "light",
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": "light",
             "type": "toggle",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -102,6 +105,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
             "type": "is_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "condition": "device",
@@ -109,6 +113,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
             "type": "is_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -146,6 +151,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "changed_states",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "platform": "device",
@@ -153,6 +159,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "platform": "device",
@@ -160,6 +167,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "turned_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -403,13 +411,6 @@ async def test_async_get_device_automations_single_device_trigger(
     )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 3
-
-    # Test deprecated str automation_type works, to be removed in 2022.4
-    result = await device_automation.async_get_device_automations(
-        hass, "trigger", [device_entry.id]
-    )
-    assert device_entry.id in result
-    assert len(result[device_entry.id]) == 3  # toggled, turned_on, turned_off
 
 
 async def test_async_get_device_automations_all_devices_trigger(

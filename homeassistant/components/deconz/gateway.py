@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import asyncio
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
-from pydeconz import DeconzSession, errors, group, light, sensor
-from pydeconz.alarm_system import AlarmSystem as DeconzAlarmSystem
-from pydeconz.group import Group as DeconzGroup
-from pydeconz.light import DeconzLight
-from pydeconz.sensor import DeconzSensor
+from pydeconz import DeconzSession, errors
+from pydeconz.models import ResourceGroup
+from pydeconz.models.alarm_system import AlarmSystem as DeconzAlarmSystem
+from pydeconz.models.group import Group as DeconzGroup
+from pydeconz.models.light import LightBase as DeconzLight
+from pydeconz.models.sensor import SensorBase as DeconzSensor
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -37,8 +38,10 @@ from .const import (
     LOGGER,
     PLATFORMS,
 )
-from .deconz_event import DeconzAlarmEvent, DeconzEvent
 from .errors import AuthenticationRequired, CannotConnect
+
+if TYPE_CHECKING:
+    from .deconz_event import DeconzAlarmEvent, DeconzEvent
 
 
 class DeconzGateway:
@@ -59,22 +62,23 @@ class DeconzGateway:
         self.ignore_state_updates = False
 
         self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
+        self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
 
-        self.signal_new_group = f"deconz_new_group_{config_entry.entry_id}"
         self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
-        self.signal_new_scene = f"deconz_new_scene_{config_entry.entry_id}"
         self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
 
         self.deconz_resource_type_to_signal_new_device = {
-            group.RESOURCE_TYPE: self.signal_new_group,
-            light.RESOURCE_TYPE: self.signal_new_light,
-            group.RESOURCE_TYPE_SCENE: self.signal_new_scene,
-            sensor.RESOURCE_TYPE: self.signal_new_sensor,
+            ResourceGroup.LIGHT.value: self.signal_new_light,
+            ResourceGroup.SENSOR.value: self.signal_new_sensor,
         }
 
         self.deconz_ids: dict[str, str] = {}
         self.entities: dict[str, set[str]] = {}
         self.events: list[DeconzAlarmEvent | DeconzEvent] = []
+
+        self._option_allow_deconz_groups = self.config_entry.options.get(
+            CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
+        )
 
     @property
     def bridgeid(self) -> str:
@@ -156,6 +160,9 @@ class DeconzGateway:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
+        if self.api.config.mac is None:
+            return
+
         device_registry = dr.async_get(self.hass)
 
         # Host device
@@ -204,7 +211,7 @@ class DeconzGateway:
         deconz_ids = []
 
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(sensor.RESOURCE_TYPE)
+            self.async_add_device_callback(ResourceGroup.SENSOR.value)
 
         else:
             deconz_ids += [
@@ -214,10 +221,12 @@ class DeconzGateway:
             ]
 
         if self.option_allow_deconz_groups:
-            self.async_add_device_callback(group.RESOURCE_TYPE)
-
+            if not self._option_allow_deconz_groups:
+                async_dispatcher_send(self.hass, self.signal_reload_groups)
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
+
+        self._option_allow_deconz_groups = self.option_allow_deconz_groups
 
         entity_registry = er.async_get(self.hass)
 
@@ -239,7 +248,7 @@ class DeconzGateway:
 
     async def async_reset(self) -> bool:
         """Reset this gateway to default state."""
-        self.api.async_connection_status_callback = None
+        self.api.connection_status_callback = None
         self.api.close()
 
         await self.hass.config_entries.async_unload_platforms(
@@ -280,6 +289,6 @@ async def get_deconz_session(
         LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, errors.RequestError) as err:
+    except (asyncio.TimeoutError, errors.RequestError, errors.ResponseError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect from err

@@ -7,7 +7,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
@@ -88,6 +88,8 @@ async def async_setup_entry(
 class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     """Representation of an ONVIF camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, device, profile):
         """Initialize ONVIF camera entity."""
         ONVIFBaseEntity.__init__(self, device, profile)
@@ -102,14 +104,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._stream_uri = None
 
     @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_STREAM
-
-    @property
     def name(self) -> str:
         """Return the name of this camera."""
-        return f"{self.device.name} - {self.profile.name}"
+        return f"{self.device.name} {self.profile.name}"
 
     @property
     def unique_id(self) -> str:

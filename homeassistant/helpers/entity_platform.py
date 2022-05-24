@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import EntityRegistry, RegistryEntryDisabler
+from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -478,7 +478,7 @@ class EntityPlatform:
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
@@ -507,6 +507,10 @@ class EntityPlatform:
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
+            hidden_by: RegistryEntryHider | None = None
+            if not entity.entity_registry_visible_default:
+                hidden_by = RegistryEntryHider.INTEGRATION
+
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
@@ -516,6 +520,7 @@ class EntityPlatform:
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
+                hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
@@ -606,7 +611,7 @@ class EntityPlatform:
             self.hass.states.async_reserve(entity.entity_id)
 
         def remove_entity_cb() -> None:
-            """Remove entity from entities list."""
+            """Remove entity from entities dict."""
             self.entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)

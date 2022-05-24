@@ -27,6 +27,9 @@
                 "data": {
                     "host": "IP adresse"
                 },
+                "data_description": {
+                    "host": "La feltet st\u00e5 tomt hvis du vil bruke automatisk s\u00f8k"
+                },
                 "description": "Koble til mottakeren, hvis IP-adressen ikke er angitt, brukes automatisk oppdagelse",
                 "title": "Denon AVR Network Receivers"
             }

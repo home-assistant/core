@@ -14,12 +14,9 @@ import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -46,9 +43,11 @@ _LOGGER = logging.getLogger(__name__)
 
 # Estimated time it takes to complete a transition
 # from one state to another
-TRANSITION_COMPLETE_DURATION = 30
+TRANSITION_COMPLETE_DURATION = 40
 
 PARALLEL_UPDATES = 1
+
+RESYNC_DELAY = 60
 
 
 async def async_setup_entry(
@@ -103,6 +102,9 @@ def hass_position_to_hd(hass_position):
 class PowerViewShade(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
+    # The hub frequently reports stale states
+    _attr_assumed_state = True
+
     def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
@@ -112,19 +114,19 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
         self._current_cover_position = MIN_POSITION
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+            self._attr_supported_features |= CoverEntityFeature.STOP
+        self._forced_resync = None
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
-            supported_features |= SUPPORT_STOP
-        return supported_features
 
     @property
     def is_closed(self):
@@ -224,10 +226,12 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @callback
     def _async_cancel_scheduled_transition_update(self):
         """Cancel any previous updates."""
-        if not self._scheduled_transition_update:
-            return
-        self._scheduled_transition_update()
-        self._scheduled_transition_update = None
+        if self._scheduled_transition_update:
+            self._scheduled_transition_update()
+            self._scheduled_transition_update = None
+        if self._forced_resync:
+            self._forced_resync()
+            self._forced_resync = None
 
     @callback
     def _async_schedule_update_for_transition(self, steps):
@@ -260,6 +264,14 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         _LOGGER.debug("Processing scheduled update for %s", self.name)
         self._scheduled_transition_update = None
         await self._async_force_refresh_state()
+        self._forced_resync = async_call_later(
+            self.hass, RESYNC_DELAY, self._async_force_resync
+        )
+
+    async def _async_force_resync(self, *_):
+        """Force a resync after an update since the hub may have stale state."""
+        self._forced_resync = None
+        await self._async_force_refresh_state()
 
     async def _async_force_refresh_state(self):
         """Refresh the cover state and force the device cache to be bypassed."""
@@ -274,10 +286,14 @@ class PowerViewShade(ShadeEntity, CoverEntity):
             self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
+    async def async_will_remove_from_hass(self):
+        """Cancel any pending refreshes."""
+        self._async_cancel_scheduled_transition_update()
+
     @callback
     def _async_update_shade_from_group(self):
         """Update with new data from the coordinator."""
-        if self._scheduled_transition_update:
+        if self._scheduled_transition_update or self._forced_resync:
             # If a transition in in progress
             # the data will be wrong
             return

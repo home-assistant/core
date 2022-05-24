@@ -24,21 +24,9 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -81,7 +69,7 @@ SET_HVAC_RUN_MODE_SCHEMA = vol.All(
         {
             vol.Optional(ATTR_RUN_MODE): vol.In([HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]),
             vol.Optional(ATTR_HVAC_MODE): vol.In(
-                [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO]
+                [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
             ),
         }
     ),
@@ -97,29 +85,29 @@ SET_HVAC_RUN_MODE_SCHEMA = vol.All(
 #
 #
 HA_TO_NEXIA_HVAC_MODE_MAP = {
-    HVAC_MODE_HEAT: OPERATION_MODE_HEAT,
-    HVAC_MODE_COOL: OPERATION_MODE_COOL,
-    HVAC_MODE_HEAT_COOL: OPERATION_MODE_AUTO,
-    HVAC_MODE_AUTO: OPERATION_MODE_AUTO,
-    HVAC_MODE_OFF: OPERATION_MODE_OFF,
+    HVACMode.HEAT: OPERATION_MODE_HEAT,
+    HVACMode.COOL: OPERATION_MODE_COOL,
+    HVACMode.HEAT_COOL: OPERATION_MODE_AUTO,
+    HVACMode.AUTO: OPERATION_MODE_AUTO,
+    HVACMode.OFF: OPERATION_MODE_OFF,
 }
 NEXIA_TO_HA_HVAC_MODE_MAP = {
     value: key for key, value in HA_TO_NEXIA_HVAC_MODE_MAP.items()
 }
 
 HVAC_MODES = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
+    HVACMode.OFF,
+    HVACMode.AUTO,
+    HVACMode.HEAT_COOL,
+    HVACMode.HEAT,
+    HVACMode.COOL,
 ]
 
 NEXIA_SUPPORTED = (
-    SUPPORT_TARGET_TEMPERATURE_RANGE
-    | SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_FAN_MODE
-    | SUPPORT_PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.PRESET_MODE
 )
 
 
@@ -177,9 +165,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._has_dehumidify_support = self._thermostat.has_dehumidify_support()
         supported = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
-            supported |= SUPPORT_TARGET_HUMIDITY
+            supported |= ClimateEntityFeature.TARGET_HUMIDITY
         if self._has_emergency_heat:
-            supported |= SUPPORT_AUX_HEAT
+            supported |= ClimateEntityFeature.AUX_HEAT
         self._attr_supported_features = supported
         self._attr_preset_modes = self._zone.get_presets()
         self._attr_fan_modes = self._thermostat.get_fan_modes()
@@ -281,25 +269,25 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._zone.get_heating_setpoint()
 
     @property
-    def hvac_action(self) -> str:
+    def hvac_action(self) -> HVACAction:
         """Operation ie. heat, cool, idle."""
         system_status = self._thermostat.get_system_status()
         zone_called = self._zone.is_calling()
 
         if self._zone.get_requested_mode() == OPERATION_MODE_OFF:
-            return CURRENT_HVAC_OFF
+            return HVACAction.OFF
         if not zone_called:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         if system_status == SYSTEM_STATUS_COOL:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
         if system_status == SYSTEM_STATUS_HEAT:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if system_status == SYSTEM_STATUS_IDLE:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
+        return HVACAction.IDLE
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current mode, as the user-visible name."""
         mode = self._zone.get_requested_mode()
         hold = self._zone.is_in_permanent_hold()
@@ -310,7 +298,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         # heating and cooling to the
         # temp range.
         if hold and mode == OPERATION_MODE_AUTO:
-            return HVAC_MODE_HEAT_COOL
+            return HVACMode.HEAT_COOL
 
         return NEXIA_TO_HA_HVAC_MODE_MAP[mode]
 
@@ -412,9 +400,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self.set_hvac_mode(OPERATION_MODE_AUTO)
         self._signal_zone_update()
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the system mode (Auto, Heat_Cool, Cool, Heat, etc)."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             self._zone.call_return_to_schedule()
             self._zone.set_mode(mode=OPERATION_MODE_AUTO)
         else:

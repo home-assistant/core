@@ -20,13 +20,17 @@ from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import RecorderRuns, migration, models
+from homeassistant.components.recorder import migration, models
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.models import (
+    SCHEMA_VERSION,
+    RecorderRuns,
+    States,
+)
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done_without_instance, create_engine_test
+from .common import async_wait_recording_done, create_engine_test
 
 from tests.common import async_fire_time_changed
 
@@ -43,7 +47,7 @@ async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
@@ -52,7 +56,7 @@ async def test_schema_update_calls(hass):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
     update.assert_has_calls(
@@ -68,23 +72,25 @@ async def test_migration_in_progress(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch(
-        "homeassistant.components.recorder.create_engine", new=create_engine_test
-    ):
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.create_engine", new=create_engine_test):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
         await hass.data[DATA_INSTANCE].async_migration_event.wait()
         assert recorder.util.async_migration_in_progress(hass) is True
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
+    assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
 async def test_database_migration_failed(hass):
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
@@ -117,7 +123,7 @@ async def test_database_migration_encounters_corruption(hass):
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.migration.schema_is_current",
         side_effect=[False, True],
     ), patch(
@@ -131,7 +137,7 @@ async def test_database_migration_encounters_corruption(hass):
         )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
     assert move_away.called
@@ -141,7 +147,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     """Test we fail on database error when we cannot recover."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.migration.schema_is_current",
         side_effect=[False, True],
     ), patch(
@@ -176,10 +182,13 @@ async def test_events_during_migration_are_queued(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch(
-        "homeassistant.components.recorder.create_engine", new=create_engine_test
-    ):
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch("homeassistant.components.recorder.create_engine", new=create_engine_test):
         await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            hass,
+            "recorder",
+            {"recorder": {"db_url": "sqlite://", "commit_interval": 0}},
         )
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
@@ -188,10 +197,12 @@ async def test_events_during_migration_are_queued(hass):
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -200,11 +211,13 @@ async def test_events_during_migration_queue_exhausted(hass):
 
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
     ), patch.object(recorder, "MAX_QUEUE_BACKLOG", 1):
         await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            hass,
+            "recorder",
+            {"recorder": {"db_url": "sqlite://", "commit_interval": 0}},
         )
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
@@ -214,14 +227,18 @@ async def test_events_during_migration_queue_exhausted(hass):
         await hass.async_block_till_done()
         hass.states.async_set("my.entity", "off", {})
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
-        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 1
     hass.states.async_set("my.entity", "on", {})
-    await async_wait_recording_done_without_instance(hass)
-    db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
+    await async_wait_recording_done(hass)
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _get_native_states, hass, "my.entity"
+    )
     assert len(db_states) == 2
 
 
@@ -257,7 +274,7 @@ async def test_schema_migrate(hass, start_version):
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
-            start=self.recording_start, created=dt_util.utcnow()
+            start=self.run_history.recording_start, created=dt_util.utcnow()
         )
 
     def _instrument_migration(*args):
@@ -283,7 +300,7 @@ async def test_schema_migrate(hass, start_version):
             migration_version = res.schema_version
         migration_done.set()
 
-    with patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.create_engine", new=_create_engine_test
     ), patch(
         "homeassistant.components.recorder.Recorder._setup_run",
@@ -299,8 +316,8 @@ async def test_schema_migrate(hass, start_version):
         assert recorder.util.async_migration_in_progress(hass) is True
         migration_stall.set()
         await hass.async_block_till_done()
-        migration_done.wait()
-        await async_wait_recording_done_without_instance(hass)
+        await hass.async_add_executor_job(migration_done.wait)
+        await async_wait_recording_done(hass)
         assert migration_version == models.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True

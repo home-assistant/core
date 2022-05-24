@@ -9,6 +9,7 @@
             "device_not_found": "Urz\u0105dzenie nie zosta\u0142o znalezione podczas wykrywania, spr\u00f3buj doda\u0107 je ponownie.",
             "inconsistent_device": "Oczekiwane protoko\u0142y nie zosta\u0142y znalezione podczas wykrywania. Zwykle wskazuje to na problem z multicastem DNS (Zeroconf). Spr\u00f3buj ponownie doda\u0107 urz\u0105dzenie.",
             "invalid_config": "Konfiguracja tego urz\u0105dzenia jest niekompletna. Spr\u00f3buj doda\u0107 go ponownie.",
+            "ipv6_not_supported": "IPv6 nie jest obs\u0142ugiwany.",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "setup_failed": "Nie uda\u0142o si\u0119 skonfigurowa\u0107 urz\u0105dzenia.",

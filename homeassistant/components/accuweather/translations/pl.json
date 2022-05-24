@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
+        "create_entry": {
+            "default": "Niekt\u00f3re sensory nie s\u0105 domy\u015blnie w\u0142\u0105czone. Mo\u017cesz je w\u0142\u0105czy\u0107 w rejestrze encji po skonfigurowaniu integracji.\nPrognoza pogody nie jest domy\u015blnie w\u0142\u0105czona. Mo\u017cesz to w\u0142\u0105czy\u0107 w opcjach integracji."
+        },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_api_key": "Nieprawid\u0142owy klucz API",

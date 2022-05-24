@@ -293,7 +293,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=updated_ip_port)
 
         for progress in self._async_in_progress(include_uninitialized=True):
-            if progress["context"].get("unique_id") == normalized_hkid:
+            context = progress["context"]
+            if context.get("unique_id") == normalized_hkid and not context.get(
+                "pairing"
+            ):
                 if paired:
                     # If the device gets paired, we want to dismiss
                     # an existing discovery since we can no longer
@@ -350,6 +353,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_setup_controller()
 
         if pair_info and self.finish_pairing:
+            self.context["pairing"] = True
             code = pair_info["pairing_code"]
             try:
                 code = ensure_pin_format(

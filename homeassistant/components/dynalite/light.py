@@ -1,6 +1,6 @@
 """Support for Dynalite channels as lights."""
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,6 +22,9 @@ async def async_setup_entry(
 class DynaliteLight(DynaliteBase, LightEntity):
     """Representation of a Dynalite Channel as a Home Assistant Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
@@ -39,8 +42,3 @@ class DynaliteLight(DynaliteBase, LightEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         await self._device.async_turn_off(**kwargs)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS

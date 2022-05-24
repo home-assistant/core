@@ -12,8 +12,9 @@
                 "data": {
                     "code": "Code de la station"
                 },
-                "description": "Entrer le code de la station m\u00e9t\u00e9orologique (par exemple, ESCAT4300000043206)",
-                "title": "M\u00e9t\u00e9oclimatique"
+                "data_description": {
+                    "code": "Ressemble \u00e0 ESCAT4300000043206B"
+                }
             }
         }
     }

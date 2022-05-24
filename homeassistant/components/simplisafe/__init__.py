@@ -51,6 +51,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_CODE,
     CONF_TOKEN,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -90,7 +91,6 @@ from .const import (
     ATTR_EXIT_DELAY_HOME,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
-    CONF_USER_ID,
     DOMAIN,
     LOGGER,
 )
@@ -280,11 +280,13 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             "New SimpliSafe OAuth standard requires re-authentication"
         )
+    if CONF_USERNAME not in entry.data:
+        raise ConfigEntryAuthFailed("Need to re-auth with username/password")
 
     entry_updates = {}
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = entry.data[CONF_USER_ID]
+        entry_updates["unique_id"] = entry.data[CONF_USERNAME]
     if CONF_CODE in entry.data:
         # If an alarm code was provided as part of configuration.yaml, pop it out of
         # the config entry's data and move it to options:
@@ -598,7 +600,7 @@ class SimpliSafe:
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=self.entry.data[CONF_USER_ID],
+            name=self.entry.title,
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )

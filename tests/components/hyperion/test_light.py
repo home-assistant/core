@@ -23,6 +23,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import (
     RELOAD_AFTER_UPDATE_DELAY,
@@ -257,9 +259,9 @@ async def test_light_basic_properties(hass: HomeAssistant) -> None:
     # By default the effect list is the 3 external sources + 'Solid'.
     assert len(entity_state.attributes["effect_list"]) == 4
 
-    assert (
-        entity_state.attributes["supported_features"] == hyperion_light.SUPPORT_HYPERION
-    )
+    assert entity_state.attributes["color_mode"] == ColorMode.HS
+    assert entity_state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert entity_state.attributes["supported_features"] == LightEntityFeature.EFFECT
 
 
 async def test_light_async_turn_on(hass: HomeAssistant) -> None:

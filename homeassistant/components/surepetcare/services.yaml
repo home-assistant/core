@@ -16,10 +16,10 @@ set_lock_state:
       selector:
         select:
           options:
-            - 'locked_all'
-            - 'locked_in'
-            - 'locked_out'
-            - 'unlocked'
+            - "locked_all"
+            - "locked_in"
+            - "locked_out"
+            - "unlocked"
 
 set_pet_location:
   name: Set pet location
@@ -38,5 +38,5 @@ set_pet_location:
       selector:
         select:
           options:
-            - 'Inside'
-            - 'Outside'
+            - "Inside"
+            - "Outside"

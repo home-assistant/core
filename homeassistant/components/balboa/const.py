@@ -1,4 +1,6 @@
 """Constants for the Balboa Spa Client integration."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.climate.const import (
@@ -6,11 +8,8 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    HVACMode,
 )
-from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_OFF
 from homeassistant.const import Platform
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,10 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "balboa"
 
 CLIMATE_SUPPORTED_FANSTATES = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-CLIMATE_SUPPORTED_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+CLIMATE_SUPPORTED_MODES = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
 CONF_SYNC_TIME = "sync_time"
 DEFAULT_SYNC_TIME = False
-FAN_SUPPORTED_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE]
 
 AUX = "Aux"

@@ -18,7 +18,7 @@
                     "mode": "\u6a21\u5f0f",
                     "name": "\u540d\u7a31",
                     "password": "\u5bc6\u78bc",
-                    "port": "\u901a\u8a0a\u57e0",
+                    "port": "\u901a\u8a0a\u57e0 (\u4fdd\u6301\u7a7a\u767d\u4f7f\u7528\u9810\u8a2d\u5354\u5b9a)",
                     "protocol": "\u4f7f\u7528\u901a\u8a0a\u606f\u5354\u5b9a",
                     "ssh_key": "SSH \u91d1\u9470\u6a94\u6848\u8def\u5f91\uff08\u975e\u5bc6\u78bc\uff09",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"

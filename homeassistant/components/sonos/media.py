@@ -172,7 +172,8 @@ class SonosMedia:
             if et_uri_md:
                 self.channel = et_uri_md.title
 
-            if ct_md and ct_md.radio_show:
+            # Extra guards for S1 compatibility
+            if ct_md and hasattr(ct_md, "radio_show") and ct_md.radio_show:
                 radio_show = ct_md.radio_show.split(",")[0]
                 self.channel = " • ".join(filter(None, [self.channel, radio_show]))
 

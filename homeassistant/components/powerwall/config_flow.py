@@ -145,7 +145,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="confirm_discovery",
-            data_schema=vol.Schema({}),
             description_placeholders={
                 "name": self.title,
                 "ip_address": self.ip_address,
