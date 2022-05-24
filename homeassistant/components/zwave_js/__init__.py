@@ -234,9 +234,8 @@ async def start_platforms(
 
     LOGGER.info("Connection to Zwave JS Server initialized")
 
-    # After connecting the driver is created.
     if client.driver is None:
-        raise RuntimeError("Invalid driver state, client not connected.")
+        raise RuntimeError("Driver not ready.")
 
     await setup_driver(hass, entry, client, client.driver)
 
