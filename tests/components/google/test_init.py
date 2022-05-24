@@ -611,15 +611,18 @@ async def test_expired_token_requires_reauth(
 
 
 @pytest.mark.parametrize(
-    "calendars_config",
+    "calendars_config,write_calls",
     [
-        [
-            {
-                "cal_id": "ignored",
-                "entities": {"device_id": "existing", "name": "existing"},
-            }
-        ],
-        [],
+        (
+            [
+                {
+                    "cal_id": "ignored",
+                    "entities": {"device_id": "existing", "name": "existing"},
+                }
+            ],
+            True,
+        ),
+        ([], False),
     ],
     ids=["has_yaml", "no_yaml"],
 )
@@ -632,6 +635,7 @@ async def test_calendar_yaml_update(
     mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     calendars_config: dict[str, Any],
+    expect_write_calls: bool,
 ) -> None:
     """Test updating the yaml file with a new calendar."""
 
@@ -640,7 +644,7 @@ async def test_calendar_yaml_update(
     assert await component_setup()
 
     mock_calendars_yaml().read.assert_called()
-    if calendars_config:
+    if expect_write_calls:
         mock_calendars_yaml().write.assert_called()
     else:
         # Config is not updated if it does not already exist
