@@ -120,7 +120,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the UPnP/IGD config flow."""
         self._discoveries: list[SsdpServiceInfo] | None = None
 
-    async def async_step_user(self, user_input: Mapping | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
@@ -172,7 +174,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
-    async def async_step_import(self, import_info: Mapping | None) -> Mapping[str, Any]:
+    async def async_step_import(
+        self, import_info: Mapping[str, Any] | None
+    ) -> FlowResult:
         """Import a new UPnP/IGD device as a config entry.
 
         This flow is triggered by `async_setup`. If no device has been
@@ -275,7 +279,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
-        self, user_input: Mapping | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
         """Confirm integration via SSDP."""
         LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
