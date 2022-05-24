@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
+version     = "2022.6.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -21,7 +22,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Topic :: Home Automation",
 ]
-dynamic = ["version", "requires-python", "dependencies"]
+requires-python = ">=3.9.0"
+dynamic = ["dependencies"]
 
 [project.urls]
 "Source Code" = "https://github.com/home-assistant/core"
