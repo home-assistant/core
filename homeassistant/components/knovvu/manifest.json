@@ -3,6 +3,6 @@
   "name": "Knovvu TTS",
   "documentation": "https://www.knovvu.com/",
   "codeowners": ["@mrterdll"],
-  "requirements": [],
+  "requirements": ["pycryptodome==3.14.1"],
   "iot_class": "cloud_push"
 }

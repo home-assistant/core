@@ -1410,6 +1410,9 @@ pycomfoconnect==0.4
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
 
+# homeassistant.components.knovvu
+pycryptodome==3.14.1
+
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.4
 
