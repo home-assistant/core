@@ -5,13 +5,11 @@ from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
 )
-import pytest
 
 from homeassistant.components.iaqualink import config_flow
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_already_configured(hass, config_entry, config_data, step):
+async def test_already_configured(hass, config_entry, config_data):
     """Test config flow when iaqualink component is already setup."""
     config_entry.add_to_hass(hass)
 
@@ -19,21 +17,20 @@ async def test_already_configured(hass, config_entry, config_data, step):
     flow.hass = hass
     flow.context = {}
 
-    fname = f"async_step_{step}"
+    fname = "async_step_user"
     func = getattr(flow, fname)
     result = await func(config_data)
 
     assert result["type"] == "abort"
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_without_config(hass, step):
+async def test_without_config(hass):
     """Test config flow with no configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
     flow.context = {}
 
-    fname = f"async_step_{step}"
+    fname = "async_step_user"
     func = getattr(flow, fname)
     result = await func()
 
@@ -42,13 +39,12 @@ async def test_without_config(hass, step):
     assert result["errors"] == {}
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_with_invalid_credentials(hass, config_data, step):
+async def test_with_invalid_credentials(hass, config_data):
     """Test config flow with invalid username and/or password."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
-    fname = f"async_step_{step}"
+    fname = "async_step_user"
     func = getattr(flow, fname)
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
@@ -61,13 +57,12 @@ async def test_with_invalid_credentials(hass, config_data, step):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_service_exception(hass, config_data, step):
+async def test_service_exception(hass, config_data):
     """Test config flow encountering service exception."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
-    fname = f"async_step_{step}"
+    fname = "async_step_user"
     func = getattr(flow, fname)
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
@@ -80,14 +75,13 @@ async def test_service_exception(hass, config_data, step):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize("step", ["import", "user"])
-async def test_with_existing_config(hass, config_data, step):
+async def test_with_existing_config(hass, config_data):
     """Test config flow with existing configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
     flow.context = {}
 
-    fname = f"async_step_{step}"
+    fname = "async_step_user"
     func = getattr(flow, fname)
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
