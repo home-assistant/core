@@ -143,7 +143,8 @@ class BAFNumber(BAFEntity, NumberEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_value = float(self.entity_description.value_fn(self._device))
+        if (value := self.entity_description.value_fn(self._device)) is not None:
+            self._attr_value = float(value)
 
     async def async_set_value(self, value: float) -> None:
         """Set the value."""
