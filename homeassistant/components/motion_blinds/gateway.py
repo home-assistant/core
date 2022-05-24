@@ -3,7 +3,7 @@ import contextlib
 import logging
 import socket
 
-from motionblinds import AsyncMotionMulticast, DEVICE_TYPES_WIFI, MotionGateway
+from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, MotionGateway
 
 from homeassistant.components import network
 
