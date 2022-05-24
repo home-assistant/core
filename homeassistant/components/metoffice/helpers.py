@@ -38,7 +38,7 @@ def fetch_data(connection: datapoint.Manager, site, mode) -> MetOfficeData:
                 timestep
                 for day in forecast.days
                 for timestep in day.timesteps
-                if timestep.date > time_now
+                if timestep.date > time_now and timestep.date.hour > 6
             ],
             site,
         )
