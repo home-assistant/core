@@ -512,11 +512,6 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     _zcl_attribute: str = "timer_duration"
 
     @property
-    def icon(self):
-        """Return the icon to be used for this entity."""
-        return ICONS[14]
-
-    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return UNITS[72]
