@@ -611,7 +611,7 @@ async def test_expired_token_requires_reauth(
 
 
 @pytest.mark.parametrize(
-    "calendars_config,write_calls",
+    "calendars_config,expect_write_calls",
     [
         (
             [
