@@ -14,6 +14,9 @@ import voluptuous as vol
 from homeassistant.components import logbook
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook.models import LazyEventPartialState
+from homeassistant.components.logbook.processor import EventProcessor
+from homeassistant.components.logbook.queries.common import PSUEDO_EVENT_STATE_CHANGED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -95,15 +98,12 @@ async def test_service_call_create_logbook_entry(hass_):
     # Our service call will unblock when the event listeners have been
     # scheduled. This means that they may not have been processed yet.
     await async_wait_recording_done(hass_)
-    ent_reg = er.async_get(hass_)
+    event_processor = EventProcessor(hass_, (EVENT_LOGBOOK_ENTRY,))
 
     events = list(
-        logbook._get_events(
-            hass_,
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 2
@@ -137,15 +137,11 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorde
         },
     )
     await async_wait_recording_done(hass)
-    ent_reg = er.async_get(hass)
-
+    event_processor = EventProcessor(hass, (EVENT_LOGBOOK_ENTRY,))
     events = list(
-        logbook._get_events(
-            hass,
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 1
@@ -335,7 +331,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = logbook.PSUEDO_EVENT_STATE_CHANGED
+    row.event_type = PSUEDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
@@ -353,7 +349,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row, {})
+    return LazyEventPartialState(row, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
@@ -2738,3 +2734,66 @@ async def test_logbook_select_entities_context_id(hass, recorder_mock, hass_clie
     assert json_dict[3]["context_domain"] == "light"
     assert json_dict[3]["context_service"] == "turn_off"
     assert json_dict[3]["context_user_id"] == "9400facee45711eaa9308bfd3d19e474"
+
+
+async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock):
+    """Test logbook get_events with a context state."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook")
+        ]
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+    hass.states.async_set("light.kitchen1", STATE_OFF)
+    hass.states.async_set("light.kitchen2", STATE_OFF)
+
+    context = ha.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF, context=context)
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "light.kitchen1", STATE_ON, {"brightness": 100}, context=context
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "light.kitchen2", STATE_ON, {"brightness": 200}, context=context
+    )
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    results = response["result"]
+    assert results[1]["entity_id"] == "binary_sensor.is_light"
+    assert results[1]["state"] == "off"
+    assert "context_state" not in results[1]
+    assert results[2]["entity_id"] == "light.kitchen1"
+    assert results[2]["state"] == "on"
+    assert results[2]["context_entity_id"] == "binary_sensor.is_light"
+    assert results[2]["context_state"] == "off"
+    assert results[2]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert "context_event_type" not in results[2]
+    assert results[3]["entity_id"] == "light.kitchen2"
+    assert results[3]["state"] == "on"
+    assert results[3]["context_entity_id"] == "binary_sensor.is_light"
+    assert results[3]["context_state"] == "off"
+    assert results[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+    assert "context_event_type" not in results[3]

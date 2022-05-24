@@ -137,8 +137,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bluesound/ @thrawnarn
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
-/homeassistant/components/bond/ @bdraco @prystupa @joshs85
-/tests/components/bond/ @bdraco @prystupa @joshs85
+/homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
+/tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_shc/ @tschamm
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
@@ -558,6 +558,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
+/homeassistant/components/laundrify/ @xLarry
+/tests/components/laundrify/ @xLarry
 /homeassistant/components/lcn/ @alengwenus
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/lg_netcast/ @Drafteed
@@ -1203,8 +1205,8 @@ build.json @home-assistant/supervisor
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
-/homeassistant/components/yolink/ @YoSmart-Inc
-/tests/components/yolink/ @YoSmart-Inc
+/homeassistant/components/yolink/ @matrixd2
+/tests/components/yolink/ @matrixd2
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/zengge/ @emontnemery
