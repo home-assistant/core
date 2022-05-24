@@ -1,6 +1,7 @@
 """Config flow to configure Xiaomi Miio."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from re import search
 from typing import Any
@@ -128,7 +129,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or missing cloud credentials."""
         self.host = user_input[CONF_HOST]
         self.token = user_input[CONF_TOKEN]
