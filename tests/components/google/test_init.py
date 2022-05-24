@@ -644,11 +644,7 @@ async def test_calendar_yaml_update(
     assert await component_setup()
 
     mock_calendars_yaml().read.assert_called()
-    if expect_write_calls:
-        mock_calendars_yaml().write.assert_called()
-    else:
-        # Config is not updated if it does not already exist
-        mock_calendars_yaml().write.assert_not_called()
+    mock_calendars_yaml().write.called is expect_write_calls
 
     state = hass.states.get(TEST_API_ENTITY)
     assert state
