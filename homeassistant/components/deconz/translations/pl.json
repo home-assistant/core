@@ -97,7 +97,7 @@
         "step": {
             "deconz_devices": {
                 "data": {
-                    "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
+                    "allow_clip_sensor": "Zezwalaj na sensory deCONZ CLIP",
                     "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ",
                     "allow_new_devices": "Zezwalaj na automatyczne dodawanie nowych urz\u0105dze\u0144"
                 },

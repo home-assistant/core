@@ -2,12 +2,13 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import axis
-from homeassistant.components.axis.const import CONF_MODEL, DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,

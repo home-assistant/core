@@ -288,14 +288,10 @@ async def async_unload_entry(
 
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    isy = hass_isy_data[ISY994_ISY]
+    isy: ISY = hass_isy_data[ISY994_ISY]
 
-    def _stop_auto_update() -> None:
-        """Stop the isy auto update."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
-        isy.websocket.stop()
-
-    await hass.async_add_executor_job(_stop_auto_update)
+    _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+    isy.websocket.stop()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

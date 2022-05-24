@@ -12,7 +12,7 @@
             "reauth_confirm": {
                 "data": {
                     "area_id": "Ter\u00fclet ID",
-                    "name": "N\u00e9v",
+                    "name": "Elnevez\u00e9s",
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 }
@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "area_id": "Ter\u00fclet ID",
-                    "name": "N\u00e9v",
+                    "name": "Elnevez\u00e9s",
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 }

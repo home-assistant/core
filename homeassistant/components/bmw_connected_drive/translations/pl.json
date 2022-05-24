@@ -21,7 +21,7 @@
         "step": {
             "account_options": {
                 "data": {
-                    "read_only": "Tylko odczyt (tylko czujniki i powiadomienia, brak wykonywania us\u0142ug, brak blokady)",
+                    "read_only": "Tylko odczyt (tylko sensory i powiadomienia, brak wykonywania us\u0142ug, brak blokady)",
                     "use_location": "U\u017cyj lokalizacji Home Assistant do sondowania lokalizacji samochodu (wymagane w przypadku pojazd\u00f3w innych ni\u017c i3/i8 wyprodukowanych przed 7/2014)"
                 }
             }

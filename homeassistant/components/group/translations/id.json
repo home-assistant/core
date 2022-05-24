@@ -1,4 +1,200 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama"
+                },
+                "description": "Jika \"semua entitas\" diaktifkan, status grup akan menyala jika semua anggota nyala. Jika \"semua entitas\" dinonaktifkan, status grup akan menyala jika ada salah satu atau lebih anggota yang menyala.",
+                "title": "Tambahkan Grup"
+            },
+            "cover": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama",
+                    "title": "Tambahkan Grup"
+                },
+                "description": "Pilih opsi grup",
+                "title": "Tambahkan Grup"
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "fan": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama",
+                    "title": "Tambahkan Grup"
+                },
+                "description": "Pilih opsi grup",
+                "title": "Tambahkan Grup"
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "init": {
+                "data": {
+                    "group_type": "Jenis grup"
+                },
+                "description": "Pilih jenis grup"
+            },
+            "light": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama",
+                    "title": "Tambahkan Grup"
+                },
+                "description": "Jika \"semua entitas\" diaktifkan, status grup akan menyala jika semua anggota nyala. Jika \"semua entitas\" dinonaktifkan, status grup akan menyala jika ada salah satu atau lebih anggota yang menyala.",
+                "title": "Tambahkan Grup"
+            },
+            "light_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "lock": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama"
+                },
+                "title": "Tambahkan Grup"
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama",
+                    "title": "Tambahkan Grup"
+                },
+                "description": "Pilih opsi grup",
+                "title": "Tambahkan Grup"
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Anggota grup"
+                },
+                "description": "Pilih opsi grup"
+            },
+            "switch": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota",
+                    "name": "Nama"
+                },
+                "title": "Tambahkan Grup"
+            },
+            "user": {
+                "data": {
+                    "group_type": "Jenis grup"
+                },
+                "description": "Grup memungkinkan Anda membuat entitas baru yang mewakili beberapa entitas dari jenis yang sama.",
+                "menu_options": {
+                    "binary_sensor": "Grup sensor biner",
+                    "cover": "Grup penutup",
+                    "fan": "Grup kipas",
+                    "light": "Grup lampu",
+                    "lock": "Grup kunci",
+                    "media_player": "Grup pemutar media",
+                    "switch": "Ganti sakelar"
+                },
+                "title": "Tambahkan Grup"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                },
+                "description": "Jika \"semua entitas\" diaktifkan, status grup akan menyala jika semua anggota nyala. Jika \"semua entitas\" dinonaktifkan, status grup akan menyala jika ada salah satu atau lebih anggota yang menyala."
+            },
+            "binary_sensor_options": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                }
+            },
+            "cover_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                }
+            },
+            "fan_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
+            },
+            "light": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                },
+                "description": "Jika \"semua entitas\" diaktifkan, status grup akan menyala jika semua anggota nyala. Jika \"semua entitas\" dinonaktifkan, status grup akan menyala jika ada salah satu atau lebih anggota yang menyala."
+            },
+            "light_options": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                }
+            },
+            "media_player_options": {
+                "data": {
+                    "entities": "Anggota"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "Semua entitas",
+                    "entities": "Anggota",
+                    "hide_members": "Sembunyikan anggota"
+                },
+                "description": "Jika \"semua entitas\" diaktifkan, status grup akan menyala jika semua anggota nyala. Jika \"semua entitas\" dinonaktifkan, status grup akan menyala jika ada salah satu atau lebih anggota yang menyala."
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Tertutup",

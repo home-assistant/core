@@ -1,6 +1,5 @@
 """The lock tests for the august platform."""
-
-from homeassistant.components.climate.const import HVAC_MODE_HEAT_COOL
+from homeassistant.components.climate.const import HVACMode
 
 from .util import async_init_integration
 
@@ -11,7 +10,7 @@ async def test_climate_zones(hass):
     await async_init_integration(hass)
 
     state = hass.states.get("climate.nick_office")
-    assert state.state == HVAC_MODE_HEAT_COOL
+    assert state.state == HVACMode.HEAT_COOL
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
         "current_humidity": 52.0,
@@ -45,7 +44,7 @@ async def test_climate_zones(hass):
     )
 
     state = hass.states.get("climate.kitchen")
-    assert state.state == HVAC_MODE_HEAT_COOL
+    assert state.state == HVACMode.HEAT_COOL
 
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",

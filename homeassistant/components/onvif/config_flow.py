@@ -261,10 +261,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             await device.close()
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_configure(user_input)
-
 
 class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle ONVIF options."""

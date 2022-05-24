@@ -15,22 +15,9 @@ from homeassistant import util
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -61,17 +48,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEBOSTV = (
-    SUPPORT_TURN_OFF
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_STOP
+    MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.STOP
 )
 
-SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+SUPPORT_WEBOSTV_VOLUME = (
+    MediaPlayerEntityFeature.VOLUME_MUTE | MediaPlayerEntityFeature.VOLUME_STEP
+)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
@@ -169,7 +158,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             and (state := await self.async_get_last_state()) is not None
         ):
             self._supported_features = (
-                state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & ~SUPPORT_TURN_ON
+                state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & ~MediaPlayerEntityFeature.TURN_ON
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -232,7 +222,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if self._client.sound_output in ("external_arc", "external_speaker"):
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
             elif self._client.sound_output != "lineout":
-                supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+                supported = (
+                    supported
+                    | SUPPORT_WEBOSTV_VOLUME
+                    | MediaPlayerEntityFeature.VOLUME_SET
+                )
 
             self._supported_features = supported
 
@@ -322,7 +316,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
         if self._wrapper.turn_on:
-            return self._supported_features | SUPPORT_TURN_ON
+            return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
 

@@ -30,10 +30,8 @@ def async_refresh_after(
     return _async_wrap
 
 
-class CoordinatedTPLinkEntity(CoordinatorEntity):
+class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
     """Common base class for all coordinated tplink entities."""
-
-    coordinator: TPLinkDataUpdateCoordinator
 
     def __init__(
         self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator

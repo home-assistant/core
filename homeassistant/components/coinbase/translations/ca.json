@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Saldos de cartera a informar.",
                     "exchange_base": "Moneda base per als sensors de canvi de tipus.",
-                    "exchange_rate_currencies": "Tipus de canvi a informar."
+                    "exchange_rate_currencies": "Tipus de canvi a informar.",
+                    "exchnage_rate_precision": "Nombre de posicions decimals per als tipus de canvi."
                 },
                 "description": "Ajusta les opcions de Coinbase"
             }

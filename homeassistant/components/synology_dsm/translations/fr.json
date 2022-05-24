@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "missing_data": "Donn\u00e9es manquantes: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration",
             "otp_failed": "\u00c9chec de l'authentification en deux \u00e9tapes, r\u00e9essayez avec un nouveau code d'acc\u00e8s",
             "unknown": "Erreur inattendue"

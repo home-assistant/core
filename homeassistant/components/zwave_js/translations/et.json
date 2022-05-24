@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Kas seadistada Z-Wave JS lisandmoodul {name}?"
+            },
+            "zeroconf_confirm": {
+                "description": "Kas lisada Z-Wave JS-server, mille ID {home_id} on leitud aadressil {url}, Home Assistant'ile?",
+                "title": "Avastatud Z-Wave JS Server"
             }
         }
     },

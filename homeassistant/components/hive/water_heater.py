@@ -5,8 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
-    SUPPORT_OPERATION_MODE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, TEMP_CELSIUS
@@ -24,7 +24,6 @@ from .const import (
     WATER_HEATER_MODES,
 )
 
-SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 HOTWATER_NAME = "Hot Water"
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -75,6 +74,8 @@ async def async_setup_entry(
 class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     """Hive Water Heater Device."""
 
+    _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
+
     @property
     def unique_id(self):
         """Return unique ID of entity."""
@@ -91,11 +92,6 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
             sw_version=self.device["deviceData"]["version"],
             via_device=(DOMAIN, self.device["parentDevice"]),
         )
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
 
     @property
     def name(self):

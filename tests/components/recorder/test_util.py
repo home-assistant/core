@@ -1,5 +1,5 @@
 """Test util methods."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 import sqlite3
 from unittest.mock import MagicMock, patch
@@ -9,15 +9,21 @@ from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import run_information_with_session, util
+from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
-from homeassistant.components.recorder.util import end_incomplete_runs, session_scope
+from homeassistant.components.recorder.util import (
+    end_incomplete_runs,
+    is_second_sunday,
+    session_scope,
+)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file
+from .common import corrupt_db_file, run_information_with_session
 
-from tests.common import async_init_recorder_component
+from tests.common import SetupRecorderInstanceT, async_test_home_assistant
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -91,36 +97,68 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
-async def test_last_run_was_recently_clean(hass):
+async def test_last_run_was_recently_clean(
+    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass)
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
+    hass = await async_test_home_assistant(None)
+
+    return_values = []
+    real_last_run_was_recently_clean = util.last_run_was_recently_clean
+
+    def _last_run_was_recently_clean(cursor):
+        return_values.append(real_last_run_was_recently_clean(cursor))
+        return return_values[-1]
+
+    # Test last_run_was_recently_clean is not called on new DB
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        await async_setup_recorder_instance(hass, config)
+        await hass.async_block_till_done()
+        last_run_was_recently_clean_mock.assert_not_called()
+
+    # Restart HA, last_run_was_recently_clean should return True
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
+    await hass.async_stop()
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        hass = await async_test_home_assistant(None)
+        await async_setup_recorder_instance(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is True
 
-    assert (
-        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-        is False
-    )
-
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE]._end_session)
+    # Restart HA with a long downtime, last_run_was_recently_clean should return False
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-
-    assert (
-        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-        is True
-    )
+    await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock, patch(
         "homeassistant.components.recorder.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        assert (
-            await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-            is False
-        )
+        hass = await async_test_home_assistant(None)
+        await async_setup_recorder_instance(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is False
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_stop()
 
 
 @pytest.mark.parametrize(
@@ -546,11 +584,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_perodic_db_cleanups(hass_recorder):
-    """Test perodic db cleanups."""
+def test_periodic_db_cleanups(hass_recorder):
+    """Test periodic db cleanups."""
     hass = hass_recorder()
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
+        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -559,19 +597,43 @@ def test_perodic_db_cleanups(hass_recorder):
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-async def test_write_lock_db(hass, tmp_path):
+async def test_write_lock_db(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+):
     """Test database write lock."""
     from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
-    await async_init_recorder_component(hass, config)
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
+    await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 
     instance = hass.data[DATA_INSTANCE]
 
+    def _drop_table():
+        with instance.engine.connect() as connection:
+            connection.execute(text("DROP TABLE events;"))
+
     with util.write_lock_db_sqlite(instance):
         # Database should be locked now, try writing SQL command
-        with instance.engine.connect() as connection:
-            with pytest.raises(OperationalError):
-                connection.execute(text("DROP TABLE events;"))
+        with pytest.raises(OperationalError):
+            # This needs to be called in another thread since
+            # the lock method is BEGIN IMMEDIATE and since we have
+            # a connection per thread with sqlite now, we cannot do it
+            # in the same thread as the one holding the lock since it
+            # would be allowed to proceed as the goal is to prevent
+            # all the other threads from accessing the database
+            await hass.async_add_executor_job(_drop_table)
+
+
+def test_is_second_sunday():
+    """Test we can find the second sunday of the month."""
+    assert is_second_sunday(datetime(2022, 1, 9, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 2, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 3, 13, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 4, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+    assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
+
+    assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False

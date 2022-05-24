@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Este dispositivo WLED ya est\u00e1 configurado.",
-            "cannot_connect": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar",
+            "cct_unsupported": "Este dispositivo WLED utiliza canales CCT, que no son compatibles con esta integraci\u00f3n."
         },
         "error": {
             "cannot_connect": "No se pudo conectar"

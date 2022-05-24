@@ -11,10 +11,10 @@ import logging
 from typing import Any
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
+from async_upnp_client.const import AddressTupleVXType, DeviceOrServiceType, SsdpSource
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.ssdp import SSDP_PORT
-from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
+from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
+from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
@@ -241,13 +241,13 @@ async def _async_process_callbacks(
 
 @core_callback
 def _async_headers_match(
-    headers: Mapping[str, Any], match_dict: dict[str, str]
+    headers: CaseInsensitiveDict, lower_match_dict: dict[str, str]
 ) -> bool:
-    for header, val in match_dict.items():
+    for header, val in lower_match_dict.items():
         if val == MATCH_ALL:
             if header not in headers:
                 return False
-        elif headers.get(header) != val:
+        elif headers.get_lower(header) != val:
             return False
     return True
 
@@ -323,7 +323,7 @@ class Scanner:
     @property
     def _all_headers_from_ssdp_devices(
         self,
-    ) -> dict[tuple[str, str], Mapping[str, Any]]:
+    ) -> dict[tuple[str, str], CaseInsensitiveDict]:
         return {
             (ssdp_device.udn, dst): headers
             for ssdp_device in self._ssdp_devices
@@ -335,19 +335,21 @@ class Scanner:
     ) -> Callable[[], None]:
         """Register a callback."""
         if match_dict is None:
-            match_dict = {}
+            lower_match_dict = {}
+        else:
+            lower_match_dict = {k.lower(): v for k, v in match_dict.items()}
 
         # Make sure any entries that happened
         # before the callback was registered are fired
         for headers in self._all_headers_from_ssdp_devices.values():
-            if _async_headers_match(headers, match_dict):
+            if _async_headers_match(headers, lower_match_dict):
                 await _async_process_callbacks(
                     [callback],
                     await self._async_headers_to_discovery_info(headers),
                     SsdpChange.ALIVE,
                 )
 
-        callback_entry = (callback, match_dict)
+        callback_entry = (callback, lower_match_dict)
         self._callbacks.append(callback_entry)
 
         @core_callback
@@ -372,17 +374,10 @@ class Scanner:
 
     async def _async_build_source_set(self) -> set[IPv4Address | IPv6Address]:
         """Build the list of ssdp sources."""
-        adapters = await network.async_get_adapters(self.hass)
-        sources: set[IPv4Address | IPv6Address] = set()
-        if network.async_only_default_interface_enabled(adapters):
-            sources.add(IPv4Address("0.0.0.0"))
-            return sources
-
         return {
             source_ip
             for source_ip in await network.async_get_enabled_source_ips(self.hass)
-            if not source_ip.is_loopback
-            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            if not source_ip.is_loopback and not source_ip.is_global
         }
 
     async def async_scan(self, *_: Any) -> None:
@@ -401,11 +396,8 @@ class Scanner:
         # address. This matches pysonos' behavior
         # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
         for listener in self._ssdp_listeners:
-            try:
-                IPv4Address(listener.source_ip)
-            except ValueError:
-                continue
-            await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+            if is_ipv4_address(listener.source):
+                await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
 
     async def async_start(self) -> None:
         """Start the scanners."""
@@ -425,11 +417,26 @@ class Scanner:
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
+        # Devices are shared between all sources.
+        device_tracker = SsdpDeviceTracker()
         for source_ip in await self._async_build_source_set():
+            source_ip_str = str(source_ip)
+            if source_ip.version == 6:
+                source_tuple: AddressTupleVXType = (
+                    source_ip_str,
+                    0,
+                    0,
+                    int(getattr(source_ip, "scope_id")),
+                )
+            else:
+                source_tuple = (source_ip_str, 0)
+            source, target = determine_source_target(source_tuple)
             self._ssdp_listeners.append(
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
-                    source_ip=source_ip,
+                    source=source,
+                    target=target,
+                    device_tracker=device_tracker,
                 )
             )
         results = await asyncio.gather(
@@ -439,9 +446,9 @@ class Scanner:
         failed_listeners = []
         for idx, result in enumerate(results):
             if isinstance(result, Exception):
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Failed to setup listener for %s: %s",
-                    self._ssdp_listeners[idx].source_ip,
+                    self._ssdp_listeners[idx].source,
                     result,
                 )
                 failed_listeners.append(self._ssdp_listeners[idx])
@@ -451,13 +458,13 @@ class Scanner:
     @core_callback
     def _async_get_matching_callbacks(
         self,
-        combined_headers: SsdpHeaders,
+        combined_headers: CaseInsensitiveDict,
     ) -> list[SsdpCallback]:
         """Return a list of callbacks that match."""
         return [
             callback
-            for callback, match_dict in self._callbacks
-            if _async_headers_match(combined_headers, match_dict)
+            for callback, lower_match_dict in self._callbacks
+            if _async_headers_match(combined_headers, lower_match_dict)
         ]
 
     async def _ssdp_listener_callback(
@@ -480,9 +487,8 @@ class Scanner:
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
             info_desc = await self._async_get_description_dict(location) or {}
-            assert isinstance(combined_headers, CaseInsensitiveDict)
             matching_domains = self.integration_matchers.async_matching_domains(
-                CaseInsensitiveDict({**combined_headers.as_dict(), **info_desc})
+                CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
 
         if not callbacks and not matching_domains:
@@ -520,7 +526,7 @@ class Scanner:
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
-        self, headers: Mapping[str, Any]
+        self, headers: CaseInsensitiveDict
     ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
@@ -561,7 +567,7 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    combined_headers: Mapping[str, Any],
+    combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""

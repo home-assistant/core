@@ -11,12 +11,21 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_FALLBACK, DOMAIN, UNIQUE_ID
+from .const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_DEFAULT,
+    CONST_OVERLAY_TADO_OPTIONS,
+    DOMAIN,
+    UNIQUE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
 )
 
 
@@ -122,9 +131,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_FALLBACK, default=self.config_entry.options.get(CONF_FALLBACK)
-                ): bool,
+                vol.Optional(
+                    CONF_FALLBACK,
+                    default=self.config_entry.options.get(
+                        CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+                    ),
+                ): vol.In(CONST_OVERLAY_TADO_OPTIONS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

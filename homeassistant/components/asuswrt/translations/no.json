@@ -18,7 +18,7 @@
                     "mode": "Modus",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "Port (la st\u00e5 tomt for protokollstandard)",
                     "protocol": "Kommunikasjonsprotokoll som skal brukes",
                     "ssh_key": "Bane til SSH-n\u00f8kkelfilen (i stedet for passord)",
                     "username": "Brukernavn"

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van"
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve"
         },
         "error": {
             "cannot_authenticate": "Sikertelen hiteles\u00edt\u00e9s. A Gateway egy m\u00e1sik eszk\u00f6zzel van p\u00e1ros\u00edtva, mint p\u00e9ld\u00e1ul a Homekittel?",

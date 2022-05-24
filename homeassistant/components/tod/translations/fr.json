@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after": "Activ\u00e9 apr\u00e8s",
+                    "after_time": "Heure d'activation",
+                    "before": "D\u00e9sactiv\u00e9 apr\u00e8s",
+                    "before_time": "Heure de d\u00e9sactivation",
+                    "name": "Nom"
+                },
+                "description": "Cr\u00e9ez un capteur binaire qui s'active et se d\u00e9sactive en fonction de l'heure.",
+                "title": "Ajouter un capteur de moment de la journ\u00e9e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after": "Activ\u00e9 apr\u00e8s",
+                    "after_time": "Heure d'activation",
+                    "before": "D\u00e9sactiv\u00e9 apr\u00e8s",
+                    "before_time": "Heure de d\u00e9sactivation"
+                },
+                "description": "Cr\u00e9ez un capteur binaire qui s'active et se d\u00e9sactive en fonction de l'heure."
+            }
+        }
+    },
+    "title": "Capteur de moment de la journ\u00e9e"
+}

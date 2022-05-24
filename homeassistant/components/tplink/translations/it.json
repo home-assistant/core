@@ -25,7 +25,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Se si lascia vuoto l'host, l'individuazione verr\u00e0 utilizzata per trovare i dispositivi."
+                "description": "Se si lascia vuoto l'host, l'individuazione sar\u00e0 utilizzata per trovare i dispositivi."
             }
         }
     }

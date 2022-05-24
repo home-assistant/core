@@ -2,6 +2,7 @@
 import contextlib
 from datetime import timedelta
 import logging
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -43,8 +44,9 @@ def raise_if_exception_missing_str(ex, match_substrs):
     raise ex
 
 
-def get_schema_version(instance):
+def get_schema_version(instance: Any) -> int:
     """Get the schema version."""
+    assert instance.get_session is not None
     with session_scope(session=instance.get_session()) as session:
         res = (
             session.query(SchemaChanges)
@@ -54,7 +56,7 @@ def get_schema_version(instance):
         current_version = getattr(res, "schema_version", None)
 
         if current_version is None:
-            current_version = _inspect_schema_version(instance.engine, session)
+            current_version = _inspect_schema_version(session)
             _LOGGER.debug(
                 "No schema version found. Inspected version: %s", current_version
             )
@@ -62,13 +64,14 @@ def get_schema_version(instance):
         return current_version
 
 
-def schema_is_current(current_version):
+def schema_is_current(current_version: int) -> bool:
     """Check if the schema is current."""
     return current_version == SCHEMA_VERSION
 
 
-def migrate_schema(instance, current_version):
+def migrate_schema(instance: Any, current_version: int) -> None:
     """Check if the schema needs to be upgraded."""
+    assert instance.get_session is not None
     _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
     for version in range(current_version, SCHEMA_VERSION):
         new_version = version + 1
@@ -376,6 +379,7 @@ def _drop_foreign_key_constraints(instance, engine, table, columns):
 def _apply_update(instance, new_version, old_version):  # noqa: C901
     """Perform operations to bring schema up to date."""
     engine = instance.engine
+    dialect = engine.dialect.name
     if new_version == 1:
         _create_index(instance, "events", "ix_events_time_fired")
     elif new_version == 2:
@@ -540,7 +544,7 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
                             # https://github.com/home-assistant/core/issues/56104
                             text(
                                 f"ALTER TABLE {table} CONVERT TO "
-                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci LOCK=EXCLUSIVE"
+                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                             )
                         )
     elif new_version == 22:
@@ -638,12 +642,17 @@ def _apply_update(instance, new_version, old_version):  # noqa: C901
                 "statistics_short_term",
                 "ix_statistics_short_term_statistic_id_start",
             )
-
+    elif new_version == 25:
+        big_int = "INTEGER(20)" if dialect == "mysql" else "INTEGER"
+        _add_columns(instance, "states", [f"attributes_id {big_int}"])
+        _create_index(instance, "states", "ix_states_attributes_id")
+    elif new_version == 26:
+        _create_index(instance, "statistics_runs", "ix_statistics_runs_start")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
 
-def _inspect_schema_version(engine, session):
+def _inspect_schema_version(session):
     """Determine the schema version by inspecting the db structure.
 
     When the schema version is not present in the db, either db was just
@@ -652,7 +661,7 @@ def _inspect_schema_version(engine, session):
     version 1 are present to make the determination. Eventually this logic
     can be removed and we can assume a new db is being created.
     """
-    inspector = sqlalchemy.inspect(engine)
+    inspector = sqlalchemy.inspect(session.connection())
     indexes = inspector.get_indexes("events")
 
     for index in indexes:

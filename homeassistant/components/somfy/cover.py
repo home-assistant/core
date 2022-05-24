@@ -9,16 +9,9 @@ from pymfy.api.devices.category import Category
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
@@ -82,19 +75,19 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Flag supported features."""
         supported_features = 0
         if self.has_capability("open"):
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
         if self.has_capability("close"):
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
         if self.has_capability("stop"):
-            supported_features |= SUPPORT_STOP
+            supported_features |= CoverEntityFeature.STOP
         if self.has_capability("position"):
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
         if self.has_capability("rotation"):
             supported_features |= (
-                SUPPORT_OPEN_TILT
-                | SUPPORT_CLOSE_TILT
-                | SUPPORT_STOP_TILT
-                | SUPPORT_SET_TILT_POSITION
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
             )
 
         return supported_features

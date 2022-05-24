@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic
+from typing import Any
 
 from pyunifiprotect.data import Camera, RecordingMode, VideoMode
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ProtectSwitchEntityDescription(
-    ProtectSetableKeysMixin, SwitchEntityDescription, Generic[T]
+    ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
     """Describes UniFi Protect Switch entity."""
 
@@ -87,7 +87,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key=_KEY_PRIVACY_MODE,
         name="Privacy Mode",
         icon="mdi:eye-settings",
-        entity_category=None,
+        entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_privacy_mask",
         ufp_value="is_privacy_on",
     ),
@@ -137,7 +137,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="Detections: Person",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="can_detect_person",
         ufp_value="is_person_detection_on",
         ufp_set_method="set_person_detection",
     ),
@@ -146,9 +146,27 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="Detections: Vehicle",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
         ufp_set_method="set_vehicle_detection",
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_face",
+        name="Detections: Face",
+        icon="mdi:human-greeting",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_face",
+        ufp_value="is_face_detection_on",
+        ufp_set_method="set_face_detection",
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_package",
+        name="Detections: Package",
+        icon="mdi:package-variant-closed",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_package",
+        ufp_value="is_package_detection_on",
+        ufp_set_method="set_package_detection",
     ),
 )
 

@@ -8,13 +8,6 @@
             "identifier_exists": "Ra\u010dun je \u017ee registriran"
         },
         "step": {
-            "input_auth_code": {
-                "data": {
-                    "auth_code": "Avtorizacijska koda"
-                },
-                "description": "Vnesite avtorizacijsko kodo iz URL-ja spletne aplikacije SimpliSafe:",
-                "title": "Dokon\u010daj avtorizacijo"
-            },
             "user": {
                 "data": {
                     "code": "Koda (uporablja se v uporabni\u0161kem vmesniku Home Assistant)",

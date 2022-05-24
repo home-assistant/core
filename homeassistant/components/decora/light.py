@@ -14,7 +14,7 @@ from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
@@ -24,8 +24,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_DECORA_LED = SUPPORT_BRIGHTNESS
 
 
 def _name_validator(config):
@@ -98,6 +96,9 @@ def setup_platform(
 class DecoraLight(LightEntity):
     """Representation of an Decora light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, device):
         """Initialize the light."""
 
@@ -127,11 +128,6 @@ class DecoraLight(LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_DECORA_LED
 
     @property
     def assumed_state(self):

@@ -11,10 +11,8 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
@@ -37,7 +35,10 @@ ECONET_STATE_TO_HA = {
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
-SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS_HEATER = (
+    WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    | WaterHeaterEntityFeature.OPERATION_MODE
+)
 
 
 async def async_setup_entry(
@@ -108,11 +109,14 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Return the list of supported features."""
         if self.water_heater.modes:
             if self.water_heater.supports_away:
-                return SUPPORT_FLAGS_HEATER | SUPPORT_AWAY_MODE
+                return SUPPORT_FLAGS_HEATER | WaterHeaterEntityFeature.AWAY_MODE
             return SUPPORT_FLAGS_HEATER
         if self.water_heater.supports_away:
-            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE
-        return SUPPORT_TARGET_TEMPERATURE
+            return (
+                WaterHeaterEntityFeature.TARGET_TEMPERATURE
+                | WaterHeaterEntityFeature.AWAY_MODE
+            )
+        return WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

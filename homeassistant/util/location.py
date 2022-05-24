@@ -14,8 +14,8 @@ import aiohttp
 
 from homeassistant.const import __version__ as HA_VERSION
 
-WHOAMI_URL = "https://whoami.home-assistant.io/v1"
-WHOAMI_URL_DEV = "https://whoami-v1-dev.home-assistant.workers.dev/v1"
+WHOAMI_URL = "https://services.home-assistant.io/whoami/v1"
+WHOAMI_URL_DEV = "https://services-dev.home-assistant.workers.dev/whoami/v1"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84

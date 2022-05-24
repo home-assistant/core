@@ -6,7 +6,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import lock
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
@@ -176,7 +176,7 @@ class MqttLock(MqttEntity, LockEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN if CONF_PAYLOAD_OPEN in self._config else 0
+        return LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in self._config else 0
 
     async def async_lock(self, **kwargs):
         """Lock the device.

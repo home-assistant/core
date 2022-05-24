@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "H\u00e4\u00e4lestamine on k\u00e4imas",
+            "ignore_ip6_link_local": "IPv6 lingi kohalikku aadressi ei toetata.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Seadistamine on juba k\u00e4ivitatud",
             "cannot_connect": "\u00dchendamine nurjus",
             "connection_error": "\u00dchendamine nurjus",
-            "invalid_auth": "Tuvastamine nurjus"
+            "invalid_auth": "Tuvastamine nurjus",
+            "upnp_not_configured": "Puuduvad seadme UPnP-seaded."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)"
+                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)",
+                    "old_discovery": "Luba vana avastamismeetod"
                 }
             }
         }

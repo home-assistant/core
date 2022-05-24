@@ -203,7 +203,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle a discovered isy994 via dhcp."""
         friendly_name = discovery_info.hostname
-        url = f"http://{discovery_info.ip}"
+        if friendly_name.startswith("polisy"):
+            url = f"http://{discovery_info.ip}:8080"
+        else:
+            url = f"http://{discovery_info.ip}"
         mac = discovery_info.macaddress
         isy_mac = (
             f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"

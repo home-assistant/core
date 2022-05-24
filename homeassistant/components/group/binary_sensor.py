@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -20,7 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -49,7 +50,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Binary Sensor platform."""
+    """Set up the Binary Sensor Group platform."""
     async_add_entities(
         [
             BinarySensorGroup(
@@ -58,6 +59,27 @@ async def async_setup_platform(
                 config.get(CONF_DEVICE_CLASS),
                 config[CONF_ENTITIES],
                 config.get(CONF_ALL),
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Binary Sensor Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+    mode = config_entry.options[CONF_ALL]
+
+    async_add_entities(
+        [
+            BinarySensorGroup(
+                config_entry.entry_id, config_entry.title, None, entities, mode
             )
         ]
     )

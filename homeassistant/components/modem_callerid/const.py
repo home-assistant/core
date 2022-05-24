@@ -8,7 +8,6 @@ DATA_KEY_API = "api"
 DEFAULT_NAME = "Phone Modem"
 DOMAIN = "modem_callerid"
 ICON = "mdi:phone-classic"
-SERVICE_REJECT_CALL = "reject_call"
 
 EXCEPTIONS: Final = (
     FileNotFoundError,

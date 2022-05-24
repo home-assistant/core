@@ -12,14 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseEntity
-from .const import (
-    ATTR_MODEL,
-    CONF_GATEWAY_ID,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    KEY_API,
-)
+from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
@@ -70,7 +63,7 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        return {ATTR_MODEL: self._device.device_info.model_number}
+        return {"model": self._device.device_info.model_number}
 
     @property
     def current_cover_position(self) -> int | None:

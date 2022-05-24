@@ -19,8 +19,8 @@
                 "data": {
                     "access_token": "Token di accesso"
                 },
-                "description": "Inserisci un SmartThings [Personal Access Token]({token_url}) che \u00e8 stato creato secondo le [istruzioni]({component_url}).  Questo sar\u00e0 utilizzato per creare l'integrazione Home Assistant all'interno del tuo account SmartThings.",
-                "title": "Inserisci il Token di Accesso Personale"
+                "description": "Inserisci un [token di accesso personale]({token_url}) che \u00e8 stato creato secondo le [istruzioni]({component_url}).  Questo sar\u00e0 utilizzato per creare l'integrazione Home Assistant all'interno del tuo account SmartThings.",
+                "title": "Inserisci il token di accesso personale"
             },
             "select_location": {
                 "data": {

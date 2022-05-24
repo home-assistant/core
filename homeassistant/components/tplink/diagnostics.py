@@ -36,11 +36,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    device = coordinator.device
-
-    data = {}
-    data[
-        "device_last_response"
-    ] = device._last_update  # pylint: disable=protected-access
-
-    return async_redact_data(data, TO_REDACT)
+    return async_redact_data(
+        {"device_last_response": coordinator.device.internal_state}, TO_REDACT
+    )

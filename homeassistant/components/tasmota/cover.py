@@ -7,8 +7,12 @@ from hatasmota import const as tasmota_const, shutter as tasmota_shutter
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
 from hatasmota.models import DiscoveryHashType
 
-from homeassistant.components import cover
-from homeassistant.components.cover import CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -36,10 +40,10 @@ async def async_setup_entry(
         )
 
     hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(cover.DOMAIN)
+        DATA_REMOVE_DISCOVER_COMPONENT.format(COVER_DOMAIN)
     ] = async_dispatcher_connect(
         hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(cover.DOMAIN),
+        TASMOTA_DISCOVERY_ENTITY_NEW.format(COVER_DOMAIN),
         async_discover,
     )
 
@@ -51,6 +55,12 @@ class TasmotaCover(
 ):
     """Representation of a Tasmota cover."""
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
     _tasmota_entity: tasmota_shutter.TasmotaShutter
 
     def __init__(self, **kwds: Any) -> None:
@@ -83,16 +93,6 @@ class TasmotaCover(
         return self._position
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return (
-            cover.SUPPORT_OPEN
-            | cover.SUPPORT_CLOSE
-            | cover.SUPPORT_STOP
-            | cover.SUPPORT_SET_POSITION
-        )
-
-    @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._direction == tasmota_const.SHUTTER_DIRECTION_UP
@@ -119,7 +119,7 @@ class TasmotaCover(
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[cover.ATTR_POSITION]
+        position = kwargs[ATTR_POSITION]
         await self._tasmota_entity.set_position(position)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:

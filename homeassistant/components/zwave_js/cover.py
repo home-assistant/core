@@ -21,15 +21,9 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -180,13 +174,13 @@ class ZWaveTiltCover(ZWaveCover):
     """Representation of a Z-Wave Cover device with tilt."""
 
     _attr_supported_features = (
-        SUPPORT_OPEN
-        | SUPPORT_CLOSE
-        | SUPPORT_STOP
-        | SUPPORT_SET_POSITION
-        | SUPPORT_OPEN_TILT
-        | SUPPORT_CLOSE_TILT
-        | SUPPORT_SET_TILT_POSITION
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
     )
 
     def __init__(
@@ -231,7 +225,7 @@ class ZWaveTiltCover(ZWaveCover):
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
 
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_device_class = CoverDeviceClass.GARAGE
 
     def __init__(

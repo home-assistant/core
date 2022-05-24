@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import usb
 from homeassistant.components.insteon.config_flow import (
     HUB1,
     HUB2,
@@ -594,3 +595,56 @@ async def test_options_override_bad_data(hass: HomeAssistant):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "input_error"}
+
+
+async def test_discovery_via_usb(hass):
+    """Test usb flow."""
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyINSTEON",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="insteon radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm_usb"
+
+    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
+        "homeassistant.components.insteon.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"] == {"device": "/dev/ttyINSTEON"}
+
+
+async def test_discovery_via_usb_already_setup(hass):
+    """Test usb flow -- already setup."""
+
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE: "/dev/ttyUSB1"}}
+    ).add_to_hass(hass)
+
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyINSTEON",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="insteon radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"

@@ -18,7 +18,7 @@
                     "mode": "Mode",
                     "name": "Nom",
                     "password": "Contrasenya",
-                    "port": "Port",
+                    "port": "Port (deixa-ho buit pel predeterminat del protocol)",
                     "protocol": "Protocol de comunicacions a utilitzar",
                     "ssh_key": "Ruta al fitxer de claus SSH (en lloc de la contrasenya)",
                     "username": "Nom d'usuari"

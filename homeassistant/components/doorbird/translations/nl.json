@@ -29,6 +29,9 @@
                 "data": {
                     "events": "Door komma's gescheiden lijst met gebeurtenissen."
                 },
+                "data_description": {
+                    "events": "Voeg een door komma's gescheiden evenementnaam toe voor elk evenement dat u wilt volgen. Nadat u ze hier hebt ingevoerd, gebruikt u de DoorBird app om ze aan een specifieke gebeurtenis toe te wijzen.\n\nVoorbeeld: iemand_drukt_op_de_knop, beweging"
+                },
                 "description": "Voeg een door komma's gescheiden evenementnaam toe voor elk evenement dat u wilt volgen. Nadat je ze hier hebt ingevoerd, gebruik je de DoorBird-app om ze toe te wijzen aan een specifiek evenement. Zie de documentatie op https://www.home-assistant.io/integrations/doorbird/#events. Voorbeeld: iemand_drukte_knop, beweging"
             }
         }

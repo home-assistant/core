@@ -4,25 +4,28 @@ from __future__ import annotations
 from contextlib import suppress
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 SENSOR_TYPES = {
     "com.fibaro.temperatureSensor": [
@@ -54,25 +57,23 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
     entities: list[SensorEntity] = []
-    for device in hass.data[FIBARO_DEVICES]["sensor"]:
+    for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
         entities.append(FibaroSensor(device))
-    for device_type in ("cover", "light", "switch"):
-        for device in hass.data[FIBARO_DEVICES][device_type]:
+    for platform in (Platform.COVER, Platform.LIGHT, Platform.SWITCH):
+        for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
             if "energy" in device.interfaces:
                 entities.append(FibaroEnergySensor(device))
+            if "power" in device.interfaces:
+                entities.append(FibaroPowerSensor(device))
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class FibaroSensor(FibaroDevice, SensorEntity):
@@ -83,7 +84,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
         self.current_value = None
         self.last_changed_time = None
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         if fibaro_device.type in SENSOR_TYPES:
             self._unit = SENSOR_TYPES[fibaro_device.type][1]
             self._icon = SENSOR_TYPES[fibaro_device.type][2]
@@ -139,7 +140,7 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
     def __init__(self, fibaro_device):
         """Initialize the sensor."""
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}_energy"
+        self.entity_id = ENTITY_ID_FORMAT.format(f"{self.ha_id}_energy")
         self._attr_name = f"{fibaro_device.friendly_name} Energy"
         self._attr_unique_id = f"{fibaro_device.unique_id_str}_energy"
 
@@ -148,4 +149,26 @@ class FibaroEnergySensor(FibaroDevice, SensorEntity):
         with suppress(KeyError, ValueError):
             self._attr_native_value = convert(
                 self.fibaro_device.properties.energy, float
+            )
+
+
+class FibaroPowerSensor(FibaroDevice, SensorEntity):
+    """Representation of a Fibaro Power Sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = POWER_WATT
+
+    def __init__(self, fibaro_device):
+        """Initialize the sensor."""
+        super().__init__(fibaro_device)
+        self.entity_id = ENTITY_ID_FORMAT.format(f"{self.ha_id}_power")
+        self._attr_name = f"{fibaro_device.friendly_name} Power"
+        self._attr_unique_id = f"{fibaro_device.unique_id_str}_power"
+
+    def update(self):
+        """Update the state."""
+        with suppress(KeyError, ValueError):
+            self._attr_native_value = convert(
+                self.fibaro_device.properties.power, float
             )

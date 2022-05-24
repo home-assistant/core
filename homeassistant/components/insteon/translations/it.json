@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Impossibile connettersi",
+            "not_insteon_device": "Dispositivo rilevato non \u00e8 un dispositivo Insteon",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "select_single": "Seleziona un'opzione."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vuoi configurare {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Indirizzo IP",
@@ -46,7 +51,7 @@
     "options": {
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "input_error": "Voci non valide, si prega di controllare i valori.",
+            "input_error": "Voci non valide, controlla i valori.",
             "select_single": "Seleziona un'opzione."
         },
         "step": {

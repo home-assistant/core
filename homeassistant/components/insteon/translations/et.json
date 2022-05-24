@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "\u00dchendamine nurjus",
+            "not_insteon_device": "Avastatud seade ei ole Insteoni seade",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "select_single": "Vali \u00fcks suvand."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Kas seadistada {name} ?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP aagress",

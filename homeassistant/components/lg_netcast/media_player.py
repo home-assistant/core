@@ -1,28 +1,19 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -43,20 +34,17 @@ DEFAULT_NAME = "LG TV Remote"
 
 CONF_ON_ACTION = "turn_on_action"
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 SUPPORT_LGTV = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -91,6 +79,8 @@ def setup_platform(
 class LgTVDevice(MediaPlayerEntity):
     """Representation of a LG TV."""
 
+    _attr_device_class = MediaPlayerDeviceClass.TV
+
     def __init__(self, client, name, on_action_script):
         """Initialize the LG TV device."""
         self._client = client
@@ -116,7 +106,6 @@ class LgTVDevice(MediaPlayerEntity):
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
 
@@ -220,7 +209,7 @@ class LgTVDevice(MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._on_action_script:
-            return SUPPORT_LGTV | SUPPORT_TURN_ON
+            return SUPPORT_LGTV | MediaPlayerEntityFeature.TURN_ON
         return SUPPORT_LGTV
 
     @property

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A bridge m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "no_bridges": "Nem tal\u00e1lhat\u00f3 deCONZ \u00e1tj\u00e1r\u00f3",
             "no_hardware_available": "Nincs deCONZ-hoz csatlakoztatott r\u00e1di\u00f3hardver",
             "not_deconz_bridge": "Nem egy deCONZ \u00e1tj\u00e1r\u00f3",

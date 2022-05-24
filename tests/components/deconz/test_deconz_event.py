@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pydeconz.sensor import (
+from pydeconz.models.sensor.ancillary_control import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_EMERGENCY,
     ANCILLARY_CONTROL_FIRE,

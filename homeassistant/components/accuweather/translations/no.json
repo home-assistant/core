@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
+        "create_entry": {
+            "default": "Noen sensorer er ikke aktivert som standard. Du kan aktivere dem i enhetsregisteret etter integrasjonskonfigurasjonen.\n V\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integreringsalternativene."
+        },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_api_key": "Ugyldig API-n\u00f8kkel",

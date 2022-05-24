@@ -25,6 +25,9 @@
                     "name": "Nazwa",
                     "region": "Region"
                 },
+                "data_description": {
+                    "code": "Przejd\u017a do \u201eUstawienia\u201d na konsoli PlayStation 4. Nast\u0119pnie przejd\u017a do \u201eUstawienia po\u0142\u0105czenia aplikacji mobilnej\u201d i wybierz \u201eDodaj urz\u0105dzenie\u201d, aby uzyska\u0107 kod PIN."
+                },
                 "description": "Wprowad\u017a informacje o PlayStation 4. Aby uzyska\u0107 'PIN', przejd\u017a do 'Ustawienia' na konsoli PlayStation 4. Nast\u0119pnie przejd\u017a do 'Ustawienia po\u0142\u0105czenia aplikacji mobilnej' i wybierz 'Dodaj urz\u0105dzenie'. Wprowad\u017a wy\u015bwietlony kod PIN. Zapoznaj si\u0119 z [dokumentacj\u0105](https://www.home-assistant.io/components/ps4/), by pozna\u0107 szczeg\u00f3\u0142y.",
                 "title": "PlayStation 4"
             },
@@ -32,6 +35,9 @@
                 "data": {
                     "ip_address": "Adres IP (pozostaw puste, je\u015bli u\u017cywasz wykrywania)",
                     "mode": "Tryb konfiguracji"
+                },
+                "data_description": {
+                    "ip_address": "Pozostaw puste, je\u015bli wybierasz automatyczne wykrywanie."
                 },
                 "description": "Wybierz tryb konfiguracji. Pole adresu IP mo\u017cna pozostawi\u0107 puste, je\u015bli wybierzesz opcj\u0119 Auto Discovery, poniewa\u017c urz\u0105dzenia zostan\u0105 automatycznie wykryte.",
                 "title": "PlayStation 4"

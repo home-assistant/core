@@ -1,5 +1,5 @@
 """Tests for the WLED button platform."""
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun import freeze_time
 import pytest
@@ -98,7 +98,11 @@ async def test_button_connection_error(
 
 
 async def test_button_update_stay_stable(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the update button.
 
@@ -127,11 +131,19 @@ async def test_button_update_stay_stable(
     await hass.async_block_till_done()
     assert mock_wled.upgrade.call_count == 1
     mock_wled.upgrade.assert_called_with(version="0.12.0")
+    assert (
+        "The WLED update button 'button.wled_rgb_light_update' is deprecated"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
 async def test_button_update_beta_to_stable(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the update button.
 
@@ -148,11 +160,19 @@ async def test_button_update_beta_to_stable(
     await hass.async_block_till_done()
     assert mock_wled.upgrade.call_count == 1
     mock_wled.upgrade.assert_called_with(version="0.8.6")
+    assert (
+        "The WLED update button 'button.wled_rgbw_light_update' is deprecated"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
 async def test_button_update_stay_beta(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the update button.
 
@@ -168,13 +188,35 @@ async def test_button_update_stay_beta(
     await hass.async_block_till_done()
     assert mock_wled.upgrade.call_count == 1
     mock_wled.upgrade.assert_called_with(version="0.8.6b2")
+    assert (
+        "The WLED update button 'button.wled_rgb_light_update' is deprecated"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
 async def test_button_no_update_available(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
 ) -> None:
     """Test the update button. There is no update available."""
     state = hass.states.get("button.wled_websocket_update")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_disabled_by_default(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test that the update button is disabled by default."""
+    registry = er.async_get(hass)
+
+    state = hass.states.get("button.wled_rgb_light_update")
+    assert state is None
+
+    entry = registry.async_get("button.wled_rgb_light_update")
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

@@ -13,14 +13,18 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, bind_hass
 from homeassistant.requirements import async_get_integration_with_requirements
@@ -48,6 +52,7 @@ DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_DEVICE_ID): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -86,24 +91,6 @@ TYPES = {
     "condition": DeviceAutomationType.CONDITION.value,
     "action": DeviceAutomationType.ACTION.value,
 }
-
-
-@bind_hass
-async def async_get_device_automations(
-    hass: HomeAssistant,
-    automation_type: DeviceAutomationType | str,
-    device_ids: Iterable[str] | None = None,
-) -> Mapping[str, Any]:
-    """Return all the device automations for a type optionally limited to specific device ids."""
-    if isinstance(automation_type, str):
-        report(
-            "uses str for async_get_device_automations automation_type. This is "
-            "deprecated and will stop working in Home Assistant 2022.4, it should be "
-            "updated to use DeviceAutomationType instead",
-            error_if_core=False,
-        )
-        automation_type = DeviceAutomationType[automation_type.upper()]
-    return await _async_get_device_automations(hass, automation_type, device_ids)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -156,26 +143,18 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 @overload
 async def async_get_device_automation_platform(  # noqa: D103
-    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
 ) -> "DeviceAutomationPlatformType":
     ...
 
 
 async def async_get_device_automation_platform(
-    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType | str
+    hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
 ) -> "DeviceAutomationPlatformType":
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    if isinstance(automation_type, str):
-        report(
-            "uses str for async_get_device_automation_platform automation_type. This "
-            "is deprecated and will stop working in Home Assistant 2022.4, it should "
-            "be updated to use DeviceAutomationType instead",
-            error_if_core=False,
-        )
-        automation_type = DeviceAutomationType[automation_type.upper()]
     platform_name = automation_type.value.section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
@@ -191,6 +170,24 @@ async def async_get_device_automation_platform(
         ) from err
 
     return platform
+
+
+@callback
+def _async_set_entity_device_automation_metadata(
+    hass: HomeAssistant, automation: dict[str, Any]
+) -> None:
+    """Set device automation metadata based on entity registry entry data."""
+    if "metadata" not in automation:
+        automation["metadata"] = {}
+    if ATTR_ENTITY_ID not in automation or "secondary" in automation["metadata"]:
+        return
+
+    entity_registry = er.async_get(hass)
+    # Guard against the entry being removed before this is called
+    if not (entry := entity_registry.async_get(automation[ATTR_ENTITY_ID])):
+        return
+
+    automation["metadata"]["secondary"] = bool(entry.entity_category or entry.hidden_by)
 
 
 async def _async_get_device_automations_from_domain(
@@ -215,10 +212,11 @@ async def _async_get_device_automations_from_domain(
     )
 
 
-async def _async_get_device_automations(
+@bind_hass
+async def async_get_device_automations(
     hass: HomeAssistant,
     automation_type: DeviceAutomationType,
-    device_ids: Iterable[str] | None,
+    device_ids: Iterable[str] | None = None,
 ) -> Mapping[str, list[dict[str, Any]]]:
     """List device automations."""
     device_registry = dr.async_get(hass)
@@ -268,6 +266,7 @@ async def _async_get_device_automations(
                 )
                 continue
             for automation in device_results:
+                _async_set_entity_device_automation_metadata(hass, automation)
                 combined_results[automation["device_id"]].append(automation)
 
     return combined_results
@@ -336,7 +335,7 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
     """Handle request for device actions."""
     device_id = msg["device_id"]
     actions = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.ACTION, [device_id]
         )
     ).get(device_id)
@@ -355,7 +354,7 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
     """Handle request for device conditions."""
     device_id = msg["device_id"]
     conditions = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.CONDITION, [device_id]
         )
     ).get(device_id)
@@ -374,7 +373,7 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg["device_id"]
     triggers = (
-        await _async_get_device_automations(
+        await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, [device_id]
         )
     ).get(device_id)

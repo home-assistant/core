@@ -542,6 +542,17 @@ async def test_simple_option_flow(hass, aioclient_mock):
     }
 
 
+async def test_option_flow_integration_not_setup(hass, aioclient_mock):
+    """Test advanced config flow options."""
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+
+    hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "integration_not_setup"
+
+
 async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
 

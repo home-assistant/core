@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "name": "Navn",
+                    "path": "Sti",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

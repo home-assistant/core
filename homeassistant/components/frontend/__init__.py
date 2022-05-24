@@ -360,19 +360,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
+    # Can be removed in 2023
+    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(hass, "profile")
-
-    # To smooth transition to new urls, add redirects to new urls of dev tools
-    # Added June 27, 2019. Can be removed in 2021.
-    for panel in ("event", "service", "state", "template"):
-        hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
-    for panel in ("logs", "info", "mqtt"):
-        # Can be removed in 2021.
-        hass.http.register_redirect(f"/dev-{panel}", f"/config/{panel}")
-        # Added June 20 2020. Can be removed in 2022.
-        hass.http.register_redirect(f"/developer-tools/{panel}", f"/config/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -533,6 +526,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         """
         if (
             request.path != "/"
+            and len(request.url.parts) > 1
             and request.url.parts[1] not in self.hass.data[DATA_PANELS]
         ):
             return None, set()
@@ -610,7 +604,7 @@ class ManifestJSONView(HomeAssistantView):
     name = "manifestjson"
 
     @callback
-    def get(self, request: web.Request) -> web.Response:  # pylint: disable=no-self-use
+    def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
         return web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"

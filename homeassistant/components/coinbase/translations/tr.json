@@ -36,7 +36,8 @@
                 "data": {
                     "account_balance_currencies": "Rapor edilecek c\u00fczdan bakiyeleri.",
                     "exchange_base": "D\u00f6viz kuru sens\u00f6rleri i\u00e7in temel para birimi.",
-                    "exchange_rate_currencies": "Raporlanacak d\u00f6viz kurlar\u0131."
+                    "exchange_rate_currencies": "Raporlanacak d\u00f6viz kurlar\u0131.",
+                    "exchnage_rate_precision": "D\u00f6viz kurlar\u0131 i\u00e7in ondal\u0131k basamak say\u0131s\u0131."
                 },
                 "description": "Coinbase Se\u00e7eneklerini Ayarlay\u0131n"
             }

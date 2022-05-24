@@ -18,7 +18,7 @@ def build_app_list(app_list):
 
     return BrowseMedia(
         media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=None,
+        media_content_id="apps",
         media_content_type=MEDIA_TYPE_APPS,
         title="Apps",
         can_play=True,

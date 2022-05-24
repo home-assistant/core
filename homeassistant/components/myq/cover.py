@@ -3,10 +3,9 @@ from pymyq.const import DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE
 from pymyq.errors import MyQError
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
@@ -36,7 +35,7 @@ async def async_setup_entry(
 class MyQCover(MyQEntity, CoverEntity):
     """Representation of a MyQ cover."""
 
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""

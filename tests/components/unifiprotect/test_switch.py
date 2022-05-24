@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera, Light
-from pyunifiprotect.data.types import RecordingMode, VideoMode
+from pyunifiprotect.data.types import RecordingMode, SmartDetectObjectType, VideoMode
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
@@ -25,6 +25,15 @@ from .conftest import (
     enable_entity,
     ids_from_device_description,
 )
+
+CAMERA_SWITCHES_BASIC = [
+    d
+    for d in CAMERA_SWITCHES
+    if d.name != "Detections: Face" and d.name != "Detections: Package"
+]
+CAMERA_SWITCHES_NO_EXTRA = [
+    d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
+]
 
 
 @pytest.fixture(name="light")
@@ -79,6 +88,10 @@ async def camera_fixture(
     camera_obj.feature_flags.has_privacy_mask = True
     camera_obj.feature_flags.has_speaker = True
     camera_obj.feature_flags.has_smart_detect = True
+    camera_obj.feature_flags.smart_detect_types = [
+        SmartDetectObjectType.PERSON,
+        SmartDetectObjectType.VEHICLE,
+    ]
     camera_obj.is_ssh_enabled = False
     camera_obj.led_settings.is_enabled = False
     camera_obj.hdr_mode = False
@@ -244,7 +257,7 @@ async def test_switch_setup_camera_all(
 
     entity_registry = er.async_get(hass)
 
-    for description in CAMERA_SWITCHES:
+    for description in CAMERA_SWITCHES_BASIC:
         unique_id, entity_id = ids_from_device_description(
             Platform.SWITCH, camera, description
         )
@@ -375,14 +388,11 @@ async def test_switch_camera_ssh(
     camera.set_ssh.assert_called_with(False)
 
 
-@pytest.mark.parametrize("description", CAMERA_SWITCHES)
+@pytest.mark.parametrize("description", CAMERA_SWITCHES_NO_EXTRA)
 async def test_switch_camera_simple(
     hass: HomeAssistant, camera: Camera, description: ProtectSwitchEntityDescription
 ):
     """Tests all simple switches for cameras."""
-
-    if description.name in ("High FPS", "Privacy Mode"):
-        return
 
     assert description.ufp_set_method is not None
 

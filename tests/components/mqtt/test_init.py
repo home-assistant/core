@@ -12,7 +12,7 @@ import voluptuous as vol
 import yaml
 
 from homeassistant import config as hass_config
-from homeassistant.components import mqtt, websocket_api
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import ReceiveMessage
@@ -23,7 +23,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.core as ha
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.entity import Entity
@@ -522,11 +522,29 @@ def test_validate_topic():
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
-    mqtt.util.valid_topic("\u0001")
-    mqtt.util.valid_topic("\u001F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\u009F")
-    mqtt.util.valid_topic("\uffff")
+    # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u0001")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u001F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u007F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\u009F")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdd0")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufdef")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\ufffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\uffff")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001fffe")
+    with pytest.raises(vol.Invalid):
+        mqtt.util.valid_topic("\U0001ffff")
 
 
 def test_validate_subscribe_topic():
@@ -1248,7 +1266,8 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             await hass.async_block_till_done()
 
             assert (
-                "Data in your configuration entry is going to override your configuration.yaml:"
+                "Deprecated configuration settings found in configuration.yaml. "
+                "These settings from your configuration entry will override:"
                 in caplog.text
             )
 
@@ -1619,6 +1638,57 @@ async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mo
     assert device_entry is not None
 
 
+async def test_update_incomplete_entry(
+    hass: HomeAssistant, device_reg, mqtt_client_mock, caplog
+):
+    """Test if the MQTT component loads when config entry data is incomplete."""
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    # Config entry data is incomplete
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={"port": 1234})
+    entry.add_to_hass(hass)
+    # Mqtt present in yaml config
+    config = {"broker": "yaml_broker"}
+    await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
+    await hass.async_block_till_done()
+
+    # Config entry data should now be updated
+    assert entry.data == {
+        "port": 1234,
+        "broker": "yaml_broker",
+    }
+    # Warnings about broker deprecated, but not about other keys with default values
+    assert (
+        "The 'broker' option is deprecated, please remove it from your configuration"
+        in caplog.text
+    )
+    assert (
+        "Deprecated configuration settings found in configuration.yaml. These settings "
+        "from your configuration entry will override: {'broker': 'yaml_broker'}"
+        in caplog.text
+    )
+
+    # Discover a device to verify the entry was setup correctly
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+
+async def test_fail_no_broker(hass, device_reg, mqtt_client_mock, caplog):
+    """Test if the MQTT component loads when broker configuration is missing."""
+    # Config entry data is incomplete
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert "MQTT broker is not configured, please configure it" in caplog.text
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(hass, caplog, mqtt_mock):
     """Test exception raised by message handler."""
@@ -1647,6 +1717,7 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
 
     async_fire_mqtt_message(hass, "test-topic", "test1")
     async_fire_mqtt_message(hass, "test-topic", "test2")
+    async_fire_mqtt_message(hass, "test-topic", b"\xDE\xAD\xBE\xEF")
 
     response = await client.receive_json()
     assert response["event"]["topic"] == "test-topic"
@@ -1655,6 +1726,10 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client, mqtt_mock):
     response = await client.receive_json()
     assert response["event"]["topic"] == "test-topic"
     assert response["event"]["payload"] == "test2"
+
+    response = await client.receive_json()
+    assert response["event"]["topic"] == "test-topic"
+    assert response["event"]["payload"] == "b'\\xde\\xad\\xbe\\xef'"
 
     # Unsubscribe
     await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 5})
@@ -1698,6 +1773,8 @@ async def test_mqtt_ws_remove_discovered_device(
     hass, device_reg, entity_reg, hass_ws_client, mqtt_mock
 ):
     """Test MQTT websocket device removal."""
+    assert await async_setup_component(hass, "config", {})
+
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -1712,8 +1789,14 @@ async def test_mqtt_ws_remove_discovered_device(
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await client.send_json(
-        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
     )
     response = await client.receive_json()
     assert response["success"]
@@ -1721,91 +1804,6 @@ async def test_mqtt_ws_remove_discovered_device(
     # Verify device entry is cleared
     device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
-
-
-async def test_mqtt_ws_remove_discovered_device_twice(
-    hass, device_reg, hass_ws_client, mqtt_mock
-):
-    """Test MQTT websocket device removal."""
-    data = (
-        '{ "device":{"identifiers":["0AFFD2"]},'
-        '  "state_topic": "foobar/sensor",'
-        '  "unique_id": "unique" }'
-    )
-
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
-    await hass.async_block_till_done()
-
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
-    assert device_entry is not None
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-
-    await client.send_json(
-        {"id": 6, "type": "mqtt/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
-
-
-async def test_mqtt_ws_remove_discovered_device_same_topic(
-    hass, device_reg, hass_ws_client, mqtt_mock
-):
-    """Test MQTT websocket device removal."""
-    data = (
-        '{ "device":{"identifiers":["0AFFD2"]},'
-        '  "state_topic": "foobar/sensor",'
-        '  "availability_topic": "foobar/sensor",'
-        '  "unique_id": "unique" }'
-    )
-
-    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
-    await hass.async_block_till_done()
-
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
-    assert device_entry is not None
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-
-    await client.send_json(
-        {"id": 6, "type": "mqtt/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
-
-
-async def test_mqtt_ws_remove_non_mqtt_device(
-    hass, device_reg, hass_ws_client, mqtt_mock
-):
-    """Test MQTT websocket device removal of device belonging to other domain."""
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    assert device_entry is not None
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
-    )
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
 
 
 async def test_mqtt_ws_get_device_debug_info(

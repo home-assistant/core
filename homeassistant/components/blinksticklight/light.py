@@ -8,8 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
@@ -22,8 +21,6 @@ import homeassistant.util.color as color_util
 CONF_SERIAL = "serial"
 
 DEFAULT_NAME = "Blinkstick"
-
-SUPPORT_BLINKSTICK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -52,7 +49,8 @@ def setup_platform(
 class BlinkStickLight(LightEntity):
     """Representation of a BlinkStick light."""
 
-    _attr_supported_features = SUPPORT_BLINKSTICK
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, stick, name):
         """Initialize the light."""

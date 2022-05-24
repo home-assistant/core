@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "service_unavailable_error": "API saat ini tidak tersedia, harap coba lagi nanti.",
+            "unknown_auth_error": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Siapkan akun Meater Cloud Anda."
+            }
+        }
+    }
+}

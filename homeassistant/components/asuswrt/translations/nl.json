@@ -18,7 +18,7 @@
                     "mode": "Mode",
                     "name": "Naam",
                     "password": "Wachtwoord",
-                    "port": "Poort",
+                    "port": "Poort (leeg laten voor protocol standaard)",
                     "protocol": "Te gebruiken communicatieprotocol",
                     "ssh_key": "Pad naar uw SSH-sleutelbestand (in plaats van wachtwoord)",
                     "username": "Gebruikersnaam"

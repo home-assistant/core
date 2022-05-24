@@ -77,6 +77,19 @@
         "address": "s0.g5",
         "output": "relay1"
       }
+    ],
+    "covers": [
+      {
+        "name": "Cover_Ouputs",
+        "address": "s0.m7",
+        "motor": "outputs",
+        "reverse_time": "rt1200"
+      },
+      {
+        "name": "Cover_Relays",
+        "address": "s0.m7",
+        "motor": "motor1"
+      }
     ]
   }
 }

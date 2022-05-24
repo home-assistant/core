@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "service_unavailable_error": "Die API ist derzeit nicht verf\u00fcgbar. Bitte versuche es sp\u00e4ter erneut.",
+            "unknown_auth_error": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Richte dein Meater Cloud-Konto ein."
+            }
+        }
+    }
+}

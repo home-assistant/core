@@ -155,13 +155,13 @@ def check_loop(func: Callable[..., Any], strict: bool = True) -> None:
         integration,
         found_frame.filename[index:],
         found_frame.lineno,
-        found_frame.line.strip(),
+        (found_frame.line or "?").strip(),
     )
     if strict:
         raise RuntimeError(
             "Blocking calls must be done in the executor or a separate thread; "
             "Use `await hass.async_add_executor_job()` "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
+            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {(found_frame.line or '?').strip()}"
         )
 
 

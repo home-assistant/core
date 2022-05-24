@@ -22,5 +22,10 @@
                 "title": "Configurar 1 cable"
             }
         }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Seleccionar los dispositivos a configurar"
+        }
     }
 }

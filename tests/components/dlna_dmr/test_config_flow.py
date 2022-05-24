@@ -4,7 +4,8 @@ from __future__ import annotations
 import dataclasses
 from unittest.mock import Mock
 
-from async_upnp_client import UpnpDevice, UpnpError
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.exceptions import UpnpError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -387,10 +388,22 @@ async def test_ssdp_flow_upnp_udn(
 
 async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     """Test SSDP ignores devices that are missing required services."""
-    # No services defined at all
+    # No service list at all
     discovery = dataclasses.replace(MOCK_DISCOVERY)
     discovery.upnp = discovery.upnp.copy()
     del discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST]
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_dmr"
+
+    # Service list does not contain services
+    discovery = dataclasses.replace(MOCK_DISCOVERY)
+    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {"bad_key": "bad_value"}
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
@@ -411,6 +424,28 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     }
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "not_dmr"
+
+
+async def test_ssdp_single_service(hass: HomeAssistant) -> None:
+    """Test SSDP discovery info with only one service defined.
+
+    THe etree_to_dict function turns multiple services into a list of dicts, but
+    a single service into only a dict.
+    """
+    discovery = dataclasses.replace(MOCK_DISCOVERY)
+    discovery.upnp = discovery.upnp.copy()
+    service_list = discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST].copy()
+    # Turn mock's list of service dicts into a single dict
+    service_list["service"] = service_list["service"][0]
+    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = service_list
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "not_dmr"

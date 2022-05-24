@@ -66,7 +66,7 @@ async def async_get_actions(
         }
         actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
-        if supported_features & const.SUPPORT_MODES:
+        if supported_features & const.HumidifierEntityFeature.MODES:
             actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions

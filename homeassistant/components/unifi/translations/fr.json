@@ -6,7 +6,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "faulty_credentials": "Authentification invalide",
+            "faulty_credentials": "Authentification non valide",
             "service_unavailable": "\u00c9chec de connexion",
             "unknown_client_mac": "Aucun client disponible sur cette adresse MAC"
         },
@@ -57,8 +57,8 @@
             "simple_options": {
                 "data": {
                     "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
-                    "track_clients": "Suivi de clients r\u00e9seaux",
-                    "track_devices": "Suivi d'\u00e9quipement r\u00e9seau (Equipements Ubiquiti)"
+                    "track_clients": "Suivre les clients du r\u00e9seau",
+                    "track_devices": "Suivre les p\u00e9riph\u00e9riques r\u00e9seau (p\u00e9riph\u00e9riques Ubiquiti)"
                 },
                 "description": "Configurer l'int\u00e9gration UniFi"
             },

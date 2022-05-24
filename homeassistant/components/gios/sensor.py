@@ -69,10 +69,9 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class GiosSensor(CoordinatorEntity, SensorEntity):
+class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     """Define an GIOS sensor."""
 
-    coordinator: GiosDataUpdateCoordinator
     entity_description: GiosSensorEntityDescription
 
     def __init__(

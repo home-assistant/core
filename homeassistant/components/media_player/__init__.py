@@ -70,6 +70,7 @@ from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F40
 from .const import (  # noqa: F401
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -126,6 +127,7 @@ from .const import (  # noqa: F401
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from .errors import BrowseError
 
@@ -241,52 +243,61 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, {}, "async_turn_on", [SUPPORT_TURN_ON]
+        SERVICE_TURN_ON, {}, "async_turn_on", [MediaPlayerEntityFeature.TURN_ON]
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [SUPPORT_TURN_OFF]
+        SERVICE_TURN_OFF, {}, "async_turn_off", [MediaPlayerEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_OFF | SUPPORT_TURN_ON]
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [MediaPlayerEntityFeature.TURN_OFF | MediaPlayerEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
         {},
         "async_volume_up",
-        [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP],
+        [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_DOWN,
         {},
         "async_volume_down",
-        [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP],
+        [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PLAY_PAUSE,
         {},
         "async_media_play_pause",
-        [SUPPORT_PLAY | SUPPORT_PAUSE],
+        [MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE],
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PLAY, {}, "async_media_play", [SUPPORT_PLAY]
+        SERVICE_MEDIA_PLAY, {}, "async_media_play", [MediaPlayerEntityFeature.PLAY]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PAUSE, {}, "async_media_pause", [SUPPORT_PAUSE]
+        SERVICE_MEDIA_PAUSE, {}, "async_media_pause", [MediaPlayerEntityFeature.PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_STOP, {}, "async_media_stop", [SUPPORT_STOP]
+        SERVICE_MEDIA_STOP, {}, "async_media_stop", [MediaPlayerEntityFeature.STOP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_NEXT_TRACK, {}, "async_media_next_track", [SUPPORT_NEXT_TRACK]
+        SERVICE_MEDIA_NEXT_TRACK,
+        {},
+        "async_media_next_track",
+        [MediaPlayerEntityFeature.NEXT_TRACK],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PREVIOUS_TRACK,
         {},
         "async_media_previous_track",
-        [SUPPORT_PREVIOUS_TRACK],
+        [MediaPlayerEntityFeature.PREVIOUS_TRACK],
     )
     component.async_register_entity_service(
-        SERVICE_CLEAR_PLAYLIST, {}, "async_clear_playlist", [SUPPORT_CLEAR_PLAYLIST]
+        SERVICE_CLEAR_PLAYLIST,
+        {},
+        "async_clear_playlist",
+        [MediaPlayerEntityFeature.CLEAR_PLAYLIST],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,
@@ -297,7 +308,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
         "async_set_volume_level",
-        [SUPPORT_VOLUME_SET],
+        [MediaPlayerEntityFeature.VOLUME_SET],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE,
@@ -308,7 +319,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _rename_keys(mute=ATTR_MEDIA_VOLUME_MUTED),
         ),
         "async_mute_volume",
-        [SUPPORT_VOLUME_MUTE],
+        [MediaPlayerEntityFeature.VOLUME_MUTE],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_SEEK,
@@ -319,25 +330,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _rename_keys(position=ATTR_MEDIA_SEEK_POSITION),
         ),
         "async_media_seek",
-        [SUPPORT_SEEK],
+        [MediaPlayerEntityFeature.SEEK],
     )
     component.async_register_entity_service(
         SERVICE_JOIN,
         {vol.Required(ATTR_GROUP_MEMBERS): vol.All(cv.ensure_list, [cv.entity_id])},
         "async_join_players",
-        [SUPPORT_GROUPING],
+        [MediaPlayerEntityFeature.GROUPING],
     )
     component.async_register_entity_service(
         SERVICE_SELECT_SOURCE,
         {vol.Required(ATTR_INPUT_SOURCE): cv.string},
         "async_select_source",
-        [SUPPORT_SELECT_SOURCE],
+        [MediaPlayerEntityFeature.SELECT_SOURCE],
     )
     component.async_register_entity_service(
         SERVICE_SELECT_SOUND_MODE,
         {vol.Required(ATTR_SOUND_MODE): cv.string},
         "async_select_sound_mode",
-        [SUPPORT_SELECT_SOUND_MODE],
+        [MediaPlayerEntityFeature.SELECT_SOUND_MODE],
     )
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
@@ -350,23 +361,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
         ),
         "async_play_media",
-        [SUPPORT_PLAY_MEDIA],
+        [MediaPlayerEntityFeature.PLAY_MEDIA],
     )
     component.async_register_entity_service(
         SERVICE_SHUFFLE_SET,
         {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean},
         "async_set_shuffle",
-        [SUPPORT_SHUFFLE_SET],
+        [MediaPlayerEntityFeature.SHUFFLE_SET],
     )
     component.async_register_entity_service(
-        SERVICE_UNJOIN, {}, "async_unjoin_player", [SUPPORT_GROUPING]
+        SERVICE_UNJOIN, {}, "async_unjoin_player", [MediaPlayerEntityFeature.GROUPING]
     )
 
     component.async_register_entity_service(
         SERVICE_REPEAT_SET,
         {vol.Required(ATTR_MEDIA_REPEAT): vol.In(REPEAT_MODES)},
         "async_set_repeat",
-        [SUPPORT_REPEAT_SET],
+        [MediaPlayerEntityFeature.REPEAT_SET],
     )
 
     return True
@@ -529,7 +540,6 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
-        # pylint: disable=no-self-use
         return None, None
 
     @property
@@ -766,72 +776,74 @@ class MediaPlayerEntity(Entity):
     @property
     def support_play(self):
         """Boolean if play is supported."""
-        return bool(self.supported_features & SUPPORT_PLAY)
+        return bool(self.supported_features & MediaPlayerEntityFeature.PLAY)
 
     @property
     def support_pause(self):
         """Boolean if pause is supported."""
-        return bool(self.supported_features & SUPPORT_PAUSE)
+        return bool(self.supported_features & MediaPlayerEntityFeature.PAUSE)
 
     @property
     def support_stop(self):
         """Boolean if stop is supported."""
-        return bool(self.supported_features & SUPPORT_STOP)
+        return bool(self.supported_features & MediaPlayerEntityFeature.STOP)
 
     @property
     def support_seek(self):
         """Boolean if seek is supported."""
-        return bool(self.supported_features & SUPPORT_SEEK)
+        return bool(self.supported_features & MediaPlayerEntityFeature.SEEK)
 
     @property
     def support_volume_set(self):
         """Boolean if setting volume is supported."""
-        return bool(self.supported_features & SUPPORT_VOLUME_SET)
+        return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_SET)
 
     @property
     def support_volume_mute(self):
         """Boolean if muting volume is supported."""
-        return bool(self.supported_features & SUPPORT_VOLUME_MUTE)
+        return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_MUTE)
 
     @property
     def support_previous_track(self):
         """Boolean if previous track command supported."""
-        return bool(self.supported_features & SUPPORT_PREVIOUS_TRACK)
+        return bool(self.supported_features & MediaPlayerEntityFeature.PREVIOUS_TRACK)
 
     @property
     def support_next_track(self):
         """Boolean if next track command supported."""
-        return bool(self.supported_features & SUPPORT_NEXT_TRACK)
+        return bool(self.supported_features & MediaPlayerEntityFeature.NEXT_TRACK)
 
     @property
     def support_play_media(self):
         """Boolean if play media command supported."""
-        return bool(self.supported_features & SUPPORT_PLAY_MEDIA)
+        return bool(self.supported_features & MediaPlayerEntityFeature.PLAY_MEDIA)
 
     @property
     def support_select_source(self):
         """Boolean if select source command supported."""
-        return bool(self.supported_features & SUPPORT_SELECT_SOURCE)
+        return bool(self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE)
 
     @property
     def support_select_sound_mode(self):
         """Boolean if select sound mode command supported."""
-        return bool(self.supported_features & SUPPORT_SELECT_SOUND_MODE)
+        return bool(
+            self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        )
 
     @property
     def support_clear_playlist(self):
         """Boolean if clear playlist command supported."""
-        return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
+        return bool(self.supported_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST)
 
     @property
     def support_shuffle_set(self):
         """Boolean if shuffle is supported."""
-        return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
+        return bool(self.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET)
 
     @property
     def support_grouping(self):
         """Boolean if player grouping is supported."""
-        return bool(self.supported_features & SUPPORT_GROUPING)
+        return bool(self.supported_features & MediaPlayerEntityFeature.GROUPING)
 
     async def async_toggle(self):
         """Toggle the power on the media player."""
@@ -853,7 +865,10 @@ class MediaPlayerEntity(Entity):
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
-        if self.volume_level < 1 and self.supported_features & SUPPORT_VOLUME_SET:
+        if (
+            self.volume_level < 1
+            and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
+        ):
             await self.async_set_volume_level(min(1, self.volume_level + 0.1))
 
     async def async_volume_down(self):
@@ -865,7 +880,10 @@ class MediaPlayerEntity(Entity):
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
-        if self.volume_level > 0 and self.supported_features & SUPPORT_VOLUME_SET:
+        if (
+            self.volume_level > 0
+            and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
+        ):
             await self.async_set_volume_level(max(0, self.volume_level - 0.1))
 
     async def async_media_play_pause(self):
@@ -907,12 +925,12 @@ class MediaPlayerEntity(Entity):
         supported_features = self.supported_features or 0
         data = {}
 
-        if supported_features & SUPPORT_SELECT_SOURCE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
         ):
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & SUPPORT_SELECT_SOUND_MODE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
             sound_mode_list := self.sound_mode_list
         ):
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
@@ -936,7 +954,7 @@ class MediaPlayerEntity(Entity):
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
-            state_attr["entity_picture_local"] = self.media_image_local
+            state_attr[ATTR_ENTITY_PICTURE_LOCAL] = self.media_image_local
 
         return state_attr
 
@@ -1147,7 +1165,7 @@ async def websocket_browse_media(hass, connection, msg):
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if not player.supported_features & SUPPORT_BROWSE_MEDIA:
+    if not player.supported_features & MediaPlayerEntityFeature.BROWSE_MEDIA:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"

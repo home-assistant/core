@@ -76,7 +76,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 description_placeholders={"url": self.entry.data[CONF_URL]},
-                data_schema=vol.Schema({}),
                 errors={},
             )
 

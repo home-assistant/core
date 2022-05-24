@@ -10,8 +10,8 @@ from whois.exceptions import (
 )
 
 from homeassistant.components.whois.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_DOMAIN, CONF_NAME
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -124,24 +124,3 @@ async def test_already_configured(
     assert result.get("reason") == "already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_whois_config_flow: MagicMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_DOMAIN: "Example.com", CONF_NAME: "My Example Domain"},
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "My Example Domain"
-    assert result.get("data") == {
-        CONF_DOMAIN: "example.com",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1

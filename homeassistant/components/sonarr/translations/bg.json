@@ -18,7 +18,8 @@
                 "data": {
                     "api_key": "API \u043a\u043b\u044e\u0447",
                     "host": "\u0425\u043e\u0441\u0442",
-                    "port": "\u041f\u043e\u0440\u0442"
+                    "port": "\u041f\u043e\u0440\u0442",
+                    "url": "URL"
                 }
             }
         }

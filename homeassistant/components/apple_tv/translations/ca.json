@@ -9,6 +9,7 @@
             "device_not_found": "No s'ha trobat el dispositiu durant el descobriment, prova de tornar-lo a afegir.",
             "inconsistent_device": "Els protocols esperats no s'han trobat durant el descobriment. Normalment aix\u00f2 indica un problema amb el DNS multicast (Zeroconf). Prova d'afegir el dispositiu de nou.",
             "invalid_config": "La configuraci\u00f3 d'aquest dispositiu no est\u00e0 completa. Intenta'l tornar a afegir.",
+            "ipv6_not_supported": "IPv6 no est\u00e0 suportat.",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "setup_failed": "No s'ha pogut configurar el dispositiu.",

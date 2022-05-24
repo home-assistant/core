@@ -15,16 +15,8 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_LOCATE,
-    SUPPORT_MAP,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, STATE_IDLE, STATE_PAUSED
@@ -50,18 +42,6 @@ from .hub import NeatoHub
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
-
-SUPPORT_NEATO = (
-    SUPPORT_BATTERY
-    | SUPPORT_PAUSE
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_STOP
-    | SUPPORT_START
-    | SUPPORT_CLEAN_SPOT
-    | SUPPORT_STATE
-    | SUPPORT_MAP
-    | SUPPORT_LOCATE
-)
 
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"
@@ -113,6 +93,18 @@ async def async_setup_entry(
 
 class NeatoConnectedVacuum(StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
+
+    _attr_supported_features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_SPOT
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.MAP
+        | VacuumEntityFeature.LOCATE
+    )
 
     def __init__(
         self,
@@ -276,7 +268,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
     @property
     def supported_features(self) -> int:
         """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_NEATO
+        return self._attr_supported_features
 
     @property
     def battery_level(self) -> int | None:

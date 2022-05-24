@@ -1033,17 +1033,14 @@ async def test_put_light_state_fan(hass_hue, hue_client):
 
     living_room_fan = hass_hue.states.get("fan.living_room_fan")
     assert living_room_fan.state == "on"
-    assert living_room_fan.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
+    assert living_room_fan.attributes[fan.ATTR_PERCENTAGE] == 43
 
     # Check setting the brightness of a fan to 0, 33%, 66% and 100% will respectively turn it off, low, medium or high
     # We also check non-cached GET value to exercise the code.
     await perform_put_light_state(
         hass_hue, hue_client, "fan.living_room_fan", True, brightness=0
     )
-    assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_OFF
-    )
+    assert hass_hue.states.get("fan.living_room_fan").state == STATE_OFF
     await perform_put_light_state(
         hass_hue,
         hue_client,
@@ -1052,8 +1049,7 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         brightness=round(33 * 254 / 100),
     )
     assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_LOW
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 33
     )
     with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
         await asyncio.sleep(0.000001)
@@ -1070,8 +1066,7 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         brightness=round(66 * 254 / 100),
     )
     assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_MEDIUM
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE] == 66
     )
     with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
         await asyncio.sleep(0.000001)
@@ -1079,7 +1074,7 @@ async def test_put_light_state_fan(hass_hue, hue_client):
             hue_client, "fan.living_room_fan", HTTPStatus.OK
         )
         assert (
-            round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 67
+            round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 66
         )  # small rounding error in inverse operation
 
     await perform_put_light_state(
@@ -1090,8 +1085,8 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         brightness=round(100 * 254 / 100),
     )
     assert (
-        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_SPEED]
-        == fan.SPEED_HIGH
+        hass_hue.states.get("fan.living_room_fan").attributes[fan.ATTR_PERCENTAGE]
+        == 100
     )
     with patch.object(hue_api, "STATE_CACHED_TIMEOUT", 0.000001):
         await asyncio.sleep(0.000001)

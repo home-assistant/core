@@ -15,9 +15,9 @@
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad",
                     "mode": "Mode",
-                    "name": "Naam van de integratie"
+                    "name": "Naam"
                 },
-                "description": "Stel OpenWeatherMap-integratie in. Ga naar https://openweathermap.org/appid om een API-sleutel te genereren",
+                "description": "Om een API sleutel te genereren ga naar https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

@@ -59,7 +59,9 @@ def _get_vehicle_diagnostics(vehicle: RenaultVehicleProxy) -> dict[str, Any]:
     return {
         "details": async_redact_data(vehicle.details.raw_data, TO_REDACT),
         "data": {
-            key: async_redact_data(coordinator.data.raw_data, TO_REDACT)
+            key: async_redact_data(
+                coordinator.data.raw_data if coordinator.data else None, TO_REDACT
+            )
             for key, coordinator in vehicle.coordinators.items()
         },
     }

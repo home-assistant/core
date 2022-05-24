@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_setup": "Afegeix l'Adam en lloc de l'Anna; consulta la documentaci\u00f3 de la integraci\u00f3 Plugwise de Home Assistant per a m\u00e9s informaci\u00f3.",
             "unknown": "Error inesperat"
         },
         "flow_title": "{name}",

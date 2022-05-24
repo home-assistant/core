@@ -12,7 +12,6 @@
         },
         "step": {
             "mfa": {
-                "description": "Kuck den E-Mailen fir ee Link vun SimpliSafe. Nodeem de Link opgeruff gouf, komm heihinner zer\u00e9ck fir d'Installatioun vun der Integratioun ofzeschl\u00e9issen.",
                 "title": "SimpliSafe Multi-Faktor Authentifikatioun"
             },
             "reauth_confirm": {

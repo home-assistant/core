@@ -112,12 +112,14 @@ async def test_get_triggers(hass):
             "domain": DOMAIN,
             "type": "camera_motion",
             "device_id": device_entry.id,
+            "metadata": {},
         },
         {
             "platform": "device",
             "domain": DOMAIN,
             "type": "camera_person",
             "device_id": device_entry.id,
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -159,6 +161,7 @@ async def test_multiple_devices(hass):
         "domain": DOMAIN,
         "type": "camera_sound",
         "device_id": entry1.device_id,
+        "metadata": {},
     }
 
     triggers = await async_get_device_automations(
@@ -170,6 +173,7 @@ async def test_multiple_devices(hass):
         "domain": DOMAIN,
         "type": "doorbell_chime",
         "device_id": entry2.device_id,
+        "metadata": {},
     }
 
 

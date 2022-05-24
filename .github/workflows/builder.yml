@@ -24,12 +24,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -67,10 +67,10 @@ jobs:
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -100,11 +100,11 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v2.3.2
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -135,7 +135,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.01.0
+        uses: home-assistant/builder@2022.03.1
         with:
           args: |
             $BUILD_ARGS \
@@ -173,7 +173,7 @@ jobs:
           - tinker
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
 
       - name: Set build additional args
         run: |
@@ -200,7 +200,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.01.0
+        uses: home-assistant/builder@2022.03.1
         with:
           args: |
             $BUILD_ARGS \
@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -255,7 +255,7 @@ jobs:
           - "homeassistant"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3.0.2
 
       - name: Login to DockerHub
         if: matrix.registry == 'homeassistant'
@@ -339,7 +339,7 @@ jobs:
 
           # Create general tags
           if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-            create_manifest"dev" "${{ needs.init.outputs.version }}"
+            create_manifest "dev" "${{ needs.init.outputs.version }}"
           elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
             create_manifest "beta" "${{ needs.init.outputs.version }}"
             create_manifest "rc" "${{ needs.init.outputs.version }}"

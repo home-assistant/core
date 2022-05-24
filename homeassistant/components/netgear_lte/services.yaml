@@ -32,18 +32,18 @@ set_option:
       selector:
         select:
           options:
-            - 'auto'
-            - 'mobile'
-            - 'wire'
+            - "auto"
+            - "mobile"
+            - "wire"
     autoconnect:
       name: Auto-connect
       description: Auto-connect mode.
       selector:
         select:
           options:
-            - 'always'
-            - 'home'
-            - 'never'
+            - "always"
+            - "home"
+            - "never"
 
 connect_lte:
   name: Connect LTE

@@ -198,6 +198,29 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[1].data["command_class"] == CommandClass.ENTRY_CONTROL
     assert events[1].data["command_class_name"] == "Entry Control"
 
+    # Publish fake Multilevel Switch CC notification
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": 32,
+            "ccId": 38,
+            "args": {"eventType": 4, "direction": "up"},
+        },
+    )
+
+    node.receive_event(event)
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 3
+    assert events[2].data["home_id"] == client.driver.controller.home_id
+    assert events[2].data["node_id"] == 32
+    assert events[2].data["event_type"] == 4
+    assert events[2].data["direction"] == "up"
+    assert events[2].data["command_class"] == CommandClass.SWITCH_MULTILEVEL
+    assert events[2].data["command_class_name"] == "Multilevel Switch"
+
 
 async def test_value_updated(hass, vision_security_zl7432, integration, client):
     """Test value updated events."""
@@ -307,3 +330,26 @@ async def test_unknown_notification(hass, hank_binary_switch, integration, clien
     notification_obj.node = node
     with pytest.raises(TypeError):
         node.emit("notification", {"notification": notification_obj})
+
+    notification_events = async_capture_events(hass, "zwave_js_notification")
+
+    # Test a valid notification with an unsupported command class
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": node.node_id,
+            "ccId": 0,
+            "args": {
+                "commandClassName": "No Operation",
+                "commandClass": 0,
+                "testNodeId": 1,
+                "status": 0,
+                "acknowledgedFrames": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    assert not notification_events

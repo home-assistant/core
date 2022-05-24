@@ -4,28 +4,32 @@ from __future__ import annotations
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    ENTITY_ID_FORMAT,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro covers."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroCover(device) for device in hass.data[FIBARO_DEVICES]["cover"]], True
+    async_add_entities(
+        [
+            FibaroCover(device)
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.COVER
+            ]
+        ],
+        True,
     )
 
 
@@ -35,7 +39,7 @@ class FibaroCover(FibaroDevice, CoverEntity):
     def __init__(self, fibaro_device):
         """Initialize the Vera device."""
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     @staticmethod
     def bound(position):
