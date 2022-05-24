@@ -51,6 +51,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -100,9 +101,10 @@ async def test_shutdown_before_startup_finishes(
     }
     hass.state = CoreState.not_running
 
-    instance = await async_setup_recorder_instance(hass, config)
-    await instance.async_db_ready
-    await hass.async_block_till_done()
+    recorder_helper.async_initialize_recorder(hass)
+    hass.create_task(async_setup_recorder_instance(hass, config))
+    await hass.data[DOMAIN]["db_connected"]
+    instance = get_instance(hass)
 
     session = await hass.async_add_executor_job(instance.get_session)
 
@@ -170,7 +172,9 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     hass.state = CoreState.not_running
 
-    await async_setup_recorder_instance(hass)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.create_task(async_setup_recorder_instance(hass))
+    await hass.data[DOMAIN]["db_connected"]
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -643,6 +647,7 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
 
 def test_recorder_setup_failure(hass):
     """Test some exceptions."""
+    recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
         "homeassistant.components.recorder.core.time.sleep"
     ):
@@ -657,6 +662,7 @@ def test_recorder_setup_failure(hass):
 
 def test_recorder_setup_failure_without_event_listener(hass):
     """Test recorder setup failure when the event listener is not setup."""
+    recorder_helper.async_initialize_recorder(hass)
     with patch.object(Recorder, "_setup_connection") as setup, patch(
         "homeassistant.components.recorder.core.time.sleep"
     ):
@@ -985,6 +991,7 @@ def test_compile_missing_statistics(tmpdir):
     ):
 
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
         hass.start()
         wait_recording_done(hass)
@@ -1006,6 +1013,7 @@ def test_compile_missing_statistics(tmpdir):
     ):
 
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
         hass.start()
         wait_recording_done(hass)
@@ -1197,6 +1205,7 @@ def test_service_disable_run_information_recorded(tmpdir):
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -1218,6 +1227,7 @@ def test_service_disable_run_information_recorded(tmpdir):
     hass.stop()
 
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -1246,6 +1256,7 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
+    recorder_helper.async_initialize_recorder(hass)
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl, CONF_COMMIT_INTERVAL: 0}}
     )

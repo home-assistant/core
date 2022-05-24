@@ -31,7 +31,7 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
@@ -779,6 +779,8 @@ async def _async_init_recorder_component(hass, add_config=None):
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.migration.migrate_schema"
     ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
         assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )

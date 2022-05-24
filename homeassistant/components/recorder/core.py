@@ -43,6 +43,7 @@ import homeassistant.util.dt as dt_util
 from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
+    DOMAIN,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
     MYSQLDB_URL_PREFIX,
@@ -166,7 +167,12 @@ class Recorder(threading.Thread):
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
         self.engine_version: AwesomeVersion | None = None
+        # Database connection is ready, but non-live migration may be in progress
+        db_connected: asyncio.Future[bool] = hass.data[DOMAIN]["db_connected"]
+        self.async_db_connected: asyncio.Future[bool] = db_connected
+        # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = asyncio.Future()
+        # Database is ready to use and all migration steps completed (used by tests)
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
@@ -188,6 +194,7 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
+        self.migration_is_live = False
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
@@ -289,7 +296,8 @@ class Recorder(threading.Thread):
 
     def _stop_executor(self) -> None:
         """Stop the executor."""
-        assert self._db_executor is not None
+        if self._db_executor is None:
+            return
         self._db_executor.shutdown()
         self._db_executor = None
 
@@ -410,6 +418,7 @@ class Recorder(threading.Thread):
     @callback
     def async_connection_failed(self) -> None:
         """Connect failed tasks."""
+        self.async_db_connected.set_result(False)
         self.async_db_ready.set_result(False)
         persistent_notification.async_create(
             self.hass,
@@ -420,13 +429,29 @@ class Recorder(threading.Thread):
 
     @callback
     def async_connection_success(self) -> None:
-        """Connect success tasks."""
+        """Connect to the database succeeded, schema version and migration need known.
+
+        The database may not yet be ready for use in case of a non-live migration.
+        """
+        self.async_db_connected.set_result(True)
+
+    @callback
+    def async_set_recorder_ready(self) -> None:
+        """Database live and ready for use.
+
+        Called after non-live migration steps are finished.
+        """
+        if self.async_db_ready.done():
+            return
         self.async_db_ready.set_result(True)
         self.async_start_executor()
 
     @callback
-    def _async_recorder_ready(self) -> None:
-        """Finish start and mark recorder ready."""
+    def _async_set_recorder_ready_migration_done(self) -> None:
+        """Finish start and mark recorder ready.
+
+        Called after all migration steps are finished.
+        """
         self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
@@ -557,6 +582,7 @@ class Recorder(threading.Thread):
             # Make sure we cleanly close the run if
             # we restart before startup finishes
             self._shutdown()
+            self.hass.add_job(self.async_set_recorder_ready)
             return
 
         # We wait to start the migration until startup has finished
@@ -577,11 +603,14 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
+                self.hass.add_job(self.async_set_recorder_ready)
                 self._shutdown()
                 return
 
+        self.hass.add_job(self.async_set_recorder_ready)
+
         _LOGGER.debug("Recorder processing the queue")
-        self.hass.add_job(self._async_recorder_ready)
+        self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
 
     def _run_event_loop(self) -> None:
@@ -659,7 +688,7 @@ class Recorder(threading.Thread):
 
         try:
             migration.migrate_schema(
-                self.hass, self.engine, self.get_session, current_version
+                self, self.hass, self.engine, self.get_session, current_version
             )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):

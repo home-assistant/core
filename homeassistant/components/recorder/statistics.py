@@ -576,7 +576,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].items():
+    for domain, platform in instance.hass.data[DOMAIN]["recorder_platform"].items():
         if not hasattr(platform, "compile_statistics"):
             continue
         compiled: PlatformCompiledStatistics = platform.compile_statistics(
@@ -851,7 +851,7 @@ def list_statistic_ids(
         }
 
     # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN]["recorder_platform"].values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
         platform_statistic_ids = platform.list_statistic_ids(
@@ -1339,7 +1339,7 @@ def _sorted_statistics_to_dict(
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN]["recorder_platform"].values():
         if not hasattr(platform, "validate_statistics"):
             continue
         platform_validation.update(platform.validate_statistics(hass))
