@@ -1,7 +1,6 @@
 """Config flow for UPNP."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any, cast
 
@@ -9,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import SsdpChange, SsdpServiceInfo
+from homeassistant.components.ssdp import SsdpServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -21,7 +20,6 @@ from .const import (
     CONFIG_ENTRY_UDN,
     DOMAIN,
     LOGGER,
-    SSDP_SEARCH_TIMEOUT,
     ST_IGD_V1,
     ST_IGD_V2,
 )
@@ -46,47 +44,6 @@ def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
         and discovery_info.ssdp_location
         and discovery_info.ssdp_usn
     )
-
-
-async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
-    """Wait for a device to be discovered."""
-    device_discovered_event = asyncio.Event()
-
-    async def device_discovered(info: SsdpServiceInfo, change: SsdpChange) -> None:
-        if change != SsdpChange.BYEBYE:
-            LOGGER.debug(
-                "Device discovered: %s, at: %s",
-                info.ssdp_usn,
-                info.ssdp_location,
-            )
-            device_discovered_event.set()
-
-    cancel_discovered_callback_1 = await ssdp.async_register_callback(
-        hass,
-        device_discovered,
-        {
-            ssdp.ATTR_SSDP_ST: ST_IGD_V1,
-        },
-    )
-    cancel_discovered_callback_2 = await ssdp.async_register_callback(
-        hass,
-        device_discovered,
-        {
-            ssdp.ATTR_SSDP_ST: ST_IGD_V2,
-        },
-    )
-
-    try:
-        await asyncio.wait_for(
-            device_discovered_event.wait(), timeout=SSDP_SEARCH_TIMEOUT
-        )
-    except asyncio.TimeoutError:
-        return False
-    finally:
-        cancel_discovered_callback_1()
-        cancel_discovered_callback_2()
-
-    return True
 
 
 async def _async_discover_igd_devices(
@@ -173,44 +130,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
         )
-
-    async def async_step_import(
-        self, import_info: Mapping[str, Any] | None
-    ) -> FlowResult:
-        """Import a new UPnP/IGD device as a config entry.
-
-        This flow is triggered by `async_setup`. If no device has been
-        configured before, find any device and create a config_entry for it.
-        Otherwise, do nothing.
-        """
-        LOGGER.debug("async_step_import: import_info: %s", import_info)
-
-        # Landed here via configuration.yaml entry.
-        # Any device already added, then abort.
-        if self._async_current_entries():
-            LOGGER.debug("Already configured, aborting")
-            return self.async_abort(reason="already_configured")
-
-        # Discover devices.
-        await _async_wait_for_discoveries(self.hass)
-        discoveries = await _async_discover_igd_devices(self.hass)
-
-        # Ensure anything to add. If not, silently abort.
-        if not discoveries:
-            LOGGER.info("No UPnP devices discovered, aborting")
-            return self.async_abort(reason="no_devices_found")
-
-        # Ensure complete discovery.
-        discovery = discoveries[0]
-        if not _is_complete_discovery(discovery):
-            LOGGER.debug("Incomplete discovery, ignoring")
-            return self.async_abort(reason="incomplete_discovery")
-
-        # Ensure not already configuring/configured.
-        unique_id = discovery.ssdp_usn
-        await self.async_set_unique_id(unique_id)
-
-        return await self._async_create_entry_from_discovery(discovery)
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered UPnP/IGD device.

@@ -5,13 +5,10 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from ipaddress import ip_address
 from typing import Any
 
 from async_upnp_client.exceptions import UpnpCommunicationError, UpnpConnectionError
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
@@ -20,9 +17,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,7 +25,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_LOCAL_IP,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
@@ -45,38 +39,6 @@ NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                vol.All(
-                    cv.deprecated(CONF_LOCAL_IP),
-                    {
-                        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-                    },
-                )
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up UPnP component."""
-    hass.data[DOMAIN] = {}
-
-    # Only start if set up via configuration.yaml.
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
