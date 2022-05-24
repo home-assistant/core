@@ -5,7 +5,11 @@ import logging
 from logging import Logger
 from typing import Any
 
-from pyialarmxr import IAlarmXR, IAlarmXRGenericException
+from pyialarmxr import (
+    IAlarmXR,
+    IAlarmXRGenericException,
+    IAlarmXRSocketTimeoutException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -67,6 +71,12 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "IAlarmXRGenericException with message: [ %s ]",
                     ialarmxr_exception.message,
+                )
+                errors["base"] = "unknown"
+            except IAlarmXRSocketTimeoutException as ialarmxr_socket_timeout_exception:
+                _LOGGER.debug(
+                    "IAlarmXRSocketTimeoutException with message: [ %s ]",
+                    ialarmxr_socket_timeout_exception.message,
                 )
                 errors["base"] = "unknown"
             except Exception:  # pylint: disable=broad-except

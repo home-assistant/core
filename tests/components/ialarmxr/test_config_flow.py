@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pyialarmxr import IAlarmXRGenericException
+from pyialarmxr import IAlarmXRGenericException, IAlarmXRSocketTimeoutException
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ialarmxr.const import DOMAIN
@@ -83,6 +83,42 @@ async def test_form_exception(hass):
     with patch(
         "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
         side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_cannot_connect_throwing_connectionError(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        side_effect=ConnectionError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect_throwing_iAlarmXRSocketTimeoutException(hass):
+    """Test we handle cannot connect error because of socket timeout."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        side_effect=IAlarmXRSocketTimeoutException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA

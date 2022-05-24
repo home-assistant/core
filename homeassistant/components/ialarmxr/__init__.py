@@ -5,7 +5,11 @@ import asyncio
 import logging
 
 from async_timeout import timeout
-from pyialarmxr import IAlarmXR
+from pyialarmxr import (
+    IAlarmXR,
+    IAlarmXRGenericException,
+    IAlarmXRSocketTimeoutException,
+)
 
 from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with timeout(10):
             ialarmxr_mac = await async_get_ialarmxr_mac(hass, ialarmxr)
-    except (asyncio.TimeoutError, ConnectionError) as ex:
+    except (
+        asyncio.TimeoutError,
+        ConnectionError,
+        IAlarmXRGenericException,
+        IAlarmXRSocketTimeoutException,
+    ) as ex:
         raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmXRDataUpdateCoordinator(hass, ialarmxr, ialarmxr_mac)
