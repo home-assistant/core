@@ -397,6 +397,11 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=UNDEFINED,
                 ),
                 TypeHintMatch(
+                    function_name="async_step_reauth",
+                    arg_types={0: "Mapping[str, Any]"},
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
                     function_name="async_step_dhcp",
                     arg_types={
                         1: "DhcpServiceInfo",
