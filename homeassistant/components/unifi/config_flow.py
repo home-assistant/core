@@ -7,6 +7,7 @@ Configuration of options through options flow.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 import socket
 from typing import Any
 from urllib.parse import urlparse
@@ -201,7 +202,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
