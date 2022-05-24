@@ -124,13 +124,13 @@ def register_node_in_dev_reg(
     hass: HomeAssistant,
     entry: ConfigEntry,
     dev_reg: device_registry.DeviceRegistry,
-    client: ZwaveClient,
+    driver: Driver,
     node: ZwaveNode,
     remove_device_func: Callable[[device_registry.DeviceEntry], None],
 ) -> device_registry.DeviceEntry:
     """Register node in dev reg."""
-    device_id = get_device_id(client, node)
-    device_id_ext = get_device_id_ext(client, node)
+    device_id = get_device_id(driver, node)
+    device_id_ext = get_device_id_ext(driver, node)
     device = dev_reg.async_get_device({device_id})
 
     # Replace the device if it can be determined that this node is not the
@@ -281,7 +281,7 @@ async def setup_driver(  # noqa: C901
             ent_reg,
             registered_unique_ids[device.id][disc_info.platform],
             device,
-            client,
+            driver,
             disc_info,
         )
 
@@ -316,7 +316,7 @@ async def setup_driver(  # noqa: C901
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
         device = register_node_in_dev_reg(
-            hass, entry, dev_reg, client, node, remove_device
+            hass, entry, dev_reg, driver, node, remove_device
         )
         # We only want to create the defaultdict once, even on reinterviews
         if device.id not in registered_unique_ids:
@@ -384,7 +384,7 @@ async def setup_driver(  # noqa: C901
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        register_node_in_dev_reg(hass, entry, dev_reg, client, node, remove_device)
+        register_node_in_dev_reg(hass, entry, dev_reg, driver, node, remove_device)
 
     async def async_on_value_added(
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
@@ -393,7 +393,7 @@ async def setup_driver(  # noqa: C901
         # If node isn't ready or a device for this node doesn't already exist, we can
         # let the node ready event handler perform discovery. If a value has already
         # been processed, we don't need to do it again
-        device_id = get_device_id(client, value.node)
+        device_id = get_device_id(driver, value.node)
         if (
             not value.node.ready
             or not (device := dev_reg.async_get_device({device_id}))
@@ -417,7 +417,7 @@ async def setup_driver(  # noqa: C901
         node: ZwaveNode = event["node"]
         replaced: bool = event.get("replaced", False)
         # grab device in device registry attached to this node
-        dev_id = get_device_id(client, node)
+        dev_id = get_device_id(driver, node)
         device = dev_reg.async_get_device({dev_id})
         # We assert because we know the device exists
         assert device
@@ -426,7 +426,7 @@ async def setup_driver(  # noqa: C901
 
             async_dispatcher_send(
                 hass,
-                f"{DOMAIN}_{get_valueless_base_unique_id(client, node)}_remove_entity",
+                f"{DOMAIN}_{get_valueless_base_unique_id(driver, node)}_remove_entity",
             )
         else:
             remove_device(device)
@@ -434,7 +434,7 @@ async def setup_driver(  # noqa: C901
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
-        device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        device = dev_reg.async_get_device({get_device_id(driver, notification.node)})
         # We assert because we know the device exists
         assert device
         raw_value = value = notification.value
@@ -469,7 +469,7 @@ async def setup_driver(  # noqa: C901
         notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
             "notification"
         ]
-        device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        device = dev_reg.async_get_device({get_device_id(driver, notification.node)})
         # We assert because we know the device exists
         assert device
         event_data = {
@@ -533,11 +533,11 @@ async def setup_driver(  # noqa: C901
             return
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = dev_reg.async_get_device({get_device_id(client, value.node)})
+        device = dev_reg.async_get_device({get_device_id(driver, value.node)})
         # We assert because we know the device exists
         assert device
 
-        unique_id = get_unique_id(client, disc_info.primary_value.value_id)
+        unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
         entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
 
         raw_value = value_ = value.value
@@ -575,7 +575,7 @@ async def setup_driver(  # noqa: C901
         dev_reg, entry.entry_id
     )
     known_devices = [
-        dev_reg.async_get_device({get_device_id(client, node)})
+        dev_reg.async_get_device({get_device_id(driver, node)})
         for node in driver.controller.nodes.values()
     ]
 
