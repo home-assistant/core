@@ -32,7 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -76,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by a YAML config import."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
