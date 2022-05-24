@@ -4,11 +4,10 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import async_timeout
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
 from bimmer_connected.vehicle.models import GPSPosition
-from httpx import HTTPError
+from httpx import HTTPError, TimeoutException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
@@ -52,11 +51,10 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
         old_refresh_token = self.account.refresh_token
 
         try:
-            async with async_timeout.timeout(60):
-                await self.account.get_vehicles()
-        except HTTPError as err:
+            await self.account.get_vehicles()
+        except (HTTPError, TimeoutException) as err:
             self._update_config_entry_refresh_token(None)
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
