@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
@@ -24,6 +24,7 @@ from zwave_js_server.const.command_class.color_switch import (
     ColorComponent,
 )
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.value import Value
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -301,10 +302,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Set (multiple) defined colors to given value(s)."""
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
-        combined_color_val = self.get_zwave_value(
-            "targetColor",
-            CommandClass.SWITCH_COLOR,
-            value_property_key=None,
+        # Setting colors is only done if there's a target color value.
+        combined_color_val = cast(
+            Value,
+            self.get_zwave_value(
+                "targetColor",
+                CommandClass.SWITCH_COLOR,
+                value_property_key=None,
+            ),
         )
         zwave_transition = None
 
