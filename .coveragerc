@@ -208,7 +208,6 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/cover.py
     homeassistant/components/devolo_home_control/light.py
     homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/switch.py
