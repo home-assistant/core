@@ -14,7 +14,7 @@ bashio::log.info "Home Assistant Core finish process exit code ${1}"
 if [[ ${APP_EXIT_CODE} -eq ${RESTART_EXIT_CODE} ]]; then
   exit 0
 elif [[ ${APP_EXIT_CODE} -eq ${SIGNAL_EXIT_CODE} ]]; then
-  bashio::log.info "Home Assistant Core finish process received signal ${APP_EXIT_CODE}" }
+  bashio::log.info "Home Assistant Core finish process received signal ${APP_EXIT_CODE}"
 
   NEW_EXIT_CODE=$((128 + SYS_EXIT_CODE))
   echo ${NEW_EXIT_CODE} > /run/s6-linux-init-container-results/exitcode
