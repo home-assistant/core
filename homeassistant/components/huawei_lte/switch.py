@@ -133,7 +133,7 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
 
     @property
     def _entity_name(self) -> str:
-        return "Wifi guest network"
+        return "WiFi guest network"
 
     @property
     def _device_unique_id(self) -> str:
