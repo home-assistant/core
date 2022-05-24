@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
@@ -53,11 +53,18 @@ class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
     REPORT_CONFIG = []
-    ZCL_INIT_ATTRS = {
-        "detection_interval": True,
-        "motion_sensitivity": True,
-        "trigger_indicator": True,
-    }
+
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+    ) -> None:
+        """Initialize Opple channel."""
+        super().__init__(cluster, ch_pool)
+        if self.cluster.endpoint.model == "lumi.motion.ac02":
+            self.ZCL_INIT_ATTRS = {  # pylint: disable=C0103
+                "detection_interval": True,
+                "motion_sensitivity": True,
+                "trigger_indicator": True,
+            }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
