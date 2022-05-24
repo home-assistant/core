@@ -102,7 +102,7 @@ async def test_dont_migrate_unique_ids(
 
     entity_registry = er.async_get(hass)
 
-    # create existin gentry with new_unique_id
+    # create existing entry with new_unique_id
     existing_entity = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         BMW_DOMAIN,
