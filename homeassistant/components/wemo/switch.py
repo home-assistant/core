@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any
 
-from pywemo import CoffeeMaker, Insight, Maker, StandbyState
+from pywemo import CoffeeMaker, Insight, Maker, StandbyState, Switch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -58,6 +58,9 @@ async def async_setup_entry(
 class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     """Representation of a WeMo switch."""
 
+    # All wemo devices used with WemoSwitch are subclasses of Switch.
+    wemo: Switch
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
@@ -103,10 +106,9 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     def detail_state(self) -> str:
         """Return the state of the device."""
         if isinstance(self.wemo, CoffeeMaker):
-            return cast(str, self.wemo.mode_string)
+            return self.wemo.mode_string
         if isinstance(self.wemo, Insight):
-            # Note: wemo.get_standby_state is a @property.
-            standby_state = self.wemo.get_standby_state
+            standby_state = self.wemo.standby_state
             if standby_state == StandbyState.ON:
                 return STATE_ON
             if standby_state == StandbyState.OFF:
