@@ -124,7 +124,7 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
 
 @dataclass
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
-    """Huawei LTE wifi guest network switch device."""
+    """Huawei LTE WiFi guest network switch device."""
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
