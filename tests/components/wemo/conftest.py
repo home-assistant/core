@@ -69,7 +69,7 @@ def create_pywemo_device(pywemo_registry, pywemo_model):
     device.supports_long_press.return_value = cls.supports_long_press()
 
     if issubclass(cls, pywemo.Insight):
-        device.get_standby_state = pywemo.StandbyState.OFF
+        device.standby_state = pywemo.StandbyState.OFF
         device.current_power_watts = MOCK_INSIGHT_CURRENT_WATTS
         device.today_kwh = MOCK_INSIGHT_TODAY_KWH
         device.threshold_power_watts = MOCK_INSIGHT_STATE_THRESHOLD_POWER
