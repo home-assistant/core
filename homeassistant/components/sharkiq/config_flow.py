@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -21,7 +23,7 @@ SHARKIQ_SCHEMA = vol.Schema(
 
 
 async def _validate_input(
-    hass: core.HomeAssistant, data: dict[str, str]
+    hass: core.HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     ayla_api = get_ayla_api(
@@ -48,7 +50,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_input(self, user_input: dict[str, str]):
+    async def _async_validate_input(self, user_input: Mapping[str, Any]):
         """Validate form input."""
         errors = {}
         info = None
@@ -81,9 +83,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=SHARKIQ_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle re-auth if login is invalid."""
         errors = {}
 
