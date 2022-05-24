@@ -795,6 +795,7 @@ omit =
     homeassistant/components/netgear/router.py
     homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear/switch.py
+    homeassistant/components/netgear/update.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
