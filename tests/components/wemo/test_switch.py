@@ -134,19 +134,19 @@ async def test_insight_state_attributes(hass, pywemo_registry):
             )
 
         # Test 'ON' state detail value.
-        insight.get_standby_state = pywemo.StandbyState.ON
+        insight.standby_state = pywemo.StandbyState.ON
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_ON
 
         # Test 'STANDBY' state detail value.
-        insight.get_standby_state = pywemo.StandbyState.STANDBY
+        insight.standby_state = pywemo.StandbyState.STANDBY
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_STANDBY
 
         # Test 'UNKNOWN' state detail value.
-        insight.get_standby_state = None
+        insight.standby_state = None
         await async_update()
         attributes = hass.states.get(wemo_entity.entity_id).attributes
         assert attributes[ATTR_CURRENT_STATE_DETAIL] == STATE_UNKNOWN
