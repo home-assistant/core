@@ -6,31 +6,14 @@ from httpx import HTTPError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import CONF_READ_ONLY
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import CONF_USERNAME
+
+from . import FIXTURE_CONFIG_ENTRY, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
 
-FIXTURE_USER_INPUT = {
-    CONF_USERNAME: "user@domain.com",
-    CONF_PASSWORD: "p4ssw0rd",
-    CONF_REGION: "rest_of_world",
-}
 FIXTURE_COMPLETE_ENTRY = FIXTURE_USER_INPUT.copy()
 FIXTURE_IMPORT_ENTRY = FIXTURE_USER_INPUT.copy()
-
-FIXTURE_CONFIG_ENTRY = {
-    "entry_id": "1",
-    "domain": DOMAIN,
-    "title": FIXTURE_USER_INPUT[CONF_USERNAME],
-    "data": {
-        CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
-        CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
-        CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
-    },
-    "options": {CONF_READ_ONLY: False},
-    "source": config_entries.SOURCE_USER,
-    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
-}
 
 
 async def test_show_form(hass):

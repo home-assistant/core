@@ -1,116 +1,136 @@
 """Test Axis component setup process."""
-from homeassistant.components.bmw_connected_drive import _async_migrate_entries
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.bmw_connected_drive.const import DOMAIN as BMW_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import FIXTURE_CONFIG_ENTRY
 
 from tests.common import MockConfigEntry
 
+VIN = "WBYYYYYYYYYYYYYYY"
+VEHICLE_NAME = "i3 (+ REX)"
+VEHICLE_NAME_SLUG = "i3_rex"
 
-async def test_migrate_unique_ids(hass):
+
+@pytest.mark.parametrize(
+    "entitydata,old_unique_id,new_unique_id",
+    [
+        (
+            {
+                "domain": SENSOR_DOMAIN,
+                "platform": BMW_DOMAIN,
+                "unique_id": f"{VIN}-charging_level_hv",
+                "suggested_object_id": f"{VEHICLE_NAME} charging_level_hv",
+                "disabled_by": None,
+            },
+            f"{VIN}-charging_level_hv",
+            f"{VIN}-remaining_battery_percent",
+        ),
+        (
+            {
+                "domain": SENSOR_DOMAIN,
+                "platform": BMW_DOMAIN,
+                "unique_id": f"{VIN}-remaining_range_total",
+                "suggested_object_id": f"{VEHICLE_NAME} remaining_range_total",
+                "disabled_by": None,
+            },
+            f"{VIN}-remaining_range_total",
+            f"{VIN}-remaining_range_total",
+        ),
+    ],
+)
+async def test_migrate_unique_ids(
+    hass: HomeAssistant,
+    entitydata: dict,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
     """Test successful migration of entity unique_ids."""
+    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    mock_config_entry.add_to_hass(hass)
 
-    config_entry = MockConfigEntry(
-        domain=BMW_DOMAIN,
-        data={
-            CONF_REGION: "rest_of_world",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-        },
+    entity_registry = er.async_get(hass)
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        **entitydata,
+        config_entry=mock_config_entry,
     )
 
-    registry = er.async_get(hass)
+    assert entity.unique_id == old_unique_id
 
-    # Create entity entry to migrate to new unique ID
-    registry.async_get_or_create(
+    with patch(
+        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        return_value=[],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == new_unique_id
+
+
+@pytest.mark.parametrize(
+    "entitydata,old_unique_id,new_unique_id",
+    [
+        (
+            {
+                "domain": SENSOR_DOMAIN,
+                "platform": BMW_DOMAIN,
+                "unique_id": f"{VIN}-charging_level_hv",
+                "suggested_object_id": f"{VEHICLE_NAME} charging_level_hv",
+                "disabled_by": None,
+            },
+            f"{VIN}-charging_level_hv",
+            f"{VIN}-remaining_battery_percent",
+        ),
+    ],
+)
+async def test_dont_migrate_unique_ids(
+    hass: HomeAssistant,
+    entitydata: dict,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test successful migration of entity unique_ids."""
+    mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+
+    # create existin gentry with new_unique_id
+    existing_entity = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         BMW_DOMAIN,
-        unique_id="WBYYYYYYYYYYYYYYY-charging_level_hv",
-        suggested_object_id="i3 (+ REX) charging_level_hv",
-        config_entry=config_entry,
-    )
-    # Create entity entry that shouldn't be migrated
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        BMW_DOMAIN,
-        unique_id="WBYYYYYYYYYYYYYYY-remaining_range_total",
-        suggested_object_id="i3  (+ REX) remaining_range_total",
-        config_entry=config_entry,
+        unique_id=f"{VIN}-remaining_battery_percent",
+        suggested_object_id=f"{VEHICLE_NAME} remaining_battery_percent",
+        config_entry=mock_config_entry,
     )
 
-    # Verify data pre-migration
-    assert (
-        registry.async_get("sensor.i3_rex_charging_level_hv").unique_id
-        == "WBYYYYYYYYYYYYYYY-charging_level_hv"
-    )
-    assert (
-        registry.async_get("sensor.i3_rex_remaining_range_total").unique_id
-        == "WBYYYYYYYYYYYYYYY-remaining_range_total"
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        **entitydata,
+        config_entry=mock_config_entry,
     )
 
-    await _async_migrate_entries(hass, config_entry)
+    assert entity.unique_id == old_unique_id
 
-    # Verify data after migration
-    assert (
-        registry.async_get("sensor.i3_rex_charging_level_hv").unique_id
-        == "WBYYYYYYYYYYYYYYY-remaining_battery_percent"
-    )
-    assert (
-        registry.async_get("sensor.i3_rex_remaining_range_total").unique_id
-        == "WBYYYYYYYYYYYYYYY-remaining_range_total"
-    )
+    with patch(
+        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        return_value=[],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == old_unique_id
 
-async def test_migrate_previously_created_unique_ids(hass):
-    """Test migration of entity unique_ids that have been created before (i.e. through custom component)."""
+    entity_not_changed = entity_registry.async_get(existing_entity.entity_id)
+    assert entity_not_changed
+    assert entity_not_changed.unique_id == new_unique_id
 
-    config_entry = MockConfigEntry(
-        domain=BMW_DOMAIN,
-        data={
-            CONF_REGION: "rest_of_world",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-        },
-    )
-
-    registry = er.async_get(hass)
-
-    # Create entity entry to migrate to new unique ID
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        BMW_DOMAIN,
-        unique_id="WBYYYYYYYYYYYYYYY-charging_level_hv",
-        suggested_object_id="i3 (+ REX) charging_level_hv",
-        config_entry=config_entry,
-    )
-    # Create entity entry that already exists
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        BMW_DOMAIN,
-        unique_id="WBYYYYYYYYYYYYYYY-remaining_battery_percent",
-        suggested_object_id="i3  (+ REX) remaining_battery_percent",
-        config_entry=config_entry,
-    )
-
-    # Verify data pre-migration
-    assert (
-        registry.async_get("sensor.i3_rex_charging_level_hv").unique_id
-        == "WBYYYYYYYYYYYYYYY-charging_level_hv"
-    )
-    assert (
-        registry.async_get("sensor.i3_rex_remaining_battery_percent").unique_id
-        == "WBYYYYYYYYYYYYYYY-remaining_battery_percent"
-    )
-
-    await _async_migrate_entries(hass, config_entry)
-
-    # Verify data after migration. As sensor with new unique_id already exists, nothing should change
-    assert (
-        registry.async_get("sensor.i3_rex_charging_level_hv").unique_id
-        == "WBYYYYYYYYYYYYYYY-charging_level_hv"
-    )
-    assert (
-        registry.async_get("sensor.i3_rex_remaining_battery_percent").unique_id
-        == "WBYYYYYYYYYYYYYYY-remaining_battery_percent"
-    )
+    assert entity_migrated != entity_not_changed
