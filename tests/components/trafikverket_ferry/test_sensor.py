@@ -20,7 +20,7 @@ async def test_sensor(
     monkeypatch: MonkeyPatch,
     get_ferries: list[FerryStop],
 ) -> None:
-    """Test the Sensibo sensor."""
+    """Test the Trafikverket Ferry sensor."""
     state1 = hass.states.get("sensor.harbor1_departure_from")
     state2 = hass.states.get("sensor.harbor1_departure_to")
     state3 = hass.states.get("sensor.harbor1_departure_time")

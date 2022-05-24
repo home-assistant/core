@@ -17,11 +17,11 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture()
-async def load_int(
+@pytest.fixture(name="load_int")
+async def load_integration_from_entry(
     hass: HomeAssistant, get_ferries: list[FerryStop]
 ) -> MockConfigEntry:
-    """Set up the Sensibo integration in Home Assistant."""
+    """Set up the Trafikverket Ferry integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -77,4 +77,4 @@ def fixture_get_ferries() -> list[FerryStop]:
         "Harbor 2",
     )
 
-    return [depart1, depart2, depart3]
+    yield [depart1, depart2, depart3]
