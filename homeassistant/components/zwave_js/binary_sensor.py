@@ -248,7 +248,7 @@ PROPERTY_SENSOR_MAPPINGS: dict[str, PropertyZWaveJSEntityDescription] = {
 
 
 # Mappings for boolean sensors
-BOOLEAN_SENSOR_MAPPINGS: dict[str, BinarySensorEntityDescription] = {
+BOOLEAN_SENSOR_MAPPINGS: dict[int, BinarySensorEntityDescription] = {
     CommandClass.BATTERY: BinarySensorEntityDescription(
         key=str(CommandClass.BATTERY),
         device_class=BinarySensorDeviceClass.BATTERY,
@@ -304,9 +304,13 @@ async def async_setup_entry(
                         config_entry, driver, info, state_key, notification_description
                     )
                 )
-        elif info.platform_hint == "property" and (
-            property_description := PROPERTY_SENSOR_MAPPINGS.get(
-                info.primary_value.property_name
+        elif (
+            info.platform_hint == "property"
+            and info.primary_value.property_name
+            and (
+                property_description := PROPERTY_SENSOR_MAPPINGS.get(
+                    info.primary_value.property_name
+                )
             )
         ):
             entities.append(

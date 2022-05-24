@@ -28,6 +28,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -140,6 +141,8 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        if target_value is None:
+            raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(
             target_value, percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
@@ -147,11 +150,15 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        if target_value is None:
+            raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, 99)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        if target_value is None:
+            raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, 0)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -207,7 +214,9 @@ class ZWaveTiltCover(ZWaveCover):
         None is unknown, 0 is closed, 100 is fully open.
         """
         value = self.data_template.current_tilt_value(self.info.platform_data)
-        return zwave_tilt_to_percent(value.value) if value else None
+        if value is None or value.value is None:
+            return None
+        return zwave_tilt_to_percent(int(value.value))
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -241,8 +250,10 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     ) -> None:
         """Initialize a ZwaveMotorizedBarrier entity."""
         super().__init__(config_entry, driver, info)
-        self._target_state: ZwaveValue = self.get_zwave_value(
-            TARGET_STATE_PROPERTY, add_to_watched_value_ids=False
+        # TARGET_STATE_PROPERTY is required in the discovery schema.
+        self._target_state = cast(
+            ZwaveValue,
+            self.get_zwave_value(TARGET_STATE_PROPERTY, add_to_watched_value_ids=False),
         )
 
     @property
