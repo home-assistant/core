@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -23,10 +26,12 @@ async def async_setup_entry(
     """Set up update entities for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_FIRMWARE]
-    async_add_entities([NetgearDeviceUpdateEntity(coordinator, router)])
+    entities = [NetgearUpdateEntity(coordinator, router)]
+
+    async_add_entities(entities)
 
 
-class NetgearDeviceUpdateEntity(NetgearRouterEntity, UpdateEntity):
+class NetgearUpdateEntity(NetgearRouterEntity, UpdateEntity):
     """Update entity for a Netgear device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE

@@ -15,9 +15,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_COORDINATOR_FIRMWARE,
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
-    KEY_COORDINATOR_FIRMWARE,
     KEY_ROUTER,
     PLATFORMS,
 )
