@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Vriendenlijst beperkt: raadpleeg de documentatie over hoe je alle andere vrienden kunt zien"
+        },
         "step": {
             "init": {
                 "data": {

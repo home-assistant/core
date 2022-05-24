@@ -27,5 +27,14 @@
                 "title": "Autentikasi Ulang Integrasi"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Akses Home Assistant ke Google Kalender"
+                }
+            }
+        }
     }
 }
