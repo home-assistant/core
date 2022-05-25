@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from typing import Any, cast
 
 from life360 import Life360
@@ -42,7 +42,7 @@ from .helpers import (
 def account_schema(
     def_username: str | vol.UNDEFINED = vol.UNDEFINED,
     def_password: str | vol.UNDEFINED = vol.UNDEFINED,
-) -> dict[Any, Callable[[Any], str]]:
+) -> dict[vol.Marker, Any]:
     """Return schema for an account with optional default values."""
     return {
         vol.Required(CONF_USERNAME, default=def_username): cv.string,
@@ -52,7 +52,7 @@ def account_schema(
 
 def password_schema(
     def_password: str | vol.UNDEFINED = vol.UNDEFINED,
-) -> dict[Any, Callable[[Any], str]]:
+) -> dict[vol.Marker, Any]:
     """Return schema for a password with optional default value."""
     return {vol.Required(CONF_PASSWORD, default=def_password): cv.string}
 
@@ -189,21 +189,21 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 class Life360OptionsFlow(OptionsFlow):
     """Life360 integration options flow."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
-        self.entry = entry
+        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle account options."""
-        options = self.entry.options
+        options = self.config_entry.options
 
         if user_input is not None:
             user_input = _extract_account_options(user_input)
             # If prefix has changed then tell __init__.async_update_options() to remove
             # and re-add config entry.
-            self.hass.data[DOMAIN]["accounts"][self.entry.unique_id][
+            self.hass.data[DOMAIN]["accounts"][self.config_entry.unique_id][
                 "re_add_entry"
             ] = user_input.get(CONF_PREFIX) != options.get(CONF_PREFIX)
             return self.async_create_entry(title="", data=user_input)
@@ -213,7 +213,7 @@ class Life360OptionsFlow(OptionsFlow):
         )
 
 
-def _account_options_schema(options: Mapping[str, Any]) -> vol.Schema:
+def _account_options_schema(options: Mapping[str, Any]) -> dict[vol.Marker, Any]:
     """Create schema for account options form."""
     def_use_prefix = CONF_PREFIX in options
     def_prefix = options.get(CONF_PREFIX, vol.UNDEFINED)
