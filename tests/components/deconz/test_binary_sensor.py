@@ -636,7 +636,7 @@ async def test_add_new_binary_sensor(hass, aioclient_mock, mock_deconz_websocket
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
 
 
-async def test_add_new_binary_sensor_ignored(
+async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     hass, aioclient_mock, mock_deconz_websocket
 ):
     """Test that adding a new binary sensor is not allowed."""
@@ -679,6 +679,57 @@ async def test_add_new_binary_sensor_ignored(
     mock_deconz_request(aioclient_mock, config_entry.data, data)
 
     await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("binary_sensor.presence_sensor")
+
+
+async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
+    hass, aioclient_mock, mock_deconz_websocket
+):
+    """Test that adding a new binary sensor is not allowed."""
+    sensor = {
+        "name": "Presence sensor",
+        "type": "ZHAPresence",
+        "state": {"presence": False},
+        "config": {"on": True, "reachable": True},
+        "uniqueid": "00:00:00:00:00:00:00:00-00",
+    }
+    event_added_sensor = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": sensor,
+    }
+
+    config_entry = await setup_deconz_integration(
+        hass,
+        aioclient_mock,
+        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
+    )
+
+    assert len(hass.states.async_all()) == 0
+
+    await mock_deconz_websocket(data=event_added_sensor)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    assert not hass.states.get("binary_sensor.presence_sensor")
+
+    entity_registry = er.async_get(hass)
+    assert (
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
+    )
+
+    aioclient_mock.clear_requests()
+    data = {"config": {}, "groups": {}, "lights": {}, "sensors": {"1": sensor}}
+    mock_deconz_request(aioclient_mock, config_entry.data, data)
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_ALLOW_NEW_DEVICES: True}
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
