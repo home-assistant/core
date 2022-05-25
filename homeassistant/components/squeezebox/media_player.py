@@ -471,11 +471,16 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        cmd = "play"
         index = None
 
-        if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
+        enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
+
+        if enqueue == MediaPlayerEnqueue.ADD:
             cmd = "add"
+        elif enqueue == MediaPlayerEnqueue.NEXT:
+            cmd = "insert"
+        else:
+            cmd = "play"
 
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
