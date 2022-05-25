@@ -27,5 +27,14 @@
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant hozz\u00e1f\u00e9r\u00e9s a Google Napt\u00e1rhoz"
+                }
+            }
+        }
     }
 }
