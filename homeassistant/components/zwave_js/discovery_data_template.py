@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -325,16 +325,15 @@ class NumericSensorDataTemplateData:
     unit_of_measurement: str | None = None
 
 
-# TypeVar to represent a Scale or Sensor Type
-_ST = TypeVar("_ST", MultilevelSensorType, MultilevelSensorScaleType, MeterScaleType)
-
-
 class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
     @staticmethod
     def find_key_from_matching_set(
-        enum_value: _ST, set_map: dict[str, set[_ST]]
+        enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
+        set_map: dict[
+            str, set[MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType]
+        ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
         for key, value_set in set_map.items():
