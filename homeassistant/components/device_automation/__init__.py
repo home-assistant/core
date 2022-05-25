@@ -314,7 +314,7 @@ async def _async_get_device_automation_capabilities(
         if asyncio.iscoroutine(capabilities):
             # Using a coroutine to get device automation capabitilites is deprecated
             # enable warning when core is fully migrated
-            # then remove in xxxx.xx
+            # then remove in Home Assistant Core xxxx.xx
             capabilities = await capabilities
     except InvalidDeviceAutomationConfig:
         return {}
