@@ -245,13 +245,13 @@ async def _async_get_entry(
         connection.send_error(
             msg[ID], ERR_NOT_FOUND, f"Config entry {entry_id} not found"
         )
-        return None, None
+        return None, None, None
 
     if entry.state is not ConfigEntryState.LOADED:
         connection.send_error(
             msg[ID], ERR_NOT_LOADED, f"Config entry {entry_id} not loaded"
         )
-        return None, None
+        return None, None, None
 
     client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
 
@@ -261,7 +261,7 @@ async def _async_get_entry(
             ERR_NOT_LOADED,
             f"Config entry {msg[ENTRY_ID]} not loaded, driver not ready",
         )
-        return
+        return None, None, None
 
     return entry, client, client.driver
 
@@ -274,7 +274,9 @@ def async_get_entry(orig_func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        entry, client, driver = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
+        entry, client, driver = await _async_get_entry(
+            hass, connection, msg, msg[ENTRY_ID]
+        )
 
         if not entry and not client and not driver:
             return
@@ -415,30 +417,26 @@ def async_register_api(hass: HomeAssistant) -> None:
 )
 @websocket_api.async_response
 async def websocket_network_status(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-    driver: Driver,
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     if ENTRY_ID in msg:
-        _, client = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
-        if not client:
+        _, client, driver = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
+        if not client or not driver:
             return
     elif DEVICE_ID in msg:
         node = await _async_get_node(hass, connection, msg, msg[DEVICE_ID])
         if not node:
             return
         client = node.client
+        assert client.driver
+        driver = client.driver
     else:
         connection.send_error(
             msg[ID], ERR_INVALID_FORMAT, "Must specify either device_id or entry_id"
         )
         return
-    assert client and client.driver and client.driver.controller
-    controller = client.driver.controller
+    controller = driver.controller
     await controller.async_get_state()
     client_version_info = client.version
     assert client_version_info  # When client is connected version info is set.
