@@ -155,6 +155,8 @@ async def async_get_device_diagnostics(
     node = driver.controller.nodes[node_id]
     entities = get_device_entities(hass, node, device)
     assert client.version
+    node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
+    node_state["statistics"] = node.statistics.data
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,
@@ -163,5 +165,5 @@ async def async_get_device_diagnostics(
             "maxSchemaVersion": client.version.max_schema_version,
         },
         "entities": entities,
-        "state": redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT)),
+        "state": node_state,
     }
