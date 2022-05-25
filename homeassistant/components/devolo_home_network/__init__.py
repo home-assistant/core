@@ -39,7 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device = Device(
             ip=entry.data[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance
         )
-        device.password = entry.data.get(CONF_PASSWORD, "")
+        device.password = entry.data.get(
+            CONF_PASSWORD, ""  # This key was added in HA Core 2022.6
+        )
         await device.async_connect(session_instance=async_client)
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
