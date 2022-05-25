@@ -151,7 +151,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 class SonarrOptionsFlowHandler(OptionsFlow):
     """Handle Sonarr client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
