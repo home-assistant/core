@@ -78,8 +78,6 @@ DATA_UNSUBSCRIBE = "unsubs"
 
 # general API constants
 ID = "id"
-DEVICE_OR_ENTRY_ID = "device_or_entry_id"
-ID_TYPE = "id_type"
 ENTRY_ID = "entry_id"
 ERR_NOT_LOADED = "not_loaded"
 NODE_ID = "node_id"
@@ -240,7 +238,7 @@ QR_CODE_STRING_SCHEMA = vol.All(str, vol.Length(min=MINIMUM_QR_STRING_LENGTH))
 
 async def _async_get_entry(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict, entry_id: str
-) -> tuple[ConfigEntry | None, Client | None]:
+) -> tuple[ConfigEntry | None, Client | None, Driver | None]:
     """Get config entry and client from message data."""
     entry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
@@ -257,7 +255,15 @@ async def _async_get_entry(
 
     client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
 
-    return entry, client
+    if client.driver is None:
+        connection.send_error(
+            msg[ID],
+            ERR_NOT_LOADED,
+            f"Config entry {msg[ENTRY_ID]} not loaded, driver not ready",
+        )
+        return
+
+    return entry, client, client.driver
 
 
 def async_get_entry(orig_func: Callable) -> Callable:
@@ -268,20 +274,12 @@ def async_get_entry(orig_func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        entry, client = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
+        entry, client, driver = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
 
-        if not entry and not client:
+        if not entry and not client and not driver:
             return
 
-        if client.driver is None:
-            connection.send_error(
-                msg[ID],
-                ERR_NOT_LOADED,
-                f"Config entry {entry_id} not loaded, driver not ready",
-            )
-            return
-
-        await orig_func(hass, connection, msg, entry, client, client.driver)
+        await orig_func(hass, connection, msg, entry, client, driver)
 
     return async_get_entry_func
 
@@ -411,8 +409,8 @@ def async_register_api(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/network_status",
-        vol.Required(DEVICE_OR_ENTRY_ID): str,
-        vol.Required(ID_TYPE): vol.In([ENTRY_ID, DEVICE_ID]),
+        vol.Exclusive(DEVICE_ID, "id"): str,
+        vol.Exclusive(ENTRY_ID, "id"): str,
     }
 )
 @websocket_api.async_response
@@ -425,19 +423,22 @@ async def websocket_network_status(
     driver: Driver,
 ) -> None:
     """Get the status of the Z-Wave JS network."""
-    controller = driver.controller
-    if msg[ID_TYPE] == ENTRY_ID:
-        _, client, driver = await _async_get_entry(
-            hass, connection, msg, msg[DEVICE_OR_ENTRY_ID]
-        )
+    if ENTRY_ID in msg:
+        _, client = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
         if not client:
             return
-    else:
-        node = await _async_get_node(hass, connection, msg, msg[DEVICE_OR_ENTRY_ID])
+    elif DEVICE_ID in msg:
+        node = await _async_get_node(hass, connection, msg, msg[DEVICE_ID])
         if not node:
             return
         client = node.client
-    controller = driver.controller
+    else:
+        connection.send_error(
+            msg[ID], ERR_INVALID_FORMAT, "Must specify either device_id or entry_id"
+        )
+        return
+    assert client and client.driver and client.driver.controller
+    controller = client.driver.controller
     await controller.async_get_state()
     client_version_info = client.version
     assert client_version_info  # When client is connected version info is set.

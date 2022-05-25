@@ -28,7 +28,10 @@ from zwave_js_server.model.controller import (
 )
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.components.websocket_api.const import (
+    ERR_INVALID_FORMAT,
+    ERR_NOT_FOUND,
+)
 from homeassistant.components.zwave_js.api import (
     ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
@@ -36,7 +39,6 @@ from homeassistant.components.zwave_js.api import (
     COMMAND_CLASS_ID,
     CONFIG,
     DEVICE_ID,
-    DEVICE_OR_ENTRY_ID,
     DSK,
     ENABLED,
     ENTRY_ID,
@@ -46,7 +48,6 @@ from homeassistant.components.zwave_js.api import (
     FORCE_CONSOLE,
     GENERIC_DEVICE_CLASS,
     ID,
-    ID_TYPE,
     INCLUSION_STRATEGY,
     INSTALLER_ICON_TYPE,
     LEVEL,
@@ -95,8 +96,7 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
             {
                 ID: 1,
                 TYPE: "zwave_js/network_status",
-                DEVICE_OR_ENTRY_ID: entry.entry_id,
-                ID_TYPE: ENTRY_ID,
+                ENTRY_ID: entry.entry_id,
             }
         )
         msg = await ws_client.receive_json()
@@ -117,8 +117,7 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
             {
                 ID: 2,
                 TYPE: "zwave_js/network_status",
-                DEVICE_OR_ENTRY_ID: device.id,
-                ID_TYPE: DEVICE_ID,
+                DEVICE_ID: device.id,
             }
         )
         msg = await ws_client.receive_json()
@@ -133,8 +132,7 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
         {
             ID: 3,
             TYPE: "zwave_js/network_status",
-            DEVICE_OR_ENTRY_ID: "fake_id",
-            ID_TYPE: ENTRY_ID,
+            ENTRY_ID: "fake_id",
         }
     )
     msg = await ws_client.receive_json()
@@ -147,8 +145,7 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
         {
             ID: 4,
             TYPE: "zwave_js/network_status",
-            DEVICE_OR_ENTRY_ID: "fake_id",
-            ID_TYPE: DEVICE_ID,
+            DEVICE_ID: "fake_id",
         }
     )
     msg = await ws_client.receive_json()
@@ -164,8 +161,7 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
         {
             ID: 5,
             TYPE: "zwave_js/network_status",
-            DEVICE_OR_ENTRY_ID: entry.entry_id,
-            ID_TYPE: ENTRY_ID,
+            ENTRY_ID: entry.entry_id,
         }
     )
     msg = await ws_client.receive_json()
@@ -178,14 +174,25 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
         {
             ID: 6,
             TYPE: "zwave_js/network_status",
-            DEVICE_OR_ENTRY_ID: device.id,
-            ID_TYPE: DEVICE_ID,
+            DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+    # Test sending command with no device ID or entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 6,
+            TYPE: "zwave_js/network_status",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
 async def test_node_ready(
