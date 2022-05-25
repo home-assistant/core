@@ -43,14 +43,10 @@ async def async_setup_entry(
         cover = gateway.api.lights.covers[cover_id]
         async_add_entities([DeconzCover(cover, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.covers.subscribe(
-            gateway.evaluate_add_device(async_add_cover),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_cover,
+        gateway.api.lights.covers,
     )
-    for cover_id in gateway.api.lights.covers:
-        async_add_cover(EventType.ADDED, cover_id)
 
 
 class DeconzCover(DeconzDevice, CoverEntity):

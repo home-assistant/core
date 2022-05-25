@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
 from pydeconz import DeconzSession, errors
+from pydeconz.interfaces.api import APIItems, GroupedAPIItems
 from pydeconz.models.event import EventType
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
@@ -105,9 +106,11 @@ class DeconzGateway:
         )
 
     @callback
-    def evaluate_add_device(
-        self, add_device_callback: Callable[[EventType, str], None]
-    ) -> Callable[[EventType, str], None]:
+    def register_platform_add_device_callback(
+        self,
+        add_device_callback: Callable[[EventType, str], None],
+        deconz_device_interface: APIItems | GroupedAPIItems,
+    ) -> None:
         """Wrap add_device_callback to check allow_new_devices option."""
 
         def async_add_device(event: EventType, device_id: str) -> None:
@@ -117,11 +120,19 @@ class DeconzGateway:
             Device_refresh is expected to load new devices.
             """
             if not self.option_allow_new_devices and not self.ignore_state_updates:
-                self.ignored_devices.add((add_device_callback, device_id))
+                self.ignored_devices.add((async_add_device, device_id))
                 return
             add_device_callback(event, device_id)
 
-        return async_add_device
+        self.config_entry.async_on_unload(
+            deconz_device_interface.subscribe(
+                async_add_device,
+                EventType.ADDED,
+            )
+        )
+
+        for device_id in deconz_device_interface:
+            add_device_callback(EventType.ADDED, device_id)
 
     @callback
     def load_ignored_devices(self) -> None:
@@ -191,6 +202,8 @@ class DeconzGateway:
         """Manage entities affected by config entry options."""
         deconz_ids = []
 
+        # Allow CLIP sensors
+
         if self.option_allow_clip_sensor:
             async_dispatcher_send(self.hass, self.signal_reload_clip_sensors)
 
@@ -201,6 +214,8 @@ class DeconzGateway:
                 if sensor.type.startswith("CLIP")
             ]
 
+        # Allow Groups
+
         if self.option_allow_deconz_groups:
             if not self._option_allow_deconz_groups:
                 async_dispatcher_send(self.hass, self.signal_reload_groups)
@@ -209,13 +224,17 @@ class DeconzGateway:
 
         self._option_allow_deconz_groups = self.option_allow_deconz_groups
 
+        # Allow adding new devices
+
         option_allow_new_devices = self.config_entry.options.get(
             CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
         )
-        if option_allow_new_devices and not self.option_allow_new_devices:
-            self.load_ignored_devices()
+        if option_allow_new_devices != self.option_allow_new_devices:
+            self.option_allow_new_devices = option_allow_new_devices
+            if option_allow_new_devices:
+                self.load_ignored_devices()
 
-        self.option_allow_new_devices = option_allow_new_devices
+        # Remove entities based on above categories
 
         entity_registry = er.async_get(self.hass)
 

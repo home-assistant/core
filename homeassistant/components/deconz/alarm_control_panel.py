@@ -83,15 +83,10 @@ async def async_setup_entry(
                 [DeconzAlarmControlPanel(sensor, gateway, alarm_system_id)]
             )
 
-    config_entry.async_on_unload(
-        gateway.api.sensors.ancillary_control.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.ancillary_control,
     )
-
-    for sensor_id in gateway.api.sensors.ancillary_control:
-        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
