@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import network
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -49,22 +50,22 @@ async def validate_input(hass, data):
 
     # 1. Checking loqed-connection
     try:
-        async with aiohttp.ClientSession() as session:
-            apiclient = loqed.APIClient(session, "http://" + newdata["ip"])
-            api = loqed.LoqedAPI(apiclient)
-            lock = await api.async_get_lock(
-                newdata["api_key"], newdata["bkey"], newdata["key_id"], newdata["name"]
-            )
-            _LOGGER.debug("Lock details retrieved: %s", newdata["ip"])
-            newdata["id"] = lock.id
-            # checking getWebooks to check the bridgeKey
-            await lock.getWebhooks()
+        session = async_get_clientsession(hass)
+
+        apiclient = loqed.APIClient(session, "http://" + newdata["ip"])
+        api = loqed.LoqedAPI(apiclient)
+        lock = await api.async_get_lock(
+            newdata["api_key"], newdata["bkey"], newdata["key_id"], newdata["name"]
+        )
+        _LOGGER.debug("Lock details retrieved: %s", newdata["ip"])
+        newdata["id"] = lock.id
+        # checking getWebooks to check the bridgeKey
+        await lock.getWebhooks()
     except (aiohttp.ClientError):
         _LOGGER.error("HTTP Connection error to loqed lock: %s:%s", lock.name, lock.id)
         raise CannotConnect from aiohttp.ClientError
     except Exception:
-        _LOGGER.error("HTTP Connection error to loqed lock: %s:%s", lock.name, lock.id)
-        raise CannotConnect from aiohttp.ClientError
+        raise CannotConnect from Exception
     return newdata
 
 
@@ -73,14 +74,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize configflow."""
-        self.host = "LOQED.."
-
     async def async_step_zeroconf(self, discovery_info) -> FlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("HOST: %s", discovery_info.hostname)
-        _LOGGER.info("HOST: %s", discovery_info.hostname)
 
         host = discovery_info.hostname.rstrip(".")
         async with aiohttp.ClientSession() as session:
@@ -90,9 +86,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already exists
         id = lock_data["bridge_mac_wifi"]
-        if await self.async_set_unique_id(id) is not None:
-            self.async_abort(reason="already_configured")
-        self.host = host
+        await self.async_set_unique_id(id)
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
     async def async_step_user(
@@ -108,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except network.NoURLAvailableError:
             internal_url = "http://<IP>:8123"
 
-        STEP_USER_DATA_SCHEMA = vol.Schema(
+        user_data_schema = vol.Schema(
             {
                 vol.Required("name", default="My Lock"): str,
                 vol.Required("internal_url", default=internal_url): str,
@@ -117,20 +112,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+            return self.async_show_form(step_id="user", data_schema=user_data_schema)
 
         errors = {}
 
         try:
             info = await validate_input(self.hass, user_input)
-            if await self.async_set_unique_id(info["id"]) is not None:
-                _LOGGER.error("Aborting config: This device is already configured")
-                return self.async_abort(reason="already_configured")
-            return self.async_create_entry(
-                title="LOQED Touch Smart Lock", data=user_input
-            )
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -138,9 +125,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+        else:
+            await self.async_set_unique_id(info["id"])
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title="LOQED Touch Smart Lock", data=user_input
+            )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=user_data_schema, errors=errors
         )
 
 

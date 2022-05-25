@@ -257,6 +257,9 @@ aiolivisi==0.0.19
 # homeassistant.components.lookin
 aiolookin==1.0.0
 
+# homeassistant.components.loqed
+loqedAPI==2.1.3
+
 # homeassistant.components.lyric
 aiolyric==1.0.9
 

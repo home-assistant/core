@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -26,7 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, STATE_OPENING, WEBHOOK_PREFIX
+from .const import DOMAIN, WEBHOOK_PREFIX
 
 LOCK_STATES = {
     "opening": STATE_OPENING,
@@ -47,7 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up the Loqed lock platform."""
     data = hass.data[DOMAIN][entry.entry_id]
     _LOGGER.debug("Start setting up the Loqed lock: %s", data["id"])
@@ -102,7 +103,6 @@ class LoqedLock(LockEntity):
         self._attr_unique_id = self._lock.id
         self._attr_name = self._lock.name
         self._attr_supported_features = SUPPORT_OPEN
-        # self._attr_supported_features = LockEntityFeature.OPEN
         self.update_task = None
 
     async def async_added_to_hass(self) -> None:
@@ -141,17 +141,10 @@ class LoqedLock(LockEntity):
         return LOCK_STATES[self.bolt_state] == STATE_LOCKED
 
     @property
-    def battery(self):
-        """Return true if lock is locked."""
-        return self._lock.battery_percentage
-
-    @property
     def extra_state_attributes(self):
         """Extra state attribtues."""
         state_attr = {
-            "id": self._lock.id,
             "bolt_state": self.bolt_state,
-            "lock_url": self.lock_url,
             "webhook_url": self._webhook,
             ATTR_BATTERY_LEVEL: self._lock.battery_percentage,
             "battery_type": self._lock.battery_type,
@@ -159,12 +152,6 @@ class LoqedLock(LockEntity):
             "wifi_strength": self._lock.wifi_strength,
             "ble_strength": self._lock.ble_strength,
             "last_event": self._lock.last_event,
-            # "party_mode": self._lock.party_mode,
-            # "guest_access_mode": self._lock.guest_access_mode,
-            # "twist_assist": self._lock.twist_assist,
-            # "touch_to_connect": self._lock.touch_to_connect,
-            # "lock_direction": self._lock.lock_direction,
-            # "mortise_lock_type": self._lock.mortise_lock_type,
             "last_changed_key_id": self._lock.last_key_id,
         }
         return state_attr

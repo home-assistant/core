@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS: list[str] = ["lock"]
+PLATFORMS: list[str] = [Platform.LOCK]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -17,8 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Registers update listener to update config entry when options are updated.
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    # Forward the setup to the lock platform
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, "lock"))
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -33,5 +33,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Handle options update."""
-    print("UPDATE LISTENER CALLED")
     await hass.config_entries.async_reload(config_entry.entry_id)
