@@ -505,7 +505,7 @@ class ConfigurableFanValueMappingDataTemplate(
         self, value: ZwaveValue
     ) -> dict[str, ZwaveConfigurationValue | None]:
         """Resolve helper class data for a discovered value."""
-        zwave_value = cast(  # type: ignore[redundant-cast]
+        zwave_value = cast(
             Union[ZwaveConfigurationValue, None],
             self._get_value_from_id(value.node, self.configuration_option),
         )
