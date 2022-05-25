@@ -11,13 +11,14 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
+from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,13 +92,10 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the user step."""
         errors = {}
-        db_url_default = DEFAULT_URL.format(
-            hass_config_path=self.hass.config.path(DEFAULT_DB_FILE)
-        )
 
         if user_input is not None:
 
-            db_url = user_input.get(CONF_DB_URL, db_url_default)
+            db_url = user_input.get(CONF_DB_URL, None)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
@@ -106,8 +104,9 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 validate_sql_select(query)
+                db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url, query, column
+                    validate_query, db_url_for_validation, query, column
                 )
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
@@ -149,14 +148,15 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
-            db_url = user_input[CONF_DB_URL]
+            db_url = user_input.get(CONF_DB_URL, None)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
 
             try:
                 validate_sql_select(query)
+                db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url, query, column
+                    validate_query, db_url_for_validation, query, column
                 )
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
@@ -176,7 +176,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         CONF_DB_URL,
                         description={
                             "suggested_value": self.entry.options[CONF_DB_URL]

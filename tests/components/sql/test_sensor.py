@@ -24,7 +24,9 @@ async def test_query(hass: HomeAssistant) -> None:
         "column": "value",
         "name": "Select value SQL query",
     }
-    await init_integration(hass, config)
+
+    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
+        await init_integration(hass, config)
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
@@ -64,7 +66,9 @@ async def test_query_value_template(hass: HomeAssistant) -> None:
         "name": "count_tables",
         "value_template": "{{ value | int }}",
     }
-    await init_integration(hass, config)
+
+    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
+        await init_integration(hass, config)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5"
@@ -79,7 +83,9 @@ async def test_query_value_template_invalid(hass: HomeAssistant) -> None:
         "name": "count_tables",
         "value_template": "{{ value | dontwork }}",
     }
-    await init_integration(hass, config)
+
+    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
+        await init_integration(hass, config)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5.01"
@@ -93,7 +99,9 @@ async def test_query_limit(hass: HomeAssistant) -> None:
         "column": "value",
         "name": "Select value SQL query",
     }
-    await init_integration(hass, config)
+
+    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
+        await init_integration(hass, config)
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
@@ -110,7 +118,9 @@ async def test_query_no_value(
         "column": "value",
         "name": "count_tables",
     }
-    await init_integration(hass, config)
+
+    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
+        await init_integration(hass, config)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
@@ -132,7 +142,7 @@ async def test_query_mssql_no_result(
     with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.text",
         return_value="SELECT TOP 1 5 as value where 1=2",
-    ):
+    ), patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
         await init_integration(hass, config)
 
     state = hass.states.get("sensor.count_tables")
@@ -184,7 +194,7 @@ async def test_invalid_url_setup(
     with patch(
         "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
         side_effect=SQLAlchemyError(url),
-    ):
+    ), patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -215,8 +225,9 @@ async def test_invalid_url_on_update(
 
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",

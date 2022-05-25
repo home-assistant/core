@@ -28,6 +28,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DB_URL_RE, DOMAIN
+from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SQL sensor entry."""
 
-    db_url: str = entry.options[CONF_DB_URL]
+    db_url: str = resolve_db_url(hass, entry.options[CONF_DB_URL])
     name: str = entry.options[CONF_NAME]
     query_str: str = entry.options[CONF_QUERY]
     unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
