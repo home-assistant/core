@@ -718,6 +718,17 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
 
+    # Test bypass check passes
+    assert not async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.value_updated",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+        },
+    )
+
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Test full validation for both events
