@@ -400,7 +400,7 @@ class ZWaveServices:
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        nodes = service.data[const.ATTR_NODES]
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
@@ -434,7 +434,7 @@ class ZWaveServices:
         self, service: ServiceCall
     ) -> None:
         """Bulk set multiple partial config values on a node."""
-        nodes = service.data[const.ATTR_NODES]
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         property_ = service.data[const.ATTR_CONFIG_PARAMETER]
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
@@ -531,7 +531,7 @@ class ZWaveServices:
 
     async def async_multicast_set_value(self, service: ServiceCall) -> None:
         """Set a value via multicast to multiple nodes."""
-        nodes = service.data[const.ATTR_NODES]
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         broadcast: bool = service.data[const.ATTR_BROADCAST]
         options = service.data.get(const.ATTR_OPTIONS)
 
@@ -559,13 +559,15 @@ class ZWaveServices:
         # If there are no nodes, we can assume there is only one config entry due to
         # schema validation and can use that to get the client, otherwise we can just
         # get the client from the node.
-        client: ZwaveClient = None
-        first_node: ZwaveNode = next((node for node in nodes), None)
-        if first_node:
+        client: ZwaveClient
+        first_node: ZwaveNode
+        try:
+            first_node = next(node for node in nodes)
             client = first_node.client
-        else:
+        except StopIteration:
             entry_id = self._hass.config_entries.async_entries(const.DOMAIN)[0].entry_id
             client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
+            assert client.driver
             first_node = next(
                 node
                 for node in client.driver.controller.nodes.values()
@@ -688,6 +690,9 @@ class ZWaveServices:
                 _LOGGER.warning("Skipping entity %s as it has no value ID", entity_id)
                 continue
 
-            endpoints.add(node.endpoints[node.values[value_id].endpoint])
+            endpoint_idx = node.values[value_id].endpoint
+            endpoints.add(
+                node.endpoints[endpoint_idx if endpoint_idx is not None else 0]
+            )
 
         await _async_invoke_cc_api(endpoints)

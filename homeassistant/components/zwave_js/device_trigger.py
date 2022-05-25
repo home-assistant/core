@@ -254,7 +254,7 @@ async def async_get_triggers(
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
-    triggers = []
+    triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
