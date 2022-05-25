@@ -54,8 +54,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         # Determine preset modes
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._attr_preset_modes = None
-        if presets := self.device["preset_modes"]:
+        if presets := self.device.get("preset_modes"):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = presets
 
