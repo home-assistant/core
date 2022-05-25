@@ -718,7 +718,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
 
-    # Test bypass check passes
+    # Test bypass check is False
     assert not async_bypass_dynamic_config_validation(
         hass,
         {
