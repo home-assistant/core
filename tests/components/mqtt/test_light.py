@@ -1943,7 +1943,7 @@ async def test_legacy_on_command_rgb(hass, mqtt_mock_entry):
     mqtt_mock.async_publish.reset_mock()
 
 
-async def test_on_command_rgb(hass, mqtt_mock):
+async def test_on_command_rgb(hass, mqtt_mock_entry):
     """Test on command in RGB brightness mode."""
     config = {
         light.DOMAIN: {
@@ -1956,6 +1956,7 @@ async def test_on_command_rgb(hass, mqtt_mock):
 
     assert await async_setup_component(hass, light.DOMAIN, config)
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN

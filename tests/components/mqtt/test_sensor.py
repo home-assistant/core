@@ -259,7 +259,7 @@ async def expires_helper(hass, caplog):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock_entry):
     """Test the setting of the value via MQTT with JSON payload."""
     assert await async_setup_component(
         hass,
@@ -275,6 +275,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     async_fire_mqtt_message(hass, "test-topic", '{ "val": "100" }')
     state = hass.states.get("sensor.test")
