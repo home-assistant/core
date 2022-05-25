@@ -300,6 +300,7 @@ async def async_setup_services(
     calendars = await hass.async_add_executor_job(
         load_config, hass.config.path(YAML_DEVICES)
     )
+    calendars_file_lock = asyncio.Lock()
 
     async def _found_calendar(calendar_item: Calendar) -> None:
         calendar = get_calendar_info(
@@ -307,15 +308,19 @@ async def async_setup_services(
             calendar_item.dict(exclude_unset=True),
         )
         calendar_id = calendar_item.id
-        # Populate the yaml file with all discovered calendars
-        if calendar_id not in calendars:
-            calendars[calendar_id] = calendar
-            await hass.async_add_executor_job(
-                update_config, hass.config.path(YAML_DEVICES), calendar
-            )
-        else:
-            # Prefer entity/name information from yaml, overriding api
-            calendar = calendars[calendar_id]
+        # If the google_calendars.yaml file already exists, populate it for
+        # backwards compatibility, but otherwise do not create it if it does
+        # not exist.
+        if calendars:
+            if calendar_id not in calendars:
+                calendars[calendar_id] = calendar
+                async with calendars_file_lock:
+                    await hass.async_add_executor_job(
+                        update_config, hass.config.path(YAML_DEVICES), calendar
+                    )
+            else:
+                # Prefer entity/name information from yaml, overriding api
+                calendar = calendars[calendar_id]
         async_dispatcher_send(hass, DISCOVER_CALENDAR, calendar)
 
     created_calendars = set()
