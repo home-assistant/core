@@ -173,12 +173,6 @@ class EventProcessor:
             self.filters,
             self.context_id,
         )
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Literal statement: %s",
-                stmt.compile(compile_kwargs={"literal_binds": True}),
-            )
-
         with session_scope(hass=self.hass) as session:
             return self.humanify(yield_rows(session.execute(stmt)))
 
@@ -214,20 +208,16 @@ def _humanify(
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
 
-    def _keep_row(row: Row | EventAsRow, event_type: str) -> bool:
+    def _keep_row(row: EventAsRow) -> bool:
         """Check if the entity_filter rejects a row."""
         assert entities_filter is not None
-        if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
+        if entity_id := row.entity_id:
             return entities_filter(entity_id)
-
-        if event_type in external_events:
-            # If the entity_id isn't described, use the domain that describes
-            # the event for filtering.
-            domain: str | None = external_events[event_type][0]
-        else:
-            domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
-
-        return domain is not None and entities_filter(f"{domain}._")
+        if entity_id := row.data.get(ATTR_ENTITY_ID):
+            return entities_filter(entity_id)
+        if domain := row.data.get(ATTR_DOMAIN):
+            return entities_filter(f"{domain}._")
+        return True
 
     # Process rows
     for row in rows:
@@ -236,12 +226,12 @@ def _humanify(
             continue
         event_type = row.event_type
         if event_type == EVENT_CALL_SERVICE or (
-            event_type is not PSUEDO_EVENT_STATE_CHANGED
-            and entities_filter is not None
-            and not _keep_row(row, event_type)
+            entities_filter
+            # We literally mean is EventAsRow not a subclass of EventAsRow
+            and type(row) is EventAsRow  # pylint: disable=unidiomatic-typecheck
+            and not _keep_row(row)
         ):
             continue
-
         if event_type is PSUEDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None

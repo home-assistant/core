@@ -470,6 +470,8 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
+/homeassistant/components/ialarm_xr/ @bigmoby
+/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/ialarmxr/ @bigmoby
 /tests/components/ialarmxr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50

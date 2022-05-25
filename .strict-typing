@@ -127,7 +127,7 @@ homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
-homeassistant.components.ialarmxr.*
+homeassistant.components.ialarm_xr.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
