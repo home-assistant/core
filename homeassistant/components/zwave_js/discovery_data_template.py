@@ -406,7 +406,7 @@ class TiltValueMix:
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue | None]:
         """Resolve helper class data for a discovered value."""
         return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
 
@@ -415,7 +415,9 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
         return [resolved_data["tilt_value"]]
 
     @staticmethod
-    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+    def current_tilt_value(
+        resolved_data: dict[str, ZwaveValue | None]
+    ) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
 
