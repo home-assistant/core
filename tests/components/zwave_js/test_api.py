@@ -185,7 +185,7 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
     # Test sending command with no device ID or entry ID fails
     await ws_client.send_json(
         {
-            ID: 6,
+            ID: 7,
             TYPE: "zwave_js/network_status",
         }
     )
