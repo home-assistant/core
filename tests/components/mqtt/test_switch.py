@@ -53,7 +53,7 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_controlling_state_via_topic(hass, mqtt_mock):
+async def test_controlling_state_via_topic(hass, mqtt_mock_entry):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -71,6 +71,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
@@ -93,7 +94,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
+async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock_entry):
     """Test the sending MQTT commands in optimistic mode."""
     fake_state = ha.State("switch.test", "on")
 
@@ -116,6 +117,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_ON
@@ -139,7 +141,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
-async def test_sending_inital_state_and_optimistic(hass, mqtt_mock):
+async def test_sending_inital_state_and_optimistic(hass, mqtt_mock_entry):
     """Test the initial state in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -153,13 +155,14 @@ async def test_sending_inital_state_and_optimistic(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
+async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock_entry):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
         hass,
@@ -177,6 +180,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
@@ -197,21 +201,21 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock):
+async def test_availability_when_connection_lost(hass, mqtt_mock_entry):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock):
+async def test_availability_without_topic(hass, mqtt_mock_entry):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock):
+async def test_default_availability_payload(hass, mqtt_mock_entry):
     """Test availability by default payload with defined topic."""
     config = {
         switch.DOMAIN: {
@@ -225,11 +229,11 @@ async def test_default_availability_payload(hass, mqtt_mock):
     }
 
     await help_test_default_availability_payload(
-        hass, mqtt_mock, switch.DOMAIN, config, True, "state-topic", "1"
+        hass, mqtt_mock_entry, switch.DOMAIN, config, True, "state-topic", "1"
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock):
+async def test_custom_availability_payload(hass, mqtt_mock_entry):
     """Test availability by custom payload with defined topic."""
     config = {
         switch.DOMAIN: {
@@ -243,11 +247,11 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     }
 
     await help_test_custom_availability_payload(
-        hass, mqtt_mock, switch.DOMAIN, config, True, "state-topic", "1"
+        hass, mqtt_mock_entry, switch.DOMAIN, config, True, "state-topic", "1"
     )
 
 
-async def test_custom_state_payload(hass, mqtt_mock):
+async def test_custom_state_payload(hass, mqtt_mock_entry):
     """Test the state payload."""
     assert await async_setup_component(
         hass,
@@ -266,6 +270,7 @@ async def test_custom_state_payload(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
@@ -282,49 +287,49 @@ async def test_custom_state_payload(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
-async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock_entry):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock_entry):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, {}
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG, {}
     )
 
 
-async def test_setting_attribute_with_template(hass, mqtt_mock):
+async def test_setting_attribute_with_template(hass, mqtt_mock_entry):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_not_dict(hass, mqtt_mock_entry, caplog):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock_entry, caplog):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_discovery_update_attr(hass, mqtt_mock, caplog):
+async def test_discovery_update_attr(hass, mqtt_mock_entry, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock, caplog, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_unique_id(hass, mqtt_mock):
+async def test_unique_id(hass, mqtt_mock_entry):
     """Test unique id option only creates one switch per unique_id."""
     config = {
         switch.DOMAIN: [
@@ -344,20 +349,22 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, mqtt_mock, switch.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock_entry, switch.DOMAIN, config)
 
 
-async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
+async def test_discovery_removal_switch(hass, mqtt_mock_entry, caplog):
     """Test removal of discovered switch."""
     data = (
         '{ "name": "test",'
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_removal(hass, mqtt_mock, caplog, switch.DOMAIN, data)
+    await help_test_discovery_removal(
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, data
+    )
 
 
-async def test_discovery_update_switch_topic_template(hass, mqtt_mock, caplog):
+async def test_discovery_update_switch_topic_template(hass, mqtt_mock_entry, caplog):
     """Test update of discovered switch."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
@@ -382,7 +389,7 @@ async def test_discovery_update_switch_topic_template(hass, mqtt_mock, caplog):
 
     await help_test_discovery_update(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry,
         caplog,
         switch.DOMAIN,
         config1,
@@ -392,7 +399,7 @@ async def test_discovery_update_switch_topic_template(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_switch_template(hass, mqtt_mock, caplog):
+async def test_discovery_update_switch_template(hass, mqtt_mock_entry, caplog):
     """Test update of discovered switch."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[switch.DOMAIN])
@@ -415,7 +422,7 @@ async def test_discovery_update_switch_template(hass, mqtt_mock, caplog):
 
     await help_test_discovery_update(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry,
         caplog,
         switch.DOMAIN,
         config1,
@@ -425,7 +432,7 @@ async def test_discovery_update_switch_template(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_unchanged_switch(hass, mqtt_mock, caplog):
+async def test_discovery_update_unchanged_switch(hass, mqtt_mock_entry, caplog):
     """Test update of discovered switch."""
     data1 = (
         '{ "name": "Beer",'
@@ -437,12 +444,12 @@ async def test_discovery_update_unchanged_switch(hass, mqtt_mock, caplog):
         "homeassistant.components.mqtt.switch.MqttSwitch.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, switch.DOMAIN, data1, discovery_update
+            hass, mqtt_mock_entry, caplog, switch.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog):
+async def test_discovery_broken(hass, mqtt_mock_entry, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = (
@@ -451,56 +458,56 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
         '  "command_topic": "test_topic" }'
     )
     await help_test_discovery_broken(
-        hass, mqtt_mock, caplog, switch.DOMAIN, data1, data2
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, data1, data2
     )
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock):
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry):
     """Test MQTT switch device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry):
     """Test MQTT switch device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_update(hass, mqtt_mock):
+async def test_entity_device_info_update(hass, mqtt_mock_entry):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_remove(hass, mqtt_mock):
+async def test_entity_device_info_remove(hass, mqtt_mock_entry):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_debug_info_message(hass, mqtt_mock):
+async def test_entity_debug_info_message(hass, mqtt_mock_entry):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, switch.SERVICE_TURN_ON
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG, switch.SERVICE_TURN_ON
     )
 
 
@@ -525,7 +532,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
 )
 async def test_publishing_with_custom_encoding(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry,
     caplog,
     service,
     topic,
@@ -539,7 +546,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry,
         caplog,
         domain,
         config,
@@ -551,11 +558,11 @@ async def test_publishing_with_custom_encoding(
     )
 
 
-async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+async def test_reloadable(hass, mqtt_mock_entry, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = switch.DOMAIN
     config = DEFAULT_CONFIG[domain]
-    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+    await help_test_reloadable(hass, mqtt_mock_entry, caplog, tmp_path, domain, config)
 
 
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
@@ -572,12 +579,12 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     ],
 )
 async def test_encoding_subscribable_topics(
-    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+    hass, mqtt_mock_entry, caplog, topic, value, attribute, attribute_value
 ):
     """Test handling of incoming encoded payload."""
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry,
         caplog,
         switch.DOMAIN,
         DEFAULT_CONFIG[switch.DOMAIN],
