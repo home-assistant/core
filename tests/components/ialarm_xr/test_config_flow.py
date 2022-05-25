@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pyialarmxr import IAlarmXRGenericException, IAlarmXRSocketTimeoutException
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.ialarmxr.const import DOMAIN
+from homeassistant.components.ialarm_xr.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -28,7 +28,7 @@ async def test_form(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["handler"] == "ialarmxr"
+    assert result["handler"] == "ialarm_xr"
     assert result["data_schema"].schema.get("host") == str
     assert result["data_schema"].schema.get("port") == int
     assert result["data_schema"].schema.get("password") == str
@@ -36,13 +36,13 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_status",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_status",
         return_value=1,
     ), patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         return_value=TEST_MAC,
     ), patch(
-        "homeassistant.components.ialarmxr.async_setup_entry",
+        "homeassistant.components.ialarm_xr.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -63,7 +63,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -81,7 +81,7 @@ async def test_form_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -99,7 +99,7 @@ async def test_form_cannot_connect_throwing_connection_error(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -110,14 +110,14 @@ async def test_form_cannot_connect_throwing_connection_error(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_cannot_connect_throwing_iAlarmXRSocketTimeoutException(hass):
+async def test_form_cannot_connect_throwing_socket_timeout_exception(hass):
     """Test we handle cannot connect error because of socket timeout."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         side_effect=IAlarmXRSocketTimeoutException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -128,14 +128,14 @@ async def test_form_cannot_connect_throwing_iAlarmXRSocketTimeoutException(hass)
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_cannot_connect_throwing_iAlarmXRGenericException(hass):
+async def test_form_cannot_connect_throwing_generic_exception(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         side_effect=IAlarmXRGenericException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -161,7 +161,7 @@ async def test_form_already_exists(hass):
     )
 
     with patch(
-        "homeassistant.components.ialarmxr.config_flow.IAlarmXR.get_mac",
+        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
         return_value=TEST_MAC,
     ):
         result2 = await hass.config_entries.flow.async_configure(

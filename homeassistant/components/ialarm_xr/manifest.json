@@ -1,5 +1,5 @@
 {
-  "domain": "ialarmxr",
+  "domain": "ialarm_xr",
   "name": "Antifurto365 iAlarmXR",
   "documentation": "https://www.home-assistant.io/integrations/ialarmxr",
   "requirements": ["pyialarmxr==1.0.13"],

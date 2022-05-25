@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from homeassistant.components.ialarmxr.const import DOMAIN
+from homeassistant.components.ialarm_xr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.util.dt import utcnow
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.fixture(name="ialarmxr_api")
 def ialarmxr_api_fixture():
     """Set up IAlarmXR API fixture."""
-    with patch("homeassistant.components.ialarmxr.IAlarmXR") as mock_ialarm_api:
+    with patch("homeassistant.components.ialarm_xr.IAlarmXR") as mock_ialarm_api:
         yield mock_ialarm_api
 
 
@@ -117,4 +117,4 @@ async def test_setup_entry_and_then_fail_on_update(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
     ialarmxr_api.return_value.get_status.assert_called_once()
-    assert hass.states.get("alarm_control_panel.ialarmxr").state == "unavailable"
+    assert hass.states.get("alarm_control_panel.iAlarmXR").state == "unavailable"
