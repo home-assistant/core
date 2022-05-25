@@ -503,7 +503,7 @@ async def setup_driver(  # noqa: C901
         elif isinstance(notification, PowerLevelNotification):
             event_data.update(
                 {
-                    ATTR_COMMAND_CLASS_NAME: "Power Level",
+                    ATTR_COMMAND_CLASS_NAME: "Powerlevel",
                     ATTR_TEST_NODE_ID: notification.test_node_id,
                     ATTR_STATUS: notification.status,
                     ATTR_ACKNOWLEDGED_FRAMES: notification.acknowledged_frames,
