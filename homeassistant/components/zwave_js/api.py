@@ -236,6 +236,36 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
 QR_CODE_STRING_SCHEMA = vol.All(str, vol.Length(min=MINIMUM_QR_STRING_LENGTH))
 
 
+async def _async_get_entry(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict, entry_id: str
+) -> tuple[ConfigEntry | None, Client | None, Driver | None]:
+    """Get config entry and client from message data."""
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None:
+        connection.send_error(
+            msg[ID], ERR_NOT_FOUND, f"Config entry {entry_id} not found"
+        )
+        return None, None, None
+
+    if entry.state is not ConfigEntryState.LOADED:
+        connection.send_error(
+            msg[ID], ERR_NOT_LOADED, f"Config entry {entry_id} not loaded"
+        )
+        return None, None, None
+
+    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+
+    if client.driver is None:
+        connection.send_error(
+            msg[ID],
+            ERR_NOT_LOADED,
+            f"Config entry {msg[ENTRY_ID]} not loaded, driver not ready",
+        )
+        return None, None, None
+
+    return entry, client, client.driver
+
+
 def async_get_entry(orig_func: Callable) -> Callable:
     """Decorate async function to get entry."""
 
@@ -244,33 +274,31 @@ def async_get_entry(orig_func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        entry_id = msg[ENTRY_ID]
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            connection.send_error(
-                msg[ID], ERR_NOT_FOUND, f"Config entry {entry_id} not found"
-            )
+        entry, client, driver = await _async_get_entry(
+            hass, connection, msg, msg[ENTRY_ID]
+        )
+
+        if not entry and not client and not driver:
             return
 
-        if entry.state is not ConfigEntryState.LOADED:
-            connection.send_error(
-                msg[ID], ERR_NOT_LOADED, f"Config entry {entry_id} not loaded"
-            )
-            return
-
-        client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-
-        if client.driver is None:
-            connection.send_error(
-                msg[ID],
-                ERR_NOT_LOADED,
-                f"Config entry {entry_id} not loaded, driver not ready",
-            )
-            return
-
-        await orig_func(hass, connection, msg, entry, client, client.driver)
+        await orig_func(hass, connection, msg, entry, client, driver)
 
     return async_get_entry_func
+
+
+async def _async_get_node(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict, device_id: str
+) -> Node | None:
+    """Get node from message data."""
+    try:
+        node = async_get_node_from_device_id(hass, device_id)
+    except ValueError as err:
+        error_code = ERR_NOT_FOUND
+        if "loaded" in err.args[0]:
+            error_code = ERR_NOT_LOADED
+        connection.send_error(msg[ID], error_code, err.args[0])
+        return None
+    return node
 
 
 def async_get_node(orig_func: Callable) -> Callable:
@@ -281,15 +309,8 @@ def async_get_node(orig_func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide user specific data and store to function."""
-        device_id = msg[DEVICE_ID]
-
-        try:
-            node = async_get_node_from_device_id(hass, device_id)
-        except ValueError as err:
-            error_code = ERR_NOT_FOUND
-            if "loaded" in err.args[0]:
-                error_code = ERR_NOT_LOADED
-            connection.send_error(msg[ID], error_code, err.args[0])
+        node = await _async_get_node(hass, connection, msg, msg[DEVICE_ID])
+        if not node:
             return
         await orig_func(hass, connection, msg, node)
 
@@ -388,24 +409,37 @@ def async_register_api(hass: HomeAssistant) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zwave_js/network_status", vol.Required(ENTRY_ID): str}
+    {
+        vol.Required(TYPE): "zwave_js/network_status",
+        vol.Exclusive(DEVICE_ID, "id"): str,
+        vol.Exclusive(ENTRY_ID, "id"): str,
+    }
 )
 @websocket_api.async_response
-@async_get_entry
 async def websocket_network_status(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-    driver: Driver,
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
     """Get the status of the Z-Wave JS network."""
+    if ENTRY_ID in msg:
+        _, client, driver = await _async_get_entry(hass, connection, msg, msg[ENTRY_ID])
+        if not client or not driver:
+            return
+    elif DEVICE_ID in msg:
+        node = await _async_get_node(hass, connection, msg, msg[DEVICE_ID])
+        if not node:
+            return
+        client = node.client
+        assert client.driver
+        driver = client.driver
+    else:
+        connection.send_error(
+            msg[ID], ERR_INVALID_FORMAT, "Must specify either device_id or entry_id"
+        )
+        return
     controller = driver.controller
+    await controller.async_get_state()
     client_version_info = client.version
     assert client_version_info  # When client is connected version info is set.
-
-    await controller.async_get_state()
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -1723,6 +1757,7 @@ async def websocket_get_log_config(
     driver: Driver,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
+    assert client and client.driver
     connection.send_result(
         msg[ID],
         dataclasses.asdict(driver.log_config),
@@ -1781,6 +1816,7 @@ async def websocket_data_collection_status(
     driver: Driver,
 ) -> None:
     """Return data collection preference and status."""
+    assert client and client.driver
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await driver.async_is_statistics_enabled(),
