@@ -213,8 +213,9 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_encoding_default(hass, calls, mqtt_mock):
+async def test_encoding_default(hass, calls, mqtt_mock_entry):
     """Test default encoding."""
+    mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -229,8 +230,9 @@ async def test_encoding_default(hass, calls, mqtt_mock):
     mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
 
 
-async def test_encoding_custom(hass, calls, mqtt_mock):
+async def test_encoding_custom(hass, calls, mqtt_mock_entry):
     """Test default encoding."""
+    mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
