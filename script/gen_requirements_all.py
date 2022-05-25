@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
-import configparser
 import difflib
 import importlib
 import os
@@ -11,6 +10,11 @@ import sys
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
@@ -166,10 +170,10 @@ def explore_module(package, explore_children):
 
 
 def core_requirements():
-    """Gather core requirements out of setup.cfg."""
-    parser = configparser.ConfigParser()
-    parser.read("setup.cfg")
-    return parser["options"]["install_requires"].strip().split("\n")
+    """Gather core requirements out of pyproject.toml."""
+    with open("pyproject.toml", "rb") as fp:
+        data = tomllib.load(fp)
+    return data["project"]["dependencies"]
 
 
 def gather_recursive_requirements(domain, seen=None):
