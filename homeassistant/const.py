@@ -7,7 +7,11 @@ from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
 <<<<<<< HEAD
+<<<<<<< HEAD
 MINOR_VERSION: Final = 6
+=======
+MINOR_VERSION: Final = 7
+>>>>>>> 3e0e8dd105 (Bump version to 2022.7.0dev0 (#72500))
 PATCH_VERSION: Final = "0.dev0"
 =======
 MINOR_VERSION: Final = 5
