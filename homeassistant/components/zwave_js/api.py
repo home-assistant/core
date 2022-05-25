@@ -114,7 +114,8 @@ DRY_RUN = "dry_run"
 # constants for inclusion
 INCLUSION_STRATEGY = "inclusion_strategy"
 
-INCLUSION_STRATEGY_NOT_SMART_START: dict[
+# Remove type ignore when bumping library to 0.37.0
+INCLUSION_STRATEGY_NOT_SMART_START: dict[  # type: ignore[misc]
     int,
     Literal[
         InclusionStrategy.DEFAULT,
