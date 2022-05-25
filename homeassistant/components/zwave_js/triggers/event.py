@@ -30,11 +30,12 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_home_and_node_id_from_device_entry,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
+
+from .helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -111,6 +112,9 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
+    if async_bypass_dynamic_config_validation(hass, config):
+        return config
+
     if config[ATTR_EVENT_SOURCE] == "node":
         config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
         if not config[ATTR_NODES]:
@@ -122,11 +126,8 @@ async def async_validate_trigger_config(
         return config
 
     entry_id = config[ATTR_CONFIG_ENTRY_ID]
-    if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+    if hass.config_entries.async_get_entry(entry_id) is None:
         raise vol.Invalid(f"Config entry '{entry_id}' not found")
-
-    if entry.state is not ConfigEntryState.LOADED:
-        raise vol.Invalid(f"Config entry '{entry_id}' not loaded")
 
     return config
 

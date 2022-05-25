@@ -13,6 +13,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
+from homeassistant.components.zwave_js.config_validation import VALUE_SCHEMA
 from homeassistant.components.zwave_js.const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
@@ -38,7 +39,7 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from ..config_validation import VALUE_SCHEMA
+from .helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -75,6 +76,9 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
+
+    if async_bypass_dynamic_config_validation(hass, config):
+        return config
 
     config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
     if not config[ATTR_NODES]:
