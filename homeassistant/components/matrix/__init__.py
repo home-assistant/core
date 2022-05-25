@@ -1,15 +1,18 @@
 """The Matrix bot component."""
 from __future__ import annotations
 
-from functools import partial
+import asyncio
 import logging
-import mimetypes
+
+# import mimetypes
 import os
 from typing import Any
 
 from matrix_client.client import MatrixRequestError
 from nio import AsyncClient
-from nio.responses import LoginError
+from nio.events.room_events import RoomMessageText
+from nio.exceptions import RemoteProtocolError
+from nio.responses import JoinError, JoinResponse, LoginError
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -194,7 +197,8 @@ class MatrixBot:
         # Joining rooms potentially does a lot of I/O, so we defer it
         async def handle_startup(_):
             """Run once when Home Assistant finished startup."""
-            self._join_rooms()
+            await self._join_rooms()
+            self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
@@ -236,49 +240,30 @@ class MatrixBot:
             }
             self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
 
-    async def _join_or_get_room(self, room_id_or_alias):
-        """
-        Join a room or get it, if we are already in the room.
+    async def _join_room(self, room_id_or_alias: str) -> None:
+        """Join a room or get it, if we are already in the room."""
+        join_response = await self._client.join(room_id_or_alias)
 
-        We can't just always call join_room(), since that seems to crash
-        the client if we're already in the room.
-        """
-        # rooms = self._client.get_rooms()
-        rooms = {}
-        if room_id_or_alias in rooms:
-            _LOGGER.debug("Already in room %s", room_id_or_alias)
-            return rooms[room_id_or_alias]
-
-        for room in rooms.values():
-            if room.room_id not in self._aliases_fetched_for:
-                room.update_aliases()
-                self._aliases_fetched_for.add(room.room_id)
-
-            if (
-                room_id_or_alias in room.aliases
-                or room_id_or_alias == room.canonical_alias
-            ):
-                _LOGGER.debug(
-                    "Already in room %s (known as %s)", room.room_id, room_id_or_alias
-                )
-                return room
-
-        # room = self._client.join_room(room_id_or_alias)
-        # _LOGGER.info("Joined room %s (known as %s)", room.room_id, room_id_or_alias)
-        # return room
-        return
+        if isinstance(join_response, JoinResponse):
+            _LOGGER.debug("Joined or already in room %s", room_id_or_alias)
+        elif isinstance(join_response, JoinError):
+            raise RemoteProtocolError(
+                f"Could not join room '{room_id_or_alias}': {join_response}"
+            )
 
     async def _join_rooms(self):
         """Join the Matrix rooms that we listen for commands in."""
-        for room_id in self._listening_rooms:
-            try:
-                room = self._join_or_get_room(room_id)
-                room.add_listener(
-                    partial(self._handle_room_message, room_id), "m.room.message"
-                )
+        rooms = {self._join_room(room_id) for room_id in self._listening_rooms}
+        try:
+            await asyncio.wait(rooms)
+        except RemoteProtocolError as exception:
+            _LOGGER.exception(str(exception))
 
-            except MatrixRequestError as ex:
-                _LOGGER.error("Could not join room %s: %s", room_id, ex)
+        # for room_id in self._listening_rooms:
+        #     room = await self._join_room(room_id)
+        #     room.add_listener(
+        #         partial(self._handle_room_message, room_id), "m.room.message"
+        #     )
 
     def _get_auth_tokens(self) -> list[Any] | dict[str, Any]:
         """
@@ -344,33 +329,33 @@ class MatrixBot:
 
         self._client = client
 
-    async def _send_image(self, img, target_rooms):
-        _LOGGER.debug("Uploading file from path, %s", img)
-
-        if not self.hass.config.is_allowed_path(img):
-            _LOGGER.error("Path not allowed: %s", img)
-            return
-        with open(img, "rb") as upfile:
-            imgfile = upfile.read()
-        content_type = mimetypes.guess_type(img)[0]
-        mxc = self._client.upload(imgfile, content_type)
-        for target_room in target_rooms:
-            try:
-                room = await self._join_or_get_room(target_room)
-                room.send_image(mxc, img, mimetype=content_type)
-            except MatrixRequestError as ex:
-                _LOGGER.error(
-                    "Unable to deliver message to room '%s': %d, %s",
-                    target_room,
-                    ex.code,
-                    ex.content,
-                )
+    # async def _send_image(self, img, target_rooms):
+    #     _LOGGER.debug("Uploading file from path, %s", img)
+    #
+    #     if not self.hass.config.is_allowed_path(img):
+    #         _LOGGER.error("Path not allowed: %s", img)
+    #         return
+    #     with open(img, "rb") as upfile:
+    #         imgfile = upfile.read()
+    #     content_type = mimetypes.guess_type(img)[0]
+    #     mxc = self._client.upload(imgfile, content_type)
+    #     for target_room in target_rooms:
+    #         try:
+    #             room = await self._join_room(target_room)
+    #             # room.send_image(mxc, img, mimetype=content_type)
+    #         except MatrixRequestError as ex:
+    #             _LOGGER.error(
+    #                 "Unable to deliver message to room '%s': %d, %s",
+    #                 target_room,
+    #                 ex.code,
+    #                 ex.content,
+    #             )
 
     async def _send_message(self, message, data, target_rooms):
         """Send the message to the Matrix server."""
         for target_room in target_rooms:
             try:
-                room = self._join_or_get_room(target_room)
+                room = await self._join_room(target_room)
                 if message is not None:
                     _LOGGER.debug(room.send_text(message))
             except MatrixRequestError as ex:
@@ -380,9 +365,9 @@ class MatrixBot:
                     ex.code,
                     ex.content,
                 )
-        if data is not None:
-            for img in data.get(ATTR_IMAGES, []):
-                await self._send_image(img, target_rooms)
+        # if data is not None:
+        #     for img in data.get(ATTR_IMAGES, []):
+        #         await self._send_image(img, target_rooms)
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
