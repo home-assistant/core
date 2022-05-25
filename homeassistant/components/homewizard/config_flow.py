@@ -4,9 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohwenergy
-from aiohwenergy.hwenergy import SUPPORTED_DEVICES
-import async_timeout
+from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.errors import DisabledError, UnsupportedError
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
@@ -175,15 +174,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Make connection with device
         # This is to test the connection and to get info for unique_id
-        energy_api = aiohwenergy.HomeWizardEnergy(ip_address)
+        energy_api = HomeWizardEnergy(ip_address)
 
         try:
-            with async_timeout.timeout(10):
-                await energy_api.initialize()
+            device = await energy_api.device()
 
-        except aiohwenergy.DisabledError as ex:
+        except DisabledError as ex:
             _LOGGER.error("API disabled, API must be enabled in the app")
             raise AbortFlow("api_not_enabled") from ex
+
+        except UnsupportedError as ex:
+            _LOGGER.error("API version unsuppored")
+            raise AbortFlow("unsupported_api_version") from ex
 
         except Exception as ex:
             _LOGGER.exception(
@@ -195,25 +197,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             await energy_api.close()
 
-        if energy_api.device is None:
-            _LOGGER.error("Initialization failed")
-            raise AbortFlow("unknown_error")
-
-        # Validate metadata
-        if energy_api.device.api_version != "v1":
-            raise AbortFlow("unsupported_api_version")
-
-        if energy_api.device.product_type not in SUPPORTED_DEVICES:
-            _LOGGER.error(
-                "Device (%s) not supported by integration",
-                energy_api.device.product_type,
-            )
-            raise AbortFlow("device_not_supported")
-
         return {
-            CONF_PRODUCT_NAME: energy_api.device.product_name,
-            CONF_PRODUCT_TYPE: energy_api.device.product_type,
-            CONF_SERIAL: energy_api.device.serial,
+            CONF_PRODUCT_NAME: device.product_name,
+            CONF_PRODUCT_TYPE: device.product_type,
+            CONF_SERIAL: device.serial,
         }
 
     async def _async_set_and_check_unique_id(self, entry_info: dict[str, Any]) -> None:
