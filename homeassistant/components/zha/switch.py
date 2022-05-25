@@ -155,6 +155,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
 class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     """Representation of a ZHA switch configuration entity."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute: str
     _zcl_inverter_attribute: str = ""
 
@@ -260,8 +261,16 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 class OnOffWindowDetectionFunctionConfigurationEntity(
     ZHASwitchConfigurationEntity, id_suffix="on_off_window_opened_detection"
 ):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA window detection configuration entity."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     _zcl_attribute = "window_detection_function"
     _zcl_inverter_attribute = "window_detection_function_inverter"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+class P1MotionTriggerIndicatorSwitch(
+    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
+):
+    """Representation of a ZHA motion triggering configuration entity."""
+
+    _zcl_attribute = "trigger_indicator"
