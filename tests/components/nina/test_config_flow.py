@@ -171,7 +171,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONST_REGION_A_TO_D: ["072350000000_62"],
+                CONST_REGION_A_TO_D: ["072350000000_1"],
                 CONST_REGION_E_TO_H: [],
                 CONST_REGION_I_TO_L: [],
                 CONST_REGION_M_TO_Q: [],
@@ -181,16 +181,20 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {
+        assert result["data"] is None
+
+        assert dict(config_entry.data) == {
             CONF_FILTER_CORONA: DUMMY_DATA[CONF_FILTER_CORONA],
             CONF_MESSAGE_SLOTS: DUMMY_DATA[CONF_MESSAGE_SLOTS],
-            CONST_REGION_A_TO_D: ["072350000000_62"],
+            CONST_REGION_A_TO_D: ["072350000000_1"],
             CONST_REGION_E_TO_H: [],
             CONST_REGION_I_TO_L: [],
             CONST_REGION_M_TO_Q: [],
             CONST_REGION_R_TO_U: [],
             CONST_REGION_V_TO_Z: [],
-            CONF_REGIONS: {"072350000000": "Aach"},
+            CONF_REGIONS: {
+                "072350000000": "Damflos (Trier-Saarburg - Rheinland-Pfalz)"
+            },
         }
 
 
@@ -293,7 +297,7 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={
                 CONF_MESSAGE_SLOTS: 2,
-                CONST_REGION_A_TO_D: ["072350000000_62", "095760000000_1"],
+                CONST_REGION_A_TO_D: ["072350000000", "095760000000"],
                 CONST_REGION_E_TO_H: [],
                 CONST_REGION_I_TO_L: [],
                 CONST_REGION_M_TO_Q: [],

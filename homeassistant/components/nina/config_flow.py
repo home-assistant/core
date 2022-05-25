@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
-    async_get_registry,
+    async_get,
 )
 
 from .const import (
@@ -206,7 +206,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = await async_get_registry(self.hass)
+                entity_registry = async_get(self.hass)
 
                 entries = async_entries_for_config_entry(
                     entity_registry, self.config_entry.entry_id
@@ -233,7 +233,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         if entry.unique_id == entity_uid:
                             entity_registry.async_remove(entry.entity_id)
 
-                return self.async_create_entry(title="", data=user_input)
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=user_input
+                )
+
+                return self.async_create_entry(title="", data=None)
 
             errors["base"] = "no_selection"
 

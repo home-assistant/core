@@ -1,7 +1,6 @@
 """The Nina integration."""
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import Any
 
 from async_timeout import timeout
@@ -59,11 +58,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    config = dict(entry.data)
-    if entry.options:
-        config.update(entry.options)
-        entry.data = MappingProxyType(config)
-
     await hass.config_entries.async_reload(entry.entry_id)
 
 
