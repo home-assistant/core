@@ -33,7 +33,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
                     "revision": None,
                 },
                 "name": "Raspberry Pi",
-                "url": "https://theuselessweb.com/",
+                "url": None,
             }
         ]
     }
