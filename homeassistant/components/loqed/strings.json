@@ -6,7 +6,7 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "internal_url": "Internal Home assistant URL",
-          "config": "Loqed Confiuguration"
+          "config": "Loqed Configuration"
         }
       }
     },
