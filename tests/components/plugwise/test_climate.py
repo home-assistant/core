@@ -18,10 +18,9 @@ async def test_adam_climate_entity_attributes(
     state = hass.states.get("climate.zone_lisa_wk")
 
     assert state
-    assert state.attributes["hvac_modes"] == [
-        HVACMode.HEAT,
-        HVACMode.AUTO,
-    ]
+    assert state.state == HVACMode.AUTO
+    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+    # hvac_action is not asserted as the fixture is not in line with recent firmware functionality
 
     assert "preset_modes" in state.attributes
     assert "no_frost" in state.attributes["preset_modes"]
@@ -37,11 +36,9 @@ async def test_adam_climate_entity_attributes(
 
     state = hass.states.get("climate.zone_thermostat_jessie")
     assert state
-
-    assert state.attributes["hvac_modes"] == [
-        HVACMode.HEAT,
-        HVACMode.AUTO,
-    ]
+    assert state.state == HVACMode.AUTO
+    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+    # hvac_action is not asserted as the fixture is not in line with recent firmware functionality
 
     assert "preset_modes" in state.attributes
     assert "no_frost" in state.attributes["preset_modes"]
@@ -60,9 +57,16 @@ async def test_adam_2_climate_entity_attributes(
 ) -> None:
     """Test creation of adam climate device environment."""
     state = hass.states.get("climate.anna")
-
     assert state
+    assert state.state == HVACMode.HEAT
     assert state.attributes["hvac_action"] == "heating"
+    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
+
+    state = hass.states.get("climate.lisa_badkamer")
+    assert state
+    assert state.state == HVACMode.AUTO
+    assert state.attributes["hvac_action"] == "idle"
+    assert state.attributes["hvac_modes"] == [HVACMode.HEAT, HVACMode.AUTO]
 
 
 async def test_adam_3_climate_entity_attributes(
@@ -72,6 +76,7 @@ async def test_adam_3_climate_entity_attributes(
     state = hass.states.get("climate.anna")
 
     assert state
+    assert state.state == HVACMode.COOL
     assert state.attributes["hvac_action"] == "cooling"
     assert state.attributes["hvac_modes"] == [HVACMode.COOL, HVACMode.AUTO]
 
