@@ -469,7 +469,7 @@ class SmartEnergyMetering(Sensor):
 
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
-    models=["add-model-names-here"],
+    models={"TS011F"},
     stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
 class PolledSmartEnergyMetering(SmartEnergyMetering):
