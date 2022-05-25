@@ -14,6 +14,7 @@ from homeassistant.components.logbook import websocket_api
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
@@ -584,6 +585,21 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     )
     hass.bus.async_fire(
         EVENT_AUTOMATION_TRIGGERED,
+        {
+            ATTR_NAME: "Mock automation switch matching entity",
+            ATTR_ENTITY_ID: "switch.match_domain",
+        },
+    )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation switch matching domain", ATTR_DOMAIN: "switch"},
+    )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
+        {ATTR_NAME: "Mock automation matches nothing"},
+    )
+    hass.bus.async_fire(
+        EVENT_AUTOMATION_TRIGGERED,
         {ATTR_NAME: "Mock automation 3", ATTR_ENTITY_ID: "light.keep"},
     )
     hass.states.async_set("cover.excluded", STATE_ON)
@@ -596,12 +612,21 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         {
             "context_id": ANY,
             "domain": "automation",
+            "entity_id": None,
+            "message": "triggered",
+            "name": "Mock automation matches nothing",
+            "source": None,
+            "when": ANY,
+        },
+        {
+            "context_id": ANY,
+            "domain": "automation",
             "entity_id": "light.keep",
             "message": "triggered",
             "name": "Mock automation 3",
             "source": None,
             "when": ANY,
-        }
+        },
     ]
 
     await websocket_client.send_json(
