@@ -1147,6 +1147,8 @@ async def test_get_provisioning_entries(hass, integration, client, hass_ws_clien
         {
             "dsk": "test",
             "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
+            "requested_security_classes": None,
+            "status": 0,
             "additional_properties": {"fake": "test"},
         }
     ]
@@ -1235,6 +1237,8 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
         "max_inclusion_request_interval": 1,
         "uuid": "test",
         "supported_protocols": [Protocols.ZWAVE],
+        "status": 0,
+        "requested_security_classes": None,
         "additional_properties": {},
     }
 
@@ -3535,6 +3539,7 @@ async def test_check_for_config_updates(hass, client, integration, hass_ws_clien
     client.async_send_command.return_value = {
         "updateAvailable": True,
         "newVersion": "test",
+        "installedVersion": "test",
     }
     await ws_client.send_json(
         {
