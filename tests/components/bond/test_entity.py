@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from bond_api import BPUPSubscriptions, DeviceType
+from bond_async import BPUPSubscriptions, DeviceType
 
 from homeassistant import core
 from homeassistant.components import fan

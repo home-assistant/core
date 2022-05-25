@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from bond_api import BPUPSubscriptions
+from bond_async import BPUPSubscriptions
 
 from homeassistant.const import (
     ATTR_HW_VERSION,
