@@ -200,7 +200,7 @@ async def _async_get_automation_for_device(
     if asyncio.iscoroutine(automations):
         # Using a coroutine to get device automations is deprecated
         # enable warning when core is fully migrated
-        # then remove in xxxx.xx
+        # then remove in Home Assistant Core xxxx.xx
         return await automations  # type: ignore[no-any-return]
     return automations  # type: ignore[no-any-return]
 
