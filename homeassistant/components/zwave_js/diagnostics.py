@@ -8,7 +8,6 @@ from typing import Any
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
 from zwave_js_server.dump import dump_msgs
-from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
@@ -150,8 +149,7 @@ async def async_get_device_diagnostics(
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
     node_id = identifiers[1] if identifiers else None
-    assert client.driver
-    driver: Driver = client.driver
+    assert (driver := client.driver)
     if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
     node = driver.controller.nodes[node_id]
