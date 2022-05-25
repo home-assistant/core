@@ -10,6 +10,9 @@ from zwave_js_server.model.node import Node
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
+from homeassistant.components.zwave_js.triggers.helpers import (
+    async_bypass_dynamic_config_validation,
+)
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
@@ -717,6 +720,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
 
     await hass.config_entries.async_unload(integration.entry_id)
 
+    # Test full validation for both events
     assert await async_validate_trigger_config(
         hass,
         {
@@ -728,6 +732,27 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     )
 
     assert await async_validate_trigger_config(
+        hass,
+        {
+            "platform": f"{DOMAIN}.event",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "event_source": "node",
+            "event": "interview stage completed",
+        },
+    )
+
+    # Test bypass check
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.value_updated",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+        },
+    )
+
+    assert async_bypass_dynamic_config_validation(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
@@ -738,7 +763,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         },
     )
 
-    assert await async_validate_trigger_config(
+    assert async_bypass_dynamic_config_validation(
         hass,
         {
             "platform": f"{DOMAIN}.event",
@@ -748,7 +773,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         },
     )
 
-    assert await async_validate_trigger_config(
+    assert async_bypass_dynamic_config_validation(
         hass,
         {
             "platform": f"{DOMAIN}.event",
@@ -756,5 +781,15 @@ async def test_zwave_js_trigger_config_entry_unloaded(
             "event_source": "node",
             "event": "interview stage completed",
             "event_data": {"stageName": "ProtocolInfo"},
+        },
+    )
+
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.event",
+            "config_entry_id": integration.entry_id,
+            "event_source": "controller",
+            "event": "nvm convert progress",
         },
     )
