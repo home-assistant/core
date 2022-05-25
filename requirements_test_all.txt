@@ -466,7 +466,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.2
 
 # homeassistant.components.flux_led
-flux_led==0.28.29
+flux_led==0.28.30
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
