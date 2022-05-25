@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import astuple, dataclass
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -48,15 +48,10 @@ from .const import (
 class ZwaveValueID:
     """Class to represent a value ID."""
 
-    property_: str | int | None = None
-    command_class: int | None = None
+    property_: str | int
+    command_class: int
     endpoint: int | None = None
     property_key: str | int | None = None
-
-    def __post_init__(self) -> None:
-        """Post initialization check."""
-        if all(val is None for val in astuple(self)):
-            raise ValueError("At least one of the fields must be set.")
 
 
 @callback
