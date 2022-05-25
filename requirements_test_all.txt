@@ -589,7 +589,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220524.0
+home-assistant-frontend==20220525.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -950,7 +950,7 @@ pybotvac==0.0.23
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==12.1.2
+pychromecast==12.1.3
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -1036,6 +1036,9 @@ pyhomematic==0.1.77
 
 # homeassistant.components.ialarm
 pyialarm==1.9.0
+
+# homeassistant.components.ialarm_xr
+pyialarmxr==1.0.13
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -1644,7 +1647,7 @@ youless-api==0.16
 zeroconf==0.38.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.73
+zha-quirks==0.0.74
 
 # homeassistant.components.zha
 zigpy-deconz==0.16.0
@@ -1662,7 +1665,7 @@ zigpy-znp==0.7.0
 zigpy==0.45.1
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.36.1
+zwave-js-server-python==0.37.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

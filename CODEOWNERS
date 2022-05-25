@@ -417,6 +417,8 @@ build.json @home-assistant/supervisor
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @ASMfreaK @leikoilja
 /tests/components/habitica/ @ASMfreaK @leikoilja
+/homeassistant/components/hardware/ @home-assistant/core
+/tests/components/hardware/ @home-assistant/core
 /homeassistant/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
@@ -471,6 +473,8 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
+/homeassistant/components/ialarm_xr/ @bigmoby
+/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -828,6 +832,8 @@ build.json @home-assistant/supervisor
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
 /tests/components/random/ @fabaff
+/homeassistant/components/raspberry_pi/ @home-assistant/core
+/tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck
 /tests/components/rdw/ @frenck
 /homeassistant/components/recollect_waste/ @bachya
