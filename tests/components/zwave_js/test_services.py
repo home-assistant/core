@@ -1817,7 +1817,7 @@ async def test_invoke_cc_api(
                 device_radio_thermostat.id,
                 device_danfoss.id,
             ],
-            ATTR_COMMAND_CLASS: 132,
+            ATTR_COMMAND_CLASS: 67,
             ATTR_ENDPOINT: 0,
             ATTR_METHOD_NAME: "someMethod",
             ATTR_PARAMETERS: [1, 2],
@@ -1827,7 +1827,7 @@ async def test_invoke_cc_api(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
-    assert args["commandClass"] == 132
+    assert args["commandClass"] == 67
     assert args["endpoint"] == 0
     assert args["methodName"] == "someMethod"
     assert args["args"] == [1, 2]
@@ -1839,7 +1839,7 @@ async def test_invoke_cc_api(
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
-    assert args["commandClass"] == 132
+    assert args["commandClass"] == 67
     assert args["endpoint"] == 0
     assert args["methodName"] == "someMethod"
     assert args["args"] == [1, 2]
@@ -1870,7 +1870,7 @@ async def test_invoke_cc_api(
                 "select.living_connect_z_thermostat_local_protection_state",
                 "sensor.living_connect_z_thermostat_node_status",
             ],
-            ATTR_COMMAND_CLASS: 132,
+            ATTR_COMMAND_CLASS: 67,
             ATTR_METHOD_NAME: "someMethod",
             ATTR_PARAMETERS: [1, 2],
         },
@@ -1879,7 +1879,7 @@ async def test_invoke_cc_api(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
-    assert args["commandClass"] == 132
+    assert args["commandClass"] == 67
     assert args["endpoint"] == 0
     assert args["methodName"] == "someMethod"
     assert args["args"] == [1, 2]
@@ -1891,7 +1891,7 @@ async def test_invoke_cc_api(
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
-    assert args["commandClass"] == 132
+    assert args["commandClass"] == 67
     assert args["endpoint"] == 0
     assert args["methodName"] == "someMethod"
     assert args["args"] == [1, 2]
@@ -1916,7 +1916,7 @@ async def test_invoke_cc_api(
                     device_danfoss.id,
                     device_radio_thermostat.id,
                 ],
-                ATTR_COMMAND_CLASS: 132,
+                ATTR_COMMAND_CLASS: 67,
                 ATTR_ENDPOINT: 0,
                 ATTR_METHOD_NAME: "someMethod",
                 ATTR_PARAMETERS: [1, 2],
@@ -1926,7 +1926,7 @@ async def test_invoke_cc_api(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
-    assert args["commandClass"] == 132
+    assert args["commandClass"] == 67
     assert args["endpoint"] == 0
     assert args["methodName"] == "someMethod"
     assert args["args"] == [1, 2]
@@ -1938,7 +1938,7 @@ async def test_invoke_cc_api(
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
-    assert args["commandClass"] == 132
+    assert args["commandClass"] == 67
     assert args["endpoint"] == 0
     assert args["methodName"] == "someMethod"
     assert args["args"] == [1, 2]
