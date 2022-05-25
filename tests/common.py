@@ -42,7 +42,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -703,9 +703,10 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
 class MockToggleEntity(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
-    def __init__(self, name, state, unique_id=None):
+    def __init__(self, name, state, unique_id=None, optimistic=True):
         """Initialize the mock entity."""
         self._name = name or DEVICE_DEFAULT_NAME
+        self._optimistic = optimistic
         self._state = state
         self.calls = []
 
@@ -730,12 +731,20 @@ class MockToggleEntity(entity.ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the entity on."""
         self.calls.append(("turn_on", kwargs))
-        self._state = STATE_ON
+        if self._optimistic:
+            self._state = STATE_ON
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
         self.calls.append(("turn_off", kwargs))
-        self._state = STATE_OFF
+        if self._optimistic:
+            self._state = STATE_OFF
+
+    @callback
+    def async_set_state(self, state):
+        """Change states."""
+        self._state = state
+        self._async_write_ha_state()
 
     def last_call(self, method=None):
         """Return the last call."""
