@@ -79,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle turning off a light."""
         # pylint: disable-next=protected-access
         switch._context_filter = state_filter(STATE_OFF)
-        await switch.async_turn_off(**call.data["params"])
+        await switch.async_turn_off()
 
     async def async_handle_switch_on_service(
         switch: SwitchEntity, call: ServiceCall
@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle turning off a light."""
         # pylint: disable-next=protected-access
         switch._context_filter = state_filter(STATE_ON)
-        await switch.async_turn_on(**call.data["params"])
+        await switch.async_turn_on()
 
     async def async_handle_toggle_service(
         switch: SwitchEntity, call: ServiceCall
