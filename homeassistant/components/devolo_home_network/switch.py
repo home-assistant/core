@@ -7,12 +7,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from devolo_plc_api.device import Device
-from devolo_plc_api.exceptions.device import DeviceUnavailable
+from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -43,18 +44,18 @@ SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription] = {
         icon="mdi:wifi",
         name="Enable guest Wifi",
         is_on_func=lambda data: data["enabled"] is True,
-        turn_on_func=lambda device: device.device.async_set_wifi_guest_access(True),  # type: ignore[no-any-return, union-attr]
-        turn_off_func=lambda device: device.device.async_set_wifi_guest_access(False),  # type: ignore[no-any-return, union-attr]
+        turn_on_func=lambda device: device.device.async_set_wifi_guest_access(True),  # type: ignore[union-attr]
+        turn_off_func=lambda device: device.device.async_set_wifi_guest_access(False),  # type: ignore[union-attr]
     ),
     SWITCH_LEDS: DevoloSwitchEntityDescription(
         key=SWITCH_LEDS,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=True,
         icon="mdi:led-off",
         name="Enable LEDs",
         is_on_func=lambda data: data["state"] == "LED_ON",  # type: ignore[no-any-return]
-        turn_on_func=lambda device: device.device.async_set_led_setting(True),  # type: ignore[no-any-return, union-attr]
-        turn_off_func=lambda device: device.device.async_set_led_setting(False),  # type: ignore[no-any-return, union-attr]
+        turn_on_func=lambda device: device.device.async_set_led_setting(True),  # type: ignore[union-attr]
+        turn_off_func=lambda device: device.device.async_set_led_setting(False),  # type: ignore[union-attr]
     ),
 }
 
@@ -112,11 +113,17 @@ class DevoloSwitchEntity(DevoloEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         with suppress(DeviceUnavailable):
-            await self.entity_description.turn_on_func(self._device)
+            try:
+                await self.entity_description.turn_on_func(self.device)
+            except DevicePasswordProtected as err:
+                raise ConfigEntryAuthFailed(err) from err
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         with suppress(DeviceUnavailable):
-            await self.entity_description.turn_off_func(self._device)
+            try:
+                await self.entity_description.turn_off_func(self.device)
+            except DevicePasswordProtected as err:
+                raise ConfigEntryAuthFailed(err) from err
         await self.coordinator.async_request_refresh()

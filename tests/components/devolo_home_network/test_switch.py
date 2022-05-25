@@ -2,11 +2,15 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from devolo_plc_api.exceptions.device import DeviceUnavailable
+from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 import pytest
 
-from homeassistant.components.devolo_home_network.const import SHORT_UPDATE_INTERVAL
-from homeassistant.components.switch import DOMAIN
+from homeassistant.components.devolo_home_network.const import (
+    DOMAIN,
+    SHORT_UPDATE_INTERVAL,
+)
+from homeassistant.components.switch import DOMAIN as PLATFORM
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ENTITY_CATEGORY_CONFIG,
     SERVICE_TURN_OFF,
@@ -16,6 +20,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt
@@ -26,24 +31,48 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_switch_setup(hass: HomeAssistant):
     """Test default setup of the switch component."""
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{DOMAIN}.enable_guest_wifi") is not None
-    assert hass.states.get(f"{DOMAIN}.enable_leds") is not None
+    assert hass.states.get(f"{PLATFORM}.enable_guest_wifi") is not None
+    assert hass.states.get(f"{PLATFORM}.enable_leds") is not None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
+async def test_update_guest_wifi_status_auth_failed(hass: HomeAssistant):
+    """Test getting the wifi_status with wrong password triggers the reauth flow."""
+    entry = configure_integration(hass)
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_guest_access",
+        side_effect=DevicePasswordProtected,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.SETUP_ERROR
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+
+        flow = flows[0]
+        assert flow["step_id"] == "reauth_confirm"
+        assert flow["handler"] == DOMAIN
+
+        assert "context" in flow
+        assert flow["context"]["source"] == SOURCE_REAUTH
+        assert flow["context"]["entry_id"] == entry.entry_id
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_device")
 async def test_update_enable_guest_wifi(hass: HomeAssistant):
     """Test state change of a enable_guest_wifi switch device."""
-    state_key = f"{DOMAIN}.enable_guest_wifi"
+    state_key = f"{PLATFORM}.enable_guest_wifi"
 
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -74,9 +103,8 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant):
         new=AsyncMock(),
     ) as turn_off:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get(state_key)
         assert state is not None
@@ -96,9 +124,8 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant):
         new=AsyncMock(),
     ) as turn_on:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get(state_key)
         assert state is not None
@@ -109,10 +136,9 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_update_enable_leds(hass: HomeAssistant):
     """Test state change of a enable_leds switch device."""
-    state_key = f"{DOMAIN}.enable_leds"
+    state_key = f"{PLATFORM}.enable_leds"
 
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -146,9 +172,8 @@ async def test_update_enable_leds(hass: HomeAssistant):
         new=AsyncMock(),
     ) as turn_off:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get(state_key)
         assert state is not None
@@ -168,9 +193,8 @@ async def test_update_enable_leds(hass: HomeAssistant):
         new=AsyncMock(),
     ) as turn_on:
         await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get(state_key)
         assert state is not None
@@ -181,7 +205,6 @@ async def test_update_enable_leds(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 @pytest.mark.parametrize(
     "name, get_method, update_interval",
     [
@@ -193,7 +216,7 @@ async def test_device_failure(
     hass: HomeAssistant, name: str, get_method: str, update_interval: timedelta
 ):
     """Test device failure."""
-    state_key = f"{DOMAIN}.{name}"
+    state_key = f"{PLATFORM}.{name}"
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -211,3 +234,40 @@ async def test_device_failure(
         state = hass.states.get(state_key)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_device")
+@pytest.mark.parametrize(
+    "name, set_method",
+    [
+        ["enable_guest_wifi", "async_set_wifi_guest_access"],
+        ["enable_leds", "async_set_led_setting"],
+    ],
+)
+async def test_auth_failed(hass: HomeAssistant, name: str, set_method: str):
+    """Test setting unautherized triggers the reauth flow."""
+    state_key = f"{PLATFORM}.{name}"
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
+
+    with patch(
+        f"devolo_plc_api.device_api.deviceapi.DeviceApi.{set_method}",
+        side_effect=DevicePasswordProtected,
+    ), pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
+
+    with patch(
+        f"devolo_plc_api.device_api.deviceapi.DeviceApi.{set_method}",
+        side_effect=DevicePasswordProtected,
+    ), pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
+
+    await hass.config_entries.async_unload(entry.entry_id)

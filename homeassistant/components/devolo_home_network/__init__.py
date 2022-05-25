@@ -11,14 +11,18 @@ from devolo_plc_api.device_api import (
     NeighborAPInfo,
     WifiGuestAccessGet,
 )
-from devolo_plc_api.exceptions.device import DeviceNotFound, DeviceUnavailable
+from devolo_plc_api.exceptions.device import (
+    DeviceNotFound,
+    DevicePasswordProtected,
+    DeviceUnavailable,
+)
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -73,6 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return await device.device.async_get_wifi_guest_access()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
+        except DevicePasswordProtected as err:
+            raise ConfigEntryAuthFailed(err) from err
 
     async def async_update_led_status() -> bool:
         """Fetch data from API endpoint."""
