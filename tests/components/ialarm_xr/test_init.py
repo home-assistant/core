@@ -117,4 +117,4 @@ async def test_setup_entry_and_then_fail_on_update(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
     ialarmxr_api.return_value.get_status.assert_called_once()
-    assert hass.states.get("alarm_control_panel.iAlarmXR").state == "unavailable"
+    assert hass.states.get("alarm_control_panel.ialarm_xr").state == "unavailable"

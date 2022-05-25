@@ -31,7 +31,7 @@ class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
-    _attr_name = "iAlarmXR"
+    _attr_name = "iAlarm_XR"
     _attr_icon = "mdi:security"
 
     def __init__(self, coordinator: IAlarmXRDataUpdateCoordinator) -> None:
