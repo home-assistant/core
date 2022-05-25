@@ -110,8 +110,8 @@ class Filters:
         """Generate the entity filter query."""
         _encoder = json.dumps
         return or_(
-            ENTITY_ID_IN_EVENT.is_(_encoder(None))
-            & OLD_ENTITY_ID_IN_EVENT.is_(_encoder(None)),
+            (ENTITY_ID_IN_EVENT == _encoder(None))
+            & (OLD_ENTITY_ID_IN_EVENT == _encoder(None)),
             self._generate_filter_for_columns(
                 (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder
             ).self_group(),
