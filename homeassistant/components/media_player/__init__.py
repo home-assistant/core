@@ -150,10 +150,16 @@ SCAN_INTERVAL = dt.timedelta(seconds=10)
 class MediaPlayerEnqueue(StrEnum):
     """Enqueue types for playing media."""
 
-    PLAY = "play"
-    NEXT = "next"
-    ALERT = "alert"
+    # add given media item to end of the queue
     ADD = "add"
+    # pause queue, play the given media item, resume queue if it was playing
+    ALERT = "alert"
+    # play the given media item next, keep queue
+    NEXT = "next"
+    # play the given media item now, keep queue
+    PLAY = "play"
+    # play the given media item now, clear queue
+    REPLACE = "replace"
 
 
 class MediaPlayerDeviceClass(StrEnum):

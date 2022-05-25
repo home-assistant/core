@@ -264,6 +264,7 @@ async def test_group_members_available_when_off(hass):
         ("next", media_player.MediaPlayerEnqueue.NEXT),
         ("alert", media_player.MediaPlayerEnqueue.ALERT),
         ("add", media_player.MediaPlayerEnqueue.ADD),
+        ("replace", media_player.MediaPlayerEnqueue.REPLACE),
     ),
 )
 async def test_enqueue_rewrite(hass, input, expected):
