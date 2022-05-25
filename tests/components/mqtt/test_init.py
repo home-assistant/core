@@ -1731,7 +1731,7 @@ async def test_mqtt_subscribes_topics_on_connect(
     assert calls == expected
 
 
-async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mock):
+async def test_setup_entry_with_config_override(hass, device_reg, mqtt_mock_entry):
     """Test if the MQTT component loads with no config and config entry can be setup."""
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -1741,6 +1741,8 @@ async def test_setup_entry_with_config_override(hass, device_reg, mqtt_client_mo
 
     # mqtt present in yaml config
     assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     # User sets up a config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
