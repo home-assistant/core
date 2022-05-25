@@ -671,35 +671,6 @@ async def test_zwave_js_event_invalid_config_entry_id(
     caplog.clear()
 
 
-# async def test_zwave_js_event_unloaded_config_entry(hass, client, integration, caplog):
-#     """Test zwave_js.event automation trigger fails when config entry is unloaded."""
-#     trigger_type = f"{DOMAIN}.event"
-
-#     await hass.config_entries.async_unload(integration.entry_id)
-
-#     assert await async_setup_component(
-#         hass,
-#         automation.DOMAIN,
-#         {
-#             automation.DOMAIN: [
-#                 {
-#                     "trigger": {
-#                         "platform": trigger_type,
-#                         "config_entry_id": integration.entry_id,
-#                         "event_source": "controller",
-#                         "event": "inclusion started",
-#                     },
-#                     "action": {
-#                         "event": "node_no_event_data_filter",
-#                     },
-#                 }
-#             ]
-#         },
-#     )
-
-#     assert f"Config entry '{integration.entry_id}' not loaded" in caplog.text
-
-
 async def test_async_validate_trigger_config(hass):
     """Test async_validate_trigger_config."""
     mock_platform = AsyncMock()
