@@ -94,7 +94,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
-                if auth_enabled:
+                if auth_enabled is True:
                     return await self.async_step_credentials()
 
                 return self.async_create_entry(
@@ -169,8 +169,10 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.host},
             )
 
-        if not self._auth_enabled:
-            self._set_confirm_only()
+        if self._auth_enabled is True:
+            return await self.async_step_credentials()
+
+        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
