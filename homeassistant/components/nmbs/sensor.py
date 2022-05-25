@@ -226,7 +226,7 @@ class NMBSSensor(SensorEntity):
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
-        if canceled != "1":
+        if canceled != 1:
             attrs["departure"] = f"In {departure} minutes"
             attrs["departure_minutes"] = departure
             attrs["canceled"] = False
