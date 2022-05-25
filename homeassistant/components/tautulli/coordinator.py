@@ -62,4 +62,3 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(ex) from ex
         except PyTautulliAuthenticationException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
-        self.users = [user for user in self.users if user.username != "Local"]
