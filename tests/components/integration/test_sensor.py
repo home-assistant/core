@@ -9,6 +9,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TIME_SECONDS,
 )
@@ -348,6 +349,15 @@ async def test_units(hass):
 
     # Testing the sensor ignored the source sensor's units until
     # they became valid
+    assert state.attributes.get("unit_of_measurement") == ENERGY_WATT_HOUR
+
+    # When source state goes to None / Unknown, expect an early exit without
+    # changes to the state or unit_of_measurement
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, None)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("sensor.integration")
+    assert state == new_state
     assert state.attributes.get("unit_of_measurement") == ENERGY_WATT_HOUR
 
 
