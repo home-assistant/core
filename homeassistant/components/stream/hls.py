@@ -9,8 +9,6 @@ from aiohttp import web
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
-    ATTR_SETTINGS,
-    DOMAIN,
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     FORMAT_CONTENT_TYPE,
@@ -47,11 +45,15 @@ def async_setup_hls(hass: HomeAssistant) -> str:
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
+    ) -> None:
         """Initialize HLS output."""
-        super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
-        self.stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
-        self._target_duration = self.stream_settings.min_segment_duration
+        super().__init__(hass, idle_timer, stream_settings, deque_maxlen=MAX_SEGMENTS)
+        self._target_duration = stream_settings.min_segment_duration
 
     @property
     def name(self) -> str:

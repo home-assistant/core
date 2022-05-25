@@ -272,13 +272,18 @@ def run_worker(hass, stream, stream_source):
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
     stream_worker(
-        stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
+        stream_source,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        stream_state,
+        KeyFrameConverter(hass),
+        threading.Event(),
     )
 
 
 async def async_decode_stream(hass, packets, py_av=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
 
     if not py_av:
@@ -304,7 +309,7 @@ async def async_decode_stream(hass, packets, py_av=None):
 
 async def test_stream_open_fails(hass):
     """Test failure on stream open."""
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
@@ -637,7 +642,7 @@ async def test_stream_stopped_while_decoding(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
 
     py_av = MockPyAv()
@@ -667,7 +672,7 @@ async def test_update_stream_source(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
     # Note that retries are disabled by default in tests, however the stream is "restarted" when
     # the stream source is updated.
@@ -709,7 +714,9 @@ async def test_update_stream_source(hass):
 
 async def test_worker_log(hass, caplog):
     """Test that the worker logs the url without username and password."""
-    stream = Stream(hass, "https://abcd:efgh@foo.bar", {})
+    stream = Stream(
+        hass, "https://abcd:efgh@foo.bar", {}, hass.data[DOMAIN][ATTR_SETTINGS]
+    )
     stream.add_provider(HLS_PROVIDER)
 
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:

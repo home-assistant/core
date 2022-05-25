@@ -237,11 +237,13 @@ class StreamOutput:
         self,
         hass: HomeAssistant,
         idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
         deque_maxlen: int | None = None,
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
         self.idle_timer = idle_timer
+        self.stream_settings = stream_settings
         self._event = asyncio.Event()
         self._part_event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
