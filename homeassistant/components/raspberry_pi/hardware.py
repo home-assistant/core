@@ -43,7 +43,12 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
         raise HomeAssistantError
 
     return HardwareInfo(
-        board=BoardInfo(manufacturer=DOMAIN, model=MODELS.get(board), revision=None),
+        board=BoardInfo(
+            hassio_board_id=board,
+            manufacturer=DOMAIN,
+            model=MODELS.get(board),
+            revision=None,
+        ),
         name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
         url="https://theuselessweb.com/",
     )

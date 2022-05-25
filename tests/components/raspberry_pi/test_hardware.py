@@ -27,6 +27,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
         "hardware": [
             {
                 "board": {
+                    "hassio_board_id": "rpi",
                     "manufacturer": "raspberry_pi",
                     "model": "1",
                     "revision": None,

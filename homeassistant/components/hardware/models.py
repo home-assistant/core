@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 class BoardInfo:
     """Board info type."""
 
+    hassio_board_id: str | None
     manufacturer: str
     model: str | None
     revision: str | None
