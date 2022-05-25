@@ -47,8 +47,8 @@ from .const import (
 class ZwaveValueID:
     """Class to represent a value ID."""
 
-    property_: str | int | None = None
-    command_class: int | None = None
+    property_: str | int
+    command_class: int
     endpoint: int | None = None
     property_key: str | int | None = None
 

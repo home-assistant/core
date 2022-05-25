@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -325,15 +325,16 @@ class NumericSensorDataTemplateData:
     unit_of_measurement: str | None = None
 
 
+# TypeVar to represent a Scale or Sensor Type
+_ST = TypeVar("_ST", MultilevelSensorType, MultilevelSensorScaleType, MeterScaleType)
+
+
 class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
     @staticmethod
     def find_key_from_matching_set(
-        enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
-        set_map: dict[
-            str, set[MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType]
-        ],
+        enum_value: _ST, set_map: dict[str, set[_ST]]
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
         for key, value_set in set_map.items():
@@ -406,7 +407,7 @@ class TiltValueMix:
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue | None]:
         """Resolve helper class data for a discovered value."""
         return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
 
@@ -415,7 +416,9 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
         return [resolved_data["tilt_value"]]
 
     @staticmethod
-    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+    def current_tilt_value(
+        resolved_data: dict[str, ZwaveValue | None]
+    ) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
 

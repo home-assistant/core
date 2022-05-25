@@ -5,7 +5,6 @@ import functools
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value, get_value_id
 
@@ -108,7 +107,7 @@ async def async_attach_trigger(
 
     @callback
     def async_on_value_updated(
-        value: Value, device: dr.DeviceEntry, event: Event
+        value: Value, device: dr.DeviceEntry, event: dict
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]

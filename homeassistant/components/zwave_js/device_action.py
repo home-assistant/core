@@ -144,7 +144,7 @@ ACTION_SCHEMA = vol.Any(
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions for Z-Wave JS devices."""
     registry = entity_registry.async_get(hass)
-    actions = []
+    actions: list[dict] = []
 
     node = async_get_node_from_device_id(hass, device_id)
 
@@ -205,10 +205,13 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
-                meter_endpoints[value.endpoint].setdefault(
+                endpoint_idx = value.endpoint
+                if endpoint_idx is None:
+                    endpoint_idx = 0
+                meter_endpoints[endpoint_idx].setdefault(
                     CONF_ENTITY_ID, entry.entity_id
                 )
-                meter_endpoints[value.endpoint].setdefault(ATTR_METER_TYPE, set()).add(
+                meter_endpoints[endpoint_idx].setdefault(ATTR_METER_TYPE, set()).add(
                     get_meter_type(value)
                 )
 
