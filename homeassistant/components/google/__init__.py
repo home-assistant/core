@@ -43,6 +43,18 @@ from .const import (
     DATA_SERVICE,
     DEVICE_AUTH_IMPL,
     DOMAIN,
+    EVENT_DESCRIPTION,
+    EVENT_END_CONF,
+    EVENT_END_DATE,
+    EVENT_END_DATETIME,
+    EVENT_IN,
+    EVENT_IN_DAYS,
+    EVENT_IN_WEEKS,
+    EVENT_START_CONF,
+    EVENT_START_DATE,
+    EVENT_START_DATETIME,
+    EVENT_SUMMARY,
+    EVENT_TYPES_CONF,
     FeatureAccess,
 )
 
@@ -61,18 +73,6 @@ CONF_MAX_RESULTS = "max_results"
 DEFAULT_CONF_OFFSET = "!!"
 
 EVENT_CALENDAR_ID = "calendar_id"
-EVENT_DESCRIPTION = "description"
-EVENT_END_CONF = "end"
-EVENT_END_DATE = "end_date"
-EVENT_END_DATETIME = "end_date_time"
-EVENT_IN = "in"
-EVENT_IN_DAYS = "days"
-EVENT_IN_WEEKS = "weeks"
-EVENT_START_CONF = "start"
-EVENT_START_DATE = "start_date"
-EVENT_START_DATETIME = "start_date_time"
-EVENT_SUMMARY = "summary"
-EVENT_TYPES_CONF = "event_types"
 
 NOTIFICATION_ID = "google_calendar_notification"
 NOTIFICATION_TITLE = "Google Calendar Setup"
@@ -276,6 +276,12 @@ async def async_setup_add_event_service(
 
     async def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
+        _LOGGER.warning(
+            "The Google Calendar add_event service has been deprecated, and "
+            "will be removed in a future Home Assistant release. Please move "
+            "calls to the create_event service"
+        )
+
         start: DateOrDatetime | None = None
         end: DateOrDatetime | None = None
 
