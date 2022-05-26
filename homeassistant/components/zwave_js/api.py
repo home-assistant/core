@@ -2111,7 +2111,7 @@ async def websocket_subscribe_controller_statistics(
     )
 
 
-def _get_node_statistics_dict(hass: HomeAssistant, statistics: NodeStatistics) -> dict:
+def _get_node_statistics_dict(hass: HomeAssistant, statistics: NodeStatistics) -> dict[str, Any]:
     """Get dictionary of node statistics."""
     dev_reg = dr.async_get(hass)
 
