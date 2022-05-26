@@ -15,6 +15,7 @@
             "stream_no_video": "Stream enth\u00e4lt kein Video",
             "stream_not_permitted": "Beim Versuch, eine Verbindung zum Stream herzustellen, ist ein Vorgang nicht zul\u00e4ssig. Falsches RTSP-Transportprotokoll?",
             "stream_unauthorised": "Autorisierung beim Versuch, eine Verbindung zum Stream herzustellen, fehlgeschlagen",
+            "template_error": "Fehler beim Rendern der Vorlage. \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
             "timeout": "Zeit\u00fcberschreitung beim Laden der URL",
             "unable_still_load": "Es konnte kein g\u00fcltiges Bild von der Standbild-URL geladen werden (z. B. ung\u00fcltiger Host, URL oder Authentifizierungsfehler). \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
             "unknown": "Unerwarteter Fehler"
@@ -57,6 +58,7 @@
             "stream_no_video": "Stream enth\u00e4lt kein Video",
             "stream_not_permitted": "Beim Versuch, eine Verbindung zum Stream herzustellen, ist ein Vorgang nicht zul\u00e4ssig. Falsches RTSP-Transportprotokoll?",
             "stream_unauthorised": "Autorisierung beim Versuch, eine Verbindung zum Stream herzustellen, fehlgeschlagen",
+            "template_error": "Fehler beim Rendern der Vorlage. \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
             "timeout": "Zeit\u00fcberschreitung beim Laden der URL",
             "unable_still_load": "Es konnte kein g\u00fcltiges Bild von der Standbild-URL geladen werden (z. B. ung\u00fcltiger Host, URL oder Authentifizierungsfehler). \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
             "unknown": "Unerwarteter Fehler"
