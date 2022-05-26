@@ -60,7 +60,7 @@ def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
 
 
 def _setup_androidtv(
-    hass: HomeAssistant, config: dict[str, Any]
+    hass: HomeAssistant, config: Mapping[str, Any]
 ) -> tuple[str, PythonRSASigner | None, str]:
     """Generate an ADB key (if needed) and load it."""
     adbkey: str = config.get(
