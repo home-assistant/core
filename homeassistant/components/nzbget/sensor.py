@@ -1,7 +1,7 @@
 """Monitor the NZBGet API."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.components.sensor import (
@@ -15,7 +15,7 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -114,22 +114,25 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
             name=f"{entry_name} {description.name}",
         )
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         sensor_type = self.entity_description.key
         value = self.coordinator.data["status"].get(sensor_type)
 
         if value is None:
             _LOGGER.warning("Unable to locate value for %s", sensor_type)
-            return None
-
-        if "DownloadRate" in sensor_type and value > 0:
+            self._attr_native_value = None
+        elif "DownloadRate" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            return round(value / 2**20, 2)
+            self._attr_native_value = round(value / 2**20, 2)
+        elif "UpTimeSec" in sensor_type and value > 0:
+            uptime = utcnow().replace(microsecond=0) - timedelta(seconds=value)
+            if isinstance(self._attr_native_value, datetime) and abs(
+                uptime - self._attr_native_value
+            ) > timedelta(seconds=5):
+                self._attr_native_value = uptime
+        else:
+            self._attr_native_value = value
 
-        if "UpTimeSec" in sensor_type and value > 0:
-            uptime = utcnow() - timedelta(seconds=value)
-            return uptime.replace(microsecond=0)
-
-        return value
+        super()._handle_coordinator_update()
