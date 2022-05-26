@@ -77,9 +77,9 @@ CONTROL_TO_SUPPORT = {
 HA_HEOS_ENQUEUE_MAP = {
     None: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
     MediaPlayerEnqueue.ADD: heos_const.ADD_QUEUE_ADD_TO_END,
-    MediaPlayerEnqueue.ALERT: heos_const.ADD_QUEUE_ADD_TO_END,
+    MediaPlayerEnqueue.REPLACE: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
     MediaPlayerEnqueue.NEXT: heos_const.ADD_QUEUE_PLAY_NEXT,
-    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_PLAY_NOW,
 }
 
 _LOGGER = logging.getLogger(__name__)

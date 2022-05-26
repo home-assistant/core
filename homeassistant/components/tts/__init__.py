@@ -20,11 +20,9 @@ import voluptuous as vol
 import yarl
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import MediaPlayerEnqueue
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
     DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
@@ -226,7 +224,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         str(yarl.URL.build(path=p_type, query=params)),
                     ),
                     ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                    ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ALERT,
                 },
                 blocking=True,
                 context=service.context,

@@ -152,8 +152,6 @@ class MediaPlayerEnqueue(StrEnum):
 
     # add given media item to end of the queue
     ADD = "add"
-    # pause queue, play the given media item, resume queue if it was playing
-    ALERT = "alert"
     # play the given media item next, keep queue
     NEXT = "next"
     # play the given media item now, keep queue

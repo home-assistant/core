@@ -162,8 +162,6 @@ play_media:
               value: "play"
             - label: "Play next"
               value: "next"
-            - label: "Play as alert"
-              value: "alert"
             - label: "Add to queue"
               value: "add"
             - label: "Play now and clear queue"
