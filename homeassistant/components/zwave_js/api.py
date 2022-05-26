@@ -1290,11 +1290,8 @@ async def websocket_remove_failed_node(
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("node removed", node_removed)]
 
-    result = await controller.async_remove_failed_node(node.node_id)
-    connection.send_result(
-        msg[ID],
-        result,
-    )
+    await controller.async_remove_failed_node(node.node_id)
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -1469,8 +1466,8 @@ async def websocket_refresh_node_info(
         node.on("interview failed", forward_event),
     ]
 
-    result = await node.async_refresh_info()
-    connection.send_result(msg[ID], result)
+    await node.async_refresh_info()
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
