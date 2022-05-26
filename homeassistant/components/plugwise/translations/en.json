@@ -1,5 +1,4 @@
 {
-    "title": "{name}",
     "config": {
         "abort": {
             "already_configured": "Service is already configured"
