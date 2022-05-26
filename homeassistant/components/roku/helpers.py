@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-import logging
 from typing import Any, TypeVar
 
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
@@ -12,8 +11,6 @@ from typing_extensions import Concatenate, ParamSpec
 from homeassistant.exceptions import HomeAssistantError
 
 from .entity import RokuEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 _RokuEntityT = TypeVar("_RokuEntityT", bound=RokuEntity)
 _P = ParamSpec("_P")
