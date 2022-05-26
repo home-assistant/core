@@ -18,6 +18,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     async_process_play_media_url,
@@ -537,8 +538,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
@@ -573,7 +572,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if result.shuffle:
                 self.set_shuffle(True)
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
                 plex_plugin.add_to_queue(result.media)
             else:
                 soco.clear_queue()
@@ -583,7 +582,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
                 share_link.add_share_link_to_queue(media_id)
             else:
                 soco.clear_queue()
@@ -593,7 +592,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
 
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
                 soco.add_uri_to_queue(media_id)
             else:
                 soco.play_uri(media_id, force_radio=is_radio)
