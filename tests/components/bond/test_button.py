@@ -1,6 +1,6 @@
 """Tests for the Bond button device."""
 
-from bond_api import Action, DeviceType
+from bond_async import Action, DeviceType
 
 from homeassistant import core
 from homeassistant.components.bond.button import STEP_SIZE
