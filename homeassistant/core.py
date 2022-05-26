@@ -1163,6 +1163,18 @@ class State:
             context,
         )
 
+    def expire(self) -> None:
+        """Mark the state as old.
+
+        We give up the original reference to the context to ensure
+        the context can be garbage collected by replacing it with
+        a new one with the same id to ensure the old state
+        can still be examined for comparison against the new state.
+        """
+        self.context = Context(
+            self.context.user_id, self.context.parent_id, self.context.id
+        )
+
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
         return (  # type: ignore[no-any-return]
@@ -1303,10 +1315,7 @@ class StateMachine:
         if old_state is None:
             return False
 
-        old_context = old_state.context
-        old_state.context = Context(
-            old_context.user_id, old_context.parent_id, old_context.id
-        )
+        old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
@@ -1410,10 +1419,7 @@ class StateMachine:
             old_state is None,
         )
         if old_state is not None:
-            old_context = old_state.context
-            old_state.context = Context(
-                old_context.user_id, old_context.parent_id, old_context.id
-            )
+            old_state.expire()
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
