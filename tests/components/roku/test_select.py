@@ -2,7 +2,13 @@
 from unittest.mock import MagicMock
 
 import pytest
-from rokuecp import Application, Device as RokuDevice, RokuError
+from rokuecp import (
+    Application,
+    Device as RokuDevice,
+    RokuConnectionError,
+    RokuConnectionTimeoutError,
+    RokuError,
+)
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.roku.coordinator import SCAN_INTERVAL
