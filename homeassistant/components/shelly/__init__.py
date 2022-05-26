@@ -772,6 +772,8 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         except (asyncio.TimeoutError, OSError) as err:
             LOGGER.exception("Error while perform ota update: %s", err)
 
+        LOGGER.debug("OTA update call successful")
+
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""
         await self.device.shutdown()
