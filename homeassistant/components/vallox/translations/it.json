@@ -14,11 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Nome"
-                },
-                "description": "Configura l'integrazione Vallox. Se hai problemi con la configurazione vai su {integration_docs_url}.",
-                "title": "Vallox"
+                    "host": "Host"
+                }
             }
         }
     }

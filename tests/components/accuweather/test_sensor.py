@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.accuweather import init_integration
@@ -693,8 +694,9 @@ async def test_manual_update_entity(hass):
         assert mock_forecast.call_count == 1
 
 
-async def test_sensor_imperial_units(hass, units_imperial):
+async def test_sensor_imperial_units(hass):
     """Test states of the sensor without forecast."""
+    hass.config.units = IMPERIAL_SYSTEM
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")

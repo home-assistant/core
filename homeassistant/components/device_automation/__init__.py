@@ -26,7 +26,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import IntegrationNotFound, bind_hass
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     ]
 
 # mypy: allow-untyped-calls, allow-untyped-defs
-
 DOMAIN = "device_automation"
 
 DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -52,6 +51,7 @@ DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_DEVICE_ID): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -211,7 +211,6 @@ async def _async_get_device_automations_from_domain(
     )
 
 
-@bind_hass
 async def async_get_device_automations(
     hass: HomeAssistant,
     automation_type: DeviceAutomationType,

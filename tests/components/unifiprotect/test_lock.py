@@ -6,8 +6,7 @@ from copy import copy
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Doorlock
-from pyunifiprotect.data.types import LockStatusType
+from pyunifiprotect.data import Doorlock, LockStatusType
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (

@@ -7,6 +7,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.media_player import DOMAIN
 from homeassistant.const import (
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -61,12 +62,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
 
     trigger_types = {
-        "turned_on",
-        "turned_off",
+        "buffering",
+        "changed_states",
         "idle",
         "paused",
         "playing",
-        "changed_states",
+        "turned_off",
+        "turned_on",
     }
     expected_triggers = [
         {
@@ -126,12 +128,13 @@ async def test_get_triggers_hidden_auxiliary(
             "metadata": {"secondary": True},
         }
         for trigger in [
-            "turned_on",
-            "turned_off",
+            "buffering",
+            "changed_states",
             "idle",
             "paused",
             "playing",
-            "changed_states",
+            "turned_off",
+            "turned_on",
         ]
     ]
     triggers = await async_get_device_automations(
@@ -153,7 +156,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 6
+    assert len(triggers) == 7
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.TRIGGER, trigger
@@ -175,12 +178,13 @@ async def test_if_fires_on_state_change(hass, calls):
         "{{{{ trigger.to_state.state}}}} - {{{{ trigger.for }}}}"
     )
     trigger_types = {
-        "turned_on",
-        "turned_off",
+        "buffering",
+        "changed_states",
         "idle",
         "paused",
         "playing",
-        "changed_states",
+        "turned_off",
+        "turned_on",
     }
 
     assert await async_setup_component(
@@ -249,6 +253,15 @@ async def test_if_fires_on_state_change(hass, calls):
     assert {calls[8].data["some"], calls[9].data["some"]} == {
         "paused - device - media_player.entity - playing - paused - None",
         "changed_states - device - media_player.entity - playing - paused - None",
+    }
+
+    # Fake that the entity is buffering.
+    hass.states.async_set("media_player.entity", STATE_BUFFERING)
+    await hass.async_block_till_done()
+    assert len(calls) == 12
+    assert {calls[10].data["some"], calls[11].data["some"]} == {
+        "buffering - device - media_player.entity - paused - buffering - None",
+        "changed_states - device - media_player.entity - paused - buffering - None",
     }
 
 

@@ -16,6 +16,7 @@ class Gateway:
 
     def __init__(self, config, hass):
         """Initialize the sms gateway."""
+        _LOGGER.debug("Init with connection mode:%s", config["Connection"])
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
@@ -73,7 +74,6 @@ class Gateway:
 
         self._hass.add_job(self._notify_incoming_sms, data)
 
-    # pylint: disable=no-self-use
     def get_and_delete_all_sms(self, state_machine, force=False):
         """Read and delete all SMS in the modem."""
         # Read SMS memory status ...

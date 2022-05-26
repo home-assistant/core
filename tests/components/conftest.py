@@ -4,9 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
-
 
 @pytest.fixture(scope="session", autouse=True)
 def patch_zeroconf_multiple_catcher():
@@ -36,10 +33,3 @@ def entity_registry_enabled_by_default() -> Generator[AsyncMock, None, None]:
         return_value=True,
     ) as mock_entity_registry_enabled_by_default:
         yield mock_entity_registry_enabled_by_default
-
-
-@pytest.fixture
-def units_imperial(hass: HomeAssistant) -> Generator[None, None, None]:
-    """Fixture to temporary change units to imperial."""
-    with patch.object(hass.config, "units", IMPERIAL_SYSTEM):
-        yield

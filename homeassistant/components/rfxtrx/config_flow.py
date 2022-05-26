@@ -24,16 +24,10 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import (
-    DeviceEntry,
-    DeviceRegistry,
-    async_entries_for_config_entry,
-    async_get_registry as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_device,
-    async_get_registry as async_get_entity_registry,
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
 )
 
 from . import (
@@ -80,8 +74,8 @@ def none_or_int(value, base):
 class OptionsFlow(config_entries.OptionsFlow):
     """Handle Rfxtrx options."""
 
-    _device_registry: DeviceRegistry
-    _device_entries: list[DeviceEntry]
+    _device_registry: dr.DeviceRegistry
+    _device_entries: list[dr.DeviceEntry]
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize rfxtrx options flow."""
@@ -135,8 +129,8 @@ class OptionsFlow(config_entries.OptionsFlow):
 
                 return self.async_create_entry(title="", data={})
 
-        device_registry = await async_get_device_registry(self.hass)
-        device_entries = async_entries_for_config_entry(
+        device_registry = dr.async_get(self.hass)
+        device_entries = dr.async_entries_for_config_entry(
             device_registry, self._config_entry.entry_id
         )
         self._device_registry = device_registry
@@ -320,8 +314,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         old_device_id = "_".join(x for x in old_device_data[CONF_DEVICE_ID])
         new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
 
-        entity_registry = await async_get_entity_registry(self.hass)
-        entity_entries = async_entries_for_device(
+        entity_registry = er.async_get(self.hass)
+        entity_entries = er.async_entries_for_device(
             entity_registry, old_device, include_disabled_entities=True
         )
         entity_migration_map = {}

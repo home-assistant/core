@@ -46,15 +46,18 @@ _LOGGER = logging.getLogger(__name__)
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONTROLLER): cv.url,
-                vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-                vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CONTROLLER): cv.url,
+                    vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
+                    vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

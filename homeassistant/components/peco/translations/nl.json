@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dienst is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "county": "County"
+                }
+            }
+        }
+    }
+}

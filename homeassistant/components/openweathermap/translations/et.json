@@ -15,10 +15,9 @@
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad",
                     "mode": "Re\u017eiim",
-                    "name": "Sidumise nimi"
+                    "name": "Nimi"
                 },
-                "description": "Seadista OpenWeatherMapi sidumine. API-v\u00f5tme loomiseks mine aadressile https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "API-v\u00f5tme loomiseks mine aadressile https://openweathermap.org/appid"
             }
         }
     },

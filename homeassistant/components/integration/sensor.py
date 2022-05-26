@@ -191,15 +191,21 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
 
+            if new_state is None or new_state.state in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ):
+                return
+
             # We may want to update our state before an early return,
             # based on the source sensor's unit_of_measurement
             # or device_class.
             update_state = False
-
-            if self._unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                if unit is not None:
-                    self._unit_of_measurement = self._unit_template.format(unit)
+            unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit is not None:
+                new_unit_of_measurement = self._unit_template.format(unit)
+                if self._unit_of_measurement != new_unit_of_measurement:
+                    self._unit_of_measurement = new_unit_of_measurement
                     update_state = True
 
             if (
@@ -213,11 +219,9 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             if update_state:
                 self.async_write_ha_state()
 
-            if (
-                old_state is None
-                or new_state is None
-                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            if old_state is None or old_state.state in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
             ):
                 return
 

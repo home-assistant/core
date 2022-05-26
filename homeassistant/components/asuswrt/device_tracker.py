@@ -22,7 +22,7 @@ async def async_setup_entry(
     tracked: set = set()
 
     @callback
-    def update_router():
+    def update_router() -> None:
         """Update the values of the router."""
         add_entities(router, async_add_entities, tracked)
 

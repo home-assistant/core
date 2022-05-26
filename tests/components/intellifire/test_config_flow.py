@@ -299,17 +299,14 @@ async def test_reauth_flow(
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "api_config"
 
-    with patch(
-        "homeassistant.config_entries.ConfigFlow.async_set_unique_id",
-        return_value=entry,
-    ):
-
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
-        )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
+    )
     await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
+    assert entry.data[CONF_PASSWORD] == "AROONIE"
+    assert entry.data[CONF_USERNAME] == "test"
 
 
 async def test_dhcp_discovery_intellifire_device(

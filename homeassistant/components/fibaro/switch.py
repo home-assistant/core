@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,7 +20,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroSwitch(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["switch"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.SWITCH
+            ]
         ],
         True,
     )

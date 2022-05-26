@@ -3,7 +3,7 @@
   "name": "Google Cast",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
-  "requirements": ["pychromecast==11.0.0"],
+  "requirements": ["pychromecast==12.1.3"],
   "after_dependencies": [
     "cloud",
     "http",

@@ -297,6 +297,12 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "invalid-hass",
                     "disabled_by": er.RegistryEntryDisabler.HASS,
                 },
+                {
+                    "entity_id": "test.system_entity",
+                    "platform": "super_platform",
+                    "unique_id": "system-entity",
+                    "entity_category": "system",
+                },
             ]
         },
     }
@@ -304,7 +310,7 @@ async def test_loading_extra_values(hass, hass_storage):
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 4
+    assert len(registry.entities) == 5
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"
@@ -326,6 +332,11 @@ async def test_loading_extra_values(hass, hass_storage):
     assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
+
+    entry_system_category = registry.async_get_or_create(
+        "test", "system_entity", "system-entity"
+    )
+    assert entry_system_category.entity_category is None
 
 
 def test_async_get_entity_id(registry):
@@ -1119,22 +1130,13 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
 async def test_entity_max_length_exceeded(hass, registry):
     """Test that an exception is raised when the max character length is exceeded."""
 
-    long_entity_id_name = (
+    long_domain_name = (
         "1234567890123456789012345678901234567890123456789012345678901234567890"
         "1234567890123456789012345678901234567890123456789012345678901234567890"
         "1234567890123456789012345678901234567890123456789012345678901234567890"
         "1234567890123456789012345678901234567890123456789012345678901234567890"
     )
 
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        registry.async_generate_entity_id("sensor", long_entity_id_name)
-
-    assert exc_info.value.property_name == "generated_entity_id"
-    assert exc_info.value.max_length == 255
-    assert exc_info.value.value == f"sensor.{long_entity_id_name}"
-
-    # Try again but against the domain
-    long_domain_name = long_entity_id_name
     with pytest.raises(MaxLengthExceeded) as exc_info:
         registry.async_generate_entity_id(long_domain_name, "sensor")
 
@@ -1150,14 +1152,15 @@ async def test_entity_max_length_exceeded(hass, registry):
         "1234567890123456789012345678901234567"
     )
 
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        registry.async_generate_entity_id(
-            "sensor", long_entity_id_name, [f"sensor.{long_entity_id_name}"]
-        )
-
-    assert exc_info.value.property_name == "generated_entity_id"
-    assert exc_info.value.max_length == 255
-    assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"
+    known = []
+    new_id = registry.async_generate_entity_id("sensor", long_entity_id_name, known)
+    assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
+    known.append(new_id)
+    new_id = registry.async_generate_entity_id("sensor", long_entity_id_name, known)
+    assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
+    known.append(new_id)
+    new_id = registry.async_generate_entity_id("sensor", long_entity_id_name, known)
+    assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
 async def test_resolve_entity_ids(hass, registry):

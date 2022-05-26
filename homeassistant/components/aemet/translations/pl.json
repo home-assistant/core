@@ -14,8 +14,7 @@
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa integracji"
                 },
-                "description": "Skonfiguruj integracj\u0119 AEMET OpenData. Aby wygenerowa\u0107 klucz API, przejd\u017a do https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "Aby wygenerowa\u0107 klucz API, przejd\u017a do https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

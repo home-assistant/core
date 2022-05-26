@@ -1,14 +1,18 @@
 """Denon HEOS Media Player."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
 import logging
 from operator import ior
+from typing import Any
 
 from pyheos import HeosError, const as heos_const
+from typing_extensions import ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
@@ -42,6 +46,8 @@ from .const import (
     SIGNAL_HEOS_UPDATED,
 )
 
+_P = ParamSpec("_P")
+
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_SET
@@ -68,6 +74,14 @@ CONTROL_TO_SUPPORT = {
     heos_const.CONTROL_PLAY_NEXT: MediaPlayerEntityFeature.NEXT_TRACK,
 }
 
+HA_HEOS_ENQUEUE_MAP = {
+    None: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.ADD: heos_const.ADD_QUEUE_ADD_TO_END,
+    MediaPlayerEnqueue.REPLACE: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.NEXT: heos_const.ADD_QUEUE_PLAY_NEXT,
+    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_PLAY_NOW,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -80,12 +94,16 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-def log_command_error(command: str):
+def log_command_error(
+    command: str,
+) -> Callable[[Callable[_P, Awaitable[Any]]], Callable[_P, Coroutine[Any, Any, None]]]:
     """Return decorator that logs command failure."""
 
-    def decorator(func):
+    def decorator(
+        func: Callable[_P, Awaitable[Any]]
+    ) -> Callable[_P, Coroutine[Any, Any, None]]:
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
                 await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
@@ -213,11 +231,8 @@ class HeosMediaPlayer(MediaPlayerEntity):
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
                 raise ValueError(f"Invalid playlist '{media_id}'")
-            add_queue_option = (
-                heos_const.ADD_QUEUE_ADD_TO_END
-                if kwargs.get(ATTR_MEDIA_ENQUEUE)
-                else heos_const.ADD_QUEUE_REPLACE_AND_PLAY
-            )
+            add_queue_option = HA_HEOS_ENQUEUE_MAP.get(kwargs.get(ATTR_MEDIA_ENQUEUE))
+
             await self._player.add_to_queue(playlist, add_queue_option)
             return
 

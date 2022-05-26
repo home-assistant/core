@@ -1334,6 +1334,7 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1598,7 +1599,7 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_WAIT_TEMPLATE in action:
         return SCRIPT_ACTION_WAIT_TEMPLATE
 
-    if CONF_CONDITION in action:
+    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
         return SCRIPT_ACTION_CHECK_CONDITION
 
     if CONF_EVENT in action:

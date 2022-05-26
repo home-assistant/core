@@ -1,17 +1,10 @@
 """Support for WiLight lights."""
-from pywilight.const import (
-    ITEM_LIGHT,
-    LIGHT_COLOR,
-    LIGHT_DIMMER,
-    LIGHT_ON_OFF,
-    SUPPORT_NONE,
-)
+from pywilight.const import ITEM_LIGHT, LIGHT_COLOR, LIGHT_DIMMER, LIGHT_ON_OFF
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -56,10 +49,8 @@ async def async_setup_entry(
 class WiLightLightOnOff(WiLightDevice, LightEntity):
     """Representation of a WiLights light on-off."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_NONE
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def is_on(self):
@@ -78,10 +69,8 @@ class WiLightLightOnOff(WiLightDevice, LightEntity):
 class WiLightLightDimmer(WiLightDevice, LightEntity):
     """Representation of a WiLights light dimmer."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def brightness(self):
@@ -131,10 +120,8 @@ def hass_to_wilight_saturation(value):
 class WiLightLightColor(WiLightDevice, LightEntity):
     """Representation of a WiLights light rgb."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     @property
     def brightness(self):

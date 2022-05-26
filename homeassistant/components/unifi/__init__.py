@@ -4,6 +4,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -106,7 +107,7 @@ class UnifiWirelessClients:
         """Set up client storage."""
         self.hass = hass
         self.data = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     async def async_load(self):
         """Load data from file."""

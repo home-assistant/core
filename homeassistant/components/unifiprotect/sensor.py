@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, Generic
+from typing import Any
 
 from pyunifiprotect.data import (
     NVR,
@@ -54,13 +54,13 @@ DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 @dataclass
 class ProtectSensorEntityDescription(
-    ProtectRequiredKeysMixin, SensorEntityDescription, Generic[T]
+    ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: ProtectDeviceModel) -> Any:
+    def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
 
@@ -450,6 +450,16 @@ MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+CHIME_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="last_ring",
+        name="Last Ring",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:bell",
+        ufp_value="last_ring",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -466,6 +476,7 @@ async def async_setup_entry(
         sense_descs=SENSE_SENSORS,
         light_descs=LIGHT_SENSORS,
         lock_descs=DOORLOCK_SENSORS,
+        chime_descs=CHIME_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)

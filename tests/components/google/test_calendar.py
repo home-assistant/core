@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import datetime
 from http import HTTPStatus
 from typing import Any
@@ -9,15 +10,17 @@ from unittest.mock import patch
 import urllib
 
 from aiohttp.client_exceptions import ClientError
+from gcal_sync.auth import API_BASE_URL
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
+from .conftest import CALENDAR_ID, TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 TEST_ENTITY = TEST_YAML_ENTITY
 TEST_ENTITY_NAME = TEST_YAML_ENTITY_NAME
@@ -471,6 +474,66 @@ async def test_http_api_all_day_event(
     }
 
 
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
+async def test_http_api_event_paging(
+    hass, hass_client, aioclient_mock, component_setup
+):
+    """Test paging through results from the server."""
+    hass.config.set_time_zone("Asia/Baghdad")
+
+    responses = [
+        {
+            "nextPageToken": "page-token",
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "summary": "event 1",
+                    **upcoming(),
+                }
+            ],
+        },
+        {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "summary": "event 2",
+                    **upcoming(),
+                }
+            ],
+        },
+    ]
+
+    def next_response(response_list):
+        results = copy.copy(response_list)
+
+        async def get(method, url, data):
+            return AiohttpClientMockResponse(method, url, json=results.pop(0))
+
+        return get
+
+    # Setup response for initial entity load
+    aioclient_mock.get(
+        f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events",
+        side_effect=next_response(responses),
+    )
+    assert await component_setup()
+
+    # Setup response for API request
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events",
+        side_effect=next_response(responses),
+    )
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 2
+    assert events[0]["summary"] == "event 1"
+    assert events[1]["summary"] == "event 2"
+
+
 @pytest.mark.parametrize(
     "calendars_config_ignore_availability,transparency,expect_visible_event",
     [
@@ -509,14 +572,16 @@ async def test_opaque_event(
     assert (len(events) > 0) == expect_visible_event
 
 
+@pytest.mark.parametrize("mock_test_setup", [None])
 async def test_scan_calendar_error(
     hass,
     component_setup,
     test_api_calendar,
     mock_calendars_list,
+    config_entry,
 ):
     """Test that the calendar update handles a server error."""
-
+    config_entry.add_to_hass(hass)
     mock_calendars_list({}, exc=ClientError())
     assert await component_setup()
 

@@ -144,10 +144,11 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         if self._live_stream_session is None:
             return None
 
-        stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(
-            self._live_stream_session.live_stream_url, extra_cmd=self._ffmpeg_arguments
+        live_stream_url = await self.hass.async_add_executor_job(
+            getattr, self._live_stream_session, "live_stream_url"
         )
+        stream = CameraMjpeg(self._ffmpeg.binary)
+        await stream.open_camera(live_stream_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
             stream_reader = await stream.get_reader()

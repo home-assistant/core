@@ -200,8 +200,6 @@ class AlexaCapabilityResource:
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
 
-    # pylint: disable=no-self-use
-
     def __init__(self, labels):
         """Initialize an Alexa resource."""
         self._resource_labels = []

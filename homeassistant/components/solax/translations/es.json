@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Puerto"
+                }
+            }
+        }
+    }
+}

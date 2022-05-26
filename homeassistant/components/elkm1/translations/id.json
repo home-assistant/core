@@ -4,7 +4,9 @@
             "address_already_configured": "ElkM1 dengan alamat ini sudah dikonfigurasi",
             "already_configured": "ElkM1 dengan prefiks ini sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "Alamat IP atau domain atau port serial jika terhubung melalui serial.",
-                    "device": "Perangkat",
-                    "password": "Kata Sandi",
-                    "prefix": "Prefiks unik (kosongkan jika hanya ada satu ElkM1).",
-                    "protocol": "Protokol",
-                    "temperature_unit": "Unit suhu yang digunakan ElkM1.",
-                    "username": "Nama Pengguna"
+                    "device": "Perangkat"
                 },
                 "description": "Pilih sistem yang ditemukan atau 'Entri Manual' jika tidak ada perangkat yang ditemukan.",
                 "title": "Hubungkan ke Kontrol Elk-M1"

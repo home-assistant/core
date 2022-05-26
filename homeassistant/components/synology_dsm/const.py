@@ -1,14 +1,12 @@
 """Constants for Synology DSM."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 
 from homeassistant.const import Platform
-from homeassistant.helpers.entity import EntityDescription
 
 DOMAIN = "synology_dsm"
+ATTRIBUTION = "Data provided by Synology"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -45,6 +43,9 @@ DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
 
 ENTITY_UNIT_LOAD = "load"
 
+# Signals
+SIGNAL_CAMERA_SOURCE_CHANGED = "synology_dsm.camera_stream_source_changed"
+
 # Services
 SERVICE_REBOOT = "reboot"
 SERVICE_SHUTDOWN = "shutdown"
@@ -52,15 +53,3 @@ SERVICES = [
     SERVICE_REBOOT,
     SERVICE_SHUTDOWN,
 ]
-
-
-@dataclass
-class SynologyDSMRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    api_key: str
-
-
-@dataclass
-class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMixin):
-    """Generic Synology DSM entity description."""

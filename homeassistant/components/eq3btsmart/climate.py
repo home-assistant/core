@@ -7,18 +7,13 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_NONE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -46,18 +41,18 @@ ATTR_STATE_LOW_BAT = "low_battery"
 ATTR_STATE_AWAY_END = "away_end"
 
 EQ_TO_HA_HVAC = {
-    eq3.Mode.Open: HVAC_MODE_HEAT,
-    eq3.Mode.Closed: HVAC_MODE_OFF,
-    eq3.Mode.Auto: HVAC_MODE_AUTO,
-    eq3.Mode.Manual: HVAC_MODE_HEAT,
-    eq3.Mode.Boost: HVAC_MODE_AUTO,
-    eq3.Mode.Away: HVAC_MODE_HEAT,
+    eq3.Mode.Open: HVACMode.HEAT,
+    eq3.Mode.Closed: HVACMode.OFF,
+    eq3.Mode.Auto: HVACMode.AUTO,
+    eq3.Mode.Manual: HVACMode.HEAT,
+    eq3.Mode.Boost: HVACMode.AUTO,
+    eq3.Mode.Away: HVACMode.HEAT,
 }
 
 HA_TO_EQ_HVAC = {
-    HVAC_MODE_HEAT: eq3.Mode.Manual,
-    HVAC_MODE_OFF: eq3.Mode.Closed,
-    HVAC_MODE_AUTO: eq3.Mode.Auto,
+    HVACMode.HEAT: eq3.Mode.Manual,
+    HVACMode.OFF: eq3.Mode.Closed,
+    HVACMode.AUTO: eq3.Mode.Auto,
 }
 
 EQ_TO_HA_PRESET = {
@@ -156,7 +151,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def hvac_mode(self):
         """Return the current operation mode."""
         if self._thermostat.mode < 0:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
         return EQ_TO_HA_HVAC[self._thermostat.mode]
 
     @property
@@ -215,7 +210,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE:
-            self.set_hvac_mode(HVAC_MODE_HEAT)
+            self.set_hvac_mode(HVACMode.HEAT)
         self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
 
     def update(self):

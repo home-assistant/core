@@ -42,6 +42,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    script_stack_cv,
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
@@ -319,6 +320,10 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         self.description = cfg[CONF_DESCRIPTION]
         self.fields = cfg[CONF_FIELDS]
 
+        # The object ID of scripts need / are unique already
+        # they cannot be changed from the UI after creating
+        self._attr_unique_id = object_id
+
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
             hass,
@@ -394,10 +399,14 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
             return
 
         # Caller does not want to wait for called script to finish so let script run in
-        # separate Task. However, wait for first state change so we can guarantee that
-        # it is written to the State Machine before we return.
+        # separate Task. Make a new empty script stack; scripts are allowed to
+        # recursively turn themselves on when not waiting.
+        script_stack_cv.set([])
+
         self._changed.clear()
         self.hass.async_create_task(coro)
+        # Wait for first state change so we can guarantee that
+        # it is written to the State Machine before we return.
         await self._changed.wait()
 
     async def _async_run(self, variables, context):

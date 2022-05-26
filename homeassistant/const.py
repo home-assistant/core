@@ -6,7 +6,7 @@ from typing import Final
 from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -323,6 +323,7 @@ STATE_OPEN: Final = "open"
 STATE_OPENING: Final = "opening"
 STATE_CLOSED: Final = "closed"
 STATE_CLOSING: Final = "closing"
+STATE_BUFFERING: Final = "buffering"
 STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
@@ -763,11 +764,9 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 # use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORY_SYSTEM: Final = "system"
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_SYSTEM,
 ]
 
 # The ID of the Home Assistant Media Player Cast App

@@ -120,6 +120,7 @@ def soco_fixture(
         mock_soco.get_battery_info.return_value = battery_info
         mock_soco.all_zones = {mock_soco}
         mock_soco.visible_zones = {mock_soco}
+        mock_soco.group.coordinator = mock_soco
         yield mock_soco
 
 

@@ -34,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.common import async_fire_time_changed
 from tests.components.gdacs import _generate_mock_feed_entry
@@ -204,8 +205,9 @@ async def test_setup(hass):
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass, units_imperial):
+async def test_setup_imperial(hass):
     """Test the setup of the integration using imperial unit system."""
+    hass.config.units = IMPERIAL_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
         "1234",

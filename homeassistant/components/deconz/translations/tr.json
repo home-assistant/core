@@ -5,10 +5,10 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "no_bridges": "DeCONZ k\u00f6pr\u00fcs\u00fc bulunamad\u0131",
             "no_hardware_available": "deCONZ'a ba\u011fl\u0131 radyo donan\u0131m\u0131 yok",
-            "not_deconz_bridge": "deCONZ k\u00f6pr\u00fcs\u00fc de\u011fil",
             "updated_instance": "DeCONZ yeni ana bilgisayar adresiyle g\u00fcncelle\u015ftirildi"
         },
         "error": {
+            "linking_not_possible": "A\u011f ge\u00e7idi ile ba\u011flant\u0131 kurulamad\u0131",
             "no_key": "API anahtar\u0131 al\u0131namad\u0131"
         },
         "flow_title": "{host}",
