@@ -45,14 +45,12 @@ def roku_exception_handler(
             try:
                 await func(self, *args, **kwargs)
             except RokuConnectionTimeoutError as error:
-                if not ignore_timeout and self.available:
-                    raise HomeAssistantError("Error communicating with Roku API: %s", error)
+                if not ignore_timeout:
+                    raise HomeAssistantError("Timeout communicating with Roku API") from error
             except RokuConnectionError as error:
-                if self.available:
-                    raise HomeAssistantError("Error communicating with Roku API: %s", error)
+                raise HomeAssistantError("Error communicating with Roku API") from error
             except RokuError as error:
-                if self.available:
-                    raise HomeAssistantError("Invalid response from Roku API: %s", error)
+                raise HomeAssistantError("Invalid response from Roku API") from error
 
         return wrapper
 
