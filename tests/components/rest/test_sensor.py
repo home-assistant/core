@@ -494,6 +494,38 @@ async def test_update_with_raw_attr(hass):
 
 
 @respx.mock
+async def test_update_with_raw_attr_no_json(hass):
+    """Test 'raw' JSON result attribute is added."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json="Something other than JSON",
+    )
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "include_raw_attribute": "true",
+                "name": "foo",
+                "unit_of_measurement": DATA_MEGABYTES,
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 1
+
+    state = hass.states.get("sensor.foo")
+    assert state.attributes["raw"] == "Something other than JSON"
+
+
+@respx.mock
 async def test_update_with_no_template(hass):
     """Test update when there is no value template."""
 

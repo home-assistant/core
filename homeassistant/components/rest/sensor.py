@@ -202,7 +202,11 @@ class RestSensor(RestEntity, SensorEntity):
             if not self._attributes:
                 self._attributes = {}
             # Add the raw API response as an attribute
-            self._attributes[ATTR_RAW] = json.loads(value)
+            if value:
+                try:
+                    self._attributes[ATTR_RAW] = json.loads(value)
+                except ValueError:
+                    self._attributes[ATTR_RAW] = value
 
         if value is not None and self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(
