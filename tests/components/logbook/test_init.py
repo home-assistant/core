@@ -510,7 +510,7 @@ async def test_exclude_described_event(hass, hass_client, recorder_mock):
         return {
             "name": "Test Name",
             "message": "tested a message",
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
+            "entity_id": event.data[ATTR_ENTITY_ID],
         }
 
     def async_describe_events(hass, async_describe_event):
@@ -2003,13 +2003,12 @@ async def test_include_events_domain_glob(hass, hass_client, recorder_mock):
     )
     await async_recorder_block_till_done(hass)
 
-    # Should get excluded by domain
     hass.bus.async_fire(
         logbook.EVENT_LOGBOOK_ENTRY,
         {
             logbook.ATTR_NAME: "Alarm",
             logbook.ATTR_MESSAGE: "is triggered",
-            logbook.ATTR_DOMAIN: "switch",
+            logbook.ATTR_ENTITY_ID: "switch.any",
         },
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
