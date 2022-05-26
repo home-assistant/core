@@ -26,6 +26,7 @@ from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
+PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
     "fanLevel": ClimateEntityFeature.FAN_MODE,
