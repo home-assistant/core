@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
+    ceiling_fan,
     help_test_entity_available,
     patch_bond_action,
     patch_bond_action_returns_clientresponseerror,
@@ -41,15 +42,6 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
-
-
-def ceiling_fan(name: str):
-    """Create a ceiling fan with given name."""
-    return {
-        "name": name,
-        "type": DeviceType.CEILING_FAN,
-        "actions": ["SetSpeed", "SetDirection"],
-    }
 
 
 def ceiling_fan_with_breeze(name: str):
