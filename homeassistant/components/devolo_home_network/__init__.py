@@ -19,7 +19,7 @@ from devolo_plc_api.exceptions.device import (
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -173,3 +173,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def require_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Require the user to log in again."""
+    hass.add_job(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "title_placeholders": {},
+            },
+            data=entry.data,
+        )
+    )

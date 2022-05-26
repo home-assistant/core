@@ -20,7 +20,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt
@@ -257,17 +256,35 @@ async def test_auth_failed(hass: HomeAssistant, name: str, set_method: str):
     with patch(
         f"devolo_plc_api.device_api.deviceapi.DeviceApi.{set_method}",
         side_effect=DevicePasswordProtected,
-    ), pytest.raises(ConfigEntryAuthFailed):
+    ):
         await hass.services.async_call(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+
+        flow = flows[0]
+        assert flow["step_id"] == "reauth_confirm"
+        assert flow["handler"] == DOMAIN
+        assert "context" in flow
+        assert flow["context"]["source"] == SOURCE_REAUTH
+        assert flow["context"]["entry_id"] == entry.entry_id
 
     with patch(
         f"devolo_plc_api.device_api.deviceapi.DeviceApi.{set_method}",
         side_effect=DevicePasswordProtected,
-    ), pytest.raises(ConfigEntryAuthFailed):
+    ):
         await hass.services.async_call(
             PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
         )
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 2
+
+        flow = flows[1]
+        assert flow["step_id"] == "reauth_confirm"
+        assert flow["handler"] == DOMAIN
+        assert "context" in flow
+        assert flow["context"]["source"] == SOURCE_REAUTH
+        assert flow["context"]["entry_id"] == entry.entry_id
 
     await hass.config_entries.async_unload(entry.entry_id)

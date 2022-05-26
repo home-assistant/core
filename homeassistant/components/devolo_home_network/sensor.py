@@ -95,27 +95,27 @@ async def async_setup_entry(
     if device.plcnet:
         entities.append(
             DevoloSensorEntity(
+                entry,
                 coordinators[CONNECTED_PLC_DEVICES],
                 SENSOR_TYPES[CONNECTED_PLC_DEVICES],
                 device,
-                entry.title,
             )
         )
     if device.device and "wifi1" in device.device.features:
         entities.append(
             DevoloSensorEntity(
+                entry,
                 coordinators[CONNECTED_WIFI_CLIENTS],
                 SENSOR_TYPES[CONNECTED_WIFI_CLIENTS],
                 device,
-                entry.title,
             )
         )
         entities.append(
             DevoloSensorEntity(
+                entry,
                 coordinators[NEIGHBORING_WIFI_NETWORKS],
                 SENSOR_TYPES[NEIGHBORING_WIFI_NETWORKS],
                 device,
-                entry.title,
             )
         )
     async_add_entities(entities)
@@ -128,14 +128,14 @@ class DevoloSensorEntity(DevoloEntity[_DataT], SensorEntity):
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator[_DataT],
         description: DevoloSensorEntityDescription[_DataT],
         device: Device,
-        device_name: str,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(coordinator, device, device_name)
+        super().__init__(entry, coordinator, device)
 
     @property
     def native_value(self) -> int:

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
@@ -12,11 +11,11 @@ from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnav
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import require_reauth
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
 from .entity import DevoloEntity
 
@@ -73,19 +72,19 @@ async def async_setup_entry(
     if device.device and "led" in device.device.features:
         entities.append(
             DevoloSwitchEntity(
+                entry,
                 coordinators[SWITCH_LEDS],
                 SWITCH_TYPES[SWITCH_LEDS],
                 device,
-                entry.title,
             )
         )
     if device.device and "wifi1" in device.device.features:
         entities.append(
             DevoloSwitchEntity(
+                entry,
                 coordinators[SWITCH_GUEST_WIFI],
                 SWITCH_TYPES[SWITCH_GUEST_WIFI],
                 device,
-                entry.title,
             )
         )
     async_add_entities(entities)
@@ -96,14 +95,14 @@ class DevoloSwitchEntity(DevoloEntity, SwitchEntity):
 
     def __init__(
         self,
+        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         description: DevoloSwitchEntityDescription,
         device: Device,
-        device_name: str,
     ) -> None:
         """Initialize entity."""
         self.entity_description: DevoloSwitchEntityDescription = description
-        super().__init__(coordinator, device, device_name)
+        super().__init__(entry, coordinator, device)
 
     @property
     def is_on(self) -> bool:
@@ -112,18 +111,20 @@ class DevoloSwitchEntity(DevoloEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        with suppress(DeviceUnavailable):
-            try:
-                await self.entity_description.turn_on_func(self.device)
-            except DevicePasswordProtected as err:
-                raise ConfigEntryAuthFailed(err) from err
+        try:
+            await self.entity_description.turn_on_func(self.device)
+        except DevicePasswordProtected:
+            require_reauth(self.hass, self.entry)
+        except DeviceUnavailable:
+            pass  # The coordinator will handle this
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        with suppress(DeviceUnavailable):
-            try:
-                await self.entity_description.turn_off_func(self.device)
-            except DevicePasswordProtected as err:
-                raise ConfigEntryAuthFailed(err) from err
+        try:
+            await self.entity_description.turn_off_func(self.device)
+        except DevicePasswordProtected:
+            require_reauth(self.hass, self.entry)
+        except DeviceUnavailable:
+            pass  # The coordinator will handle this
         await self.coordinator.async_request_refresh()
