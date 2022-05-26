@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -68,7 +67,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="rssi",
         icon="mdi:wifi",
-        value_fn=lambda data: cast(Optional[int], data.rssi),
+        value_fn=lambda data: data.rssi,
         entity_registry_enabled_default=False,
     ),
     SensiboMotionSensorEntityDescription(
@@ -79,7 +78,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Battery Voltage",
         icon="mdi:battery",
-        value_fn=lambda data: cast(Optional[int], data.battery_voltage),
+        value_fn=lambda data: data.battery_voltage,
     ),
     SensiboMotionSensorEntityDescription(
         key="humidity",
@@ -88,7 +87,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Humidity",
         icon="mdi:water",
-        value_fn=lambda data: cast(Optional[int], data.humidity),
+        value_fn=lambda data: data.humidity,
     ),
     SensiboMotionSensorEntityDescription(
         key="temperature",
@@ -97,7 +96,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
         icon="mdi:thermometer",
-        value_fn=lambda data: cast(Optional[float], data.temperature),
+        value_fn=lambda data: data.temperature,
     ),
 )
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
@@ -108,13 +107,13 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="PM2.5",
         icon="mdi:air-filter",
-        value_fn=lambda data: cast(Optional[int], data.pm25),
+        value_fn=lambda data: data.pm25,
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
         name="Pure Sensitivity",
         icon="mdi:air-filter",
-        value_fn=lambda data: cast(Optional[str], data.pure_sensitivity),
+        value_fn=lambda data: data.pure_sensitivity,
     ),
 )
 
@@ -128,13 +127,15 @@ async def async_setup_entry(
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 
-    entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data.motion_sensors.items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data.motion_sensors
-    )
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
@@ -174,7 +175,9 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.sensor_data)
+        if self.sensor_data:
+            return self.entity_description.value_fn(self.sensor_data)
+        return None
 
 
 class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):

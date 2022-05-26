@@ -104,29 +104,36 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        humidity: int = self.device_data.humidity
-        return humidity
+        return self.device_data.humidity
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation."""
-        if self.device_data.device_on:
+        if self.device_data.device_on and self.device_data.hvac_mode:
             return SENSIBO_TO_HA[self.device_data.hvac_mode]
         return HVACMode.OFF
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
+        hvac_modes = []
+        if self.device_data.hvac_modes is None:
+            return [HVACMode.OFF]
+        for mode in self.device_data.hvac_modes:
+            if mode:
+                hvac_modes.append(SENSIBO_TO_HA[mode])
+        return hvac_modes if hvac_modes else [HVACMode.OFF]
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return convert_temperature(
-            self.device_data.temp,
-            TEMP_CELSIUS,
-            self.temperature_unit,
-        )
+        if self.device_data.temp:
+            return convert_temperature(
+                self.device_data.temp,
+                TEMP_CELSIUS,
+                self.temperature_unit,
+            )
+        return None
 
     @property
     def target_temperature(self) -> float | None:
@@ -149,8 +156,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        fan_modes: list[str] | None = self.device_data.fan_modes
-        return fan_modes
+        if self.device_data.fan_modes:
+            return self.device_data.fan_modes
+        return None
 
     @property
     def swing_mode(self) -> str | None:
@@ -161,8 +169,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        swing_modes: list[str] | None = self.device_data.swing_modes
-        return swing_modes
+        if self.device_data.swing_modes:
+            return self.device_data.swing_modes
+        return None
 
     @property
     def min_temp(self) -> float:

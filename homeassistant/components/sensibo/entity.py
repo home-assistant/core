@@ -119,6 +119,8 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         )
 
     @property
-    def sensor_data(self) -> MotionSensor:
+    def sensor_data(self) -> MotionSensor | None:
         """Return data for device."""
-        return self.device_data.motion_sensors[self._sensor_id]
+        if self.device_data.motion_sensors:
+            return self.device_data.motion_sensors[self._sensor_id]
+        return None

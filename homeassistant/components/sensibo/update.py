@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
 
 from pysensibo.model import SensiboDevice
 
@@ -44,8 +43,8 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Update Available",
         icon="mdi:rocket-launch",
-        value_version=lambda data: cast(Optional[str], data.fw_ver),
-        value_available=lambda data: cast(Optional[str], data.fw_ver_available),
+        value_version=lambda data: data.fw_ver,
+        value_available=lambda data: data.fw_ver_available,
     ),
 )
 

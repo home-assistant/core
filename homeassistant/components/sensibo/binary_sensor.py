@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -57,21 +56,21 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Alive",
         icon="mdi:wifi",
-        value_fn=lambda data: cast(Optional[bool], data.alive),
+        value_fn=lambda data: data.alive,
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Main Sensor",
         icon="mdi:connection",
-        value_fn=lambda data: cast(Optional[bool], data.is_main_sensor),
+        value_fn=lambda data: data.is_main_sensor,
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
         icon="mdi:motion-sensor",
-        value_fn=lambda data: cast(Optional[bool], data.motion),
+        value_fn=lambda data: data.motion,
     ),
 )
 
@@ -81,7 +80,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         name="Room Occupied",
         icon="mdi:motion-sensor",
-        value_fn=lambda data: cast(Optional[bool], data.room_occupied),
+        value_fn=lambda data: data.room_occupied,
     ),
 )
 
@@ -94,13 +93,16 @@ async def async_setup_entry(
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
-    entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data.motion_sensors.items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data.motion_sensors
-    )
+
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in DEVICE_SENSOR_TYPES
@@ -141,7 +143,9 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.entity_description.value_fn(self.sensor_data)
+        if self.sensor_data:
+            return self.entity_description.value_fn(self.sensor_data)
+        return None
 
 
 class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):
