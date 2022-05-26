@@ -1170,6 +1170,12 @@ class State:
         the context can be garbage collected by replacing it with
         a new one with the same id to ensure the old state
         can still be examined for comparison against the new state.
+
+        Since we are always going to fire a EVENT_STATE_CHANGED event
+        after we remove a state from the state machine we need to make
+        sure we don't end up holding a reference to the original context
+        since it can never be garbage collected as each event would
+        reference the previous one.
         """
         self.context = Context(
             self.context.user_id, self.context.parent_id, self.context.id
