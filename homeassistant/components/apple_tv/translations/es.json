@@ -2,13 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_configured_device": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "backoff": "El dispositivo no acepta solicitudes de emparejamiento en este momento (es posible que hayas introducido un c\u00f3digo PIN no v\u00e1lido demasiadas veces), int\u00e9ntalo de nuevo m\u00e1s tarde.",
             "device_did_not_pair": "No se ha intentado finalizar el proceso de emparejamiento desde el dispositivo.",
             "device_not_found": "No se ha encontrado el dispositivo durante la detecci\u00f3n, por favor, intente a\u00f1adirlo de nuevo.",
             "inconsistent_device": "No se encontraron los protocolos esperados durante el descubrimiento. Esto normalmente indica un problema con el DNS de multidifusi\u00f3n (Zeroconf). Por favor, intente a\u00f1adir el dispositivo de nuevo.",
-            "invalid_config": "La configuraci\u00f3n para este dispositivo est\u00e1 incompleta. Intenta a\u00f1adirlo de nuevo.",
             "no_devices_found": "No se encontraron dispositivos en la red",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "setup_failed": "No se ha podido configurar el dispositivo.",
@@ -18,7 +16,6 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "no_devices_found": "No se encontraron dispositivos en la red",
-            "no_usable_service": "Se encontr\u00f3 un dispositivo, pero no se pudo identificar ninguna manera de establecer una conexi\u00f3n con \u00e9l. Si sigues viendo este mensaje, intenta especificar su direcci\u00f3n IP o reiniciar el Apple TV.",
             "unknown": "Error inesperado"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +69,5 @@
                 "description": "Configurar los ajustes generales del dispositivo"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

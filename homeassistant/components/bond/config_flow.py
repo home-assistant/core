@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from bond_api import Bond
+from bond_async import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions

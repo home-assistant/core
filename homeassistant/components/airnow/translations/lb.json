@@ -15,10 +15,8 @@
                     "api_key": "API Schl\u00ebssel",
                     "latitude": "L\u00e4ngegrad",
                     "longitude": "Breedegrag"
-                },
-                "title": "AirNow"
+                }
             }
         }
-    },
-    "title": "AirNow"
+    }
 }

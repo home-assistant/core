@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API kulcs",
-                    "base_path": "El\u00e9r\u00e9si \u00fat az API-hoz",
-                    "host": "C\u00edm",
-                    "port": "Port",
-                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
                     "url": "URL",
                     "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
                 }

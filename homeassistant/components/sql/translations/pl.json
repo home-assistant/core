@@ -5,8 +5,7 @@
         },
         "error": {
             "db_url_invalid": "Nieprawid\u0142owy adres URL bazy danych",
-            "query_invalid": "Nieprawid\u0142owe zapytanie SQL",
-            "value_template_invalid": "Nieprawid\u0142owy szablon warto\u015bci"
+            "query_invalid": "Nieprawid\u0142owe zapytanie SQL"
         },
         "step": {
             "user": {
@@ -32,8 +31,7 @@
     "options": {
         "error": {
             "db_url_invalid": "Nieprawid\u0142owy adres URL bazy danych",
-            "query_invalid": "Nieprawid\u0142owe zapytanie SQL",
-            "value_template_invalid": "Nieprawid\u0142owy szablon warto\u015bci"
+            "query_invalid": "Nieprawid\u0142owe zapytanie SQL"
         },
         "step": {
             "init": {

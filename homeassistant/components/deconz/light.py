@@ -93,23 +93,15 @@ async def async_setup_entry(
 
         async_add_entities([DeconzLight(light, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.lights.subscribe(
-            gateway.evaluate_add_device(async_add_light),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_light,
+        gateway.api.lights.lights,
     )
-    for light_id in gateway.api.lights.lights:
-        async_add_light(EventType.ADDED, light_id)
 
-    config_entry.async_on_unload(
-        gateway.api.lights.fans.subscribe(
-            async_add_light,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_light,
+        gateway.api.lights.fans,
     )
-    for light_id in gateway.api.lights.fans:
-        async_add_light(EventType.ADDED, light_id)
 
     @callback
     def async_add_group(_: EventType, group_id: str) -> None:

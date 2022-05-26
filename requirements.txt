@@ -15,7 +15,7 @@ ifaddr==0.1.7
 jinja2==3.1.2
 PyJWT==2.4.0
 cryptography==36.0.2
-pip>=21.0,<22.1
+pip>=21.0,<22.2
 python-slugify==4.0.1
 pyyaml==6.0
 requests==2.27.1

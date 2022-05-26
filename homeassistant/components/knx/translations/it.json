@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
-                    "individual_address": "Indirizzo individuale per la connessione",
                     "local_ip": "IP locale di Home Assistant",
                     "port": "Porta",
-                    "route_back": "Torna indietro / Modalit\u00e0 NAT",
                     "tunneling_type": "Tipo tunnel KNX"
                 },
                 "data_description": {
@@ -104,15 +102,13 @@
                     "multicast_group": "Utilizzato per l'instradamento e il rilevamento. Predefinito: `224.0.23.12`",
                     "multicast_port": "Utilizzato per l'instradamento e il rilevamento. Predefinito: `3671`",
                     "rate_limit": "Numero massimo di telegrammi in uscita al secondo.\n Consigliato: da 20 a 40",
-                    "state_updater": "Abilita o disabilita globalmente gli stati di lettura dal bus KNX. Se disabilitato, Home Assistant non recuperer\u00e0 attivamente gli stati dal bus KNX, le opzioni dell'entit\u00e0 `sync_state` non avranno alcun effetto."
+                    "state_updater": "Impostazione predefinita per la lettura degli stati dal bus KNX. Se disabilitata Home Assistant non recuperer\u00e0 attivamente gli stati delle entit\u00e0 dal bus KNX. Pu\u00f2 essere sovrascritta dalle opzioni dell'entit\u00e0 `sync_state`."
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "IP locale (lascia vuoto se non sei sicuro)",
                     "port": "Porta",
-                    "route_back": "Torna indietro / Modalit\u00e0 NAT",
                     "tunneling_type": "Tipo tunnel KNX"
                 },
                 "data_description": {

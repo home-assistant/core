@@ -20,7 +20,7 @@
                     "token": "Tempel Token Auth di sini",
                     "use_webhook": "Gunakan webhook"
                 },
-                "description": "Untuk dapat melakukan kueri API diperlukan 'auth_token'. Nilai token dapat diperoleh dengan mengikuti [petunjuk ini](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token)\n\nPerangkat yang dipilih: **{device_type}** \n\nJika Anda lebih memilih untuk menggunakan metode webhook bawaan (hanya Airlock), centang centang kotak di bawah ini dan kosongkan nilai Auth Token'",
+                "description": "Untuk dapat melakukan kueri API diperlukan `auth_token`. Nilai token dapat diperoleh dengan mengikuti [petunjuk ini](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token)\n\nPerangkat yang dipilih: **{device_type}** \n\nJika Anda lebih memilih untuk menggunakan metode webhook bawaan (hanya Airlock), centang centang kotak di bawah ini dan kosongkan nilai Auth Token'",
                 "title": "Pilih metode API"
             },
             "user": {

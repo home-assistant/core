@@ -1,6 +1,7 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -9,6 +10,7 @@ from typing import Any, TypedDict, cast, overload
 import ciso8601
 from fnvhash import fnv1a_32
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Column,
@@ -22,11 +24,12 @@ from sqlalchemy import (
     String,
     Text,
     distinct,
+    type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components.websocket_api.const import (
@@ -51,7 +54,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 28
+SCHEMA_VERSION = 29
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +108,9 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
 JSON_VARIENT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"
 )
+JSONB_VARIENT_CAST = Text().with_variant(
+    postgresql.JSONB(none_as_null=True), "postgresql"
+)
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -116,8 +122,27 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+
+
+class JSONLiteral(JSON):  # type: ignore[misc]
+    """Teach SA how to literalize json."""
+
+    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
+        """Processor to convert a value to JSON."""
+
+        def process(value: Any) -> str:
+            """Dump json."""
+            return json.dumps(value)
+
+        return process
+
+
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
+
+
+class UnsupportedDialect(Exception):
+    """The dialect or its version is not supported."""
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -508,7 +533,7 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     )
     __tablename__ = TABLE_STATISTICS_META
     id = Column(Integer, Identity(), primary_key=True)
-    statistic_id = Column(String(255), index=True)
+    statistic_id = Column(String(255), index=True, unique=True)
     source = Column(String(32))
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
@@ -603,6 +628,26 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
             f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
+
+
+EVENT_DATA_JSON = type_coerce(
+    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+)
+OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+)
+
+SHARED_ATTRS_JSON = type_coerce(
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+OLD_FORMAT_ATTRS_JSON = type_coerce(
+    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+
+ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
+OLD_ENTITY_ID_IN_EVENT: Column = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
+DEVICE_ID_IN_EVENT: Column = EVENT_DATA_JSON["device_id"]
+OLD_STATE = aliased(States, name="old_state")
 
 
 @overload

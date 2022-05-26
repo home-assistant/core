@@ -5,8 +5,12 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Camera, RecordingMode, VideoMode
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import (
+    Camera,
+    ProtectAdoptableDeviceModel,
+    RecordingMode,
+    VideoMode,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry

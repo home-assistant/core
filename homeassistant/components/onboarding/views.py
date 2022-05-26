@@ -14,6 +14,7 @@ from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 
@@ -152,7 +153,7 @@ class UserOnboardingView(_BaseOnboardingView):
                 hass, data["language"], "area", {DOMAIN}
             )
 
-            area_registry = await hass.helpers.area_registry.async_get_registry()
+            area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
                 area_registry.async_create(

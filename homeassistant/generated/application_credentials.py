@@ -9,8 +9,12 @@ APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
     "home_connect",
+    "lyric",
+    "neato",
     "netatmo",
+    "senz",
     "spotify",
+    "withings",
     "xbox",
     "yolink"
 ]

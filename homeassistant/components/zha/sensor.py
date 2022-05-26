@@ -27,6 +27,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_HOURS,
+    TIME_MINUTES,
     TIME_SECONDS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
@@ -754,3 +755,18 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
 class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class TimeLeft(Sensor, id_suffix="time_left"):
+    """Sensor that displays time left value."""
+
+    SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
