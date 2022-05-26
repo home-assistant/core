@@ -103,10 +103,20 @@ async def test_application_state(
     assert state.state == "Home"
 
 
+@pytest.mark.parametrize(
+    "error, error_string",
+    [
+        (RokuConnectionError, "Error communicating with Roku API"),
+        (RokuConnectionTimeoutError, "Timeout communicating with Roku API"),
+        (RokuError, "Invalid response from Roku API"),
+    ],
+)
 async def test_application_select_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_roku: MagicMock,
+    error: RokuError,
+    error_string: str,
 ) -> None:
     """Test error handling of the Roku selects."""
     entity_registry = er.async_get(hass)
@@ -123,9 +133,9 @@ async def test_application_select_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_roku.launch.side_effect = RokuError
+    mock_roku.launch.side_effect = error
 
-    with pytest.raises(HomeAssistantError, match="Invalid response from Roku API"):
+    with pytest.raises(HomeAssistantError, match=error_string):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
