@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "pairing_failed": "\ud398\uc5b4\ub9c1\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4. Bosch Smart Home Controller\uac00 \ud398\uc5b4\ub9c1 \ubaa8\ub4dc(LED \uae5c\ubc15\uc784)\uc774\uace0 \ube44\ubc00\ubc88\ud638\uac00 \uc62c\ubc14\ub978\uc9c0 \ud655\uc778\ud558\uc2ed\uc2dc\uc624.",
+            "session_error": "\uc138\uc158 \uc624\ub958: API\uac00 \ube44\uc815\uc0c1 \uacb0\uacfc\ub97c \ubc18\ud658\ud569\ub2c8\ub2e4.",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "Bosch SHC: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "LED\uac00 \uae5c\ubc15\uc774\uae30 \uc2dc\uc791\ud560 \ub54c\uae4c\uc9c0 Bosch Smart Home Controller\uc758 \uc804\uba74 \ubc84\ud2bc\uc744 \ub204\ub974\uc2ed\uc2dc\uc624.\nHome Assistant\ub85c {model} @ {host} \ub97c \uacc4\uc18d \uc124\uc815\ud560 \uc900\ube44\uac00 \ub418\uc168\uc2b5\ub2c8\uae4c?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Smart Home Controller\uc758 \ube44\ubc00\ubc88\ud638"
+                }
+            },
+            "reauth_confirm": {
+                "description": "bosch_shc \ud1b5\ud569\uad6c\uc131\uc694\uc18c\ub294 \uacc4\uc815\uc744 \ub2e4\uc2dc \uc778\uc99d\ud574\uc57c \ud569\ub2c8\ub2e4.",
+                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8"
+                },
+                "description": "Home Assistant\ub85c \ubaa8\ub2c8\ud130\ub9c1\ud558\uace0 \uc81c\uc5b4\ud560 \uc218 \uc788\ub3c4\ub85d Bosch Smart Home Controller\ub97c \uc124\uc815\ud558\uc2ed\uc2dc\uc624.",
+                "title": "SHC \uc778\uc99d \ub9e4\uac1c\ubcc0\uc218"
+            }
+        }
+    }
+}

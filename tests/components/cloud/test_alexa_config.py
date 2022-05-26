@@ -41,18 +41,11 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     entity_entry3 = entity_registry.async_get_or_create(
         "light",
         "test",
-        "light_system_id",
-        suggested_object_id="system_light",
-        entity_category=EntityCategory.SYSTEM,
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
-        "light",
-        "test",
         "light_hidden_integration_id",
         suggested_object_id="hidden_integration_light",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_hidden_user_id",
@@ -77,7 +70,6 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
     assert not conf.should_expose(entity_entry4.entity_id)
-    assert not conf.should_expose(entity_entry5.entity_id)
 
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
@@ -86,7 +78,6 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
     assert not conf.should_expose(entity_entry4.entity_id)
-    assert not conf.should_expose(entity_entry5.entity_id)
 
     entity_conf["should_expose"] = None
     assert conf.should_expose("light.kitchen")
@@ -95,7 +86,6 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
     assert not conf.should_expose(entity_entry4.entity_id)
-    assert not conf.should_expose(entity_entry5.entity_id)
 
     assert "alexa" not in hass.config.components
     await cloud_prefs.async_update(

@@ -32,7 +32,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "progress": {
-      "email_2fa": "Input the two-factor authentication code\nsent to you via email."
+      "email_2fa": "Check your email for a verification link from Simplisafe."
     }
   },
   "options": {

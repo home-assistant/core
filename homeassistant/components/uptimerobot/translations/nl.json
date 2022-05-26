@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "reauth_failed_existing": "Kon de config entry niet updaten, gelieve de integratie te verwijderen en het opnieuw op te zetten.",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -19,7 +19,7 @@
                     "api_key": "API-sleutel"
                 },
                 "description": "U moet een nieuwe 'hoofd'-API-sleutel van UptimeRobot opgeven",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

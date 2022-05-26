@@ -10,6 +10,9 @@ from zwave_js_server.model.node import Node
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
+from homeassistant.components.zwave_js.triggers.helpers import (
+    async_bypass_dynamic_config_validation,
+)
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
@@ -671,35 +674,6 @@ async def test_zwave_js_event_invalid_config_entry_id(
     caplog.clear()
 
 
-async def test_zwave_js_event_unloaded_config_entry(hass, client, integration, caplog):
-    """Test zwave_js.event automation trigger fails when config entry is unloaded."""
-    trigger_type = f"{DOMAIN}.event"
-
-    await hass.config_entries.async_unload(integration.entry_id)
-
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: [
-                {
-                    "trigger": {
-                        "platform": trigger_type,
-                        "config_entry_id": integration.entry_id,
-                        "event_source": "controller",
-                        "event": "inclusion started",
-                    },
-                    "action": {
-                        "event": "node_no_event_data_filter",
-                    },
-                }
-            ]
-        },
-    )
-
-    assert f"Config entry '{integration.entry_id}' not loaded" in caplog.text
-
-
 async def test_async_validate_trigger_config(hass):
     """Test async_validate_trigger_config."""
     mock_platform = AsyncMock()
@@ -735,3 +709,98 @@ async def test_invalid_trigger_configs(hass):
                 "property": "latchStatus",
             },
         )
+
+
+async def test_zwave_js_trigger_config_entry_unloaded(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test zwave_js triggers bypass dynamic validation when needed."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    # Test bypass check is False
+    assert not async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.value_updated",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+        },
+    )
+
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    # Test full validation for both events
+    assert await async_validate_trigger_config(
+        hass,
+        {
+            "platform": f"{DOMAIN}.value_updated",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+        },
+    )
+
+    assert await async_validate_trigger_config(
+        hass,
+        {
+            "platform": f"{DOMAIN}.event",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "event_source": "node",
+            "event": "interview stage completed",
+        },
+    )
+
+    # Test bypass check
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.value_updated",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+        },
+    )
+
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.value_updated",
+            "device_id": device.id,
+            "command_class": CommandClass.DOOR_LOCK.value,
+            "property": "latchStatus",
+            "from": "ajar",
+        },
+    )
+
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.event",
+            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+            "event_source": "node",
+            "event": "interview stage completed",
+        },
+    )
+
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.event",
+            "device_id": device.id,
+            "event_source": "node",
+            "event": "interview stage completed",
+            "event_data": {"stageName": "ProtocolInfo"},
+        },
+    )
+
+    assert async_bypass_dynamic_config_validation(
+        hass,
+        {
+            "platform": f"{DOMAIN}.event",
+            "config_entry_id": integration.entry_id,
+            "event_source": "controller",
+            "event": "nvm convert progress",
+        },
+    )

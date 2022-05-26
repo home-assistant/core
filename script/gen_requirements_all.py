@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
-import configparser
 import difflib
 import importlib
 import os
@@ -11,6 +10,11 @@ import sys
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
@@ -32,7 +36,6 @@ COMMENT_REQUIREMENTS = (
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "RPi.GPIO",
     "tensorflow",
     "tf-models-official",
 )
@@ -67,7 +70,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.45.0
+grpcio==1.46.1
+grpcio-status==1.46.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -166,10 +170,10 @@ def explore_module(package, explore_children):
 
 
 def core_requirements():
-    """Gather core requirements out of setup.cfg."""
-    parser = configparser.ConfigParser()
-    parser.read("setup.cfg")
-    return parser["options"]["install_requires"].strip().split("\n")
+    """Gather core requirements out of pyproject.toml."""
+    with open("pyproject.toml", "rb") as fp:
+        data = tomllib.load(fp)
+    return data["project"]["dependencies"]
 
 
 def gather_recursive_requirements(domain, seen=None):

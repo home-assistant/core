@@ -103,7 +103,7 @@ def valid_color_configuration(config):
 
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
             vol.Optional(
@@ -146,10 +146,11 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_JSON = vol.All(
     # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
     cv.deprecated(CONF_WHITE_VALUE),
-    _PLATFORM_SCHEMA_BASE,
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_color_configuration,
 )
 
@@ -157,6 +158,11 @@ DISCOVERY_SCHEMA_JSON = vol.All(
     # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
     cv.deprecated(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    valid_color_configuration,
+)
+
+PLATFORM_SCHEMA_MODERN_JSON = vol.All(
+    _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
 

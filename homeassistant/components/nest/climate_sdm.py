@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
@@ -30,11 +31,11 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
@@ -80,12 +81,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the client entities."""
 
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    try:
-        device_manager = await subscriber.async_get_device_manager()
-    except ApiException as err:
-        raise PlatformNotReady from err
-
+    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     entities = []
     for device in device_manager.devices.values():
         if ThermostatHvacTrait.NAME in device.traits:
@@ -300,7 +296,10 @@ class ThermostatEntity(ClimateEntity):
             hvac_mode = HVACMode.OFF
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
-        await trait.set_mode(api_mode)
+        try:
+            await trait.set_mode(api_mode)
+        except ApiException as err:
+            raise HomeAssistantError(f"Error setting HVAC mode: {err}") from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -314,20 +313,26 @@ class ThermostatEntity(ClimateEntity):
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             return
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
-        if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
-            if low_temp and high_temp:
-                await trait.set_range(low_temp, high_temp)
-        elif hvac_mode == HVACMode.COOL and temp:
-            await trait.set_cool(temp)
-        elif hvac_mode == HVACMode.HEAT and temp:
-            await trait.set_heat(temp)
+        try:
+            if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
+                if low_temp and high_temp:
+                    await trait.set_range(low_temp, high_temp)
+            elif hvac_mode == HVACMode.COOL and temp:
+                await trait.set_cool(temp)
+            elif hvac_mode == HVACMode.HEAT and temp:
+                await trait.set_heat(temp)
+        except ApiException as err:
+            raise HomeAssistantError(f"Error setting HVAC mode: {err}") from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
         trait = self._device.traits[ThermostatEcoTrait.NAME]
-        await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
+        try:
+            await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
+        except ApiException as err:
+            raise HomeAssistantError(f"Error setting HVAC mode: {err}") from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -337,4 +342,7 @@ class ThermostatEntity(ClimateEntity):
         duration = None
         if fan_mode != FAN_OFF:
             duration = MAX_FAN_DURATION
-        await trait.set_timer(FAN_INV_MODE_MAP[fan_mode], duration=duration)
+        try:
+            await trait.set_timer(FAN_INV_MODE_MAP[fan_mode], duration=duration)
+        except ApiException as err:
+            raise HomeAssistantError(f"Error setting HVAC mode: {err}") from err

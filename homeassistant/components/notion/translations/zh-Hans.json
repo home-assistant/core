@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "no_devices": "\u5e10\u6237\u4e2d\u627e\u4e0d\u5230\u8bbe\u5907"
-        },
         "step": {
             "user": {
                 "data": {

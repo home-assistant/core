@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "Alle elever er allerede lagt til.",
             "already_configured": "Den studenten er allerede lagt til.",
+            "no_matching_entries": "Ingen samsvarende oppf\u00f8ringer funnet, vennligst bruk en annen konto eller fjern integrasjon med utdatert student..",
             "reauth_successful": "Reauth vellykket"
         },
         "error": {
@@ -29,7 +30,7 @@
                 },
                 "description": "Logg p\u00e5 Vulcan-kontoen din ved \u00e5 bruke registreringssiden for mobilappen."
             },
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
                     "region": "Symbol",
@@ -48,21 +49,6 @@
                     "student_name": "Velg elev"
                 },
                 "description": "Velg student, du kan legge til flere studenter ved \u00e5 legge til integrering p\u00e5 nytt."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Det oppstod en feil"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Vis varsler om de siste fremm\u00f8teoppf\u00f8ringene",
-                    "grade_notify": "Vis varsler om de nyeste vurderingene",
-                    "message_notify": "Vis varsler n\u00e5r ny melding mottas",
-                    "scan_interval": "Oppdateringsintervall (i minutter)"
-                }
             }
         }
     }

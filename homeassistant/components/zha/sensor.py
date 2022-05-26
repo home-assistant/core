@@ -27,6 +27,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_HOURS,
+    TIME_MINUTES,
     TIME_SECONDS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
@@ -345,7 +346,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
     """Frequency measurement."""
 
     SENSOR_ATTR = "ac_frequency"
-    _device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
     _unit = FREQUENCY_HERTZ
     _div_mul_prefix = "ac_frequency"
 
@@ -360,7 +361,7 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
     """Frequency measurement."""
 
     SENSOR_ATTR = "power_factor"
-    _device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _unit = PERCENTAGE
 
     @property
@@ -718,8 +719,8 @@ class SinopeHVACAction(ThermostatHVACAction):
 class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
-    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
@@ -754,3 +755,18 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
 class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class TimeLeft(Sensor, id_suffix="time_left"):
+    """Sensor that displays time left value."""
+
+    SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES

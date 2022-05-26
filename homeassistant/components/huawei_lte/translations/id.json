@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi",
-            "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "not_huawei_lte": "Bukan perangkat Huawei LTE"
         },
         "error": {
@@ -34,7 +32,6 @@
                 "data": {
                     "name": "Nama layanan notifikasi (perubahan harus dimulai ulang)",
                     "recipient": "Penerima notifikasi SMS",
-                    "track_new_devices": "Lacak perangkat baru",
                     "track_wired_clients": "Lacak klien jaringan kabel",
                     "unauthenticated_mode": "Mode tidak diautentikasi (perubahan memerlukan pemuatan ulang)"
                 }

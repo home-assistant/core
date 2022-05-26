@@ -15,10 +15,13 @@ from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
     DOMAIN,
+)
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -163,6 +166,48 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
         data,
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    ("template", "url", "expected_result"),
+    [
+        # Test we can handle templates in strange parts of the url, #70961.
+        (
+            "http://localhost:812{{3}}/static/icons/favicon-apple-180x180.png",
+            "http://localhost:8123/static/icons/favicon-apple-180x180.png",
+            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+        ),
+        (
+            "{% if 1 %}https://bla{% else %}https://yo{% endif %}",
+            "https://bla/",
+            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+        ),
+        (
+            "http://{{example.org",
+            "http://example.org",
+            data_entry_flow.RESULT_TYPE_FORM,
+        ),
+        (
+            "invalid1://invalid:4\\1",
+            "invalid1://invalid:4%5c1",
+            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+        ),
+    ],
+)
+async def test_still_template(
+    hass, user_flow, fakeimgbytes_png, template, url, expected_result
+) -> None:
+    """Test we can handle various templates."""
+    respx.get(url).respond(stream=fakeimgbytes_png)
+    data = TESTDATA.copy()
+    data.pop(CONF_STREAM_SOURCE)
+    data[CONF_STILL_IMAGE_URL] = template
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result2["type"] == expected_result
 
 
 @respx.mock
@@ -489,6 +534,16 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_av_open):
         assert result4.get("type") == data_entry_flow.RESULT_TYPE_FORM
         assert result4["errors"] == {"still_image_url": "template_error"}
 
+        # verify that an invalid template reports the correct UI error.
+        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+        data[CONF_STREAM_SOURCE] = "http://127.0.0.2/testurl/{{1/0}}"
+        result5 = await hass.config_entries.options.async_configure(
+            result4["flow_id"],
+            user_input=data,
+        )
+        assert result5.get("type") == data_entry_flow.RESULT_TYPE_FORM
+        assert result5["errors"] == {"stream_source": "template_error"}
+
 
 @respx.mock
 async def test_options_only_stream(hass, fakeimgbytes_png, mock_av_open):
@@ -611,3 +666,32 @@ async def test_migrate_existing_ids(hass) -> None:
 
     entity_entry = registry.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
+
+
+@respx.mock
+async def test_use_wallclock_as_timestamps_option(hass, fakeimg_png, mock_av_open):
+    """Test the use_wallclock_as_timestamps option flow."""
+
+    mock_entry = MockConfigEntry(
+        title="Test Camera",
+        domain=DOMAIN,
+        data={},
+        options=TESTDATA,
+    )
+
+    with mock_av_open:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(
+            mock_entry.entry_id, context={"show_advanced_options": True}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

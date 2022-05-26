@@ -75,6 +75,5 @@
                 "description": "Elija el m\u00e9todo de conexi\u00f3n con la pasarela"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

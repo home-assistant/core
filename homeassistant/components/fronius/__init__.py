@@ -161,7 +161,7 @@ class FroniusSolarNet:
                 "value"
             ]
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             **solar_net_device,

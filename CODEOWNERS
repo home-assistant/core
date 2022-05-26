@@ -6,6 +6,7 @@
 
 # Home Assistant Core
 setup.cfg @home-assistant/core
+pyproject.toml @home-assistant/core
 /homeassistant/*.py @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
@@ -32,6 +33,8 @@ build.json @home-assistant/supervisor
 /tests/components/adguard/ @frenck
 /homeassistant/components/advantage_air/ @Bre77
 /tests/components/advantage_air/ @Bre77
+/homeassistant/components/aemet/ @Noltari
+/tests/components/aemet/ @Noltari
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/air_quality/ @home-assistant/core
@@ -48,6 +51,8 @@ build.json @home-assistant/supervisor
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airzone/ @Noltari
 /tests/components/airzone/ @Noltari
+/homeassistant/components/aladdin_connect/ @mkmer
+/tests/components/aladdin_connect/ @mkmer
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
 /homeassistant/components/alert/ @home-assistant/core
@@ -116,6 +121,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
+/homeassistant/components/baf/ @bdraco @jfroy
+/tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1
 /tests/components/balboa/ @garbled1
 /homeassistant/components/beewi_smartclim/ @alemuro
@@ -131,8 +138,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bluesound/ @thrawnarn
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
-/homeassistant/components/bond/ @bdraco @prystupa @joshs85
-/tests/components/bond/ @bdraco @prystupa @joshs85
+/homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
+/tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_shc/ @tschamm
 /tests/components/bosch_shc/ @tschamm
 /homeassistant/components/braviatv/ @bieniu @Drafteed
@@ -372,6 +379,8 @@ build.json @home-assistant/supervisor
 /tests/components/geo_location/ @home-assistant/core
 /homeassistant/components/geo_rss_events/ @exxamalte
 /tests/components/geo_rss_events/ @exxamalte
+/homeassistant/components/geocaching/ @Sholofly @reinder83
+/tests/components/geocaching/ @Sholofly @reinder83
 /homeassistant/components/geonetnz_quakes/ @exxamalte
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
@@ -408,6 +417,8 @@ build.json @home-assistant/supervisor
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @ASMfreaK @leikoilja
 /tests/components/habitica/ @ASMfreaK @leikoilja
+/homeassistant/components/hardware/ @home-assistant/core
+/tests/components/hardware/ @home-assistant/core
 /homeassistant/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
@@ -453,8 +464,8 @@ build.json @home-assistant/supervisor
 /tests/components/huisbaasje/ @dennisschroer
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
-/homeassistant/components/hunterdouglas_powerview/ @bdraco
-/tests/components/hunterdouglas_powerview/ @bdraco
+/homeassistant/components/hunterdouglas_powerview/ @bdraco @trullock
+/tests/components/hunterdouglas_powerview/ @bdraco @trullock
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @ptcryan
@@ -462,6 +473,8 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
+/homeassistant/components/ialarm_xr/ @bigmoby
+/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -548,6 +561,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
+/homeassistant/components/laundrify/ @xLarry
+/tests/components/laundrify/ @xLarry
 /homeassistant/components/lcn/ @alengwenus
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/lg_netcast/ @Drafteed
@@ -811,12 +826,14 @@ build.json @home-assistant/supervisor
 /homeassistant/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
-/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert
-/tests/components/rainforest_eagle/ @gtdiehl @jcalbert
+/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /homeassistant/components/rainmachine/ @bachya
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
 /tests/components/random/ @fabaff
+/homeassistant/components/raspberry_pi/ @home-assistant/core
+/tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck
 /tests/components/rdw/ @frenck
 /homeassistant/components/recollect_waste/ @bachya
@@ -899,7 +916,6 @@ build.json @home-assistant/supervisor
 /tests/components/shell_command/ @home-assistant/core
 /homeassistant/components/shelly/ @balloob @bieniu @thecode @chemelli74
 /tests/components/shelly/ @balloob @bieniu @thecode @chemelli74
-/homeassistant/components/shiftr/ @fabaff
 /homeassistant/components/shodan/ @fabaff
 /homeassistant/components/sia/ @eavanvalkenburg
 /tests/components/sia/ @eavanvalkenburg
@@ -914,8 +930,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
-/homeassistant/components/slack/ @bachya
-/tests/components/slack/ @bachya
+/homeassistant/components/slack/ @bachya @tkdrob
+/tests/components/slack/ @bachya @tkdrob
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
@@ -1072,6 +1088,8 @@ build.json @home-assistant/supervisor
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221
 /tests/components/twinkly/ @dr1rrb @Robbie1221
+/homeassistant/components/ukraine_alarm/ @PaulAnnekov
+/tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk
@@ -1105,8 +1123,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velux/ @Julius2342
 /homeassistant/components/venstar/ @garbled1
 /tests/components/venstar/ @garbled1
-/homeassistant/components/vera/ @pavoni
-/tests/components/vera/ @pavoni
 /homeassistant/components/verisure/ @frenck
 /tests/components/verisure/ @frenck
 /homeassistant/components/versasense/ @flamm3blemuff1n
@@ -1123,7 +1139,6 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
-/homeassistant/components/volkszaehler/ @fabaff
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos @decompil3d
@@ -1172,6 +1187,8 @@ build.json @home-assistant/supervisor
 /tests/components/workday/ @fabaff
 /homeassistant/components/worldclock/ @fabaff
 /tests/components/worldclock/ @fabaff
+/homeassistant/components/ws66i/ @ssaenger
+/tests/components/ws66i/ @ssaenger
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
 /homeassistant/components/xbox_live/ @MartinHjelmare
@@ -1191,6 +1208,8 @@ build.json @home-assistant/supervisor
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
+/homeassistant/components/yolink/ @matrixd2
+/tests/components/yolink/ @matrixd2
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/zengge/ @emontnemery

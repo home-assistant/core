@@ -30,7 +30,6 @@ async def system_health_info(hass: HomeAssistant):
         healthy = {
             "type": "failed",
             "error": "Unhealthy",
-            "more_info": "/hassio/system",
         }
 
     if supervisor_info.get("supported"):
@@ -39,13 +38,13 @@ async def system_health_info(hass: HomeAssistant):
         supported = {
             "type": "failed",
             "error": "Unsupported",
-            "more_info": "/hassio/system",
         }
 
     information = {
         "host_os": host_info.get("operating_system"),
         "update_channel": info.get("channel"),
         "supervisor_version": f"supervisor-{info.get('supervisor')}",
+        "agent_version": host_info.get("agent_version"),
         "docker_version": info.get("docker"),
         "disk_total": f"{host_info.get('disk_total')} GB",
         "disk_used": f"{host_info.get('disk_used')} GB",
@@ -63,7 +62,6 @@ async def system_health_info(hass: HomeAssistant):
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,
         f"https://version.home-assistant.io/{info.get('channel')}.json",
-        "/hassio/system",
     )
 
     information["installed_addons"] = ", ".join(

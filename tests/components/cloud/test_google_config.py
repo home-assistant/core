@@ -300,18 +300,11 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     entity_entry3 = entity_registry.async_get_or_create(
         "light",
         "test",
-        "light_system_id",
-        suggested_object_id="system_light",
-        entity_category=EntityCategory.SYSTEM,
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
-        "light",
-        "test",
         "light_hidden_integration_id",
         suggested_object_id="hidden_integration_light",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "light",
         "test",
         "light_hidden_user_id",
@@ -328,14 +321,12 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     state = State("light.kitchen", "on")
     state_config = State(entity_entry1.entity_id, "on")
     state_diagnostic = State(entity_entry2.entity_id, "on")
-    state_system = State(entity_entry3.entity_id, "on")
-    state_hidden_integration = State(entity_entry4.entity_id, "on")
-    state_hidden_user = State(entity_entry5.entity_id, "on")
+    state_hidden_integration = State(entity_entry3.entity_id, "on")
+    state_hidden_user = State(entity_entry4.entity_id, "on")
 
     assert not mock_conf.should_expose(state)
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
-    assert not mock_conf.should_expose(state_system)
     assert not mock_conf.should_expose(state_hidden_integration)
     assert not mock_conf.should_expose(state_hidden_user)
 
@@ -344,7 +335,6 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
-    assert not mock_conf.should_expose(state_system)
     assert not mock_conf.should_expose(state_hidden_integration)
     assert not mock_conf.should_expose(state_hidden_user)
 
@@ -353,7 +343,6 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
-    assert not mock_conf.should_expose(state_system)
     assert not mock_conf.should_expose(state_hidden_integration)
     assert not mock_conf.should_expose(state_hidden_user)
 
