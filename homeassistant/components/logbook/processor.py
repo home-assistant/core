@@ -329,12 +329,10 @@ class ContextAugmenter:
         """Get the context row from the id or row context."""
         if context_id:
             return self.context_lookup.get(context_id)
-        if (context := getattr(row, "context", None)) is not None:
-            # import pprint
-            # pprint.pprint(['context',context])
-            if (origin_event := context.origin_event) is not None:
-                # pprint.pprint(['origin_event',origin_event])
-                return async_event_to_row(origin_event)
+        if (context := getattr(row, "context", None)) is not None and (
+            origin_event := context.origin_event
+        ) is not None:
+            return async_event_to_row(origin_event)
         return None
 
     def augment(
@@ -346,9 +344,6 @@ class ContextAugmenter:
 
         if not (context_row := self._get_context_row(context_id, row)):
             return
-
-        # import pprint
-        # pprint.pprint(['_rows_match',row, context_row, _rows_match(row, context_row)])
 
         if _rows_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by

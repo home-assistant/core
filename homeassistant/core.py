@@ -36,8 +36,8 @@ from typing import (
     overload,
 )
 from urllib.parse import urlparse
-import weakref
 
+import attr
 import voluptuous as vol
 import yarl
 
@@ -716,30 +716,14 @@ class HomeAssistant:
             self._stopped.set()
 
 
+@attr.s(slots=True, frozen=False)
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("__weakref__", "user_id", "parent_id", "id", "origin_event")
-
-    def __init__(
-        self,
-        user_id: str | None = None,
-        parent_id: str | None = None,
-        id: str | None = None,  # pylint: disable=redefined-builtin
-    ) -> None:
-        """Init the context."""
-        self.id = id or ulid_util.ulid()
-        self.user_id = user_id
-        self.parent_id = parent_id
-        self.origin_event: Event | None = None
-
-    def __eq__(self, other: Any) -> bool:
-        """Compare contexts."""
-        return bool(self.__class__ == other.__class__ and self.id == other.id)
-
-    def __hash__(self) -> int:
-        """Hash the context."""
-        return hash(self.id)
+    user_id: str | None = attr.ib(default=None)
+    parent_id: str | None = attr.ib(default=None)
+    id: str = attr.ib(factory=ulid_util.ulid)
+    origin_event: Event | None = attr.ib(default=None, eq=False)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -760,7 +744,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
@@ -884,38 +868,7 @@ class EventBus:
 
         event = Event(event_type, event_data, origin, time_fired, context)
         if not event.context.origin_event:
-            if (
-                event.event_type == EVENT_STATE_CHANGED
-                and event.data.get("old_state") is not None
-            ):
-                event.data["old_state"].context = weakref.proxy(
-                    event.data["old_state"].context
-                )
-            event.context.origin_event = (
-                event  # Event(event_type, {}, origin, time_fired, event.context)
-            )
-        #            event.context = weakref.proxy(event.context)
-        # event.context.origin_event.context = weakref.proxy(event.context)
-        # event_context = event.context
-        # new_context = Context(user_id=event.context.user_id, parent_id=event.context.parent_id, id=event.context.id)
-        # import pprint
-        # pprint.pprint(event_data)
-        # event.context.origin_event = Event(
-        #    event_type, event_data, origin, time_fired,
-        #    new_context
-        # )
-        # import pprint
-        # pprint.pprint(event)
-        # event.context.origin_event = copy.deepcopy(event)
-
-        # event.context.origin_event = Event(
-        #    event_type,
-        #    event_data,
-        #    origin,
-        #    time_fired,
-        #    copy.copy(event.context)
-        # )
-        #    Context(event_context.user_id, event_context.parent_id, event_context.id))
+            event.context.origin_event = event
 
         _LOGGER.debug("Bus:Handling %s", event)
 
@@ -1099,7 +1052,6 @@ class State:
     """
 
     __slots__ = [
-        "__weakref__",
         "entity_id",
         "state",
         "attributes",
