@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from . import get_api
+from .client import get_api
 from .const import (
     CONF_LIMIT,
     CONF_ORDER,

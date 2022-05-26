@@ -7,12 +7,12 @@ from transmissionrpc.torrent import Torrent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_IDLE, UnitOfDataRate
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TransmissionClient
+from .client import TransmissionClientCoordinator
 from .const import (
     CONF_LIMIT,
     CONF_ORDER,
@@ -29,10 +29,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Transmission sensors."""
 
-    tm_client = hass.data[DOMAIN][config_entry.entry_id]
+    tm_client: TransmissionClientCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data[CONF_NAME]
 
-    dev = [
+    entities = [
         TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
         TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
         TransmissionStatusSensor(tm_client, name, "Status"),
@@ -43,55 +43,29 @@ async def async_setup_entry(
         TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
     ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
-class TransmissionSensor(SensorEntity):
+class TransmissionSensor(
+    CoordinatorEntity[TransmissionClientCoordinator], SensorEntity
+):
     """A base class for all Transmission sensors."""
 
-    _attr_should_poll = False
-
-    def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
+    def __init__(
+        self,
+        tm_client,
+        client_name,
+        sensor_name,
+        sub_type="",
+    ):
         """Initialize the sensor."""
-        self._tm_client: TransmissionClient = tm_client
-        self._client_name = client_name
-        self._name = sensor_name
+        super().__init__(tm_client)
         self._sub_type = sub_type
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self) -> bool:
-        """Could the device be accessed during the last update call."""
-        return self._tm_client.api.available
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self._tm_client.api.signal_update, update
-            )
+        self._attr_name = f"{client_name} {sensor_name}"
+        self._attr_unique_id = (
+            f"{self.coordinator.config_entry.data[CONF_HOST]}-{self.name}"
         )
+        self._state = None
 
 
 class TransmissionSpeedSensor(TransmissionSensor):
@@ -100,36 +74,35 @@ class TransmissionSpeedSensor(TransmissionSensor):
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
 
-    def update(self) -> None:
-        """Get the latest data from Transmission and updates the state."""
-        if data := self._tm_client.api.data:
-            mb_spd = (
-                float(data.downloadSpeed)
-                if self._sub_type == "download"
-                else float(data.uploadSpeed)
-            )
-            mb_spd = mb_spd / 1024 / 1024
-            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
+    @property
+    def native_value(self):
+        """Return the state of the entity."""
+        data = self.coordinator.data
+        mb_spd = (
+            float(data.downloadSpeed)
+            if self._sub_type == "download"
+            else float(data.uploadSpeed)
+        )
+        mb_spd = mb_spd / 1024 / 1024
+        return round(mb_spd, 2 if mb_spd < 0.1 else 1)
 
 
 class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
-    def update(self) -> None:
-        """Get the latest data from Transmission and updates the state."""
-        if data := self._tm_client.api.data:
-            upload = data.uploadSpeed
-            download = data.downloadSpeed
-            if upload > 0 and download > 0:
-                self._state = "Up/Down"
-            elif upload > 0 and download == 0:
-                self._state = "Seeding"
-            elif upload == 0 and download > 0:
-                self._state = "Downloading"
-            else:
-                self._state = STATE_IDLE
-        else:
-            self._state = None
+    @property
+    def native_value(self):
+        """Return the state of the entity."""
+        state = STATE_IDLE
+        upload = self.coordinator.data.uploadSpeed
+        download = self.coordinator.data.downloadSpeed
+        if upload > 0 and download > 0:
+            state = "Up/Down"
+        elif upload > 0 and download == 0:
+            state = "Seeding"
+        elif upload == 0 and download > 0:
+            state = "Downloading"
+        return state
 
 
 class TransmissionTorrentsSensor(TransmissionSensor):
@@ -143,30 +116,29 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         "total": None,
     }
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return "Torrents"
+    _attr_native_unit_of_measurement = "Torrents"
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes, if any."""
         info = _torrents_info(
-            torrents=self._tm_client.api.torrents,
-            order=self._tm_client.config_entry.options[CONF_ORDER],
-            limit=self._tm_client.config_entry.options[CONF_LIMIT],
+            torrents=self.coordinator.api.torrents,
+            order=self.coordinator.config_entry.options[CONF_ORDER],
+            limit=self.coordinator.config_entry.options[CONF_LIMIT],
             statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,
         }
 
-    def update(self) -> None:
-        """Get the latest data from Transmission and updates the state."""
+    @property
+    def native_value(self):
+        """Return the state of the entity."""
         torrents = _filter_torrents(
-            self._tm_client.api.torrents, statuses=self.SUBTYPE_MODES[self._sub_type]
+            self.coordinator.api.torrents,
+            statuses=self.SUBTYPE_MODES[self._sub_type],
         )
-        self._state = len(torrents)
+        return len(torrents)
 
 
 def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
