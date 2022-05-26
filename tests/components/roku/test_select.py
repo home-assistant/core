@@ -106,7 +106,6 @@ async def test_application_select_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_roku: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Roku selects."""
     entity_registry = er.async_get(hass)
@@ -125,20 +124,20 @@ async def test_application_select_error(
 
     mock_roku.launch.side_effect = RokuError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.my_roku_3_application",
-            ATTR_OPTION: "Netflix",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="Invalid response from Roku API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.my_roku_3_application",
+                ATTR_OPTION: "Netflix",
+            },
+            blocking=True,
+        )
 
     state = hass.states.get("select.my_roku_3_application")
     assert state
     assert state.state == "Home"
-    assert "Invalid response from API" in caplog.text
     assert mock_roku.launch.call_count == 1
     mock_roku.launch.assert_called_with("12")
 
@@ -218,24 +217,23 @@ async def test_channel_select_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_roku: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Roku selects."""
     mock_roku.tune.side_effect = RokuError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
-            ATTR_OPTION: "99.1",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match="Invalid response from Roku API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.58_onn_roku_tv_channel",
+                ATTR_OPTION: "99.1",
+            },
+            blocking=True,
+        )
 
     state = hass.states.get("select.58_onn_roku_tv_channel")
     assert state
     assert state.state == "getTV (14.3)"
-    assert "Invalid response from API" in caplog.text
     assert mock_roku.tune.call_count == 1
     mock_roku.tune.assert_called_with("99.1")
