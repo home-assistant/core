@@ -2,7 +2,7 @@
 import logging
 from typing import Final
 
-from aladdin_connect import AladdinConnectClient
+from AIOAladdinConnect import AladdinConnectClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -20,9 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    acc = AladdinConnectClient(username, password)
+    acc = AladdinConnectClient(username, password, None)
     try:
-        if not await hass.async_add_executor_job(acc.login):
+        if not await acc.login():
             raise ConfigEntryAuthFailed("Incorrect Password")
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)

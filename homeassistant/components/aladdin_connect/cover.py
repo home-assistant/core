@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from aladdin_connect import AladdinConnectClient
+from AIOAladdinConnect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -21,7 +21,6 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -63,17 +62,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Aladdin Connect platform."""
     acc = hass.data[DOMAIN][config_entry.entry_id]
-    try:
-        doors = await hass.async_add_executor_job(acc.get_doors)
-
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        raise ConfigEntryNotReady from ex
-
-    async_add_entities(
-        (AladdinDevice(acc, door) for door in doors),
-        update_before_add=True,
-    )
+    doors = await acc.get_doors()
+    if doors:
+        async_add_entities(
+            (AladdinDevice(acc, door) for door in doors),
+            update_before_add=True,
+        )
 
 
 class AladdinDevice(CoverEntity):
@@ -85,24 +79,36 @@ class AladdinDevice(CoverEntity):
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
+        self._callback = self.async_write_ha_state
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._attr_name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
 
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
-        self._acc.close_door(self._device_id, self._number)
+        await self._acc.close_door(self._device_id, self._number)
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
-        self._acc.open_door(self._device_id, self._number)
+        await self._acc.open_door(self._device_id, self._number)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update status of cover."""
+        battery = {}
+        await self._acc.get_doors()
         status = STATES_MAP.get(
-            self._acc.get_door_status(self._device_id, self._number)
+            await self._acc.get_door_status(self._device_id, self._number)
         )
         self._attr_is_opening = status == STATE_OPENING
         self._attr_is_closing = status == STATE_CLOSING
         self._attr_is_closed = None if status is None else status == STATE_CLOSED
+        battery.update(
+            {
+                "battery_level": await self._acc.get_battery_status(
+                    self._device_id, self._number
+                )
+            }
+        )
+        battery.update({"RSSI": 0})
+        self._attr_extra_state_attributes = battery

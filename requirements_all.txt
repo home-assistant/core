@@ -4,6 +4,9 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.2.1
 
+# homeassistant.components.aladdin_connect
+AIOAladdinConnect==0.1.1
+
 # homeassistant.components.adax
 Adax-local==0.1.4
 
@@ -281,9 +284,6 @@ airthings_cloud==0.1.0
 
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
-
-# homeassistant.components.aladdin_connect
-aladdin_connect==0.4
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1

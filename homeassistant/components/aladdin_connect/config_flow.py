@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aladdin_connect import AladdinConnectClient
+from AIOAladdinConnect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,9 +32,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
+    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD], None)
     try:
-        login = await hass.async_add_executor_job(acc.login)
+        login = await acc.login()
     except (TypeError, KeyError, NameError, ValueError) as ex:
         raise ConnectionError from ex
     else:
