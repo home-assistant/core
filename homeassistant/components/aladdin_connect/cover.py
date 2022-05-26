@@ -65,7 +65,7 @@ async def async_setup_entry(
     doors = await acc.get_doors()
     if doors:
         async_add_entities(
-            (AladdinDevice(acc, door) for door in doors),
+            (AladdinDevice(acc.auth_token(), door, config_entry) for door in doors),
             update_before_add=True,
         )
 
@@ -76,9 +76,14 @@ class AladdinDevice(CoverEntity):
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
 
-    def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
+    def __init__(self, auth_token: str, device: DoorDevice, entry: ConfigEntry) -> None:
         """Initialize the Aladdin Connect cover."""
-        self._acc = acc
+        self._acc = AladdinConnectClient(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            self.async_update_ha_state,
+        )
+        self._acc.set_auth_token(auth_token)
         self._callback = self.async_write_ha_state
         self._device_id = device["device_id"]
         self._number = device["door_number"]
@@ -110,5 +115,7 @@ class AladdinDevice(CoverEntity):
                 )
             }
         )
-        battery.update({"RSSI": 0})
+        battery.update(
+            {"RSSI": await self._acc.get_rssi_status(self._device_id, self._number)}
+        )
         self._attr_extra_state_attributes = battery

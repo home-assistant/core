@@ -1,4 +1,5 @@
 """The aladdin_connect component."""
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -14,6 +15,7 @@ from .const import DOMAIN
 _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.COVER]
+SCAN_INTERVAL = timedelta(seconds=120)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
