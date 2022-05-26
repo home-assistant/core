@@ -37,7 +37,6 @@ from typing import (
 )
 from urllib.parse import urlparse
 
-import attr
 import voluptuous as vol
 import yarl
 
@@ -716,14 +715,30 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=False)
 class Context:
     """The context that triggered something."""
 
-    user_id: str | None = attr.ib(default=None)
-    parent_id: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=ulid_util.ulid)
-    origin_event: Event | None = attr.ib(default=None, eq=False)
+    __slots__ = ("user_id", "parent_id", "id", "origin_event")
+
+    def __init__(
+        self,
+        user_id: str | None = None,
+        parent_id: str | None = None,
+        id: str | None = None,  # pylint: disable=redefined-builtin
+    ) -> None:
+        """Init the context."""
+        self.id = id or ulid_util.ulid()
+        self.user_id = user_id
+        self.parent_id = parent_id
+        self.origin_event: Event | None = None
+
+    def __eq__(self, other: Any) -> bool:
+        """Compare contexts."""
+        return bool(self.__class__ == other.__class__ and self.id == other.id)
+
+    def __hash__(self) -> int:
+        """Hash the context."""
+        return hash(self.id)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
