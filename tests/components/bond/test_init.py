@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from bond_api import DeviceType
+from bond_async import DeviceType
 import pytest
 
 from homeassistant.components.bond.const import DOMAIN

@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_api import DeviceType
+from bond_async import DeviceType
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN

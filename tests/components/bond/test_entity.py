@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from bond_api import BPUPSubscriptions, DeviceType
+from bond_async import BPUPSubscriptions, DeviceType
 
 from homeassistant import core
 from homeassistant.components import fan
@@ -44,7 +44,7 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 3, "direction": 0},
         }
     )
@@ -54,7 +54,7 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 1, "direction": 0},
         }
     )
@@ -75,7 +75,7 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
         bpup_subs.notify(
             {
                 "s": 200,
-                "t": "bond/test-device-id/update",
+                "t": "devices/test-device-id/state",
                 "b": {"power": 1, "speed": 2, "direction": 0},
             }
         )
@@ -106,7 +106,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 3, "direction": 0},
         }
     )
@@ -116,7 +116,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 1, "direction": 0},
         }
     )
@@ -133,7 +133,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/not-this-device-id/update",
+            "t": "devices/not-this-device-id/state",
             "b": {"power": 1, "speed": 2, "direction": 0},
         }
     )

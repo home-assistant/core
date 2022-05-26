@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
-from bond_api import Bond, BPUPSubscriptions, start_bpup
+from bond_async import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
