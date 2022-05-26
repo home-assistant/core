@@ -92,7 +92,16 @@ async def test_device_diagnostics(
     assert len(diagnostics_data["entities"]) == len(
         list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
     )
-    assert diagnostics_data["state"] == multisensor_6.data
+    assert diagnostics_data["state"] == {
+        **multisensor_6.data,
+        "statistics": {
+            "commandsDroppedRX": 0,
+            "commandsDroppedTX": 0,
+            "commandsRX": 0,
+            "commandsTX": 0,
+            "timeoutResponse": 0,
+        },
+    }
 
 
 async def test_device_diagnostics_error(hass, integration):
