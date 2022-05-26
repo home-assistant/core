@@ -26,106 +26,79 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    ObjectSelector,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TemplateSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
-        vol.Required(CONF_RESOURCE): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.URL)
-        ),
-        vol.Required(CONF_SELECT): selector.TextSelector(),
-        vol.Optional(CONF_ATTRIBUTE): selector.TextSelector(),
-        vol.Optional(CONF_INDEX, default=0): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, step=1, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-        vol.Optional(CONF_AUTHENTICATION): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-        ),
-        vol.Optional(CONF_HEADERS): selector.ObjectSelector(),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
-        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[e.value for e in SensorDeviceClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[e.value for e in SensorStateClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-        vol.Optional(
-            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-        ): selector.BooleanSelector(),
-    }
-)
+SCHEMA_SETUP = {
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+    vol.Required(CONF_RESOURCE): TextSelector(
+        TextSelectorConfig(type=TextSelectorType.URL)
+    ),
+    vol.Required(CONF_SELECT): TextSelector(),
+}
 
-DATA_SCHEMA_OPTIONS = vol.Schema(
-    {
-        vol.Optional(CONF_ATTRIBUTE): selector.TextSelector(),
-        vol.Optional(CONF_INDEX, default=0): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, step=1, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-        vol.Optional(CONF_AUTHENTICATION): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-        ),
-        vol.Optional(CONF_HEADERS): selector.ObjectSelector(),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(),
-        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[e.value for e in SensorDeviceClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[e.value for e in SensorStateClass],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-        vol.Optional(
-            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-        ): selector.BooleanSelector(),
-    }
-)
+SCHEMA_OPT = {
+    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
+    vol.Optional(CONF_INDEX, default=0): NumberSelector(
+        NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+    ),
+    vol.Optional(CONF_AUTHENTICATION): SelectSelector(
+        SelectSelectorConfig(
+            options=[HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION],
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    ),
+    vol.Optional(CONF_USERNAME): TextSelector(),
+    vol.Optional(CONF_PASSWORD): TextSelector(
+        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+    ),
+    vol.Optional(CONF_HEADERS): ObjectSelector(),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
+    vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
+        SelectSelectorConfig(
+            options=[e.value for e in SensorDeviceClass],
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    ),
+    vol.Optional(CONF_STATE_CLASS): SelectSelector(
+        SelectSelectorConfig(
+            options=[e.value for e in SensorStateClass],
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    ),
+    vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): BooleanSelector(),
+}
 
+DATA_SCHEMA = vol.Schema({**SCHEMA_SETUP, **SCHEMA_OPT})
+DATA_SCHEMA_OPT = vol.Schema({**SCHEMA_OPT})
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(DATA_SCHEMA),
     "import": SchemaFlowFormStep(DATA_SCHEMA),
 }
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(DATA_SCHEMA_OPTIONS),
+    "init": SchemaFlowFormStep(DATA_SCHEMA_OPT),
 }
 
 
