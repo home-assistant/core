@@ -2140,6 +2140,8 @@ def _get_node_statistics_dict(
         if not data[key]:
             continue
         for key_2 in ("repeaters", "route_failed_between"):
+            if not data[key][key_2]:
+                continue
             data[key][key_2] = [
                 _convert_node_to_device_id(node) for node in data[key][key_2]
             ]
