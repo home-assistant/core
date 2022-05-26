@@ -450,6 +450,7 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token["is_current"] is True
     assert token["last_used_at"] == refresh_token.last_used_at.isoformat()
     assert token["last_used_ip"] == refresh_token.last_used_ip
+    assert token["auth_provider_type"] == "homeassistant"
 
 
 async def test_ws_delete_refresh_token(

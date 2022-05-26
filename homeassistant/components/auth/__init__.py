@@ -486,11 +486,10 @@ async def websocket_create_long_lived_access_token(
     try:
         access_token = hass.auth.async_create_access_token(refresh_token)
     except InvalidAuthError as exc:
-        return websocket_api.error_message(
-            msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc))
+        return
 
-    connection.send_message(websocket_api.result_message(msg["id"], access_token))
+    connection.send_result(msg["id"], access_token)
 
 
 @websocket_api.websocket_command({vol.Required("type"): "auth/refresh_tokens"})
@@ -501,25 +500,30 @@ def websocket_refresh_tokens(
 ):
     """Return metadata of users refresh tokens."""
     current_id = connection.refresh_token_id
-    connection.send_message(
-        websocket_api.result_message(
-            msg["id"],
-            [
-                {
-                    "id": refresh.id,
-                    "client_id": refresh.client_id,
-                    "client_name": refresh.client_name,
-                    "client_icon": refresh.client_icon,
-                    "type": refresh.token_type,
-                    "created_at": refresh.created_at,
-                    "is_current": refresh.id == current_id,
-                    "last_used_at": refresh.last_used_at,
-                    "last_used_ip": refresh.last_used_ip,
-                }
-                for refresh in connection.user.refresh_tokens.values()
-            ],
+
+    tokens = []
+    for refresh in connection.user.refresh_tokens.values():
+        if refresh.credential:
+            auth_provider_type = refresh.credential.auth_provider_type
+        else:
+            auth_provider_type = None
+
+        tokens.append(
+            {
+                "id": refresh.id,
+                "client_id": refresh.client_id,
+                "client_name": refresh.client_name,
+                "client_icon": refresh.client_icon,
+                "type": refresh.token_type,
+                "created_at": refresh.created_at,
+                "is_current": refresh.id == current_id,
+                "last_used_at": refresh.last_used_at,
+                "last_used_ip": refresh.last_used_ip,
+                "auth_provider_type": auth_provider_type,
+            }
         )
-    )
+
+    connection.send_result(msg["id"], tokens)
 
 
 @websocket_api.websocket_command(
@@ -537,13 +541,12 @@ async def websocket_delete_refresh_token(
     refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
 
     if refresh_token is None:
-        return websocket_api.error_message(
-            msg["id"], "invalid_token_id", "Received invalid token"
-        )
+        connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
+        return
 
     await hass.auth.async_remove_refresh_token(refresh_token)
 
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_result(msg["id"], {})
 
 
 @websocket_api.websocket_command(
