@@ -17,8 +17,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (board := os_info.get("board")) is None or not board.startswith("odroid"):
         # Not running on a Hardkernel board, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        print("Booo!!!", board)
         return False
 
-    print("Weee!!!", board)
     return True
