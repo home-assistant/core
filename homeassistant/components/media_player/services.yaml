@@ -166,6 +166,8 @@ play_media:
               value: "alert"
             - label: "Add to queue"
               value: "add"
+            - label: "Play now and clear queue"
+              value: "replace"
 
 select_source:
   name: Select source
