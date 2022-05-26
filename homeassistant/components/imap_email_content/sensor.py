@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.ssl import client_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +97,9 @@ class EmailReader:
     def connect(self):
         """Login and setup the connection."""
         try:
-            self.connection = imaplib.IMAP4_SSL(self._server, self._port)
+            self.connection = imaplib.IMAP4_SSL(
+                self._server, self._port, ssl_context=client_context()
+            )
             self.connection.login(self._user, self._password)
             return True
         except imaplib.IMAP4.error:
