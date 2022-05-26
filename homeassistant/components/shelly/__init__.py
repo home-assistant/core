@@ -766,14 +766,11 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self.device.firmware_version,
             new_version,
         )
-        result = None
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                result = await self.device.trigger_ota_update(beta=beta)
+                await self.device.trigger_ota_update(beta=beta)
         except (asyncio.TimeoutError, OSError) as err:
             LOGGER.exception("Error while perform ota update: %s", err)
-
-        LOGGER.debug("Result of OTA update call: %s", result)
 
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""
