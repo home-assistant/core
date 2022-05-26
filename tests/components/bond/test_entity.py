@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from bond_async import BPUPSubscriptions, DeviceType
+from bond_async.bpup import BPUP_ALIVE_TIMEOUT
 
 from homeassistant import core
 from homeassistant.components import fan
@@ -51,6 +52,29 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
     await hass.async_block_till_done()
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 100
 
+    # Send a message for the wrong device to make sure its ignored
+    # we should never get this callback
+    bpup_subs.notify(
+        {
+            "s": 200,
+            "t": "devices/other-device-id/state",
+            "b": {"power": 1, "speed": 1, "direction": 0},
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 100
+
+    # Test we ignore messages for the wrong topic
+    bpup_subs.notify(
+        {
+            "s": 200,
+            "t": "devices/test-device-id/other_topic",
+            "b": {"power": 1, "speed": 1, "direction": 0},
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 100
+
     bpup_subs.notify(
         {
             "s": 200,
@@ -61,7 +85,7 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
     await hass.async_block_till_done()
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 33
 
-    bpup_subs.last_message_time = 0
+    bpup_subs.last_message_time = -BPUP_ALIVE_TIMEOUT
     with patch_bond_device_state(side_effect=asyncio.TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
@@ -123,7 +147,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     await hass.async_block_till_done()
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 33
 
-    bpup_subs.last_message_time = 0
+    bpup_subs.last_message_time = -BPUP_ALIVE_TIMEOUT
     with patch_bond_device_state(side_effect=asyncio.TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
