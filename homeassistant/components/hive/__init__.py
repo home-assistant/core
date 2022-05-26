@@ -1,10 +1,15 @@
 """Support for the Hive devices and services."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
+from typing import Any, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,6 +26,9 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+
+_HiveEntityT = TypeVar("_HiveEntityT", bound="HiveEntity")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,11 +112,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def refresh_system(func):
+def refresh_system(
+    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]]
+) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self: _HiveEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)
 

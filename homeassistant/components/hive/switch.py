@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class HiveSwitch(HiveEntity, SwitchEntity, SwitchEntityDescription):
+class HiveSwitch(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
     def __init__(self, hive, hive_device, entity_description):
@@ -67,6 +67,4 @@ class HiveSwitch(HiveEntity, SwitchEntity, SwitchEntityDescription):
         self._attr_available = self.device["deviceData"].get("online")
         if self._attr_available:
             self._attr_is_on = self.device["status"]["state"]
-            if self.entity_description.key == "activeplug":
-                self._attr_current_power_w = self.device["status"].get("power_usage")
             self.attributes.update(self.device.get("attributes", {}))
