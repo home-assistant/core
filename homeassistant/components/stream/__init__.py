@@ -64,6 +64,7 @@ from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 __all__ = [
+    "CONF_EXTRA_PART_WAIT_TIME",
     "CONF_RTSP_TRANSPORT",
     "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
     "FORMAT_CONTENT_TYPE",
