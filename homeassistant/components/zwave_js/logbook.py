@@ -6,11 +6,10 @@ from collections.abc import Callable
 from zwave_js_server.const import CommandClass
 
 from homeassistant.components.logbook.const import (
-    LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 
@@ -26,7 +25,6 @@ from .const import (
     DOMAIN,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
-    ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
 
 
@@ -68,7 +66,8 @@ def async_describe_events(
             return {
                 **data,
                 LOGBOOK_ENTRY_MESSAGE: (
-                    f"{prefix} for event type '{event_type}' with data type '{data_type}'"
+                    f"{prefix} for event type '{event_type}' with data type "
+                    f"'{data_type}'"
                 ),
             }
 
@@ -100,26 +99,10 @@ def async_describe_events(
 
         return {
             LOGBOOK_ENTRY_NAME: device_name,
-            LOGBOOK_ENTRY_MESSAGE: f"fired {command_class} CC 'value notification' event for '{label}': '{value}'",
-        }
-
-    @callback
-    def async_describe_zwave_js_value_updated_event(
-        event: Event,
-    ) -> dict[str, str]:
-        """Describe Z-Wave JS value updated event."""
-        device = dev_reg.devices[event.data[ATTR_DEVICE_ID]]
-        # Z-Wave JS devices always have a name
-        device_name = device.name_by_user or device.name
-        assert device_name
-
-        entity_id = event.data[ATTR_ENTITY_ID]
-        value = event.data[ATTR_VALUE]
-
-        return {
-            LOGBOOK_ENTRY_NAME: device_name,
-            LOGBOOK_ENTRY_ENTITY_ID: entity_id,
-            LOGBOOK_ENTRY_MESSAGE: f"fired 'value updated' event: '{value}'",
+            LOGBOOK_ENTRY_MESSAGE: (
+                f"fired {command_class} CC 'value notification' event for '{label}': "
+                f"'{value}'"
+            ),
         }
 
     async_describe_event(
@@ -129,9 +112,4 @@ def async_describe_events(
         DOMAIN,
         ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
         async_describe_zwave_js_value_notification_event,
-    )
-    async_describe_event(
-        DOMAIN,
-        ZWAVE_JS_VALUE_UPDATED_EVENT,
-        async_describe_zwave_js_value_updated_event,
     )

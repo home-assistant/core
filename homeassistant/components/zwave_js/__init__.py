@@ -297,8 +297,8 @@ async def setup_driver(  # noqa: C901
         if not disc_info.assumed_state:
             return
         value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
-        # If this is the first time we found a value we want to watch for updates,
-        # return early
+        # If this is not the first time we found a value we want to watch for updates,
+        # return early because we only need one listener for all values.
         if len(value_updates_disc_info) != 1:
             return
         # add listener for value updated events
