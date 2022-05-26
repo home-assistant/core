@@ -36,7 +36,7 @@ from typing import (
     overload,
 )
 from urllib.parse import urlparse
-from weakref import WeakKeyDictionary
+import weakref
 
 import voluptuous as vol
 import yarl
@@ -719,7 +719,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("__weakref__", "user_id", "parent_id", "id", "_has_origin_event")
+    __slots__ = ("__weakref__", "user_id", "parent_id", "id", "origin_event")
 
     def __init__(
         self,
@@ -731,11 +731,11 @@ class Context:
         self.id = id or ulid_util.ulid()
         self.user_id = user_id
         self.parent_id = parent_id
-        self._has_origin_event = False
+        self.origin_event: Event | None = None
 
     def __eq__(self, other: Any) -> bool:
         """Compare contexts."""
-        return bool(self.id == other.id)
+        return bool(self.__class__ == other.__class__ and self.id == other.id)
 
     def __hash__(self) -> int:
         """Hash the context."""
@@ -760,7 +760,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
@@ -831,12 +831,6 @@ class EventBus:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
-        self._event_origins: WeakKeyDictionary[Context, Event] = WeakKeyDictionary()
-
-    @callback
-    def get_origin(self, context: Context) -> Event | None:
-        """Get the origin of a context."""
-        return self._event_origins.get(context)
 
     @callback
     def async_listeners(self) -> dict[str, int]:
@@ -889,9 +883,39 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        if not event.context._has_origin_event:  # pylint: disable=protected-access
-            event.context._has_origin_event = True  # pylint: disable=protected-access
-            self._event_origins[event.context] = event
+        if not event.context.origin_event:
+            if (
+                event.event_type == EVENT_STATE_CHANGED
+                and event.data.get("old_state") is not None
+            ):
+                event.data["old_state"].context = weakref.proxy(
+                    event.data["old_state"].context
+                )
+            event.context.origin_event = (
+                event  # Event(event_type, {}, origin, time_fired, event.context)
+            )
+        #            event.context = weakref.proxy(event.context)
+        # event.context.origin_event.context = weakref.proxy(event.context)
+        # event_context = event.context
+        # new_context = Context(user_id=event.context.user_id, parent_id=event.context.parent_id, id=event.context.id)
+        # import pprint
+        # pprint.pprint(event_data)
+        # event.context.origin_event = Event(
+        #    event_type, event_data, origin, time_fired,
+        #    new_context
+        # )
+        # import pprint
+        # pprint.pprint(event)
+        # event.context.origin_event = copy.deepcopy(event)
+
+        # event.context.origin_event = Event(
+        #    event_type,
+        #    event_data,
+        #    origin,
+        #    time_fired,
+        #    copy.copy(event.context)
+        # )
+        #    Context(event_context.user_id, event_context.parent_id, event_context.id))
 
         _LOGGER.debug("Bus:Handling %s", event)
 
@@ -1075,6 +1099,7 @@ class State:
     """
 
     __slots__ = [
+        "__weakref__",
         "entity_id",
         "state",
         "attributes",
@@ -1416,6 +1441,7 @@ class StateMachine:
             return
 
         now = dt_util.utcnow()
+
         if context is None:
             context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
 

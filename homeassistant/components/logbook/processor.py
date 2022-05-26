@@ -124,7 +124,7 @@ class EventProcessor:
             include_entity_name=include_entity_name,
             format_time=format_time,
         )
-        self.context_augmenter = ContextAugmenter(hass, self.logbook_run)
+        self.context_augmenter = ContextAugmenter(self.logbook_run)
 
     @property
     def limited_select(self) -> bool:
@@ -315,9 +315,8 @@ class ContextLookup:
 class ContextAugmenter:
     """Augment data with context trace."""
 
-    def __init__(self, hass: HomeAssistant, logbook_run: LogbookRun) -> None:
+    def __init__(self, logbook_run: LogbookRun) -> None:
         """Init the augmenter."""
-        self.hass = hass
         self.context_lookup = logbook_run.context_lookup
         self.entity_name_cache = logbook_run.entity_name_cache
         self.external_events = logbook_run.external_events
@@ -330,10 +329,12 @@ class ContextAugmenter:
         """Get the context row from the id or row context."""
         if context_id:
             return self.context_lookup.get(context_id)
-        if (context := getattr(row, "context", None)) is not None and (
-            origin_event := self.hass.bus.get_origin(context)
-        ) is not None:
-            return async_event_to_row(origin_event)
+        if (context := getattr(row, "context", None)) is not None:
+            # import pprint
+            # pprint.pprint(['context',context])
+            if (origin_event := context.origin_event) is not None:
+                # pprint.pprint(['origin_event',origin_event])
+                return async_event_to_row(origin_event)
         return None
 
     def augment(
@@ -345,6 +346,9 @@ class ContextAugmenter:
 
         if not (context_row := self._get_context_row(context_id, row)):
             return
+
+        # import pprint
+        # pprint.pprint(['_rows_match',row, context_row, _rows_match(row, context_row)])
 
         if _rows_match(row, context_row):
             # This is the first event with the given ID. Was it directly caused by
