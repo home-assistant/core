@@ -15,7 +15,7 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -113,34 +113,27 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
 
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
-        self._attr_native_value = self._native_value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self._native_value
-        super()._handle_coordinator_update()
+        self._native_value: datetime | None = None
 
     @property
-    def _native_value(self):
+    def native_value(self):
         """Return the state of the sensor."""
         sensor_type = self.entity_description.key
         value = self.coordinator.data["status"].get(sensor_type)
 
         if value is None:
             _LOGGER.warning("Unable to locate value for %s", sensor_type)
-            return None
-
-        if "DownloadRate" in sensor_type and value > 0:
+            self._native_value = None
+        elif "DownloadRate" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            return round(value / 2**20, 2)
-
-        if "UpTimeSec" in sensor_type and value > 0:
+            self._native_value = round(value / 2**20, 2)
+        elif "UpTimeSec" in sensor_type and value > 0:
             uptime = utcnow().replace(microsecond=0) - timedelta(seconds=value)
             if not isinstance(self._attr_native_value, datetime) or abs(
                 uptime - self._attr_native_value
             ) > timedelta(seconds=5):
-                return uptime
-            return self._attr_native_value
+                self._native_value = uptime
+        else:
+            self._native_value = value
 
-        return value
+        return self._native_value
