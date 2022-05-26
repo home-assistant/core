@@ -130,6 +130,8 @@ async def async_remove_config_entry_device(
         if identifier[0] != DOMAIN or len(identifier) != 3:
             continue
         bond_id: str = identifier[1]
+        # Bond still uses the 3 arg tuple before
+        # the identifiers were typed
         device_id: str = identifier[2]  # type: ignore[misc]
         # If device_id is no longer present on
         # the hub, we allow removal.
