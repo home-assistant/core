@@ -36,7 +36,6 @@ from typing import (
     overload,
 )
 from urllib.parse import urlparse
-import weakref
 
 import attr
 import voluptuous as vol
@@ -745,7 +744,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["__weakref__", "event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
 
     def __init__(
         self,
@@ -869,7 +868,7 @@ class EventBus:
 
         event = Event(event_type, event_data, origin, time_fired, context)
         if not event.context.origin_event:
-            event.context.origin_event = weakref.ref(event)
+            event.context.origin_event = event
 
         _LOGGER.debug("Bus:Handling %s", event)
 
