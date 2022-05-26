@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -40,6 +41,9 @@ EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
 HassApi = Callable[[], Awaitable[dict[str, Any]]]
+
+TEST_EVENT_SUMMARY = "Test Summary"
+TEST_EVENT_DESCRIPTION = "Test Description"
 
 
 def assert_state(actual: State | None, expected: State | None) -> None:
@@ -73,6 +77,7 @@ def setup_config_entry(
             {"entity_id": TEST_YAML_ENTITY},
         ),
     ],
+    ids=("add_event", "create_event"),
 )
 def add_event_call_service(
     hass: HomeAssistant,
@@ -88,6 +93,8 @@ def add_event_call_service(
             {
                 **data,
                 **params,
+                "summary": TEST_EVENT_SUMMARY,
+                "description": TEST_EVENT_DESCRIPTION,
             },
             target=target,
             blocking=True,
@@ -334,7 +341,125 @@ async def test_calendar_config_track_new(
     assert_state(state, expected_state)
 
 
-async def test_add_event_missing_required_fields(
+@pytest.mark.parametrize(
+    "date_fields,expected_error,error_match",
+    [
+        (
+            {},
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+            },
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "end_date": "2022-04-02",
+            },
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00",
+            },
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "start_date_time": "2022-04-01T06:00:00",
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'start'",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00",
+                "end_date_time": "2022-04-01T07:00:00",
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'end'",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date": "2022-04-02",
+            },
+            ValueError,
+            "Missing required fields",
+        ),
+        (
+            {
+                "in": {
+                    "days": 2,
+                    "weeks": 2,
+                }
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'event_types'",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date": "2022-04-02",
+                "in": {
+                    "days": 2,
+                },
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'start'",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date_time": "2022-04-01T07:00:00",
+                "in": {
+                    "days": 2,
+                },
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'start'",
+        ),
+    ],
+    ids=[
+        "missing_all",
+        "missing_end_date",
+        "missing_start_date",
+        "missing_end_datetime",
+        "missing_start_datetime",
+        "multiple_start",
+        "multiple_end",
+        "missing_end_date",
+        "missing_end_date_time",
+        "multiple_in",
+        "unexpected_in_with_date",
+        "unexpected_in_with_datetime",
+    ],
+)
+async def test_add_event_invalid_params(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
@@ -343,20 +468,18 @@ async def test_add_event_missing_required_fields(
     mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
+    date_fields: dict[str, Any],
+    expected_error: type[Exception],
+    error_match: str | None,
 ) -> None:
-    """Test service call that adds an event missing required fields."""
+    """Test service calls with incorrect fields."""
 
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
 
-    with pytest.raises(ValueError):
-        await add_event_call_service(
-            {
-                "summary": "Summary",
-                "description": "Description",
-            },
-        )
+    with pytest.raises(expected_error, match=error_match):
+        await add_event_call_service(date_fields)
 
 
 @pytest.mark.parametrize(
@@ -405,17 +528,11 @@ async def test_add_event_date_in_x(
         calendar_id=CALENDAR_ID,
     )
 
-    await add_event_call_service(
-        {
-            "summary": "Summary",
-            "description": "Description",
-            **date_fields,
-        },
-    )
+    await add_event_call_service(date_fields)
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == {
-        "summary": "Summary",
-        "description": "Description",
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
         "start": {"date": start_date.date().isoformat()},
         "end": {"date": end_date.date().isoformat()},
     }
@@ -450,16 +567,14 @@ async def test_add_event_date(
 
     await add_event_call_service(
         {
-            "summary": "Summary",
-            "description": "Description",
             "start_date": today.isoformat(),
             "end_date": end_date.isoformat(),
         },
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == {
-        "summary": "Summary",
-        "description": "Description",
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
         "start": {"date": today.isoformat()},
         "end": {"date": end_date.isoformat()},
     }
@@ -494,16 +609,14 @@ async def test_add_event_date_time(
 
     await add_event_call_service(
         {
-            "summary": "Summary",
-            "description": "Description",
             "start_date_time": start_datetime.isoformat(),
             "end_date_time": end_datetime.isoformat(),
         },
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == {
-        "summary": "Summary",
-        "description": "Description",
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
         "start": {
             "dateTime": start_datetime.isoformat(timespec="seconds"),
             "timeZone": "America/Regina",

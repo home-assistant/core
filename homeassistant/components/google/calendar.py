@@ -81,7 +81,7 @@ CREATE_EVENT_SCHEMA = {
     vol.Exclusive(EVENT_END_DATE, EVENT_END_CONF): cv.date,
     vol.Exclusive(EVENT_START_DATETIME, EVENT_START_CONF): cv.datetime,
     vol.Exclusive(EVENT_END_DATETIME, EVENT_END_CONF): cv.datetime,
-    vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES,
+    vol.Exclusive(EVENT_IN, EVENT_START_CONF): _EVENT_IN_TYPES,
 }
 
 
@@ -291,11 +291,11 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             start = DateOrDatetime(date=start_in)
             end = DateOrDatetime(date=end_in)
 
-    elif EVENT_START_DATE in call.data:
+    elif EVENT_START_DATE in call.data and EVENT_END_DATE in call.data:
         start = DateOrDatetime(date=call.data[EVENT_START_DATE])
         end = DateOrDatetime(date=call.data[EVENT_END_DATE])
 
-    elif EVENT_START_DATETIME in call.data:
+    elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
         start_dt = call.data[EVENT_START_DATETIME]
         end_dt = call.data[EVENT_END_DATETIME]
         start = DateOrDatetime(date_time=start_dt, timezone=str(hass.config.time_zone))
