@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 
 SENSOR_VAR1 = "sensor.sensor_var1"
 SENSOR_SETPOINT1 = "sensor.sensor_setpoint1"
@@ -49,7 +50,7 @@ async def test_entity_state(hass, lcn_connection):
 
 async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entity_var1 = entity_registry.async_get(SENSOR_VAR1)
     assert entity_var1

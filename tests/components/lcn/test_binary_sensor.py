@@ -5,6 +5,7 @@ from pypck.lcn_defs import Var, VarValue
 
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 
 BINARY_SENSOR_LOCKREGULATOR1 = "binary_sensor.sensor_lockregulator1"
 BINARY_SENSOR_SENSOR1 = "binary_sensor.binary_sensor1"
@@ -37,7 +38,7 @@ async def test_entity_state(hass, lcn_connection):
 
 async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entity_setpoint1 = entity_registry.async_get(BINARY_SENSOR_LOCKREGULATOR1)
     assert entity_setpoint1
