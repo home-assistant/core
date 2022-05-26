@@ -5,9 +5,8 @@ from datetime import timedelta
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
-from intellifire4py.intellifire import IntellifireAPICloud, IntellifireAPILocal
-from intellifire4py.read_async import IntellifireAsync
+from intellifire4py import IntellifirePollData
+from intellifire4py.intellifire import IntellifireAPILocal
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -22,7 +21,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
     def __init__(
         self,
         hass: HomeAssistant,
-        control_api: IntellifireControlAsync,
         api: IntellifireAPILocal,
     ) -> None:
         """Initialize the Coordinator."""
@@ -32,16 +30,26 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
         )
-        self._control_api = control_api
         self._api = api
 
     async def _async_update_data(self) -> IntellifirePollData:
-        LOGGER.debug("Calling update loop on IntelliFire")
-        async with timeout(100):
-            try:
-                await self._api.poll()
-            except (ConnectionError, ClientConnectionError) as exception:
-                raise UpdateFailed from exception
+
+        if not self._api.is_polling_in_background:
+            LOGGER.info("Starting Intellifire Background Polling Loop")
+            await self._api.start_background_polling()
+
+            # Don't return uninitialized poll data
+            async with timeout(100):
+                try:
+                    await self._api.poll()
+                except (ConnectionError, ClientConnectionError) as exception:
+                    raise UpdateFailed from exception
+
+        LOGGER.info("Failure Count %d", self._api.failed_poll_attempts)
+        if self._api.failed_poll_attempts > 10:
+            LOGGER.debug("Too many polling errors - raising exception")
+            raise UpdateFailed
+
         return self._api.data
 
     @property
@@ -50,9 +58,9 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         return self._api
 
     @property
-    def control_api(self) -> IntellifireControlAsync:
+    def control_api(self) -> IntellifireAPILocal:
         """Return the control API."""
-        return self._control_api
+        return self._api
 
     @property
     def device_info(self) -> DeviceInfo:

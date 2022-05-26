@@ -5,7 +5,6 @@ from aiohttp import ClientConnectionError
 from intellifire4py import IntellifireControlAsync
 from intellifire4py.exceptions import LoginException
 from intellifire4py.intellifire import IntellifireAPICloud, IntellifireAPILocal
-from intellifire4py.read_async import IntellifireAsync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,9 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Old config entry format detected: %s", entry.unique_id)
         raise ConfigEntryAuthFailed
 
-    # Define the API Objects
-    read_object = IntellifireAsync(entry.data[CONF_HOST])
-
     ift_control = IntellifireControlAsync(
         fireplace_ip=entry.data[CONF_HOST],
     )
@@ -54,17 +50,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Extract API Key and User_ID from ift_control
     # Eventually this will migrate to using IntellifireAPICloud
 
-    user_id = ift_control.get_username
-    api_key = ift_control.default_fireplace.apikey
+    if CONF_USER_ID not in entry.data or CONF_API_KEY not in entry.data:
+        LOGGER.info(
+            "Updating intellifire config entry for %s with api information",
+            entry.unique_id,
+        )
+        cloud_api = IntellifireAPICloud()
+        await cloud_api.login(
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+        )
+        api_key = (cloud_api.get_fireplace_api_key(),)
+        user_id = (cloud_api.get_user_id(),)
+
+    else:
+        api_key = (entry.data[CONF_API_KEY],)
+        user_id = (entry.data[CONF_USER_ID],)
 
     # Instantiate local control
     api = IntellifireAPILocal(
-        fireplace_ip=entry.data[CONF_HOST], api_key=api_key, user_id=user_id
+        fireplace_ip=entry.data[CONF_HOST],
+        api_key=api_key[0],
+        user_id=user_id[0],
     )
 
     # Define the update coordinator
     coordinator = IntellifireDataUpdateCoordinator(
-        hass=hass, api=api, control_api=ift_control
+        hass=hass,
+        api=api,
     )
 
     await coordinator.async_config_entry_first_refresh()
