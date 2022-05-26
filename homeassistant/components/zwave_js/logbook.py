@@ -34,7 +34,7 @@ from .const import (
 def async_describe_events(
     hass: HomeAssistant,
     async_describe_event: Callable[
-        [str, str, Callable[[Event], dict[str, str | int]]], None
+        [str, str, Callable[[Event], dict[str, str]]], None
     ],
 ) -> None:
     """Describe logbook events."""
