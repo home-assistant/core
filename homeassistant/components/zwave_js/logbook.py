@@ -33,9 +33,7 @@ from .const import (
 @callback
 def async_describe_events(
     hass: HomeAssistant,
-    async_describe_event: Callable[
-        [str, str, Callable[[Event], dict[str, str]]], None
-    ],
+    async_describe_event: Callable[[str, str, Callable[[Event], dict[str, str]]], None],
 ) -> None:
     """Describe logbook events."""
     dev_reg = dr.async_get(hass)
