@@ -12,7 +12,7 @@ from PIL import Image
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
 from nio.events.room_events import RoomMessageText
-from nio.exceptions import RemoteProtocolError
+from nio.exceptions import LocalProtocolError, RemoteProtocolError
 from nio.responses import (
     ErrorResponse,
     JoinError,
@@ -112,10 +112,6 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 )
 
 
-class MatrixLoginError(Exception):
-    """Error indicating a login failure with the Matrix Homeserver."""
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
@@ -132,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[CONF_COMMANDS],
         )
         hass.data[DOMAIN] = bot
-    except MatrixLoginError as exception:
+    except LocalProtocolError as exception:
         _LOGGER.exception("Matrix failed to log in: %s", str(exception))
         return False
 
@@ -347,8 +343,8 @@ class MatrixBot:
                 )
 
         if not client.logged_in:
-            raise MatrixLoginError(
-                "Login failed, both token and username/password invalid"
+            raise LocalProtocolError(
+                "Login failed, both token and username/password invalid."
             )
 
         self._client = client
