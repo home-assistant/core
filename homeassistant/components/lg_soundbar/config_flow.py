@@ -1,5 +1,6 @@
 """Config flow to configure the LG Soundbar integration."""
 from queue import Queue
+import socket
 
 import temescal
 import voluptuous as vol
@@ -35,8 +36,10 @@ def test_connect(host, port):
         connection.get_info()
         details = {"name": name_q.get(timeout=10), "uuid": uuid_q.get(timeout=10)}
         return details
-    except Exception as err:
-        raise ConnectionError("Connection failed.") from err
+    except socket.gaierror as err:
+        raise ConnectionError(f"Cannot resolve hostname: {host}") from err
+    except socket.timeout as err:
+        raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
 
 
 class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
