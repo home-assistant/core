@@ -119,3 +119,22 @@ def _async_remove_old_device_identifiers(
             continue
         if config_entry_id in dev.config_entries:
             device_registry.async_remove_device(dev.id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove bond config entry from a device."""
+    hub: BondHub = hass.data[DOMAIN][config_entry.entry_id][HUB]
+    for identifier in device_entry.identifiers:
+        if identifier[0] != DOMAIN or len(identifier) != 3:
+            continue
+        bond_id: str = identifier[1]
+        device_id: str = identifier[2]  # type: ignore[misc]
+        # If device_id is no longer present on
+        # the hub, we allow removal.
+        if hub.bond_id == bond_id and not all(
+            device_id == device.device_id for device in hub.devices
+        ):
+            return True
+    return False
