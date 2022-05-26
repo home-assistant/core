@@ -3,17 +3,24 @@ from __future__ import annotations
 
 import asyncio
 import logging
-
-# import mimetypes
+import mimetypes
 import os
 import re
 from typing import NewType, TypedDict
 
-from matrix_client.client import MatrixRequestError
+from PIL import Image
+import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
 from nio.events.room_events import RoomMessageText
 from nio.exceptions import RemoteProtocolError
-from nio.responses import JoinError, JoinResponse, LoginError
+from nio.responses import (
+    ErrorResponse,
+    JoinError,
+    JoinResponse,
+    LoginError,
+    Response,
+    UploadError,
+)
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -52,14 +59,13 @@ ATTR_IMAGES = "images"  # optional images
 WordCommand = NewType("WordCommand", str)
 ExpressionCommand = NewType("ExpressionCommand", re.Pattern)
 RoomID = NewType("RoomID", str)
-RoomList = NewType("RoomList", list[RoomID])
 
 
 class ConfigCommand(TypedDict, total=False):
     """Corresponds to a single COMMAND_SCHEMA."""
 
     name: str  # CONF_NAME
-    rooms: RoomList | None  # CONF_ROOMS
+    rooms: list[RoomID] | None  # CONF_ROOMS
     word: WordCommand | None  # CONF_WORD
     expression: ExpressionCommand | None  # CONF_EXPRESSION
 
@@ -151,7 +157,7 @@ class MatrixBot:
         verify_ssl: bool,
         username: str,
         password: str,
-        listening_rooms: RoomList,
+        listening_rooms: list[RoomID],
         commands: list[ConfigCommand],
     ) -> None:
         """Set up the client."""
@@ -301,7 +307,7 @@ class MatrixBot:
             return auth_tokens
         return {}
 
-    async def _store_auth_token(self, token: str):
+    def _store_auth_token(self, token: str):
         """Store authentication token to session and persistent storage."""
         self._auth_tokens[self._mx_id] = token
 
@@ -347,50 +353,77 @@ class MatrixBot:
 
         self._client = client
 
-    # async def _send_image(self, img, target_rooms):
-    #     _LOGGER.debug("Uploading file from path, %s", img)
-    #
-    #     if not self.hass.config.is_allowed_path(img):
-    #         _LOGGER.error("Path not allowed: %s", img)
-    #         return
-    #     with open(img, "rb") as upfile:
-    #         imgfile = upfile.read()
-    #     content_type = mimetypes.guess_type(img)[0]
-    #     mxc = self._client.upload(imgfile, content_type)
-    #     for target_room in target_rooms:
-    #         try:
-    #             room = await self._join_room(target_room)
-    #             # room.send_image(mxc, img, mimetype=content_type)
-    #         except MatrixRequestError as ex:
-    #             _LOGGER.error(
-    #                 "Unable to deliver message to room '%s': %d, %s",
-    #                 target_room,
-    #                 ex.code,
-    #                 ex.content,
-    #             )
+    async def _send_image(self, img: str, target_rooms: list[RoomID]) -> None:
+        if not self.hass.config.is_allowed_path(img):
+            _LOGGER.error("Path not allowed: %s", img)
+            return
 
-    async def _send_message(self, message, data, target_rooms):
+        # Get required image metadata.
+        image = Image.open(img)
+        (width, height) = image.size
+        mime_type = mimetypes.guess_type(img)[0]
+
+        file_stat = await aiofiles.os.stat(img)
+
+        _LOGGER.debug("Uploading file from path, %s", img)
+        async with aiofiles.open(img, "r+b") as file:
+            response, _ = await self._client.upload(
+                file,
+                content_type=mime_type,
+                filename=os.path.basename(img),
+                filesize=file_stat.st_size,
+            )
+        if isinstance(response, UploadError):
+            _LOGGER.error("Unable to upload image to homeserver: %s", response)
+            return
+
+        content = {
+            "body": os.path.basename(img),
+            "info": {
+                "size": file_stat.st_size,
+                "mimetype": mime_type,
+                "w": width,
+                "h": height,
+            },
+            "msgtype": "m.image",
+            "url": response.content_uri,
+        }
+
+        image_sends = {
+            self._client.room_send(
+                room_id=room, message_type="m.room.message", content=content
+            )
+            for room in target_rooms
+        }
+        await asyncio.wait(image_sends)
+
+    async def _send_message(
+        self, message: str, data: dict | None, target_rooms: list[RoomID]
+    ):
         """Send the message to the Matrix server."""
         for target_room in target_rooms:
-            try:
-                room = await self._join_room(target_room)
-                if message is not None:
-                    _LOGGER.debug(room.send_text(message))
-            except MatrixRequestError as ex:
+            response: Response = await self._client.room_send(
+                room_id=target_room,
+                message_type="m.room.message",
+                content={"msgtype": "m.text", "body": message},
+            )
+            if isinstance(response, ErrorResponse):
                 _LOGGER.error(
-                    "Unable to deliver message to room '%s': %d, %s",
+                    "Unable to deliver message to room '%s': %s",
                     target_room,
-                    ex.code,
-                    ex.content,
+                    response,
                 )
-        # if data is not None:
-        #     for img in data.get(ATTR_IMAGES, []):
-        #         await self._send_image(img, target_rooms)
+            else:
+                _LOGGER.debug("Message delivered to room '%s'", target_room)
+
+        if data is not None and len(target_rooms) > 0:
+            for img in data.get(ATTR_IMAGES, []):
+                await self._send_image(img, target_rooms)
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
         return await self._send_message(
-            service.data.get(ATTR_MESSAGE),
+            service.data.get(ATTR_MESSAGE),  # type: ignore[arg-type]
             service.data.get(ATTR_DATA),
             service.data[ATTR_TARGET],
         )
