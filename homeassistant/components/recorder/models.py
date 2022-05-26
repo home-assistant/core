@@ -853,7 +853,7 @@ def row_to_compressed_state(
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
     }
     if start_time:
-        comp_state[COMPRESSED_STATE_LAST_CHANGED] = start_time.timestamp()
+        comp_state[COMPRESSED_STATE_LAST_UPDATED] = start_time.timestamp()
     else:
         row_last_updated: datetime = row.last_updated
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = process_datetime_to_timestamp(
