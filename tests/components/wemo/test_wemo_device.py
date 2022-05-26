@@ -168,7 +168,7 @@ async def test_device_info(hass, wemo_entity):
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
-async def test_dli_device_info(hass, wemo_entity, pywemo_dli_device):
+async def test_dli_device_info(hass, wemo_dli_entity):
     """Verify the DeviceInfo data for Digital Loggers emulated wemo device."""
     dr = device_registry.async_get(hass)
     device_entries = list(dr.devices.values())

@@ -138,3 +138,9 @@ async def async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix):
 async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
     """Fixture for a Wemo entity in hass."""
     return await async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix)
+
+
+@pytest.fixture(name="wemo_dli_entity")
+async def async_wemo_dli_entity_fixture(hass, pywemo_dli_device, wemo_entity_suffix):
+    """Fixture for a Wemo entity in hass."""
+    return await async_create_wemo_entity(hass, pywemo_dli_device, wemo_entity_suffix)
