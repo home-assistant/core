@@ -15,7 +15,7 @@ import weakref
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
-from .components import persistent_notification
+# from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
@@ -669,8 +669,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         flow = cast(ConfigFlow, flow)
 
         # Remove notification if no other discovery config entries in progress
-        if not self._async_has_other_discovery_flows(flow.flow_id):
-            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
+#        if not self._async_has_other_discovery_flows(flow.flow_id):
+#            persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
 
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
@@ -768,25 +768,25 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Create notification.
         if source in DISCOVERY_SOURCES:
             self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            persistent_notification.async_create(
-                self.hass,
-                title="New devices discovered",
-                message=(
-                    "We have discovered new devices on your network. "
-                    "[Check it out](/config/integrations)."
-                ),
-                notification_id=DISCOVERY_NOTIFICATION_ID,
-            )
-        elif source == SOURCE_REAUTH:
-            persistent_notification.async_create(
-                self.hass,
-                title="Integration requires reconfiguration",
-                message=(
-                    "At least one of your integrations requires reconfiguration to "
-                    "continue functioning. [Check it out](/config/integrations)."
-                ),
-                notification_id=RECONFIGURE_NOTIFICATION_ID,
-            )
+#            persistent_notification.async_create(
+#                self.hass,
+#                title="New devices discovered",
+#                message=(
+#                    "We have discovered new devices on your network. "
+#                    "[Check it out](/config/integrations)."
+#                ),
+#                notification_id=DISCOVERY_NOTIFICATION_ID,
+#            )
+#        elif source == SOURCE_REAUTH:
+#            persistent_notification.async_create(
+#                self.hass,
+#                title="Integration requires reconfiguration",
+#                message=(
+#                    "At least one of your integrations requires reconfiguration to "
+#                    "continue functioning. [Check it out](/config/integrations)."
+#                ),
+#                notification_id=RECONFIGURE_NOTIFICATION_ID,
+#            )
 
 
 class ConfigEntries:
@@ -1390,16 +1390,16 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> data_entry_flow.FlowResult:
         """Abort the config flow."""
         # Remove reauth notification if no reauth flows are in progress
-        if self.source == SOURCE_REAUTH and not any(
-            ent["context"]["source"] == SOURCE_REAUTH
-            for ent in self.hass.config_entries.flow.async_progress_by_handler(
-                self.handler
-            )
-            if ent["flow_id"] != self.flow_id
-        ):
-            persistent_notification.async_dismiss(
-                self.hass, RECONFIGURE_NOTIFICATION_ID
-            )
+#        if self.source == SOURCE_REAUTH and not any(
+#            ent["context"]["source"] == SOURCE_REAUTH
+#            for ent in self.hass.config_entries.flow.async_progress_by_handler(
+#                self.handler
+#            )
+#            if ent["flow_id"] != self.flow_id
+#        ):
+#            persistent_notification.async_dismiss(
+#                self.hass, RECONFIGURE_NOTIFICATION_ID
+#            )
 
         return super().async_abort(
             reason=reason, description_placeholders=description_placeholders

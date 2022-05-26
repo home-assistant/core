@@ -11,7 +11,7 @@ from typing import Any, Final
 from aiohttp import WSMsgType, web
 import async_timeout
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
