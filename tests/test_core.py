@@ -1828,4 +1828,4 @@ async def test_event_context(hass):
     cancel()
     cancel2()
 
-    assert dummy_event2.context.origin_event == dummy_event
+    assert dummy_event2.context._has_origin_event is True

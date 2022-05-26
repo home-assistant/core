@@ -124,7 +124,7 @@ class EventProcessor:
             include_entity_name=include_entity_name,
             format_time=format_time,
         )
-        self.context_augmenter = ContextAugmenter(self.logbook_run)
+        self.context_augmenter = ContextAugmenter(hass, self.logbook_run)
 
     @property
     def limited_select(self) -> bool:
@@ -315,8 +315,9 @@ class ContextLookup:
 class ContextAugmenter:
     """Augment data with context trace."""
 
-    def __init__(self, logbook_run: LogbookRun) -> None:
+    def __init__(self, hass: HomeAssistant, logbook_run: LogbookRun) -> None:
         """Init the augmenter."""
+        self.hass = hass
         self.context_lookup = logbook_run.context_lookup
         self.entity_name_cache = logbook_run.entity_name_cache
         self.external_events = logbook_run.external_events
@@ -330,7 +331,7 @@ class ContextAugmenter:
         if context_id:
             return self.context_lookup.get(context_id)
         if (context := getattr(row, "context", None)) is not None and (
-            origin_event := context.origin_event
+            origin_event := self.hass.bus.get_origin(context)
         ) is not None:
             return async_event_to_row(origin_event)
         return None

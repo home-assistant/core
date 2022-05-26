@@ -36,8 +36,8 @@ from typing import (
     overload,
 )
 from urllib.parse import urlparse
+from weakref import WeakKeyDictionary
 
-import attr
 import voluptuous as vol
 import yarl
 
@@ -716,14 +716,30 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=False)
 class Context:
     """The context that triggered something."""
 
-    user_id: str | None = attr.ib(default=None)
-    parent_id: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=ulid_util.ulid)
-    origin_event: Event | None = attr.ib(default=None, eq=False)
+    __slots__ = ("__weakref__", "user_id", "parent_id", "id", "_has_origin_event")
+
+    def __init__(
+        self,
+        user_id: str | None = None,
+        parent_id: str | None = None,
+        id: str | None = None,  # pylint: disable=redefined-builtin
+    ) -> None:
+        """Init the context."""
+        self.id = id or ulid_util.ulid()
+        self.user_id = user_id
+        self.parent_id = parent_id
+        self._has_origin_event = False
+
+    def __eq__(self, other: Any) -> bool:
+        """Compare contexts."""
+        return bool(self.id == other.id)
+
+    def __hash__(self) -> int:
+        """Hash the context."""
+        return hash(self.id)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -815,6 +831,12 @@ class EventBus:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
+        self._event_origins: WeakKeyDictionary[Context, Event] = WeakKeyDictionary()
+
+    @callback
+    def get_origin(self, context: Context) -> Event | None:
+        """Get the origin of a context."""
+        return self._event_origins.get(context)
 
     @callback
     def async_listeners(self) -> dict[str, int]:
@@ -867,8 +889,9 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        if not event.context.origin_event:
-            event.context.origin_event = event
+        if not event.context._has_origin_event:  # pylint: disable=protected-access
+            event.context._has_origin_event = True  # pylint: disable=protected-access
+            self._event_origins[event.context] = event
 
         _LOGGER.debug("Bus:Handling %s", event)
 
