@@ -249,7 +249,7 @@ class BrightnessTrait(_Trait):
         if domain == light.DOMAIN:
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
             if brightness is not None:
-                response["brightness"] = int(100 * (brightness / 255))
+                response["brightness"] = round(100 * (brightness / 255))
             else:
                 response["brightness"] = 0
 
