@@ -135,7 +135,7 @@ async def async_remove_config_entry_device(
         device_id: str = identifier[2]  # type: ignore[misc]
         # If device_id is no longer present on
         # the hub, we allow removal.
-        if hub.bond_id == bond_id and not any(
+        if hub.bond_id != bond_id or not any(
             device_id == device.device_id for device in hub.devices
         ):
             return True

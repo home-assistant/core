@@ -321,3 +321,14 @@ async def test_device_remove_devices(hass, hass_ws_client):
         )
         is True
     )
+
+    dead_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "wrong-hub-id", "test-device-id")},
+    )
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
+        )
+        is True
+    )
