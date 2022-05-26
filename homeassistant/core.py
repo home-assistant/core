@@ -36,7 +36,6 @@ from typing import (
     overload,
 )
 from urllib.parse import urlparse
-import weakref
 
 import attr
 import voluptuous as vol
@@ -1304,7 +1303,10 @@ class StateMachine:
         if old_state is None:
             return False
 
-        old_state.context = weakref.proxy(old_state.context)
+        old_context = old_state.context
+        old_state.context = Context(
+            old_context.user_id, old_context.parent_id, old_context.id
+        )
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
@@ -1408,7 +1410,10 @@ class StateMachine:
             old_state is None,
         )
         if old_state is not None:
-            old_state.context = weakref.proxy(old_state.context)
+            old_context = old_state.context
+            old_state.context = Context(
+                old_context.user_id, old_context.parent_id, old_context.id
+            )
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
