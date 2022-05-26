@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import call
 
-from bond_api import Action, DeviceType, Direction
+from bond_async import Action, DeviceType, Direction
 import pytest
 
 from homeassistant import core
