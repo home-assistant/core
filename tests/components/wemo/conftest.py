@@ -97,6 +97,15 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
         yield pywemo_device
 
 
+@pytest.fixture(name="pywemo_dli_device")
+def pywemo_dli_device_fixture(pywemo_registry, pywemo_model):
+    """Fixture for Digital Loggers emulated instances."""
+    with create_pywemo_device(pywemo_registry, pywemo_model) as pywemo_dli_device:
+        pywemo_dli_device.model_name == "DLI emulated Belkin Socket"
+        pywemo_dli_device.serialnumber = "1234567891"
+        yield pywemo_dli_device
+
+
 @pytest.fixture(name="wemo_entity_suffix")
 def wemo_entity_suffix_fixture():
     """Fixture to select a specific entity for wemo_entity."""
