@@ -108,7 +108,7 @@ def async_describe_events(
     @callback
     def async_describe_zwave_js_value_updated_event(
         event: Event,
-    ) -> dict[str, str | int]:
+    ) -> dict[str, str]:
         """Describe Z-Wave JS value updated event."""
         device = dev_reg.devices[event.data[ATTR_DEVICE_ID]]
         # Z-Wave JS devices always have a name
