@@ -77,4 +77,4 @@ def fixture_get_ferries() -> list[FerryStop]:
         "Harbor 2",
     )
 
-    yield [depart1, depart2, depart3]
+    return [depart1, depart2, depart3]
