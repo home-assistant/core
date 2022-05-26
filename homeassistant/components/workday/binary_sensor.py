@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -32,6 +33,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
+    DOMAIN,
     LOGGER,
 )
 
@@ -76,21 +78,45 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[DateLike] = config[CONF_ADD_HOLIDAYS]
-    remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
-    country: str = config[CONF_COUNTRY]
-    days_offset: int = config[CONF_OFFSET]
-    excludes: list[str] = config[CONF_EXCLUDES]
-    province: str | None = config.get(CONF_PROVINCE)
-    sensor_name: str = config[CONF_NAME]
-    workdays: list[str] = config[CONF_WORKDAYS]
+    LOGGER.warning(
+        # Config flow added in Home Assistant Core 2022.7, remove import flow in 2022.9
+        "Loading Workday via platform setup has been deprecated in Home Assistant 2022.7 "
+        "Your configuration has been automatically imported and you can "
+        "remove it from your configuration.yaml"
+    )
+
+    new_config = config
+    if config.get(CONF_PROVINCE) is None:
+        new_config[CONF_PROVINCE] = None
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=new_config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Workday sensor."""
+    add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]
+    remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
+    country: str = entry.options[CONF_COUNTRY]
+    days_offset: int = int(entry.options[CONF_OFFSET])
+    excludes: list[str] = entry.options[CONF_EXCLUDES]
+    province: str = entry.options[CONF_PROVINCE]
+    sensor_name: str = entry.options[CONF_NAME]
+    workdays: list[str] = entry.options[CONF_WORKDAYS]
 
     year: int = (dt.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
@@ -103,7 +129,7 @@ def setup_platform(
             return
 
     # Add custom holidays
-    try:
+    if add_holidays != []:
         obj_holidays.append(add_holidays)
     except ValueError as error:
         LOGGER.error("Could not add custom holidays: %s", error)
@@ -131,8 +157,17 @@ def setup_platform(
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
         LOGGER.debug("%s %s", _holiday_string, name)
 
-    add_entities(
-        [IsWorkdaySensor(obj_holidays, workdays, excludes, days_offset, sensor_name)],
+    async_add_entities(
+        [
+            IsWorkdaySensor(
+                obj_holidays,
+                workdays,
+                excludes,
+                days_offset,
+                sensor_name,
+                entry.entry_id,
+            )
+        ],
         True,
     )
 
@@ -147,6 +182,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         excludes: list[str],
         days_offset: int,
         name: str,
+        entry_id: str,
     ) -> None:
         """Initialize the Workday sensor."""
         self._attr_name = name
@@ -159,6 +195,7 @@ class IsWorkdaySensor(BinarySensorEntity):
             CONF_EXCLUDES: excludes,
             CONF_OFFSET: days_offset,
         }
+        self._attr_unique_id = entry_id
 
     def is_include(self, day: str, now: date) -> bool:
         """Check if given day is in the includes list."""
