@@ -55,7 +55,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
     }
 
 
-@pytest.mark.parametrize("os_info", [{}, {"board": None}, {"board": "other"}])
+@pytest.mark.parametrize("os_info", [None, {"board": None}, {"board": "other"}])
 async def test_hardware_info_fail(hass: HomeAssistant, hass_ws_client, os_info) -> None:
     """Test async_info raises if os_info is not as expected."""
     mock_integration(hass, MockModule("hassio"))
