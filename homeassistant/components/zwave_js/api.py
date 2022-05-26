@@ -2125,7 +2125,7 @@ def _get_node_statistics_dict(
         assert device
         return device.id
 
-    statistics_data: dict = {
+    data: dict = {
         "commands_tx": statistics.commands_tx,
         "commands_rx": statistics.commands_rx,
         "commands_dropped_tx": statistics.commands_dropped_tx,
@@ -2137,15 +2137,14 @@ def _get_node_statistics_dict(
         "nlwr": statistics.nlwr.as_dict() if statistics.nlwr else None,
     }
     for key in ("lwr", "nlwr"):
-        if not statistics_data[key]:
+        if not data[key]:
             continue
-        working_route = statistics_data[key]
         for key_2 in ("repeaters", "route_failed_between"):
-            working_route[key_2] = [
-                _convert_node_to_device_id(node) for node in working_route[key_2]
+            data[key][key_2] = [
+                _convert_node_to_device_id(node) for node in data[key][key_2]
             ]
 
-    return statistics_data
+    return data
 
 
 @websocket_api.require_admin
