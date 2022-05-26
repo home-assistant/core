@@ -35,6 +35,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD], None)
     try:
         login = await acc.login()
+        acc.close()
     except (TypeError, KeyError, NameError, ValueError) as ex:
         raise ConnectionError from ex
     else:

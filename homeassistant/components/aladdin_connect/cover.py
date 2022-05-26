@@ -68,6 +68,7 @@ async def async_setup_entry(
             (AladdinDevice(acc.auth_token(), door, config_entry) for door in doors),
             update_before_add=True,
         )
+    acc.close()
 
 
 class AladdinDevice(CoverEntity):
