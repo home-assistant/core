@@ -1522,6 +1522,11 @@ omit =
     homeassistant/components/persistent_notification/__init__.py
     homeassistant/helpers/entity.py
     homeassistant/helpers/entity_id.py
+    homeassistant/components/http/ban.py
+    homeassistant/components/websocket_api/http.py
+    homeassistant/config_entries.py
+    homeassistant/components/tts/__init__.py
+    
 
 [report]
 # Regexes for lines to exclude from consideration
