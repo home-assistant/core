@@ -148,43 +148,6 @@ from homeassistant.util import dt as dt_util
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
-WS_TYPE_CURRENT_USER = "auth/current_user"
-SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_CURRENT_USER}
-)
-
-WS_TYPE_LONG_LIVED_ACCESS_TOKEN = "auth/long_lived_access_token"
-SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        vol.Required("lifespan"): int,  # days
-        vol.Required("client_name"): str,
-        vol.Optional("client_icon"): str,
-    }
-)
-
-WS_TYPE_REFRESH_TOKENS = "auth/refresh_tokens"
-SCHEMA_WS_REFRESH_TOKENS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_REFRESH_TOKENS}
-)
-
-WS_TYPE_DELETE_REFRESH_TOKEN = "auth/delete_refresh_token"
-SCHEMA_WS_DELETE_REFRESH_TOKEN = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_DELETE_REFRESH_TOKEN,
-        vol.Required("refresh_token_id"): str,
-    }
-)
-
-WS_TYPE_SIGN_PATH = "auth/sign_path"
-SCHEMA_WS_SIGN_PATH = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SIGN_PATH,
-        vol.Required("path"): str,
-        vol.Optional("expires", default=30): int,
-    }
-)
-
 RESULT_TYPE_CREDENTIALS = "credentials"
 
 
@@ -204,27 +167,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(LinkUserView(retrieve_result))
     hass.http.register_view(OAuth2AuthorizeCallbackView())
 
-    websocket_api.async_register_command(
-        hass, WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        websocket_create_long_lived_access_token,
-        SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN,
-    )
-    websocket_api.async_register_command(
-        hass, WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_DELETE_REFRESH_TOKEN,
-        websocket_delete_refresh_token,
-        SCHEMA_WS_DELETE_REFRESH_TOKEN,
-    )
-    websocket_api.async_register_command(
-        hass, WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
-    )
+    websocket_api.async_register_command(hass, websocket_current_user)
+    websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
+    websocket_api.async_register_command(hass, websocket_refresh_tokens)
+    websocket_api.async_register_command(hass, websocket_delete_refresh_token)
+    websocket_api.async_register_command(hass, websocket_sign_path)
 
     await login_flow.async_setup(hass, store_result)
     await mfa_setup_flow.async_setup(hass)
@@ -476,6 +423,7 @@ def _create_auth_code_store():
     return store_result, retrieve_result
 
 
+@websocket_api.websocket_command({vol.Required("type"): "auth/current_user"})
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_current_user(
@@ -513,6 +461,14 @@ async def websocket_current_user(
     )
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/long_lived_access_token",
+        vol.Required("lifespan"): int,  # days
+        vol.Required("client_name"): str,
+        vol.Optional("client_icon"): str,
+    }
+)
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_create_long_lived_access_token(
@@ -537,6 +493,7 @@ async def websocket_create_long_lived_access_token(
     connection.send_message(websocket_api.result_message(msg["id"], access_token))
 
 
+@websocket_api.websocket_command({vol.Required("type"): "auth/refresh_tokens"})
 @websocket_api.ws_require_user()
 @callback
 def websocket_refresh_tokens(
@@ -565,6 +522,12 @@ def websocket_refresh_tokens(
     )
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/delete_refresh_token",
+        vol.Required("refresh_token_id"): str,
+    }
+)
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_delete_refresh_token(
@@ -583,6 +546,13 @@ async def websocket_delete_refresh_token(
     connection.send_message(websocket_api.result_message(msg["id"], {}))
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/sign_path",
+        vol.Required("path"): str,
+        vol.Optional("expires", default=30): int,
+    }
+)
 @websocket_api.ws_require_user()
 @callback
 def websocket_sign_path(
