@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player.browse_media import BrowseMedia
@@ -291,3 +292,25 @@ async def test_enqueue_rewrite(hass, input, expected):
 
     assert len(mock_play_media.mock_calls) == 1
     assert mock_play_media.mock_calls[0][2]["enqueue"] == expected
+
+
+async def test_enqueue_alert_exclusive(hass):
+    """Test that alert and enqueue cannot be used together."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media_content_type": "music",
+                "media_content_id": "1234",
+                "enqueue": "play",
+                "alert": True,
+            },
+            blocking=True,
+        )

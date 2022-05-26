@@ -166,6 +166,13 @@ play_media:
               value: "add"
             - label: "Play now and clear queue"
               value: "replace"
+    alert:
+      name: Alert
+      description: If the media should be played as an alert.
+      required: false
+      example: "true"
+      selector:
+        boolean:
 
 select_source:
   name: Select source
