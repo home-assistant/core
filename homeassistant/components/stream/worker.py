@@ -481,7 +481,7 @@ def stream_worker(
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
     # Disable ll-hls for hls inputs
-    if container.format.name in {"hls"}:
+    if container.format.name == "hls":
         stream_settings.ll_hls = False
     stream_state.diagnostics.set_value("container_format", container.format.name)
     stream_state.diagnostics.set_value("video_codec", video_stream.name)
