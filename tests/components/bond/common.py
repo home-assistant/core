@@ -19,6 +19,20 @@ from homeassistant.util import utcnow
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
 def ceiling_fan_with_breeze(name: str):
     """Create a ceiling fan with given name with breeze support."""
     return {
@@ -246,3 +260,12 @@ async def help_test_entity_available(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+def ceiling_fan(name: str):
+    """Create a ceiling fan with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection"],
+    }
