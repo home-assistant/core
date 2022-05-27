@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,7 +89,7 @@ class AladdinDevice(CoverEntity):
     ) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
-        self._acc.register_callback(self._update_callback)
+
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._attr_name = device["name"]
@@ -97,9 +97,15 @@ class AladdinDevice(CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
+
+        @callback
+        async def update_callback() -> None:
+            """Schedule a state update."""
+            self.async_schedule_update_ha_state(True)
+
+        await self._acc.register_callback(update_callback)
         await self._acc.get_doors()
         await self.async_update()
-        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""
@@ -138,7 +144,3 @@ class AladdinDevice(CoverEntity):
         )
 
         self._attr_extra_state_attributes = extra
-
-    async def _update_callback(self) -> None:
-        """Schedule a state update."""
-        self.async_schedule_update_ha_state(True)
