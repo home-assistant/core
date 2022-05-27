@@ -8,7 +8,7 @@ from AIOAladdinConnect import AladdinConnectClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import DOMAIN
 
@@ -23,12 +23,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     acc = AladdinConnectClient(username, password, None)
-    try:
-        if not await acc.login():
-            raise ConfigEntryAuthFailed("Incorrect Password")
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        raise ConfigEntryNotReady from ex
+    if not await acc.login():
+        raise ConfigEntryAuthFailed("Incorrect Password")
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -37,4 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
