@@ -15,6 +15,7 @@
             "stream_no_video": "Streaming tidak memiliki video",
             "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
             "stream_unauthorised": "Otorisasi gagal saat mencoba menyambung ke streaming",
+            "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
             "timeout": "Tenggang waktu habis saat memuat URL",
             "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
             "unknown": "Kesalahan yang tidak diharapkan"
@@ -57,6 +58,7 @@
             "stream_no_video": "Streaming tidak memiliki video",
             "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
             "stream_unauthorised": "Otorisasi gagal saat mencoba menyambung ke streaming",
+            "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
             "timeout": "Tenggang waktu habis saat memuat URL",
             "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
             "unknown": "Kesalahan yang tidak diharapkan"
