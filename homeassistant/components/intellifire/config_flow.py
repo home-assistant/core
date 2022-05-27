@@ -30,15 +30,16 @@ class DiscoveredHostInfo:
     serial: str | None
 
 
-async def validate_host_input(host: str) -> str:
+async def validate_host_input(host: str, dhcp_mode: bool = False) -> str:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     LOGGER.debug("Instantiating IntellifireAPI with host: [%s]", host)
     api = IntellifireAPILocal(fireplace_ip=host)
-    await api.poll()
+    await api.poll(supress_warnings=dhcp_mode)
     serial = api.data.serial
+
     LOGGER.debug("Found a fireplace: %s", serial)
     # Return the serial number which will be used to calculate a unique ID for the device/sensors
     return serial
@@ -237,14 +238,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle DHCP Discovery."""
 
-        LOGGER.debug("STEP: dhcp")
         # Run validation logic on ip
         host = discovery_info.ip
+        LOGGER.debug("STEP: dhcp for host %s", host)
 
         self._async_abort_entries_match({CONF_HOST: host})
         try:
-            self._serial = await validate_host_input(host)
+            self._serial = await validate_host_input(host, dhcp_mode=True)
         except (ConnectionError, ClientConnectionError):
+            LOGGER.info(
+                "DHCP Discovery has determined %s is not an IntelliFire device", host
+            )
             return self.async_abort(reason="not_intellifire_device")
 
         await self.async_set_unique_id(self._serial)
