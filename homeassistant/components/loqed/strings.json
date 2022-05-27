@@ -1,20 +1,18 @@
 {
   "config": {
+    "flow_title": "LOQED Touch Smartlock setup ({host})",
     "step": {
       "user": {
-        "description": "Please enter a name for the lock and the internal Home Assistant URL.<BR/>Then visit https://app.loqed.com/API-Config and: <BR/>* Create an API-key: [add new api-key] <BR/>* Copy the [Integration information] value by clicking on the copy button in the detail-page of the just created API-key.",
+        "description": "Visit {config_url} and: <BR/>* Create an API-key: [add new api-key] <BR/>* Copy the [Integration information] value by clicking on the copy button in the detail-page of the just created API-key.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "internal_url": "Internal Home assistant URL",
-          "config": "Loqed Configuration"
+          "config": "Loqed Configuration copied from the API setup page"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

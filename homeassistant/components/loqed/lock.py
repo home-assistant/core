@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import network
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, WEBHOOK_PREFIX
@@ -48,7 +49,7 @@ async def async_setup_entry(
     """Set up the Loqed lock platform."""
     lock = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([LoqedLock(lock, entry.data["internal_url"])])
+    async_add_entities([LoqedLock(lock, network.get_url(hass))])
 
 
 def get_random_string(length):
