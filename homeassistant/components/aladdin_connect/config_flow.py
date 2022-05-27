@@ -33,15 +33,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD], None)
-    try:
-        login = await acc.login()
-        acc.close()
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        raise ConnectionError from ex
-    else:
-        if not login:
-            raise InvalidAuth
+    login = await acc.login()
     acc.close()
+
+    if not login:
+        raise InvalidAuth
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,8 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
+
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             else:
