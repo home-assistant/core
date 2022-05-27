@@ -3,7 +3,7 @@
   "name": "Squeezebox (Logitech Media Server)",
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "codeowners": ["@rajlaud"],
-  "requirements": ["pysqueezebox==0.5.5"],
+  "requirements": ["pysqueezebox==0.6.0"],
   "config_flow": true,
   "dhcp": [
     {
