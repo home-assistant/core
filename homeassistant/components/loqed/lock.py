@@ -2,17 +2,15 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 import random
 import string
 
-from aiohttp import ClientError
 from loqedAPI import loqed
 from voluptuous.schema_builder import Undefined
 
 from homeassistant.components import webhook
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -24,7 +22,6 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, WEBHOOK_PREFIX
@@ -41,7 +38,6 @@ LOCK_STATES = {
 
 
 WEBHOOK_API_ENDPOINT = "/api/loqed/webhook"
-SCAN_INTERVAL = timedelta(seconds=300)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,38 +46,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Loqed lock platform."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    _LOGGER.debug("Start setting up the Loqed lock: %s", data["id"])
-    websession = async_get_clientsession(hass)
-    host = data["host"]
-    apiclient = loqed.APIClient(websession, "http://" + host)
-    api = loqed.LoqedAPI(apiclient)
-    try:
-        await api.async_get_lock_details()
-    except ClientError:
-        host = data["ip"]
-        _LOGGER.warning(
-            "Unable to use the mdns hostname: %s . Trying with IP-address: %s",
-            data["host"],
-            data["ip"],
-        )
-        apiclient = loqed.APIClient(websession, "http://" + host)
-        api = loqed.LoqedAPI(apiclient)
+    lock = hass.data[DOMAIN][entry.entry_id]
 
-    lock = await api.async_get_lock(
-        data["api_key"], data["bkey"], data["key_id"], data["name"]
-    )
-    _LOGGER.debug(
-        "Inititated loqed-lock entity with id: %s and host: %s", lock.id, host
-    )
-    if not lock:
-        # No locks found; abort setup routine.
-        _LOGGER.info(
-            "We cannot connect to the loqed lock, \
-                please try to reinstall the integation"
-        )
-        return
-    async_add_entities([LoqedLock(lock, data["internal_url"], "http://" + host)])
+    async_add_entities([LoqedLock(lock, entry.data["internal_url"])])
 
 
 def get_random_string(length):
@@ -94,15 +61,14 @@ def get_random_string(length):
 class LoqedLock(LockEntity):
     """Representation of a loqed lock."""
 
-    def __init__(self, lock: loqed.Lock, internal_url, lock_url) -> None:
+    def __init__(self, lock: loqed.Lock, internal_url) -> None:
         """Initialize the lock."""
-        self.lock_url = lock_url
         self._lock = lock
         self._internal_url = internal_url
         self._webhook = ""
         self._attr_unique_id = self._lock.id
         self._attr_name = self._lock.name
-        self._attr_supported_features = SUPPORT_OPEN
+        self._attr_supported_features = LockEntityFeature.OPEN
         self.update_task = None
 
     async def async_added_to_hass(self) -> None:

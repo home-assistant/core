@@ -79,10 +79,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("HOST: %s", discovery_info.hostname)
 
         host = discovery_info.hostname.rstrip(".")
-        async with aiohttp.ClientSession() as session:
-            apiclient = loqed.APIClient(session, "http://" + host)
-            api = loqed.LoqedAPI(apiclient)
-            lock_data = await api.async_get_lock_details()
+
+        session = async_get_clientsession(self.hass)
+        apiclient = loqed.APIClient(session, "http://" + host)
+        api = loqed.LoqedAPI(apiclient)
+        lock_data = await api.async_get_lock_details()
 
         # Check if already exists
         id = lock_data["bridge_mac_wifi"]
