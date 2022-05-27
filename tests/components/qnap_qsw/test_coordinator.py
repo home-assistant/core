@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aioqsw.exceptions import QswError
+from aioqsw.exceptions import APIError, QswError
 
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.components.qnap_qsw.coordinator import (
@@ -90,6 +90,13 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
 
         state = hass.states.get("sensor.qsw_m408_4c_temperature")
         assert state.state == STATE_UNAVAILABLE
+
+        mock_firmware_update_check.side_effect = APIError
+        async_fire_time_changed(hass, utcnow() + FW_SCAN_INTERVAL)
+        await hass.async_block_till_done()
+
+        mock_firmware_update_check.assert_called_once()
+        mock_firmware_update_check.reset_mock()
 
         mock_firmware_update_check.side_effect = QswError
         async_fire_time_changed(hass, utcnow() + FW_SCAN_INTERVAL)
