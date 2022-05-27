@@ -1854,7 +1854,7 @@ async def test_state_changed_events_to_not_leak_contexts(hass):
     """Test state changed events do not leak contexts."""
     gc.collect()
 
-    # Other tests can log context which keep them in memory
+    # Other tests can log Contexts which keep them in memory
     # so we need to look at how many exist at the start
     init_count = len(_get_by_type("homeassistant.core.Context"))
 
