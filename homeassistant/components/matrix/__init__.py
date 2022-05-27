@@ -167,27 +167,9 @@ class MatrixBot:
 
         self._listening_rooms = listening_rooms
 
-        # Word commands are stored dict-of-dict: First dict indexes by room ID
-        #  / alias, second dict indexes by the word
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
-
-        # Regular expression commands are stored as a list of commands per
-        # room, i.e., a dict-of-list
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
-
-        for command in commands:
-            # Set the command for all listening_rooms, if not otherwise specified.
-            command.setdefault(CONF_ROOMS, listening_rooms)  # type: ignore[misc]
-
-            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
-            if (word_command := command.get(CONF_WORD)) is not None:
-                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
-                    self._word_commands.setdefault(room_id, {})
-                    self._word_commands[room_id][word_command] = command  # type: ignore[index]
-            else:
-                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
-                    self._expression_commands.setdefault(room_id, [])
-                    self._expression_commands[room_id].append(command)
+        self._load_commands(commands)
 
         async def stop_client(_) -> None:
             """Run once when Home Assistant stops."""
@@ -206,6 +188,21 @@ class MatrixBot:
             return await self._client.sync_forever(timeout=30_000)  # milliseconds.
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+
+    def _load_commands(self, commands: list[ConfigCommand]):
+        for command in commands:
+            # Set the command for all listening_rooms, unless otherwise specified.
+            command.setdefault(CONF_ROOMS, self._listening_rooms)  # type: ignore[misc]
+
+            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
+            if (word_command := command.get(CONF_WORD)) is not None:
+                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
+                    self._word_commands.setdefault(room_id, {})
+                    self._word_commands[room_id][word_command] = command  # type: ignore[index]
+            else:
+                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
+                    self._expression_commands.setdefault(room_id, [])
+                    self._expression_commands[room_id].append(command)
 
     async def _handle_room_message(self, room: MatrixRoom, event: Event) -> None:
         """Handle a message sent to a Matrix room."""
