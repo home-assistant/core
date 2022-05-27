@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -63,11 +64,13 @@ async def async_setup_entry(
     """Set up the Aladdin Connect platform."""
     acc = hass.data[DOMAIN][config_entry.entry_id]
     doors = await acc.get_doors()
-    if doors:
-        async_add_entities(
-            (AladdinDevice(acc.auth_token(), door, config_entry) for door in doors),
-            update_before_add=True,
-        )
+    if doors is None:
+        raise PlatformNotReady("Error from Aladdin Connect getting doors")
+
+    async_add_entities(
+        (AladdinDevice(acc.auth_token(), door, config_entry) for door in doors),
+        update_before_add=True,
+    )
     acc.close()
 
 
@@ -82,10 +85,9 @@ class AladdinDevice(CoverEntity):
         self._acc = AladdinConnectClient(
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
-            self.async_update_ha_state,
+            self.async_schedule_update_ha_state(True),
         )
         self._acc.set_auth_token(auth_token)
-        self._callback = self.async_write_ha_state
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._attr_name = device["name"]
@@ -101,22 +103,26 @@ class AladdinDevice(CoverEntity):
 
     async def async_update(self) -> None:
         """Update status of cover."""
-        battery = {}
         await self._acc.get_doors()
+
         status = STATES_MAP.get(
             await self._acc.get_door_status(self._device_id, self._number)
         )
         self._attr_is_opening = status == STATE_OPENING
         self._attr_is_closing = status == STATE_CLOSING
         self._attr_is_closed = None if status is None else status == STATE_CLOSED
-        battery.update(
+
+        extra = {}
+        extra.update(
             {
                 "battery_level": await self._acc.get_battery_status(
                     self._device_id, self._number
                 )
             }
         )
-        battery.update(
+
+        extra.update(
             {"RSSI": await self._acc.get_rssi_status(self._device_id, self._number)}
         )
-        self._attr_extra_state_attributes = battery
+
+        self._attr_extra_state_attributes = extra
