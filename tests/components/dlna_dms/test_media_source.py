@@ -60,31 +60,31 @@ async def test_resolve_media_bad_identifier(
     """Test trying to resolve an item that has an unresolvable identifier."""
     # Empty identifier
     with pytest.raises(Unresolvable, match="No source ID.*"):
-        await media_source.async_resolve_media(hass, f"media-source://{DOMAIN}")
+        await media_source.async_resolve_media(hass, f"media-source://{DOMAIN}", None)
 
     # Identifier has media_id but no source_id
     # media_source.URI_SCHEME_REGEX won't let the ID through to dlna_dms
     with pytest.raises(Unresolvable, match="Invalid media source URI"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}//media_id"
+            hass, f"media-source://{DOMAIN}//media_id", None
         )
 
     # Identifier has source_id but no media_id
     with pytest.raises(Unresolvable, match="No media ID.*"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/source_id/"
+            hass, f"media-source://{DOMAIN}/source_id/", None
         )
 
     # Identifier is missing source_id/media_id separator
     with pytest.raises(Unresolvable, match="No media ID.*"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/source_id"
+            hass, f"media-source://{DOMAIN}/source_id", None
         )
 
     # Identifier has an unknown source_id
     with pytest.raises(Unresolvable, match="Unknown source ID: unknown_source"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/unknown_source/media_id"
+            hass, f"media-source://{DOMAIN}/unknown_source/media_id", None
         )
 
 
@@ -105,7 +105,7 @@ async def test_resolve_media_success(
     dms_device_mock.async_browse_metadata.return_value = didl_item
 
     result = await media_source.async_resolve_media(
-        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:{object_id}"
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:{object_id}", None
     )
     assert isinstance(result, DidlPlayMedia)
     assert result.url == f"{MOCK_DEVICE_BASE_URL}/{res_url}"
