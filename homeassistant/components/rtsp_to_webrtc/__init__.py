@@ -24,10 +24,11 @@ import async_timeout
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 from rtsp_to_webrtc.interface import WebRTCClientInterface
+import voluptuous as vol
 
-from homeassistant.components import camera
+from homeassistant.components import camera, websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -37,6 +38,7 @@ DOMAIN = "rtsp_to_webrtc"
 DATA_SERVER_URL = "server_url"
 DATA_UNSUB = "unsub"
 TIMEOUT = 10
+CONF_STUN_SERVER = "stun_server"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -53,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError) as err:
         raise ConfigEntryNotReady from err
+
+    hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER, "")
 
     async def async_offer_for_stream_source(
         stream_source: str,
@@ -79,9 +83,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    websocket_api.async_register_command(hass, ws_get_settings)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    del hass.data[DOMAIN]
     return True
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "rtsp_to_webrtc/get_settings",
+    }
+)
+@callback
+def ws_get_settings(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle the websocket command."""
+    connection.send_result(
+        msg["id"],
+        {CONF_STUN_SERVER: hass.data.get(DOMAIN, {}).get(CONF_STUN_SERVER, "")},
+    )
