@@ -75,9 +75,9 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Web scrape sensor."""
     _LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.6, remove import flow in 2022.8
-        "Loading Scrape via platform setup has been deprecated in Home Assistant 2022.6"
-        "Your configuration has been automatically imported and you can"
+        # Config flow added in Home Assistant Core 2022.7, remove import flow in 2022.9
+        "Loading Scrape via platform setup has been deprecated in Home Assistant 2022.7 "
+        "Your configuration has been automatically imported and you can "
         "remove it from your configuration.yaml"
     )
 
