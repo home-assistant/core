@@ -54,7 +54,9 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: percentage.ordered_list_item_to_percentage(
             [1, 2, 3, 4], value
-        ),
+        )
+        if value is not None
+        else None,
         exists_fn=lambda device: device.device_type
         in [ATTR_DEVICE_DOOR_SENSOR, ATTR_DEVICE_TH_SENSOR, ATTR_DEVICE_MOTION_SENSOR],
     ),
@@ -119,6 +121,9 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         """Init YoLink Sensor."""
         super().__init__(coordinator, device)
         self.entity_description = description
+        self._attr_native_value = self.entity_description.value(
+            coordinator.data[device.device_id][description.key]
+        )
         self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
         self._attr_name = f"{device.device_name} ({self.entity_description.name})"
 

@@ -35,7 +35,7 @@ DEVICE_TYPES: tuple[YoLinkSirenEntityDescription, ...] = (
     YoLinkSirenEntityDescription(
         key="state",
         name="State",
-        value=lambda value: value == "alert",
+        value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_SIREN],
     ),
 )
@@ -79,6 +79,9 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
         super().__init__(coordinator, device)
         self.config_entry = config_entry
         self.entity_description = description
+        self._attr_is_on = self.entity_description.value(
+            coordinator.data[device.device_id][description.key]
+        )
         self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
         self._attr_name = f"{device.device_name} ({self.entity_description.name})"
         self._attr_supported_features = (

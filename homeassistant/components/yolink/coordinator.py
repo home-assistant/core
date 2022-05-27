@@ -14,7 +14,7 @@ from yolink.mqtt_client import MqttClient
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ATTR_DEVICE, ATTR_DEVICE_STATE, DOMAIN
 
@@ -93,12 +93,14 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                     self.data[device.device_id] = device_state_resp.data[
                         ATTR_DEVICE_STATE
                     ]
+                else:
+                    self.data[device.device_id] = {"state": None}
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
-        except YoLinkClientError as yl_client_err:
-            raise UpdateFailed(
-                f"Error communicating with API: {yl_client_err}"
-            ) from yl_client_err
+        except YoLinkClientError:
+            # Current device unknown state.
+            _LOGGER.error("Error Fetching device: %s state", device.device_id)
+            self.data[device.device_id] = {"state": None}
 
     async def _async_update_data(self) -> dict:
         fetch_tasks = []

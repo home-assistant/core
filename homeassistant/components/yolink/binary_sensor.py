@@ -47,14 +47,14 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
-        value=lambda value: value == "open",
+        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
-        value=lambda value: value == "alert",
+        value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         name="Leak",
         icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        value=lambda value: value == "alert",
+        value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
     ),
 )
@@ -104,6 +104,9 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         """Init YoLink Sensor."""
         super().__init__(coordinator, device)
         self.entity_description = description
+        self._attr_is_on = self.entity_description.value(
+            coordinator.data[device.device_id][description.state_key]
+        )
         self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
         self._attr_name = f"{device.device_name} ({self.entity_description.name})"
 
