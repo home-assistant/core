@@ -18,8 +18,11 @@ DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
 
 GLOB_TO_SQL_CHARS = {
-    42: "%",  # *
-    46: "_",  # .
+    ord("*"): "%",
+    ord("?"): "_",
+    ord("%"): "\\%",
+    ord("_"): "\\_",
+    ord("\\"): "\\\\",
 }
 
 
@@ -123,7 +126,7 @@ def _globs_to_like(
 ) -> ClauseList:
     """Translate glob to sql."""
     return or_(
-        column.like(encoder(glob_str.translate(GLOB_TO_SQL_CHARS)))
+        column.like(encoder(glob_str.translate(GLOB_TO_SQL_CHARS)), escape="\\")
         for glob_str in glob_strs
         for column in columns
     )
