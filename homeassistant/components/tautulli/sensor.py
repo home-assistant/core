@@ -314,6 +314,6 @@ class TautulliSessionSensor(TautulliEntity, SensorEntity):
         """Return the state of the sensor."""
         if self.coordinator.activity:
             for session in self.coordinator.activity.sessions:
-                if self.session and session.user_id == self.session.user_id:
+                if self.user and session.user_id == self.user.user_id:
                     return self.entity_description.value_fn(session)
         return None

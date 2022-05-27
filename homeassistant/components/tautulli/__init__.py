@@ -1,7 +1,7 @@
 """The Tautulli integration."""
 from __future__ import annotations
 
-from pytautulli import PyTautulli, PyTautulliApiSession, PyTautulliHostConfiguration
+from pytautulli import PyTautulli, PyTautulliApiUser, PyTautulliHostConfiguration
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -50,18 +50,18 @@ class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
         self,
         coordinator: TautulliDataUpdateCoordinator,
         description: EntityDescription,
-        session: PyTautulliApiSession | None = None,
+        user: PyTautulliApiUser | None = None,
     ) -> None:
         """Initialize the Tautulli entity."""
         super().__init__(coordinator)
         entry_id = coordinator.config_entry.entry_id
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
-        self.session = session
+        self.user = user
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, session.user_id if session else entry_id)},
+            identifiers={(DOMAIN, user.user_id if user else entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=session.username if session else DEFAULT_NAME,
+            name=user.username if user else DEFAULT_NAME,
         )
