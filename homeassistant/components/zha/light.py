@@ -364,18 +364,18 @@ class Light(BaseLight, ZhaEntity):
 
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if self._level_channel:
-            self._attr_supported_color_modes += {ColorMode.BRIGHTNESS}
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
             self._supported_features |= light.LightEntityFeature.TRANSITION
             self._brightness = self._level_channel.current_level
 
         if self._color_channel:
             color_capabilities = self._color_channel.color_capabilities
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
-                self._attr_supported_color_modes += {ColorMode.COLOR_TEMP}
+                self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
                 self._color_temp = self._color_channel.color_temperature
 
             if color_capabilities & CAPABILITIES_COLOR_XY:
-                self._attr_supported_color_modes += {ColorMode.HS}
+                self._attr_supported_color_modes.add(ColorMode.HS)
                 curr_x = self._color_channel.current_x
                 curr_y = self._color_channel.current_y
                 if curr_x is not None and curr_y is not None:
