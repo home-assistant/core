@@ -746,7 +746,7 @@ class LazyState(State):
     def context(self) -> Context:  # type: ignore[override]
         """State context."""
         if self._context is None:
-            self._context = Context(id=None)  # type: ignore[arg-type]
+            self._context = Context(id=None)
         return self._context
 
     @context.setter
