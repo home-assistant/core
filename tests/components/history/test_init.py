@@ -719,7 +719,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(
         {
             "history": {
                 "exclude": {
-                    "entity_globs": ["light.k*"],
+                    "entity_globs": ["light.k*", "binary_sensor.*_?"],
                     "domains": "switch",
                     "entities": "media_player.test",
                 },
@@ -731,6 +731,9 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     hass.states.async_set("light.match", "on")
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
+    hass.states.async_set("binary_sensor.sensor_l", "on")
+    hass.states.async_set("binary_sensor.sensor_r", "on")
+    hass.states.async_set("binary_sensor.sensor", "on")
 
     await async_wait_recording_done(hass)
 
@@ -740,9 +743,10 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
-    assert len(response_json) == 2
-    assert response_json[0][0]["entity_id"] == "light.cow"
-    assert response_json[1][0]["entity_id"] == "light.match"
+    assert len(response_json) == 3
+    assert response_json[0][0]["entity_id"] == "binary_sensor.sensor"
+    assert response_json[1][0]["entity_id"] == "light.cow"
+    assert response_json[2][0]["entity_id"] == "light.match"
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
