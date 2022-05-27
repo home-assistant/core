@@ -149,19 +149,13 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         LOGGER.debug("%s,%s", percentage, preset_mode)
         LOGGER.debug("On  [ Set Function   ] - Turn On Fan")
         await self.entity_description.set_fn(self.coordinator.control_api, 1)
-        LOGGER.debug("On  [ Coordinator    ] - Update Fan state")
-        setattr(self.coordinator.read_api, self.entity_description.data_field, 1)
-        LOGGER.debug("On  [ Home Assistant ] - Trigger State Update")
-        self.async_write_ha_state()
+        await self.async_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         LOGGER.debug("Off [ Set Function   ] - Turn Off Fan")
         await self.entity_description.set_fn(self.coordinator.control_api, 0)
-        LOGGER.debug("Off [ Coordinator    ] - Update Fan state")
-        setattr(self.coordinator.read_api, self.entity_description.data_field, 0)
-        LOGGER.debug("Off [ Home Assistant ] - Trigger State Update")
-        self.async_write_ha_state()
+        await self.async_update_ha_state(force_refresh=True)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
