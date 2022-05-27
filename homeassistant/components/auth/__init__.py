@@ -19,13 +19,15 @@ Exchange the authorization code retrieved from the login flow for tokens.
 
 Return value will be the access and refresh tokens. The access token will have
 a limited expiration. New access tokens can be requested using the refresh
-token.
+token. The value ha_auth_provider will contain the auth provider type that was
+used to authorize the refresh token.
 
 {
     "access_token": "ABCDEFGH",
     "expires_in": 1800,
     "refresh_token": "IJKLMNOPQRST",
-    "token_type": "Bearer"
+    "token_type": "Bearer",
+    "ha_auth_provider": "homeassistant"
 }
 
 ## Grant type refresh_token
@@ -342,7 +344,12 @@ class TokenView(HomeAssistantView):
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
-            }
+                "ha_auth_provider": credential.auth_provider_type,
+            },
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
         )
 
     async def _async_handle_refresh_token(self, hass, data, remote_addr):
@@ -399,7 +406,11 @@ class TokenView(HomeAssistantView):
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
-            }
+            },
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
         )
 
 
