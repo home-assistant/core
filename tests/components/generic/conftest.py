@@ -9,6 +9,7 @@ import respx
 
 from homeassistant import config_entries, setup
 from homeassistant.components.generic.const import DOMAIN
+from homeassistant.components.stream import ATTR_SETTINGS, DOMAIN as STREAM_DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -120,3 +121,10 @@ async def setup_entry(hass, config_entry):
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     return config_entry
+
+
+@pytest.fixture(autouse=True)
+async def setup_stream(hass):
+    """Put an entry in stream settings so convert_stream_options works."""
+    hass.data[STREAM_DOMAIN] = {}
+    hass.data[STREAM_DOMAIN][ATTR_SETTINGS] = {}

@@ -64,9 +64,11 @@ from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 __all__ = [
+    "ATTR_SETTINGS",
     "CONF_EXTRA_PART_WAIT_TIME",
     "CONF_RTSP_TRANSPORT",
     "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
+    "DOMAIN",
     "FORMAT_CONTENT_TYPE",
     "HLS_PROVIDER",
     "OUTPUT_FORMATS",
@@ -525,7 +527,7 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
 
 
 def convert_stream_options(
-    hass: HomeAssistant, stream_options: dict[str, str | bool | float]
+    hass: HomeAssistant, stream_options: Mapping[str, str | bool | float]
 ) -> tuple[dict[str, str], StreamSettings]:
     """Convert options from stream options into PyAV options."""
     stream_settings = copy.copy(hass.data[DOMAIN][ATTR_SETTINGS])
