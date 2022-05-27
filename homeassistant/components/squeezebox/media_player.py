@@ -472,6 +472,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
         index = None
+        current_playlist = None
 
         enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
 
@@ -481,6 +482,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             cmd = "insert"
         else:
             cmd = "play"
+
+        if enqueue in MediaPlayerEnqueue.PLAY:
+            # save the current playlist, which would otherwise be replaced by LMS
+            current_playlist = self._player.playlist
 
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
@@ -495,33 +500,36 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 media_id = async_process_play_media_url(self.hass, media_id)
 
             await self._player.async_load_url(media_id, cmd)
-            return
-
-        if media_type == MEDIA_TYPE_PLAYLIST:
-            try:
-                # a saved playlist by number
+        else:
+            if media_type == MEDIA_TYPE_PLAYLIST:
+                try:
+                    # a saved playlist by number
+                    payload = {
+                        "search_id": int(media_id),
+                        "search_type": MEDIA_TYPE_PLAYLIST,
+                    }
+                    playlist = await generate_playlist(self._player, payload)
+                except ValueError:
+                    # a list of urls
+                    content = json.loads(media_id)
+                    playlist = content["urls"]
+                    index = content["index"]
+            else:
                 payload = {
-                    "search_id": int(media_id),
-                    "search_type": MEDIA_TYPE_PLAYLIST,
+                    "search_id": media_id,
+                    "search_type": media_type,
                 }
                 playlist = await generate_playlist(self._player, payload)
-            except ValueError:
-                # a list of urls
-                content = json.loads(media_id)
-                playlist = content["urls"]
-                index = content["index"]
-        else:
-            payload = {
-                "search_id": media_id,
-                "search_type": media_type,
-            }
-            playlist = await generate_playlist(self._player, payload)
 
-            _LOGGER.debug("Generated playlist: %s", playlist)
+                _LOGGER.debug("Generated playlist: %s", playlist)
 
-        await self._player.async_load_playlist(playlist, cmd)
-        if index is not None:
-            await self._player.async_index(index)
+            await self._player.async_load_playlist(playlist, cmd)
+            if index is not None:
+                await self._player.async_index(index)
+
+        if current_playlist:
+            # append the current playlist
+            await self._player.async_load_playlist(current_playlist, cmd="add")
 
     async def async_set_repeat(self, repeat):
         """Set the repeat mode."""
