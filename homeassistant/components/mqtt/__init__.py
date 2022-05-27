@@ -81,6 +81,8 @@ from .const import (
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_BIRTH,
@@ -157,6 +159,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
@@ -170,7 +173,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
-
 
 CLIENT_KEY_AUTH_MSG = (
     "client_key and client_cert must both be present in "
@@ -187,7 +189,11 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     required=True,
 )
 
-CONFIG_SCHEMA_BASE = vol.Schema(
+PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
+    {vol.Optional(platform.value): cv.ensure_list for platform in PLATFORMS}
+)
+
+CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
     {
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
@@ -253,10 +259,28 @@ SCHEMA_BASE = {
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }
 
+MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
+
+# Will be removed when all platforms support a modern platform schema
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
+# Will be removed when all platforms support a modern platform schema
+MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
+# Will be removed when all platforms support a modern platform schema
+MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    }
+)
 
 # Sensor type platforms subscribe to MQTT events
-MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+MQTT_RO_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -264,7 +288,7 @@ MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 # Switch type platforms publish to MQTT and may subscribe
-MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
+MQTT_RW_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
@@ -773,6 +797,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         ),
     )
+
+    # setup platforms and discovery
+    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+
+    async def async_forward_entry_setup():
+        """Forward the config entry setup to the platforms."""
+        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+            for component in PLATFORMS:
+                config_entries_key = f"{component}.mqtt"
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                    await hass.config_entries.async_forward_entry_setup(
+                        entry, component
+                    )
+
+    hass.async_create_task(async_forward_entry_setup())
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)

@@ -11,13 +11,6 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "L\u00f6senord"
-                },
-                "description": "Uppdatera l\u00f6senord f\u00f6r {username}",
-                "title": "\u00c5terautentisera integration"
-            },
             "service": {
                 "data": {
                     "services": "Tj\u00e4nster"

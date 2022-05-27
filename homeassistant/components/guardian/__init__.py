@@ -363,7 +363,7 @@ class PairedSensorManager:
 
         # Remove the paired sensor device from the device registry (which will
         # clean up entities and the entity registry):
-        dev_reg = await self._hass.helpers.device_registry.async_get_registry()
+        dev_reg = dr.async_get(self._hass)
         device = dev_reg.async_get_or_create(
             config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
         )

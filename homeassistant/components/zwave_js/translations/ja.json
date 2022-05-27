@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ad\u30fc",
                     "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",
                     "s2_access_control_key": "S2\u30a2\u30af\u30bb\u30b9\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30ad\u30fc",
                     "s2_authenticated_key": "S2\u8a8d\u8a3c\u6e08\u307f\u306a\u30ad\u30fc",
@@ -117,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u306e\u30a8\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3",
                     "log_level": "\u30ed\u30b0\u30ec\u30d9\u30eb",
-                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af",
                     "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",
                     "s2_access_control_key": "S2\u30a2\u30af\u30bb\u30b9\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30ad\u30fc",
                     "s2_authenticated_key": "S2\u8a8d\u8a3c\u6e08\u307f\u306a\u30ad\u30fc",
@@ -146,6 +144,5 @@
                 "title": "Z-Wave JS \u30a2\u30c9\u30aa\u30f3\u304c\u8d77\u52d5\u3057\u3066\u3044\u307e\u3059\u3002"
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

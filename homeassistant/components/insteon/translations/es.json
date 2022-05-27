@@ -1,14 +1,19 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "No se puede conectar al m\u00f3dem Insteon",
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "not_insteon_device": "El dispositivo descubierto no es un dispositivo Insteon",
             "single_instance_allowed": "Ya esta configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
             "cannot_connect": "No se conect\u00f3 al m\u00f3dem Insteon, por favor, int\u00e9ntelo de nuevo.",
             "select_single": "Seleccione una opci\u00f3n."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Direcci\u00f3n IP",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Tipo de m\u00f3dem."
                 },
-                "description": "Seleccione el tipo de m\u00f3dem Insteon.",
-                "title": "Insteon"
+                "description": "Seleccione el tipo de m\u00f3dem Insteon."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Categor\u00eda del dispositivo (es decir, 0x10)",
                     "subcat": "Subcategor\u00eda del dispositivo (es decir, 0x0a)"
                 },
-                "description": "Agregue una anulaci\u00f3n del dispositivo.",
-                "title": "Insteon"
+                "description": "Agregue una anulaci\u00f3n del dispositivo."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Pasos de atenuaci\u00f3n (s\u00f3lo para dispositivos de luz, por defecto 22)",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "Cambie la contrase\u00f1a del Hub Insteon.",
-                "title": "Insteon"
+                "description": "Cambie la contrase\u00f1a del Hub Insteon."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Puerto",
                     "username": "Usuario"
                 },
-                "description": "Cambiar la informaci\u00f3n de la conexi\u00f3n del Hub Insteon. Debes reiniciar el Home Assistant despu\u00e9s de hacer este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n del Hub usa la aplicaci\u00f3n Hub.",
-                "title": "Insteon"
+                "description": "Cambiar la informaci\u00f3n de la conexi\u00f3n del Hub Insteon. Debes reiniciar el Home Assistant despu\u00e9s de hacer este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n del Hub usa la aplicaci\u00f3n Hub."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Cambie la configuraci\u00f3n del Hub.",
                     "remove_override": "Eliminar una anulaci\u00f3n del dispositivo.",
                     "remove_x10": "Eliminar un dispositivo X10"
-                },
-                "description": "Seleccione una opci\u00f3n para configurar.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Seleccione una direcci\u00f3n del dispositivo para eliminar"
                 },
-                "description": "Eliminar una anulaci\u00f3n del dispositivo",
-                "title": "Insteon"
+                "description": "Eliminar una anulaci\u00f3n del dispositivo"
             },
             "remove_x10": {
                 "data": {
                     "address": "Seleccione la direcci\u00f3n del dispositivo para eliminar"
                 },
-                "description": "Eliminar un dispositivo X10",
-                "title": "Insteon"
+                "description": "Eliminar un dispositivo X10"
             }
         }
     }

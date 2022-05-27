@@ -1,8 +1,6 @@
 """Provides device automations for Media player."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -55,9 +53,9 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Media player entities."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     triggers = await entity.async_get_triggers(hass, device_id, DOMAIN)
 
     # Get all the integration entities for this device

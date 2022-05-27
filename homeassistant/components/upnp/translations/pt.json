@@ -12,11 +12,6 @@
         "step": {
             "ssdp_confirm": {
                 "description": "Deseja configurar este dispositivo UPnP/IGD?"
-            },
-            "user": {
-                "data": {
-                    "usn": "Dispositivo"
-                }
             }
         }
     }

@@ -204,7 +204,7 @@ class SonosDiscoveryManager:
     def _add_speaker(self, soco: SoCo) -> None:
         """Create and set up a new SonosSpeaker instance."""
         try:
-            speaker_info = soco.get_speaker_info(True)
+            speaker_info = soco.get_speaker_info(True, timeout=7)
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)

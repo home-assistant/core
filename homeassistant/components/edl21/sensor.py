@@ -24,13 +24,12 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
@@ -340,7 +339,7 @@ class EDL21:
 
     async def add_entities(self, new_entities) -> None:
         """Migrate old unique IDs, then add entities to hass."""
-        registry = await async_get_registry(self._hass)
+        registry = er.async_get(self._hass)
 
         for entity in new_entities:
             old_entity_id = registry.async_get_entity_id(

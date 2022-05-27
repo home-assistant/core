@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import cast
 
 import attr
 import voluptuous as vol
@@ -290,9 +290,9 @@ async def async_removed_from_device(hass: HomeAssistant, device_id: str) -> None
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for MQTT devices."""
-    triggers: list[dict] = []
+    triggers: list[dict[str, str]] = []
 
     if DEVICE_TRIGGERS not in hass.data:
         return triggers

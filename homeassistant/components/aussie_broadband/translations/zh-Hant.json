@@ -11,13 +11,6 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "\u5bc6\u78bc"
-                },
-                "description": "\u66f4\u65b0 {username} \u5bc6\u78bc",
-                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "\u5bc6\u78bc"

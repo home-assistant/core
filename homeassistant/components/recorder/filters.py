@@ -1,14 +1,18 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from sqlalchemy import not_, or_
+from collections.abc import Callable, Iterable
+import json
+from typing import Any
+
+from sqlalchemy import Column, not_, or_
 from sqlalchemy.sql.elements import ClauseList
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.typing import ConfigType
 
-from .models import States
+from .models import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
@@ -59,50 +63,84 @@ class Filters:
             or self.included_entity_globs
         )
 
-    def entity_filter(self) -> ClauseList:
-        """Generate the entity filter query."""
+    def _generate_filter_for_columns(
+        self, columns: Iterable[Column], encoder: Callable[[Any], Any]
+    ) -> ClauseList:
         includes = []
         if self.included_domains:
-            includes.append(
-                or_(
-                    *[
-                        States.entity_id.like(f"{domain}.%")
-                        for domain in self.included_domains
-                    ]
-                ).self_group()
-            )
+            includes.append(_domain_matcher(self.included_domains, columns, encoder))
         if self.included_entities:
-            includes.append(States.entity_id.in_(self.included_entities))
-        for glob in self.included_entity_globs:
-            includes.append(_glob_to_like(glob))
+            includes.append(_entity_matcher(self.included_entities, columns, encoder))
+        if self.included_entity_globs:
+            includes.append(
+                _globs_to_like(self.included_entity_globs, columns, encoder)
+            )
 
         excludes = []
         if self.excluded_domains:
-            excludes.append(
-                or_(
-                    *[
-                        States.entity_id.like(f"{domain}.%")
-                        for domain in self.excluded_domains
-                    ]
-                ).self_group()
-            )
+            excludes.append(_domain_matcher(self.excluded_domains, columns, encoder))
         if self.excluded_entities:
-            excludes.append(States.entity_id.in_(self.excluded_entities))
-        for glob in self.excluded_entity_globs:
-            excludes.append(_glob_to_like(glob))
+            excludes.append(_entity_matcher(self.excluded_entities, columns, encoder))
+        if self.excluded_entity_globs:
+            excludes.append(
+                _globs_to_like(self.excluded_entity_globs, columns, encoder)
+            )
 
         if not includes and not excludes:
             return None
 
         if includes and not excludes:
-            return or_(*includes)
+            return or_(*includes).self_group()
 
         if not includes and excludes:
-            return not_(or_(*excludes))
+            return not_(or_(*excludes).self_group())
 
-        return or_(*includes) & not_(or_(*excludes))
+        return or_(*includes).self_group() & not_(or_(*excludes).self_group())
+
+    def states_entity_filter(self) -> ClauseList:
+        """Generate the entity filter query."""
+
+        def _encoder(data: Any) -> Any:
+            """Nothing to encode for states since there is no json."""
+            return data
+
+        return self._generate_filter_for_columns((States.entity_id,), _encoder)
+
+    def events_entity_filter(self) -> ClauseList:
+        """Generate the entity filter query."""
+        _encoder = json.dumps
+        return or_(
+            (ENTITY_ID_IN_EVENT == _encoder(None))
+            & (OLD_ENTITY_ID_IN_EVENT == _encoder(None)),
+            self._generate_filter_for_columns(
+                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder
+            ).self_group(),
+        )
 
 
-def _glob_to_like(glob_str: str) -> ClauseList:
+def _globs_to_like(
+    glob_strs: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
+) -> ClauseList:
     """Translate glob to sql."""
-    return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+    return or_(
+        column.like(encoder(glob_str.translate(GLOB_TO_SQL_CHARS)))
+        for glob_str in glob_strs
+        for column in columns
+    )
+
+
+def _entity_matcher(
+    entity_ids: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
+) -> ClauseList:
+    return or_(
+        column.in_([encoder(entity_id) for entity_id in entity_ids])
+        for column in columns
+    )
+
+
+def _domain_matcher(
+    domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
+) -> ClauseList:
+    return or_(
+        column.like(encoder(f"{domain}.%")) for domain in domains for column in columns
+    )

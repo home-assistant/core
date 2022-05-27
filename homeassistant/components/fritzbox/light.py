@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from requests.exceptions import HTTPError
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -21,6 +23,7 @@ from .const import (
     COLOR_TEMP_MODE,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
+    LOGGER,
 )
 from .coordinator import FritzboxDataUpdateCoordinator
 
@@ -135,16 +138,33 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
             level = kwargs[ATTR_BRIGHTNESS]
             await self.hass.async_add_executor_job(self.device.set_level, level)
         if kwargs.get(ATTR_HS_COLOR) is not None:
-            hass_hue = int(kwargs[ATTR_HS_COLOR][0])
-            hass_saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
-            # find supported hs values closest to what user selected
-            hue = min(self._supported_hs.keys(), key=lambda x: abs(x - hass_hue))
-            saturation = min(
-                self._supported_hs[hue], key=lambda x: abs(x - hass_saturation)
-            )
-            await self.hass.async_add_executor_job(
-                self.device.set_color, (hue, saturation)
-            )
+            # Try setunmappedcolor first. This allows free color selection,
+            # but we don't know if its supported by all devices.
+            try:
+                # HA gives 0..360 for hue, fritz light only supports 0..359
+                unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
+                unmapped_saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
+                await self.hass.async_add_executor_job(
+                    self.device.set_unmapped_color, (unmapped_hue, unmapped_saturation)
+                )
+            # This will raise 400 BAD REQUEST if the setunmappedcolor is not available
+            except HTTPError as err:
+                if err.response.status_code != 400:
+                    raise
+                LOGGER.debug(
+                    "fritzbox does not support method 'setunmappedcolor', fallback to 'setcolor'"
+                )
+                # find supported hs values closest to what user selected
+                hue = min(
+                    self._supported_hs.keys(), key=lambda x: abs(x - unmapped_hue)
+                )
+                saturation = min(
+                    self._supported_hs[hue],
+                    key=lambda x: abs(x - unmapped_saturation),
+                )
+                await self.hass.async_add_executor_job(
+                    self.device.set_color, (hue, saturation)
+                )
 
         if kwargs.get(ATTR_COLOR_TEMP) is not None:
             kelvin = color.color_temperature_kelvin_to_mired(kwargs[ATTR_COLOR_TEMP])

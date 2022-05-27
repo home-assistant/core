@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     ]
 
 # mypy: allow-untyped-calls, allow-untyped-defs
-
 DOMAIN = "device_automation"
 
 DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(

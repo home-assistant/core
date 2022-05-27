@@ -96,7 +96,7 @@ class FileSizeCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, float | int | datetime]:
         """Fetch file information."""
         try:
-            statinfo = os.stat(self._path)
+            statinfo = await self.hass.async_add_executor_job(os.stat, self._path)
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
 

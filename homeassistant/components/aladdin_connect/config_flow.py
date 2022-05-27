@@ -36,8 +36,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     login = await acc.login()
     await acc.close()
 
-    if not login:
-        raise InvalidAuth
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -104,8 +102,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
