@@ -6,6 +6,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo
@@ -24,7 +31,9 @@ async def async_setup_entry(
     async_add_entities([IAlarmXRPanel(coordinator)])
 
 
-class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
+class IAlarmXRPanel(
+    CoordinatorEntity[IAlarmXRDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of an iAlarmXR device."""
 
     _attr_supported_features = (
@@ -37,7 +46,6 @@ class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
     def __init__(self, coordinator: IAlarmXRDataUpdateCoordinator) -> None:
         """Initialize the alarm panel."""
         super().__init__(coordinator)
-        self.coordinator: IAlarmXRDataUpdateCoordinator = coordinator
         self._attr_unique_id = coordinator.mac
         self._attr_device_info = DeviceInfo(
             manufacturer="Antifurto365 - Meian",
@@ -48,7 +56,19 @@ class IAlarmXRPanel(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-        return self.coordinator.state
+
+        state = STATE_UNKNOWN
+
+        if self.coordinator.state == "disarmed":
+            state = STATE_ALARM_DISARMED
+        elif self.coordinator.state == "armed_away":
+            state = STATE_ALARM_ARMED_AWAY
+        elif self.coordinator.state == "armed_home":
+            state = STATE_ALARM_ARMED_HOME
+        elif self.coordinator.state == "triggered":
+            state = STATE_ALARM_TRIGGERED
+
+        return state
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
