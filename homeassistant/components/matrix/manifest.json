@@ -4,6 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "requirements": ["matrix-nio==0.19.0", "pillow==9.1.1"],
   "codeowners": ["@tinloaf"],
-  "iot_class": "cloud_push",
-  "loggers": ["matrix_client"]
+  "iot_class": "cloud_push"
 }
