@@ -41,6 +41,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     else:
         if not login:
             raise InvalidAuth
+    acc.close()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
