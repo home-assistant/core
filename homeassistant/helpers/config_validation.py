@@ -18,7 +18,7 @@ import re
 from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
-from typing import Any, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -258,19 +258,20 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-@overload
-def ensure_list(value: None) -> list[Any]:
-    ...
+if not TYPE_CHECKING:
+    # These overloads have been temporarily disabled because they increase mypy's
+    # initial run time from a few seconds to many minutes
+    @overload
+    def ensure_list(value: None) -> list[Any]:
+        ...
 
+    @overload
+    def ensure_list(value: list[_T]) -> list[_T]:
+        ...
 
-@overload
-def ensure_list(value: list[_T]) -> list[_T]:
-    ...
-
-
-@overload
-def ensure_list(value: list[_T] | _T) -> list[_T]:
-    ...
+    @overload
+    def ensure_list(value: list[_T] | _T) -> list[_T]:
+        ...
 
 
 def ensure_list(value: _T | None) -> list[_T] | list[Any]:
