@@ -66,10 +66,15 @@ LOGGING_INTEGRATIONS = {
     # Error logging
     "system_log",
     "sentry",
+}
+FRONTEND_INTEGRATIONS = {
     # Get the frontend up and running as soon as possible so problem
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
+}
+RECORDER_INTEGRATIONS = {
+    # Setup after frontend
     # To record data
     "recorder",
 }
@@ -520,6 +525,16 @@ async def _async_set_up_integrations(
         _LOGGER.info("Setting up logging: %s", logging_domains)
         await async_setup_multi_components(hass, logging_domains, config)
 
+    # Setup frontend
+    if frontend_domains := domains_to_setup & FRONTEND_INTEGRATIONS:
+        _LOGGER.info("Setting up frontend: %s", frontend_domains)
+        await async_setup_multi_components(hass, frontend_domains, config)
+
+    # Setup recorder
+    if recorder_domains := domains_to_setup & RECORDER_INTEGRATIONS:
+        _LOGGER.info("Setting up frontend: %s", recorder_domains)
+        await async_setup_multi_components(hass, recorder_domains, config)
+
     # Start up debuggers. Start these first in case they want to wait.
     if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
@@ -546,7 +561,14 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
+    stage_2_domains = (
+        domains_to_setup
+        - logging_domains
+        - frontend_domains
+        - recorder_domains
+        - debuggers
+        - stage_1_domains
+    )
 
     def _cache_uname_processor() -> None:
         """Cache the result of platform.uname().processor in the executor.
