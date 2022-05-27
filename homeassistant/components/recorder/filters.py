@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable
 import json
 from typing import Any
 
-from sqlalchemy import Column, not_, or_
+from sqlalchemy import JSON, Column, Text, not_, or_, type_coerce
 from sqlalchemy.sql.elements import ClauseList
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
@@ -108,10 +108,13 @@ class Filters:
 
     def events_entity_filter(self) -> ClauseList:
         """Generate the entity filter query."""
-        _encoder = json.dumps
+
+        def _encoder(data: Any) -> Any:
+            """Nothing to encode for states since there is no json."""
+            return type_coerce(json.dumps(data), Text())
+
         return or_(
-            (ENTITY_ID_IN_EVENT == _encoder(None))
-            & (OLD_ENTITY_ID_IN_EVENT == _encoder(None)),
+            (ENTITY_ID_IN_EVENT == JSON.NULL) & (OLD_ENTITY_ID_IN_EVENT == JSON.NULL),
             self._generate_filter_for_columns(
                 (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder
             ).self_group(),

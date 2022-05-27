@@ -1,7 +1,6 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -108,9 +107,7 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
 JSON_VARIENT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"
 )
-JSONB_VARIENT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"
-)
+JSONB_VARIENT_CAST = Text().with_variant(postgresql.JSONB(), "postgresql")
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -122,19 +119,6 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
-
-
-class JSONLiteral(JSON):  # type: ignore[misc]
-    """Teach SA how to literalize json."""
-
-    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
-        """Processor to convert a value to JSON."""
-
-        def process(value: Any) -> str:
-            """Dump json."""
-            return json.dumps(value)
-
-        return process
 
 
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
@@ -630,11 +614,9 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
         )
 
 
-EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
-)
+EVENT_DATA_JSON = type_coerce(EventData.shared_data.cast(JSONB_VARIENT_CAST), JSON())
 OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSON()
 )
 
 SHARED_ATTRS_JSON = type_coerce(
