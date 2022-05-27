@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import timedelta
-import enum
 import functools
 import itertools
 import logging
@@ -93,14 +92,6 @@ SUPPORT_GROUP_LIGHT = (
     | light.LightEntityFeature.FLASH
     | light.LightEntityFeature.TRANSITION
 )
-
-
-class LightColorMode(enum.IntEnum):
-    """ZCL light color mode enum."""
-
-    HS_COLOR = 0x00
-    XY_COLOR = 0x01
-    COLOR_TEMP = 0x02
 
 
 async def async_setup_entry(
@@ -398,7 +389,7 @@ class Light(BaseLight, ZhaEntity):
         if len(self._attr_supported_color_modes) == 1:
             self._color_mode = next(iter(self._attr_supported_color_modes))
         else:  # Light supports color_temp + hs, determine which mode the light is in
-            if self._color_channel.color_mode == LightColorMode.COLOR_TEMP:
+            if self._color_channel.color_mode == Color.ColorMode.Color_temperature:
                 self._color_mode = ColorMode.COLOR_TEMP
             else:
                 self._color_mode = ColorMode.HS
@@ -498,7 +489,7 @@ class Light(BaseLight, ZhaEntity):
             )
 
             if (color_mode := results.get("color_mode")) is not None:
-                if color_mode == LightColorMode.COLOR_TEMP:
+                if color_mode == Color.ColorMode.Color_temperature:
                     self._color_mode = ColorMode.COLOR_TEMP
                     color_temp = results.get("color_temperature")
                     if color_temp is not None and color_mode:
