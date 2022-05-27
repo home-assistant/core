@@ -1852,15 +1852,22 @@ def _get_by_type(full_name: str) -> list[Any]:
 @patch.object(ha._LOGGER, "debug", lambda *args: None)
 async def test_state_changed_events_to_not_leak_contexts(hass):
     """Test state changed events do not leak contexts."""
+    gc.collect()
+
+    # Other tests can log Contexts which keep them in memory
+    # so we need to look at how many exist at the start
+    init_count = len(_get_by_type("homeassistant.core.Context"))
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count
     for i in range(20):
         hass.states.async_set("light.switch", str(i))
     await hass.async_block_till_done()
     gc.collect()
 
-    assert len(_get_by_type("homeassistant.core.Context")) == 2
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count + 2
 
     hass.states.async_remove("light.switch")
     await hass.async_block_till_done()
     gc.collect()
 
-    assert len(_get_by_type("homeassistant.core.Context")) == 0
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count
