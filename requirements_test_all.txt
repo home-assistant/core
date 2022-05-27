@@ -655,7 +655,7 @@ kostal_plenticore==0.2.0
 krakenex==2.1.0
 
 # homeassistant.components.laundrify
-laundrify_aio==1.1.1
+laundrify_aio==1.1.2
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
