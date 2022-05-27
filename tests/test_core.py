@@ -1849,11 +1849,14 @@ def _get_by_type(full_name: str) -> list[Any]:
 
 # The logger will hold a strong reference to the event for the life of the tests
 # so we must patch it out
+@pytest.mark.skipif(
+    not os.environ.get("DEBUG_MEMORY"),
+    reason="Takes too long on the CI",
+)
 @patch.object(ha._LOGGER, "debug", lambda *args: None)
 async def test_state_changed_events_to_not_leak_contexts(hass):
     """Test state changed events do not leak contexts."""
     gc.collect()
-
     # Other tests can log Contexts which keep them in memory
     # so we need to look at how many exist at the start
     init_count = len(_get_by_type("homeassistant.core.Context"))

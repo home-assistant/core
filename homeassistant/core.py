@@ -736,10 +736,6 @@ class Context:
         """Compare contexts."""
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
-    def __hash__(self) -> int:
-        """Hash the context."""
-        return hash(self.id)
-
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
         return {"id": self.id, "parent_id": self.parent_id, "user_id": self.user_id}
