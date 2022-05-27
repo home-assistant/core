@@ -284,7 +284,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    # Avoid race if reload happens while integration is still setting up
+    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def async_setup_services(
