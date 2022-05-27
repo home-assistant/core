@@ -457,7 +457,7 @@ class Light(BaseLight, ZhaEntity):
         if "off_brightness" in last_state.attributes:
             self._off_brightness = last_state.attributes["off_brightness"]
         if "color_mode" in last_state.attributes:
-            self._color_mode = last_state.attributes["color_mode"]
+            self._color_mode = ColorMode(last_state.attributes["color_mode"])
         if "color_temp" in last_state.attributes:
             self._color_temp = last_state.attributes["color_temp"]
         if "hs_color" in last_state.attributes:
