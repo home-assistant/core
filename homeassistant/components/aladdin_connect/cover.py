@@ -1,6 +1,7 @@
 """Platform for the Aladdin Connect cover component."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any, Final
 
@@ -29,11 +30,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
 from .model import DoorDevice
 
+# from homeassistant.components.aladdin_connect import SCAN_INTERVAL
+
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
+SCAN_INTERVAL = timedelta(seconds=120)
 
 
 async def async_setup_platform(
@@ -68,10 +73,9 @@ async def async_setup_entry(
         raise PlatformNotReady("Error from Aladdin Connect getting doors")
 
     async_add_entities(
-        (AladdinDevice(acc.auth_token(), door, config_entry) for door in doors),
-        update_before_add=True,
+        (AladdinDevice(acc, door, config_entry) for door in doors),
+        # update_before_add=True,
     )
-    acc.close()
 
 
 class AladdinDevice(CoverEntity):
@@ -80,18 +84,26 @@ class AladdinDevice(CoverEntity):
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
 
-    def __init__(self, auth_token: str, device: DoorDevice, entry: ConfigEntry) -> None:
+    def __init__(
+        self, acc: AladdinConnectClient, device: DoorDevice, entry: ConfigEntry
+    ) -> None:
         """Initialize the Aladdin Connect cover."""
-        self._acc = AladdinConnectClient(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            self.async_schedule_update_ha_state(True),
-        )
-        self._acc.set_auth_token(auth_token)
+        self._acc = acc
+        self._acc.register_callback(self._update_callback)
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._attr_name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
+
+    async def async_added_to_hass(self) -> None:
+        """Connect Aladdin Connect to the cloud."""
+        await self._acc.get_doors()
+        await self.async_update()
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close Aladdin Connect before removing."""
+        await self._acc.close()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
@@ -126,3 +138,7 @@ class AladdinDevice(CoverEntity):
         )
 
         self._attr_extra_state_attributes = extra
+
+    async def _update_callback(self) -> None:
+        """Schedule a state update."""
+        self.async_schedule_update_ha_state(True)
