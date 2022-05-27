@@ -1,6 +1,4 @@
 """Tests for diagnostics data."""
-from asyncio.log import logger
-
 from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
