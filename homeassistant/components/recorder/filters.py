@@ -125,7 +125,7 @@ def _globs_to_like(
 ) -> ClauseList:
     """Translate glob to sql."""
     return or_(
-        cast(column, Text()).like(encoder(glob_str.translate(GLOB_TO_SQL_CHARS)))
+        cast(column, Text()).like(encoder(glob_str).translate(GLOB_TO_SQL_CHARS))
         for glob_str in glob_strs
         for column in columns
     )
