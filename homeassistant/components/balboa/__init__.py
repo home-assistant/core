@@ -22,6 +22,7 @@ from .const import (
     SIGNAL_UPDATE,
 )
 
+KEEP_ALIVE_INTERVAL = timedelta(minutes=1)
 SYNC_TIME_INTERVAL = timedelta(days=1)
 
 
@@ -31,7 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Attempting to connect to %s", host)
     spa = BalboaSpaWifi(host)
-
     connected = await spa.connect()
     if not connected:
         _LOGGER.error("Failed to connect to spa at %s", host)
@@ -39,11 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
 
-    # send config requests, and then listen until we are configured.
-    await spa.send_mod_ident_req()
-    await spa.send_panel_req(0, 1)
-
-    async def _async_balboa_update_cb():
+    async def _async_balboa_update_cb() -> None:
         """Primary update callback called from pybalboa."""
         _LOGGER.debug("Primary update callback triggered")
         async_dispatcher_send(hass, SIGNAL_UPDATE.format(entry.entry_id))
@@ -52,12 +48,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     spa.new_data_cb = _async_balboa_update_cb
 
     _LOGGER.debug("Starting listener and monitor tasks")
-    asyncio.create_task(spa.listen())
+    monitoring_tasks = [asyncio.create_task(spa.listen())]
     await spa.spa_configured()
-    asyncio.create_task(spa.check_connection_status())
+    monitoring_tasks.append(asyncio.create_task(spa.check_connection_status()))
+
+    def stop_monitoring() -> None:
+        """Stop monitoring the spa connection."""
+        _LOGGER.debug("Canceling listener and monitor tasks")
+        for task in monitoring_tasks:
+            task.cancel()
+
+    entry.async_on_unload(stop_monitoring)
 
     # At this point we have a configured spa.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    async def keep_alive(now: datetime) -> None:
+        """Keep alive task."""
+        _LOGGER.debug("Keep alive")
+        await spa.send_mod_ident_req()
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, keep_alive, KEEP_ALIVE_INTERVAL)
+    )
 
     # call update_listener on startup and for options change as well.
     await async_setup_time_sync(hass, entry)
@@ -68,13 +81,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
     _LOGGER.debug("Disconnecting from spa")
-    spa = hass.data[DOMAIN][entry.entry_id]
-    await spa.disconnect()
+    spa: BalboaSpaWifi = hass.data[DOMAIN][entry.entry_id]
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    await spa.disconnect()
 
     return unload_ok
 
@@ -90,9 +103,9 @@ async def async_setup_time_sync(hass: HomeAssistant, entry: ConfigEntry) -> None
         return
 
     _LOGGER.debug("Setting up daily time sync")
-    spa = hass.data[DOMAIN][entry.entry_id]
+    spa: BalboaSpaWifi = hass.data[DOMAIN][entry.entry_id]
 
-    async def sync_time(now: datetime):
+    async def sync_time(now: datetime) -> None:
         _LOGGER.debug("Syncing time with Home Assistant")
         await spa.set_time(time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z"))
 

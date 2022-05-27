@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
-from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,13 +36,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the sensors."""
 
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    try:
-        device_manager = await subscriber.async_get_device_manager()
-    except ApiException as err:
-        _LOGGER.warning("Failed to get devices: %s", err)
-        raise PlatformNotReady from err
-
+    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     entities: list[SensorEntity] = []
     for device in device_manager.devices.values():
         if TemperatureTrait.NAME in device.traits:

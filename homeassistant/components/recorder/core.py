@@ -12,6 +12,7 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
+from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.engine import Engine
@@ -34,6 +35,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from . import migration, statistics
@@ -41,6 +43,7 @@ from .const import (
     DB_WORKER_PREFIX,
     KEEPALIVE_TIME,
     MAX_QUEUE_BACKLOG,
+    MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -55,6 +58,7 @@ from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticsRuns,
+    UnsupportedDialect,
     process_timestamp,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
@@ -73,10 +77,12 @@ from .tasks import (
     RecorderTask,
     StatisticsTask,
     StopTask,
+    SynchronizeTask,
     UpdateStatisticsMetadataTask,
     WaitTask,
 )
 from .util import (
+    build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
     is_second_sunday,
@@ -155,6 +161,7 @@ class Recorder(threading.Thread):
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
+        self.engine_version: AwesomeVersion | None = None
         self.async_db_ready: asyncio.Future[bool] = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
@@ -177,7 +184,6 @@ class Recorder(threading.Thread):
         self._completed_first_database_setup: bool | None = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
-        self._db_supports_row_number = True
         self._database_lock_task: DatabaseLockTask | None = None
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
@@ -456,10 +462,18 @@ class Recorder(threading.Thread):
 
     @callback
     def async_update_statistics_metadata(
-        self, statistic_id: str, unit_of_measurement: str | None
+        self,
+        statistic_id: str,
+        *,
+        new_statistic_id: str | UndefinedType = UNDEFINED,
+        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
-        self.queue_task(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
+        self.queue_task(
+            UpdateStatisticsMetadataTask(
+                statistic_id, new_statistic_id, new_unit_of_measurement
+            )
+        )
 
     @callback
     def async_external_statistics(
@@ -604,6 +618,8 @@ class Recorder(threading.Thread):
             try:
                 self._setup_connection()
                 return migration.get_schema_version(self.get_session)
+            except UnsupportedDialect:
+                break
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
                     "Error during connection setup: %s (retrying in %s seconds)",
@@ -845,15 +861,14 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         self._commits_without_expire += 1
 
+        self.event_session.commit()
         if self._pending_expunge:
-            self.event_session.flush()
             for dbstate in self._pending_expunge:
                 # Expunge the state so its not expired
                 # until we use it later for dbstate.old_state
                 if dbstate in self.event_session:
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
-        self.event_session.commit()
 
         # We just committed the state attributes to the database
         # and we now know the attributes_ids.  We can save
@@ -924,6 +939,12 @@ class Recorder(threading.Thread):
         """Listen for new events and put them in the process queue."""
         if self._async_event_filter(event):
             self.queue_task(EventTask(event))
+
+    async def async_block_till_done(self) -> None:
+        """Async version of block_till_done."""
+        event = asyncio.Event()
+        self.queue_task(SynchronizeTask(event))
+        await event.wait()
 
     def block_till_done(self) -> None:
         """Block till all events processed.
@@ -999,12 +1020,13 @@ class Recorder(threading.Thread):
         ) -> None:
             """Dbapi specific connection settings."""
             assert self.engine is not None
-            setup_connection_for_dialect(
+            if version := setup_connection_for_dialect(
                 self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,
-            )
+            ):
+                self.engine_version = version
             self._completed_first_database_setup = True
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
@@ -1014,6 +1036,14 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
+        elif self.db_url.startswith(MYSQLDB_URL_PREFIX):
+            # If they have configured MySQLDB but don't have
+            # the MySQLDB module installed this will throw
+            # an ImportError which we suppress here since
+            # sqlalchemy will give them a better error when
+            # it tried to import it below.
+            with contextlib.suppress(ImportError):
+                kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
         else:
             kwargs["echo"] = False
 

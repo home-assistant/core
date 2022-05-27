@@ -8,7 +8,6 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
             "one": "Vuoto",
             "other": "Vuoti"
         },

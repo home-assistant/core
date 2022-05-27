@@ -7,7 +7,7 @@
         },
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie"
         },

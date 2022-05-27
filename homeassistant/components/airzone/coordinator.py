@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
@@ -31,14 +31,13 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-            update_method=self._async_update,
         )
 
-    async def _async_update(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with async_timeout.timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
             try:
                 await self.airzone.update()
             except AirzoneError as error:
                 raise UpdateFailed(error) from error
-            return cast(dict[str, Any], self.airzone.data())
+            return self.airzone.data()

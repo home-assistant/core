@@ -1,0 +1,16 @@
+{
+    "state": {
+        "tomorrowio__health_concern": {
+            "unhealthy": "Poco saludable",
+            "unhealthy_for_sensitive_groups": "No saludable para grupos sensibles",
+            "very_unhealthy": "Nada saludable"
+        },
+        "tomorrowio__pollen_index": {
+            "medium": "Medio",
+            "very_low": "Muy bajo"
+        },
+        "tomorrowio__precipitation_type": {
+            "snow": "Nieve"
+        }
+    }
+}

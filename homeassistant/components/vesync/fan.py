@@ -171,8 +171,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if hasattr(self.smartfan, "night_light"):
             attr["night_light"] = self.smartfan.night_light
 
-        if hasattr(self.smartfan, "air_quality"):
-            attr["air_quality"] = self.smartfan.air_quality
+        if self.smartfan.details.get("air_quality_value") is not None:
+            attr["air_quality"] = self.smartfan.details["air_quality_value"]
 
         if hasattr(self.smartfan, "mode"):
             attr["mode"] = self.smartfan.mode

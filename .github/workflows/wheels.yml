@@ -50,13 +50,13 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -134,7 +134,6 @@ jobs:
             sed -i "s|# pybluez|pybluez|g" ${requirement_file}
             sed -i "s|# bluepy|bluepy|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
-            sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}

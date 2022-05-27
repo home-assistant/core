@@ -24,6 +24,8 @@ async def test_recorder_system_health(hass, recorder_mock):
         "current_recorder_run": instance.run_history.current.start,
         "oldest_recorder_run": instance.run_history.first.start,
         "estimated_db_size": ANY,
+        "database_engine": SupportedDialect.SQLITE.value,
+        "database_version": ANY,
     }
 
 
@@ -46,6 +48,8 @@ async def test_recorder_system_health_alternate_dbms(hass, recorder_mock, dialec
         "current_recorder_run": instance.run_history.current.start,
         "oldest_recorder_run": instance.run_history.first.start,
         "estimated_db_size": "1.00 MiB",
+        "database_engine": dialect_name.value,
+        "database_version": ANY,
     }
 
 
@@ -62,4 +66,6 @@ async def test_recorder_system_health_crashed_recorder_runs_table(
         "current_recorder_run": instance.run_history.current.start,
         "oldest_recorder_run": instance.run_history.current.start,
         "estimated_db_size": ANY,
+        "database_engine": SupportedDialect.SQLITE.value,
+        "database_version": ANY,
     }

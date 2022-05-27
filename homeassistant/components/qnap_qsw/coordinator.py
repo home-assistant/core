@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aioqsw.exceptions import QswError
 from aioqsw.localapi import QnapQswApi
@@ -31,14 +31,13 @@ class QswUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-            update_method=self._async_update,
         )
 
-    async def _async_update(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with async_timeout.timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.update()
             except QswError as error:
                 raise UpdateFailed(error) from error
-            return cast(dict[str, Any], self.qsw.data())
+            return self.qsw.data()

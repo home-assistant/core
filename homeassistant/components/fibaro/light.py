@@ -23,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
 
+PARALLEL_UPDATES = 2
+
 
 def scaleto255(value: int | None) -> int:
     """Scale the input value from 0-100 to 0-255."""
@@ -84,7 +86,10 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "RGBW" in fibaro_device.type
             or "rgbw" in fibaro_device.type
         )
-        supports_dimming = "levelChange" in fibaro_device.interfaces
+        supports_dimming = (
+            "levelChange" in fibaro_device.interfaces
+            and "setValue" in fibaro_device.actions
+        )
 
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -112,6 +117,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             self.set_level(scaleto99(self._attr_brightness))
+            return
 
         if ATTR_RGB_COLOR in kwargs:
             # Update based on parameters

@@ -55,6 +55,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    async_block_recorder,
     async_wait_recording_done,
     corrupt_db_file,
     run_information_with_session,
@@ -1319,7 +1320,9 @@ def test_entity_id_filter(hass_recorder):
 
 
 async def test_database_lock_and_unlock(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
     # Use file DB, in memory DB cannot do write locks.
@@ -1329,6 +1332,10 @@ async def test_database_lock_and_unlock(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+
+    def _get_db_events():
+        with session_scope(hass=hass) as session:
+            return list(session.query(Events).filter_by(event_type=event_type))
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
@@ -1344,21 +1351,20 @@ async def test_database_lock_and_unlock(
     # Recording can't be finished while lock is held
     with pytest.raises(asyncio.TimeoutError):
         await asyncio.wait_for(asyncio.shield(task), timeout=1)
-
-    with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        db_events = await hass.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
 
     assert instance.unlock_database()
 
     await task
-    with session_scope(hass=hass) as session:
-        db_events = list(session.query(Events).filter_by(event_type=event_type))
-        assert len(db_events) == 1
+    db_events = await hass.async_add_executor_job(_get_db_events)
+    assert len(db_events) == 1
 
 
 async def test_database_lock_and_overflow(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     # Use file DB, in memory DB cannot do write locks.
@@ -1368,6 +1374,10 @@ async def test_database_lock_and_overflow(
     }
     await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
+
+    def _get_db_events():
+        with session_scope(hass=hass) as session:
+            return list(session.query(Events).filter_by(event_type=event_type))
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
@@ -1384,9 +1394,8 @@ async def test_database_lock_and_overflow(
         # even before unlocking.
         await async_wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
-            db_events = list(session.query(Events).filter_by(event_type=event_type))
-            assert len(db_events) == 1
+        db_events = await hass.async_add_executor_job(_get_db_events)
+        assert len(db_events) == 1
 
         assert not instance.unlock_database()
 
@@ -1529,3 +1538,25 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
         first_attributes_id = states[0].attributes_id
         last_attributes_id = states[-1].attributes_id
         assert first_attributes_id == last_attributes_id
+
+
+async def test_async_block_till_done(hass, async_setup_recorder_instance):
+    """Test we can block until recordering is done."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    hass.states.async_set(entity_id, "on", attributes)
+    hass.states.async_set(entity_id, "off", attributes)
+
+    def _fetch_states():
+        with session_scope(hass=hass) as session:
+            return list(session.query(States).filter(States.entity_id == entity_id))
+
+    await async_block_recorder(hass, 0.1)
+    await instance.async_block_till_done()
+    states = await instance.async_add_executor_job(_fetch_states)
+    assert len(states) == 2
+    await hass.async_block_till_done()

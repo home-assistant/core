@@ -77,8 +77,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             when = current_time
 
         try:
-            routedata: FerryStop = await self._ferry_api.async_get_next_ferry_stop(
-                self._from, self._to, when
+            routedata: list[
+                FerryStop
+            ] = await self._ferry_api.async_get_next_ferry_stops(
+                self._from, self._to, when, 3
             )
         except ValueError as error:
             raise UpdateFailed(
@@ -86,11 +88,13 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
             ) from error
 
         states = {
-            "departure_time": routedata.departure_time,
-            "departure_from": routedata.from_harbor_name,
-            "departure_to": routedata.to_harbor_name,
-            "departure_modified": routedata.modified_time,
-            "departure_information": routedata.other_information,
+            "departure_time": routedata[0].departure_time,
+            "departure_from": routedata[0].from_harbor_name,
+            "departure_to": routedata[0].to_harbor_name,
+            "departure_modified": routedata[0].modified_time,
+            "departure_information": routedata[0].other_information,
+            "departure_time_next": routedata[1].departure_time,
+            "departure_time_next_next": routedata[2].departure_time,
         }
         _LOGGER.debug("States: %s", states)
         return states

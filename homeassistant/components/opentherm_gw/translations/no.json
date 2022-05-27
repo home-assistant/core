@@ -11,8 +11,7 @@
                     "device": "Bane eller URL-adresse",
                     "id": "",
                     "name": "Navn"
-                },
-                "title": ""
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Les presisjon",
                     "set_precision": "Angi presisjon",
                     "temporary_override_mode": "Midlertidig overstyringsmodus for settpunkt"
-                },
-                "description": "Alternativer for OpenTherm Gateway"
+                }
             }
         }
     }

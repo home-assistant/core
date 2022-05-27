@@ -12,16 +12,14 @@
         },
         "step": {
             "confirm_discovery": {
-                "description": "Dianjurkan untuk menggunakan reservasi DHCP pada router Anda. Jika tidak diatur, perangkat mungkin tidak tersedia hingga Home Assistant mendeteksi alamat IP baru. Lihat panduan pengguna router Anda.",
-                "title": "Goal Zero Yeti"
+                "description": "Dianjurkan untuk menggunakan reservasi DHCP pada router Anda. Jika tidak diatur, perangkat mungkin tidak tersedia hingga Home Assistant mendeteksi alamat IP baru. Lihat panduan pengguna router Anda."
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Nama"
                 },
-                "description": "Rujuk ke dokumentasi untuk memastikan semua persyaratan terpenuhi.",
-                "title": "Goal Zero Yeti"
+                "description": "Rujuk ke dokumentasi untuk memastikan semua persyaratan terpenuhi."
             }
         }
     }

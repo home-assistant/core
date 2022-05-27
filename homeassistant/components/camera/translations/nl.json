@@ -3,7 +3,7 @@
         "_": {
             "idle": "Inactief",
             "recording": "Opnemen",
-            "streaming": "Streamen"
+            "streaming": "Streaming"
         }
     },
     "title": "Camera"

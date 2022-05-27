@@ -426,7 +426,7 @@ class KodiEntity(MediaPlayerEntity):
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
-        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg = device_registry.async_get(self.hass)
         device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
@@ -713,7 +713,9 @@ class KodiEntity(MediaPlayerEntity):
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_URL
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         media_type_lower = media_type.lower()

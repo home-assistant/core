@@ -13,8 +13,7 @@
                     "host": "Host",
                     "name": "Name"
                 },
-                "description": "Please refer to the documentation to make sure all requirements are met.",
-                "title": "Notifications for Android TV / Fire TV"
+                "description": "Please refer to the documentation to make sure all requirements are met."
             }
         }
     }
