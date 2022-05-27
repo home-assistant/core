@@ -927,7 +927,7 @@ krakenex==2.1.0
 lakeside==0.12
 
 # homeassistant.components.laundrify
-laundrify_aio==1.1.1
+laundrify_aio==1.1.2
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
