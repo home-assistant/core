@@ -105,10 +105,13 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_PORT] == 8278
 
 
-async def test_options(hass):
+async def test_options(hass, api):
     """Test updating options."""
     entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
