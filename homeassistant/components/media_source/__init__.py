@@ -22,7 +22,7 @@ from homeassistant.helpers.frame import report
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
 
 from . import local_source
@@ -128,7 +128,7 @@ async def async_browse_media(
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,
-    target_media_player: str | None = UNDEFINED,
+    target_media_player: str | None | UndefinedType = UNDEFINED,
 ) -> PlayMedia:
     """Get info to play media."""
     if DOMAIN not in hass.data:
