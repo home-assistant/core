@@ -993,9 +993,6 @@ mac-vendor-lookup==0.1.11
 magicseaweed==1.0.3
 
 # homeassistant.components.matrix
-matrix-client==0.4.0
-
-# homeassistant.components.matrix
 matrix-nio==0.19.0
 
 # homeassistant.components.maxcube
@@ -1231,6 +1228,7 @@ pilight==0.1.1
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image
+# homeassistant.components.matrix
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
