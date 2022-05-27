@@ -93,6 +93,11 @@ def _async_setup_entities(
     num_entities = len(disc_info[CONF_ENTITIES])
     for data in disc_info[CONF_ENTITIES]:
         entity_enabled = data.get(CONF_TRACK, True)
+        if not entity_enabled:
+            _LOGGER.warning(
+                "The 'track' option in google_calendars.yaml has been deprecated. The setting "
+                "has been imported to the UI, and should now be removed from google_calendars.yaml"
+            )
         entity_name = data[CONF_DEVICE_ID]
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass)
         calendar_id = disc_info[CONF_CAL_ID]
