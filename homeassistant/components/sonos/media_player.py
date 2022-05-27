@@ -550,7 +550,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
                 run_coroutine_threadsafe(
-                    media_source.async_resolve_media(self.hass, media_id),
+                    media_source.async_resolve_media(
+                        self.hass, media_id, self.entity_id
+                    ),
                     self.hass.loop,
                 )
                 .result()

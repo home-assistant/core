@@ -275,7 +275,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         if self.state == STATE_OFF:
