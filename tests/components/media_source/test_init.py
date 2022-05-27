@@ -109,6 +109,7 @@ async def test_async_resolve_media(hass):
     assert media.mime_type == "audio/mpeg"
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_async_resolve_media_no_entity(hass, caplog):
     """Test browse media."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
