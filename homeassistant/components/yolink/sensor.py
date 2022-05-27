@@ -121,9 +121,6 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         """Init YoLink Sensor."""
         super().__init__(coordinator, device)
         self.entity_description = description
-        self._attr_native_value = self.entity_description.value(
-            coordinator.data[device.device_id][description.key]
-        )
         self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
         self._attr_name = f"{device.device_name} ({self.entity_description.name})"
 

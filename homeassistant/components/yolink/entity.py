@@ -30,8 +30,13 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
         """Return the device id of the YoLink device."""
         return self.device.device_id
 
+    async def async_added_to_hass(self) -> None:
+        """Update state."""
+        return self._handle_coordinator_update()
+
     @callback
     def _handle_coordinator_update(self) -> None:
+        """Update state."""
         data = self.coordinator.data.get(self.device.device_id)
         if data is not None:
             self.update_entity_state(data)
