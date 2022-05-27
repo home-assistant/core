@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data["api_key"],
         entry.data["bkey"],
         entry.data["key_id"],
-        entry.data["name"],
+        entry.data["host"],
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lock

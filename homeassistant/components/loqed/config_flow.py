@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from typing import Any
 
 import aiohttp
@@ -11,9 +10,10 @@ from loqedAPI import loqed
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import network
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -21,24 +21,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-urlRegex = re.compile(
-    r"^(?:http|ftp)s?://"  # http:// or https://
-    r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?| \
-    [A-Z0-9-]{s2,}\.?)|"
-    r"localhost|"  # localhost...
-    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
-    r"(?::\d+)?"  # optional port
-    r"(?:/?|[/?]\S+)$",
-    re.IGNORECASE,
-)
-
-
-async def validate_input(hass, data):
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any], zeroconf_host: str | None
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    if len(data["internal_url"]) > 5:
-        if re.match(urlRegex, data["internal_url"]) is None:
-            _LOGGER.error("Local HA URL is incorrect %s", data["internal_url"])
-            raise ValueError("Local HA URL is incorrect")
+
     newdata = data
     json_config = json.loads(data["config"])
     newdata["ip"] = json_config["bridge_ip"]
@@ -46,7 +33,11 @@ async def validate_input(hass, data):
     newdata["bkey"] = json_config["bridge_key"]
     newdata["key_id"] = int(json_config["lock_key_local_id"])
     newdata["api_key"] = json_config["lock_key_key"]
-    _LOGGER.debug("Got Info from config: %s", str(newdata))
+
+    if zeroconf_host is not None and zeroconf_host != newdata["host"]:
+        raise InvalidAuth(
+            f"Got config for {newdata['host']} while configuring {zeroconf_host} "
+        )
 
     # 1. Checking loqed-connection
     try:
@@ -55,14 +46,13 @@ async def validate_input(hass, data):
         apiclient = loqed.APIClient(session, "http://" + newdata["ip"])
         api = loqed.LoqedAPI(apiclient)
         lock = await api.async_get_lock(
-            newdata["api_key"], newdata["bkey"], newdata["key_id"], newdata["name"]
+            newdata["api_key"], newdata["bkey"], newdata["key_id"], newdata["host"]
         )
-        _LOGGER.debug("Lock details retrieved: %s", newdata["ip"])
         newdata["id"] = lock.id
         # checking getWebooks to check the bridgeKey
         await lock.getWebhooks()
     except (aiohttp.ClientError):
-        _LOGGER.error("HTTP Connection error to loqed lock: %s:%s", lock.name, lock.id)
+        _LOGGER.error("HTTP Connection error to loqed lock")
         raise CannotConnect from aiohttp.ClientError
     except Exception:
         raise CannotConnect from Exception
@@ -72,22 +62,23 @@ async def validate_input(hass, data):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for loqed."""
 
-    VERSION = 1
+    VERSION = 2
+
+    def __init__(self) -> None:
+        """Initialize the ConfigFlow for the LOQED integration."""
+        self._host: str | None = None
 
     async def async_step_zeroconf(self, discovery_info) -> FlowResult:
         """Handle zeroconf discovery."""
-        _LOGGER.debug("HOST: %s", discovery_info.hostname)
-
-        host = discovery_info.hostname.rstrip(".")
+        self._host = discovery_info.hostname.rstrip(".")
 
         session = async_get_clientsession(self.hass)
-        apiclient = loqed.APIClient(session, "http://" + host)
+        apiclient = loqed.APIClient(session, "http://" + self._host)
         api = loqed.LoqedAPI(apiclient)
         lock_data = await api.async_get_lock_details()
 
         # Check if already exists
-        id = lock_data["bridge_mac_wifi"]
-        await self.async_set_unique_id(id)
+        await self.async_set_unique_id(lock_data["bridge_mac_wifi"])
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
@@ -95,30 +86,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show userform to user."""
-        try:
-            internal_url = network.get_url(
-                self.hass, allow_internal=True, allow_external=False, allow_ip=True
-            )
-            if internal_url.startswith("172"):
-                internal_url = "http://<IP>:8123"
-        except network.NoURLAvailableError:
-            internal_url = "http://<IP>:8123"
-
         user_data_schema = vol.Schema(
             {
-                vol.Required("name", default="My Lock"): str,
-                vol.Required("internal_url", default=internal_url): str,
                 vol.Required("config"): str,
             }
         )
-
+        self.context["title_placeholders"] = {CONF_HOST: self._host}
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=user_data_schema)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=user_data_schema,
+                description_placeholders={
+                    CONF_HOST: self._host,
+                    "config_url": "https://app.loqed.com/API-Config",
+                },
+            )
 
         errors = {}
 
         try:
-            info = await validate_input(self.hass, user_input)
+            info = await validate_input(self.hass, user_input, self._host)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
