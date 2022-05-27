@@ -4,9 +4,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any
 
-from pytautulli import PyTautulliApiSession
+from pytautulli import (
+    PyTautulliApiActivity,
+    PyTautulliApiHomeStats,
+    PyTautulliApiSession,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -63,10 +66,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_top_stats(coordinator: TautulliDataUpdateCoordinator, key: str) -> str | None:
+def get_top_stats(home_stats: PyTautulliApiHomeStats, key: str) -> str | None:
     """Get top statistics."""
     value = None
-    for stat in coordinator.home_stats:
+    for stat in home_stats:
         if stat.stat_id == key:
             value = stat.rows[0].title if stat.rows else None
         elif stat.stat_id == "top_users" and key == ATTR_TOP_USER:
@@ -75,10 +78,17 @@ def get_top_stats(coordinator: TautulliDataUpdateCoordinator, key: str) -> str |
 
 
 @dataclass
-class TautulliSensorEntityDescription(SensorEntityDescription):
-    """Class to describe a Tautulli sensor."""
+class TautulliSensorEntityMixin:
+    """Mixin for Tautulli sensor."""
 
-    value_fn: Callable[[TautulliDataUpdateCoordinator, str], Any] = lambda val, _: val
+    value_fn: Callable[[PyTautulliApiHomeStats, PyTautulliApiActivity, str], StateType]
+
+
+@dataclass
+class TautulliSensorEntityDescription(
+    SensorEntityDescription, TautulliSensorEntityMixin
+):
+    """Describes a Tautulli sensor."""
 
 
 SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
@@ -87,18 +97,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="watching_count",
         name="Tautulli",
         native_unit_of_measurement="Watching",
-        value_fn=lambda coordinator, _: coordinator.activity.stream_count or 0
-        if coordinator.activity
-        else 0,
-    ),
-    TautulliSensorEntityDescription(
-        icon="mdi:plex",
-        key="stream_count",
-        name="Streams",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement="Streams",
-        entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, _: coordinator.activity.stream_count,
+        value_fn=lambda home_stats, activity, _: activity.stream_count or 0,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
@@ -107,7 +106,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, _: coordinator.activity.stream_count_direct_play,
+        value_fn=lambda home_stats, activity, _: activity.stream_count_direct_play or 0,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
@@ -116,7 +115,8 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, _: coordinator.activity.stream_count_direct_stream,
+        value_fn=lambda home_stats, activity, _: activity.stream_count_direct_stream
+        or 0,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
@@ -125,7 +125,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, _: coordinator.activity.stream_count_transcode,
+        value_fn=lambda home_stats, activity, _: activity.stream_count_transcode or 0,
     ),
     TautulliSensorEntityDescription(
         key="total_bandwidth",
@@ -133,7 +133,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_KILOBITS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coordinator, _: coordinator.activity.total_bandwidth,
+        value_fn=lambda home_stats, activity, _: activity.total_bandwidth or 0,
     ),
     TautulliSensorEntityDescription(
         key="lan_bandwidth",
@@ -142,7 +142,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_KILOBITS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coordinator, _: coordinator.activity.lan_bandwidth,
+        value_fn=lambda home_stats, activity, _: activity.lan_bandwidth or 0,
     ),
     TautulliSensorEntityDescription(
         key="wan_bandwidth",
@@ -151,15 +151,15 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_KILOBITS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda coordinator, _: coordinator.activity.wan_bandwidth,
+        value_fn=lambda home_stats, activity, _: activity.wan_bandwidth or 0,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:movie-open",
         key="top_movies",
         name="Top Movie",
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, key: get_top_stats(  # pylint: disable=unnecessary-lambda
-            coordinator, key
+        value_fn=lambda home_stats, _, key: get_top_stats(  # pylint: disable=unnecessary-lambda
+            home_stats, key
         ),
     ),
     TautulliSensorEntityDescription(
@@ -167,8 +167,8 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="top_tv",
         name="Top TV Show",
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, key: get_top_stats(  # pylint: disable=unnecessary-lambda
-            coordinator, key
+        value_fn=lambda home_stats, _, key: get_top_stats(  # pylint: disable=unnecessary-lambda
+            home_stats, key
         ),
     ),
     TautulliSensorEntityDescription(
@@ -176,18 +176,25 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key=ATTR_TOP_USER,
         name="Top User",
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator, key: get_top_stats(  # pylint: disable=unnecessary-lambda
-            coordinator, key
+        value_fn=lambda home_stats, _, key: get_top_stats(  # pylint: disable=unnecessary-lambda
+            home_stats, key
         ),
     ),
 )
 
 
 @dataclass
-class TautulliSessionSensorEntityDescription(SensorEntityDescription):
-    """Class to describe a Tautulli sensor."""
+class TautulliSessionSensorEntityMixin:
+    """Mixin for Tautulli session sensor."""
 
-    value_fn: Callable[[PyTautulliApiSession], Any] = lambda val: val
+    value_fn: Callable[[PyTautulliApiSession], StateType]
+
+
+@dataclass
+class TautulliSessionSensorEntityDescription(
+    SensorEntityDescription, TautulliSessionSensorEntityMixin
+):
+    """Describes a Tautulli session sensor."""
 
 
 SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
@@ -195,13 +202,13 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         icon="mdi:plex",
         key="state",
         name="State",
-        value_fn=lambda user: user.state,
+        value_fn=lambda session: session.state or "",
     ),
     TautulliSessionSensorEntityDescription(
         key="full_title",
         name="Full Title",
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.full_title,
+        value_fn=lambda session: session.full_title or "",
     ),
     TautulliSessionSensorEntityDescription(
         icon="mdi:progress-clock",
@@ -209,14 +216,14 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         name="Progress",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.progress_percent,
+        value_fn=lambda session: session.progress_percent or "",
     ),
     TautulliSessionSensorEntityDescription(
         key="stream_resolution",
         name="Stream Resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.stream_video_resolution,
+        value_fn=lambda session: session.stream_video_resolution or 0,
     ),
     TautulliSessionSensorEntityDescription(
         icon="mdi:plex",
@@ -224,21 +231,21 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         name="Transcode Decision",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.transcode_decision,
+        value_fn=lambda session: session.transcode_decision or "",
     ),
     TautulliSessionSensorEntityDescription(
-        key="user_thumb",
-        name="User Thumbnail",
+        key="session_thumb",
+        name="session Thumbnail",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.user_thumb,
+        value_fn=lambda session: session.user_thumb or "",
     ),
     TautulliSessionSensorEntityDescription(
         key="video_resolution",
         name="Video Resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda user: user.video_resolution,
+        value_fn=lambda session: session.video_resolution or "",
     ),
 )
 
@@ -269,19 +276,20 @@ async def async_setup_entry(
         )
         for description in SENSOR_TYPES
     ]
-    for user in coordinator.users:
-        if user.username != "Local":
-            for description in SESSION_SENSOR_TYPES:
-                _description = deepcopy(description)
-                _description.key = f"{user.user_id}_{_description.key}"
-                _description.name = f"{user.username} {_description.name}"
-                entities.append(
-                    TautulliSessionSensor(
-                        coordinator,
-                        _description,
-                        user.user_id,
+    if coordinator.users:
+        for user in coordinator.users:
+            if user.username != "Local":
+                for description in SESSION_SENSOR_TYPES:
+                    _description = deepcopy(description)
+                    _description.key = f"{user.user_id}_{_description.key}"
+                    _description.name = f"{user.username} {_description.name}"
+                    entities.append(
+                        TautulliSessionSensor(
+                            coordinator,
+                            _description,
+                            user.user_id,
+                        )
                     )
-                )
     async_add_entities(entities)
 
 
@@ -293,7 +301,11 @@ class TautulliSensor(TautulliEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator, self.entity_description.key)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(
+            self.coordinator.home_stats,
+            self.coordinator.activity,
+            self.entity_description.key,
+        )
 
 
 class TautulliSessionSensor(TautulliEntity, SensorEntity):
@@ -304,7 +316,8 @@ class TautulliSessionSensor(TautulliEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        for user in self.coordinator.activity.sessions:
-            if user.user_id == self.user_id:
-                return self.entity_description.value_fn(user)  # type: ignore[no-any-return]
+        if self.coordinator.activity:
+            for user in self.coordinator.activity.sessions:
+                if user.user_id == self.user_id:
+                    return self.entity_description.value_fn(user)
         return None

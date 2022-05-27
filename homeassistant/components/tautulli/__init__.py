@@ -59,9 +59,10 @@ class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
         self.entity_description = description
         self.user_id = user_id
         usr: PyTautulliApiUser = None
-        for user in coordinator.users:
-            if user.user_id == user_id:
-                usr = user
+        if coordinator.users:
+            for user in coordinator.users:
+                if user.user_id == user_id:
+                    usr = user
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,

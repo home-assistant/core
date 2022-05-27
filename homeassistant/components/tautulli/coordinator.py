@@ -44,9 +44,9 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.host_configuration = host_configuration
         self.api_client = api_client
-        self.activity: PyTautulliApiActivity = PyTautulliApiActivity({"": ""})
-        self.home_stats: list[PyTautulliApiHomeStats] = []
-        self.users: list[PyTautulliApiUser] = []
+        self.activity: PyTautulliApiActivity | None = None
+        self.home_stats: list[PyTautulliApiHomeStats] | None = None
+        self.users: list[PyTautulliApiUser] | None = None
 
     async def _async_update_data(self) -> None:
         """Get the latest data from Tautulli."""
