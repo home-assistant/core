@@ -117,7 +117,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 _SINGLE_CALSEARCH_CONFIG = vol.All(
     cv.deprecated(CONF_MAX_RESULTS),
-    cv.deprecated(CONF_TRACK),
     vol.Schema(
         {
             vol.Required(CONF_NAME): cv.string,
