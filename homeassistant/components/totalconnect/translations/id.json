@@ -28,5 +28,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Otomatis dilewatkan saat baterai lemah"
+                },
+                "title": "Opsi TotalConnect"
+            }
+        }
     }
 }

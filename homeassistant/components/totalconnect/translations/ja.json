@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "\u30d0\u30c3\u30c6\u30ea\u30fc\u6b8b\u91cf(\u4f4e)\u3067\u306e\u81ea\u52d5\u30d0\u30a4\u30d1\u30b9"
+                },
+                "description": "\u30d0\u30c3\u30c6\u30ea\u30fc\u6b8b\u91cf\u304c\u5c11\u306a\u3044\u3068\u5831\u544a\u3055\u308c\u305f\u77ac\u9593\u306b\u3001\u81ea\u52d5\u7684\u306b\u30be\u30fc\u30f3\u3092\u30d0\u30a4\u30d1\u30b9\u3057\u307e\u3059\u3002",
+                "title": "TotalConnect\u30aa\u30d7\u30b7\u30e7\u30f3"
+            }
+        }
     }
 }
