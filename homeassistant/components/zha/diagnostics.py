@@ -76,5 +76,5 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict:
     """Return diagnostics for a device."""
-    zha_device: ZHADevice = await async_get_zha_device(hass, device.id)
+    zha_device: ZHADevice = async_get_zha_device(hass, device.id)
     return async_redact_data(zha_device.zha_device_info, KEYS_TO_REDACT)

@@ -12,6 +12,7 @@ from typing_extensions import ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
@@ -71,6 +72,14 @@ CONTROL_TO_SUPPORT = {
     heos_const.CONTROL_STOP: MediaPlayerEntityFeature.STOP,
     heos_const.CONTROL_PLAY_PREVIOUS: MediaPlayerEntityFeature.PREVIOUS_TRACK,
     heos_const.CONTROL_PLAY_NEXT: MediaPlayerEntityFeature.NEXT_TRACK,
+}
+
+HA_HEOS_ENQUEUE_MAP = {
+    None: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.ADD: heos_const.ADD_QUEUE_ADD_TO_END,
+    MediaPlayerEnqueue.REPLACE: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.NEXT: heos_const.ADD_QUEUE_PLAY_NEXT,
+    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_PLAY_NOW,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -192,7 +201,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_URL
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         if media_type in (MEDIA_TYPE_URL, MEDIA_TYPE_MUSIC):
@@ -222,11 +233,8 @@ class HeosMediaPlayer(MediaPlayerEntity):
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
                 raise ValueError(f"Invalid playlist '{media_id}'")
-            add_queue_option = (
-                heos_const.ADD_QUEUE_ADD_TO_END
-                if kwargs.get(ATTR_MEDIA_ENQUEUE)
-                else heos_const.ADD_QUEUE_REPLACE_AND_PLAY
-            )
+            add_queue_option = HA_HEOS_ENQUEUE_MAP.get(kwargs.get(ATTR_MEDIA_ENQUEUE))
+
             await self._player.add_to_queue(playlist, add_queue_option)
             return
 

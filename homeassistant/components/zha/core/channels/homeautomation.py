@@ -102,7 +102,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             for attr, value in result.items():
                 self.async_send_signal(
                     f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                    self.cluster.attridx.get(attr, attr),
+                    self.cluster.find_attribute(attr).id,
                     attr,
                     value,
                 )

@@ -71,7 +71,6 @@ async def async_setup_entry(
     doors = await acc.get_doors()
     if doors is None:
         raise PlatformNotReady("Error from Aladdin Connect getting doors")
-
     async_add_entities(
         (AladdinDevice(acc, door, config_entry) for door in doors),
         # update_before_add=True,

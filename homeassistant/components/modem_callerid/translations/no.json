@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Dette er en integrasjon for fasttelefonsamtaler ved hjelp av et talemodem CX93001. Dette kan hente oppringer -ID -informasjon med et alternativ for \u00e5 avvise et innkommende anrop.",
-                "title": "Telefonmodem"
+                "description": "Dette er en integrasjon for fasttelefonsamtaler ved hjelp av et talemodem CX93001. Dette kan hente oppringer -ID -informasjon med et alternativ for \u00e5 avvise et innkommende anrop."
             },
             "user": {
                 "data": {
                     "name": "Navn",
                     "port": "Port"
                 },
-                "description": "Dette er en integrasjon for fasttelefonsamtaler ved hjelp av et talemodem CX93001. Dette kan hente oppringer -ID -informasjon med et alternativ for \u00e5 avvise et innkommende anrop.",
-                "title": "Telefonmodem"
+                "description": "Dette er en integrasjon for fasttelefonsamtaler ved hjelp av et talemodem CX93001. Dette kan hente oppringer -ID -informasjon med et alternativ for \u00e5 avvise et innkommende anrop."
             }
         }
     }

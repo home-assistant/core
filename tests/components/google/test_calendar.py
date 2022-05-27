@@ -572,14 +572,16 @@ async def test_opaque_event(
     assert (len(events) > 0) == expect_visible_event
 
 
+@pytest.mark.parametrize("mock_test_setup", [None])
 async def test_scan_calendar_error(
     hass,
     component_setup,
     test_api_calendar,
     mock_calendars_list,
+    config_entry,
 ):
     """Test that the calendar update handles a server error."""
-
+    config_entry.add_to_hass(hass)
     mock_calendars_list({}, exc=ClientError())
     assert await component_setup()
 

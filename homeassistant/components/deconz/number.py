@@ -75,14 +75,10 @@ async def async_setup_entry(
                 continue
             async_add_entities([DeconzNumber(sensor, gateway, description)])
 
-    config_entry.async_on_unload(
-        gateway.api.sensors.presence.subscribe(
-            async_add_sensor,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.presence,
     )
-    for sensor_id in gateway.api.sensors.presence:
-        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 class DeconzNumber(DeconzDevice, NumberEntity):

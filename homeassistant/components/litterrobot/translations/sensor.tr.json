@@ -1,0 +1,28 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "Kapak \u00c7\u0131kar\u0131ld\u0131",
+            "ccc": "Temizleme Tamamland\u0131",
+            "ccp": "Temizleme Devam Ediyor",
+            "csf": "Kedi Sens\u00f6r\u00fc Hatas\u0131",
+            "csi": "Kedi Sens\u00f6r\u00fc Kesildi",
+            "cst": "Kedi Sens\u00f6r Zamanlamas\u0131",
+            "df1": "Hazne Neredeyse Dolu - 2 kez daha s\u00fcp\u00fcrebilir",
+            "df2": "Hazne Neredeyse Dolu - 1 kez daha s\u00fcp\u00fcrebilir",
+            "dfs": "Hazne Dolu",
+            "dhf": "Bo\u015faltma + Ana Konum Hatas\u0131",
+            "dpf": "Bo\u015faltma Konumu Hatas\u0131",
+            "ec": "Bo\u015f D\u00f6ng\u00fc",
+            "hpf": "Ev Konumu Hatas\u0131",
+            "off": "Kapal\u0131",
+            "offline": "\u00c7evrimd\u0131\u015f\u0131",
+            "otf": "A\u015f\u0131r\u0131 Tork Ar\u0131zas\u0131",
+            "p": "Durduruldu",
+            "pd": "S\u0131k\u0131\u015fma Alg\u0131lama",
+            "rdy": "Haz\u0131r",
+            "scf": "Ba\u015flang\u0131\u00e7ta Cat Sens\u00f6r\u00fc Hatas\u0131",
+            "sdf": "Ba\u015flang\u0131\u00e7ta Hazne Dolu",
+            "spf": "Ba\u015flang\u0131\u00e7ta S\u0131k\u0131\u015fma Alg\u0131lama"
+        }
+    }
+}

@@ -45,7 +45,7 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Climate devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     conditions = []
 
     # Get all the integrations entities for this device
@@ -92,7 +92,9 @@ def async_condition_from_config(
     return test_is_state
 
 
-async def async_get_condition_capabilities(hass, config):
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 
