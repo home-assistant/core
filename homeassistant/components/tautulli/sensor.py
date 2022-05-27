@@ -66,14 +66,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_top_stats(home_stats: PyTautulliApiHomeStats, key: str) -> str | None:
+def get_top_stats(
+    home_stats: PyTautulliApiHomeStats, activity: PyTautulliApiActivity, key: str
+) -> str | None:
     """Get top statistics."""
     value = None
     for stat in home_stats:
-        if stat.stat_id == key:
-            value = stat.rows[0].title if stat.rows else None
-        elif stat.stat_id == "top_users" and key == ATTR_TOP_USER:
-            value = stat.rows[0].user if stat.rows else None
+        if stat.rows and stat.stat_id == key:
+            value = stat.rows[0].title
+        elif stat.rows and stat.stat_id == "top_users" and key == ATTR_TOP_USER:
+            value = stat.rows[0].user
     return value
 
 
@@ -158,27 +160,21 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="top_movies",
         name="Top Movie",
         entity_registry_enabled_default=False,
-        value_fn=lambda home_stats, _, key: get_top_stats(  # pylint: disable=unnecessary-lambda
-            home_stats, key
-        ),
+        value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:television",
         key="top_tv",
         name="Top TV Show",
         entity_registry_enabled_default=False,
-        value_fn=lambda home_stats, _, key: get_top_stats(  # pylint: disable=unnecessary-lambda
-            home_stats, key
-        ),
+        value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:walk",
         key=ATTR_TOP_USER,
         name="Top User",
         entity_registry_enabled_default=False,
-        value_fn=lambda home_stats, _, key: get_top_stats(  # pylint: disable=unnecessary-lambda
-            home_stats, key
-        ),
+        value_fn=get_top_stats,
     ),
 )
 
@@ -287,7 +283,7 @@ async def async_setup_entry(
                         TautulliSessionSensor(
                             coordinator,
                             _description,
-                            user.user_id,
+                            user,
                         )
                     )
     async_add_entities(entities)
@@ -317,7 +313,7 @@ class TautulliSessionSensor(TautulliEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.activity:
-            for user in self.coordinator.activity.sessions:
-                if user.user_id == self.user_id:
-                    return self.entity_description.value_fn(user)
+            for session in self.coordinator.activity.sessions:
+                if self.session and session.user_id == self.session.user_id:
+                    return self.entity_description.value_fn(session)
         return None
