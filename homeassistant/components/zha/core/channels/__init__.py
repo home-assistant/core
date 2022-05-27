@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import zigpy.endpoint
@@ -50,7 +49,6 @@ class Channels:
         self._pools: list[ChannelPool] = []
         self._power_config: base.ZigbeeChannel | None = None
         self._identify: base.ZigbeeChannel | None = None
-        self._semaphore = asyncio.Semaphore(3)
         self._unique_id = str(zha_device.ieee)
         self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
         self._zha_device = zha_device
@@ -81,11 +79,6 @@ class Channels:
         """Power configuration channel setter."""
         if self._identify is None:
             self._identify = channel
-
-    @property
-    def semaphore(self) -> asyncio.Semaphore:
-        """Return semaphore for concurrent tasks."""
-        return self._semaphore
 
     @property
     def zdo_channel(self) -> base.ZDOChannel:
@@ -284,7 +277,8 @@ class ChannelPool:
         pool = cls(channels, ep_id)
         pool.add_all_channels()
         pool.add_client_channels()
-        zha_disc.PROBE.discover_entities(pool)
+        if not channels.zha_device.is_coordinator:
+            zha_disc.PROBE.discover_entities(pool)
         return pool
 
     @callback
@@ -336,13 +330,8 @@ class ChannelPool:
 
     async def _execute_channel_tasks(self, func_name: str, *args: Any) -> None:
         """Add a throttled channel task and swallow exceptions."""
-
-        async def _throttle(coro: Coroutine[Any, Any, None]) -> None:
-            async with self._channels.semaphore:
-                return await coro
-
         channels = [*self.claimed_channels.values(), *self.client_channels.values()]
-        tasks = [_throttle(getattr(ch, func_name)(*args)) for ch in channels]
+        tasks = [getattr(ch, func_name)(*args) for ch in channels]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for channel, outcome in zip(channels, results):
             if isinstance(outcome, Exception):

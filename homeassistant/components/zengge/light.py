@@ -10,9 +10,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE,
-    COLOR_MODE_HS,
-    COLOR_MODE_WHITE,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME
@@ -100,16 +99,16 @@ class ZenggeLight(LightEntity):
         return self._white
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the current color mode."""
         if self._white != 0:
-            return COLOR_MODE_WHITE
-        return COLOR_MODE_HS
+            return ColorMode.WHITE
+        return ColorMode.HS
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode | str]:
         """Flag supported color modes."""
-        return {COLOR_MODE_HS, COLOR_MODE_WHITE}
+        return {ColorMode.HS, ColorMode.WHITE}
 
     @property
     def assumed_state(self):

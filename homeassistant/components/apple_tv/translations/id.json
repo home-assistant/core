@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "already_configured_device": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "backoff": "Perangkat tidak bisa menerima permintaan pemasangan saat ini (Anda mungkin telah berulang kali memasukkan kode PIN yang salah). Coba lagi nanti.",
             "device_did_not_pair": "Tidak ada upaya untuk menyelesaikan proses pemasangan dari sisi perangkat.",
             "device_not_found": "Perangkat tidak ditemukan selama penemuan, coba tambahkan lagi.",
             "inconsistent_device": "Protokol yang diharapkan tidak ditemukan selama penemuan. Ini biasanya terjadi karena masalah dengan DNS multicast (Zeroconf). Coba tambahkan perangkat lagi.",
-            "invalid_config": "Konfigurasi untuk perangkat ini tidak lengkap. Coba tambahkan lagi.",
+            "ipv6_not_supported": "IPv6 tidak didukung.",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
             "reauth_successful": "Autentikasi ulang berhasil",
             "setup_failed": "Gagal menyiapkan perangkat.",
@@ -18,7 +17,6 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "invalid_auth": "Autentikasi tidak valid",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
-            "no_usable_service": "Perangkat ditemukan tetapi kami tidak dapat mengidentifikasi berbagai cara untuk membuat koneksi ke perangkat tersebut. Jika Anda terus melihat pesan ini, coba tentukan alamat IP-nya atau mulai ulang Apple TV Anda.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "flow_title": "{name} ({type})",
@@ -72,6 +70,5 @@
                 "description": "Konfigurasikan pengaturan umum perangkat"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

@@ -11,8 +11,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -74,8 +74,8 @@ async def async_setup_platform(
 class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
 
-    _attr_color_mode = COLOR_MODE_HS
-    _attr_supported_color_modes = {COLOR_MODE_HS}
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, api, channel, status, effects):

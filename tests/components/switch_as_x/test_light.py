@@ -8,8 +8,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE_VALUE,
-    COLOR_MODE_ONOFF,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch_as_x.const import CONF_TARGET_DOMAIN, DOMAIN
@@ -53,7 +53,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_WHITE_VALUE) is None
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
-    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [COLOR_MODE_ONOFF]
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]
     assert state.attributes.get(ATTR_COLOR_MODE) is None
 
 
@@ -96,7 +96,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     assert hass.states.get("light.decorative_lights").state == STATE_ON
     assert (
         hass.states.get("light.decorative_lights").attributes.get(ATTR_COLOR_MODE)
-        == COLOR_MODE_ONOFF
+        == ColorMode.ONOFF
     )
 
     await hass.services.async_call(

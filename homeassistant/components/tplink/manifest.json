@@ -3,8 +3,8 @@
   "name": "TP-Link Kasa Smart",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink",
-  "requirements": ["python-kasa==0.4.3"],
-  "codeowners": ["@rytilahti", "@thegardenmonkey"],
+  "requirements": ["python-kasa==0.5.0"],
+  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
   "dependencies": ["network"],
   "quality_scale": "platinum",
   "iot_class": "local_polling",
@@ -73,6 +73,10 @@
     {
       "hostname": "k[lp]*",
       "macaddress": "1027F5*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "B0A7B9*"
     },
     {
       "hostname": "k[lp]*",

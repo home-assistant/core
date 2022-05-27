@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydeconz.light import Siren
+from pydeconz.models.event import EventType
+from pydeconz.models.light.siren import Siren
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -13,7 +14,6 @@ from homeassistant.components.siren import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
@@ -30,33 +30,15 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_siren(lights: list[Siren] | None = None) -> None:
+    def async_add_siren(_: EventType, siren_id: str) -> None:
         """Add siren from deCONZ."""
-        entities = []
+        siren = gateway.api.lights.sirens[siren_id]
+        async_add_entities([DeconzSiren(siren, gateway)])
 
-        if lights is None:
-            lights = list(gateway.api.lights.sirens.values())
-
-        for light in lights:
-
-            if (
-                isinstance(light, Siren)
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzSiren(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
-            async_add_siren,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_siren,
+        gateway.api.lights.sirens,
     )
-
-    async_add_siren()
 
 
 class DeconzSiren(DeconzDevice, SirenEntity):

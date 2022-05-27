@@ -177,6 +177,7 @@ def zha_device_joined(hass, setup_zha):
     """Return a newly joined ZHA device."""
 
     async def _zha_device(zigpy_dev):
+        zigpy_dev.last_seen = time.time()
         await setup_zha()
         zha_gateway = common.get_zha_gateway(hass)
         await zha_gateway.async_device_initialized(zigpy_dev)

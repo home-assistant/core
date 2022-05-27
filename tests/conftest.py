@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import AsyncGenerator
 import functools
 import logging
-import socket
 import ssl
 import threading
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -46,7 +45,6 @@ from tests.common import (  # noqa: E402, isort:skip
     MockUser,
     SetupRecorderInstanceT,
     async_fire_mqtt_message,
-    async_init_recorder_component,
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
@@ -56,6 +54,8 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 from tests.components.recorder.common import (  # noqa: E402, isort:skip
     async_recorder_block_till_done,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -86,63 +86,10 @@ def pytest_runtest_setup():
     Modified to include https://github.com/spulec/freezegun/pull/424
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    disable_socket(allow_unix_socket=True)
+    pytest_socket.disable_socket(allow_unix_socket=True)
 
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
     freezegun.api.FakeDatetime = HAFakeDatetime
-
-
-@pytest.fixture
-def socket_disabled(pytestconfig):
-    """Disable socket.socket for duration of this test function.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
-    and hardcodes allow_unix_socket to True because it's not passed on the command line.
-    """
-    socket_was_enabled = socket.socket == pytest_socket._true_socket
-    disable_socket(allow_unix_socket=True)
-    yield
-    if socket_was_enabled:
-        pytest_socket.enable_socket()
-
-
-@pytest.fixture
-def socket_enabled(pytestconfig):
-    """Enable socket.socket for duration of this test function.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
-    and hardcodes allow_unix_socket to True because it's not passed on the command line.
-    """
-    socket_was_disabled = socket.socket != pytest_socket._true_socket
-    pytest_socket.enable_socket()
-    yield
-    if socket_was_disabled:
-        disable_socket(allow_unix_socket=True)
-
-
-def disable_socket(allow_unix_socket=False):
-    """Disable socket.socket to disable the Internet. useful in testing.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/75
-    """
-
-    class GuardedSocket(socket.socket):
-        """socket guard to disable socket creation (from pytest-socket)."""
-
-        def __new__(cls, *args, **kwargs):
-            try:
-                if len(args) > 0:
-                    is_unix_socket = args[0] == socket.AF_UNIX
-                else:
-                    is_unix_socket = kwargs.get("family") == socket.AF_UNIX
-            except AttributeError:
-                # AF_UNIX not supported on Windows https://bugs.python.org/issue33408
-                is_unix_socket = False
-            if is_unix_socket and allow_unix_socket:
-                return super().__new__(cls, *args, **kwargs)
-            raise pytest_socket.SocketBlockedError()
-
-    socket.socket = GuardedSocket
 
 
 def ha_datetime_to_fakedatetime(datetime):
@@ -614,9 +561,10 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     )
 
     entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    # Do not forward the entry setup to the components here
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
@@ -737,6 +685,27 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     dt_util.DEFAULT_TIME_ZONE = original_tz
 
 
+async def _async_init_recorder_component(hass, add_config=None):
+    """Initialize the recorder asynchronously."""
+    config = dict(add_config) if add_config else {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        if recorder.CONF_COMMIT_INTERVAL not in config:
+            config[recorder.CONF_COMMIT_INTERVAL] = 0
+
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "homeassistant.components.recorder.migration.migrate_schema"
+    ):
+        assert await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        )
+        assert recorder.DOMAIN in hass.config.components
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
+
+
 @pytest.fixture
 async def async_setup_recorder_instance(
     enable_nightly_purge, enable_statistics
@@ -762,12 +731,12 @@ async def async_setup_recorder_instance(
             side_effect=stats,
             autospec=True,
         ):
-            await async_init_recorder_component(hass, config)
+            await _async_init_recorder_component(hass, config)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
             if hass.state == CoreState.running:
-                await async_recorder_block_till_done(hass, instance)
+                await async_recorder_block_till_done(hass)
             return instance
 
     return async_setup_recorder

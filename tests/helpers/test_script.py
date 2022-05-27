@@ -94,7 +94,7 @@ def assert_element(trace_element, expected_element, path):
     # Check for unexpected items in trace_element
     assert not set(trace_element._result or {}) - set(expected_result)
 
-    if "error_type" in expected_element:
+    if "error_type" in expected_element and expected_element["error_type"] is not None:
         assert isinstance(trace_element._error, expected_element["error_type"])
     else:
         assert trace_element._error is None
@@ -1445,7 +1445,7 @@ async def test_condition_warning(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._AbortScript, "result": {"result": False}}],
+            "1": [{"result": {"result": False}}],
             "1/entity_id/0": [{"error_type": ConditionError}],
         },
         expected_script_execution="aborted",
@@ -1499,12 +1499,60 @@ async def test_condition_basic(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
                     "result": {"entities": ["test.entity"], "result": False},
                 }
             ],
         },
         expected_script_execution="aborted",
+    )
+
+
+async def test_condition_subscript(hass, caplog):
+    """Test failing conditions in a subscript don't stop the parent script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "repeat": {
+                    "until": "{{ 1 == 1 }}",
+                    "sequence": [
+                        {"condition": "{{ 1 == 2 }}"},
+                    ],
+                }
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {}}],
+            "1/repeat/sequence/0": [
+                {
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                    "result": {"entities": [], "result": False},
+                }
+            ],
+            "1/repeat": [
+                {
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                    "result": {"result": True},
+                }
+            ],
+            "1/repeat/until/0": [{"result": {"entities": [], "result": True}}],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
     )
 
 
@@ -1590,7 +1638,6 @@ async def test_shorthand_template_condition(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
                     "result": {"entities": ["test.entity"], "result": False},
                 }
             ],
@@ -1656,7 +1703,6 @@ async def test_condition_validation(hass, caplog):
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error_type": script._AbortScript,
                     "result": {"result": False},
                 }
             ],
@@ -3027,7 +3073,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         ],
         "0/parallel/1/sequence/0": [
             {
-                "variables": {"wait": {"remaining": None}},
+                "variables": {},
                 "result": {
                     "event": "test_event",
                     "event_data": {"hello": "from action 2", "what": "world"},
@@ -3042,6 +3088,150 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                     "event_data": {"hello": "from action 1", "what": "world"},
                 },
             }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_parallel_loop(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test parallel loops do not affect each other."""
+    events_loop1 = async_capture_events(hass, "loop1")
+    events_loop2 = async_capture_events(hass, "loop2")
+    hass.states.async_set("switch.trigger", "off")
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "alias": "Loop1",
+                    "sequence": [
+                        {
+                            "repeat": {
+                                "for_each": ["loop1_a", "loop1_b", "loop1_c"],
+                                "sequence": [
+                                    {
+                                        "event": "loop1",
+                                        "event_data": {"hello1": "{{ repeat.item }}"},
+                                    }
+                                ],
+                            },
+                        },
+                    ],
+                },
+                {
+                    "alias": "Loop2",
+                    "sequence": [
+                        {
+                            "repeat": {
+                                "for_each": ["loop2_a", "loop2_b", "loop2_c"],
+                                "sequence": [
+                                    {
+                                        "event": "loop2",
+                                        "event_data": {"hello2": "{{ repeat.item }}"},
+                                    }
+                                ],
+                            },
+                        },
+                    ],
+                },
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.async_create_task(
+        script_obj.async_run(MappingProxyType({"what": "world"}), Context())
+    )
+    await hass.async_block_till_done()
+
+    assert len(events_loop1) == 3
+    assert events_loop1[0].data["hello1"] == "loop1_a"
+    assert events_loop1[1].data["hello1"] == "loop1_b"
+    assert events_loop1[2].data["hello1"] == "loop1_c"
+    assert events_loop2[0].data["hello2"] == "loop2_a"
+    assert events_loop2[1].data["hello2"] == "loop2_b"
+    assert events_loop2[2].data["hello2"] == "loop2_c"
+
+    expected_trace = {
+        "0": [{"result": {}}],
+        "0/parallel/0/sequence/0": [{"result": {}}],
+        "0/parallel/1/sequence/0": [
+            {
+                "result": {},
+            }
+        ],
+        "0/parallel/0/sequence/0/repeat/sequence/0": [
+            {
+                "variables": {
+                    "repeat": {
+                        "first": True,
+                        "index": 1,
+                        "last": False,
+                        "item": "loop1_a",
+                    }
+                },
+                "result": {"event": "loop1", "event_data": {"hello1": "loop1_a"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 2,
+                        "last": False,
+                        "item": "loop1_b",
+                    }
+                },
+                "result": {"event": "loop1", "event_data": {"hello1": "loop1_b"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 3,
+                        "last": True,
+                        "item": "loop1_c",
+                    }
+                },
+                "result": {"event": "loop1", "event_data": {"hello1": "loop1_c"}},
+            },
+        ],
+        "0/parallel/1/sequence/0/repeat/sequence/0": [
+            {
+                "variables": {
+                    "repeat": {
+                        "first": True,
+                        "index": 1,
+                        "last": False,
+                        "item": "loop2_a",
+                    }
+                },
+                "result": {"event": "loop2", "event_data": {"hello2": "loop2_a"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 2,
+                        "last": False,
+                        "item": "loop2_b",
+                    }
+                },
+                "result": {"event": "loop2", "event_data": {"hello2": "loop2_b"}},
+            },
+            {
+                "variables": {
+                    "repeat": {
+                        "first": False,
+                        "index": 3,
+                        "last": True,
+                        "item": "loop2_c",
+                    }
+                },
+                "result": {"event": "loop2", "event_data": {"hello2": "loop2_c"}},
+            },
         ],
     }
     assert_action_trace(expected_trace)
@@ -4485,6 +4675,65 @@ async def test_stop_action(hass, caplog):
     )
 
 
+@pytest.mark.parametrize(
+    "error,error_type,logmsg,script_execution",
+    (
+        (True, script._AbortScript, "Error", "aborted"),
+        (False, None, "Stop", "finished"),
+    ),
+)
+async def test_stop_action_subscript(
+    hass, caplog, error, error_type, logmsg, script_execution
+):
+    """Test if automation stops on calling the stop action from a sub-script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    alias = "stop step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "if": {
+                    "alias": "if condition",
+                    "condition": "template",
+                    "value_template": "{{ 1 == 1 }}",
+                },
+                "then": {
+                    "alias": alias,
+                    "stop": "In the name of love",
+                    "error": error,
+                },
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"{logmsg} script sequence: In the name of love" in caplog.text
+    caplog.clear()
+    assert len(events) == 1
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"error_type": error_type, "result": {"choice": "then"}}],
+            "1/if": [{"result": {"result": True}}],
+            "1/if/condition/0": [{"result": {"result": True, "entities": []}}],
+            "1/then/0": [
+                {
+                    "error_type": error_type,
+                    "result": {"stop": "In the name of love", "error": error},
+                }
+            ],
+        },
+        expected_script_execution=script_execution,
+    )
+
+
 async def test_stop_action_with_error(hass, caplog):
     """Test if automation fails on calling the error action."""
     event = "test_event"
@@ -4739,8 +4988,125 @@ async def test_disabled_actions(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{}],
-            "2": [{}],
+            "1": [{"result": {"enabled": False}}],
+            "2": [{"result": {"enabled": False}}],
             "3": [{"result": {"event": "test_event", "event_data": {}}}],
         },
+    )
+
+
+async def test_condition_and_shorthand(hass, caplog):
+    """Test if we can use the shorthand and conditions in a script."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "shorthand and condition",
+                "and": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states('test.entity') == 'hello' }}",
+                    }
+                ],
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Test condition shorthand and condition: True" in caplog.text
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/conditions/0": [
+                {"result": {"entities": ["test.entity"], "result": True}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+
+async def test_condition_or_shorthand(hass, caplog):
+    """Test if we can use the shorthand or conditions in a script."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "shorthand or condition",
+                "or": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states('test.entity') == 'hello' }}",
+                    }
+                ],
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Test condition shorthand or condition: True" in caplog.text
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/conditions/0": [
+                {"result": {"entities": ["test.entity"], "result": True}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+
+async def test_condition_not_shorthand(hass, caplog):
+    """Test if we can use the shorthand not conditions in a script."""
+    events = async_capture_events(hass, "test_event")
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": "test_event"},
+            {
+                "alias": "shorthand not condition",
+                "not": [
+                    {
+                        "condition": "template",
+                        "value_template": "{{ states('test.entity') == 'hello' }}",
+                    }
+                ],
+            },
+            {"event": "test_event"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "not hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert "Test condition shorthand not condition: True" in caplog.text
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/conditions/0": [
+                {"result": {"entities": ["test.entity"], "result": False}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
     )

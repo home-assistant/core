@@ -41,7 +41,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Inverser l'\u00e9tat ouvert / ferm\u00e9",
-                    "name": "Nom (facultatif)",
+                    "name": "Nom",
                     "type": "Type de capteur binaire"
                 },
                 "description": "Veuillez s\u00e9lectionner les options du capteur binaire attach\u00e9 \u00e0 {zone}",
@@ -49,8 +49,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nom (facultatif)",
-                    "poll_interval": "Intervalle d'interrogation (minutes) (facultatif)",
+                    "name": "Nom",
+                    "poll_interval": "Intervalle d'interrogation (en minutes)",
                     "type": "Type de capteur"
                 },
                 "description": "Veuillez s\u00e9lectionner les options du capteur digital attach\u00e9 \u00e0 {zone}",
@@ -86,7 +86,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Remplacer l'URL de l'h\u00f4te de l'API (facultatif)",
+                    "api_host": "Remplacer l'URL de l'h\u00f4te de l'API",
                     "blink": "Voyant du panneau clignotant lors de l'envoi d'un changement d'\u00e9tat",
                     "discovery": "R\u00e9pondre aux demandes de d\u00e9couverte sur votre r\u00e9seau",
                     "override_api_host": "Remplacer l'URL par d\u00e9faut du panneau h\u00f4te de l'API Home Assistant"
@@ -97,11 +97,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Sortie lorsque activ\u00e9",
-                    "momentary": "Dur\u00e9e de l'impulsion (ms) (facultatif)",
+                    "momentary": "Dur\u00e9e de l'impulsion (en millisecondes)",
                     "more_states": "Configurer des \u00e9tats suppl\u00e9mentaires pour cette zone",
-                    "name": "Nom (facultatif)",
-                    "pause": "Pause entre les impulsions (ms) (facultatif)",
-                    "repeat": "Nombre de r\u00e9p\u00e9tition (-1=infini) (facultatif)"
+                    "name": "Nom",
+                    "pause": "Pause entre les impulsions (en millisecondes)",
+                    "repeat": "Nombre de r\u00e9p\u00e9titions (-1\u00a0=\u00a0infini)"
                 },
                 "description": "Veuillez s\u00e9lectionner les options de sortie pour {zone} : \u00e9tat {state}",
                 "title": "Configurer la sortie commutable"

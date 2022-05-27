@@ -14,9 +14,7 @@
             "user": {
                 "data": {
                     "api_key": "Chiave API",
-                    "api_token": "API segreta",
-                    "currencies": "Valute del saldo del conto",
-                    "exchange_rates": "Tassi di cambio"
+                    "api_token": "API segreta"
                 },
                 "description": "Inserisci i dettagli della tua chiave API come forniti da Coinbase.",
                 "title": "Dettagli della chiave API di Coinbase"
@@ -26,9 +24,7 @@
     "options": {
         "error": {
             "currency_unavailable": "Uno o pi\u00f9 dei saldi in valuta richiesti non sono forniti dalla tua API Coinbase.",
-            "currency_unavaliable": "Uno o pi\u00f9 saldi in valuta richiesti non sono forniti dalla tua API Coinbase.",
             "exchange_rate_unavailable": "Uno o pi\u00f9 dei tassi di cambio richiesti non sono forniti da Coinbase.",
-            "exchange_rate_unavaliable": "Uno o pi\u00f9 dei tassi di cambio richiesti non sono forniti da Coinbase.",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -36,7 +32,8 @@
                 "data": {
                     "account_balance_currencies": "Saldi del portafoglio da segnalare.",
                     "exchange_base": "Valuta di base per i sensori di tasso di cambio.",
-                    "exchange_rate_currencies": "Tassi di cambio da segnalare."
+                    "exchange_rate_currencies": "Tassi di cambio da segnalare.",
+                    "exchnage_rate_precision": "Numero di cifre decimali per i tassi di cambio."
                 },
                 "description": "Regola le opzioni di Coinbase"
             }

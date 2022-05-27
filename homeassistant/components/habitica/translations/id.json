@@ -15,6 +15,5 @@
                 "description": "Hubungkan profil Habitica Anda untuk memungkinkan pemantauan profil dan tugas pengguna Anda. Perhatikan bahwa api_id dan api_key harus diperoleh dari https://habitica.com/user/settings/api"
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

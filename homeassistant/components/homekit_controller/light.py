@@ -10,10 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -87,34 +84,34 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
             CharacteristicsTypes.SATURATION
         ):
-            return COLOR_MODE_HS
+            return ColorMode.HS
 
         if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
 
         if self.service.has(CharacteristicsTypes.BRIGHTNESS):
-            return COLOR_MODE_BRIGHTNESS
+            return ColorMode.BRIGHTNESS
 
-        return COLOR_MODE_ONOFF
+        return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode | str] | None:
         """Flag supported color modes."""
-        color_modes = set()
+        color_modes: set[ColorMode | str] = set()
 
         if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
             CharacteristicsTypes.SATURATION
         ):
-            color_modes.add(COLOR_MODE_HS)
+            color_modes.add(ColorMode.HS)
 
         if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
-            color_modes.add(COLOR_MODE_COLOR_TEMP)
+            color_modes.add(ColorMode.COLOR_TEMP)
 
         if not color_modes and self.service.has(CharacteristicsTypes.BRIGHTNESS):
-            color_modes.add(COLOR_MODE_BRIGHTNESS)
+            color_modes.add(ColorMode.BRIGHTNESS)
 
         if not color_modes:
-            color_modes.add(COLOR_MODE_ONOFF)
+            color_modes.add(ColorMode.ONOFF)
 
         return color_modes
 

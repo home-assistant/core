@@ -10,9 +10,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -52,16 +50,16 @@ async def async_setup_entry(
 class WLEDMasterLight(WLEDEntity, LightEntity):
     """Defines a WLED master light."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_icon = "mdi:led-strip-variant"
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED master light."""
         super().__init__(coordinator=coordinator)
         self._attr_name = f"{coordinator.data.info.name} Master"
         self._attr_unique_id = coordinator.data.info.mac_address
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     @property
     def brightness(self) -> int | None:
@@ -128,11 +126,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
-        self._attr_color_mode = COLOR_MODE_RGB
-        self._attr_supported_color_modes = {COLOR_MODE_RGB}
+        self._attr_color_mode = ColorMode.RGB
+        self._attr_supported_color_modes = {ColorMode.RGB}
         if self._rgbw and self._wv:
-            self._attr_color_mode = COLOR_MODE_RGBW
-            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+            self._attr_color_mode = ColorMode.RGBW
+            self._attr_supported_color_modes = {ColorMode.RGBW}
 
     @property
     def available(self) -> bool:

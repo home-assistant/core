@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 
 @dataclass

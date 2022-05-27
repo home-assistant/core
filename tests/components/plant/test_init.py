@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 GOOD_DATA = {
     "moisture": 50,
@@ -158,7 +158,7 @@ async def test_load_from_db(hass, recorder_mock):
         )
         await hass.async_block_till_done()
     # wait for the recorder to really store the data
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     assert await async_setup_component(
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}

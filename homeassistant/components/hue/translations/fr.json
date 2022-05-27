@@ -6,6 +6,7 @@
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "cannot_connect": "\u00c9chec de connexion",
             "discover_timeout": "D\u00e9tection de ponts Philips Hue impossible",
+            "invalid_host": "H\u00f4te non valide",
             "no_bridges": "Aucun pont Philips Hue n'a \u00e9t\u00e9 d\u00e9couvert",
             "not_hue_bridge": "Pas de pont Hue",
             "unknown": "Erreur inattendue"

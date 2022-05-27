@@ -1,6 +1,7 @@
 """Provides device automations for homekit devices."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -63,7 +64,7 @@ class TriggerSource:
         self._hass = connection.hass
         self._connection = connection
         self._aid = aid
-        self._triggers = {}
+        self._triggers: dict[tuple[str, str], dict[str, Any]] = {}
         for trigger in triggers:
             self._triggers[(trigger["type"], trigger["subtype"])] = trigger
         self._callbacks = {}
@@ -73,7 +74,7 @@ class TriggerSource:
         for event_handler in self._callbacks.get(iid, []):
             event_handler(value)
 
-    def async_get_triggers(self):
+    def async_get_triggers(self) -> Generator[tuple[str, str], None, None]:
         """List device triggers for homekit devices."""
         yield from self._triggers
 
@@ -240,13 +241,13 @@ def async_fire_triggers(conn: HKDevice, events: dict[tuple[int, int], Any]):
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for homekit devices."""
 
     if device_id not in hass.data.get(TRIGGERS, {}):
         return []
 
-    device = hass.data[TRIGGERS][device_id]
+    device: TriggerSource = hass.data[TRIGGERS][device_id]
 
     return [
         {

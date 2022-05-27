@@ -4,17 +4,16 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pydeconz.sensor import (
-    Alarm,
-    CarbonMonoxide,
-    Fire,
-    GenericFlag,
-    OpenClose,
-    Presence,
-    SensorResources,
-    Vibration,
-    Water,
-)
+from pydeconz.interfaces.sensors import SensorResources
+from pydeconz.models.event import EventType
+from pydeconz.models.sensor.alarm import Alarm
+from pydeconz.models.sensor.carbon_monoxide import CarbonMonoxide
+from pydeconz.models.sensor.fire import Fire
+from pydeconz.models.sensor.generic_flag import GenericFlag
+from pydeconz.models.sensor.open_close import OpenClose
+from pydeconz.models.sensor.presence import Presence
+from pydeconz.models.sensor.vibration import Vibration
+from pydeconz.models.sensor.water import Water
 
 from homeassistant.components.binary_sensor import (
     DOMAIN,
@@ -190,46 +189,42 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors: list[SensorResources] | None = None) -> None:
-        """Add binary sensor from deCONZ."""
-        entities: list[DeconzBinarySensor] = []
+    def async_add_sensor(_: EventType, sensor_id: str) -> None:
+        """Add sensor from deCONZ."""
+        sensor = gateway.api.sensors[sensor_id]
 
-        if sensors is None:
-            sensors = gateway.api.sensors.values()
+        if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+            return
 
-        for sensor in sensors:
-
-            if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
+        for description in (
+            ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
+        ):
+            if (
+                not hasattr(sensor, description.key)
+                or description.value_fn(sensor) is None
+            ):
                 continue
 
-            known_entities = set(gateway.entities[DOMAIN])
-            for description in (
-                ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
-            ):
+            async_add_entities([DeconzBinarySensor(sensor, gateway, description)])
 
-                if (
-                    not hasattr(sensor, description.key)
-                    or description.value_fn(sensor) is None
-                ):
-                    continue
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors,
+    )
 
-                new_sensor = DeconzBinarySensor(sensor, gateway, description)
-                if new_sensor.unique_id not in known_entities:
-                    entities.append(new_sensor)
-
-        if entities:
-            async_add_entities(entities)
+    @callback
+    def async_reload_clip_sensors() -> None:
+        """Load clip sensor sensors from deCONZ."""
+        for sensor_id, sensor in gateway.api.sensors.items():
+            if sensor.type.startswith("CLIP"):
+                async_add_sensor(EventType.ADDED, sensor_id)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            gateway.signal_new_sensor,
-            async_add_sensor,
+            gateway.signal_reload_clip_sensors,
+            async_reload_clip_sensors,
         )
-    )
-
-    async_add_sensor(
-        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
     )
 
 

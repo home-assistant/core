@@ -27,6 +27,10 @@
             "0": "Sensibilidad baja",
             "1": "Sensibilidad alta"
         },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "90": "90\u00b0"
+        },
         "tuya__fingerbot_mode": {
             "click": "Push",
             "switch": "Interruptor"
@@ -43,7 +47,12 @@
             "level_8": "Nivel 8",
             "level_9": "Nivel 9"
         },
+        "tuya__humidifier_moodlighting": {
+            "3": "Estado 3",
+            "4": "Estado 4"
+        },
         "tuya__humidifier_spray_mode": {
+            "auto": "Autom\u00e1tico",
             "health": "Salud",
             "humidity": "Humedad",
             "sleep": "Dormir",

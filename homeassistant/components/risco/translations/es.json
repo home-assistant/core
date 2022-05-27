@@ -33,7 +33,7 @@
             "init": {
                 "data": {
                     "code_arm_required": "Requiere un c\u00f3digo PIN para armar",
-                    "code_disarm_required": "Requiere un c\u00f3digo PIN para desarmar",
+                    "code_disarm_required": "Requiere un c\u00f3digo PIN para desactivar",
                     "scan_interval": "Con qu\u00e9 frecuencia sondear Risco (en segundos)"
                 },
                 "title": "Configurar opciones"

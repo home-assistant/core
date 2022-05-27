@@ -25,10 +25,12 @@ from homeassistant.const import (
     CONF_SENDER,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.dt as dt_util
+from homeassistant.util.ssl import client_context
 
 from . import DOMAIN, PLATFORMS
 
@@ -65,6 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SENDER_NAME): cv.string,
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -73,16 +76,17 @@ def get_service(hass, config, discovery_info=None):
     """Get the mail notification service."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
-        config.get(CONF_SERVER),
-        config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT),
-        config.get(CONF_SENDER),
-        config.get(CONF_ENCRYPTION),
+        config[CONF_SERVER],
+        config[CONF_PORT],
+        config[CONF_TIMEOUT],
+        config[CONF_SENDER],
+        config[CONF_ENCRYPTION],
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
-        config.get(CONF_RECIPIENT),
+        config[CONF_RECIPIENT],
         config.get(CONF_SENDER_NAME),
-        config.get(CONF_DEBUG),
+        config[CONF_DEBUG],
+        config[CONF_VERIFY_SSL],
     )
 
     if mail_service.connection_is_valid():
@@ -106,6 +110,7 @@ class MailNotificationService(BaseNotificationService):
         recipients,
         sender_name,
         debug,
+        verify_ssl,
     ):
         """Initialize the SMTP service."""
         self._server = server
@@ -118,18 +123,25 @@ class MailNotificationService(BaseNotificationService):
         self.recipients = recipients
         self._sender_name = sender_name
         self.debug = debug
+        self._verify_ssl = verify_ssl
         self.tries = 2
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
+        ssl_context = client_context() if self._verify_ssl else None
         if self.encryption == "tls":
-            mail = smtplib.SMTP_SSL(self._server, self._port, timeout=self._timeout)
+            mail = smtplib.SMTP_SSL(
+                self._server,
+                self._port,
+                timeout=self._timeout,
+                context=ssl_context,
+            )
         else:
             mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.encryption == "starttls":
-            mail.starttls()
+            mail.starttls(context=ssl_context)
             mail.ehlo()
         if self.username and self.password:
             mail.login(self.username, self.password)
@@ -235,7 +247,7 @@ def _attach_file(atch_name, content_id):
         attachment = MIMEImage(file_bytes)
     except TypeError:
         _LOGGER.warning(
-            "Attachment %s has an unknown MIME type. " "Falling back to file",
+            "Attachment %s has an unknown MIME type. Falling back to file",
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=atch_name)

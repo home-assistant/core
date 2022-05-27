@@ -75,6 +75,5 @@
                 "description": "Escolha o m\u00e9todo de conex\u00e3o com o gateway"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }
