@@ -28,5 +28,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "TotalConnect-opties"
+            }
+        }
     }
 }
