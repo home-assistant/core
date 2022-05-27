@@ -159,6 +159,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
@@ -196,17 +197,18 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         vol.Optional(Platform.CAMERA.value): cv.ensure_list,
         vol.Optional(Platform.CLIMATE.value): cv.ensure_list,
         vol.Optional(Platform.COVER.value): cv.ensure_list,
+        vol.Optional(Platform.DEVICE_TRACKER.value): cv.ensure_list,
         vol.Optional(Platform.FAN.value): cv.ensure_list,
         vol.Optional(Platform.HUMIDIFIER.value): cv.ensure_list,
         vol.Optional(Platform.LIGHT.value): cv.ensure_list,
         vol.Optional(Platform.LOCK.value): cv.ensure_list,
+        vol.Optional(Platform.NUMBER.value): cv.ensure_list,
         vol.Optional(Platform.SCENE.value): cv.ensure_list,
         vol.Optional(Platform.SELECT.value): cv.ensure_list,
         vol.Optional(Platform.SIREN.value): cv.ensure_list,
         vol.Optional(Platform.SENSOR.value): cv.ensure_list,
         vol.Optional(Platform.SWITCH.value): cv.ensure_list,
         vol.Optional(Platform.VACUUM.value): cv.ensure_list,
-        vol.Optional(Platform.NUMBER.value): cv.ensure_list,
     }
 )
 

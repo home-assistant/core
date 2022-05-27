@@ -177,7 +177,7 @@ def async_generate_motioneye_webhook(
     except NoURLAvailableError:
         _LOGGER.warning(
             "Unable to get Home Assistant URL. Have you set the internal and/or "
-            "external URLs in Configuration -> General?"
+            "external URLs in Settings -> System -> Network?"
         )
         return None
 

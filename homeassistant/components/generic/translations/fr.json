@@ -15,6 +15,7 @@
             "stream_no_video": "Le flux ne contient pas de vid\u00e9o",
             "stream_not_permitted": "Op\u00e9ration non autoris\u00e9e lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
             "stream_unauthorised": "\u00c9chec de l'autorisation lors de la tentative de connexion au flux",
+            "template_error": "Erreur lors du rendu du mod\u00e8le. Consultez le journal pour plus d'informations.",
             "timeout": "D\u00e9lai d'attente expir\u00e9 lors du chargement de l'URL",
             "unable_still_load": "Impossible de charger une image valide depuis l'URL d'image fixe (cela pourrait \u00eatre d\u00fb \u00e0 un h\u00f4te ou \u00e0 une URL non valide, ou \u00e0 un \u00e9chec de l'authentification).  Consultez le journal pour plus d'informations.",
             "unknown": "Erreur inattendue"
@@ -57,6 +58,7 @@
             "stream_no_video": "Le flux ne contient pas de vid\u00e9o",
             "stream_not_permitted": "Op\u00e9ration non autoris\u00e9e lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
             "stream_unauthorised": "\u00c9chec de l'autorisation lors de la tentative de connexion au flux",
+            "template_error": "Erreur lors du rendu du mod\u00e8le. Consultez le journal pour plus d'informations.",
             "timeout": "D\u00e9lai d'attente expir\u00e9 lors du chargement de l'URL",
             "unable_still_load": "Impossible de charger une image valide depuis l'URL d'image fixe (cela pourrait \u00eatre d\u00fb \u00e0 un h\u00f4te ou \u00e0 une URL non valide, ou \u00e0 un \u00e9chec de l'authentification).  Consultez le journal pour plus d'informations.",
             "unknown": "Erreur inattendue"

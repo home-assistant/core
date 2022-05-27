@@ -15,6 +15,7 @@
             "stream_no_video": "El flux no cont\u00e9 v\u00eddeo",
             "stream_not_permitted": "Operaci\u00f3 no permesa mentre s'intentava connectar al flux de dades. Protocol de transport RTSP incorrecte?",
             "stream_unauthorised": "L'autoritzaci\u00f3 ha fallat mentre s'intentava connectar amb el flux de dades",
+            "template_error": "Error renderitzant plantilla. Consulta els registres per m\u00e9s informaci\u00f3.",
             "timeout": "El temps m\u00e0xim de c\u00e0rrega de l'URL ha expirat",
             "unable_still_load": "No s'ha pogut carregar cap imatge v\u00e0lida des de l'URL d'imatge fixa (pot ser per un amfitri\u00f3 o URL inv\u00e0lid o un error d'autenticaci\u00f3). Revisa els registres per a m\u00e9s informaci\u00f3.",
             "unknown": "Error inesperat"
@@ -57,6 +58,7 @@
             "stream_no_video": "El flux no cont\u00e9 v\u00eddeo",
             "stream_not_permitted": "Operaci\u00f3 no permesa mentre s'intentava connectar al flux de dades. Protocol de transport RTSP incorrecte?",
             "stream_unauthorised": "L'autoritzaci\u00f3 ha fallat mentre s'intentava connectar amb el flux de dades",
+            "template_error": "Error renderitzant plantilla. Consulta els registres per m\u00e9s informaci\u00f3.",
             "timeout": "El temps m\u00e0xim de c\u00e0rrega de l'URL ha expirat",
             "unable_still_load": "No s'ha pogut carregar cap imatge v\u00e0lida des de l'URL d'imatge fixa (pot ser per un amfitri\u00f3 o URL inv\u00e0lid o un error d'autenticaci\u00f3). Revisa els registres per a m\u00e9s informaci\u00f3.",
             "unknown": "Error inesperat"

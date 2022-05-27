@@ -123,8 +123,10 @@ def process_plex_payload(
         plex_url = URL(content_id)
         if plex_url.name:
             if len(plex_url.parts) == 2:
-                # The path contains a single item, will always be a ratingKey
-                content = int(plex_url.name)
+                if plex_url.name == "search":
+                    content = {}
+                else:
+                    content = int(plex_url.name)
             else:
                 # For "special" items like radio stations
                 content = plex_url.path
@@ -132,7 +134,10 @@ def process_plex_payload(
             plex_server = get_plex_server(hass, plex_server_id=server_id)
         else:
             # Handle legacy payloads without server_id in URL host position
-            content = int(plex_url.host)  # type: ignore[arg-type]
+            if plex_url.host == "search":
+                content = {}
+            else:
+                content = int(plex_url.host)  # type: ignore[arg-type]
         extra_params = dict(plex_url.query)
     else:
         content = json.loads(content_id)

@@ -433,6 +433,17 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+class AqaraMotionDetectionInterval(
+    ZHANumberConfigurationEntity, id_suffix="detection_interval"
+):
+    """Representation of a ZHA on off transition time configuration entity."""
+
+    _attr_min_value: float = 2
+    _attr_max_value: float = 65535
+    _zcl_attribute: str = "detection_interval"
+
+
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
 class OnOffTransitionTimeConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="on_off_transition_time"
@@ -495,3 +506,20 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_min_value: float = 0x00
     _attr_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_duration"):
+    """Representation of a ZHA timer duration configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[14]
+    _attr_min_value: float = 0x00
+    _attr_max_value: float = 0x257
+    _attr_unit_of_measurement: str | None = UNITS[72]
+    _zcl_attribute: str = "timer_duration"

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from bond_api import Action, BPUPSubscriptions
+from bond_async import Action, BPUPSubscriptions
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
