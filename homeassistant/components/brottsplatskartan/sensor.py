@@ -44,8 +44,8 @@ async def async_setup_platform(
     """Set up the Brottsplatskartan platform."""
 
     LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.6, remove import flow in 2022.8
-        "Loading Brottsplatskartan via platform setup is deprecated and will be removed in 2022.8 "
+        # Config flow added in Home Assistant Core 2022.7, remove import flow in 2022.9
+        "Loading Brottsplatskartan via platform setup is deprecated and will be removed in 2022.9 "
         "Please remove it from your configuration"
     )
 
