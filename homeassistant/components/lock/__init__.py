@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 import functools as ft
 import logging
 from typing import Any, final
@@ -46,7 +47,15 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
-# Bitfield of features supported by the lock entity
+
+class LockEntityFeature(IntEnum):
+    """Supported features of the lock entity."""
+
+    OPEN = 1
+
+
+# The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
+# Please use the LockEntityFeature enum instead.
 SUPPORT_OPEN = 1
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
@@ -162,8 +171,7 @@ class LockEntity(Entity):
         """Return the state attributes."""
         state_attr = {}
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
         return state_attr
 
@@ -177,19 +185,6 @@ class LockEntity(Entity):
             return STATE_LOCKING
         if self.is_unlocking:
             return STATE_UNLOCKING
-        locked = self.is_locked
-        if locked is None:
+        if (locked := self.is_locked) is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
-
-
-class LockDevice(LockEntity):
-    """Representation of a lock (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "LockDevice is deprecated, modify %s to extend LockEntity",
-            cls.__name__,
-        )

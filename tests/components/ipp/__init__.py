@@ -1,21 +1,13 @@
 """Tests for the IPP integration."""
-import os
-
 import aiohttp
 from pyipp import IPPConnectionUpgradeRequired, IPPError
 
+from homeassistant.components import zeroconf
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TYPE,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_fixture_path
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_HOSTNAME = "hostname"
@@ -42,30 +34,30 @@ MOCK_USER_INPUT = {
     CONF_BASE_PATH: BASE_PATH,
 }
 
-MOCK_ZEROCONF_IPP_SERVICE_INFO = {
-    CONF_TYPE: IPP_ZEROCONF_SERVICE_TYPE,
-    CONF_NAME: f"{ZEROCONF_NAME}.{IPP_ZEROCONF_SERVICE_TYPE}",
-    CONF_HOST: ZEROCONF_HOST,
-    ATTR_HOSTNAME: ZEROCONF_HOSTNAME,
-    CONF_PORT: ZEROCONF_PORT,
-    ATTR_PROPERTIES: {"rp": ZEROCONF_RP},
-}
+MOCK_ZEROCONF_IPP_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+    type=IPP_ZEROCONF_SERVICE_TYPE,
+    name=f"{ZEROCONF_NAME}.{IPP_ZEROCONF_SERVICE_TYPE}",
+    host=ZEROCONF_HOST,
+    addresses=[ZEROCONF_HOST],
+    hostname=ZEROCONF_HOSTNAME,
+    port=ZEROCONF_PORT,
+    properties={"rp": ZEROCONF_RP},
+)
 
-MOCK_ZEROCONF_IPPS_SERVICE_INFO = {
-    CONF_TYPE: IPPS_ZEROCONF_SERVICE_TYPE,
-    CONF_NAME: f"{ZEROCONF_NAME}.{IPPS_ZEROCONF_SERVICE_TYPE}",
-    CONF_HOST: ZEROCONF_HOST,
-    ATTR_HOSTNAME: ZEROCONF_HOSTNAME,
-    CONF_PORT: ZEROCONF_PORT,
-    ATTR_PROPERTIES: {"rp": ZEROCONF_RP},
-}
+MOCK_ZEROCONF_IPPS_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+    type=IPPS_ZEROCONF_SERVICE_TYPE,
+    name=f"{ZEROCONF_NAME}.{IPPS_ZEROCONF_SERVICE_TYPE}",
+    host=ZEROCONF_HOST,
+    addresses=[ZEROCONF_HOST],
+    hostname=ZEROCONF_HOSTNAME,
+    port=ZEROCONF_PORT,
+    properties={"rp": ZEROCONF_RP},
+)
 
 
 def load_fixture_binary(filename):
     """Load a binary fixture."""
-    path = os.path.join(os.path.dirname(__file__), "..", "..", "fixtures", filename)
-    with open(path, "rb") as fptr:
-        return fptr.read()
+    return get_fixture_path(filename, "ipp").read_bytes()
 
 
 def mock_connection(
@@ -97,11 +89,11 @@ def mock_connection(
         aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPConnectionUpgradeRequired)
         return
 
-    fixture = "ipp/get-printer-attributes.bin"
+    fixture = "get-printer-attributes.bin"
     if no_unique_id:
-        fixture = "ipp/get-printer-attributes-success-nodata.bin"
+        fixture = "get-printer-attributes-success-nodata.bin"
     elif version_not_supported:
-        fixture = "ipp/get-printer-attributes-error-0x0503.bin"
+        fixture = "get-printer-attributes-error-0x0503.bin"
 
     if parse_error:
         content = "BAD"

@@ -1,16 +1,10 @@
 """Provides device automations for Alarm control panel."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-)
 from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
@@ -38,6 +32,12 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
+)
 
 BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
 TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
@@ -58,9 +58,9 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Alarm control panel devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     triggers: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
@@ -157,7 +157,7 @@ async def async_attach_trigger(
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
-    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

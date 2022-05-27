@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-import logging
 
-from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
+from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
@@ -12,37 +11,17 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SHARK
+from .const import DOMAIN, LOGGER, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-# Supported features
-SUPPORT_SHARKIQ = (
-    SUPPORT_BATTERY
-    | SUPPORT_FAN_SPEED
-    | SUPPORT_PAUSE
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_START
-    | SUPPORT_STATE
-    | SUPPORT_STATUS
-    | SUPPORT_STOP
-    | SUPPORT_LOCATE
-)
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: STATE_PAUSED,
@@ -67,12 +46,16 @@ ATTR_RECHARGE_RESUME = "recharge_and_resume"
 ATTR_RSSI = "rssi"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Shark IQ vacuum cleaner."""
     coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
-    _LOGGER.debug(
+    LOGGER.debug(
         "Found %d Shark IQ device(s): %s",
         len(device_names),
         ", ".join([d.name for d in devices]),
@@ -80,8 +63,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
 
 
-class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
+class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):
     """Shark IQ vacuum entity."""
+
+    _attr_fan_speed_list = list(FAN_SPEEDS_MAP)
+    _attr_supported_features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.LOCATE
+    )
 
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
@@ -89,6 +85,9 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
         self.sharkiq = sharkiq
+        self._attr_name = sharkiq.name
+        self._attr_unique_id = sharkiq.serial_number
+        self._serial_number = sharkiq.serial_number
 
     def clean_spot(self, **kwargs):
         """Clean a spot. Not yet implemented."""
@@ -101,17 +100,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def is_online(self) -> bool:
         """Tell us if the device is online."""
-        return self.coordinator.device_is_online(self.sharkiq.serial_number)
-
-    @property
-    def name(self) -> str:
-        """Device name."""
-        return self.sharkiq.name
-
-    @property
-    def serial_number(self) -> str:
-        """Vacuum API serial number (DSN)."""
-        return self.sharkiq.serial_number
+        return self.coordinator.device_is_online(self._serial_number)
 
     @property
     def model(self) -> str:
@@ -123,25 +112,15 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info dictionary."""
-        return {
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "name": self.name,
-            "manufacturer": SHARK,
-            "model": self.model,
-            "sw_version": self.sharkiq.get_property_value(
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._serial_number)},
+            manufacturer=SHARK,
+            model=self.model,
+            name=self.name,
+            sw_version=self.sharkiq.get_property_value(
                 Properties.ROBOT_FIRMWARE_VERSION
             ),
-        }
-
-    @property
-    def supported_features(self) -> int:
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_SHARKIQ
-
-    @property
-    def is_docked(self) -> bool | None:
-        """Is vacuum docked."""
-        return self.sharkiq.get_property_value(Properties.DOCKED_STATUS)
+        )
 
     @property
     def error_code(self) -> int | None:
@@ -175,14 +154,9 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         In the app, these are (usually) handled by showing the robot as stopped and sending the
         user a notification.
         """
-        if self.is_docked:
+        if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return STATE_DOCKED
         return self.operating_mode
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the vacuum cleaner."""
-        return self.serial_number
 
     @property
     def available(self) -> bool:
@@ -191,7 +165,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return self.coordinator.last_update_success and self.is_online
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Get the current battery level."""
         return self.sharkiq.get_property_value(Properties.BATTERY_CAPACITY)
 
@@ -220,7 +194,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         await self.sharkiq.async_find_device()
 
     @property
-    def fan_speed(self) -> str:
+    def fan_speed(self) -> str | None:
         """Return the current fan speed."""
         fan_speed = None
         speed_level = self.sharkiq.get_property_value(Properties.POWER_MODE)
@@ -235,11 +209,6 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
             Properties.POWER_MODE, FAN_SPEEDS_MAP.get(fan_speed.capitalize())
         )
         await self.coordinator.async_refresh()
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(FAN_SPEEDS_MAP)
 
     # Various attributes we want to expose
     @property

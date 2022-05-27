@@ -159,7 +159,7 @@ remote_learn_command:
 
 remote_set_led_on:
   name: Remote set LED on
-  description: 'Turn on blue LED.'
+  description: "Turn on blue LED."
   target:
     entity:
       integration: xiaomi_miio
@@ -167,7 +167,7 @@ remote_set_led_on:
 
 remote_set_led_off:
   name: Remote set LED off
-  description: 'Turn off blue LED.'
+  description: "Turn off blue LED."
   target:
     entity:
       integration: xiaomi_miio
@@ -231,8 +231,8 @@ switch_set_power_mode:
       selector:
         select:
           options:
-            - 'green'
-            - 'normal'
+            - "green"
+            - "normal"
 
 vacuum_remote_control_start:
   name: Vacuum remote control start
@@ -273,7 +273,7 @@ vacuum_remote_control_move:
         number:
           min: -179
           max: 179
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     duration:
       name: Duration
       description: Duration of the movement.
@@ -306,7 +306,7 @@ vacuum_remote_control_move_step:
         number:
           min: -179
           max: 179
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     duration:
       name: Duration
       description: Duration of the movement.

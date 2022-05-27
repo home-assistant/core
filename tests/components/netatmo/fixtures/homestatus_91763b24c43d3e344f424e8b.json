@@ -1,0 +1,110 @@
+{
+  "status": "ok",
+  "time_server": 1559292039,
+  "body": {
+    "home": {
+      "modules": [
+        {
+          "id": "12:34:56:00:f1:62",
+          "type": "NACamera",
+          "monitoring": "on",
+          "sd_status": 4,
+          "alim_status": 2,
+          "locked": false,
+          "vpn_url": "https://prodvpn-eu-2.netatmo.net/restricted/10.255.123.45/609e27de5699fb18147ab47d06846631/MTRPn_BeWCav5RBq4U1OMDruTW4dkQ0NuMwNDAw11g,,",
+          "is_local": true
+        },
+        {
+          "id": "12:34:56:00:fa:d0",
+          "type": "NAPlug",
+          "firmware_revision": 174,
+          "rf_strength": 107,
+          "wifi_strength": 42
+        },
+        {
+          "id": "12:34:56:00:01:ae",
+          "reachable": true,
+          "type": "NATherm1",
+          "firmware_revision": 65,
+          "rf_strength": 58,
+          "boiler_valve_comfort_boost": false,
+          "boiler_status": false,
+          "anticipating": false,
+          "bridge": "12:34:56:00:fa:d0",
+          "battery_state": "high"
+        },
+        {
+          "id": "12:34:56:03:a5:54",
+          "reachable": true,
+          "type": "NRV",
+          "firmware_revision": 79,
+          "rf_strength": 51,
+          "bridge": "12:34:56:00:fa:d0",
+          "battery_state": "full"
+        },
+        {
+          "id": "12:34:56:03:a0:ac",
+          "reachable": true,
+          "type": "NRV",
+          "firmware_revision": 79,
+          "rf_strength": 59,
+          "bridge": "12:34:56:00:fa:d0",
+          "battery_state": "full"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "2746182631",
+          "reachable": true,
+          "therm_measured_temperature": 19.8,
+          "therm_setpoint_temperature": 12,
+          "therm_setpoint_mode": "schedule",
+          "therm_setpoint_start_time": 1559229567,
+          "therm_setpoint_end_time": 0
+        },
+        {
+          "id": "2940411577",
+          "reachable": true,
+          "therm_measured_temperature": 5,
+          "heating_power_request": 1,
+          "therm_setpoint_temperature": 7,
+          "therm_setpoint_mode": "away",
+          "therm_setpoint_start_time": 0,
+          "therm_setpoint_end_time": 0,
+          "anticipating": false,
+          "open_window": false
+        },
+        {
+          "id": "2833524037",
+          "reachable": true,
+          "therm_measured_temperature": 24.5,
+          "heating_power_request": 0,
+          "therm_setpoint_temperature": 7,
+          "therm_setpoint_mode": "hg",
+          "therm_setpoint_start_time": 0,
+          "therm_setpoint_end_time": 0,
+          "anticipating": false,
+          "open_window": false
+        }
+      ],
+      "id": "91763b24c43d3e344f424e8b",
+      "persons": [
+        {
+          "id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+          "last_seen": 1557071156,
+          "out_of_sight": true
+        },
+        {
+          "id": "91827375-7e04-5298-83ae-a0cb8372dff2",
+          "last_seen": 1559282761,
+          "out_of_sight": false
+        },
+        {
+          "id": "91827376-7e04-5298-83af-a0cb8372dff3",
+          "last_seen": 1559224132,
+          "out_of_sight": true
+        }
+      ]
+    }
+  }
+}

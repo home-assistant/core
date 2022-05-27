@@ -1,0 +1,10 @@
+{
+    "config": {
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Haluatko lis\u00e4t\u00e4 laitteen {device} Home Assistantiin?"
+            }
+        }
+    }
+}

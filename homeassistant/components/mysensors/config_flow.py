@@ -1,7 +1,6 @@
 """Config flow for MySensors."""
 from __future__ import annotations
 
-import logging
 import os
 from typing import Any
 
@@ -18,35 +17,30 @@ from homeassistant.components.mqtt import (
     valid_publish_topic,
     valid_subscribe_topic,
 )
-from homeassistant.components.mysensors import (
-    CONF_DEVICE,
-    DEFAULT_BAUD_RATE,
-    DEFAULT_TCP_PORT,
-    is_persistence_file,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
+from . import DEFAULT_BAUD_RATE, DEFAULT_TCP_PORT, DEFAULT_VERSION, is_persistence_file
 from .const import (
     CONF_BAUD_RATE,
+    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_ALL,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
     CONF_PERSISTENCE_FILE,
+    CONF_RETAIN,
     CONF_TCP_PORT,
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
+    CONF_VERSION,
     DOMAIN,
     ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _get_schema_common(user_input: dict[str, str]) -> dict:
@@ -315,7 +309,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(
-                    verification_func, user_input.get(CONF_DEVICE)
+                    verification_func, user_input[CONF_DEVICE]
                 )
             except vol.Invalid:
                 errors[CONF_DEVICE] = (

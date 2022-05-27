@@ -4,10 +4,10 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from forecast_solar import ForecastSolar
+from forecast_solar import Estimate, ForecastSolar
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -16,20 +16,24 @@ from .const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Forecast.Solar from a config entry."""
-    api_key = entry.options.get(CONF_API_KEY)
     # Our option flow may cause it to be an empty string,
     # this if statement is here to catch that.
-    if not api_key:
-        api_key = None
+    api_key = entry.options.get(CONF_API_KEY) or None
+
+    if (
+        inverter_size := entry.options.get(CONF_INVERTER_SIZE)
+    ) is not None and inverter_size > 0:
+        inverter_size = inverter_size / 1000
 
     session = async_get_clientsession(hass)
     forecast = ForecastSolar(
@@ -41,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         azimuth=(entry.options[CONF_AZIMUTH] - 180),
         kwp=(entry.options[CONF_MODULES_POWER] / 1000),
         damping=entry.options.get(CONF_DAMPING, 0),
+        inverter=inverter_size,
     )
 
     # Free account have a resolution of 1 hour, using that as the default
@@ -49,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if api_key is not None:
         update_interval = timedelta(minutes=30)
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator[Estimate] = DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,

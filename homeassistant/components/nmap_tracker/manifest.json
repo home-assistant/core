@@ -8,7 +8,8 @@
     "getmac==0.8.2",
     "mac-vendor-lookup==0.1.11"
   ],
-  "codeowners": ["@bdraco"],
+  "codeowners": [],
   "iot_class": "local_polling",
-  "config_flow": true
+  "config_flow": true,
+  "loggers": ["nmap"]
 }

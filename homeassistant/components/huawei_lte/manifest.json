@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huawei_lte",
   "requirements": [
-    "huawei-lte-api==1.4.18",
+    "huawei-lte-api==1.6.0",
     "stringcase==1.2.0",
     "url-normalize==1.4.1"
   ],
@@ -15,5 +15,6 @@
     }
   ],
   "codeowners": ["@scop", "@fphammerle"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["huawei_lte_api"]
 }

@@ -1,5 +1,9 @@
 """Provide common test tools for Z-Wave JS."""
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
+BATTERY_SENSOR = "sensor.multisensor_6_battery_level"
+TAMPER_SENSOR = (
+    "binary_sensor.multisensor_6_home_security_tampering_product_cover_removed"
+)
 HUMIDITY_SENSOR = "sensor.multisensor_6_humidity"
 POWER_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
 ENERGY_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2"
@@ -33,5 +37,7 @@ ID_LOCK_CONFIG_PARAMETER_SENSOR = (
 ZEN_31_ENTITY = "light.kitchen_under_cabinet_lights"
 METER_ENERGY_SENSOR = "sensor.smart_switch_6_electric_consumed_kwh"
 METER_VOLTAGE_SENSOR = "sensor.smart_switch_6_electric_consumed_v"
+HUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_humidifier"
+DEHUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_dehumidifier"
 
 PROPERTY_ULTRAVIOLET = "Ultraviolet"

@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
-from homeassistant.components.cloud.const import PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE
+from homeassistant.components.cloud.const import (
+    PREF_ALEXA_REPORT_STATE,
+    PREF_ENABLE_ALEXA,
+    PREF_ENABLE_GOOGLE,
+)
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
@@ -47,7 +51,7 @@ async def test_handler_alexa(hass):
         },
     )
 
-    mock_cloud_prefs(hass)
+    mock_cloud_prefs(hass, {PREF_ALEXA_REPORT_STATE: False})
     cloud = hass.data["cloud"]
 
     resp = await cloud.client.async_alexa_message(

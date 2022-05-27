@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Anda hanya dapat mengonfigurasi satu akun Soma.",
+            "already_setup": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
-            "connection_error": "Gagal menyambungkan ke SOMA Connect.",
+            "connection_error": "Gagal terhubung",
             "missing_configuration": "Komponen Soma tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "result_error": "SOMA Connect merespons dengan status kesalahan."
         },
         "create_entry": {
-            "default": "Berhasil mengautentikasi dengan Soma."
+            "default": "Berhasil diautentikasi"
         },
         "step": {
             "user": {

@@ -7,6 +7,7 @@ from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
 import pytest
 
+from homeassistant.components import zeroconf
 from homeassistant.components.daikin.const import KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
@@ -119,7 +120,19 @@ async def test_api_password_abort(hass):
 @pytest.mark.parametrize(
     "source, data, unique_id",
     [
-        (SOURCE_ZEROCONF, {CONF_HOST: HOST}, MAC),
+        (
+            SOURCE_ZEROCONF,
+            zeroconf.ZeroconfServiceInfo(
+                host=HOST,
+                addresses=[HOST],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+            MAC,
+        ),
     ],
 )
 async def test_discovery_zeroconf(

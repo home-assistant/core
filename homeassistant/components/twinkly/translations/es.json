@@ -7,12 +7,13 @@
             "cannot_connect": "No se pudo conectar"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres configurar {name} - {model} ({host})?"
+            },
             "user": {
                 "data": {
-                    "host": "Host (o direcci\u00f3n IP) de tu dispositivo Twinkly"
-                },
-                "description": "Configura tu tira led Twinkly",
-                "title": "Twinkly"
+                    "host": "Host"
+                }
             }
         }
     }

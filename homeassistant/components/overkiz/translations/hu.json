@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "reauth_wrong_account": "Ezt csak ugyanazzal az Overkiz fi\u00f3kkal \u00e9s hubbal hiteles\u00edtheti \u00fajra."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "server_in_maintenance": "A szerver karbantart\u00e1s miatt nem el\u00e9rhet\u0151",
+            "too_many_attempts": "T\u00fal sok pr\u00f3b\u00e1lkoz\u00e1s \u00e9rv\u00e9nytelen tokennel, ideiglenesen kitiltva",
+            "too_many_requests": "T\u00fal sok a k\u00e9r\u00e9s, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "\u00c1tj\u00e1r\u00f3: {gateway_id}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "hub": "Hub",
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Az Overkiz platformot k\u00fcl\u00f6nb\u00f6z\u0151 gy\u00e1rt\u00f3k haszn\u00e1lj\u00e1k, mint p\u00e9ld\u00e1ul a Somfy (Connexoon / TaHoma), a Hitachi (Hi Kumo), a Rexel (Energeasy Connect) \u00e9s az Atlantic (Cozytouch). Adja meg az alkalmaz\u00e1s hiteles\u00edt\u0151 adatait, \u00e9s v\u00e1lassza ki a hubot."
+            }
+        }
+    }
+}

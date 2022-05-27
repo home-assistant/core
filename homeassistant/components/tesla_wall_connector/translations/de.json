@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{serial_number} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Tesla Wall Connector konfigurieren"
+            }
+        }
+    }
+}

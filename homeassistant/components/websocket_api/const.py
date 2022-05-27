@@ -2,23 +2,24 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from concurrent import futures
 from functools import partial
 import json
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 if TYPE_CHECKING:
-    from .connection import ActiveConnection
+    from .connection import ActiveConnection  # noqa: F401
 
 
 WebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", Dict[str, Any]], None
+    [HomeAssistant, "ActiveConnection", dict[str, Any]], None
 ]
 AsyncWebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", Dict[str, Any]], Awaitable[None]
+    [HomeAssistant, "ActiveConnection", dict[str, Any]], Awaitable[None]
 ]
 
 DOMAIN: Final = "websocket_api"
@@ -52,4 +53,12 @@ SIGNAL_WEBSOCKET_DISCONNECTED: Final = "websocket_disconnected"
 # Data used to store the current connection list
 DATA_CONNECTIONS: Final = f"{DOMAIN}.connections"
 
-JSON_DUMP: Final = partial(json.dumps, cls=JSONEncoder, allow_nan=False)
+JSON_DUMP: Final = partial(
+    json.dumps, cls=JSONEncoder, allow_nan=False, separators=(",", ":")
+)
+
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"

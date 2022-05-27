@@ -11,9 +11,13 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
 )
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -97,10 +101,62 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in expected_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert_lists_same(actions, expected_actions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected actions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=SUPPORT_CLOSE,
+    )
+    expected_actions = []
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for action in ["close"]
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
@@ -109,7 +165,21 @@ async def test_get_action_capabilities(
 ):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockCover(
+            name="Set position cover",
+            is_on=True,
+            unique_id="unique_set_pos_cover",
+            current_cover_position=50,
+            supported_features=SUPPORT_OPEN
+            | SUPPORT_CLOSE
+            | SUPPORT_STOP
+            | SUPPORT_OPEN_TILT
+            | SUPPORT_CLOSE_TILT
+            | SUPPORT_STOP_TILT,
+        ),
+    )
     ent = platform.ENTITIES[0]
 
     config_entry = MockConfigEntry(domain="test", data={})
@@ -125,11 +195,15 @@ async def test_get_action_capabilities(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 3  # open, close, stop
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert len(actions) == 5  # open, close, open_tilt, close_tilt
+    action_types = {action["type"] for action in actions}
+    assert action_types == {"open", "close", "stop", "open_tilt", "close_tilt"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == {"extra_fields": []}
 
@@ -167,11 +241,15 @@ async def test_get_action_capabilities_set_pos(
             }
         ]
     }
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 1  # set_position
+    action_types = {action["type"] for action in actions}
+    assert action_types == {"set_position"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         if action["type"] == "set_position":
             assert capabilities == expected_capabilities
@@ -185,7 +263,7 @@ async def test_get_action_capabilities_set_tilt_pos(
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
-    ent = platform.ENTITIES[2]
+    ent = platform.ENTITIES[3]
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -212,11 +290,15 @@ async def test_get_action_capabilities_set_tilt_pos(
             }
         ]
     }
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 4  # open, close, stop, set_tilt_position
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert len(actions) == 3
+    action_types = {action["type"] for action in actions}
+    assert action_types == {"open", "close", "set_tilt_position"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         if action["type"] == "set_tilt_position":
             assert capabilities == expected_capabilities

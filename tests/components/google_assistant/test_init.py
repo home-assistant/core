@@ -1,4 +1,6 @@
 """The tests for google-assistant init."""
+from http import HTTPStatus
+
 from homeassistant.components import google_assistant as ga
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
@@ -10,11 +12,11 @@ async def test_request_sync_service(aioclient_mock, hass):
     """Test that it posts to the request_sync url."""
     aioclient_mock.post(
         ga.const.HOMEGRAPH_TOKEN_URL,
-        status=200,
+        status=HTTPStatus.OK,
         json={"access_token": "1234", "expires_in": 3600},
     )
 
-    aioclient_mock.post(ga.const.REQUEST_SYNC_BASE_URL, status=200)
+    aioclient_mock.post(ga.const.REQUEST_SYNC_BASE_URL, status=HTTPStatus.OK)
 
     await async_setup_component(
         hass,

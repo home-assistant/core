@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "media_player": {
+                "data": {
+                    "entities": "Membros",
+                    "name": "Nome"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Fechada",

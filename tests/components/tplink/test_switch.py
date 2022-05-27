@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from kasa import SmartDeviceException
+import pytest
 
 from homeassistant.components import tplink
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -12,10 +13,11 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from . import (
     MAC_ADDRESS,
+    _mocked_dimmer,
     _mocked_plug,
     _mocked_strip,
     _patch_discovery,
@@ -51,6 +53,44 @@ async def test_plug(hass: HomeAssistant) -> None:
     )
     plug.turn_on.assert_called_once()
     plug.turn_on.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "dev, domain",
+    [
+        (_mocked_plug(), "switch"),
+        (_mocked_strip(), "switch"),
+        (_mocked_dimmer(), "light"),
+    ],
+)
+async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
+    """Test LED setting for plugs, strips and dimmers."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    with _patch_discovery(device=dev), _patch_single_discovery(device=dev):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_name = slugify(dev.alias)
+
+    led_entity_id = f"switch.{entity_name}_led"
+    led_state = hass.states.get(led_entity_id)
+    assert led_state.state == STATE_ON
+    assert led_state.name == f"{dev.alias} LED"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    dev.set_led.assert_called_once_with(False)
+    dev.set_led.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    dev.set_led.assert_called_once_with(True)
+    dev.set_led.reset_mock()
 
 
 async def test_plug_unique_id(hass: HomeAssistant) -> None:

@@ -11,6 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
@@ -49,18 +50,21 @@ SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
         name="Tracker Buzzer",
         icon="mdi:volume-high",
         method="async_set_buzzer",
+        entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LED,
         name="Tracker LED",
         icon="mdi:led-on",
         method="async_set_led",
+        entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LIVE_TRACKING,
         name="Live Tracking",
         icon="mdi:map-marker-path",
         method="async_set_live_tracking",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

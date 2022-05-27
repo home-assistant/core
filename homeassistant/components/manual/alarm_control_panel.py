@@ -1,4 +1,6 @@
 """Support for manual alarms."""
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
@@ -8,12 +10,7 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     CONF_ARMING_TIME,
@@ -33,10 +30,12 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,7 +152,12 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the manual alarm platform."""
     add_entities(
         [
@@ -253,12 +257,12 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_ARM_VACATION
-            | SUPPORT_ALARM_TRIGGER
-            | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+            AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.ARM_VACATION
+            | AlarmControlPanelEntityFeature.TRIGGER
+            | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
         )
 
     @property
@@ -290,8 +294,8 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+            return alarm.CodeFormat.NUMBER
+        return alarm.CodeFormat.TEXT
 
     @property
     def code_arm_required(self):
@@ -427,8 +431,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             if (
                 state.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING)
                 and hasattr(state, "attributes")

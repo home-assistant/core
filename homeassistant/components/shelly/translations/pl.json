@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "firmware_not_fully_provisioned": "Urz\u0105dzenie nie jest w pe\u0142ni udost\u0119pnione. Skontaktuj si\u0119 z pomoc\u0105 techniczn\u0105 Shelly.",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -37,11 +38,16 @@
             "button4": "Czwarty przycisk"
         },
         "trigger_type": {
+            "btn_down": "przycisk {subtype} zostanie wci\u015bni\u0119ty",
+            "btn_up": "przycisk {subtype} zostanie puszczony",
             "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
-            "long": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "double_push": "przycisk {subtype} zostanie dwukrotnie naci\u015bni\u0119ty",
+            "long": "przycisk {subtype} zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "long_push": "przycisk {subtype} zostanie d\u0142ugo naci\u015bni\u0119ty",
             "long_single": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty, a nast\u0119pnie pojedynczo naci\u015bni\u0119ty",
             "single": "przycisk \"{subtype}\" zostanie pojedynczo naci\u015bni\u0119ty",
             "single_long": "przycisk \"{subtype}\" pojedynczo naci\u015bni\u0119ty, a nast\u0119pnie d\u0142ugo naci\u015bni\u0119ty",
+            "single_push": "przycisk {subtype} zostanie pojedynczo naci\u015bni\u0119ty",
             "triple": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
     }

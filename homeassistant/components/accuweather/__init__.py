@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
@@ -11,7 +11,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,7 +20,7 @@ from .const import ATTR_FORECAST, CONF_FORECAST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -63,7 +63,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
+class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching AccuWeather data API."""
 
     def __init__(

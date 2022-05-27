@@ -1,6 +1,10 @@
 """Provides device triggers for binary sensors."""
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
@@ -8,38 +12,12 @@ from homeassistant.components.device_automation.const import (
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_MOVING,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PRESENCE,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_UPDATE,
-    DEVICE_CLASS_VIBRATION,
-    DEVICE_CLASS_WINDOW,
-    DOMAIN,
-)
+from . import DOMAIN, BinarySensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -49,6 +27,8 @@ CONF_BAT_LOW = "bat_low"
 CONF_NOT_BAT_LOW = "not_bat_low"
 CONF_CHARGING = "charging"
 CONF_NOT_CHARGING = "not_charging"
+CONF_CO = "co"
+CONF_NO_CO = "no_co"
 CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
@@ -77,12 +57,16 @@ CONF_PRESENT = "present"
 CONF_NOT_PRESENT = "not_present"
 CONF_PROBLEM = "problem"
 CONF_NO_PROBLEM = "no_problem"
+CONF_RUNNING = "running"
+CONF_NOT_RUNNING = "not_running"
 CONF_UNSAFE = "unsafe"
 CONF_NOT_UNSAFE = "not_unsafe"
 CONF_SMOKE = "smoke"
 CONF_NO_SMOKE = "no_smoke"
 CONF_SOUND = "sound"
 CONF_NO_SOUND = "no_sound"
+CONF_TAMPERED = "tampered"
+CONF_NOT_TAMPERED = "not_tampered"
 CONF_UPDATE = "update"
 CONF_NO_UPDATE = "no_update"
 CONF_VIBRATION = "vibration"
@@ -93,6 +77,7 @@ CONF_NOT_OPENED = "not_opened"
 
 TURNED_ON = [
     CONF_BAT_LOW,
+    CONF_CO,
     CONF_COLD,
     CONF_CONNECTED,
     CONF_GAS,
@@ -108,11 +93,13 @@ TURNED_ON = [
     CONF_POWERED,
     CONF_PRESENT,
     CONF_PROBLEM,
+    CONF_RUNNING,
     CONF_SMOKE,
     CONF_SOUND,
     CONF_UNSAFE,
     CONF_UPDATE,
     CONF_VIBRATION,
+    CONF_TAMPERED,
     CONF_TURNED_ON,
 ]
 
@@ -129,11 +116,14 @@ TURNED_OFF = [
     CONF_NOT_PLUGGED_IN,
     CONF_NOT_POWERED,
     CONF_NOT_PRESENT,
+    CONF_NOT_TAMPERED,
     CONF_NOT_UNSAFE,
+    CONF_NO_CO,
     CONF_NO_GAS,
     CONF_NO_LIGHT,
     CONF_NO_MOTION,
     CONF_NO_PROBLEM,
+    CONF_NOT_RUNNING,
     CONF_NO_SMOKE,
     CONF_NO_SOUND,
     CONF_NO_VIBRATION,
@@ -142,44 +132,122 @@ TURNED_OFF = [
 
 
 ENTITY_TRIGGERS = {
-    DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BAT_LOW}, {CONF_TYPE: CONF_NOT_BAT_LOW}],
-    DEVICE_CLASS_BATTERY_CHARGING: [
+    BinarySensorDeviceClass.BATTERY: [
+        {CONF_TYPE: CONF_BAT_LOW},
+        {CONF_TYPE: CONF_NOT_BAT_LOW},
+    ],
+    BinarySensorDeviceClass.BATTERY_CHARGING: [
         {CONF_TYPE: CONF_CHARGING},
         {CONF_TYPE: CONF_NOT_CHARGING},
     ],
-    DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_COLD}, {CONF_TYPE: CONF_NOT_COLD}],
-    DEVICE_CLASS_CONNECTIVITY: [
+    BinarySensorDeviceClass.CO: [
+        {CONF_TYPE: CONF_CO},
+        {CONF_TYPE: CONF_NO_CO},
+    ],
+    BinarySensorDeviceClass.COLD: [
+        {CONF_TYPE: CONF_COLD},
+        {CONF_TYPE: CONF_NOT_COLD},
+    ],
+    BinarySensorDeviceClass.CONNECTIVITY: [
         {CONF_TYPE: CONF_CONNECTED},
         {CONF_TYPE: CONF_NOT_CONNECTED},
     ],
-    DEVICE_CLASS_DOOR: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_GARAGE_DOOR: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_GAS}, {CONF_TYPE: CONF_NO_GAS}],
-    DEVICE_CLASS_HEAT: [{CONF_TYPE: CONF_HOT}, {CONF_TYPE: CONF_NOT_HOT}],
-    DEVICE_CLASS_LIGHT: [{CONF_TYPE: CONF_LIGHT}, {CONF_TYPE: CONF_NO_LIGHT}],
-    DEVICE_CLASS_LOCK: [{CONF_TYPE: CONF_LOCKED}, {CONF_TYPE: CONF_NOT_LOCKED}],
-    DEVICE_CLASS_MOISTURE: [{CONF_TYPE: CONF_MOIST}, {CONF_TYPE: CONF_NOT_MOIST}],
-    DEVICE_CLASS_MOTION: [{CONF_TYPE: CONF_MOTION}, {CONF_TYPE: CONF_NO_MOTION}],
-    DEVICE_CLASS_MOVING: [{CONF_TYPE: CONF_MOVING}, {CONF_TYPE: CONF_NOT_MOVING}],
-    DEVICE_CLASS_OCCUPANCY: [
+    BinarySensorDeviceClass.DOOR: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.GARAGE_DOOR: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.GAS: [
+        {CONF_TYPE: CONF_GAS},
+        {CONF_TYPE: CONF_NO_GAS},
+    ],
+    BinarySensorDeviceClass.HEAT: [
+        {CONF_TYPE: CONF_HOT},
+        {CONF_TYPE: CONF_NOT_HOT},
+    ],
+    BinarySensorDeviceClass.LIGHT: [
+        {CONF_TYPE: CONF_LIGHT},
+        {CONF_TYPE: CONF_NO_LIGHT},
+    ],
+    BinarySensorDeviceClass.LOCK: [
+        {CONF_TYPE: CONF_LOCKED},
+        {CONF_TYPE: CONF_NOT_LOCKED},
+    ],
+    BinarySensorDeviceClass.MOISTURE: [
+        {CONF_TYPE: CONF_MOIST},
+        {CONF_TYPE: CONF_NOT_MOIST},
+    ],
+    BinarySensorDeviceClass.MOTION: [
+        {CONF_TYPE: CONF_MOTION},
+        {CONF_TYPE: CONF_NO_MOTION},
+    ],
+    BinarySensorDeviceClass.MOVING: [
+        {CONF_TYPE: CONF_MOVING},
+        {CONF_TYPE: CONF_NOT_MOVING},
+    ],
+    BinarySensorDeviceClass.OCCUPANCY: [
         {CONF_TYPE: CONF_OCCUPIED},
         {CONF_TYPE: CONF_NOT_OCCUPIED},
     ],
-    DEVICE_CLASS_OPENING: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_PLUG: [{CONF_TYPE: CONF_PLUGGED_IN}, {CONF_TYPE: CONF_NOT_PLUGGED_IN}],
-    DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWERED}, {CONF_TYPE: CONF_NOT_POWERED}],
-    DEVICE_CLASS_PRESENCE: [{CONF_TYPE: CONF_PRESENT}, {CONF_TYPE: CONF_NOT_PRESENT}],
-    DEVICE_CLASS_PROBLEM: [{CONF_TYPE: CONF_PROBLEM}, {CONF_TYPE: CONF_NO_PROBLEM}],
-    DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_UNSAFE}, {CONF_TYPE: CONF_NOT_UNSAFE}],
-    DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_SMOKE}, {CONF_TYPE: CONF_NO_SMOKE}],
-    DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_SOUND}, {CONF_TYPE: CONF_NO_SOUND}],
-    DEVICE_CLASS_UPDATE: [{CONF_TYPE: CONF_UPDATE}, {CONF_TYPE: CONF_NO_UPDATE}],
-    DEVICE_CLASS_VIBRATION: [
+    BinarySensorDeviceClass.OPENING: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.PLUG: [
+        {CONF_TYPE: CONF_PLUGGED_IN},
+        {CONF_TYPE: CONF_NOT_PLUGGED_IN},
+    ],
+    BinarySensorDeviceClass.POWER: [
+        {CONF_TYPE: CONF_POWERED},
+        {CONF_TYPE: CONF_NOT_POWERED},
+    ],
+    BinarySensorDeviceClass.PRESENCE: [
+        {CONF_TYPE: CONF_PRESENT},
+        {CONF_TYPE: CONF_NOT_PRESENT},
+    ],
+    BinarySensorDeviceClass.PROBLEM: [
+        {CONF_TYPE: CONF_PROBLEM},
+        {CONF_TYPE: CONF_NO_PROBLEM},
+    ],
+    BinarySensorDeviceClass.RUNNING: [
+        {CONF_TYPE: CONF_RUNNING},
+        {CONF_TYPE: CONF_NOT_RUNNING},
+    ],
+    BinarySensorDeviceClass.SAFETY: [
+        {CONF_TYPE: CONF_UNSAFE},
+        {CONF_TYPE: CONF_NOT_UNSAFE},
+    ],
+    BinarySensorDeviceClass.SMOKE: [
+        {CONF_TYPE: CONF_SMOKE},
+        {CONF_TYPE: CONF_NO_SMOKE},
+    ],
+    BinarySensorDeviceClass.SOUND: [
+        {CONF_TYPE: CONF_SOUND},
+        {CONF_TYPE: CONF_NO_SOUND},
+    ],
+    BinarySensorDeviceClass.UPDATE: [
+        {CONF_TYPE: CONF_UPDATE},
+        {CONF_TYPE: CONF_NO_UPDATE},
+    ],
+    BinarySensorDeviceClass.TAMPER: [
+        {CONF_TYPE: CONF_TAMPERED},
+        {CONF_TYPE: CONF_NOT_TAMPERED},
+    ],
+    BinarySensorDeviceClass.VIBRATION: [
         {CONF_TYPE: CONF_VIBRATION},
         {CONF_TYPE: CONF_NO_VIBRATION},
     ],
-    DEVICE_CLASS_WINDOW: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
-    DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_TURNED_ON}, {CONF_TYPE: CONF_TURNED_OFF}],
+    BinarySensorDeviceClass.WINDOW: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    DEVICE_CLASS_NONE: [
+        {CONF_TYPE: CONF_TURNED_ON},
+        {CONF_TYPE: CONF_TURNED_OFF},
+    ],
 }
 
 
@@ -192,7 +260,12 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
@@ -208,20 +281,22 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers = []
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    triggers: list[dict[str, str]] = []
+    entity_registry = er.async_get(hass)
 
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == DOMAIN
     ]
 
@@ -246,7 +321,9 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

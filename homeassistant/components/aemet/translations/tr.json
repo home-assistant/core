@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam",
+                    "name": "Entegrasyonun ad\u0131"
+                },
+                "description": "API anahtar\u0131 olu\u015fturmak i\u00e7in https://opendata.aemet.es/centrodedescargas/altaUsuario adresine gidin."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "AEMET hava istasyonlar\u0131ndan veri toplay\u0131n"
+                }
+            }
+        }
+    }
+}

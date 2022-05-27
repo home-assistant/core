@@ -1,4 +1,5 @@
 """Test core config."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -8,8 +9,6 @@ from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.util import dt as dt_util, location
-
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 @pytest.fixture
@@ -33,7 +32,7 @@ async def test_validate_config_ok(hass, hass_client):
     ):
         resp = await client.post("/api/config/core/check_config")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["result"] == "valid"
     assert result["errors"] is None
@@ -44,7 +43,7 @@ async def test_validate_config_ok(hass, hass_client):
     ):
         resp = await client.post("/api/config/core/check_config")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["result"] == "invalid"
     assert result["errors"] == "beer"

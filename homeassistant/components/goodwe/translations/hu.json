@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve"
+        },
+        "error": {
+            "connection_error": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm"
+                },
+                "description": "Csatlakoz\u00e1s az inverterhez",
+                "title": "GoodWe inverter"
+            }
+        }
+    }
+}

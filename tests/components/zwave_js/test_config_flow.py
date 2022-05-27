@@ -7,7 +7,10 @@ import pytest
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
+from homeassistant.components import usb
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
@@ -20,32 +23,32 @@ ADDON_DISCOVERY_INFO = {
 }
 
 
-USB_DISCOVERY_INFO = {
-    "device": "/dev/zwave",
-    "pid": "AAAA",
-    "vid": "AAAA",
-    "serial_number": "1234",
-    "description": "zwave radio",
-    "manufacturer": "test",
-}
+USB_DISCOVERY_INFO = usb.UsbServiceInfo(
+    device="/dev/zwave",
+    pid="AAAA",
+    vid="AAAA",
+    serial_number="1234",
+    description="zwave radio",
+    manufacturer="test",
+)
 
-NORTEK_ZIGBEE_DISCOVERY_INFO = {
-    "device": "/dev/zigbee",
-    "pid": "8A2A",
-    "vid": "10C4",
-    "serial_number": "1234",
-    "description": "nortek zigbee radio",
-    "manufacturer": "nortek",
-}
+NORTEK_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+    device="/dev/zigbee",
+    pid="8A2A",
+    vid="10C4",
+    serial_number="1234",
+    description="nortek zigbee radio",
+    manufacturer="nortek",
+)
 
-CP2652_ZIGBEE_DISCOVERY_INFO = {
-    "device": "/dev/zigbee",
-    "pid": "EA60",
-    "vid": "10C4",
-    "serial_number": "",
-    "description": "cp2652",
-    "manufacturer": "generic",
-}
+CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+    device="/dev/zigbee",
+    pid="EA60",
+    vid="10C4",
+    serial_number="",
+    description="cp2652",
+    manufacturer="generic",
+)
 
 
 @pytest.fixture(name="setup_entry")
@@ -167,7 +170,7 @@ async def test_manual(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == 1234
+    assert result2["result"].unique_id == "1234"
 
 
 async def slow_server_version(*args):
@@ -241,7 +244,7 @@ async def test_manual_already_configured(hass):
             "integration_created_addon": True,
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -281,7 +284,7 @@ async def test_supervisor_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     with patch(
@@ -321,7 +324,7 @@ async def test_supervisor_discovery_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "abort"
@@ -343,7 +346,7 @@ async def test_clean_discovery_on_user_create(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "form"
@@ -399,14 +402,17 @@ async def test_abort_discovery_with_existing_entry(
     """Test discovery flow is aborted if an entry already exists."""
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
+        domain=DOMAIN,
+        data={"url": "ws://localhost:3000"},
+        title=TITLE,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "abort"
@@ -430,7 +436,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result2["type"] == "abort"
@@ -474,7 +480,6 @@ async def test_usb_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": "/test",
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -487,7 +492,7 @@ async def test_usb_discovery(
         "core_zwave_js",
         {
             "options": {
-                "device": "/test",
+                "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -515,7 +520,7 @@ async def test_usb_discovery(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": "/test",
+        "usb_path": USB_DISCOVERY_INFO.device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -556,7 +561,6 @@ async def test_usb_discovery_addon_not_running(
     # Make sure the discovered usb device is preferred.
     data_schema = result["data_schema"]
     assert data_schema({}) == {
-        "usb_path": USB_DISCOVERY_INFO["device"],
         "s0_legacy_key": "",
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
@@ -566,7 +570,6 @@ async def test_usb_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": USB_DISCOVERY_INFO["device"],
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -579,7 +582,7 @@ async def test_usb_discovery_addon_not_running(
         "core_zwave_js",
         {
             "options": {
-                "device": USB_DISCOVERY_INFO["device"],
+                "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -607,7 +610,7 @@ async def test_usb_discovery_addon_not_running(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": USB_DISCOVERY_INFO["device"],
+        "usb_path": USB_DISCOVERY_INFO.device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -628,7 +631,7 @@ async def test_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -710,7 +713,7 @@ async def test_discovery_addon_not_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -791,7 +794,7 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "form"
@@ -809,7 +812,10 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
 async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_options):
     """Test usb discovery flow is aborted when there is an existing entry."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
+        domain=DOMAIN,
+        data={"url": "ws://localhost:3000"},
+        title=TITLE,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -1040,9 +1046,10 @@ async def test_addon_running_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id=1234,  # Unique ID is purposely set to int to test migration logic
     )
     entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -1371,7 +1378,7 @@ async def test_addon_installed_already_configured(
             "s2_unauthenticated_key": "old987",
         },
         title=TITLE,
-        unique_id=1234,
+        unique_id="1234",
     )
     entry.add_to_hass(hass)
 
@@ -1558,7 +1565,7 @@ async def test_install_addon_failure(hass, supervisor, addon_installed, install_
 async def test_options_manual(hass, client, integration):
     """Test manual settings in options flow."""
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
@@ -1603,7 +1610,7 @@ async def test_options_manual_different_device(hass, integration):
 async def test_options_not_addon(hass, client, supervisor, integration):
     """Test options flow and opting out of add-on on Supervisor."""
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
@@ -1704,7 +1711,7 @@ async def test_options_addon_running(
     """Test options flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -1814,7 +1821,7 @@ async def test_options_addon_running_no_changes(
     """Test options flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -1927,7 +1934,7 @@ async def test_options_different_device(
     """Test options flow and configuring a different device."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2077,7 +2084,7 @@ async def test_options_addon_restart_failed(
     """Test options flow and add-on restart failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2198,7 +2205,7 @@ async def test_options_addon_running_server_info_failure(
     """Test options flow and add-on already running with server info failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2302,7 +2309,7 @@ async def test_options_addon_not_installed(
     addon_installed.return_value["version"] = None
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = 1234
+    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data)
 
@@ -2449,6 +2456,51 @@ async def test_import_addon_installed(
         "s2_authenticated_key": "",
         "s2_unauthenticated_key": "",
         "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf(hass):
+    """Test zeroconf discovery."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            host="localhost",
+            addresses=["127.0.0.1"],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "zeroconf_confirm"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://localhost:3000",
+        "usb_path": None,
+        "s0_legacy_key": None,
+        "s2_access_control_key": None,
+        "s2_authenticated_key": None,
+        "s2_unauthenticated_key": None,
+        "use_addon": False,
         "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1

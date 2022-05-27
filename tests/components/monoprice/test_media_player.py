@@ -518,7 +518,7 @@ async def test_first_run_with_failing_zones(hass):
 
     entry = registry.async_get(ZONE_7_ID)
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_not_first_run_with_failing_zone(hass):

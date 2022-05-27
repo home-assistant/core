@@ -10,7 +10,6 @@ from homeassistant.components.climate import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     SET_TEMPERATURE_SCHEMA,
-    ClimateDevice,
     ClimateEntity,
 )
 
@@ -93,21 +92,3 @@ async def test_sync_turn_off(hass):
     await climate.async_turn_off()
 
     assert climate.turn_off.called
-
-
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomClimate(ClimateDevice):
-        """Custom climate entity class."""
-
-        @property
-        def hvac_mode(self):
-            pass
-
-        @property
-        def hvac_modes(self):
-            pass
-
-    CustomClimate()
-    assert "ClimateDevice is deprecated, modify CustomClimate" in caplog.text

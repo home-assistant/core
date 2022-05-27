@@ -13,7 +13,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
@@ -40,7 +41,7 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Humidifier devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     conditions = await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 
     # Get all the integrations entities for this device
@@ -50,7 +51,7 @@ async def async_get_conditions(
 
         supported_features = get_supported_features(hass, entry.entity_id)
 
-        if supported_features & const.SUPPORT_MODES:
+        if supported_features & const.HumidifierEntityFeature.MODES:
             conditions.append(
                 {
                     CONF_CONDITION: "device",
@@ -66,26 +67,27 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-
     if config[CONF_TYPE] == "is_mode":
         attribute = ATTR_MODE
     else:
-        return toggle_entity.async_condition_from_config(config)
+        return toggle_entity.async_condition_from_config(hass, config)
 
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
         state = hass.states.get(config[ATTR_ENTITY_ID])
-        return state and state.attributes.get(attribute) == config[attribute]
+        return (
+            state is not None and state.attributes.get(attribute) == config[attribute]
+        )
 
     return test_is_state
 
 
-async def async_get_condition_capabilities(hass, config):
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 

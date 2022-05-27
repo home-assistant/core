@@ -7,11 +7,23 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "Indirizzo IP"
+                },
+                "description": "Indirizzo IP locale del dispositivo."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Seleziona il tipo di connessione"
+                },
+                "description": "Seleziona il tipo di connessione. Locale richiede riscaldatori di terza generazione"
             }
         }
     }

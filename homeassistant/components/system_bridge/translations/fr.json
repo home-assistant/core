@@ -7,10 +7,10 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Pont syst\u00e8me: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {
@@ -27,6 +27,5 @@
                 "description": "Veuillez saisir vos informations de connexion."
             }
         }
-    },
-    "title": "Pont syst\u00e8me"
+    }
 }

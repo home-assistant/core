@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "auth_failed": "Rakenduse API v\u00f5tme toomine nurjus",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "OctoPrint printer: {host}",
+        "progress": {
+            "get_api_key": "Ava OctoPrinti kasutajaliides ja kl\u00f5psa Home Assistanti juurdep\u00e4\u00e4sutaotluses nuppu Luba."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "path": "Rakenduse tee",
+                    "port": "Pordi number",
+                    "ssl": "Kasuta SSL-i",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL serti"
+                }
+            }
+        }
+    }
+}

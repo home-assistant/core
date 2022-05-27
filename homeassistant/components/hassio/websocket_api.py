@@ -1,17 +1,20 @@
 """Websocekt API handlers for the hassio integration."""
 import logging
+import re
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 
+from . import HassioAPIError
 from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
@@ -32,6 +35,11 @@ from .handler import HassIO
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     {vol.Required(ATTR_WS_EVENT): cv.string},
     extra=vol.ALLOW_EXTRA,
+)
+
+# Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
+WS_NO_ADMIN_ENDPOINTS = re.compile(
+    r"^(?:" r"|/ingress/(session|validate_session)" r"|/addons/[^/]+/info" r")$"
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -79,7 +87,6 @@ async def websocket_supervisor_event(
     connection.send_result(msg[WS_ID])
 
 
-@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
@@ -94,6 +101,10 @@ async def websocket_supervisor_api(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ):
     """Websocket handler to call Supervisor API."""
+    if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
+        msg[ATTR_ENDPOINT]
+    ):
+        raise Unauthorized()
     supervisor: HassIO = hass.data[DOMAIN]
     try:
         result = await supervisor.send_command(
@@ -104,8 +115,8 @@ async def websocket_supervisor_api(
         )
 
         if result.get(ATTR_RESULT) == "error":
-            raise hass.components.hassio.HassioAPIError(result.get("message"))
-    except hass.components.hassio.HassioAPIError as err:
+            raise HassioAPIError(result.get("message"))
+    except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)

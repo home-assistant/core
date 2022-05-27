@@ -1,24 +1,22 @@
 """Support for BloomSky weather station."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    HTTP_METHOD_NOT_ALLOWED,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["camera", "binary_sensor", "sensor"]
+PLATFORMS = [Platform.CAMERA, Platform.BINARY_SENSOR, Platform.SENSOR]
 
 DOMAIN = "bloomsky"
 
@@ -31,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BloomSky integration."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
@@ -72,12 +70,12 @@ class BloomSky:
             headers={AUTHORIZATION: self._api_key},
             timeout=10,
         )
-        if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise RuntimeError("Invalid API_KEY")
-        if response.status_code == HTTP_METHOD_NOT_ALLOWED:
+        if response.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
             _LOGGER.error("You have no bloomsky devices configured")
             return
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
         # Create dictionary keyed off of the device unique id

@@ -1,30 +1,18 @@
 """Test basic initialization for the Legacy Nest API using mocks for the Nest python library."""
 
-import time
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from homeassistant.setup import async_setup_component
+import pytest
 
-from tests.common import MockConfigEntry
+from .common import TEST_CONFIG_LEGACY
 
 DOMAIN = "nest"
 
-CONFIG = {
-    "nest": {
-        "client_id": "some-client-id",
-        "client_secret": "some-client-secret",
-    },
-}
 
-CONFIG_ENTRY_DATA = {
-    "auth_implementation": "local",
-    "tokens": {
-        "expires_at": time.time() + 86400,
-        "access_token": {
-            "token": "some-token",
-        },
-    },
-}
+@pytest.fixture
+def nest_test_config():
+    """Fixture to specify the overall test fixture configuration."""
+    return TEST_CONFIG_LEGACY
 
 
 def make_thermostat():
@@ -45,7 +33,7 @@ def make_thermostat():
     return device
 
 
-async def test_thermostat(hass):
+async def test_thermostat(hass, setup_base_platform):
     """Test simple initialization for thermostat entities."""
 
     thermostat = make_thermostat()
@@ -58,8 +46,6 @@ async def test_thermostat(hass):
     nest = MagicMock()
     type(nest).structures = PropertyMock(return_value=[structure])
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
-    config_entry.add_to_hass(hass)
     with patch("homeassistant.components.nest.legacy.Nest", return_value=nest), patch(
         "homeassistant.components.nest.legacy.sensor._VALID_SENSOR_TYPES",
         ["humidity", "temperature"],
@@ -67,8 +53,7 @@ async def test_thermostat(hass):
         "homeassistant.components.nest.legacy.binary_sensor._VALID_BINARY_SENSOR_TYPES",
         {"fan": None},
     ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+        await setup_base_platform()
 
     climate = hass.states.get("climate.my_thermostat")
     assert climate is not None

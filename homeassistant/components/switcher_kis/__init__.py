@@ -9,7 +9,7 @@ from aioswitcher.device import SwitcherBase
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -30,7 +30,7 @@ from .const import (
 )
 from .utils import async_start_bridge, async_stop_bridge
 
-PLATFORMS = ["switch", "sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

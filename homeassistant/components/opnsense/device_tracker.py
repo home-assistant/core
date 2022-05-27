@@ -1,9 +1,12 @@
 """Device tracker support for OPNSense routers."""
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.components.opnsense import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+
+from . import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
 
 
-async def async_get_scanner(hass, config, discovery_info=None):
+async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
     scanner = OPNSenseDeviceScanner(
@@ -56,7 +59,6 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the extra attrs of the given device."""
         if device not in self.last_results:
             return None
-        mfg = self.last_results[device].get("manufacturer")
-        if not mfg:
+        if not (mfg := self.last_results[device].get("manufacturer")):
             return {}
         return {"manufacturer": mfg}

@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "You can only configure one Soma account.",
+            "already_setup": "Already configured. Only a single configuration possible.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
-            "connection_error": "Failed to connect to SOMA Connect.",
+            "connection_error": "Failed to connect",
             "missing_configuration": "The Soma component is not configured. Please follow the documentation.",
             "result_error": "SOMA Connect responded with error status."
         },
         "create_entry": {
-            "default": "Successfully authenticated with Soma."
+            "default": "Successfully authenticated"
         },
         "step": {
             "user": {

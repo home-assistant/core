@@ -1,16 +1,14 @@
 """The HVV integration."""
 
-from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 from .hub import GTIHub
 
-PLATFORMS = [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -1,17 +1,14 @@
 """Support for Proliphix NT10e Thermostats."""
+from __future__ import annotations
+
 import proliphix
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -21,7 +18,10 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_FAN = "fan"
 
@@ -34,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -49,15 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
         self._name = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def should_poll(self):
@@ -104,34 +106,33 @@ class ProliphixThermostat(ClimateEntity):
         return self._pdp.setback
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return the current state of the thermostat."""
         state = self._pdp.hvac_state
         if state == 1:
-            return CURRENT_HVAC_OFF
+            return HVACAction.OFF
         if state in (3, 4, 5):
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if state in (6, 7):
-            return CURRENT_HVAC_COOL
-        return CURRENT_HVAC_IDLE
+            return HVACAction.COOLING
+        return HVACAction.IDLE
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return the current state of the thermostat."""
         if self._pdp.is_heating:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if self._pdp.is_cooling:
-            return HVAC_MODE_COOL
-        return HVAC_MODE_OFF
+            return HVACMode.COOL
+        return HVACMode.OFF
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return available HVAC modes."""
         return []
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._pdp.setback = temperature

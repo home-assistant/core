@@ -1,5 +1,6 @@
 """The tests for generic camera component."""
 from datetime import timedelta
+from http import HTTPStatus
 import io
 
 from homeassistant.config import async_process_ha_core_config
@@ -34,7 +35,7 @@ async def test_bad_posting(hass, hass_client_no_auth):
 
     # missing file
     async with client.post("/api/webhook/camera.config_test") as resp:
-        assert resp.status == 200  # webhooks always return 200
+        assert resp.status == HTTPStatus.OK  # webhooks always return OK
 
     camera_state = hass.states.get("camera.config_test")
     assert camera_state.state == "idle"  # no file supplied we are still idle
@@ -69,7 +70,7 @@ async def test_posting_url(hass, hass_client_no_auth):
 
     # post image
     resp = await client.post("/api/webhook/camera.config_test", data=files)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     # state recording
     camera_state = hass.states.get("camera.config_test")

@@ -15,7 +15,7 @@ import itertools
 import logging
 from random import uniform
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -23,7 +23,9 @@ import zigpy.types
 import zigpy.util
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.core import State, callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CLUSTER_TYPE_IN,
@@ -34,6 +36,12 @@ from .const import (
 )
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
+
+if TYPE_CHECKING:
+    from .device import ZHADevice
+    from .gateway import ZHAGateway
+
+_T = TypeVar("_T")
 
 
 @dataclass
@@ -130,7 +138,9 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 
 
 @callback
-def async_get_zha_config_value(config_entry, section, config_key, default):
+def async_get_zha_config_value(
+    config_entry: ConfigEntry, section: str, config_key: str, default: _T
+) -> _T:
     """Get the value for the specified configuration from the zha config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
@@ -154,11 +164,12 @@ def async_cluster_exists(hass, cluster_id):
     return False
 
 
-async def async_get_zha_device(hass, device_id):
+@callback
+def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     """Get a ZHA device for the given device registry id."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
     ieee = zigpy.types.EUI64.convert(ieee_address)
     return zha_gateway.devices[ieee]
@@ -167,8 +178,7 @@ async def async_get_zha_device(hass, device_id):
 def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
-        value = state.attributes.get(key)
-        if value is not None:
+        if (value := state.attributes.get(key)) is not None:
             yield value
 
 
@@ -206,23 +216,23 @@ def reduce_attribute(
 class LogMixin:
     """Log helper."""
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args, **kwargs):
         """Log with level."""
         raise NotImplementedError
 
-    def debug(self, msg, *args):
+    def debug(self, msg, *args, **kwargs):
         """Debug level log."""
         return self.log(logging.DEBUG, msg, *args)
 
-    def info(self, msg, *args):
+    def info(self, msg, *args, **kwargs):
         """Info level log."""
         return self.log(logging.INFO, msg, *args)
 
-    def warning(self, msg, *args):
+    def warning(self, msg, *args, **kwargs):
         """Warning method log."""
         return self.log(logging.WARNING, msg, *args)
 
-    def error(self, msg, *args):
+    def error(self, msg, *args, **kwargs):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
 

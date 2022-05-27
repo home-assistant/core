@@ -5,7 +5,7 @@ from pymonoprice import get_monoprice
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -17,7 +17,7 @@ from .const import (
     UNDO_UPDATE_LISTENER,
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +63,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

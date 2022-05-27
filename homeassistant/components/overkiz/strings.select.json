@@ -1,0 +1,13 @@
+{
+  "state": {
+    "overkiz__open_closed_pedestrian": {
+      "open": "Open",
+      "pedestrian": "Pedestrian",
+      "closed": "Closed"
+    },
+    "overkiz__memorized_simple_volume": {
+      "highest": "Highest",
+      "standard": "Standard"
+    }
+  }
+}

@@ -18,7 +18,7 @@
             "unable_to_pair": "No se ha podido emparejar, por favor int\u00e9ntelo de nuevo.",
             "unknown_error": "El dispositivo report\u00f3 un error desconocido. La vinculaci\u00f3n ha fallado."
         },
-        "flow_title": "Accesorio HomeKit: {name}",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Interrumpe el emparejamiento en todos los controladores o intenta reiniciar el dispositivo y luego contin\u00faa con el emparejamiento.",
@@ -69,5 +69,5 @@
             "single_press": "\"{subtype}\" pulsado"
         }
     },
-    "title": "Accesorio HomeKit"
+    "title": "Controlador HomeKit"
 }

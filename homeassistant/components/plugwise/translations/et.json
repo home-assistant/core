@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
+            "invalid_setup": "Lisa oma Anna asemel oma Adam, lisateabe saamiseks vaata Home Assistant Plugwise'i sidumise dokumentatsiooni",
             "unknown": "Tundmatu viga"
         },
         "flow_title": "{name}",

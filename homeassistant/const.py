@@ -3,18 +3,57 @@ from __future__ import annotations
 
 from typing import Final
 
-MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 11
+from .backports.enum import StrEnum
+
+MAJOR_VERSION: Final = 2022
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
-# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
+# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
+
+
+class Platform(StrEnum):
+    """Available entity platforms."""
+
+    AIR_QUALITY = "air_quality"
+    ALARM_CONTROL_PANEL = "alarm_control_panel"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CALENDAR = "calendar"
+    CAMERA = "camera"
+    CLIMATE = "climate"
+    COVER = "cover"
+    DEVICE_TRACKER = "device_tracker"
+    FAN = "fan"
+    GEO_LOCATION = "geo_location"
+    HUMIDIFIER = "humidifier"
+    IMAGE_PROCESSING = "image_processing"
+    LIGHT = "light"
+    LOCK = "lock"
+    MAILBOX = "mailbox"
+    MEDIA_PLAYER = "media_player"
+    NOTIFY = "notify"
+    NUMBER = "number"
+    REMOTE = "remote"
+    SCENE = "scene"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SIREN = "siren"
+    STT = "stt"
+    SWITCH = "switch"
+    TTS = "tts"
+    VACUUM = "vacuum"
+    UPDATE = "update"
+    WATER_HEATER = "water_heater"
+    WEATHER = "weather"
+
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL: Final = "*"
@@ -22,6 +61,7 @@ MATCH_ALL: Final = "*"
 # Entity target all constant
 ENTITY_MATCH_NONE: Final = "none"
 ENTITY_MATCH_ALL: Final = "all"
+ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
@@ -76,6 +116,7 @@ CONF_COMMAND_STATE: Final = "command_state"
 CONF_COMMAND_STOP: Final = "command_stop"
 CONF_CONDITION: Final = "condition"
 CONF_CONDITIONS: Final = "conditions"
+CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COVERS: Final = "covers"
@@ -100,11 +141,15 @@ CONF_DOMAIN: Final = "domain"
 CONF_DOMAINS: Final = "domains"
 CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
+CONF_ELSE: Final = "else"
 CONF_EMAIL: Final = "email"
+CONF_ENABLED: Final = "enabled"
 CONF_ENTITIES: Final = "entities"
+CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
+CONF_ERROR: Final = "error"
 CONF_EVENT: Final = "event"
 CONF_EVENT_DATA: Final = "event_data"
 CONF_EVENT_DATA_TEMPLATE: Final = "event_data_template"
@@ -113,6 +158,7 @@ CONF_EXTERNAL_URL: Final = "external_url"
 CONF_FILENAME: Final = "filename"
 CONF_FILE_PATH: Final = "file_path"
 CONF_FOR: Final = "for"
+CONF_FOR_EACH: Final = "for_each"
 CONF_FORCE_UPDATE: Final = "force_update"
 CONF_FRIENDLY_NAME: Final = "friendly_name"
 CONF_FRIENDLY_NAME_TEMPLATE: Final = "friendly_name_template"
@@ -123,25 +169,30 @@ CONF_HS: Final = "hs"
 CONF_ICON: Final = "icon"
 CONF_ICON_TEMPLATE: Final = "icon_template"
 CONF_ID: Final = "id"
+CONF_IF: Final = "if"
 CONF_INCLUDE: Final = "include"
 CONF_INTERNAL_URL: Final = "internal_url"
 CONF_IP_ADDRESS: Final = "ip_address"
 CONF_LATITUDE: Final = "latitude"
 CONF_LEGACY_TEMPLATES: Final = "legacy_templates"
 CONF_LIGHTS: Final = "lights"
+CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
+CONF_MATCH: Final = "match"
 CONF_MAXIMUM: Final = "maximum"
 CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
+CONF_MODEL: Final = "model"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
 CONF_PACKAGES: Final = "packages"
+CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
 CONF_PASSWORD: Final = "password"
 CONF_PATH: Final = "path"
@@ -182,10 +233,12 @@ CONF_SOURCE: Final = "source"
 CONF_SSL: Final = "ssl"
 CONF_STATE: Final = "state"
 CONF_STATE_TEMPLATE: Final = "state_template"
+CONF_STOP: Final = "stop"
 CONF_STRUCTURE: Final = "structure"
 CONF_SWITCHES: Final = "switches"
 CONF_TARGET: Final = "target"
 CONF_TEMPERATURE_UNIT: Final = "temperature_unit"
+CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
@@ -227,11 +280,10 @@ EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
-EVENT_TIMER_OUT_OF_SYNC: Final = "timer_out_of_sync"
-EVENT_TIME_CHANGED: Final = "time_changed"
-
 
 # #### DEVICE CLASSES ####
+# DEVICE_CLASS_* below are deprecated as of 2021.12
+# use the SensorDeviceClass enum instead.
 DEVICE_CLASS_AQI: Final = "aqi"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
@@ -239,6 +291,8 @@ DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_CURRENT: Final = "current"
 DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
+DEVICE_CLASS_FREQUENCY: Final = "frequency"
+DEVICE_CLASS_GAS: Final = "gas"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
 DEVICE_CLASS_MONETARY: Final = "monetary"
@@ -246,19 +300,18 @@ DEVICE_CLASS_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 DEVICE_CLASS_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 DEVICE_CLASS_NITROUS_OXIDE = "nitrous_oxide"
 DEVICE_CLASS_OZONE: Final = "ozone"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_PM25: Final = "pm25"
 DEVICE_CLASS_PM1: Final = "pm1"
 DEVICE_CLASS_PM10: Final = "pm10"
+DEVICE_CLASS_PM25: Final = "pm25"
+DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
+DEVICE_CLASS_POWER: Final = "power"
 DEVICE_CLASS_PRESSURE: Final = "pressure"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_VOLTAGE: Final = "voltage"
 DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
-DEVICE_CLASS_GAS: Final = "gas"
+DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -270,6 +323,7 @@ STATE_OPEN: Final = "open"
 STATE_OPENING: Final = "opening"
 STATE_CLOSED: Final = "closed"
 STATE_CLOSING: Final = "closing"
+STATE_BUFFERING: Final = "buffering"
 STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
@@ -351,9 +405,15 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
+ATTR_CONFIGURATION_URL: Final = "configuration_url"
+ATTR_CONNECTIONS: Final = "connections"
+ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_HW_VERSION: Final = "hw_version"
+ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
@@ -408,16 +468,25 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+# Persons attribute
+ATTR_PERSONS: Final = "persons"
 
 # #### UNITS OF MEASUREMENT ####
+# Apparent power units
+POWER_VOLT_AMPERE: Final = "VA"
+
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
-POWER_VOLT_AMPERE: Final = "VA"
+POWER_BTU_PER_HOUR: Final = "BTU/h"
+
+# Reactive power units
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
@@ -464,6 +533,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_KILOHERTZ: Final = "kHz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
@@ -472,7 +542,9 @@ PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
 PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
+PRESSURE_CBAR: Final = "cbar"
 PRESSURE_MBAR: Final = "mbar"
+PRESSURE_MMHG: Final = "mmHg"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
@@ -641,7 +713,6 @@ URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
 URL_API_CONFIG: Final = "/api/config"
-URL_API_DISCOVERY_INFO: Final = "/api/discovery_info"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"
 URL_API_EVENTS: Final = "/api/events"
@@ -652,21 +723,6 @@ URL_API_COMPONENTS: Final = "/api/components"
 URL_API_ERROR_LOG: Final = "/api/error_log"
 URL_API_LOG_OUT: Final = "/api/log_out"
 URL_API_TEMPLATE: Final = "/api/template"
-
-HTTP_OK: Final = 200
-HTTP_CREATED: Final = 201
-HTTP_ACCEPTED: Final = 202
-HTTP_MOVED_PERMANENTLY: Final = 301
-HTTP_BAD_REQUEST: Final = 400
-HTTP_UNAUTHORIZED: Final = 401
-HTTP_FORBIDDEN: Final = 403
-HTTP_NOT_FOUND: Final = 404
-HTTP_METHOD_NOT_ALLOWED: Final = 405
-HTTP_UNPROCESSABLE_ENTITY: Final = 422
-HTTP_TOO_MANY_REQUESTS: Final = 429
-HTTP_INTERNAL_SERVER_ERROR: Final = 500
-HTTP_BAD_GATEWAY: Final = 502
-HTTP_SERVICE_UNAVAILABLE: Final = 503
 
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
@@ -688,8 +744,10 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
-SPEED_MS: Final = "speed_ms"
+SPEED: Final = "speed"
+WIND_SPEED: Final = "wind_speed"
 ILLUMINANCE: Final = "illuminance"
+ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -702,5 +760,21 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# The ID of the Home Assistant Cast App
-CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+# ENTITY_CATEGOR* below are deprecated as of 2021.12
+# use the EntityCategory enum instead.
+ENTITY_CATEGORY_CONFIG: Final = "config"
+ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
+ENTITY_CATEGORIES: Final[list[str]] = [
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+]
+
+# The ID of the Home Assistant Media Player Cast App
+CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
+# The ID of the Home Assistant Lovelace Cast App
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"
+
+SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"

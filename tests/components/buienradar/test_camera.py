@@ -56,7 +56,7 @@ async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert aioclient_mock.call_count == 1
     body = await resp.text()
     assert body == "hello world"
@@ -86,7 +86,7 @@ async def test_expire_delta(aioclient_mock, hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert aioclient_mock.call_count == 1
     body = await resp.text()
     assert body == "hello world"

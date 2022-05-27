@@ -1,21 +1,27 @@
 """Support for Google - Calendar Event Devices."""
-from datetime import datetime, timedelta, timezone
-from enum import Enum
-import logging
-import os
+from __future__ import annotations
 
-from googleapiclient import discovery as google_discovery
-import httplib2
-from oauth2client.client import (
-    FlowExchangeError,
-    OAuth2DeviceCodeError,
-    OAuth2WebServerFlow,
-)
+import asyncio
+from collections.abc import Mapping
+from datetime import datetime, timedelta
+import logging
+from typing import Any
+
+import aiohttp
+from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException
+from gcal_sync.model import Calendar, DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
+from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -24,15 +30,32 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
 )
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util import convert
+from homeassistant.helpers.typing import ConfigType
+
+from .api import ApiAuthImpl, get_feature_access
+from .const import (
+    CONF_CALENDAR_ACCESS,
+    DATA_CONFIG,
+    DATA_SERVICE,
+    DEVICE_AUTH_IMPL,
+    DISCOVER_CALENDAR,
+    DOMAIN,
+    FeatureAccess,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "google"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_TRACK_NEW = "track_new_calendar"
@@ -42,9 +65,7 @@ CONF_TRACK = "track"
 CONF_SEARCH = "search"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
-CONF_CALENDAR_ACCESS = "calendar_access"
 
-DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = "!!"
 
 EVENT_CALENDAR_ID = "calendar_id"
@@ -66,45 +87,31 @@ NOTIFICATION_TITLE = "Google Calendar Setup"
 GROUP_NAME_ALL_CALENDARS = "Google Calendar Sensors"
 
 SERVICE_SCAN_CALENDARS = "scan_for_calendars"
-SERVICE_FOUND_CALENDARS = "found_calendar"
 SERVICE_ADD_EVENT = "add_event"
-
-DATA_INDEX = "google_calendars"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
 TOKEN_FILE = f".{DOMAIN}.token"
 
-
-class FeatureAccess(Enum):
-    """Class to represent different access scopes."""
-
-    read_only = "https://www.googleapis.com/auth/calendar.readonly"
-    read_write = "https://www.googleapis.com/auth/calendar"
-
-    def __init__(self, scope: str) -> None:
-        """Init instance."""
-        self._scope = scope
-
-    @property
-    def scope(self) -> str:
-        """Google calendar scope for the feature."""
-        return self._scope
+PLATFORMS = ["calendar"]
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-                vol.Optional(CONF_TRACK_NEW): cv.boolean,
-                vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
-                    FeatureAccess
-                ),
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                    vol.Optional(CONF_TRACK_NEW, default=True): cv.boolean,
+                    vol.Optional(CONF_CALENDAR_ACCESS, default="read_write"): cv.enum(
+                        FeatureAccess
+                    ),
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -154,158 +161,196 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def do_authentication(hass, hass_config, config):
-    """Notify user of actions and authenticate.
-
-    Notify user of user_code and verification_url then poll
-    until we have an access token.
-    """
-    oauth = OAuth2WebServerFlow(
-        client_id=config[CONF_CLIENT_ID],
-        client_secret=config[CONF_CLIENT_SECRET],
-        scope=config[CONF_CALENDAR_ACCESS].scope,
-        redirect_uri="Home-Assistant.io",
-    )
-    try:
-        dev_flow = oauth.step1_get_device_and_user_codes()
-    except OAuth2DeviceCodeError as err:
-        hass.components.persistent_notification.create(
-            f"Error: {err}<br />You will need to restart hass after fixing." "",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
-        return False
-
-    hass.components.persistent_notification.create(
-        (
-            f"In order to authorize Home-Assistant to view your calendars "
-            f'you must visit: <a href="{dev_flow.verification_url}" target="_blank">{dev_flow.verification_url}</a> and enter '
-            f"code: {dev_flow.user_code}"
-        ),
-        title=NOTIFICATION_TITLE,
-        notification_id=NOTIFICATION_ID,
-    )
-
-    def step2_exchange(now):
-        """Keep trying to validate the user_code until it expires."""
-
-        # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
-        # object without tzinfo. For the comparison below to work, it needs one.
-        user_code_expiry = dev_flow.user_code_expiry.replace(tzinfo=timezone.utc)
-
-        if now >= user_code_expiry:
-            hass.components.persistent_notification.create(
-                "Authentication code expired, please restart "
-                "Home-Assistant and try again",
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID,
-            )
-            listener()
-
-        try:
-            credentials = oauth.step2_exchange(device_flow_info=dev_flow)
-        except FlowExchangeError:
-            # not ready yet, call again
-            return
-
-        storage = Storage(hass.config.path(TOKEN_FILE))
-        storage.put(credentials)
-        do_setup(hass, hass_config, config)
-        listener()
-        hass.components.persistent_notification.create(
-            (
-                f"We are all setup now. Check {YAML_DEVICES} for calendars that have "
-                f"been found"
-            ),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
-
-    listener = track_utc_time_change(
-        hass, step2_exchange, second=range(0, 60, dev_flow.interval)
-    )
-
-    return True
-
-
-def setup(hass, config):
-    """Set up the Google platform."""
-    if DATA_INDEX not in hass.data:
-        hass.data[DATA_INDEX] = {}
-
-    conf = config.get(DOMAIN, {})
-    if not conf:
-        # component is set up by tts platform
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google component."""
+    if DOMAIN not in config:
         return True
 
-    token_file = hass.config.path(TOKEN_FILE)
-    if not os.path.isfile(token_file):
-        do_authentication(hass, config, conf)
-    else:
-        if not check_correct_scopes(token_file, conf):
-            do_authentication(hass, config, conf)
-        else:
-            do_setup(hass, config, conf)
+    conf = config.get(DOMAIN, {})
+    hass.data[DOMAIN] = {DATA_CONFIG: conf}
+
+    if CONF_CLIENT_ID in conf and CONF_CLIENT_SECRET in conf:
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(
+                conf[CONF_CLIENT_ID],
+                conf[CONF_CLIENT_SECRET],
+            ),
+            DEVICE_AUTH_IMPL,
+        )
+
+    # Import credentials from the old token file into the new way as
+    # a ConfigEntry managed by home assistant.
+    storage = Storage(hass.config.path(TOKEN_FILE))
+    creds = await hass.async_add_executor_job(storage.get)
+    if creds and get_feature_access(hass).scope in creds.scopes:
+        _LOGGER.debug("Importing configuration entry with credentials")
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={
+                    "creds": creds,
+                },
+            )
+        )
+
+    _LOGGER.warning(
+        "Configuration of Google Calendar in YAML in configuration.yaml is "
+        "is deprecated and will be removed in a future release; Your existing "
+        "OAuth Application Credentials and other settings have been imported "
+        "into the UI automatically and can be safely removed from your "
+        "configuration.yaml file"
+    )
 
     return True
 
 
-def check_correct_scopes(token_file, config):
-    """Check for the correct scopes in file."""
-    with open(token_file, encoding="utf8") as tokenfile:
-        contents = tokenfile.read()
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Google from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    async_upgrade_entry(hass, entry)
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    # Force a token refresh to fix a bug where tokens were persisted with
+    # expires_in (relative time delta) and expires_at (absolute time) swapped.
+    # A google session token typically only lasts a few days between refresh.
+    now = datetime.now()
+    if session.token["expires_at"] >= (now + timedelta(days=365)).timestamp():
+        session.token["expires_in"] = 0
+        session.token["expires_at"] = now.timestamp()
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
-        # Check for quoted scope as our scopes can be subsets of other scopes
-        target_scope = f'"{config.get(CONF_CALENDAR_ACCESS).scope}"'
-        if target_scope not in contents:
-            _LOGGER.warning("Please re-authenticate with Google")
-            return False
+    access = FeatureAccess[entry.options[CONF_CALENDAR_ACCESS]]
+    token_scopes = session.token.get("scope", [])
+    if access.scope not in token_scopes:
+        _LOGGER.debug("Scope '%s' not in scopes '%s'", access.scope, token_scopes)
+        raise ConfigEntryAuthFailed(
+            "Required scopes are not available, reauth required"
+        )
+    calendar_service = GoogleCalendarService(
+        ApiAuthImpl(async_get_clientsession(hass), session)
+    )
+    hass.data[DOMAIN][DATA_SERVICE] = calendar_service
+
+    await async_setup_services(hass, calendar_service)
+    # Only expose the add event service if we have the correct permissions
+    if access is FeatureAccess.read_write:
+        await async_setup_add_event_service(hass, calendar_service)
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Reload entry when options are updated
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
 
 
-def setup_services(
-    hass, hass_config, config, track_new_found_calendars, calendar_service
-):
+def async_upgrade_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Upgrade the config entry if needed."""
+    if DATA_CONFIG not in hass.data[DOMAIN] and entry.options:
+        return
+
+    options = (
+        entry.options
+        if entry.options
+        else {
+            CONF_CALENDAR_ACCESS: get_feature_access(hass).name,
+        }
+    )
+    disable_new_entities = (
+        not hass.data[DOMAIN].get(DATA_CONFIG, {}).get(CONF_TRACK_NEW, True)
+    )
+    hass.config_entries.async_update_entry(
+        entry,
+        options=options,
+        pref_disable_new_entities=disable_new_entities,
+    )
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry when it changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_setup_services(
+    hass: HomeAssistant,
+    calendar_service: GoogleCalendarService,
+) -> None:
     """Set up the service listeners."""
 
-    def _found_calendar(call):
-        """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
-        calendar = get_calendar_info(hass, call.data)
-        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
-            return
+    calendars = await hass.async_add_executor_job(
+        load_config, hass.config.path(YAML_DEVICES)
+    )
+    calendars_file_lock = asyncio.Lock()
 
-        hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})
-
-        update_config(
-            hass.config.path(YAML_DEVICES), hass.data[DATA_INDEX][calendar[CONF_CAL_ID]]
-        )
-
-        discovery.load_platform(
+    async def _found_calendar(calendar_item: Calendar) -> None:
+        calendar = get_calendar_info(
             hass,
-            "calendar",
-            DOMAIN,
-            hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
-            hass_config,
+            calendar_item.dict(exclude_unset=True),
         )
+        calendar_id = calendar_item.id
+        # If the google_calendars.yaml file already exists, populate it for
+        # backwards compatibility, but otherwise do not create it if it does
+        # not exist.
+        if calendars:
+            if calendar_id not in calendars:
+                calendars[calendar_id] = calendar
+                async with calendars_file_lock:
+                    await hass.async_add_executor_job(
+                        update_config, hass.config.path(YAML_DEVICES), calendar
+                    )
+            else:
+                # Prefer entity/name information from yaml, overriding api
+                calendar = calendars[calendar_id]
+        async_dispatcher_send(hass, DISCOVER_CALENDAR, calendar)
 
-    hass.services.register(DOMAIN, SERVICE_FOUND_CALENDARS, _found_calendar)
+    created_calendars = set()
 
-    def _scan_for_calendars(service):
+    async def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
-        service = calendar_service.get()
-        cal_list = service.calendarList()
-        calendars = cal_list.list().execute()["items"]
-        for calendar in calendars:
-            calendar["track"] = track_new_found_calendars
-            hass.services.call(DOMAIN, SERVICE_FOUND_CALENDARS, calendar)
+        try:
+            result = await calendar_service.async_list_calendars()
+        except ApiException as err:
+            raise HomeAssistantError(str(err)) from err
+        tasks = []
+        for calendar_item in result.items:
+            if calendar_item.id in created_calendars:
+                continue
+            created_calendars.add(calendar_item.id)
+            tasks.append(_found_calendar(calendar_item))
+        await asyncio.gather(*tasks)
 
-    hass.services.register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
+    hass.services.async_register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
 
-    def _add_event(call):
+
+async def async_setup_add_event_service(
+    hass: HomeAssistant,
+    calendar_service: GoogleCalendarService,
+) -> None:
+    """Add the service to add events."""
+
+    async def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
-        service = calendar_service.get()
-        start = {}
-        end = {}
+        start: DateOrDatetime | None = None
+        end: DateOrDatetime | None = None
 
         if EVENT_IN in call.data:
             if EVENT_IN_DAYS in call.data[EVENT_IN]:
@@ -314,8 +359,8 @@ def setup_services(
                 start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
                 end_in = start_in + timedelta(days=1)
 
-                start = {"date": start_in.strftime("%Y-%m-%d")}
-                end = {"date": end_in.strftime("%Y-%m-%d")}
+                start = DateOrDatetime(date=start_in)
+                end = DateOrDatetime(date=end_in)
 
             elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
                 now = datetime.now()
@@ -323,84 +368,50 @@ def setup_services(
                 start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
                 end_in = start_in + timedelta(days=1)
 
-                start = {"date": start_in.strftime("%Y-%m-%d")}
-                end = {"date": end_in.strftime("%Y-%m-%d")}
+                start = DateOrDatetime(date=start_in)
+                end = DateOrDatetime(date=end_in)
 
         elif EVENT_START_DATE in call.data:
-            start = {"date": str(call.data[EVENT_START_DATE])}
-            end = {"date": str(call.data[EVENT_END_DATE])}
+            start = DateOrDatetime(date=call.data[EVENT_START_DATE])
+            end = DateOrDatetime(date=call.data[EVENT_END_DATE])
 
         elif EVENT_START_DATETIME in call.data:
-            start_dt = str(
-                call.data[EVENT_START_DATETIME].strftime("%Y-%m-%dT%H:%M:%S")
+            start_dt = call.data[EVENT_START_DATETIME]
+            end_dt = call.data[EVENT_END_DATETIME]
+            start = DateOrDatetime(
+                date_time=start_dt, timezone=str(hass.config.time_zone)
             )
-            end_dt = str(call.data[EVENT_END_DATETIME].strftime("%Y-%m-%dT%H:%M:%S"))
-            start = {"dateTime": start_dt, "timeZone": str(hass.config.time_zone)}
-            end = {"dateTime": end_dt, "timeZone": str(hass.config.time_zone)}
+            end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
 
-        event = {
-            "summary": call.data[EVENT_SUMMARY],
-            "description": call.data[EVENT_DESCRIPTION],
-            "start": start,
-            "end": end,
-        }
-        service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "body": event}
-        event = service.events().insert(**service_data).execute()
+        if start is None or end is None:
+            raise ValueError(
+                "Missing required fields to set start or end date/datetime"
+            )
 
-    # Only expose the add event service if we have the correct permissions
-    if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.read_write:
-        hass.services.register(
-            DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
+        await calendar_service.async_create_event(
+            call.data[EVENT_CALENDAR_ID],
+            Event(
+                summary=call.data[EVENT_SUMMARY],
+                description=call.data[EVENT_DESCRIPTION],
+                start=start,
+                end=end,
+            ),
         )
-    return True
 
-
-def do_setup(hass, hass_config, config):
-    """Run the setup after we have everything configured."""
-    # Load calendars the user has configured
-    hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
-
-    calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    track_new_found_calendars = convert(
-        config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
-    )
-    setup_services(
-        hass, hass_config, config, track_new_found_calendars, calendar_service
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
     )
 
-    for calendar in hass.data[DATA_INDEX].values():
-        discovery.load_platform(hass, "calendar", DOMAIN, calendar, hass_config)
 
-    # Look for any new calendars
-    hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
-    return True
-
-
-class GoogleCalendarService:
-    """Calendar service interface to Google."""
-
-    def __init__(self, token_file):
-        """Init the Google Calendar service."""
-        self.token_file = token_file
-
-    def get(self):
-        """Get the calendar service from the storage file token."""
-        credentials = Storage(self.token_file).get()
-        http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build(
-            "calendar", "v3", http=http, cache_discovery=False
-        )
-        return service
-
-
-def get_calendar_info(hass, calendar):
+def get_calendar_info(
+    hass: HomeAssistant, calendar: Mapping[str, Any]
+) -> dict[str, Any]:
     """Convert data from Google into DEVICE_SCHEMA."""
-    calendar_info = DEVICE_SCHEMA(
+    calendar_info: dict[str, Any] = DEVICE_SCHEMA(
         {
             CONF_CAL_ID: calendar["id"],
             CONF_ENTITIES: [
                 {
-                    CONF_TRACK: calendar["track"],
                     CONF_NAME: calendar["summary"],
                     CONF_DEVICE_ID: generate_entity_id(
                         "{}", calendar["summary"], hass=hass
@@ -412,7 +423,7 @@ def get_calendar_info(hass, calendar):
     return calendar_info
 
 
-def load_config(path):
+def load_config(path: str) -> dict[str, Any]:
     """Load the google_calendar_devices.yaml."""
     calendars = {}
     try:
@@ -424,15 +435,19 @@ def load_config(path):
                 except VoluptuousError as exception:
                     # keep going
                     _LOGGER.warning("Calendar Invalid Data: %s", exception)
-    except FileNotFoundError:
+    except FileNotFoundError as err:
+        _LOGGER.debug("Error reading calendar configuration: %s", err)
         # When YAML file could not be loaded/did not contain a dict
         return {}
 
     return calendars
 
 
-def update_config(path, calendar):
+def update_config(path: str, calendar: dict[str, Any]) -> None:
     """Write the google_calendar_devices.yaml."""
-    with open(path, "a", encoding="utf8") as out:
-        out.write("\n")
-        yaml.dump([calendar], out, default_flow_style=False)
+    try:
+        with open(path, "a", encoding="utf8") as out:
+            out.write("\n")
+            yaml.dump([calendar], out, default_flow_style=False)
+    except FileNotFoundError as err:
+        _LOGGER.debug("Error persisting calendar configuration: %s", err)

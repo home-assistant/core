@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
+            "no_locations": "F\u00fcr diesen Benutzer sind keine Standorte verf\u00fcgbar, \u00fcberpr\u00fcfe die TotalConnect-Einstellungen",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -11,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Standort",
                     "usercode": "Benutzercode"
                 },
                 "description": "Gib den Benutzercode f\u00fcr den Benutzer {location_id} an dieser Stelle ein",
@@ -25,8 +25,18 @@
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatische Umgehung bei schwacher Batterie"
                 },
-                "title": "Total Connect"
+                "description": "Automatische Umgehung von Zonen, sobald sie einen niedrigen Batteriestand melden.",
+                "title": "TotalConnect-Optionen"
             }
         }
     }

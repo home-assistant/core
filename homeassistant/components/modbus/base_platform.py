@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_UNIQUE_ID,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -53,9 +54,9 @@ from .const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    DATA_TYPE_STRING,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
+    DataType,
 )
 from .modbus import ModbusHub
 
@@ -82,6 +83,7 @@ class BasePlatform(Entity):
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
 
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -160,15 +162,21 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def unpack_structure_result(self, registers: list[int]) -> str:
+    def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
         registers = self._swap_registers(registers)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        if self._data_type == DATA_TYPE_STRING:
+        if self._data_type == DataType.STRING:
             return byte_string.decode()
 
-        val = struct.unpack(self._structure, byte_string)
+        try:
+            val = struct.unpack(self._structure, byte_string)
+        except struct.error as err:
+            recv_size = len(registers) * 2
+            msg = f"Received {recv_size} bytes, unpack error {err}"
+            _LOGGER.error(msg)
+            return None
         # Issue: https://github.com/home-assistant/core/issues/41944
         # If unpack() returns a tuple greater than 1, don't try to process the value.
         # Instead, return the values of unpack(...) separated by commas.
@@ -248,8 +256,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
 
     async def async_turn(self, command: int) -> None:
@@ -305,7 +312,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
-        if self._verify_type == CALL_TYPE_COIL:
+        if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
             self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])

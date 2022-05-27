@@ -4,22 +4,37 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "invalid_path": "Finner ikke mappen"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
-            "owserver": {
+            "user": {
                 "data": {
                     "host": "Vert",
                     "port": "Port"
                 },
-                "title": "Angi detaljer om owserver"
-            },
-            "user": {
+                "title": "Angi serverdetaljer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Velg enheter som skal konfigureres"
+        },
+        "step": {
+            "configure_device": {
                 "data": {
-                    "type": "Tilkoblingstype"
+                    "precision": "Sensorpresisjon"
                 },
-                "title": "Sett opp 1-Wire"
+                "description": "Velg sensorpresisjon for {sensor_id}",
+                "title": "OneWire-sensorpresisjon"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Fjern alle enhetskonfigurasjoner",
+                    "device_selection": "Velg enheter som skal konfigureres"
+                },
+                "description": "Velg hvilke konfigurasjonstrinn som skal behandles",
+                "title": "OneWire-enhetsalternativer"
             }
         }
     }

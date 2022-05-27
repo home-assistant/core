@@ -4,9 +4,16 @@ from functools import partial
 from aiohttp import hdrs
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
+from . import async_register, async_unregister
 
 # mypy: allow-untyped-defs
 
@@ -35,12 +42,18 @@ async def _handle_webhook(job, trigger_data, hass, webhook_id, request):
     hass.async_run_hass_job(job, {"trigger": result})
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     trigger_data = automation_info["trigger_data"]
-    webhook_id = config.get(CONF_WEBHOOK_ID)
+    webhook_id: str = config[CONF_WEBHOOK_ID]
     job = HassJob(action)
-    hass.components.webhook.async_register(
+    async_register(
+        hass,
         automation_info["domain"],
         automation_info["name"],
         webhook_id,
@@ -50,6 +63,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
     @callback
     def unregister():
         """Unregister webhook."""
-        hass.components.webhook.async_unregister(webhook_id)
+        async_unregister(hass, webhook_id)
 
     return unregister

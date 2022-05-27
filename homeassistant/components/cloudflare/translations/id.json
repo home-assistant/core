@@ -14,7 +14,8 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_token": "Token API"
+                    "api_token": "Token API",
+                    "description": "Autentikasi ulang dengan akun Cloudflare Anda."
                 }
             },
             "records": {

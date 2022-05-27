@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Kecepatan Baud",
                     "device": "Perangkat"
                 },
                 "title": "Hubungkan ke modem"

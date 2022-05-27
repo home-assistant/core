@@ -7,11 +7,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
@@ -88,7 +90,11 @@ START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Rachio switches."""
     zone_entities = []
     has_flex_sched = False
@@ -102,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
     _LOGGER.info("%d Rachio switch(es) added", len(entities))
 
-    def start_multiple(service):
+    def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
         zones_list = []
         person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
@@ -285,6 +291,7 @@ class RachioRainDelay(RachioSwitch):
             endtime = parse_datetime(args[0][0][KEY_RAIN_DELAY_END])
             _LOGGER.debug("Rain delay expires at %s", endtime)
             self._state = True
+            assert endtime is not None
             self._cancel_update = async_track_point_in_utc_time(
                 self.hass, self._delay_expiration, endtime
             )

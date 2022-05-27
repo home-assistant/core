@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3. Comprova l'amfitri\u00f3 i el port i torna-ho a provar. Assegurat que est\u00e0s utilitzant la versi\u00f3 del servidor FiveM m\u00e9s recent.",
+            "invalid_game_name": "L'API del joc al qual est\u00e0s intentant connectar-te no \u00e9s d'un joc FiveM.",
+            "unknown_error": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

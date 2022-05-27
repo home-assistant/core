@@ -1,0 +1,29 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Automatinis"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Automatinis",
+            "manual": "Rankinis"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "Greitis",
+            "standard": "Standartas"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 minu\u010di\u0173",
+            "30 min": "30 minu\u010di\u0173",
+            "60 min": "60 minu\u010di\u0173",
+            "90 min": "90 minu\u010di\u0173",
+            "off": "I\u0161jungta"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Automatinis"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Automatinis",
+            "manual": "Rankinis"
+        }
+    }
+}

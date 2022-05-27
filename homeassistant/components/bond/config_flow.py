@@ -1,25 +1,21 @@
 """Config flow for Bond integration."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from bond_api import Bond
+from bond_async import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    CONF_NAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 from .utils import BondHub
@@ -51,12 +47,12 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
         data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
     )
     try:
-        hub = BondHub(bond)
+        hub = BondHub(bond, data[CONF_HOST])
         await hub.setup(max_devices=1)
     except ClientConnectionError as error:
         raise InputValidationError("cannot_connect") from error
     except ClientResponseError as error:
-        if error.status == HTTP_UNAUTHORIZED:
+        if error.status == HTTPStatus.UNAUTHORIZED:
             raise InputValidationError("invalid_auth") from error
         raise InputValidationError("unknown") from error
     except Exception as error:
@@ -91,15 +87,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, hub_name = await _validate_input(self.hass, self._discovered)
+        try:
+            _, hub_name = await _validate_input(self.hass, self._discovered)
+        except InputValidationError:
+            return
         self._discovered[CONF_NAME] = hub_name
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info[CONF_NAME]
-        host: str = discovery_info[CONF_HOST]
+        name: str = discovery_info.name
+        host: str = discovery_info.host
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
         for entry in self._async_current_entries():
@@ -110,12 +109,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 token := await async_get_token(self.hass, host)
             ):
                 updates[CONF_ACCESS_TOKEN] = token
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, **updates}
-            )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
+            new_data = {**entry.data, **updates}
+            if new_data != dict(entry.data):
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **updates}
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
             raise AbortFlow("already_configured")
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}

@@ -10,17 +10,14 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -47,7 +44,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 class LyricSensorEntityDescription(SensorEntityDescription):
     """Class describing Honeywell Lyric sensor entities."""
 
-    value: Callable[[LyricDevice], StateType] = round
+    value: Callable[[LyricDevice], StateType | datetime] = round
 
 
 def get_datetime_from_future_time(time: str) -> datetime:
@@ -60,7 +57,7 @@ def get_datetime_from_future_time(time: str) -> datetime:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -81,8 +78,8 @@ async def async_setup_entry(
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_indoor_temperature",
                             name="Indoor Temperature",
-                            device_class=DEVICE_CLASS_TEMPERATURE,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            device_class=SensorDeviceClass.TEMPERATURE,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.indoorTemperature,
                         ),
@@ -97,8 +94,8 @@ async def async_setup_entry(
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_outdoor_temperature",
                             name="Outdoor Temperature",
-                            device_class=DEVICE_CLASS_TEMPERATURE,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            device_class=SensorDeviceClass.TEMPERATURE,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.outdoorTemperature,
                         ),
@@ -113,8 +110,8 @@ async def async_setup_entry(
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_outdoor_humidity",
                             name="Outdoor Humidity",
-                            device_class=DEVICE_CLASS_HUMIDITY,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            device_class=SensorDeviceClass.HUMIDITY,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement="%",
                             value=lambda device: device.displayedOutdoorHumidity,
                         ),
@@ -130,10 +127,10 @@ async def async_setup_entry(
                             LyricSensorEntityDescription(
                                 key=f"{device.macID}_next_period_time",
                                 name="Next Period Time",
-                                device_class=DEVICE_CLASS_TIMESTAMP,
+                                device_class=SensorDeviceClass.TIMESTAMP,
                                 value=lambda device: get_datetime_from_future_time(
                                     device.changeableValues.nextPeriodTime
-                                ).isoformat(),
+                                ),
                             ),
                             location,
                             device,

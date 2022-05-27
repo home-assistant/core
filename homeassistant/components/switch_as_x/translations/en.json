@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Switch",
+                    "target_domain": "New Type"
+                },
+                "description": "Pick a switch that you want to show up in Home Assistant as a light, cover or anything else. The original switch will be hidden."
+            }
+        }
+    },
+    "title": "Change device type of a switch"
+}

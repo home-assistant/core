@@ -6,7 +6,7 @@ from datetime import timedelta
 from directv import DIRECTV, DIRECTVError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -14,9 +14,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["media_player", "remote"]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 

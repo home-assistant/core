@@ -1,0 +1,133 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Aus",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatisch",
+            "1": "Aus",
+            "2": "An"
+        },
+        "tuya__countdown": {
+            "1h": "1 Stunde",
+            "2h": "2 Stunden",
+            "3h": "3 Stunden",
+            "4h": "4 Stunden",
+            "5h": "5 Stunden",
+            "6h": "6 Stunden",
+            "cancel": "Abbrechen"
+        },
+        "tuya__curtain_mode": {
+            "morning": "Morgen",
+            "night": "Nacht"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Zur\u00fcck",
+            "forward": "Vorw\u00e4rts"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Geringe Empfindlichkeit",
+            "1": "Hohe Empfindlichkeit"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "Dr\u00fccken",
+            "switch": "Schalter"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "Stufe 1",
+            "level_10": "Stufe 10",
+            "level_2": "Stufe 2",
+            "level_3": "Stufe 3",
+            "level_4": "Stufe 4",
+            "level_5": "Stufe 5",
+            "level_6": "Stufe 6",
+            "level_7": "Stufe 7",
+            "level_8": "Stufe 8",
+            "level_9": "Stufe 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Stimmung 1",
+            "2": "Stimmung 2",
+            "3": "Stimmung 3",
+            "4": "Stimmung 4",
+            "5": "Stimmung 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Automatisch",
+            "health": "Gesundheit",
+            "humidity": "Luftfeuchtigkeit",
+            "sleep": "Schlafen",
+            "work": "Arbeit"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Energiesparmodus",
+            "1": "Kontinuierlicher Arbeitsmodus"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Gl\u00fchlampe",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Aus",
+            "pos": "Schalterposition anzeigen",
+            "relay": "Ein-/Ausschaltzustand anzeigen"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Geringe Empfindlichkeit",
+            "1": "Mittlere Empfindlichkeit",
+            "2": "Hohe Empfindlichkeit"
+        },
+        "tuya__record_mode": {
+            "1": "Nur Ereignisse aufzeichnen",
+            "2": "Kontinuierliche Aufnahme"
+        },
+        "tuya__relay_status": {
+            "last": "Letzten Zustand merken",
+            "memory": "Letzten Zustand merken",
+            "off": "Aus",
+            "on": "An",
+            "power_off": "Aus",
+            "power_on": "An"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Geschlossen",
+            "high": "Hoch",
+            "low": "Niedrig",
+            "middle": "Mittel"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Gro\u00df",
+            "middle": "Mittel",
+            "small": "Klein"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Bogen",
+            "chargego": "Zur\u00fcck zur Dockingstation",
+            "left_bow": "Bogen links",
+            "left_spiral": "Spirale links",
+            "mop": "Mopp",
+            "part": "Teil",
+            "partial_bow": "Bogen Teilweise",
+            "pick_zone": "Zone ausw\u00e4hlen",
+            "point": "Punkt",
+            "pose": "Pose",
+            "random": "Zuf\u00e4llig",
+            "right_bow": "Bogen rechts",
+            "right_spiral": "Spirale rechts",
+            "single": "Einzeln",
+            "smart": "Smart",
+            "spiral": "Spirale",
+            "standby": "Standby",
+            "wall_follow": "Wand folgen",
+            "zone": "Zone"
+        }
+    }
+}

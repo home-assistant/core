@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Integrasjonsmetode",
+                    "name": "Navn",
+                    "round": "Presisjon",
+                    "source": "Inngangssensor",
+                    "unit_prefix": "Metrisk prefiks",
+                    "unit_time": "Tidsenhet"
+                },
+                "data_description": {
+                    "round": "Styrer antall desimaler i utdataene.",
+                    "unit_prefix": "Utdataene skaleres i henhold til det valgte metriske prefikset.",
+                    "unit_time": "Utgangen vil bli skalert i henhold til den valgte tidsenheten."
+                },
+                "description": "Lag en sensor som beregner en Riemann-sum for \u00e5 estimere integralet til en sensor.",
+                "title": "Legg til Riemann sum integral sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "Presisjon"
+                },
+                "data_description": {
+                    "round": "Styrer antall desimaler i utdataene."
+                }
+            }
+        }
+    },
+    "title": "Integrasjon - Riemann sum integral sensor"
+}

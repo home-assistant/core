@@ -8,13 +8,13 @@ from plumlightpad import Plum
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
@@ -31,7 +31,7 @@ async def async_setup_entry(
     plum: Plum = hass.data[DOMAIN][entry.entry_id]
 
     def setup_entities(device) -> None:
-        entities = []
+        entities: list[LightEntity] = []
 
         if "lpid" in device:
             lightpad = plum.get_lightpad(device["lpid"])
@@ -94,14 +94,14 @@ class PlumLight(LightEntity):
         return self._load.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "model": "Dimmer",
-            "manufacturer": "Plum",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Plum",
+            model="Dimmer",
+            name=self.name,
+        )
 
     @property
     def brightness(self) -> int:
@@ -114,11 +114,16 @@ class PlumLight(LightEntity):
         return self._brightness > 0
 
     @property
-    def supported_features(self):
+    def color_mode(self) -> ColorMode:
         """Flag supported features."""
         if self._load.dimmable:
-            return SUPPORT_BRIGHTNESS
-        return 0
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -134,6 +139,9 @@ class PlumLight(LightEntity):
 
 class GlowRing(LightEntity):
     """Representation of a Plum Lightpad dimmer glow ring."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, lightpad):
         """Initialize the light."""
@@ -185,14 +193,14 @@ class GlowRing(LightEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "model": "Glow Ring",
-            "manufacturer": "Plum",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Plum",
+            model="Glow Ring",
+            name=self.name,
+        )
 
     @property
     def brightness(self) -> int:
@@ -213,11 +221,6 @@ class GlowRing(LightEntity):
     def icon(self):
         """Return the crop-portrait icon representing the glow ring."""
         return "mdi:crop-portrait"
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""

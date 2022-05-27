@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
@@ -14,7 +15,7 @@
                     "latitude": "Latitudine",
                     "longitude": "Logitudine"
                 },
-                "description": "Immettere la latitudine e la longitudine da monitorare:"
+                "description": "Immetti la latitudine e la longitudine da monitorare:"
             },
             "location": {
                 "data": {
@@ -22,12 +23,29 @@
                 },
                 "description": "Scegli una posizione da monitorare:"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Digita nuovamente la password per {username}:",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
                 },
                 "description": "Inserisci il tuo nome utente e password:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra la posizione monitorata sulla mappa"
+                },
+                "title": "Configura WattTime"
             }
         }
     }

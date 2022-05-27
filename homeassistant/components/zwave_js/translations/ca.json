@@ -26,13 +26,13 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Clau de xarxa",
                     "s0_legacy_key": "Clau d'S0 (est\u00e0ndard)",
                     "s2_access_control_key": "Clau de control d'acc\u00e9s d'S2",
                     "s2_authenticated_key": "Clau d'S2 autenticat",
                     "s2_unauthenticated_key": "Clau d'S2 no autenticat",
                     "usb_path": "Ruta del dispositiu USB"
                 },
+                "description": "El complement generar\u00e0 claus de seguretat si aquests camps es deixen buits.",
                 "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },
             "hassio_confirm": {
@@ -58,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Vols configurar {name} amb el complement Z-Wave JS?"
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir el servidor Z-Wave JS amb ID {home_id} que es troba a {url} a Home Assistant?",
+                "title": "Servidor Z-Wave JS descobert"
             }
         }
     },
@@ -112,13 +116,13 @@
                 "data": {
                     "emulate_hardware": "Emula maquinari",
                     "log_level": "Nivell dels registres",
-                    "network_key": "Clau de xarxa",
                     "s0_legacy_key": "Clau d'S0 (est\u00e0ndard)",
                     "s2_access_control_key": "Clau de control d'acc\u00e9s d'S2",
                     "s2_authenticated_key": "Clau d'S2 autenticat",
                     "s2_unauthenticated_key": "Clau d'S2 no autenticat",
                     "usb_path": "Ruta del dispositiu USB"
                 },
+                "description": "El complement generar\u00e0 claus de seguretat si aquests camps es deixen buits.",
                 "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },
             "install_addon": {
@@ -140,6 +144,5 @@
                 "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

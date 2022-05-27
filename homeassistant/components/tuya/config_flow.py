@@ -1,7 +1,6 @@
 """Config flow for Tuya."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from tuya_iot import AuthType, TuyaOpenAPI
@@ -19,17 +18,16 @@ from .const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DOMAIN,
+    LOGGER,
     SMARTLIFE_APP,
     TUYA_COUNTRIES,
     TUYA_RESPONSE_CODE,
     TUYA_RESPONSE_MSG,
-    TUYA_RESPONSE_PLATFROM_URL,
+    TUYA_RESPONSE_PLATFORM_URL,
     TUYA_RESPONSE_RESULT,
     TUYA_RESPONSE_SUCCESS,
     TUYA_SMART_APP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -78,7 +76,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 schema=data[CONF_APP_TYPE],
             )
 
-            _LOGGER.debug("Response %s", response)
+            LOGGER.debug("Response %s", response)
 
             if response.get(TUYA_RESPONSE_SUCCESS, False):
                 break
@@ -97,7 +95,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if response.get(TUYA_RESPONSE_SUCCESS, False):
                 if endpoint := response.get(TUYA_RESPONSE_RESULT, {}).get(
-                    TUYA_RESPONSE_PLATFROM_URL
+                    TUYA_RESPONSE_PLATFORM_URL
                 ):
                     data[CONF_ENDPOINT] = endpoint
 

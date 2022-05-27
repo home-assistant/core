@@ -1,11 +1,12 @@
 """Test event helpers."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
+from freezegun import freeze_time
 import jinja2
 import pytest
 
@@ -20,6 +21,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_track_entity_registry_updated_event,
     async_track_point_in_time,
     async_track_point_in_utc_time,
     async_track_same_state,
@@ -37,18 +39,13 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
     track_point_in_utc_time,
 )
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-def teardown():
-    """Stop everything that was started."""
-    dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
 async def test_track_point_in_time(hass):
@@ -1022,6 +1019,638 @@ async def test_track_template_result(hass):
     assert len(wildercard_runs) == 4
 
 
+async def test_track_template_result_none(hass):
+    """Test tracking template."""
+    specific_runs = []
+    wildcard_runs = []
+    wildercard_runs = []
+
+    template_condition = Template("{{state_attr('sensor.test', 'battery')}}", hass)
+    template_condition_var = Template(
+        "{{(state_attr('sensor.test', 'battery')|int(default=0)) + test }}", hass
+    )
+
+    def specific_run_callback(event, updates):
+        track_result = updates.pop()
+        result = int(track_result.result) if track_result.result is not None else None
+        specific_runs.append(result)
+
+    async_track_template_result(
+        hass, [TrackTemplate(template_condition, None)], specific_run_callback
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        track_result = updates.pop()
+        last_result = (
+            int(track_result.last_result)
+            if track_result.last_result is not None
+            else None
+        )
+        result = int(track_result.result) if track_result.result is not None else None
+        wildcard_runs.append((last_result, result))
+
+    async_track_template_result(
+        hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
+    )
+
+    async def wildercard_run_callback(event, updates):
+        track_result = updates.pop()
+        last_result = (
+            int(track_result.last_result)
+            if track_result.last_result is not None
+            else None
+        )
+        result = int(track_result.result) if track_result.result is not None else None
+        wildercard_runs.append((last_result, result))
+
+    async_track_template_result(
+        hass,
+        [TrackTemplate(template_condition_var, {"test": 5})],
+        wildercard_run_callback,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", "-")
+    await hass.async_block_till_done()
+
+    assert specific_runs == [None]
+    assert wildcard_runs == [(None, None)]
+    assert wildercard_runs == [(None, 5)]
+
+    hass.states.async_set("sensor.test", "-", {"battery": 5})
+    await hass.async_block_till_done()
+
+    assert specific_runs == [None, 5]
+    assert wildcard_runs == [(None, None), (None, 5)]
+    assert wildercard_runs == [(None, 5), (5, 10)]
+
+
+async def test_track_template_result_super_template(hass):
+    """Test tracking template with super template listening to same entity."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template("{{ is_number(states('sensor.test')) }}", hass)
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_super_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_super_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", "unavailable")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False]
+    assert wildcard_runs_availability == [False]
+    assert wildercard_runs_availability == [False]
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True, False]
+    assert wildcard_runs_availability == [False, True, False]
+    assert wildercard_runs_availability == [False, True, False]
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True, False, True]
+    assert wildcard_runs_availability == [False, True, False, True]
+    assert wildercard_runs_availability == [False, True, False, True]
+
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+    hass.states.async_set("sensor.test", "other")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+    assert len(specific_runs_availability) == 6
+    assert len(wildcard_runs_availability) == 6
+    assert len(wildercard_runs_availability) == 6
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+    assert len(specific_runs_availability) == 6
+    assert len(wildcard_runs_availability) == 6
+    assert len(wildercard_runs_availability) == 6
+
+    hass.states.async_set("sensor.test", 31)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 3
+    assert len(wildcard_runs) == 3
+    assert len(wildercard_runs) == 3
+    assert len(specific_runs_availability) == 6
+    assert len(wildcard_runs_availability) == 6
+    assert len(wildercard_runs_availability) == 6
+
+
+async def test_track_template_result_super_template_initially_false(hass):
+    """Test tracking template with super template listening to same entity."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template("{{ is_number(states('sensor.test')) }}", hass)
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    # Make the super template initially false
+    hass.states.async_set("sensor.test", "unavailable")
+    await hass.async_block_till_done()
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_super_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_super_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == []
+    assert wildcard_runs_availability == []
+    assert wildercard_runs_availability == []
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True, False]
+    assert wildcard_runs_availability == [True, False]
+    assert wildercard_runs_availability == [True, False]
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True, False, True]
+    assert wildcard_runs_availability == [True, False, True]
+    assert wildercard_runs_availability == [True, False, True]
+
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+    hass.states.async_set("sensor.test", "other")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+    assert len(specific_runs_availability) == 5
+    assert len(wildcard_runs_availability) == 5
+    assert len(wildercard_runs_availability) == 5
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+    assert len(specific_runs_availability) == 5
+    assert len(wildcard_runs_availability) == 5
+    assert len(wildercard_runs_availability) == 5
+
+    hass.states.async_set("sensor.test", 31)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 3
+    assert len(wildcard_runs) == 3
+    assert len(wildercard_runs) == 3
+    assert len(specific_runs_availability) == 5
+    assert len(wildcard_runs_availability) == 5
+    assert len(wildercard_runs_availability) == 5
+
+
+@pytest.mark.parametrize(
+    "availability_template",
+    [
+        "{{ states('sensor.test2') != 'unavailable' }}",
+        "{% if states('sensor.test2') != 'unavailable' -%} true {%- else -%} false {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} 1 {%- else -%} 0 {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} yes {%- else -%} no {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} on {%- else -%} off {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} enable {%- else -%} disable {%- endif %}",
+        # This will throw when sensor.test2 is not "unavailable"
+        "{% if states('sensor.test2') != 'unavailable' -%} {{'a' + 5}} {%- else -%} false {%- endif %}",
+    ],
+)
+async def test_track_template_result_super_template_2(hass, availability_template):
+    """Test tracking template with super template listening to different entities."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template(availability_template)
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    def _super_template_as_boolean(result):
+        if isinstance(result, TemplateError):
+            return True
+
+        return result_as_boolean(result)
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_super_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_super_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test2", "unavailable")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False]
+    assert wildcard_runs_availability == [False]
+    assert wildercard_runs_availability == [False]
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    hass.states.async_set("sensor.test2", "available")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test2", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+
+    hass.states.async_set("sensor.test2", "available")
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [False, True]
+    assert wildcard_runs_availability == [False, True]
+    assert wildercard_runs_availability == [False, True]
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+
+@pytest.mark.parametrize(
+    "availability_template",
+    [
+        "{{ states('sensor.test2') != 'unavailable' }}",
+        "{% if states('sensor.test2') != 'unavailable' -%} true {%- else -%} false {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} 1 {%- else -%} 0 {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} yes {%- else -%} no {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} on {%- else -%} off {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} enable {%- else -%} disable {%- endif %}",
+        # This will throw when sensor.test2 is not "unavailable"
+        "{% if states('sensor.test2') != 'unavailable' -%} {{'a' + 5}} {%- else -%} false {%- endif %}",
+    ],
+)
+async def test_track_template_result_super_template_2_initially_false(
+    hass, availability_template
+):
+    """Test tracking template with super template listening to different entities."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template(availability_template)
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    hass.states.async_set("sensor.test2", "unavailable")
+    await hass.async_block_till_done()
+
+    def _super_template_as_boolean(result):
+        if isinstance(result, TemplateError):
+            return True
+
+        return result_as_boolean(result)
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_super_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_super_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == []
+    assert wildcard_runs_availability == []
+    assert wildercard_runs_availability == []
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    hass.states.async_set("sensor.test2", "available")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test2", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+
+    hass.states.async_set("sensor.test2", "available")
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+
 async def test_track_template_result_complex(hass):
     """Test tracking template."""
     specific_runs = []
@@ -1355,6 +1984,69 @@ async def test_track_template_result_and_conditional(hass):
     assert specific_runs[2] == "on"
 
 
+async def test_track_template_result_and_conditional_upper_case(hass):
+    """Test tracking template with an and conditional with an upper case template."""
+    specific_runs = []
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "off")
+    template_str = '{% if states.light.A.state == "on" and states.light.B.state == "on" %}on{% else %}off{% endif %}'
+
+    template = Template(template_str, hass)
+
+    def specific_run_callback(event, updates):
+        specific_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template, None)], specific_run_callback
+    )
+    await hass.async_block_till_done()
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a"},
+        "time": False,
+    }
+
+    hass.states.async_set("light.b", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    hass.states.async_set("light.a", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+    assert specific_runs[0] == "on"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a", "light.b"},
+        "time": False,
+    }
+
+    hass.states.async_set("light.b", "off")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+    assert specific_runs[1] == "off"
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"light.a", "light.b"},
+        "time": False,
+    }
+
+    hass.states.async_set("light.a", "off")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    hass.states.async_set("light.b", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    hass.states.async_set("light.a", "on")
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+    assert specific_runs[2] == "on"
+
+
 async def test_track_template_result_iterator(hass):
     """Test tracking template."""
     iterator_runs = []
@@ -1559,7 +2251,7 @@ async def test_track_template_rate_limit(hass):
     assert refresh_runs == [0]
     info.async_refresh()
     assert refresh_runs == [0, 1]
-    hass.states.async_set("sensor.two", "any")
+    hass.states.async_set("sensor.TWO", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
@@ -1572,7 +2264,7 @@ async def test_track_template_rate_limit(hass):
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
-    hass.states.async_set("sensor.four", "any")
+    hass.states.async_set("sensor.fOuR", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
@@ -1585,6 +2277,217 @@ async def test_track_template_rate_limit(hass):
     hass.states.async_set("sensor.five", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2, 4]
+
+
+async def test_track_template_rate_limit_super(hass):
+    """Test template rate limit with super template."""
+    template_availability = Template(
+        "{{ states('sensor.one') != 'unavailable' }}", hass
+    )
+    template_refresh = Template("{{ states | count }}", hass)
+
+    availability_runs = []
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        for track_result in updates:
+            if track_result.template is template_refresh:
+                refresh_runs.append(track_result.result)
+            elif track_result.template is template_availability:
+                availability_runs.append(track_result.result)
+
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_refresh, None, timedelta(seconds=0.1)),
+        ],
+        refresh_listener,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == [0]
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0]
+    info.async_refresh()
+    assert refresh_runs == [0, 1]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0, 1]
+    hass.states.async_set("sensor.one", "unavailable")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0, 1]
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+    assert refresh_runs == [0, 1]
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0, 1]
+    hass.states.async_set("sensor.four", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0, 1]
+    # The super template renders as true -> trigger rerendering of all templates
+    hass.states.async_set("sensor.one", "available")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0, 1, 4]
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+    assert refresh_runs == [0, 1, 4]
+    hass.states.async_set("sensor.five", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [0, 1, 4]
+
+
+async def test_track_template_rate_limit_super_2(hass):
+    """Test template rate limit with rate limited super template."""
+    # Somewhat forced example of a rate limited template
+    template_availability = Template("{{ states | count % 2 == 1 }}", hass)
+    template_refresh = Template("{{ states | count }}", hass)
+
+    availability_runs = []
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        for track_result in updates:
+            if track_result.template is template_refresh:
+                refresh_runs.append(track_result.result)
+            elif track_result.template is template_availability:
+                availability_runs.append(track_result.result)
+
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None, timedelta(seconds=0.1)),
+            TrackTemplate(template_refresh, None, timedelta(seconds=0.1)),
+        ],
+        refresh_listener,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == []
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == []
+    info.async_refresh()
+    assert refresh_runs == [1]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1]
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+    assert refresh_runs == [1]
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1]
+    hass.states.async_set("sensor.four", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1]
+    hass.states.async_set("sensor.five", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1]
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+    assert refresh_runs == [1, 5]
+    hass.states.async_set("sensor.six", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1, 5]
+
+
+async def test_track_template_rate_limit_super_3(hass):
+    """Test template with rate limited super template."""
+    # Somewhat forced example of a rate limited template
+    template_availability = Template("{{ states | count % 2 == 1 }}", hass)
+    template_refresh = Template("{{ states | count }}", hass)
+
+    availability_runs = []
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        for track_result in updates:
+            if track_result.template is template_refresh:
+                refresh_runs.append(track_result.result)
+            elif track_result.template is template_availability:
+                availability_runs.append(track_result.result)
+
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None, timedelta(seconds=0.1)),
+            TrackTemplate(template_refresh, None),
+        ],
+        refresh_listener,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == []
+    hass.states.async_set("sensor.ONE", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == []
+    info.async_refresh()
+    assert refresh_runs == [1]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    # The super template is rate limited so stuck at `True`
+    assert refresh_runs == [1, 2]
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+    assert refresh_runs == [1, 2]
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    # The super template is rate limited so stuck at `False`
+    assert refresh_runs == [1, 2]
+    hass.states.async_set("sensor.four", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1, 2]
+    hass.states.async_set("sensor.FIVE", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1, 2]
+    next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+    assert refresh_runs == [1, 2, 5]
+    hass.states.async_set("sensor.six", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1, 2, 5, 6]
+    hass.states.async_set("sensor.seven", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == [1, 2, 5, 6, 7]
 
 
 async def test_track_template_rate_limit_suppress_listener(hass):
@@ -1614,7 +2517,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     await hass.async_block_till_done()
 
     assert refresh_runs == [0]
-    hass.states.async_set("sensor.one", "any")
+    hass.states.async_set("sensor.oNe", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0]
     info.async_refresh()
@@ -1643,7 +2546,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
         "time": False,
     }
     assert refresh_runs == [0, 1, 2]
-    hass.states.async_set("sensor.three", "any")
+    hass.states.async_set("sensor.Three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
     hass.states.async_set("sensor.four", "any")
@@ -1670,7 +2573,7 @@ async def test_track_template_rate_limit_suppress_listener(hass):
         "time": False,
     }
     assert refresh_runs == [0, 1, 2, 4]
-    hass.states.async_set("sensor.five", "any")
+    hass.states.async_set("sensor.Five", "any")
     await hass.async_block_till_done()
     # Rate limit hit and the all listener is shut off
     assert info.listeners == {
@@ -1749,7 +2652,7 @@ async def test_track_template_has_default_rate_limit(hass):
     assert refresh_runs == [1, 2]
 
 
-async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
+async def test_track_template_unavailable_states_has_default_rate_limit(hass):
     """Test template watching for unavailable states has a rate limit by default."""
     hass.states.async_set("sensor.zero", "unknown")
     template_refresh = Template(
@@ -2422,7 +3325,7 @@ async def test_track_time_interval(hass):
     assert len(specific_runs) == 2
 
 
-async def test_track_sunrise(hass, legacy_patchable_time):
+async def test_track_sunrise(hass):
     """Test track the sunrise."""
     latitude = 32.87336
     longitude = 117.22743
@@ -2453,42 +3356,46 @@ async def test_track_sunrise(hass, legacy_patchable_time):
 
     # Track sunrise
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub2 = async_track_sunrise(
             hass, callback(lambda: offset_runs.append(1)), offset
         )
 
     # run tests
-    async_fire_time_changed(hass, next_rising - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising - offset):
+        async_fire_time_changed(hass, next_rising - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_rising + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_rising + offset):
+        async_fire_time_changed(hass, next_rising + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
-async def test_track_sunrise_update_location(hass, legacy_patchable_time):
+async def test_track_sunrise_update_location(hass):
     """Test track the sunrise."""
     # Setup sun component
     hass.config.latitude = 32.87336
@@ -2516,16 +3423,17 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
 
     # Track sunrise
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
 
     # Move!
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
@@ -2535,10 +3443,11 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
     )
 
     # Mimic sunrise
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    # Did not increase
-    assert len(runs) == 1
+    with freeze_time(next_rising):
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        # Did not increase
+        assert len(runs) == 1
 
     # Get next sunrise
     mod = -1
@@ -2550,13 +3459,14 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
             break
         mod += 1
 
-    # Mimic sunrise at new location
-    async_fire_time_changed(hass, next_rising)
-    await hass.async_block_till_done()
-    assert len(runs) == 2
+    with freeze_time(next_rising):
+        # Mimic sunrise at new location
+        async_fire_time_changed(hass, next_rising)
+        await hass.async_block_till_done()
+        assert len(runs) == 2
 
 
-async def test_track_sunset(hass, legacy_patchable_time):
+async def test_track_sunset(hass):
     """Test track the sunset."""
     latitude = 32.87336
     longitude = 117.22743
@@ -2585,39 +3495,43 @@ async def test_track_sunset(hass, legacy_patchable_time):
 
     # Track sunset
     runs = []
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub = async_track_sunset(hass, callback(lambda: runs.append(1)))
 
     offset_runs = []
     offset = timedelta(minutes=30)
-    with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         unsub2 = async_track_sunset(
             hass, callback(lambda: offset_runs.append(1)), offset
         )
 
     # Run tests
-    async_fire_time_changed(hass, next_setting - offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 0
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting - offset):
+        async_fire_time_changed(hass, next_setting - offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 0
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 0
+    with freeze_time(next_setting):
+        async_fire_time_changed(hass, next_setting)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 0
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
     unsub()
     unsub2()
 
-    async_fire_time_changed(hass, next_setting + offset)
-    await hass.async_block_till_done()
-    assert len(runs) == 1
-    assert len(offset_runs) == 1
+    with freeze_time(next_setting + offset):
+        async_fire_time_changed(hass, next_setting + offset)
+        await hass.async_block_till_done()
+        assert len(runs) == 1
+        assert len(offset_runs) == 1
 
 
 async def test_async_track_time_change(hass):
@@ -2901,109 +3815,238 @@ async def test_periodic_task_duplicate_time(hass):
     unsub()
 
 
-async def test_periodic_task_entering_dst(hass):
+# DST starts early morning March 28th 2021
+@pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
+async def test_periodic_task_entering_dst(hass, freezer):
     """Test periodic task behavior when entering dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = datetime(
-        now.year + 1, 3, 25, 2, 31, 0, tzinfo=timezone
+    today = date.today().isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+
+    # Make sure we enter DST during the test
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=2)).utcoffset()
+
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        hour=2,
+        minute=30,
+        second=0,
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour=2,
-            minute=30,
-            second=0,
-        )
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 25, 1, 50, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{today} 01:50:00.999999+01:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 25, 3, 50, 0, 999999, tzinfo=timezone)
-    )
+    # There was no 02:30 today, the event should not fire until tomorrow
+    freezer.move_to(f"{today} 03:50:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 26, 1, 50, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{tomorrow} 01:50:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 26, 2, 50, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{tomorrow} 02:50:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     unsub()
 
 
-async def test_periodic_task_leaving_dst(hass):
-    """Test periodic task behavior when leaving dst."""
-    timezone = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(timezone)
+# DST starts early morning March 28th 2021
+@pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
+async def test_periodic_task_entering_dst_2(hass, freezer):
+    """Test periodic task behavior when entering dst.
+
+    This tests a task firing every second in the range 0..58 (not *:*:59)
+    """
+    hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
 
-    now = dt_util.utcnow()
+    today = date.today().isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
 
-    time_that_will_not_match_right_away = datetime(
-        now.year + 1, 10, 28, 2, 28, 0, tzinfo=timezone, fold=1
+    # Make sure we enter DST during the test
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=2)).utcoffset()
+
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        second=list(range(59)),
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour=2,
-            minute=30,
-            second=0,
-        )
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 10, 28, 2, 5, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 01:59:59.999999+01:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 03:00:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(
-        hass,
-        datetime(now.year + 2, 10, 28, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
-    )
+    freezer.move_to(f"{today} 03:00:01.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(
+    freezer.move_to(f"{tomorrow} 01:59:59.999999+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+
+    freezer.move_to(f"{tomorrow} 02:00:00.999999+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 4
+
+    unsub()
+
+
+# DST ends early morning October 31st 2021
+@pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
+async def test_periodic_task_leaving_dst(hass, freezer):
+    """Test periodic task behavior when leaving dst."""
+    hass.config.set_time_zone("Europe/Vienna")
+    specific_runs = []
+
+    today = date.today().isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+
+    # Make sure we leave DST during the test
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=1)).utcoffset()
+
+    unsub = async_track_time_change(
         hass,
-        datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
+        callback(lambda x: specific_runs.append(x)),
+        hour=2,
+        minute=30,
+        second=0,
     )
+
+    # The task should not fire yet
+    freezer.move_to(f"{today} 02:28:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    # The task should fire
+    freezer.move_to(f"{today} 02:30:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # The task should not fire again
+    freezer.move_to(f"{today} 02:55:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # DST has ended, the task should not fire yet
+    freezer.move_to(f"{today} 02:15:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1  # DST has ended
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # The task should fire
+    freezer.move_to(f"{today} 02:45:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
-    )
+    # The task should not fire again
+    freezer.move_to(f"{today} 02:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
+
+    # The task should fire again the next day
+    freezer.move_to(f"{tomorrow} 02:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+
+    unsub()
+
+
+# DST ends early morning October 31st 2021
+@pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
+async def test_periodic_task_leaving_dst_2(hass, freezer):
+    """Test periodic task behavior when leaving dst."""
+    hass.config.set_time_zone("Europe/Vienna")
+    specific_runs = []
+
+    today = date.today().isoformat()
+
+    # Make sure we leave DST during the test
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=1)).utcoffset()
+
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        minute=30,
+        second=0,
+    )
+
+    # The task should not fire yet
+    freezer.move_to(f"{today} 02:28:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    # The task should fire
+    freezer.move_to(f"{today} 02:55:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # DST has ended, the task should not fire yet
+    freezer.move_to(f"{today} 02:15:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # The task should fire
+    freezer.move_to(f"{today} 02:45:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    # The task should not fire again
+    freezer.move_to(f"{today} 02:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    # The task should fire again the next hour
+    freezer.move_to(f"{today} 03:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
 
     unsub()
 
@@ -3188,12 +4231,10 @@ async def test_track_point_in_utc_time_cancel(hass):
         with pytest.raises(TypeError):
             track_point_in_utc_time("nothass", run_callback, utc_now)
 
-        unsub1 = hass.helpers.event.track_point_in_utc_time(
-            run_callback, utc_now + timedelta(seconds=0.1)
+        unsub1 = track_point_in_utc_time(
+            hass, run_callback, utc_now + timedelta(seconds=0.1)
         )
-        hass.helpers.event.track_point_in_utc_time(
-            run_callback, utc_now + timedelta(seconds=0.1)
-        )
+        track_point_in_utc_time(hass, run_callback, utc_now + timedelta(seconds=0.1))
 
         unsub1()
 
@@ -3209,8 +4250,8 @@ async def test_async_track_point_in_time_cancel(hass):
     """Test cancel of async track point in time."""
 
     times = []
+    hass.config.set_time_zone("US/Hawaii")
     hst_tz = dt_util.get_time_zone("US/Hawaii")
-    dt_util.set_default_time_zone(hst_tz)
 
     @ha.callback
     def run_callback(local_time):
@@ -3220,12 +4261,10 @@ async def test_async_track_point_in_time_cancel(hass):
     utc_now = dt_util.utcnow()
     hst_now = utc_now.astimezone(hst_tz)
 
-    unsub1 = hass.helpers.event.async_track_point_in_time(
-        run_callback, hst_now + timedelta(seconds=0.1)
+    unsub1 = async_track_point_in_time(
+        hass, run_callback, hst_now + timedelta(seconds=0.1)
     )
-    hass.helpers.event.async_track_point_in_time(
-        run_callback, hst_now + timedelta(seconds=0.1)
-    )
+    async_track_point_in_time(hass, run_callback, hst_now + timedelta(seconds=0.1))
 
     unsub1()
 
@@ -3250,11 +4289,9 @@ async def test_async_track_entity_registry_updated_event(hass):
     def run_callback(event):
         event_data.append(event.data)
 
-    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, run_callback
-    )
-    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        new_entity_id, run_callback
+    unsub1 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
+    unsub2 = async_track_entity_registry_updated_event(
+        hass, new_entity_id, run_callback
     )
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
@@ -3320,12 +4357,10 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
     def failing_callback(event):
         raise ValueError
 
-    unsub1 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, failing_callback
+    unsub1 = async_track_entity_registry_updated_event(
+        hass, entity_id, failing_callback
     )
-    unsub2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        entity_id, run_callback
-    )
+    unsub2 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
     hass.bus.async_fire(
         EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
     )
@@ -3338,11 +4373,11 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
 
 async def test_async_track_entity_registry_updated_event_with_empty_list(hass):
     """Test async_track_entity_registry_updated_event passing an empty list of entities."""
-    unsub_single = hass.helpers.event.async_track_entity_registry_updated_event(
-        [], ha.callback(lambda event: None)
+    unsub_single = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
     )
-    unsub_single2 = hass.helpers.event.async_track_entity_registry_updated_event(
-        [], ha.callback(lambda event: None)
+    unsub_single2 = async_track_entity_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
     )
 
     unsub_single2()

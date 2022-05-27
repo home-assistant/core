@@ -7,6 +7,7 @@ import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -90,7 +91,9 @@ async def test_triggers(hass, mock_devices):
     ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
 
     expected_triggers = [
         {
@@ -99,6 +102,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -106,6 +110,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHAKEN,
             "subtype": SHAKEN,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -113,6 +118,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": DOUBLE_PRESS,
             "subtype": DOUBLE_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -120,6 +126,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHORT_PRESS,
             "subtype": SHORT_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -127,6 +134,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_PRESS,
             "subtype": LONG_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -134,6 +142,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_RELEASE,
             "subtype": LONG_RELEASE,
+            "metadata": {},
         },
     ]
     assert _same_lists(triggers, expected_triggers)
@@ -148,7 +157,9 @@ async def test_no_triggers(hass, mock_devices):
     ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
     assert triggers == [
         {
             "device_id": reg_device.id,
@@ -156,6 +167,7 @@ async def test_no_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         }
     ]
 

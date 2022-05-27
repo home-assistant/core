@@ -9,12 +9,24 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "La integraci\u00f3n Sense debe volver a autenticar la cuenta {email}."
+            },
             "user": {
                 "data": {
                     "email": "Correo electr\u00f3nico",
-                    "password": "Contrase\u00f1a"
+                    "password": "Contrase\u00f1a",
+                    "timeout": "Timeout"
                 },
                 "title": "Conectar a tu Sense Energy Monitor"
+            },
+            "validation": {
+                "data": {
+                    "code": "C\u00f3digo de verificaci\u00f3n"
+                }
             }
         }
     }

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/usgs_earthquakes_feed",
   "requirements": ["geojson_client==0.6"],
   "codeowners": ["@exxamalte"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["geojson_client"]
 }

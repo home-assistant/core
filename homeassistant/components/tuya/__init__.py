@@ -1,9 +1,9 @@
 """Support for Tuya Smart devices."""
 from __future__ import annotations
 
-import logging
 from typing import NamedTuple
 
+import requests
 from tuya_iot import (
     AuthType,
     TuyaDevice,
@@ -14,9 +14,12 @@ from tuya_iot import (
     TuyaOpenMQ,
 )
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
@@ -30,13 +33,12 @@ from .const import (
     CONF_PROJECT_TYPE,
     CONF_USERNAME,
     DOMAIN,
+    LOGGER,
     PLATFORMS,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
-    TUYA_SUPPORTED_PRODUCT_CATEGORIES,
+    DPCode,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HomeAssistantTuyaData(NamedTuple):
@@ -58,18 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.pop(CONF_PROJECT_TYPE)
         hass.config_entries.async_update_entry(entry, data=data)
 
-    success = await _init_tuya_sdk(hass, entry)
-
-    if not success:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-
-    return bool(success)
-
-
-async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth_type = AuthType(entry.data[CONF_AUTH_TYPE])
     api = TuyaOpenAPI(
         endpoint=entry.data[CONF_ENDPOINT],
@@ -80,22 +70,24 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api.set_dev_channel("hass")
 
-    if auth_type == AuthType.CUSTOM:
-        response = await hass.async_add_executor_job(
-            api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
-        )
-    else:
-        response = await hass.async_add_executor_job(
-            api.connect,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            entry.data[CONF_COUNTRY_CODE],
-            entry.data[CONF_APP_TYPE],
-        )
+    try:
+        if auth_type == AuthType.CUSTOM:
+            response = await hass.async_add_executor_job(
+                api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            )
+        else:
+            response = await hass.async_add_executor_job(
+                api.connect,
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_PASSWORD],
+                entry.data[CONF_COUNTRY_CODE],
+                entry.data[CONF_APP_TYPE],
+            )
+    except requests.exceptions.RequestException as err:
+        raise ConfigEntryNotReady(err) from err
 
     if response.get("success", False) is False:
-        _LOGGER.error("Tuya login error response: %s", response)
-        return False
+        raise ConfigEntryNotReady(response)
 
     tuya_mq = TuyaOpenMQ(api)
     tuya_mq.start()
@@ -116,10 +108,20 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.async_add_executor_job(home_manager.update_device_cache)
     await cleanup_device_registry(hass, device_manager)
 
+    # Migrate old unique_ids to the new format
+    async_migrate_entities_unique_ids(hass, entry, device_manager)
+
     # Register known device IDs
+    device_registry = dr.async_get(hass)
     for device in device_manager.device_map.values():
-        if device.category in TUYA_SUPPORTED_PRODUCT_CATEGORIES:
-            device_ids.add(device.id)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, device.id)},
+            manufacturer="Tuya",
+            name=device.name,
+            model=f"{device.product_name} (unsupported)",
+        )
+        device_ids.add(device.id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -129,12 +131,89 @@ async def cleanup_device_registry(
     hass: HomeAssistant, device_manager: TuyaDeviceManager
 ) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
-    device_registry_object = device_registry.async_get(hass)
-    for dev_id, device_entry in list(device_registry_object.devices.items()):
+    device_registry = dr.async_get(hass)
+    for dev_id, device_entry in list(device_registry.devices.items()):
         for item in device_entry.identifiers:
             if DOMAIN == item[0] and item[1] not in device_manager.device_map:
-                device_registry_object.async_remove_device(dev_id)
+                device_registry.async_remove_device(dev_id)
                 break
+
+
+@callback
+def async_migrate_entities_unique_ids(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_manager: TuyaDeviceManager
+) -> None:
+    """Migrate unique_ids in the entity registry to the new format."""
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    light_entries = {
+        entry.unique_id: entry
+        for entry in registry_entries
+        if entry.domain == LIGHT_DOMAIN
+    }
+    switch_entries = {
+        entry.unique_id: entry
+        for entry in registry_entries
+        if entry.domain == SWITCH_DOMAIN
+    }
+
+    for device in device_manager.device_map.values():
+        # Old lights where in `tuya.{device_id}` format, now the DPCode is added.
+        #
+        # If the device is a previously supported light category and still has
+        # the old format for the unique ID, migrate it to the new format.
+        #
+        # Previously only devices providing the SWITCH_LED DPCode were supported,
+        # thus this can be added to those existing IDs.
+        #
+        # `tuya.{device_id}` -> `tuya.{device_id}{SWITCH_LED}`
+        if (
+            device.category in ("dc", "dd", "dj", "fs", "fwl", "jsq", "xdd", "xxj")
+            and (entry := light_entries.get(f"tuya.{device.id}"))
+            and f"tuya.{device.id}{DPCode.SWITCH_LED}" not in light_entries
+        ):
+            entity_registry.async_update_entity(
+                entry.entity_id, new_unique_id=f"tuya.{device.id}{DPCode.SWITCH_LED}"
+            )
+
+        # Old switches has different formats for the unique ID, but is mappable.
+        #
+        # If the device is a previously supported switch category and still has
+        # the old format for the unique ID, migrate it to the new format.
+        #
+        # `tuya.{device_id}` -> `tuya.{device_id}{SWITCH}`
+        # `tuya.{device_id}_1` -> `tuya.{device_id}{SWITCH_1}`
+        # ...
+        # `tuya.{device_id}_6` -> `tuya.{device_id}{SWITCH_6}`
+        # `tuya.{device_id}_usb1` -> `tuya.{device_id}{SWITCH_USB1}`
+        # ...
+        # `tuya.{device_id}_usb6` -> `tuya.{device_id}{SWITCH_USB6}`
+        #
+        # In all other cases, the unique ID is not changed.
+        if device.category in ("bh", "cwysj", "cz", "dlq", "kg", "kj", "pc", "xxj"):
+            for postfix, dpcode in (
+                ("", DPCode.SWITCH),
+                ("_1", DPCode.SWITCH_1),
+                ("_2", DPCode.SWITCH_2),
+                ("_3", DPCode.SWITCH_3),
+                ("_4", DPCode.SWITCH_4),
+                ("_5", DPCode.SWITCH_5),
+                ("_6", DPCode.SWITCH_6),
+                ("_usb1", DPCode.SWITCH_USB1),
+                ("_usb2", DPCode.SWITCH_USB2),
+                ("_usb3", DPCode.SWITCH_USB3),
+                ("_usb4", DPCode.SWITCH_USB4),
+                ("_usb5", DPCode.SWITCH_USB5),
+                ("_usb6", DPCode.SWITCH_USB6),
+            ):
+                if (
+                    entry := switch_entries.get(f"tuya.{device.id}{postfix}")
+                ) and f"tuya.{device.id}{dpcode}" not in switch_entries:
+                    entity_registry.async_update_entity(
+                        entry.entity_id, new_unique_id=f"tuya.{device.id}{dpcode}"
+                    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -155,6 +234,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class DeviceListener(TuyaDeviceListener):
     """Device Update Listener."""
 
+    # pylint: disable=arguments-differ
+    # Library incorrectly defines methods as 'classmethod'
+    # https://github.com/tuya/tuya-iot-python-sdk/pull/48
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -169,29 +252,28 @@ class DeviceListener(TuyaDeviceListener):
     def update_device(self, device: TuyaDevice) -> None:
         """Update device status."""
         if device.id in self.device_ids:
-            _LOGGER.debug(
-                "_update-->%s;->>%s",
-                self,
+            LOGGER.debug(
+                "Received update for device %s: %s",
                 device.id,
+                self.device_manager.device_map[device.id].status,
             )
             dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
 
     def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""
-        if device.category in TUYA_SUPPORTED_PRODUCT_CATEGORIES:
-            # Ensure the device isn't present stale
-            self.hass.add_job(self.async_remove_device, device.id)
+        # Ensure the device isn't present stale
+        self.hass.add_job(self.async_remove_device, device.id)
 
-            self.device_ids.add(device.id)
-            dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+        self.device_ids.add(device.id)
+        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
-            device_manager = self.device_manager
-            device_manager.mq.stop()
-            tuya_mq = TuyaOpenMQ(device_manager.api)
-            tuya_mq.start()
+        device_manager = self.device_manager
+        device_manager.mq.stop()
+        tuya_mq = TuyaOpenMQ(device_manager.api)
+        tuya_mq.start()
 
-            device_manager.mq = tuya_mq
-            tuya_mq.add_message_listener(device_manager.on_message)
+        device_manager.mq = tuya_mq
+        tuya_mq.add_message_listener(device_manager.on_message)
 
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
@@ -200,11 +282,11 @@ class DeviceListener(TuyaDeviceListener):
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
-        _LOGGER.debug("Remove device: %s", device_id)
-        device_registry_object = device_registry.async_get(self.hass)
-        device_entry = device_registry_object.async_get_device(
+        LOGGER.debug("Remove device: %s", device_id)
+        device_registry = dr.async_get(self.hass)
+        device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}
         )
         if device_entry is not None:
-            device_registry_object.async_remove_device(device_entry.id)
+            device_registry.async_remove_device(device_entry.id)
             self.device_ids.discard(device_id)

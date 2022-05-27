@@ -38,5 +38,15 @@
                 "description": "Introdueix el nom d'usuari i contrasenya:"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra la ubicaci\u00f3 monitoritzada al mapa"
+                },
+                "title": "Configuraci\u00f3 de WattTime"
+            }
+        }
     }
 }

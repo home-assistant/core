@@ -18,7 +18,7 @@ set_time_to:
 
 set_myzone:
   name: Set MyZone
-  description: Change which zone is set as the reference for temperature control
+  description: Change which zone is set as the reference for temperature control (deprecated)
   target:
     entity:
       integration: advantage_air

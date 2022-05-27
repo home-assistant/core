@@ -8,7 +8,7 @@
         "error": {
             "connection_error": "\u7121\u6cd5\u9023\u7dda\u81f3 ESP\uff0c\u8acb\u78ba\u5b9a\u60a8\u7684 YAML \u6a94\u6848\u5305\u542b\u300capi:\u300d\u8a2d\u5b9a\u5217\u3002",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "invalid_psk": "\u50b3\u8f38\u5bc6\u9470\u7121\u6548\u3002\u8acb\u78ba\u5b9a\u8207\u8a2d\u5b9a\u5167\u6240\u8a2d\u5b9a\u4e4b\u5bc6\u9470\u76f8\u7b26\u5408",
+            "invalid_psk": "\u50b3\u8f38\u91d1\u9470\u7121\u6548\u3002\u8acb\u78ba\u5b9a\u8207\u8a2d\u5b9a\u5167\u6240\u8a2d\u5b9a\u4e4b\u91d1\u9470\u76f8\u7b26\u5408",
             "resolve_error": "\u7121\u6cd5\u89e3\u6790 ESP \u4f4d\u5740\uff0c\u5047\u5982\u6b64\u932f\u8aa4\u6301\u7e8c\u767c\u751f\uff0c\u8acb\u53c3\u8003\u8aaa\u660e\u8a2d\u5b9a\u70ba\u975c\u614b\u56fa\u5b9a IP \uff1a https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "{name}",
@@ -25,15 +25,15 @@
             },
             "encryption_key": {
                 "data": {
-                    "noise_psk": "\u5bc6\u9470"
+                    "noise_psk": "\u91d1\u9470"
                 },
-                "description": "\u8acb\u8f38\u5165 {name} \u8a2d\u5b9a\u4e2d\u6240\u8a2d\u5b9a\u4e4b\u5bc6\u9470\u3002"
+                "description": "\u8acb\u8f38\u5165 {name} \u8a2d\u5b9a\u4e2d\u6240\u8a2d\u5b9a\u4e4b\u91d1\u9470\u3002"
             },
             "reauth_confirm": {
                 "data": {
-                    "noise_psk": "\u5bc6\u9470"
+                    "noise_psk": "\u91d1\u9470"
                 },
-                "description": "ESPHome \u88dd\u7f6e {name} \u5df2\u958b\u555f\u50b3\u8f38\u52a0\u5bc6\u6216\u8b8a\u66f4\u5bc6\u9470\u3002\u8acb\u8f38\u5165\u66f4\u65b0\u5bc6\u9470\u3002"
+                "description": "ESPHome \u88dd\u7f6e {name} \u5df2\u958b\u555f\u50b3\u8f38\u52a0\u5bc6\u6216\u8b8a\u66f4\u91d1\u9470\u3002\u8acb\u8f38\u5165\u66f4\u65b0\u91d1\u9470\u3002"
             },
             "user": {
                 "data": {

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "no_home": "V konfigur\u00e1cii Home Assistant nie s\u00fa nastaven\u00e9 \u017eiadne dom\u00e1ce s\u00faradnice"
+        },
+        "error": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Nadmorsk\u00e1 v\u00fd\u0161ka",
+                    "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
+                    "longitude": "Zemepisn\u00e1 d\u013a\u017eka",
+                    "name": "N\u00e1zov"
+                },
+                "description": "Meteorologick\u00fd \u00fastav",
+                "title": "Umiestnenie"
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "Body": {
+    "Data": {}
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 255,
+      "Reason": "GetStorageRealtimeData request is not supported by this device.",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-12-09T15:34:05-03:00"
+  }
+}

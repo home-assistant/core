@@ -57,18 +57,21 @@ async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_re
             "type": "turn_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": "light",
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "domain": "light",
             "type": "toggle",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -102,6 +105,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
             "type": "is_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "condition": "device",
@@ -109,6 +113,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
             "type": "is_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -143,9 +148,18 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
         {
             "platform": "device",
             "domain": "light",
+            "type": "changed_states",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
+        },
+        {
+            "platform": "device",
+            "domain": "light",
             "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
         {
             "platform": "device",
@@ -153,6 +167,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
             "type": "turned_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
 
@@ -341,7 +356,7 @@ async def test_websocket_get_bad_condition_capabilities(
         {
             "id": 1,
             "type": "device_automation/condition/capabilities",
-            "condition": {"domain": "beer"},
+            "condition": {"condition": "device", "domain": "beer", "device_id": "1234"},
         }
     )
     msg = await client.receive_json()
@@ -364,7 +379,11 @@ async def test_websocket_get_no_condition_capabilities(
         {
             "id": 1,
             "type": "device_automation/condition/capabilities",
-            "condition": {"domain": "deconz"},
+            "condition": {
+                "condition": "device",
+                "domain": "deconz",
+                "device_id": "abcd",
+            },
         }
     )
     msg = await client.receive_json()
@@ -388,10 +407,10 @@ async def test_async_get_device_automations_single_device_trigger(
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
     result = await device_automation.async_get_device_automations(
-        hass, "trigger", [device_entry.id]
+        hass, device_automation.DeviceAutomationType.TRIGGER, [device_entry.id]
     )
     assert device_entry.id in result
-    assert len(result[device_entry.id]) == 2
+    assert len(result[device_entry.id]) == 3
 
 
 async def test_async_get_device_automations_all_devices_trigger(
@@ -406,9 +425,11 @@ async def test_async_get_device_automations_all_devices_trigger(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    result = await device_automation.async_get_device_automations(hass, "trigger")
+    result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.TRIGGER
+    )
     assert device_entry.id in result
-    assert len(result[device_entry.id]) == 2
+    assert len(result[device_entry.id]) == 3  # toggled, turned_on, turned_off
 
 
 async def test_async_get_device_automations_all_devices_condition(
@@ -423,7 +444,9 @@ async def test_async_get_device_automations_all_devices_condition(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    result = await device_automation.async_get_device_automations(hass, "condition")
+    result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.CONDITION
+    )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 2
 
@@ -440,7 +463,9 @@ async def test_async_get_device_automations_all_devices_action(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    result = await device_automation.async_get_device_automations(hass, "action")
+    result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.ACTION
+    )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 3
 
@@ -461,7 +486,9 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
         "homeassistant.components.light.device_trigger.async_get_triggers",
         side_effect=KeyError,
     ):
-        result = await device_automation.async_get_device_automations(hass, "trigger")
+        result = await device_automation.async_get_device_automations(
+            hass, device_automation.DeviceAutomationType.TRIGGER
+        )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 0
     assert "KeyError" in caplog.text
@@ -501,7 +528,7 @@ async def test_websocket_get_trigger_capabilities(
     triggers = msg["result"]
 
     id = 2
-    assert len(triggers) == 2
+    assert len(triggers) == 3  # toggled, turned_on, turned_off
     for trigger in triggers:
         await client.send_json(
             {
@@ -531,7 +558,7 @@ async def test_websocket_get_bad_trigger_capabilities(
         {
             "id": 1,
             "type": "device_automation/trigger/capabilities",
-            "trigger": {"domain": "beer"},
+            "trigger": {"platform": "device", "domain": "beer", "device_id": "abcd"},
         }
     )
     msg = await client.receive_json()
@@ -554,7 +581,7 @@ async def test_websocket_get_no_trigger_capabilities(
         {
             "id": 1,
             "type": "device_automation/trigger/capabilities",
-            "trigger": {"domain": "deconz"},
+            "trigger": {"platform": "device", "domain": "deconz", "device_id": "abcd"},
         }
     )
     msg = await client.receive_json()

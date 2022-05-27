@@ -1,27 +1,18 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
+from __future__ import annotations
+
 import logging
 
 from afsapi import AFSAPI
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -33,25 +24,12 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FRONTIER_SILICON = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_STOP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = "1234"
@@ -66,14 +44,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Frontier Silicon platform."""
     if discovery_info is not None:
         async_add_entities(
             [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD, None)],
             True,
         )
-        return True
+        return
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -85,17 +68,30 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             [AFSAPIDevice(f"http://{host}:{port}/device", password, name)], True
         )
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
-        return True
     except requests.exceptions.RequestException:
         _LOGGER.error(
             "Could not add the FSAPI device at %s:%s -> %s", host, port, password
         )
 
-    return False
-
 
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, device_url, password, name):
         """Initialize the Frontier Silicon API device."""
@@ -150,11 +146,6 @@ class AFSAPIDevice(MediaPlayerEntity):
     def media_content_type(self):
         """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
-
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return SUPPORT_FRONTIER_SILICON
 
     @property
     def state(self):

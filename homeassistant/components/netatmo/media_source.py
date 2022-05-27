@@ -52,11 +52,7 @@ class NetatmoSource(MediaSource):
         url = self.events[camera_id][event_id]["media_url"]
         return PlayMedia(url, MIME_TYPE)
 
-    async def async_browse_media(
-        self,
-        item: MediaSourceItem,
-        media_types: tuple[str] = ("video",),
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         try:
             source, camera_id, event_id = async_parse_identifier(item)

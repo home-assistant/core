@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "api_ratelimit": "API\u30ec\u30fc\u30c8\u5236\u9650\u3092\u8d85\u3048\u307e\u3057\u305f",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "error": {
+            "api_ratelimit": "API\u30ec\u30fc\u30c8\u5236\u9650\u3092\u8d85\u3048\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "\u56fd\u5225\u30b3\u30fc\u30c9"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3",
+                    "location": "\uff5e\u306e\u30c7\u30fc\u30bf\u3092\u53d6\u5f97"
+                },
+                "description": "\u30c8\u30fc\u30af\u30f3\u3092\u30ea\u30af\u30a8\u30b9\u30c8\u3059\u308b\u306b\u306f\u3001https://co2signal.com/ \u306b\u30a2\u30af\u30bb\u30b9\u3057\u3066\u304f\u3060\u3055\u3044"
+            }
+        }
+    }
+}

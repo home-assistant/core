@@ -3,18 +3,24 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
+from typing import Any, TypeVar
 
 from construct.core import ChecksumError
 from miio import Device, DeviceException
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.const import ATTR_CONNECTIONS, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN
+from .const import CONF_MAC, DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T", bound=DataUpdateCoordinator[Any])
 
 
 class ConnectXiaomiDevice:
@@ -48,14 +54,11 @@ class ConnectXiaomiDevice:
             )
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error) from error
+                raise AuthException(error) from error
 
-            _LOGGER.error(
-                "DeviceException during setup of xiaomi device with host %s: %s",
-                host,
-                error,
-            )
-            return False
+            raise SetupException(
+                f"DeviceException during setup of xiaomi device with host {host}"
+            ) from error
 
         _LOGGER.debug(
             "%s %s %s detected",
@@ -63,7 +66,6 @@ class ConnectXiaomiDevice:
             self._device_info.firmware_version,
             self._device_info.hardware_version,
         )
-        return True
 
 
 class XiaomiMiioEntity(Entity):
@@ -90,22 +92,22 @@ class XiaomiMiioEntity(Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "manufacturer": "Xiaomi",
-            "name": self._name,
-            "model": self._model,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Xiaomi",
+            model=self._model,
+            name=self._name,
+        )
 
         if self._mac is not None:
-            device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 
 
-class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
+class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
     """Representation of a base a coordinated Xiaomi Miio Entity."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
@@ -130,17 +132,17 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "manufacturer": "Xiaomi",
-            "name": self._device_name,
-            "model": self._model,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Xiaomi",
+            model=self._model,
+            name=self._device_name,
+        )
 
         if self._mac is not None:
-            device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 
@@ -171,25 +173,15 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             return cls._parse_datetime_time(value)
         if isinstance(value, datetime.datetime):
             return cls._parse_datetime_datetime(value)
-        if isinstance(value, datetime.timedelta):
-            return cls._parse_time_delta(value)
-        if isinstance(value, float):
-            return value
-        if isinstance(value, int):
-            return value
 
-        _LOGGER.warning(
-            "Could not determine how to parse state value of type %s for state %s and attribute %s",
-            type(value),
-            type(state),
-            attribute,
-        )
+        if value is None:
+            _LOGGER.debug("Attribute %s is None, this is unexpected", attribute)
 
         return value
 
     @staticmethod
     def _parse_time_delta(timedelta: datetime.timedelta) -> int:
-        return timedelta.seconds
+        return int(timedelta.total_seconds())
 
     @staticmethod
     def _parse_datetime_time(time: datetime.time) -> str:
@@ -205,7 +197,3 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     @staticmethod
     def _parse_datetime_datetime(time: datetime.datetime) -> str:
         return time.isoformat()
-
-    @staticmethod
-    def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
-        return time.seconds

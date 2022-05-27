@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, Dict, Mapping, Optional, Tuple, cast
+from typing import Any, Optional, cast
 
 import jwt
 
@@ -21,9 +22,9 @@ from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_REMOVED = "user_removed"
 
-_MfaModuleDict = Dict[str, MultiFactorAuthModule]
-_ProviderKey = Tuple[str, Optional[str]]
-_ProviderDict = Dict[_ProviderKey, AuthProvider]
+_MfaModuleDict = dict[str, MultiFactorAuthModule]
+_ProviderKey = tuple[str, Optional[str]]
+_ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
 class InvalidAuthError(Exception):
@@ -214,11 +215,19 @@ class AuthManager:
         return None
 
     async def async_create_system_user(
-        self, name: str, group_ids: list[str] | None = None
+        self,
+        name: str,
+        *,
+        group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> models.User:
         """Create a system user."""
         user = await self._store.async_create_user(
-            name=name, system_generated=True, is_active=True, group_ids=group_ids or []
+            name=name,
+            system_generated=True,
+            is_active=True,
+            group_ids=group_ids or [],
+            local_only=local_only,
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
@@ -226,13 +235,18 @@ class AuthManager:
         return user
 
     async def async_create_user(
-        self, name: str, group_ids: list[str] | None = None
+        self,
+        name: str,
+        *,
+        group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> models.User:
         """Create a user."""
         kwargs: dict[str, Any] = {
             "name": name,
             "is_active": True,
             "group_ids": group_ids or [],
+            "local_only": local_only,
         }
 
         if await self._user_should_be_owner():
@@ -276,6 +290,12 @@ class AuthManager:
         self, user: models.User, credentials: models.Credentials
     ) -> None:
         """Link credentials to an existing user."""
+        linked_user = await self.async_get_user_by_credentials(credentials)
+        if linked_user == user:
+            return
+        if linked_user is not None:
+            raise ValueError("Credential is already linked to a user")
+
         await self._store.async_link_user(user, credentials)
 
     async def async_remove_user(self, user: models.User) -> None:
@@ -286,7 +306,7 @@ class AuthManager:
         ]
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
         await self._store.async_remove_user(user)
 
@@ -298,13 +318,18 @@ class AuthManager:
         name: str | None = None,
         is_active: bool | None = None,
         group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> None:
         """Update a user."""
         kwargs: dict[str, Any] = {}
-        if name is not None:
-            kwargs["name"] = name
-        if group_ids is not None:
-            kwargs["group_ids"] = group_ids
+
+        for attr_name, value in (
+            ("name", name),
+            ("group_ids", group_ids),
+            ("local_only", local_only),
+        ):
+            if value is not None:
+                kwargs[attr_name] = value
         await self._store.async_update_user(user, **kwargs)
 
         if is_active is not None:
@@ -329,7 +354,7 @@ class AuthManager:
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
             # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(credentials)  # type: ignore
+            await provider.async_will_remove_credentials(credentials)  # type: ignore[attr-defined]
 
         await self._store.async_remove_credentials(credentials)
 

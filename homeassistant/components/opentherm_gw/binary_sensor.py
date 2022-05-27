@@ -3,11 +3,13 @@ import logging
 from pprint import pformat
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 from .const import (
@@ -21,12 +23,16 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the OpenTherm Gateway binary sensors."""
     sensors = []
     deprecated_sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
-    ent_reg = await async_get_registry(hass)
+    ent_reg = er.async_get(hass)
     for var, info in BINARY_SENSOR_INFO.items():
         device_class = info[0]
         friendly_name_format = info[1]
@@ -131,15 +137,15 @@ class OpenThermBinarySensor(BinarySensorEntity):
         return self._friendly_name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway.gw_id)},
-            "name": self._gateway.name,
-            "manufacturer": "Schelte Bron",
-            "model": "OpenTherm Gateway",
-            "sw_version": self._gateway.gw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway.gw_id)},
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            name=self._gateway.name,
+            sw_version=self._gateway.gw_version,
+        )
 
     @property
     def unique_id(self):

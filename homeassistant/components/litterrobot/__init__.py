@@ -3,13 +3,20 @@
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .hub import LitterRobotHub
 
-PLATFORMS = ["sensor", "switch", "vacuum"]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

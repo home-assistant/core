@@ -8,7 +8,7 @@ from homepluscontrol.homeplusapi import HomePlusControlApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # The Legrand Home+ Control platform is currently limited to "switch" entities
-PLATFORMS = ["switch"]
+PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

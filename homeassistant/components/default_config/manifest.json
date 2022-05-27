@@ -3,6 +3,7 @@
   "name": "Default Config",
   "documentation": "https://www.home-assistant.io/integrations/default_config",
   "dependencies": [
+    "application_credentials",
     "automation",
     "cloud",
     "counter",
@@ -11,6 +12,7 @@
     "frontend",
     "history",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
@@ -30,11 +32,10 @@
     "tag",
     "timer",
     "usb",
-    "updater",
     "webhook",
     "zeroconf",
     "zone"
   ],
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

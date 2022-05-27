@@ -1,5 +1,76 @@
+[build-system]
+requires = ["setuptools~=62.3", "wheel~=0.37.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name        = "homeassistant"
+version     = "2022.7.0.dev0"
+license     = {text = "Apache-2.0"}
+description = "Open-source home automation platform running on Python 3."
+readme      = "README.rst"
+authors     = [
+    {name = "The Home Assistant Authors", email = "hello@home-assistant.io"}
+]
+keywords    = ["home", "automation"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Home Automation",
+]
+requires-python = ">=3.9.0"
+dependencies    = [
+    "aiohttp==3.8.1",
+    "astral==2.2",
+    "async_timeout==4.0.2",
+    "attrs==21.2.0",
+    "atomicwrites==1.4.0",
+    "awesomeversion==22.5.1",
+    "bcrypt==3.1.7",
+    "certifi>=2021.5.30",
+    "ciso8601==2.2.0",
+    # When bumping httpx, please check the version pins of
+    # httpcore, anyio, and h11 in gen_requirements_all
+    "httpx==0.23.0",
+    "ifaddr==0.1.7",
+    "jinja2==3.1.2",
+    "PyJWT==2.4.0",
+    # PyJWT has loose dependency. We want the latest one.
+    "cryptography==36.0.2",
+    "pip>=21.0,<22.2",
+    "python-slugify==4.0.1",
+    "pyyaml==6.0",
+    "requests==2.27.1",
+    "typing-extensions>=3.10.0.2,<5.0",
+    "voluptuous==0.13.1",
+    "voluptuous-serialize==2.5.0",
+    "yarl==1.7.2",
+]
+
+[project.urls]
+"Source Code" = "https://github.com/home-assistant/core"
+"Bug Reports" = "https://github.com/home-assistant/core/issues"
+"Docs: Dev"   = "https://developers.home-assistant.io/"
+"Discord"     = "https://www.home-assistant.io/join-chat/"
+"Forum"       = "https://community.home-assistant.io/"
+
+[project.scripts]
+hass = "homeassistant.__main__:main"
+
+[tool.setuptools]
+platforms = ["any"]
+zip-safe  = false
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["homeassistant*"]
+
 [tool.black]
-target-version = ["py38"]
+target-version = ["py39", "py310"]
 exclude = 'generated'
 
 [tool.isort]
@@ -17,19 +88,29 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
-py-version = "3.8"
+py-version = "3.9"
 ignore = [
     "tests",
 ]
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
-init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(str(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins")))'
+init-hook = """\
+    from pathlib import Path; \
+    import sys; \
+
+    from pylint.config import find_default_config_files; \
+
+    sys.path.append( \
+        str(Path(next(find_default_config_files())).parent.joinpath('pylint/plugins'))
+    ) \
+    """
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "pylint_strict_informational",
     "hass_constructor",
+    "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
 ]
@@ -53,7 +134,7 @@ good-names = [
     "j",
     "k",
     "Run",
-    "T",
+    "ip",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
@@ -71,13 +152,13 @@ good-names = [
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
+# no-self-use - little added value with too many false-positives
 # ---
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 # consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
     "format",
-    "abstract-class-little-used",
     "abstract-method",
     "cyclic-import",
     "duplicate-code",
@@ -98,6 +179,7 @@ disable = [
     "unused-argument",
     "wrong-import-order",
     "consider-using-f-string",
+    "no-self-use",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
 ]
@@ -113,6 +195,7 @@ score = false
 ignored-classes = [
     "_CountingAttr",  # for attrs
 ]
+mixin-class-rgx = ".*[Mm]ix[Ii]n"
 
 [tool.pylint.FORMAT]
 expected-line-ending-format = "LF"
@@ -138,3 +221,5 @@ norecursedirs = [
     ".git",
     "testing_config",
 ]
+log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"

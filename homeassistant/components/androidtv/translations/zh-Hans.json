@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86",
+            "invalid_unique_id": "\u65e0\u6cd5\u786e\u5b9a\u8bbe\u5907\u7684\u6709\u6548 unique ID"
+        },
+        "error": {
+            "adbkey_not_file": "\u672a\u627e\u5230 ADB \u5bc6\u94a5\u6587\u4ef6",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "key_and_server": "\u53ea\u63d0\u4f9b\u4e86 ADB \u79d8\u94a5\u6216 ADB \u670d\u52a1\u5668",
+            "unknown": "\u975e\u9884\u671f\u7684\u9519\u8bef"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "ADB \u670d\u52a1\u5668 IP \u5730\u5740\uff08\u7559\u7a7a\u4e0d\u4f7f\u7528\uff09",
+                    "adb_server_port": "ADB \u670d\u52a1\u5668\u7aef\u53e3",
+                    "adbkey": "ADB \u5bc6\u94a5\u6587\u4ef6\u8def\u5f84\uff08\u7559\u7a7a\u4ee5\u81ea\u52a8\u751f\u6210\uff09",
+                    "device_class": "\u8bbe\u5907\u7c7b\u578b",
+                    "host": "\u4e3b\u673a",
+                    "port": "\u7aef\u53e3"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "\u72b6\u6001\u68c0\u6d4b\u89c4\u5219\u65e0\u6548"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "\u52fe\u9009\u4ee5\u5220\u9664\u5e94\u7528\u7a0b\u5e8f",
+                    "app_id": "\u5e94\u7528\u7a0b\u5e8f ID",
+                    "app_name": "\u5e94\u7528\u7a0b\u5e8f\u540d\u79f0"
+                },
+                "description": "\u914d\u7f6e\u5e94\u7528\u7a0b\u5e8f ID {app_id}",
+                "title": "\u914d\u7f6e Android TV \u5e94\u7528"
+            },
+            "init": {
+                "data": {
+                    "apps": "\u914d\u7f6e\u5e94\u7528\u7a0b\u5e8f\u5217\u8868",
+                    "exclude_unnamed_apps": "\u4ece\u4fe1\u53f7\u6e90\u5217\u8868\u4e2d\u6392\u9664\u672a\u77e5\u540d\u79f0\u7684\u5e94\u7528",
+                    "get_sources": "\u83b7\u53d6\u8fd0\u884c\u4e2d\u7684\u5e94\u7528\u4f5c\u4e3a\u4fe1\u53f7\u6e90\u5217\u8868",
+                    "screencap": "\u4f7f\u7528\u5c4f\u5e55\u622a\u56fe\u4f5c\u4e3a\u4e13\u8f91\u5c01\u9762",
+                    "state_detection_rules": "\u914d\u7f6e\u72b6\u6001\u68c0\u6d4b\u89c4\u5219",
+                    "turn_off_command": "ADB shell \u5173\u673a\u547d\u4ee4\uff08\u7559\u7a7a\u4ee5\u4f7f\u7528\u9ed8\u8ba4\u503c\uff09",
+                    "turn_on_command": "ADB shell \u5f00\u673a\u547d\u4ee4\uff08\u7559\u7a7a\u4ee5\u4f7f\u7528\u9ed8\u8ba4\u503c\uff09"
+                }
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "\u52fe\u9009\u4ee5\u5220\u9664\u89c4\u5219",
+                    "rule_id": "\u5e94\u7528\u7a0b\u5e8f ID",
+                    "rule_values": "\u72b6\u6001\u68c0\u6d4b\u89c4\u5219\u5217\u8868\uff08\u8bf7\u53c2\u9605\u6587\u6863\uff09"
+                },
+                "description": "\u4e3a\u5e94\u7528\u7a0b\u5e8f ID {rule_id} \u914d\u7f6e\u68c0\u6d4b\u89c4\u5219",
+                "title": "\u914d\u7f6e Android TV \u72b6\u6001\u68c0\u6d4b\u89c4\u5219"
+            }
+        }
+    }
+}

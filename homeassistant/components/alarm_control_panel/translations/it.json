@@ -1,11 +1,11 @@
 {
     "device_automation": {
         "action_type": {
-            "arm_away": "Armare {entity_name} uscito",
-            "arm_home": "Armare {entity_name} casa",
-            "arm_night": "Armare {entity_name} notte",
-            "arm_vacation": "Armare {entity_name} vacanza",
-            "disarm": "Disarmare {entity_name}",
+            "arm_away": "Attiva {entity_name} fuori casa",
+            "arm_home": "Attiva {entity_name} casa",
+            "arm_night": "Attiva {entity_name} notte",
+            "arm_vacation": "Attiva {entity_name} vacanza",
+            "disarm": "Disattiva {entity_name}",
             "trigger": "Attivazione {entity_name}"
         },
         "condition_type": {
@@ -32,13 +32,13 @@
             "armed_custom_bypass": "Attivo con bypass personalizzato",
             "armed_home": "Attivo in casa",
             "armed_night": "Attivo Notte",
-            "armed_vacation": "Attivo Vacanza",
-            "arming": "In Attivazione",
+            "armed_vacation": "Attivo in vacanza",
+            "arming": "In attivazione",
             "disarmed": "Disattivo",
-            "disarming": "In Disattivazione",
+            "disarming": "In disattivazione",
             "pending": "In sospeso",
             "triggered": "Attivato"
         }
     },
-    "title": "Pannello di Controllo degli Allarmi"
+    "title": "Pannello di controllo degli allarmi"
 }

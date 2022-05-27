@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "cloud": {
+                "data": {
+                    "account_id": "Konta ID"
+                }
+            }
+        }
+    }
+}

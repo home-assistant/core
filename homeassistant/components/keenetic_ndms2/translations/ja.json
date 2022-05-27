@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30a2\u30ab\u30a6\u30f3\u30c8\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "no_udn": "SSDP\u691c\u51fa\u60c5\u5831\u306b\u3001UDN\u304c\u3042\u308a\u307e\u305b\u3093",
+            "not_keenetic_ndms2": "\u767a\u898b\u3055\u308c\u305f\u30a2\u30a4\u30c6\u30e0\u306fKeenetic router\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "title": "Keenetic NDMS2\u30eb\u30fc\u30bf\u30fc\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "\u30db\u30fc\u30e0\u30a4\u30f3\u30bf\u30fc\u30d0\u30eb\u3092\u691c\u8a0e",
+                    "include_arp": "ARP\u30c7\u30fc\u30bf\u3092\u4f7f\u7528(\u30db\u30c3\u30c8\u30b9\u30dd\u30c3\u30c8 \u30c7\u30fc\u30bf\u3092\u4f7f\u7528\u3057\u305f\u5834\u5408\u306f\u7121\u8996)",
+                    "include_associated": "WiFi AP\u30a2\u30bd\u30b7\u30a8\u30fc\u30b7\u30e7\u30f3 \u30c7\u30fc\u30bf\u3092\u4f7f\u7528(\u30db\u30c3\u30c8\u30b9\u30dd\u30c3\u30c8\u30c7\u30fc\u30bf\u3092\u4f7f\u7528\u3057\u305f\u5834\u5408\u306f\u7121\u8996)",
+                    "interfaces": "\u30b9\u30ad\u30e3\u30f3\u3059\u308b\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9\u3092\u9078\u629e",
+                    "scan_interval": "\u30b9\u30ad\u30e3\u30f3\u9593\u9694",
+                    "try_hotspot": "'ip hotspot'\u30c7\u30fc\u30bf\u3092\u4f7f\u7528\u3059\u308b(\u6700\u3082\u6b63\u78ba)"
+                }
+            }
+        }
+    }
+}

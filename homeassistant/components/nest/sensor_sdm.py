@@ -4,22 +4,20 @@ from __future__ import annotations
 import logging
 
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
-from google_nest_sdm.exceptions import GoogleNestException
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,13 +36,7 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the sensors."""
 
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    try:
-        device_manager = await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
-        _LOGGER.warning("Failed to get devices: %s", err)
-        raise PlatformNotReady from err
-
+    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
     entities: list[SensorEntity] = []
     for device in device_manager.devices.values():
         if TemperatureTrait.NAME in device.traits:
@@ -57,8 +49,8 @@ async def async_setup_sdm_entry(
 class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
-    _attr_shoud_poll = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
@@ -77,7 +69,7 @@ class SensorBase(SensorEntity):
 class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -89,13 +81,16 @@ class TemperatureSensor(SensorBase):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
-        return trait.ambient_temperature_celsius
+        # Round for display purposes because the API returns 5 decimal places.
+        # This can be removed if the SDM API issue is fixed, or a frontend
+        # display fix is added for all integrations.
+        return float(round(trait.ambient_temperature_celsius, 1))
 
 
 class HumiditySensor(SensorBase):
     """Representation of a Humidity Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
@@ -104,7 +99,8 @@ class HumiditySensor(SensorBase):
         return f"{self._device_info.device_name} Humidity"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
-        return trait.ambient_humidity_percent
+        # Cast without loss of precision because the API always returns an integer.
+        return int(trait.ambient_humidity_percent)

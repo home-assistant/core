@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
         "step": {
             "usb_manual_config": {
                 "data": {
@@ -16,12 +23,12 @@
     },
     "options": {
         "step": {
-            "usb_config_option": {
+            "usb_config": {
                 "data": {
                     "usb_path": "Cesta k USB za\u0159\u00edzen\u00ed"
                 }
             },
-            "usb_manual_config_option": {
+            "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "Cesta k USB za\u0159\u00edzen\u00ed"
                 }

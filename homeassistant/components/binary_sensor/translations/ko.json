@@ -89,6 +89,9 @@
             "vibration": "{entity_name}\uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud558\uae30 \uc2dc\uc791\ud588\uc744 \ub54c"
         }
     },
+    "device_class": {
+        "co": "\uc77c\uc0b0\ud654\ud0c4\uc18c"
+    },
     "state": {
         "_": {
             "off": "\uaebc\uc9d0",

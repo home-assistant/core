@@ -5,7 +5,8 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
-from ipaddress import ip_address
+from http import HTTPStatus
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final
@@ -14,8 +15,8 @@ from aiohttp.web import Application, Request, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -66,7 +67,7 @@ async def ban_middleware(
         return await handler(request)
 
     # Verify if IP is not banned
-    ip_address_ = ip_address(request.remote)
+    ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
     is_banned = any(
         ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
     )
@@ -89,9 +90,9 @@ def log_invalid_auth(
     async def handle_req(
         view: HomeAssistantView, request: Request, *args: Any, **kwargs: Any
     ) -> StreamResponse:
-        """Try to log failed login attempts if response status >= 400."""
+        """Try to log failed login attempts if response status >= BAD_REQUEST."""
         resp = await func(view, request, *args, **kwargs)
-        if resp.status >= HTTP_BAD_REQUEST:
+        if resp.status >= HTTPStatus.BAD_REQUEST:
             await process_wrong_login(request)
         return resp
 
@@ -106,7 +107,7 @@ async def process_wrong_login(request: Request) -> None:
     """
     hass = request.app["hass"]
 
-    remote_addr = ip_address(request.remote)
+    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
     remote_host = request.remote
     with suppress(herror):
         remote_host, _, _ = await hass.async_add_executor_job(
@@ -123,8 +124,8 @@ async def process_wrong_login(request: Request) -> None:
 
     _LOGGER.warning(log_msg)
 
-    hass.components.persistent_notification.async_create(
-        notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+    persistent_notification.async_create(
+        hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
     # Check if ban middleware is loaded
@@ -134,11 +135,12 @@ async def process_wrong_login(request: Request) -> None:
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
     # Supervisor IP should never be banned
-    if (
-        "hassio" in hass.config.components
-        and hass.components.hassio.get_supervisor_ip() == str(remote_addr)
-    ):
-        return
+    if "hassio" in hass.config.components:
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components import hassio
+
+        if hassio.get_supervisor_ip() == str(remote_addr):
+            return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
@@ -153,7 +155,8 @@ async def process_wrong_login(request: Request) -> None:
 
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
@@ -167,7 +170,7 @@ async def process_success_login(request: Request) -> None:
     No release IP address from banned list function, it can only be done by
     manual modify ip bans config file.
     """
-    remote_addr = ip_address(request.remote)
+    remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
 
     # Check if ban middleware is loaded
     if KEY_BANNED_IPS not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
@@ -186,7 +189,11 @@ async def process_success_login(request: Request) -> None:
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime | None = None) -> None:
+    def __init__(
+        self,
+        ip_ban: str | IPv4Address | IPv6Address,
+        banned_at: datetime | None = None,
+    ) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or dt_util.utcnow()

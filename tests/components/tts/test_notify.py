@@ -1,6 +1,4 @@
 """The tests for the TTS component."""
-from unittest.mock import patch
-
 import pytest
 import yarl
 
@@ -20,16 +18,6 @@ from tests.common import assert_setup_component, async_mock_service
 def relative_url(url):
     """Convert an absolute url to a relative one."""
     return str(yarl.URL(url).relative())
-
-
-@pytest.fixture(autouse=True)
-def mutagen_mock():
-    """Mock writing tags."""
-    with patch(
-        "homeassistant.components.tts.SpeechManager.write_tags",
-        side_effect=lambda *args: args[1],
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)

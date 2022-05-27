@@ -1,4 +1,6 @@
 """Support for the Mediaroom Set-up-box."""
+from __future__ import annotations
+
 import logging
 
 from pymediaroom import (
@@ -10,20 +12,12 @@ from pymediaroom import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -36,9 +30,11 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,18 +46,7 @@ DISCOVERY_MEDIAROOM = "mediaroom_discovery_installed"
 MEDIA_TYPE_MEDIAROOM = "mediaroom"
 
 SIGNAL_STB_NOTIFY = "mediaroom_stb_discovered"
-SUPPORT_MEDIAROOM = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY
-)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -73,13 +58,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Mediaroom platform."""
-    known_hosts = hass.data.get(DATA_MEDIAROOM)
-    if known_hosts is None:
+    if (known_hosts := hass.data.get(DATA_MEDIAROOM)) is None:
         known_hosts = hass.data[DATA_MEDIAROOM] = []
-    host = config.get(CONF_HOST)
-    if host:
+    if host := config.get(CONF_HOST):
         async_add_entities(
             [
                 MediaroomDevice(
@@ -90,18 +78,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 )
             ]
         )
-        hass.data[DATA_MEDIAROOM].append(host)
+        known_hosts.append(host)
 
     _LOGGER.debug("Trying to discover Mediaroom STB")
 
     def callback_notify(notify):
         """Process NOTIFY message from STB."""
-        if notify.ip_address in hass.data[DATA_MEDIAROOM]:
+        if notify.ip_address in known_hosts:
             dispatcher_send(hass, SIGNAL_STB_NOTIFY, notify)
             return
 
         _LOGGER.debug("Discovered new stb %s", notify.ip_address)
-        hass.data[DATA_MEDIAROOM].append(notify.ip_address)
+        known_hosts.append(notify.ip_address)
         new_stb = MediaroomDevice(
             host=notify.ip_address, device_id=notify.device_uuid, optimistic=False
         )
@@ -128,6 +116,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class MediaroomDevice(MediaPlayerEntity):
     """Representation of a Mediaroom set-up-box on the network."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def set_state(self, mediaroom_state):
         """Map pymediaroom state to HA state."""
@@ -234,11 +235,6 @@ class MediaroomDevice(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_MEDIAROOM
 
     @property
     def media_content_type(self):

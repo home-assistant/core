@@ -1,22 +1,27 @@
 """Support for WeMo binary sensors."""
 import asyncio
-import logging
 
-from pywemo import Insight, Maker
+from pywemo import Insight, Maker, StandbyState
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity, WemoEntity
+from .wemo_device import DeviceCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(coordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
         if isinstance(coordinator.wemo, Insight):
             async_add_entities([InsightBinarySensor(coordinator)])
@@ -35,32 +40,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoBinarySensor(WemoEntity, BinarySensorEntity):
+class WemoBinarySensor(WemoBinaryStateEntity, BinarySensorEntity):
     """Representation a WeMo binary sensor."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on. Standby is on."""
-        return self.wemo.get_state()
 
 
 class MakerBinarySensor(WemoEntity, BinarySensorEntity):
     """Maker device's sensor port."""
 
     _name_suffix = "Sensor"
+    wemo: Maker
 
     @property
     def is_on(self) -> bool:
         """Return true if the Maker's sensor is pulled low."""
-        return self.wemo.has_sensor and self.wemo.sensor_state == 0
+        return self.wemo.has_sensor != 0 and self.wemo.sensor_state == 0
 
 
 class InsightBinarySensor(WemoBinarySensor):
     """Sensor representing the device connected to the Insight Switch."""
 
     _name_suffix = "Device"
+    wemo: Insight
 
     @property
     def is_on(self) -> bool:
         """Return true device connected to the Insight Switch is on."""
-        return super().is_on and self.wemo.insight_params["state"] == "1"
+        return super().is_on and self.wemo.standby_state == StandbyState.ON

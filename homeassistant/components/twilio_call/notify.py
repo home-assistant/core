@@ -43,10 +43,7 @@ class TwilioCallNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Call to specified target users."""
-
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             _LOGGER.info("At least 1 target is required")
             return
 

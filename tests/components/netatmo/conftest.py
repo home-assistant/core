@@ -22,7 +22,7 @@ def mock_config_entry_fixture(hass):
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": " ".join(ALL_SCOPES),
+                "scope": ALL_SCOPES,
             },
         },
         options={
@@ -53,7 +53,7 @@ def mock_config_entry_fixture(hass):
     return mock_entry
 
 
-@pytest.fixture
+@pytest.fixture(name="netatmo_auth")
 def netatmo_auth():
     """Restrict loaded platforms to list given."""
     with patch(

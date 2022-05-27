@@ -2,33 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet.",
+            "email_2fa_timed_out": "Zeit\u00fcberschreitung beim Warten auf E-Mail-basierte Zwei-Faktor-Authentifizierung.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "identifier_exists": "Konto bereits registriert",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "still_awaiting_mfa": "Immernoch warten auf MFA-E-Mail-Klick",
             "unknown": "Unerwarteter Fehler"
         },
+        "progress": {
+            "email_2fa": "\u00dcberpr\u00fcfe deine E-Mails auf einen Best\u00e4tigungslink von Simplisafe."
+        },
         "step": {
-            "mfa": {
-                "description": "Pr\u00fcfe deine E-Mail auf einen Link von SimpliSafe. Kehre nach der Verifizierung des Links hierher zur\u00fcck, um die Installation der Integration abzuschlie\u00dfen.",
-                "title": "SimpliSafe Multi-Faktor-Authentifizierung"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Dein Zugriffstoken ist abgelaufen oder wurde widerrufen. Gib dein Passwort ein, um dein Konto erneut zu verkn\u00fcpfen.",
+                "description": "Bitte gib das Passwort f\u00fcr {username} erneut ein.",
                 "title": "Integration erneut authentifizieren"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Code"
+                },
+                "description": "Gib den Code f\u00fcr die Zwei-Faktor-Authentifizierung ein, den du per SMS erhalten hast."
             },
             "user": {
                 "data": {
-                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
                     "password": "Passwort",
-                    "username": "E-Mail"
+                    "username": "Benutzername"
                 },
-                "title": "Gib deine Informationen ein"
+                "description": "Gib deinen Benutzernamen und Passwort ein."
             }
         }
     },

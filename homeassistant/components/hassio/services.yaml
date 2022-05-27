@@ -66,52 +66,6 @@ host_shutdown:
   name: Poweroff the host system.
   description: Poweroff the host system.
 
-snapshot_full:
-  name: Create a full backup.
-  description: Create a full backup (deprecated, use backup_full instead).
-  fields:
-    name:
-      name: Name
-      description: Optional (default = current date and time).
-      example: "Backup 1"
-      selector:
-        text:
-    password:
-      name: Password
-      description: Optional password.
-      example: "password"
-      selector:
-        text:
-
-snapshot_partial:
-  name: Create a partial backup.
-  description: Create a partial backup (deprecated, use backup_partial instead).
-  fields:
-    addons:
-      name: Add-ons
-      description: Optional list of add-on slugs.
-      example: ["core_ssh", "core_samba", "core_mosquitto"]
-      selector:
-        object:
-    folders:
-      name: Folders
-      description: Optional list of directories.
-      example: ["homeassistant", "share"]
-      selector:
-        object:
-    name:
-      name: Name
-      description: Optional (default = current date and time).
-      example: "Partial backup 1"
-      selector:
-        text:
-    password:
-      name: Password
-      description: Optional password.
-      example: "password"
-      selector:
-        text:
-
 backup_full:
   name: Create a full backup.
   description: Create a full backup.
@@ -128,11 +82,22 @@ backup_full:
       example: "password"
       selector:
         text:
+    compressed:
+      name: Compressed
+      description: Use compressed archives
+      default: true
+      selector:
+        boolean:
 
 backup_partial:
   name: Create a partial backup.
   description: Create a partial backup.
   fields:
+    homeassistant:
+      name: Home Assistant settings
+      description: Backup Home Assistant settings
+      selector:
+        boolean:
     addons:
       name: Add-ons
       description: Optional list of add-on slugs.
@@ -157,6 +122,12 @@ backup_partial:
       example: "password"
       selector:
         text:
+    compressed:
+      name: Compressed
+      description: Use compressed archives
+      default: true
+      selector:
+        boolean:
 
 restore_full:
   name: Restore from full backup.
@@ -164,6 +135,7 @@ restore_full:
   fields:
     slug:
       name: Slug
+      required: true
       description: Slug of backup to restore from.
       selector:
         text:
@@ -178,6 +150,12 @@ restore_partial:
   name: Restore from partial backup.
   description: Restore from partial backup.
   fields:
+    slug:
+      name: Slug
+      required: true
+      description: Slug of backup to restore from.
+      selector:
+        text:
     homeassistant:
       name: Home Assistant settings
       description: Restore Home Assistant
@@ -195,3 +173,9 @@ restore_partial:
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
         object:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "invalid_pin": "The provided pin is invalid",
+            "network_error": "A network error occurred",
+            "no_panel_online": "No online Elmax control panel was found.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "panels": {
+                "data": {
+                    "panel_id": "Panel ID",
+                    "panel_name": "Panel Name",
+                    "panel_pin": "PIN Code"
+                },
+                "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured."
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please login to the Elmax cloud using your credentials"
+            }
+        }
+    }
+}

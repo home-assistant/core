@@ -8,22 +8,28 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     LENGTH_INCHES,
-    LENGTH_METERS,
-    LENGTH_MILES,
     LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 
 from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
 
@@ -39,7 +45,11 @@ def format_condition(condition: str):
     return condition
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
@@ -129,8 +139,9 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         if self._is_metric or speed_m_s is None:
             return speed_m_s
 
-        speed_mi_s = convert_distance(speed_m_s, LENGTH_METERS, LENGTH_MILES)
-        speed_mi_h = speed_mi_s / 3600.0
+        speed_mi_h = convert_speed(
+            speed_m_s, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
+        )
         return int(round(speed_mi_h))
 
     @property
@@ -182,10 +193,11 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self):
         """Device info."""
-        return {
-            "identifiers": {(DOMAIN,)},
-            "manufacturer": "Met Éireann",
-            "model": "Forecast",
-            "default_name": "Forecast",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            default_name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN,)},
+            manufacturer="Met Éireann",
+            model="Forecast",
+            configuration_url="https://www.met.ie",
+        )

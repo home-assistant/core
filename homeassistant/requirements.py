@@ -7,13 +7,11 @@ import logging
 import os
 from typing import Any, cast
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
-import homeassistant.util.package as pkg_util
-
-# mypy: disallow-any-generics
+from .core import HomeAssistant, callback
+from .exceptions import HomeAssistantError
+from .helpers.typing import UNDEFINED, UndefinedType
+from .loader import Integration, IntegrationNotFound, async_get_integration
+from .util import package as pkg_util
 
 PIP_TIMEOUT = 60  # The default is too low when the internet connection is satellite or high latency
 MAX_INSTALL_FAILURES = 3
@@ -60,8 +58,7 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip:
         return integration
 
-    cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_INTEGRATIONS_WITH_REQS)) is None:
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
 
     int_or_evt: Integration | asyncio.Event | None | UndefinedType = cache.get(
@@ -71,12 +68,10 @@ async def async_get_integration_with_requirements(
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
 
-        int_or_evt = cache.get(domain, UNDEFINED)
-
         # When we have waited and it's UNDEFINED, it doesn't exist
         # We don't cache that it doesn't exist, or else people can't fix it
         # and then restart, because their config will never be valid.
-        if int_or_evt is UNDEFINED:
+        if (int_or_evt := cache.get(domain, UNDEFINED)) is UNDEFINED:
             raise IntegrationNotFound(domain)
 
     if int_or_evt is not UNDEFINED:
@@ -154,8 +149,7 @@ async def async_process_requirements(
     This method is a coroutine. It will raise RequirementsNotFound
     if an requirement can't be satisfied.
     """
-    pip_lock = hass.data.get(DATA_PIP_LOCK)
-    if pip_lock is None:
+    if (pip_lock := hass.data.get(DATA_PIP_LOCK)) is None:
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
     install_failure_history = hass.data.get(DATA_INSTALL_FAILURE_HISTORY)
     if install_failure_history is None:

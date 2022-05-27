@@ -5,6 +5,7 @@ import aiohttp
 from whirlpool.auth import Auth
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -12,7 +13,7 @@ from .const import AUTH_INSTANCE_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

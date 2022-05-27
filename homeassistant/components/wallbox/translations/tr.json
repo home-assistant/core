@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "reauth_invalid": "Yeniden kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu; Seri Numaras\u0131 orijinalle e\u015fle\u015fmiyor",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "station": "\u0130stasyon Seri Numaras\u0131",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

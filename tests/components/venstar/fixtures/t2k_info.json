@@ -1,0 +1,21 @@
+{
+  "name": "T2000",
+  "mode": 0,
+  "state": 0,
+  "activestage": 0,
+  "fan": 0,
+  "fanstate": 0,
+  "tempunits": 0,
+  "schedule": 0,
+  "schedulepart": 1,
+  "away": 0,
+  "spacetemp": 14.5,
+  "heattemp": 10.0,
+  "cooltemp": 29.5,
+  "cooltempmin": 2.0,
+  "cooltempmax": 37.0,
+  "heattempmin": 2.0,
+  "heattempmax": 37.0,
+  "setpointdelta": 2,
+  "availablemodes": 2
+}

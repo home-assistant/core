@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Prosz\u0119 potwierdzi\u0107 dodanie urz\u0105dzenia",
-                "title": "Denon AVR"
+                "description": "Prosz\u0119 potwierdzi\u0107 dodanie urz\u0105dzenia"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "Adres IP"
                 },
-                "description": "\u0141\u0105czenie z urz\u0105dzeniem, je\u015bli adres IP nie jest zdefiniowany, u\u017cywane jest automatyczne wykrywanie.",
-                "title": "Denon AVR"
+                "data_description": {
+                    "host": "Pozostaw puste, aby u\u017cy\u0107 automatycznego wykrywania"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Konfiguracja Strefy 2",
                     "zone3": "Konfiguracja Strefy 3"
                 },
-                "description": "Ustawienia opcjonalne",
-                "title": "Denon AVR"
+                "description": "Ustawienia opcjonalne"
             }
         }
     }

@@ -1,11 +1,14 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -72,7 +75,7 @@ class RachioPerson:
 
         all_devices = [rachio_iro.name for rachio_iro in self._controllers]
 
-        def pause_water(service):
+        def pause_water(service: ServiceCall) -> None:
             """Service to pause watering on all or specific controllers."""
             duration = service.data[ATTR_DURATION]
             devices = service.data.get(ATTR_DEVICES, all_devices)
@@ -80,14 +83,14 @@ class RachioPerson:
                 if iro.name in devices:
                     iro.pause_watering(duration)
 
-        def resume_water(service):
+        def resume_water(service: ServiceCall) -> None:
             """Service to resume watering on all or specific controllers."""
             devices = service.data.get(ATTR_DEVICES, all_devices)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.resume_watering()
 
-        def stop_water(service):
+        def stop_water(service: ServiceCall) -> None:
             """Service to stop watering on all or specific controllers."""
             devices = service.data.get(ATTR_DEVICES, all_devices)
             for iro in self._controllers:
@@ -123,12 +126,18 @@ class RachioPerson:
         rachio = self.rachio
 
         response = rachio.person.info()
-        assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
+        if is_invalid_auth_code(int(response[0][KEY_STATUS])):
+            raise ConfigEntryAuthFailed(f"API key error: {response}")
+        if int(response[0][KEY_STATUS]) != HTTPStatus.OK:
+            raise ConfigEntryNotReady(f"API Error: {response}")
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
+        if is_invalid_auth_code(int(data[0][KEY_STATUS])):
+            raise ConfigEntryAuthFailed(f"User ID error: {data}")
+        if int(data[0][KEY_STATUS]) != HTTPStatus.OK:
+            raise ConfigEntryNotReady(f"API Error: {data}")
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
@@ -295,3 +304,11 @@ class RachioIro:
         """Resume paused watering on this controller."""
         self.rachio.device.resume_zone_run(self.controller_id)
         _LOGGER.debug("Resuming watering on %s", self)
+
+
+def is_invalid_auth_code(http_status_code):
+    """HTTP status codes that mean invalid auth."""
+    if http_status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+        return True
+
+    return False

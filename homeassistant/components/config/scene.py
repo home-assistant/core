@@ -20,7 +20,7 @@ async def async_setup(hass):
         if action != ACTION_DELETE:
             return
 
-        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg = entity_registry.async_get(hass)
 
         entity_id = ent_reg.async_get_entity_id(DOMAIN, HA_DOMAIN, config_key)
 
@@ -47,8 +47,8 @@ class EditSceneConfigView(EditIdBasedConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        # Iterate through some keys that we want to have ordered in the output
         updated_value = {CONF_ID: config_key}
+        # Iterate through some keys that we want to have ordered in the output
         for key in ("name", "entities"):
             if key in new_value:
                 updated_value[key] = new_value[key]

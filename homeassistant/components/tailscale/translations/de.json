@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                },
+                "description": "Tailscale-API-Token sind 90 Tage lang g\u00fcltig. Du kannst unter https://login.tailscale.com/admin/settings/authkeys einen neuen Tailscale-API-Schl\u00fcssel erstellen."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "tailnet": "Tailnet"
+                },
+                "description": "Diese Integration \u00fcberwacht dein Tailscale-Netzwerk, sie macht deinen Home Assistant **nicht** \u00fcber Tailscale VPN zug\u00e4nglich. \n\nUm sich bei Tailscale zu authentifizieren, musst du einen API-Schl\u00fcssel unter {authkeys_url} erstellen.\n\nEin Tailnet ist der Name deines Tailscale-Netzwerks. Du findest es oben links im Tailscale Admin Panel (neben dem Tailscale Logo)."
+            }
+        }
+    }
+}

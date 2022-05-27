@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -32,6 +31,10 @@ from .core.const import (
 from .core.helpers import LogMixin
 from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
+
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
@@ -41,21 +44,21 @@ UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    _unique_id_suffix: str | None = None
+    unique_id_suffix: str | None = None
 
-    def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs) -> None:
+    def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
         self._name: str = ""
         self._force_update: bool = False
         self._should_poll: bool = False
         self._unique_id: str = unique_id
-        if self._unique_id_suffix:
-            self._unique_id += f"-{self._unique_id_suffix}"
+        if self.unique_id_suffix:
+            self._unique_id += f"-{self.unique_id_suffix}"
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
-        self._zha_device: ZhaDeviceType = zha_device
+        self._zha_device = zha_device
         self._unsubs: list[CALLABLE_T] = []
-        self.remove_future: Awaitable[None] = None
+        self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
     def name(self) -> str:
@@ -68,7 +71,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._unique_id
 
     @property
-    def zha_device(self) -> ZhaDeviceType:
+    def zha_device(self) -> ZHADevice:
         """Return the zha device this entity is attached to."""
         return self._zha_device
 
@@ -92,14 +95,14 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
-        return {
-            "connections": {(CONNECTION_ZIGBEE, ieee)},
-            "identifiers": {(DOMAIN, ieee)},
-            ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
-            ATTR_MODEL: zha_device_info[ATTR_MODEL],
-            ATTR_NAME: zha_device_info[ATTR_NAME],
-            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
-        }
+        return entity.DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, ieee)},
+            identifiers={(DOMAIN, ieee)},
+            manufacturer=zha_device_info[ATTR_MANUFACTURER],
+            model=zha_device_info[ATTR_MODEL],
+            name=zha_device_info[ATTR_NAME],
+            via_device=(DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+        )
 
     @callback
     def async_state_changed(self) -> None:
@@ -136,11 +139,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             )
         self._unsubs.append(unsub)
 
-    def log(self, level: int, msg: str, *args):
+    def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
         args = (self.entity_id,) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
@@ -154,24 +157,23 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """
         super().__init_subclass__(**kwargs)
         if id_suffix:
-            cls._unique_id_suffix = id_suffix
+            cls.unique_id_suffix = id_suffix
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
     ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = [ch.cluster.ep_attribute for ch in channels]
-        ch_names = ", ".join(sorted(ch_names))
+        ch_names = ", ".join(sorted(ch.name for ch in channels))
         self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
-        if self._unique_id_suffix:
-            self._name += f" {self._unique_id_suffix}"
-        self.cluster_channels: dict[str, ChannelType] = {}
+        if self.unique_id_suffix:
+            self._name += f" {self.unique_id_suffix}"
+        self.cluster_channels: dict[str, ZigbeeChannel] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
@@ -204,11 +206,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             signal_override=True,
         )
 
-        if not self.zha_device.is_mains_powered:
-            # mains powered devices will get real time state
-            last_state = await self.async_get_last_state()
-            if last_state:
-                self.async_restore_last_state(last_state)
+        if last_state := await self.async_get_last_state():
+            self.async_restore_last_state(last_state)
 
         self.async_accept_signal(
             None,
@@ -290,6 +289,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+        await self.async_update()
 
         self.async_accept_signal(
             None,

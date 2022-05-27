@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata",
+            "unknown_coordinates": "Enlem/boylam i\u00e7in veri yok"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                },
+                "description": "\u0130zlenecek enlem ve boylam\u0131 girin:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Konum"
+                },
+                "description": "\u0130zlemek i\u00e7in bir konum se\u00e7in:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "L\u00fctfen {username} parolas\u0131n\u0131 yeniden girin:",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Kullan\u0131c\u0131 ad\u0131n\u0131z\u0131 ve \u015fifrenizi girin:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Haritada izlenen konumu g\u00f6ster"
+                },
+                "title": "WattTime'\u0131 yap\u0131land\u0131r\u0131n"
+            }
+        }
+    }
+}

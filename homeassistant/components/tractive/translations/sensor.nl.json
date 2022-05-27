@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Niet rapporteren",
+            "operational": "Operationeel",
+            "system_shutdown_user": "Systeem afsluiten gebruiker",
+            "system_startup": "Systeem opstarten"
+        }
+    }
+}

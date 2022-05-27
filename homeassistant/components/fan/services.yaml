@@ -116,8 +116,10 @@ set_direction:
       selector:
         select:
           options:
-            - "forward"
-            - "reverse"
+            - label: "Forward"
+              value: "forward"
+            - label: "Reverse"
+              value: "reverse"
 
 increase_speed:
   name: Increase speed

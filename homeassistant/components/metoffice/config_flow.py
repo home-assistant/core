@@ -5,11 +5,11 @@ import datapoint
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.metoffice.helpers import fetch_site
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
+from .helpers import fetch_site
 
 _LOGGER = logging.getLogger(__name__)
 

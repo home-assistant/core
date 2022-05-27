@@ -4,8 +4,7 @@ import zigpy.profiles.zha
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 
 from .common import (
     async_enable_traffic,
@@ -78,7 +77,7 @@ async def test_binary_sensor(
     """Test ZHA binary_sensor platform."""
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.BINARY_SENSOR, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF

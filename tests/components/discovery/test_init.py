@@ -16,17 +16,11 @@ from tests.common import async_fire_time_changed, mock_coro
 SERVICE = "yamaha"
 SERVICE_COMPONENT = "media_player"
 
-# sabnzbd is the last no platform integration to be migrated
-# drop these tests once it is migrated
-SERVICE_NO_PLATFORM = "sabnzbd"
-SERVICE_NO_PLATFORM_COMPONENT = "sabnzbd"
 SERVICE_INFO = {"key": "value"}  # Can be anything
 
 UNKNOWN_SERVICE = "this_service_will_never_be_supported"
 
 BASE_CONFIG = {discovery.DOMAIN: {"ignore": [], "enable": []}}
-
-IGNORE_CONFIG = {discovery.DOMAIN: {"ignore": [SERVICE_NO_PLATFORM]}}
 
 
 @pytest.fixture(autouse=True)
@@ -85,63 +79,6 @@ async def test_load_platform(hass):
     assert mock_platform.called
     mock_platform.assert_called_with(
         hass, SERVICE_COMPONENT, SERVICE, SERVICE_INFO, BASE_CONFIG
-    )
-
-
-async def test_load_component(hass):
-    """Test load a component."""
-
-    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
-        """Fake discovery."""
-        return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
-
-    mock_discover, mock_platform = await mock_discovery(hass, discover)
-
-    assert mock_discover.called
-    assert not mock_platform.called
-    mock_discover.assert_called_with(
-        hass,
-        SERVICE_NO_PLATFORM,
-        SERVICE_INFO,
-        SERVICE_NO_PLATFORM_COMPONENT,
-        BASE_CONFIG,
-    )
-
-
-async def test_ignore_service(hass):
-    """Test ignore service."""
-
-    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
-        """Fake discovery."""
-        return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
-
-    mock_discover, mock_platform = await mock_discovery(hass, discover, IGNORE_CONFIG)
-
-    assert not mock_discover.called
-    assert not mock_platform.called
-
-
-async def test_discover_duplicates(hass):
-    """Test load a component."""
-
-    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
-        """Fake discovery."""
-        return [
-            (SERVICE_NO_PLATFORM, SERVICE_INFO),
-            (SERVICE_NO_PLATFORM, SERVICE_INFO),
-        ]
-
-    mock_discover, mock_platform = await mock_discovery(hass, discover)
-
-    assert mock_discover.called
-    assert mock_discover.call_count == 1
-    assert not mock_platform.called
-    mock_discover.assert_called_with(
-        hass,
-        SERVICE_NO_PLATFORM,
-        SERVICE_INFO,
-        SERVICE_NO_PLATFORM_COMPONENT,
-        BASE_CONFIG,
     )
 
 

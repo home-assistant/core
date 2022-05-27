@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_station": "Kunne ikke finne en v\u00e6rstasjon med det angitte navnet",
+            "more_stations": "Fant flere v\u00e6rstasjoner med det angitte navnet"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "station": "Stasjon"
+                }
+            }
+        }
+    }
+}

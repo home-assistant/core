@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -98,75 +99,27 @@ async def test_get_triggers(hass, device_reg):
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "on",
+            CONF_SUBTYPE: subtype,
             CONF_TYPE: "press",
-        },
+            "metadata": {},
+        }
+        for subtype in ["on", "stop", "off", "raise", "lower"]
+    ]
+    expected_triggers += [
         {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "stop",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "off",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "raise",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "lower",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "on",
+            CONF_SUBTYPE: subtype,
             CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "stop",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "off",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "raise",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "lower",
-            CONF_TYPE: "release",
-        },
+            "metadata": {},
+        }
+        for subtype in ["on", "stop", "off", "raise", "lower"]
     ]
 
-    triggers = await async_get_device_automations(hass, "trigger", device_id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -180,7 +133,9 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg):
     )
 
     with pytest.raises(InvalidDeviceAutomationConfig):
-        await async_get_device_automations(hass, "trigger", invalid_device.id)
+        await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, invalid_device.id
+        )
 
 
 async def test_if_fires_on_button_event(hass, calls, device_reg):
@@ -334,12 +289,4 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
                 },
             ]
         },
-    )
-
-    assert (
-        len(entity_ids := hass.states.async_entity_ids("persistent_notification")) == 1
-    )
-    assert (
-        "The following integrations and platforms could not be set up"
-        in hass.states.get(entity_ids[0]).attributes["message"]
     )

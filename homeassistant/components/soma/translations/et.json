@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche Soma konto.",
+            "already_setup": "Seade on juba h\u00e4\u00e4lestatud. Ainult \u00fcks konto on lubatud.",
             "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp.",
-            "connection_error": "SOMA Connect seadmega \u00fchenduse loomine nurjus.",
+            "connection_error": "\u00dchendamine nurjus",
             "missing_configuration": "Soma komponent pole seadistatud. Palun loe dokumentatsiooni.",
             "result_error": "SOMA Connect vastas t\u00f5rkeolekuga."
         },
         "create_entry": {
-            "default": "Edukalt Soma'ga autenditud."
+            "default": "Tuvastamine \u00f5nnestus"
         },
         "step": {
             "user": {

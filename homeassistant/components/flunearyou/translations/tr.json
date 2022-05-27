@@ -11,7 +11,9 @@
                 "data": {
                     "latitude": "Enlem",
                     "longitude": "Boylam"
-                }
+                },
+                "description": "Bir \u00e7ift koordinat i\u00e7in kullan\u0131c\u0131 tabanl\u0131 raporlar\u0131 ve CDC raporlar\u0131n\u0131 izleyin.",
+                "title": "Flu Near You'yu Yap\u0131land\u0131r\u0131n"
             }
         }
     }

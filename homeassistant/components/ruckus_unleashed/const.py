@@ -1,6 +1,8 @@
 """Constants for the Ruckus Unleashed integration."""
+from homeassistant.const import Platform
+
 DOMAIN = "ruckus_unleashed"
-PLATFORMS = ["device_tracker"]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 SCAN_INTERVAL = 180
 
 MANUFACTURER = "Ruckus"

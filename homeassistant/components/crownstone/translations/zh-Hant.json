@@ -56,13 +56,6 @@
                 "description": "\u9078\u64c7 Crownstone USB \u88dd\u7f6e\u5e8f\u5217\u57e0\u3002\n\n\u8acb\u641c\u5c0b VID 10C4 \u53ca PID EA60 \u88dd\u7f6e\u3002",
                 "title": "Crownstone USB \u88dd\u7f6e\u8a2d\u5b9a"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
-                },
-                "description": "\u9078\u64c7 Crownstone USB \u88dd\u7f6e\u5e8f\u5217\u57e0\u3002\n\n\u8acb\u641c\u5c0b VID 10C4 \u53ca PID EA60 \u88dd\u7f6e\u3002",
-                "title": "Crownstone USB \u88dd\u7f6e\u8a2d\u5b9a"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "USB \u88dd\u7f6e\u8def\u5f91"
@@ -70,21 +63,7 @@
                 "description": "\u624b\u52d5\u8f38\u5165 Crownstone USB \u88dd\u7f6e\u8def\u5f91\u3002",
                 "title": "Crownstone USB \u88dd\u7f6e\u624b\u52d5\u8def\u5f91"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB \u88dd\u7f6e\u8def\u5f91"
-                },
-                "description": "\u624b\u52d5\u8f38\u5165 Crownstone USB \u88dd\u7f6e\u8def\u5f91\u3002",
-                "title": "Crownstone USB \u88dd\u7f6e\u624b\u52d5\u8def\u5f91"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "\u9078\u64c7 Crownstone Sphere \u6240\u5728 USB \u8def\u5f91\u3002",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },

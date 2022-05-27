@@ -10,8 +10,7 @@
                     "port": "Port (Valfri)",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "description": "Do vill du konfigurera {name} ({host})?",
-                "title": "Synology DSM"
+                "description": "Do vill du konfigurera {name} ({host})?"
             },
             "user": {
                 "data": {
@@ -27,6 +26,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuter mellan skanningar",
+                    "snap_profile_type": "Kvalitetsniv\u00e5 p\u00e5 kamerabilder (0:h\u00f6g 1:medel 2:l\u00e5g)",
                     "timeout": "Timeout (sekunder)"
                 }
             }

@@ -16,4 +16,5 @@ BRIDGE_CONNECTION_ERRORS = (
     ClientConnectionError,
     ClientConnectorError,
     ClientResponseError,
+    OSError,
 )

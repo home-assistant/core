@@ -1,4 +1,6 @@
 """Platform for climate integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -13,17 +15,15 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntityFeature,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import AUTH_INSTANCE_KEY, DOMAIN
 
@@ -31,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 AIRCON_MODE_MAP = {
-    AirconMode.Cool: HVAC_MODE_COOL,
-    AirconMode.Heat: HVAC_MODE_HEAT,
-    AirconMode.Fan: HVAC_MODE_FAN_ONLY,
+    AirconMode.Cool: HVACMode.COOL,
+    AirconMode.Heat: HVACMode.HEAT,
+    AirconMode.Fan: HVACMode.FAN_ONLY,
 }
 
 HVAC_MODE_TO_AIRCON_MODE = {v: k for k, v in AIRCON_MODE_MAP.items()}
@@ -50,10 +50,10 @@ FAN_MODE_TO_AIRCON_FANSPEED = {v: k for k, v in AIRCON_FANSPEED_MAP.items()}
 
 SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
 SUPPORTED_HVAC_MODES = [
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_OFF,
+    HVACMode.COOL,
+    HVACMode.HEAT,
+    HVACMode.FAN_ONLY,
+    HVACMode.OFF,
 ]
 SUPPORTED_MAX_TEMP = 30
 SUPPORTED_MIN_TEMP = 16
@@ -61,18 +61,21 @@ SUPPORTED_SWING_MODES = [SWING_HORIZONTAL, SWING_OFF]
 SUPPORTED_TARGET_TEMPERATURE_STEP = 1
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
-    said_list = auth.get_said_list()
-    if not said_list:
+    if not (said_list := auth.get_said_list()):
         _LOGGER.debug("No appliances found")
         return
 
     # the whirlpool library needs to be updated to be able to support more
     # than one device, so we use only the first one for now
-    aircon = AirConEntity(said_list[0], auth)
-    async_add_entities([aircon], True)
+    aircons = [AirConEntity(said, auth) for said in said_list]
+    async_add_entities(aircons, True)
 
 
 class AirConEntity(ClimateEntity):
@@ -83,7 +86,9 @@ class AirConEntity(ClimateEntity):
     _attr_max_temp = SUPPORTED_MAX_TEMP
     _attr_min_temp = SUPPORTED_MIN_TEMP
     _attr_supported_features = (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
@@ -142,22 +147,21 @@ class AirConEntity(ClimateEntity):
         await self._aircon.set_humidity(humidity)
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, fan."""
         if not self._aircon.get_power_on():
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         mode: AirconMode = self._aircon.get_mode()
         return AIRCON_MODE_MAP.get(mode)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._aircon.set_power_on(False)
             return
 
-        mode = HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)
-        if not mode:
+        if not (mode := HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)):
             raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
         await self._aircon.set_mode(mode)
@@ -172,8 +176,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        fanspeed = FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)
-        if not fanspeed:
+        if not (fanspeed := FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)):
             raise ValueError(f"Invalid fan mode {fan_mode}")
         await self._aircon.set_fanspeed(fanspeed)
 

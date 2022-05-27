@@ -1,29 +1,36 @@
 """The Bond integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
+from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
-from bond_api import Bond, BPUPSubscriptions, start_bpup
+from bond_async import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
-    HTTP_UNAUTHORIZED,
+    Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
+from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
 from .utils import BondHub
 
-PLATFORMS = ["cover", "fan", "light", "switch"]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SWITCH,
+]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
-_STOP_CANCEL = "stop_cancel"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,11 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout=ClientTimeout(total=_API_TIMEOUT),
         session=async_get_clientsession(hass),
     )
-    hub = BondHub(bond)
+    hub = BondHub(bond, host)
     try:
         await hub.setup()
     except ClientResponseError as ex:
-        if ex.status == HTTP_UNAUTHORIZED:
+        if ex.status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
@@ -55,18 +62,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     stop_bpup = await start_bpup(host, bpup_subs)
 
     @callback
-    def _async_stop_event(event: Event) -> None:
+    def _async_stop_event(*_: Any) -> None:
         stop_bpup()
 
-    stop_event_cancel = hass.bus.async_listen(
-        EVENT_HOMEASSISTANT_STOP, _async_stop_event
+    entry.async_on_unload(_async_stop_event)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
     )
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,
-        BPUP_STOP: stop_bpup,
-        _STOP_CANCEL: stop_event_cancel,
     }
 
     if not entry.unique_id:
@@ -74,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     assert hub.bond_id is not None
     hub_name = hub.name or hub.bond_id
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
@@ -82,7 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=hub_name,
         model=hub.target,
         sw_version=hub.fw_ver,
+        hw_version=hub.mcu_ver,
         suggested_area=hub.location,
+        configuration_url=f"http://{host}",
     )
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
@@ -95,15 +103,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    data = hass.data[DOMAIN][entry.entry_id]
-    data[_STOP_CANCEL]()
-    if BPUP_STOP in data:
-        data[BPUP_STOP]()
-
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
@@ -118,3 +119,24 @@ def _async_remove_old_device_identifiers(
             continue
         if config_entry_id in dev.config_entries:
             device_registry.async_remove_device(dev.id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove bond config entry from a device."""
+    hub: BondHub = hass.data[DOMAIN][config_entry.entry_id][HUB]
+    for identifier in device_entry.identifiers:
+        if identifier[0] != DOMAIN or len(identifier) != 3:
+            continue
+        bond_id: str = identifier[1]
+        # Bond still uses the 3 arg tuple before
+        # the identifiers were typed
+        device_id: str = identifier[2]  # type: ignore[misc]
+        # If device_id is no longer present on
+        # the hub, we allow removal.
+        if hub.bond_id != bond_id or not any(
+            device_id == device.device_id for device in hub.devices
+        ):
+            return True
+    return False

@@ -6,11 +6,13 @@ from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-import homeassistant.helpers.config_validation as cv
+
+from . import config_validation as cv
 
 
 class _BaseFlowManagerView(HomeAssistantView):
@@ -20,7 +22,6 @@ class _BaseFlowManagerView(HomeAssistantView):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
-    # pylint: disable=no-self-use
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
@@ -31,15 +32,12 @@ class _BaseFlowManagerView(HomeAssistantView):
             data.pop("data")
             return data
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
+        if "data_schema" not in result:
             return result
-
-        import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
         data = result.copy()
 
-        schema = data["data_schema"]
-        if schema is None:
+        if (schema := data["data_schema"]) is None:
             data["data_schema"] = []
         else:
             data["data_schema"] = voluptuous_serialize.convert(
@@ -70,7 +68,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore
+                handler,  # type: ignore[arg-type]
                 context={
                     "source": config_entries.SOURCE_USER,
                     "show_advanced_options": data["show_advanced_options"],
@@ -111,8 +109,10 @@ class FlowManagerResourceView(_BaseFlowManagerView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except vol.Invalid:
-            return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
+        except vol.Invalid as ex:
+            return self.json_message(
+                f"User input malformed: {ex}", HTTPStatus.BAD_REQUEST
+            )
 
         result = self._prepare_result_json(result)
 

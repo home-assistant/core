@@ -1,8 +1,10 @@
 {
   "domain": "aurora_abb_powerone",
-  "name": "Aurora ABB Solar PV",
-  "documentation": "https://www.home-assistant.io/integrations/aurora_abb_powerone/",
-  "codeowners": ["@davet2001"],
+  "name": "Aurora ABB PowerOne Solar PV",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aurora_abb_powerone",
   "requirements": ["aurorapy==0.2.6"],
-  "iot_class": "local_polling"
+  "codeowners": ["@davet2001"],
+  "iot_class": "local_polling",
+  "loggers": ["aurorapy"]
 }

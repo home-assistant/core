@@ -9,8 +9,19 @@ from hole.exceptions import HoleError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.pi_hole.const import (
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
     CONF_LOCATION,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import (
     CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -19,16 +30,6 @@ from homeassistant.components.pi_hole.const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,5 +171,5 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, location: str, tls: bool, verify_tls: bool
     ) -> None:
         session = async_get_clientsession(self.hass, verify_tls)
-        pi_hole = Hole(host, self.hass.loop, session, location=location, tls=tls)
+        pi_hole = Hole(host, session, location=location, tls=tls)
         await pi_hole.get_data()

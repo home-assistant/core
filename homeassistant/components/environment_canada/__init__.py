@@ -1,48 +1,82 @@
 """The Environment Canada (EC) component."""
-from functools import partial
+from datetime import timedelta
 import logging
+import xml.etree.ElementTree as et
 
-from env_canada import ECData, ECRadar
+from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 
-PLATFORMS = ["camera", "sensor", "weather"]
+DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
+DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
+
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up EC as config entry."""
     lat = config_entry.data.get(CONF_LATITUDE)
     lon = config_entry.data.get(CONF_LONGITUDE)
     station = config_entry.data.get(CONF_STATION)
     lang = config_entry.data.get(CONF_LANGUAGE, "English")
 
-    weather_api = {}
+    coordinators = {}
+    errors = 0
 
-    weather_init = partial(
-        ECData, station_id=station, coordinates=(lat, lon), language=lang.lower()
+    weather_data = ECWeather(
+        station_id=station,
+        coordinates=(lat, lon),
+        language=lang.lower(),
     )
-    weather_data = await hass.async_add_executor_job(weather_init)
-    weather_api["weather_data"] = weather_data
+    coordinators["weather_coordinator"] = ECDataUpdateCoordinator(
+        hass, weather_data, "weather", DEFAULT_WEATHER_UPDATE_INTERVAL
+    )
+    try:
+        await coordinators["weather_coordinator"].async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        errors = errors + 1
+        _LOGGER.warning("Unable to retrieve Environment Canada weather")
 
-    radar_init = partial(ECRadar, coordinates=(lat, lon))
-    radar_data = await hass.async_add_executor_job(radar_init)
-    weather_api["radar_data"] = radar_data
-    await hass.async_add_executor_job(radar_data.get_loop)
+    radar_data = ECRadar(coordinates=(lat, lon))
+    coordinators["radar_coordinator"] = ECDataUpdateCoordinator(
+        hass, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
+    )
+    try:
+        await coordinators["radar_coordinator"].async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        errors = errors + 1
+        _LOGGER.warning("Unable to retrieve Environment Canada radar")
+
+    aqhi_data = ECAirQuality(coordinates=(lat, lon))
+    coordinators["aqhi_coordinator"] = ECDataUpdateCoordinator(
+        hass, aqhi_data, "AQHI", DEFAULT_WEATHER_UPDATE_INTERVAL
+    )
+    try:
+        await coordinators["aqhi_coordinator"].async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        errors = errors + 1
+        _LOGGER.warning("Unable to retrieve Environment Canada AQHI")
+
+    if errors == 3:
+        raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = weather_api
+    hass.data[DOMAIN][config_entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -53,27 +87,21 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-def trigger_import(hass, config):
-    """Trigger a import of YAML config into a config_entry."""
-    _LOGGER.warning(
-        "Environment Canada YAML configuration is deprecated; your YAML configuration "
-        "has been imported into the UI and can be safely removed"
-    )
-    if not config.get(CONF_LANGUAGE):
-        config[CONF_LANGUAGE] = "English"
+class ECDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching EC data."""
 
-    data = {}
-    for key in (
-        CONF_STATION,
-        CONF_LATITUDE,
-        CONF_LONGITUDE,
-        CONF_LANGUAGE,
-    ):  # pylint: disable=consider-using-tuple
-        if config.get(key):
-            data[key] = config[key]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+    def __init__(self, hass, ec_data, name, update_interval):
+        """Initialize global EC data updater."""
+        super().__init__(
+            hass, _LOGGER, name=f"{DOMAIN} {name}", update_interval=update_interval
         )
-    )
+        self.ec_data = ec_data
+        self.last_update_success = False
+
+    async def _async_update_data(self):
+        """Fetch data from EC."""
+        try:
+            await self.ec_data.update()
+        except (et.ParseError, ec_exc.UnknownStationId) as ex:
+            raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
+        return self.ec_data

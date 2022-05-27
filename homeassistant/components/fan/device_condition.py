@@ -34,7 +34,7 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Fan devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     conditions = []
 
     # Get all the integrations entities for this device
@@ -56,11 +56,9 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     if config[CONF_TYPE] == "is_on":
         state = STATE_ON
     else:
