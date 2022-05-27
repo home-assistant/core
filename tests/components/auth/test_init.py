@@ -81,6 +81,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+    assert tokens["ha_auth_provider"] == "insecure_example"
 
     # Use refresh token to get more tokens.
     resp = await client.post(
