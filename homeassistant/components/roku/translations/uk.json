@@ -10,12 +10,7 @@
         "flow_title": "Roku: {name}",
         "step": {
             "discovery_confirm": {
-                "description": "\u0412\u0438 \u0445\u043e\u0447\u0435\u0442\u0435 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 {name}?",
-                "title": "Roku"
-            },
-            "ssdp_confirm": {
-                "description": "\u0425\u043e\u0447\u0435\u0442\u0435 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 {name}?",
-                "title": "Roku"
+                "description": "\u0412\u0438 \u0445\u043e\u0447\u0435\u0442\u0435 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u0442\u0438 {name}?"
             },
             "user": {
                 "data": {

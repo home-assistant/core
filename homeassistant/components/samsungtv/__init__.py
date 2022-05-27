@@ -26,11 +26,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    async_get_device_info,
+    mac_from_device_info,
+    model_requires_encryption,
+)
 from .const import (
     CONF_ON_ACTION,
     CONF_SESSION_ID,
@@ -214,11 +220,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _model_requires_encryption(model: str | None) -> bool:
-    """H and J models need pairing with PIN."""
-    return model is not None and len(model) > 4 and model[4] in ("H", "J")
-
-
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> SamsungTVBridge:
@@ -279,7 +280,7 @@ async def _async_create_bridge_with_updated_data(
                 LOGGER.info("Updated model to %s for %s", model, host)
                 updated_data[CONF_MODEL] = model
 
-    if _model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
+    if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
             "Detected model %s for %s. Some televisions from H and J series use "
             "an encrypted protocol but you are using %s which may not be supported",
@@ -313,11 +314,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
-        dev_reg = await hass.helpers.device_registry.async_get_registry()
-        dev_reg.async_clear_config_entry(config_entry)
+        dev_reg = dr.async_get(hass)
+        dev_reg.async_clear_config_entry(config_entry.entry_id)
 
-        en_reg = await hass.helpers.entity_registry.async_get_registry()
-        en_reg.async_clear_config_entry(config_entry)
+        en_reg = er.async_get(hass)
+        en_reg.async_clear_config_entry(config_entry.entry_id)
 
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)

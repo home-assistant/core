@@ -10,35 +10,20 @@ from time import sleep
 from typing import Any, cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
-import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .base import FritzBoxPhonebook
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PHONEBOOK,
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
     FRITZBOX_PHONEBOOK,
     ICON_PHONE,
@@ -59,40 +44,6 @@ class CallState(StrEnum):
     DIALING = "dialing"
     TALKING = "talking"
     IDLE = "idle"
-
-
-# Deprecated in Home Assistant 2022.3
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): cv.positive_int,
-        vol.Optional(CONF_PREFIXES): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import the platform into a config entry."""
-    _LOGGER.warning(
-        "Configuration of the AVM FRITZ!Box Call Monitor sensor platform in YAML "
-        "is deprecated and will be removed in Home Assistant 2022.5; "
-        "Your existing configuration has been imported into the UI automatically "
-        "and can be safely removed from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(

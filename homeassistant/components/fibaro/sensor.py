@@ -33,27 +33,43 @@ SENSOR_TYPES = {
         None,
         None,
         SensorDeviceClass.TEMPERATURE,
+        SensorStateClass.MEASUREMENT,
     ],
     "com.fibaro.smokeSensor": [
         "Smoke",
         CONCENTRATION_PARTS_PER_MILLION,
         "mdi:fire",
         None,
+        None,
     ],
     "CO2": [
         "CO2",
         CONCENTRATION_PARTS_PER_MILLION,
         None,
-        None,
         SensorDeviceClass.CO2,
+        SensorStateClass.MEASUREMENT,
     ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,
         None,
         SensorDeviceClass.HUMIDITY,
+        SensorStateClass.MEASUREMENT,
     ],
-    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, SensorDeviceClass.ILLUMINANCE],
+    "com.fibaro.lightSensor": [
+        "Light",
+        LIGHT_LUX,
+        None,
+        SensorDeviceClass.ILLUMINANCE,
+        SensorStateClass.MEASUREMENT,
+    ],
+    "com.fibaro.energyMeter": [
+        "Energy",
+        ENERGY_KILO_WATT_HOUR,
+        None,
+        SensorDeviceClass.ENERGY,
+        SensorStateClass.TOTAL_INCREASING,
+    ],
 }
 
 
@@ -66,7 +82,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
         entities.append(FibaroSensor(device))
-    for platform in (Platform.COVER, Platform.LIGHT, Platform.SWITCH):
+    for platform in (Platform.COVER, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH):
         for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
             if "energy" in device.interfaces:
                 entities.append(FibaroEnergySensor(device))
@@ -89,6 +105,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
             self._unit = SENSOR_TYPES[fibaro_device.type][1]
             self._icon = SENSOR_TYPES[fibaro_device.type][2]
             self._device_class = SENSOR_TYPES[fibaro_device.type][3]
+            self._attr_state_class = SENSOR_TYPES[fibaro_device.type][4]
         else:
             self._unit = None
             self._icon = None

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -58,6 +59,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
 
     @property
     def name(self):

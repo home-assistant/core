@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3092\u958b\u59cb\u3057\u307e\u3059\u304b\uff1f"
-            },
             "discovery_confirm": {
                 "description": "{name} ({host})\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "\u30db\u30b9\u30c8",
-                    "name": "\u540d\u524d"
+                    "host": "\u30db\u30b9\u30c8"
                 },
                 "description": "\u65b0\u3057\u3044\u96fb\u7403(bulb)\u3092\u8ffd\u52a0\u3059\u308b\u306b\u306f\u3001\u30db\u30b9\u30c8\u540d\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9\u3068\u540d\u524d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044:"
             }

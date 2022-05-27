@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari",
+                    "web_port": "Port web (per al servei de visita)"
+                },
+                "description": "Per poder utilitzar aquesta integraci\u00f3, has d'activar l'opci\u00f3 seg\u00fcent a la configuraci\u00f3 de Deluge: Daemon > Permet controls remots"
+            }
+        }
+    }
+}

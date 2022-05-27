@@ -1,8 +1,6 @@
 """Provides device triggers for LCN."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -53,7 +51,7 @@ TYPE_SCHEMAS = {
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
@@ -101,6 +99,8 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return TYPE_SCHEMAS.get(config[CONF_TYPE], {})

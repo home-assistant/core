@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
+            "firmware_not_fully_provisioned": "Dispositiu no totalment aprovisionat. Posa't en contacte amb l'assist\u00e8ncia de Shelly",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },

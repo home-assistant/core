@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Ingin memulai penyiapan?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -23,6 +20,5 @@
                 "title": "Perangkat kipas Modern Forms yang Ditemukan"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

@@ -10,6 +10,7 @@ from typing import cast
 import attr
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
 from homeassistant.loader import bind_hass
 
 from .typing import ZhaDeviceType
@@ -38,7 +39,7 @@ class ZhaStorage:
         """Initialize the zha device storage."""
         self.hass: HomeAssistant = hass
         self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_create_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:

@@ -10,8 +10,7 @@
                     "port": "Port (Valfri)",
                     "username": "Anv\u00e4ndarnamn"
                 },
-                "description": "Do vill du konfigurera {name} ({host})?",
-                "title": "Synology DSM"
+                "description": "Do vill du konfigurera {name} ({host})?"
             },
             "user": {
                 "data": {

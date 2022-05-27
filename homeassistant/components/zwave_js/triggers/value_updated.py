@@ -5,7 +5,6 @@ import functools
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value, get_value_id
 
@@ -13,6 +12,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
+from homeassistant.components.zwave_js.config_validation import VALUE_SCHEMA
 from homeassistant.components.zwave_js.const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
@@ -38,7 +38,7 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from ..config_validation import VALUE_SCHEMA
+from .helpers import async_bypass_dynamic_config_validation
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -76,6 +76,9 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
+    if async_bypass_dynamic_config_validation(hass, config):
+        return config
+
     config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
     if not config[ATTR_NODES]:
         raise vol.Invalid(
@@ -108,7 +111,7 @@ async def async_attach_trigger(
 
     @callback
     def async_on_value_updated(
-        value: Value, device: dr.DeviceEntry, event: Event
+        value: Value, device: dr.DeviceEntry, event: dict
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
@@ -162,7 +165,9 @@ async def async_attach_trigger(
 
     dev_reg = dr.async_get(hass)
     for node in nodes:
-        device_identifier = get_device_id(node.client, node)
+        driver = node.client.driver
+        assert driver is not None  # The node comes from the driver.
+        device_identifier = get_device_id(driver, node)
         device = dev_reg.async_get_device({device_identifier})
         assert device
         value_id = get_value_id(node, command_class, property_, endpoint, property_key)

@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Elhelyezked\u00e9s",
                     "usercode": "Felhaszn\u00e1l\u00f3i k\u00f3d"
                 },
                 "description": "Adja meg ennek a felhaszn\u00e1l\u00f3i k\u00f3dj\u00e1t a k\u00f6vetkez\u0151 helyen: {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatikus kiiktat\u00e1s alacsony akkumul\u00e1torral"
                 },
-                "title": "Total Connect"
+                "description": "Automatikusan kiiktatja a z\u00f3n\u00e1kat abban a pillanatban, amikor lemer\u00fclt akkumul\u00e1tort jelentenek.",
+                "title": "TotalConnect be\u00e1ll\u00edt\u00e1sok"
             }
         }
     }

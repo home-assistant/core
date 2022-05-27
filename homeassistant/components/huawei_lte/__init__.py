@@ -10,9 +10,9 @@ import logging
 import time
 from typing import Any, NamedTuple, cast
 
-from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
     ResponseErrorException,
     ResponseErrorLoginRequiredException,
@@ -47,6 +47,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -186,9 +187,12 @@ class Router:
         try:
             self.data[key] = func()
         except ResponseErrorLoginRequiredException:
-            if isinstance(self.connection, AuthorizedConnection):
+            if not self.config_entry.options.get(CONF_UNAUTHENTICATED_MODE):
                 _LOGGER.debug("Trying to authorize again")
-                if self.connection.enforce_authorized_connection():
+                if self.client.user.login(
+                    self.config_entry.data.get(CONF_USERNAME, ""),
+                    self.config_entry.data.get(CONF_PASSWORD, ""),
+                ):
                     _LOGGER.debug(
                         "success, %s will be updated by a future periodic run",
                         key,
@@ -276,8 +280,6 @@ class Router:
 
     def logout(self) -> None:
         """Log out router session."""
-        if not isinstance(self.connection, AuthorizedConnection):
-            return
         try:
             self.client.user.logout()
         except ResponseErrorNotSupportedException:
@@ -293,6 +295,7 @@ class Router:
         self.subscriptions.clear()
 
         self.logout()
+        self.connection.requests_session.close()
 
 
 class HuaweiLteData(NamedTuple):
@@ -315,7 +318,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = AuthorizedConnection(
+            connection = Connection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
             )
         return connection
@@ -515,7 +518,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
-            result = router.client.device.reboot()
+            result = router.client.device.set_control(ControlModeEnum.REBOOT)
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
@@ -529,7 +532,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("%s: unsupported service", service.service)
 
     for service in ADMIN_SERVICES:
-        hass.helpers.service.async_register_admin_service(
+        async_register_admin_service(
+            hass,
             DOMAIN,
             service,
             service_handler,

@@ -34,7 +34,7 @@ test_response = json.loads(
     json.dumps(
         {
             CHARGER_CHARGING_POWER_KEY: 0,
-            CHARGER_STATUS_ID_KEY: 161,
+            CHARGER_STATUS_ID_KEY: 193,
             CHARGER_MAX_AVAILABLE_POWER_KEY: 25.2,
             CHARGER_CHARGING_SPEED_KEY: 0,
             CHARGER_ADDED_RANGE_KEY: 150,

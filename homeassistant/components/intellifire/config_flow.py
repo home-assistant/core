@@ -5,20 +5,17 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from intellifire4py import (
-    AsyncUDPFireplaceFinder,
-    IntellifireAsync,
-    IntellifireControlAsync,
-)
+from intellifire4py import AsyncUDPFireplaceFinder
 from intellifire4py.exceptions import LoginException
+from intellifire4py.intellifire import IntellifireAPICloud, IntellifireAPILocal
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_USER_ID, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -38,7 +35,8 @@ async def validate_host_input(host: str) -> str:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    api = IntellifireAsync(host)
+    LOGGER.debug("Instantiating IntellifireAPI with host: [%s]", host)
+    api = IntellifireAPILocal(fireplace_ip=host)
     await api.poll()
     serial = api.data.serial
     LOGGER.debug("Found a fireplace: %s", serial)
@@ -82,17 +80,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, *, host: str, username: str, password: str, serial: str
     ):
         """Validate username/password against api."""
-        ift_control = IntellifireControlAsync(fireplace_ip=host)
-
         LOGGER.debug("Attempting login to iftapi with: %s", username)
-        # This can throw an error which will be handled above
-        try:
-            await ift_control.login(username=username, password=password)
-            await ift_control.get_username()
-        finally:
-            await ift_control.close()
 
-        data = {CONF_HOST: host, CONF_PASSWORD: password, CONF_USERNAME: username}
+        ift_cloud = IntellifireAPICloud()
+        await ift_cloud.login(username=username, password=password)
+        api_key = ift_cloud.get_fireplace_api_key()
+        user_id = ift_cloud.get_user_id()
+
+        data = {
+            CONF_HOST: host,
+            CONF_PASSWORD: password,
+            CONF_USERNAME: username,
+            CONF_API_KEY: api_key,
+            CONF_USER_ID: user_id,
+        }
 
         # Update or Create
         existing_entry = await self.async_set_unique_id(serial)
@@ -128,21 +129,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if user_input[CONF_USERNAME] != "":
-                try:
-                    return await self.validate_api_access_and_create_or_update(
-                        host=self._host,
-                        username=user_input[CONF_USERNAME],
-                        password=user_input[CONF_PASSWORD],
-                        serial=self._serial,
-                    )
+            try:
+                return await self.validate_api_access_and_create_or_update(
+                    host=self._host,
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                    serial=self._serial,
+                )
 
-                except (ConnectionError, ClientConnectionError):
-                    errors["base"] = "iftapi_connect"
-                    LOGGER.info("ERROR: iftapi_connect")
-                except LoginException:
-                    errors["base"] = "api_error"
-                    LOGGER.info("ERROR: api_error")
+            except (ConnectionError, ClientConnectionError):
+                errors["base"] = "iftapi_connect"
+                LOGGER.error(
+                    "Could not connect to iftapi.net over https - verify connectivity"
+                )
+            except LoginException:
+                errors["base"] = "api_error"
+                LOGGER.error("Invalid credentials for iftapi.net")
 
         return self.async_show_form(
             step_id="api_config", errors=errors, data_schema=control_schema

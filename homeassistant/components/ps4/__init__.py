@@ -116,7 +116,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
         # Prevent changing entity_id. Updates entity registry.
-        registry = await entity_registry.async_get_registry(hass)
+        registry = entity_registry.async_get(hass)
 
         for entity_id, e_entry in registry.entities.items():
             if e_entry.config_entry_id == entry.entry_id:

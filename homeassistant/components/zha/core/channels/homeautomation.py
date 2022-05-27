@@ -97,12 +97,12 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             for a in self.REPORT_CONFIG
             if a["attr"] not in self.cluster.unsupported_attributes
         ]
-        result = await self.get_attributes(attrs, from_cache=False)
+        result = await self.get_attributes(attrs, from_cache=False, only_cache=False)
         if result:
             for attr, value in result.items():
                 self.async_send_signal(
                     f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                    self.cluster.attridx.get(attr, attr),
+                    self.cluster.find_attribute(attr).id,
                     attr,
                     value,
                 )

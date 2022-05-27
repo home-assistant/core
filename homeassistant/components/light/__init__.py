@@ -116,6 +116,23 @@ COLOR_MODES_COLOR = {
 }
 
 
+def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorMode]:
+    """Filter the given color modes."""
+    color_modes = set(color_modes)
+    if (
+        not color_modes
+        or ColorMode.UNKNOWN in color_modes
+        or (ColorMode.WHITE in color_modes and not color_supported(color_modes))
+    ):
+        raise HomeAssistantError
+
+    if ColorMode.ONOFF in color_modes and len(color_modes) > 1:
+        color_modes.remove(ColorMode.ONOFF)
+    if ColorMode.BRIGHTNESS in color_modes and len(color_modes) > 1:
+        color_modes.remove(ColorMode.BRIGHTNESS)
+    return color_modes
+
+
 def valid_supported_color_modes(
     color_modes: Iterable[ColorMode | str],
 ) -> set[ColorMode | str]:
@@ -747,7 +764,7 @@ class LightEntity(ToggleEntity):
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
-    _attr_supported_color_modes: set[ColorMode | str] | None = None
+    _attr_supported_color_modes: set[ColorMode] | set[str] | None = None
     _attr_supported_features: int = 0
     _attr_xy_color: tuple[float, float] | None = None
 
@@ -978,32 +995,32 @@ class LightEntity(ToggleEntity):
         return {key: val for key, val in data.items() if val is not None}
 
     @property
-    def _light_internal_supported_color_modes(self) -> set:
+    def _light_internal_supported_color_modes(self) -> set[ColorMode] | set[str]:
         """Calculate supported color modes with backwards compatibility."""
-        supported_color_modes = self.supported_color_modes
+        if self.supported_color_modes is not None:
+            return self.supported_color_modes
 
-        if supported_color_modes is None:
-            # Backwards compatibility for supported_color_modes added in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
-            supported_features = self.supported_features
-            supported_color_modes = set()
+        # Backwards compatibility for supported_color_modes added in 2021.4
+        # Add warning in 2021.6, remove in 2021.10
+        supported_features = self.supported_features
+        supported_color_modes: set[ColorMode] = set()
 
-            if supported_features & SUPPORT_COLOR_TEMP:
-                supported_color_modes.add(ColorMode.COLOR_TEMP)
-            if supported_features & SUPPORT_COLOR:
-                supported_color_modes.add(ColorMode.HS)
-            if supported_features & SUPPORT_WHITE_VALUE:
-                supported_color_modes.add(ColorMode.RGBW)
-            if supported_features & SUPPORT_BRIGHTNESS and not supported_color_modes:
-                supported_color_modes = {ColorMode.BRIGHTNESS}
+        if supported_features & SUPPORT_COLOR_TEMP:
+            supported_color_modes.add(ColorMode.COLOR_TEMP)
+        if supported_features & SUPPORT_COLOR:
+            supported_color_modes.add(ColorMode.HS)
+        if supported_features & SUPPORT_WHITE_VALUE:
+            supported_color_modes.add(ColorMode.RGBW)
+        if supported_features & SUPPORT_BRIGHTNESS and not supported_color_modes:
+            supported_color_modes = {ColorMode.BRIGHTNESS}
 
-            if not supported_color_modes:
-                supported_color_modes = {ColorMode.ONOFF}
+        if not supported_color_modes:
+            supported_color_modes = {ColorMode.ONOFF}
 
         return supported_color_modes
 
     @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
+    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
         """Flag supported color modes."""
         return self._attr_supported_color_modes
 

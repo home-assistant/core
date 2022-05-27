@@ -1,6 +1,7 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any
 
@@ -33,6 +34,19 @@ TYPE_LITTER_BOX = "Litter Box"
 SERVICE_RESET_WASTE_DRAWER = "reset_waste_drawer"
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 SERVICE_SET_WAIT_TIME = "set_wait_time"
+
+LITTER_BOX_STATUS_STATE_MAP = {
+    LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
+    LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
+    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+    LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
+    LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
+    LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
+    LitterBoxStatus.READY: STATE_DOCKED,
+    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
+    LitterBoxStatus.OFF: STATE_OFF,
+}
+UNAVAILABLE_AFTER = timedelta(minutes=30)
 
 
 async def async_setup_entry(
@@ -83,26 +97,14 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     )
 
     @property
-    def supported_features(self) -> int:
-        """Flag cleaner robot features that are supported."""
-        return self._attr_supported_features
+    def available(self) -> bool:
+        """Return True if the cleaner has been seen recently."""
+        return self.robot.last_seen > datetime.now(timezone.utc) - UNAVAILABLE_AFTER
 
     @property
     def state(self) -> str:
         """Return the state of the cleaner."""
-        switcher = {
-            LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
-            LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
-            LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
-            LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
-            LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
-            LitterBoxStatus.READY: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
-            LitterBoxStatus.OFF: STATE_OFF,
-        }
-
-        return switcher.get(self.robot.status, STATE_ERROR)
+        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, STATE_ERROR)
 
     @property
     def status(self) -> str:
@@ -160,11 +162,8 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
-            "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
             "sleep_mode_enabled": self.robot.sleep_mode_enabled,
             "power_status": self.robot.power_status,
-            "status_code": self.robot.status_code,
-            "last_seen": self.robot.last_seen,
             "status": self.status,
         }

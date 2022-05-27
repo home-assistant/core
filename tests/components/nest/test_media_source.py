@@ -361,7 +361,7 @@ async def test_camera_event(hass, auth, hass_client):
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
     assert media.mime_type == "image/jpeg"
@@ -374,7 +374,7 @@ async def test_camera_event(hass, auth, hass_client):
 
     # Resolving the device id points to the most recent event
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
     assert media.mime_type == "image/jpeg"
@@ -535,7 +535,7 @@ async def test_multiple_image_events_in_session(hass, auth, hass_client):
 
     # Resolve the most recent event
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier2}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier2}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier2}"
     assert media.mime_type == "image/jpeg"
@@ -548,7 +548,7 @@ async def test_multiple_image_events_in_session(hass, auth, hass_client):
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier1}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier1}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier1}"
     assert media.mime_type == "image/jpeg"
@@ -632,7 +632,7 @@ async def test_multiple_clip_preview_events_in_session(hass, auth, hass_client):
     # to the same clip preview media clip object.
     # Resolve media for the first event
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier1}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier1}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier1}"
     assert media.mime_type == "video/mp4"
@@ -645,7 +645,7 @@ async def test_multiple_clip_preview_events_in_session(hass, auth, hass_client):
 
     # Resolve media for the second event
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier1}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier1}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier1}"
     assert media.mime_type == "video/mp4"
@@ -712,6 +712,7 @@ async def test_resolve_missing_event_id(hass, auth):
         await media_source.async_resolve_media(
             hass,
             f"{const.URI_SCHEME}{DOMAIN}/{device.id}",
+            None,
         )
 
 
@@ -723,6 +724,7 @@ async def test_resolve_invalid_device_id(hass, auth):
         await media_source.async_resolve_media(
             hass,
             f"{const.URI_SCHEME}{DOMAIN}/invalid-device-id/GXXWRWVeHNUlUU3V3MGV3bUOYW...",
+            None,
         )
 
 
@@ -740,6 +742,7 @@ async def test_resolve_invalid_event_id(hass, auth):
     media = await media_source.async_resolve_media(
         hass,
         f"{const.URI_SCHEME}{DOMAIN}/{device.id}/GXXWRWVeHNUlUU3V3MGV3bUOYW...",
+        None,
     )
     assert (
         media.url == f"/api/nest/event_media/{device.id}/GXXWRWVeHNUlUU3V3MGV3bUOYW..."
@@ -835,7 +838,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client, mp4):
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
     assert media.mime_type == "video/mp4"
@@ -921,7 +924,7 @@ async def test_event_media_failure(hass, auth, hass_client):
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}", None
     )
     assert media.url == f"/api/nest/event_media/{device.id}/{event_identifier}"
     assert media.mime_type == "image/jpeg"
@@ -1128,7 +1131,7 @@ async def test_media_store_persistence(hass, auth, hass_client, event_store):
     event_identifier = browse.children[0].identifier
 
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{event_identifier}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{event_identifier}", None
     )
     assert media.url == f"/api/nest/event_media/{event_identifier}"
     assert media.mime_type == "video/mp4"
@@ -1182,7 +1185,7 @@ async def test_media_store_persistence(hass, auth, hass_client, event_store):
     event_identifier = browse.children[0].identifier
 
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{event_identifier}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{event_identifier}", None
     )
     assert media.url == f"/api/nest/event_media/{event_identifier}"
     assert media.mime_type == "video/mp4"
@@ -1234,7 +1237,7 @@ async def test_media_store_save_filesystem_error(hass, auth, hass_client):
     event = browse.children[0]
 
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/{event.identifier}"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{event.identifier}", None
     )
     assert media.url == f"/api/nest/event_media/{event.identifier}"
     assert media.mime_type == "video/mp4"

@@ -35,6 +35,7 @@ async def test_hassio_system_health(hass, aioclient_mock):
     }
     hass.data["hassio_host_info"] = {
         "operating_system": "Home Assistant OS 5.9",
+        "agent_version": "1337",
         "disk_total": "32.0",
         "disk_used": "30.0",
     }
@@ -52,6 +53,7 @@ async def test_hassio_system_health(hass, aioclient_mock):
             info[key] = await val
 
     assert info == {
+        "agent_version": "1337",
         "board": "odroid-n2",
         "disk_total": "32.0 GB",
         "disk_used": "30.0 GB",
@@ -98,16 +100,13 @@ async def test_hassio_system_health_with_issues(hass, aioclient_mock):
 
     assert info["healthy"] == {
         "error": "Unhealthy",
-        "more_info": "/hassio/system",
         "type": "failed",
     }
     assert info["supported"] == {
         "error": "Unsupported",
-        "more_info": "/hassio/system",
         "type": "failed",
     }
     assert info["version_api"] == {
         "error": "unreachable",
-        "more_info": "/hassio/system",
         "type": "failed",
     }

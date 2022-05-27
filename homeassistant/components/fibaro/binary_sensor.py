@@ -15,7 +15,7 @@ from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
-    "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],
+    "com.fibaro.floodSensor": ["Flood", "mdi:water", BinarySensorDeviceClass.MOISTURE],
     "com.fibaro.motionSensor": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
     "com.fibaro.doorSensor": ["Door", "mdi:window-open", BinarySensorDeviceClass.DOOR],
     "com.fibaro.windowSensor": [
@@ -25,7 +25,7 @@ SENSOR_TYPES = {
     ],
     "com.fibaro.smokeSensor": ["Smoke", "mdi:smoking", BinarySensorDeviceClass.SMOKE],
     "com.fibaro.FGMS001": ["Motion", "mdi:run", BinarySensorDeviceClass.MOTION],
-    "com.fibaro.heatDetector": ["Heat", "mdi:fire", "heat"],
+    "com.fibaro.heatDetector": ["Heat", "mdi:fire", BinarySensorDeviceClass.HEAT],
 }
 
 
@@ -51,7 +51,6 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def __init__(self, fibaro_device):
         """Initialize the binary_sensor."""
-        self._state = None
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         stype = None
@@ -60,27 +59,9 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
         elif fibaro_device.baseType in SENSOR_TYPES:
             stype = fibaro_device.baseType
         if stype:
-            self._device_class = SENSOR_TYPES[stype][2]
-            self._icon = SENSOR_TYPES[stype][1]
-        else:
-            self._device_class = None
-            self._icon = None
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state
+            self._attr_device_class = SENSOR_TYPES[stype][2]
+            self._attr_icon = SENSOR_TYPES[stype][1]
 
     def update(self):
         """Get the latest data and update the state."""
-        self._state = self.current_binary_state
+        self._attr_is_on = self.current_binary_state

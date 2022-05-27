@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "\uc804\uc1a1 \uc18d\ub3c4",
                     "device": "\uae30\uae30"
                 },
                 "title": "\ubaa8\ub380\uc5d0 \uc5f0\uacb0\ud558\uae30"

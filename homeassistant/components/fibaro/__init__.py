@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -9,10 +10,7 @@ from fiblary3.client.v4.client import (
     Client as FibaroClientV4,
     StateHandler as StateHandlerV4,
 )
-from fiblary3.client.v5.client import (
-    Client as FibaroClientV5,
-    StateHandler as StateHandlerV5,
-)
+from fiblary3.client.v5.client import StateHandler as StateHandlerV5
 from fiblary3.common.exceptions import HTTPException
 import voluptuous as vol
 
@@ -80,6 +78,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.FGT001": Platform.CLIMATE,
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
+    "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -126,7 +125,7 @@ class FibaroController:
     """Initiate Fibaro Controller Class."""
 
     def __init__(
-        self, config: dict[str, Any], serial_number: str | None = None
+        self, config: Mapping[str, Any], serial_number: str | None = None
     ) -> None:
         """Initialize the Fibaro controller.
 
@@ -140,18 +139,12 @@ class FibaroController:
         should do that only when you use the FibaroController for login test as only
         the login and info API's are equal throughout the different versions.
         """
-        if (
-            serial_number is None
-            or serial_number.upper().startswith("HC2")
-            or serial_number.upper().startswith("HCL")
-        ):
-            self._client = FibaroClientV4(
-                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
-        else:
-            self._client = FibaroClientV5(
-                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
+
+        # Only use V4 API as it works better even for HC3, after the library is fixed, we should
+        # add here support for the newer library version V5 again.
+        self._client = FibaroClientV4(
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+        )
 
         self._scene_map = None
         # Whether to import devices from plugins
@@ -437,7 +430,9 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-def _init_controller(data: dict[str, Any], serial_number: str) -> FibaroController:
+def _init_controller(
+    data: Mapping[str, Any], serial_number: str | None
+) -> FibaroController:
     """Validate the user input allows us to connect to fibaro."""
     controller = FibaroController(data, serial_number)
     controller.connect_with_error_handling()

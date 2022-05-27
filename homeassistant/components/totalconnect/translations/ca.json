@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Ubicaci\u00f3",
                     "usercode": "Codi d'usuari"
                 },
                 "description": "Introdueix el codi de l'usuari en la ubicaci\u00f3 {location_id}",
@@ -26,8 +25,14 @@
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
-                },
-                "title": "Total Connect"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Opcions de TotalConnect"
             }
         }
     }
