@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Setting unique id where missing
     if entry.unique_id is None:
-        unique_id = f"{entry.data[CONF_LATITUDE]}-{entry.data[CONF_LONGITUDE]}"
+        unique_id = f"{entry.data[CONF_LOCATION][CONF_LATITUDE]}-{entry.data[CONF_LOCATION][CONF_LONGITUDE]}"
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
