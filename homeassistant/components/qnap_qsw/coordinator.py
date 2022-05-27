@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioqsw.exceptions import QswError
+from aioqsw.exceptions import APIError, QswError
 from aioqsw.localapi import QnapQswApi
 import async_timeout
 
@@ -63,6 +63,8 @@ class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         async with async_timeout.timeout(QSW_TIMEOUT_SEC):
             try:
                 await self.qsw.check_firmware()
+            except APIError as error:
+                _LOGGER.warning(error)
             except QswError as error:
                 raise UpdateFailed(error) from error
             return self.qsw.data()
