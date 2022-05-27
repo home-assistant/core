@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         KEY_COORDINATOR: coordinator,
         KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
         KEY_COORDINATOR_SPEED: coordinator_speed_test,
-        KEY_COORDINATOR_LINK: coordinator_link
+        KEY_COORDINATOR_LINK: coordinator_link,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

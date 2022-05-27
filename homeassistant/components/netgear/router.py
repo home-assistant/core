@@ -231,9 +231,7 @@ class NetgearRouter:
     async def async_get_link_status(self) -> dict[str, Any] | None:
         """Check the ethernet link status of the router."""
         async with self._api_lock:
-            return await self.hass.async_add_executor_job(
-                self._api.check_ethernet_link
-            )
+            return await self.hass.async_add_executor_job(self._api.check_ethernet_link)
 
     async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
         """Allow or block a device connected to the router."""
