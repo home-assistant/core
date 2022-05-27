@@ -8,7 +8,7 @@ import functools
 import itertools
 import logging
 import random
-from typing import Any
+from typing import Any, cast
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -17,12 +17,14 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
     brightness_supported,
     filter_supported_color_modes,
@@ -578,7 +580,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
         )
-        self._attr_supported_color_modes = COLOR_MODES_GROUP_LIGHT
+        self._color_mode = None
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -638,6 +640,29 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
+
+        self._attr_color_mode = None
+        all_color_modes = list(
+            helpers.find_state_attributes(on_states, ATTR_COLOR_MODE)
+        )
+        if all_color_modes:
+            # Report the most common color mode, select brightness and onoff last
+            color_mode_count = Counter(itertools.chain(all_color_modes))
+            if ColorMode.ONOFF in color_mode_count:
+                color_mode_count[ColorMode.ONOFF] = -1
+            if ColorMode.BRIGHTNESS in color_mode_count:
+                color_mode_count[ColorMode.BRIGHTNESS] = 0
+            self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+
+        self._attr_supported_color_modes = None
+        all_supported_color_modes = list(
+            helpers.find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
+        )
+        if all_supported_color_modes:
+            # Merge all color modes.
+            self._attr_supported_color_modes = cast(
+                set[str], set().union(*all_supported_color_modes)
+            )
 
         self._supported_features = 0
         for support in helpers.find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
