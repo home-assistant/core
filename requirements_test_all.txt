@@ -655,7 +655,7 @@ kostal_plenticore==0.2.0
 krakenex==2.1.0
 
 # homeassistant.components.laundrify
-laundrify_aio==1.1.1
+laundrify_aio==1.1.2
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1364,7 +1364,7 @@ rachiopy==1.0.3
 radios==0.1.1
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.01.0
+regenmaschine==2022.05.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
