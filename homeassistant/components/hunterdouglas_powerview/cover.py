@@ -230,7 +230,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
         position_one = hass_position_to_hd(target_hass_position)
         return PowerviewShadeMove(
-            {ATTR_POSITION1: position_one, ATTR_POSKIND1: POS_KIND_PRIMARY},
+            {ATTR_POSITION1: position_one, ATTR_POSKIND1: POS_KIND_PRIMARY}, {}
         )
 
     async def _async_execute_move(self, move: PowerviewShadeMove) -> None:
@@ -411,6 +411,7 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
                 ATTR_POSKIND1: POS_KIND_PRIMARY,
                 ATTR_POSKIND2: POS_KIND_SECONDARY,
             },
+            {},
         )
 
 
@@ -458,6 +459,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
                 ATTR_POSKIND1: POS_KIND_PRIMARY,
                 ATTR_POSKIND2: POS_KIND_SECONDARY,
             },
+            {},
         )
 
 

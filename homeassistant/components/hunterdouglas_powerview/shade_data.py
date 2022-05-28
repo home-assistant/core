@@ -31,10 +31,10 @@ class PowerviewShadeMove:
     # The positions to request on the hub
     request: dict[str, int]
 
-    # The positions that will change
+    # The positions that will also change
     # as a result of the request that the
     # hub will not send back
-    new_positions: dict[int, int] = {}
+    new_positions: dict[int, int]
 
 
 @dataclass
