@@ -127,7 +127,7 @@ class UPNPResponderProtocol:
         _LOGGER.debug("UPNP Responder responding with: %s", response)
         self.transport.sendto(response, addr)
 
-    def error_received(self, exc):  # pylint: disable=no-self-use
+    def error_received(self, exc):
         """Log UPNP errors."""
         _LOGGER.error("UPNP Error received: %s", exc)
 

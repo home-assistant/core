@@ -7,12 +7,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,40 +57,40 @@ class HMLight(HMDevice, LightEntity):
             return False
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if "COLOR" in self._hmdevice.WRITENODE:
-            return COLOR_MODE_HS
+            return ColorMode.HS
         if hasattr(self._hmdevice, "get_color_temp"):
-            return COLOR_MODE_COLOR_TEMP
-        return COLOR_MODE_BRIGHTNESS
+            return ColorMode.COLOR_TEMP
+        return ColorMode.BRIGHTNESS
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode | str]:
         """Flag supported color modes."""
-        color_modes = set()
+        color_modes: set[ColorMode | str] = set()
 
         if "COLOR" in self._hmdevice.WRITENODE:
-            color_modes.add(COLOR_MODE_HS)
+            color_modes.add(ColorMode.HS)
         if hasattr(self._hmdevice, "get_color_temp"):
-            color_modes.add(COLOR_MODE_COLOR_TEMP)
+            color_modes.add(ColorMode.COLOR_TEMP)
         if not color_modes:
-            color_modes.add(COLOR_MODE_BRIGHTNESS)
+            color_modes.add(ColorMode.BRIGHTNESS)
 
         return color_modes
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = SUPPORT_TRANSITION
+        features = LightEntityFeature.TRANSITION
         if "PROGRAM" in self._hmdevice.WRITENODE:
-            features |= SUPPORT_EFFECT
+            features |= LightEntityFeature.EFFECT
         return features
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        if COLOR_MODE_HS not in self.supported_color_modes:
+        if ColorMode.HS not in self.supported_color_modes:
             return None
         hue, sat = self._hmdevice.get_hs_color(self._channel)
         return hue * 360.0, sat * 100.0
@@ -101,7 +98,7 @@ class HMLight(HMDevice, LightEntity):
     @property
     def color_temp(self):
         """Return the color temp in mireds [int]."""
-        if COLOR_MODE_COLOR_TEMP not in self.supported_color_modes:
+        if ColorMode.COLOR_TEMP not in self.supported_color_modes:
             return None
         hm_color_temp = self._hmdevice.get_color_temp(self._channel)
         return self.max_mireds - (self.max_mireds - self.min_mireds) * hm_color_temp
@@ -109,14 +106,14 @@ class HMLight(HMDevice, LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        if not self.supported_features & SUPPORT_EFFECT:
+        if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect_list()
 
     @property
     def effect(self):
         """Return the current color change program of the light."""
-        if not self.supported_features & SUPPORT_EFFECT:
+        if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect()
 
@@ -162,7 +159,7 @@ class HMLight(HMDevice, LightEntity):
         self._state = "LEVEL"
         self._data[self._state] = None
 
-        if COLOR_MODE_HS in self.supported_color_modes:
+        if ColorMode.HS in self.supported_color_modes:
             self._data.update({"COLOR": None})
-        if self.supported_features & SUPPORT_EFFECT:
+        if self.supported_features & LightEntityFeature.EFFECT:
             self._data.update({"PROGRAM": None})

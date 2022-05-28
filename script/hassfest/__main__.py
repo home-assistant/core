@@ -5,6 +5,7 @@ import sys
 from time import monotonic
 
 from . import (
+    application_credentials,
     codeowners,
     config_flow,
     coverage,
@@ -25,6 +26,7 @@ from . import (
 from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
+    application_credentials,
     codeowners,
     config_flow,
     dependencies,

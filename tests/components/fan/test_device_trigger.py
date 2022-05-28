@@ -8,6 +8,8 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.fan import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -55,24 +57,60 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turned_off",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
+            "metadata": {"secondary": False},
+        }
+        for trigger in ["turned_off", "turned_on", "changed_states"]
+    ]
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert_lists_same(triggers, expected_triggers)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_triggers_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected triggers from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_triggers = [
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turned_on",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "changed_states",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
+            "metadata": {"secondary": True},
+        }
+        for trigger in ["turned_off", "turned_on", "changed_states"]
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

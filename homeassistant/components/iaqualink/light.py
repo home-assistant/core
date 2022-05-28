@@ -4,11 +4,10 @@ from __future__ import annotations
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
     DOMAIN,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -87,11 +86,11 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         return list(self.dev.supported_light_effects)
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.dev.is_dimmer:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     def supported_color_modes(self) -> set[str] | None:
@@ -102,6 +101,6 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
     def supported_features(self) -> int:
         """Return the list of features supported by the light."""
         if self.dev.is_color:
-            return SUPPORT_EFFECT
+            return LightEntityFeature.EFFECT
 
         return 0

@@ -17,8 +17,7 @@
                     "one": "jeden",
                     "other": "inne"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
-                "title": "Roku"
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
             },
             "ssdp_confirm": {
                 "data": {
@@ -26,9 +25,7 @@
                     "many": "wiele",
                     "one": "jeden",
                     "other": "inne"
-                },
-                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
-                "title": "Roku"
+                }
             },
             "user": {
                 "data": {

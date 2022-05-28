@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
+from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -200,9 +200,6 @@ class EntityCategory(StrEnum):
     # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
     DIAGNOSTIC = "diagnostic"
 
-    # System: An entity which is not useful for the user to interact with
-    SYSTEM = "system"
-
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
@@ -230,6 +227,7 @@ class EntityDescription:
     device_class: str | None = None
     entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
+    entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
     name: str | None = None
@@ -293,6 +291,7 @@ class Entity(ABC):
     _attr_entity_category: EntityCategory | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
+    _attr_entity_registry_visible_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
@@ -453,6 +452,15 @@ class Entity(ABC):
         return True
 
     @property
+    def entity_registry_visible_default(self) -> bool:
+        """Return if the entity should be visible when first added to the entity registry."""
+        if hasattr(self, "_attr_entity_registry_visible_default"):
+            return self._attr_entity_registry_visible_default
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_registry_visible_default
+        return True
+
+    @property
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
@@ -610,7 +618,7 @@ class Entity(ABC):
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
-        def _convert_temperature(state: str, attr: dict) -> str:
+        def _convert_temperature(state: str, attr: dict[str, Any]) -> str:
             # Convert temperature if we detect one
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.components.sensor import SensorEntity
@@ -748,7 +756,7 @@ class Entity(ABC):
 
     @callback
     def async_on_remove(self, func: CALLBACK_TYPE) -> None:
-        """Add a function to call when entity removed."""
+        """Add a function to call when entity is removed or not added."""
         if self._on_remove is None:
             self._on_remove = []
         self._on_remove.append(func)
@@ -777,13 +785,23 @@ class Entity(ABC):
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDED
 
+    def _call_on_remove_callbacks(self) -> None:
+        """Call callbacks registered by async_on_remove."""
+        if self._on_remove is None:
+            return
+        while self._on_remove:
+            self._on_remove.pop()()
+
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
+
+        self._platform_state = EntityPlatformState.NOT_ADDED
+        self._call_on_remove_callbacks()
+
         self.hass = None  # type: ignore[assignment]
         self.platform = None
         self.parallel_updates = None
-        self._platform_state = EntityPlatformState.NOT_ADDED
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
@@ -808,9 +826,7 @@ class Entity(ABC):
 
         self._platform_state = EntityPlatformState.REMOVED
 
-        if self._on_remove is not None:
-            while self._on_remove:
-                self._on_remove.pop()()
+        self._call_on_remove_callbacks()
 
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
@@ -939,7 +955,7 @@ class Entity(ABC):
         """Return the representation."""
         return f"<Entity {self.name}: {self.state}>"
 
-    async def async_request_call(self, coro: Awaitable) -> None:
+    async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
@@ -1009,15 +1025,20 @@ class ToggleEntity(Entity):
         """Turn the entity off."""
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
+    @final
     def toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
-        if self.is_on:
-            self.turn_off(**kwargs)
-        else:
-            self.turn_on(**kwargs)
+        """Toggle the entity.
+
+        This method will never be called by Home Assistant and should not be implemented
+        by integrations.
+        """
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
+        """Toggle the entity.
+
+        This method should typically not be implemented by integrations, it's enough to
+        implement async_turn_on + async_turn_off or turn_on + turn_off.
+        """
         if self.is_on:
             await self.async_turn_off(**kwargs)
         else:

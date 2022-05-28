@@ -25,6 +25,7 @@ from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.loader import async_get_application_credentials
 
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
@@ -32,11 +33,11 @@ from .network import NoURLAvailableError
 _LOGGER = logging.getLogger(__name__)
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
-DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
+MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
@@ -129,6 +130,9 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
+        if "my" in self.hass.config.components:
+            return MY_AUTH_CALLBACK_PATH
+
         if (req := http.current_request.get()) is None:
             raise RuntimeError("No current request in context")
 
@@ -240,6 +244,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return await self.async_step_auth()
 
         if not implementations:
+            if self.DOMAIN in await async_get_application_credentials(self.hass):
+                return self.async_abort(reason="missing_credentials")
             return self.async_abort(reason="missing_configuration")
 
         req = http.current_request.get()
@@ -331,12 +337,6 @@ def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
-    if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
-        DATA_VIEW_REGISTERED, False
-    ):
-        hass.http.register_view(OAuth2AuthorizeCallbackView())
-        hass.data[DATA_VIEW_REGISTERED] = True
-
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
     implementations.setdefault(domain, {})[implementation.domain] = implementation
 
@@ -354,10 +354,9 @@ async def async_get_implementations(
         return registered
 
     registered = dict(registered)
-
-    for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
-        if (implementation := await get_impl(hass, domain)) is not None:
-            registered[provider_domain] = implementation
+    for get_impl in list(hass.data[DATA_PROVIDERS].values()):
+        for impl in await get_impl(hass, domain):
+            registered[impl.domain] = impl
 
     return registered
 
@@ -380,7 +379,7 @@ def async_add_implementation_provider(
     hass: HomeAssistant,
     provider_domain: str,
     async_provide_implementation: Callable[
-        [HomeAssistant, str], Awaitable[AbstractOAuth2Implementation | None]
+        [HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]
     ],
 ) -> None:
     """Add an implementation provider.
@@ -401,7 +400,6 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Receive authorization code."""
-        # pylint: disable=no-self-use
         if "code" not in request.query or "state" not in request.query:
             return web.Response(
                 text=f"Missing code or state parameter in {request.url}"

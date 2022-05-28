@@ -76,7 +76,6 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""
-        # pylint: disable=no-self-use
         LOGGER.debug("Fetching data for %s", device.uuid)
         air_data = await device.air_data_latest()
         LOGGER.debug(air_data)

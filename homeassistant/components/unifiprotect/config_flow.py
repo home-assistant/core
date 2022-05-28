@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect.data import NVR
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -116,9 +116,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: new_host}
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
                 return self.async_abort(reason="already_configured")
             if entry_host in (direct_connect_domain, source_ip) or (
                 entry_has_direct_connect
@@ -146,7 +143,9 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_VERIFY_SSL] = False
                 nvr_data, errors = await self._async_get_nvr_data(user_input)
             if nvr_data and not errors:
-                return self._async_create_entry(nvr_data.name, user_input)
+                return self._async_create_entry(
+                    nvr_data.name or nvr_data.type, user_input
+                )
 
         placeholders = {
             "name": discovery_info["hostname"]
@@ -262,6 +261,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
+        self.context["title_placeholders"] = {
+            "name": self.entry.title,
+            "ip_address": self.entry.data[CONF_HOST],
+        }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -288,7 +291,9 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(nvr_data.mac)
                 self._abort_if_unique_id_configured()
 
-                return self._async_create_entry(nvr_data.name, user_input)
+                return self._async_create_entry(
+                    nvr_data.name or nvr_data.type, user_input
+                )
 
         user_input = user_input or {}
         return self.async_show_form(

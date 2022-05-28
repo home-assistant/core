@@ -132,4 +132,3 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     # Check the state of the entity has changed as expected
     state = hass.states.get(f"{platform}.my_min_max")
     assert state.state == "21.1"
-    assert state.attributes["count_sensors"] == 3

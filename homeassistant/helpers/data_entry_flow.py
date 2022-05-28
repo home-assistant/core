@@ -22,7 +22,6 @@ class _BaseFlowManagerView(HomeAssistantView):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
-    # pylint: disable=no-self-use
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:

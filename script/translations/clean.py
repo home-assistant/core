@@ -65,7 +65,7 @@ def find_frontend():
         raise ExitApp(f"Unable to find frontend at {FRONTEND_DIR}")
 
     source = FRONTEND_DIR / "src/translations/en.json"
-    translated = FRONTEND_DIR / "translations/en.json"
+    translated = FRONTEND_DIR / "translations/frontend/en.json"
 
     missing_keys = []
     find_extra(
@@ -91,6 +91,8 @@ def run():
         print("No missing translations!")
         return 0
 
+    print(f"Found {len(missing_keys)} extra keys")
+
     # We can't query too many keys at once, so limit the number to 50.
     for i in range(0, len(missing_keys), 50):
         chunk = missing_keys[i : i + 50]
@@ -100,11 +102,13 @@ def run():
             print(
                 f"Lookin up key in Lokalise returns {len(key_data)} results, expected {len(chunk)}"
             )
-            return 1
 
-        print(f"Deleting {len(chunk)} keys:")
-        for key in chunk:
-            print(" -", key)
+        if not key_data:
+            continue
+
+        print(f"Deleting {len(key_data)} keys:")
+        for key in key_data:
+            print(" -", key["key_name"]["web"])
         print()
         while input("Type YES to delete these keys: ") != "YES":
             pass

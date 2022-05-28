@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Schakel de terugvalmodus in."
+                    "fallback": "Kies de terugvalmodus."
                 },
-                "description": "De fallback-modus schakelt over naar Smart Schedule bij de volgende schemaschakeling na het handmatig aanpassen van een zone.",
+                "description": "Met de terugvalmodus kunt u kiezen wanneer u wilt terugvallen op Smart Schedule vanuit uw handmatige zoneoverlay. (NEXT_TIME_BLOCK:= Verander bij de volgende wijziging van Smart Schedule; MANUAL:= Verander niet tot je annuleert; TADO_DEFAULT:= Verander op basis van je instelling in Tado App).",
                 "title": "Pas Tado-opties aan."
             }
         }

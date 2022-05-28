@@ -1,14 +1,17 @@
 """Selectors for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, cast
+from collections.abc import Callable, Sequence
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
+import yaml
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
+from homeassistant.util.yaml.dumper import represent_odict
 
 from . import config_validation as cv
 
@@ -36,11 +39,7 @@ def selector(config: Any) -> Selector:
     selector_class = _get_selector_class(config)
     selector_type = list(config)[0]
 
-    # Selectors can be empty
-    if config[selector_type] is None:
-        return selector_class({selector_type: {}})
-
-    return selector_class(config)
+    return selector_class(config[selector_type])
 
 
 def validate_selector(config: Any) -> dict:
@@ -64,9 +63,13 @@ class Selector:
     config: Any
     selector_type: str
 
-    def __init__(self, config: Any) -> None:
+    def __init__(self, config: Any = None) -> None:
         """Instantiate a selector."""
-        self.config = self.CONFIG_SCHEMA(config[self.selector_type])
+        # Selectors can be empty
+        if config is None:
+            config = {}
+
+        self.config = self.CONFIG_SCHEMA(config)
 
     def serialize(self) -> Any:
         """Serialize Selector for voluptuous_serialize."""
@@ -84,6 +87,15 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
+
+class SingleEntitySelectorConfig(TypedDict, total=False):
+    """Class to represent a single entity selector config."""
+
+    integration: str
+    domain: str
+    device_class: str
+
+
 SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
@@ -98,6 +110,19 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+class SingleDeviceSelectorConfig(TypedDict, total=False):
+    """Class to represent a single device selector config."""
+
+    integration: str
+    manufacturer: str
+    model: str
+    entity: SingleEntitySelectorConfig
+
+
+class ActionSelectorConfig(TypedDict):
+    """Class to represent an action selector config."""
+
+
 @SELECTORS.register("action")
 class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
@@ -106,9 +131,20 @@ class ActionSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: ActionSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         return data
+
+
+class AddonSelectorConfig(TypedDict, total=False):
+    """Class to represent an addon selector config."""
+
+    name: str
+    slug: str
 
 
 @SELECTORS.register("addon")
@@ -124,10 +160,22 @@ class AddonSelector(Selector):
         }
     )
 
+    def __init__(self, config: AddonSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         addon: str = vol.Schema(str)(data)
         return addon
+
+
+class AreaSelectorConfig(TypedDict, total=False):
+    """Class to represent an area selector config."""
+
+    entity: SingleEntitySelectorConfig
+    device: SingleDeviceSelectorConfig
+    multiple: bool
 
 
 @SELECTORS.register("area")
@@ -144,6 +192,10 @@ class AreaSelector(Selector):
         }
     )
 
+    def __init__(self, config: AreaSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
@@ -154,6 +206,12 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
+class AttributeSelectorConfig(TypedDict):
+    """Class to represent an attribute selector config."""
+
+    entity_id: str
+
+
 @SELECTORS.register("attribute")
 class AttributeSelector(Selector):
     """Selector for an entity attribute."""
@@ -162,10 +220,18 @@ class AttributeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
 
+    def __init__(self, config: AttributeSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         attribute: str = vol.Schema(str)(data)
         return attribute
+
+
+class BooleanSelectorConfig(TypedDict):
+    """Class to represent a boolean selector config."""
 
 
 @SELECTORS.register("boolean")
@@ -176,10 +242,18 @@ class BooleanSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: BooleanSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> bool:
         """Validate the passed selection."""
         value: bool = vol.Coerce(bool)(data)
         return value
+
+
+class ColorRGBSelectorConfig(TypedDict):
+    """Class to represent a color RGB selector config."""
 
 
 @SELECTORS.register("color_rgb")
@@ -190,10 +264,21 @@ class ColorRGBSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: ColorRGBSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> list[int]:
         """Validate the passed selection."""
         value: list[int] = vol.All(list, vol.ExactSequence((cv.byte,) * 3))(data)
         return value
+
+
+class ColorTempSelectorConfig(TypedDict, total=False):
+    """Class to represent a color temp selector config."""
+
+    max_mireds: int
+    min_mireds: int
 
 
 @SELECTORS.register("color_temp")
@@ -209,6 +294,10 @@ class ColorTempSelector(Selector):
         }
     )
 
+    def __init__(self, config: ColorTempSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> int:
         """Validate the passed selection."""
         value: int = vol.All(
@@ -221,6 +310,10 @@ class ColorTempSelector(Selector):
         return value
 
 
+class DateSelectorConfig(TypedDict):
+    """Class to represent a date selector config."""
+
+
 @SELECTORS.register("date")
 class DateSelector(Selector):
     """Selector of a date."""
@@ -229,10 +322,18 @@ class DateSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: DateSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         cv.date(data)
         return data
+
+
+class DateTimeSelectorConfig(TypedDict):
+    """Class to represent a date time selector config."""
 
 
 @SELECTORS.register("datetime")
@@ -243,10 +344,24 @@ class DateTimeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: DateTimeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         cv.datetime(data)
         return data
+
+
+class DeviceSelectorConfig(TypedDict, total=False):
+    """Class to represent a device selector config."""
+
+    integration: str
+    manufacturer: str
+    model: str
+    entity: SingleEntitySelectorConfig
+    multiple: bool
 
 
 @SELECTORS.register("device")
@@ -259,6 +374,10 @@ class DeviceSelector(Selector):
         {vol.Optional("multiple", default=False): cv.boolean}
     )
 
+    def __init__(self, config: DeviceSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
@@ -267,6 +386,12 @@ class DeviceSelector(Selector):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [vol.Schema(str)(val) for val in data]
+
+
+class DurationSelectorConfig(TypedDict, total=False):
+    """Class to represent a duration selector config."""
+
+    enable_day: bool
 
 
 @SELECTORS.register("duration")
@@ -283,10 +408,22 @@ class DurationSelector(Selector):
         }
     )
 
+    def __init__(self, config: DurationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
         cv.time_period_dict(data)
         return cast(dict[str, float], data)
+
+
+class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
+    """Class to represent an entity selector config."""
+
+    exclude_entities: list[str]
+    include_entities: list[str]
+    multiple: bool
 
 
 @SELECTORS.register("entity")
@@ -302,6 +439,10 @@ class EntitySelector(Selector):
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
+
+    def __init__(self, config: EntitySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
@@ -333,6 +474,12 @@ class EntitySelector(Selector):
         return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
+class IconSelectorConfig(TypedDict, total=False):
+    """Class to represent an icon selector config."""
+
+    placeholder: str
+
+
 @SELECTORS.register("icon")
 class IconSelector(Selector):
     """Selector for an icon."""
@@ -344,10 +491,21 @@ class IconSelector(Selector):
         # Frontend also has a fallbackPath option, this is not used by core
     )
 
+    def __init__(self, config: IconSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LocationSelectorConfig(TypedDict, total=False):
+    """Class to represent a location selector config."""
+
+    radius: bool
+    icon: str
 
 
 @SELECTORS.register("location")
@@ -367,10 +525,18 @@ class LocationSelector(Selector):
         }
     )
 
+    def __init__(self, config: LocationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
         location: dict[str, float] = self.DATA_SCHEMA(data)
         return location
+
+
+class MediaSelectorConfig(TypedDict):
+    """Class to represent a media selector config."""
 
 
 @SELECTORS.register("media")
@@ -392,10 +558,31 @@ class MediaSelector(Selector):
         }
     )
 
+    def __init__(self, config: MediaSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
         media: dict[str, float] = self.DATA_SCHEMA(data)
         return media
+
+
+class NumberSelectorConfig(TypedDict, total=False):
+    """Class to represent a number selector config."""
+
+    min: float
+    max: float
+    step: float
+    unit_of_measurement: str
+    mode: NumberSelectorMode
+
+
+class NumberSelectorMode(StrEnum):
+    """Possible modes for a number selector."""
+
+    BOX = "box"
+    SLIDER = "slider"
 
 
 def has_min_max_if_slider(data: Any) -> Any:
@@ -426,11 +613,17 @@ class NumberSelector(Selector):
                     vol.Coerce(float), vol.Range(min=1e-3)
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
+                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                    vol.Coerce(NumberSelectorMode), lambda val: val.value
+                ),
             }
         ),
         has_min_max_if_slider,
     )
+
+    def __init__(self, config: NumberSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> float:
         """Validate the passed selection."""
@@ -445,6 +638,10 @@ class NumberSelector(Selector):
         return value
 
 
+class ObjectSelectorConfig(TypedDict):
+    """Class to represent an object selector config."""
+
+
 @SELECTORS.register("object")
 class ObjectSelector(Selector):
     """Selector for an arbitrary object."""
@@ -452,6 +649,10 @@ class ObjectSelector(Selector):
     selector_type = "object"
 
     CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
@@ -469,9 +670,32 @@ select_option = vol.All(
 )
 
 
+class SelectOptionDict(TypedDict):
+    """Class to represent a select option dict."""
+
+    value: str
+    label: str
+
+
+class SelectSelectorMode(StrEnum):
+    """Possible modes for a number selector."""
+
+    LIST = "list"
+    DROPDOWN = "dropdown"
+
+
+class SelectSelectorConfig(TypedDict, total=False):
+    """Class to represent a select selector config."""
+
+    options: Sequence[SelectOptionDict] | Sequence[str]  # required
+    multiple: bool
+    custom_value: bool
+    mode: SelectSelectorMode
+
+
 @SELECTORS.register("select")
 class SelectSelector(Selector):
-    """Selector for an single or multi-choice input select."""
+    """Selector for an single-choice input select."""
 
     selector_type = "select"
 
@@ -480,9 +704,15 @@ class SelectSelector(Selector):
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.In(("list", "dropdown")),
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
         }
     )
+
+    def __init__(self, config: SelectSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
@@ -504,41 +734,11 @@ class SelectSelector(Selector):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
-@SELECTORS.register("text")
-class StringSelector(Selector):
-    """Selector for a multi-line text string."""
+class TargetSelectorConfig(TypedDict, total=False):
+    """Class to represent a target selector config."""
 
-    selector_type = "text"
-
-    STRING_TYPES = [
-        "number",
-        "text",
-        "search",
-        "tel",
-        "url",
-        "email",
-        "password",
-        "date",
-        "month",
-        "week",
-        "time",
-        "datetime-local",
-        "color",
-    ]
-    CONFIG_SCHEMA = vol.Schema(
-        {
-            vol.Optional("multiline", default=False): bool,
-            vol.Optional("suffix"): str,
-            # The "type" controls the input field in the browser, the resulting
-            # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.In(STRING_TYPES),
-        }
-    )
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        text: str = vol.Schema(str)(data)
-        return text
+    entity: SingleEntitySelectorConfig
+    device: SingleDeviceSelectorConfig
 
 
 @SELECTORS.register("target")
@@ -559,10 +759,94 @@ class TargetSelector(Selector):
 
     TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
 
+    def __init__(self, config: TargetSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> dict[str, list[str]]:
         """Validate the passed selection."""
         target: dict[str, list[str]] = self.TARGET_SELECTION_SCHEMA(data)
         return target
+
+
+class TemplateSelectorConfig(TypedDict):
+    """Class to represent an template selector config."""
+
+
+@SELECTORS.register("template")
+class TemplateSelector(Selector):
+    """Selector for an template."""
+
+    selector_type = "template"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TemplateSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        template = cv.template(data)
+        return template.template
+
+
+class TextSelectorConfig(TypedDict, total=False):
+    """Class to represent a text selector config."""
+
+    multiline: bool
+    suffix: str
+    type: TextSelectorType
+
+
+class TextSelectorType(StrEnum):
+    """Enum for text selector types."""
+
+    COLOR = "color"
+    DATE = "date"
+    DATETIME_LOCAL = "datetime-local"
+    EMAIL = "email"
+    MONTH = "month"
+    NUMBER = "number"
+    PASSWORD = "password"
+    SEARCH = "search"
+    TEL = "tel"
+    TEXT = "text"
+    TIME = "time"
+    URL = "url"
+    WEEK = "week"
+
+
+@SELECTORS.register("text")
+class TextSelector(Selector):
+    """Selector for a multi-line text string."""
+
+    selector_type = "text"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiline", default=False): bool,
+            vol.Optional("suffix"): str,
+            # The "type" controls the input field in the browser, the resulting
+            # data can be any string so we don't validate it.
+            vol.Optional("type"): vol.All(
+                vol.Coerce(TextSelectorType), lambda val: val.value
+            ),
+        }
+    )
+
+    def __init__(self, config: TextSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        text: str = vol.Schema(str)(data)
+        return text
+
+
+class ThemeSelectorConfig(TypedDict):
+    """Class to represent a theme selector config."""
 
 
 @SELECTORS.register("theme")
@@ -573,10 +857,18 @@ class ThemeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: ThemeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         theme: str = vol.Schema(str)(data)
         return theme
+
+
+class TimeSelectorConfig(TypedDict):
+    """Class to represent a time selector config."""
 
 
 @SELECTORS.register("time")
@@ -587,7 +879,19 @@ class TimeSelector(Selector):
 
     CONFIG_SCHEMA = vol.Schema({})
 
+    def __init__(self, config: TimeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+yaml.SafeDumper.add_representer(
+    Selector,
+    lambda dumper, value: represent_odict(
+        dumper, "tag:yaml.org,2002:map", value.serialize()
+    ),
+)

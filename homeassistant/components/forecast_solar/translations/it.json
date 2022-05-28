@@ -22,6 +22,7 @@
                     "azimuth": "Azimut (360 gradi, 0 = Nord, 90 = Est, 180 = Sud, 270 = Ovest)",
                     "damping": "Fattore di smorzamento: regola i risultati al mattino e alla sera",
                     "declination": "Declinazione (0 = Orizzontale, 90 = Verticale)",
+                    "inverter_size": "Dimensioni inverter (Watt)",
                     "modules power": "Potenza di picco totale in Watt dei tuoi moduli solari"
                 },
                 "description": "Questi valori consentono di modificare il risultato di Solar.Forecast. Fai riferimento alla documentazione se un campo non \u00e8 chiaro."

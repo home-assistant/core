@@ -7,11 +7,7 @@ from adax import Adax
 from adax_local import Adax as AdaxLocal
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -65,7 +61,7 @@ async def async_setup_entry(
 class AdaxDevice(ClimateEntity):
     """Representation of a heater."""
 
-    _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_max_temp = 35
     _attr_min_temp = 5
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -86,12 +82,12 @@ class AdaxDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
             await self._adax_data_handler.set_room_target_temperature(
                 self._device_id, temperature, True
             )
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_room_target_temperature(
                 self._device_id, self.min_temp, False
             )
@@ -116,10 +112,10 @@ class AdaxDevice(ClimateEntity):
             self._attr_current_temperature = room.get("temperature")
             self._attr_target_temperature = room.get("targetTemperature")
             if room["heatingEnabled"]:
-                self._attr_hvac_mode = HVAC_MODE_HEAT
+                self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
             else:
-                self._attr_hvac_mode = HVAC_MODE_OFF
+                self._attr_hvac_mode = HVACMode.OFF
                 self._attr_icon = "mdi:radiator-off"
             return
 
@@ -127,8 +123,8 @@ class AdaxDevice(ClimateEntity):
 class LocalAdaxDevice(ClimateEntity):
     """Representation of a heater."""
 
-    _attr_hvac_modes = [HVAC_MODE_HEAT]
-    _attr_hvac_mode = HVAC_MODE_HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_hvac_mode = HVACMode.HEAT
     _attr_max_temp = 35
     _attr_min_temp = 5
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE

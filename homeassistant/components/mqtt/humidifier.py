@@ -1,6 +1,7 @@
 """Support for MQTT humidifiers."""
 from __future__ import annotations
 
+import asyncio
 import functools
 import logging
 
@@ -12,9 +13,9 @@ from homeassistant.components.humidifier import (
     ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    SUPPORT_MODES,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -45,8 +46,10 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
 
 CONF_AVAILABLE_MODES_LIST = "modes"
@@ -100,7 +103,7 @@ def valid_humidity_range_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
     {
         # CONF_AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
         vol.Inclusive(
@@ -140,7 +143,15 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+# Configuring MQTT Humidifiers under the humidifier platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    valid_humidity_range_configuration,
+    valid_mode_configuration,
+    warn_for_legacy_schema(humidifier.DOMAIN),
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_humidity_range_configuration,
     valid_mode_configuration,
@@ -159,7 +170,8 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT humidifier through configuration.yaml."""
+    """Set up MQTT humidifier configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, humidifier.DOMAIN, config, async_add_entities, _async_setup_entity
     )
@@ -170,7 +182,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT humidifier dynamically through MQTT discovery."""
+    """Set up MQTT humidifier through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, humidifier.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )  # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -250,7 +271,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         else:
             self._available_modes = []
         if self._available_modes:
-            self._attr_supported_features = SUPPORT_MODES
+            self._attr_supported_features = HumidifierEntityFeature.MODES
         else:
             self._attr_supported_features = 0
 

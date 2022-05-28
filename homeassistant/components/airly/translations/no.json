@@ -15,8 +15,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
-                "description": "Sett opp Airly luftkvalitet integrasjon. For \u00e5 opprette API-n\u00f8kkel, g\u00e5 til [https://developer.airly.eu/register](https://developer.airly.eu/register)",
-                "title": ""
+                "description": "For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://developer.airly.eu/register"
             }
         }
     },

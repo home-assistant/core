@@ -11,11 +11,9 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,8 +23,6 @@ import homeassistant.util.color as color_util
 from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
-
-SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
 
 
 async def async_setup_entry(
@@ -53,6 +49,8 @@ async def async_setup_entry(
 class TradfriLight(TradfriBaseEntity, LightEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
@@ -72,15 +70,19 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._attr_unique_id = f"light-{gateway_id}-{self._device_id}"
         self._hs_color = None
 
-        # Calculate supported features
-        _features = SUPPORTED_LIGHT_FEATURES
-        if self._device.light_control.can_set_dimmer:
-            _features |= SUPPORT_BRIGHTNESS
+        # Calculate supported color modes
+        self._attr_supported_color_modes: set[ColorMode] = set()
         if self._device.light_control.can_set_color:
-            _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+            self._attr_supported_color_modes.add(ColorMode.HS)
         if self._device.light_control.can_set_temp:
-            _features |= SUPPORT_COLOR_TEMP
-        self._attr_supported_features = _features
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+        if (
+            not self._attr_supported_color_modes
+            and self._device.light_control.can_set_dimmer
+        ):
+            # Must be the only supported mode according to docs for
+            # ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -27,6 +27,5 @@
                 "description": "Voer uw verbindingsgegevens in."
             }
         }
-    },
-    "title": "System Bridge"
+    }
 }

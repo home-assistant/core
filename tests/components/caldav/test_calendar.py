@@ -934,11 +934,10 @@ async def test_get_events_custom_calendars(hass, calendar, get_api_events):
     events = await get_api_events("calendar.private_private")
     assert events == [
         {
-            "description": "Surprisingly rainy",
-            "end": "2017-11-27T10:00:00-08:00",
-            "location": "Hamburg",
-            "start": "2017-11-27T09:00:00-08:00",
+            "end": {"dateTime": "2017-11-27T10:00:00-08:00"},
+            "start": {"dateTime": "2017-11-27T09:00:00-08:00"},
             "summary": "This is a normal event",
-            "uid": "1",
+            "location": "Hamburg",
+            "description": "Surprisingly rainy",
         }
     ]

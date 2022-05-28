@@ -40,6 +40,7 @@ from .const import (  # noqa: F401
     SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -129,12 +130,12 @@ class AlarmControlPanelEntity(Entity):
     entity_description: AlarmControlPanelEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
-    _attr_code_format: str | None = None
+    _attr_code_format: CodeFormat | None = None
     _attr_supported_features: int
 
     @property
-    def code_format(self) -> str | None:
-        """Regex for code format or None if no code is required."""
+    def code_format(self) -> CodeFormat | None:
+        """Code format or None if no code is required."""
         return self._attr_code_format
 
     @property

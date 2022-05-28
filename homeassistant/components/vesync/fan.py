@@ -2,7 +2,7 @@
 import logging
 import math
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,10 +20,20 @@ _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
+    "LV-RH131S": "fan",  # Alt ID Model LV-PUR131S
     "Core200S": "fan",
+    "LAP-C201S-AUSR": "fan",  # Alt ID Model Core200S
+    "LAP-C202S-WUSR": "fan",  # Alt ID Model Core200S
     "Core300S": "fan",
+    "LAP-C301S-WJP": "fan",  # Alt ID Model Core300S
     "Core400S": "fan",
+    "LAP-C401S-WJP": "fan",  # Alt ID Model Core400S
+    "LAP-C401S-WUSR": "fan",  # Alt ID Model Core400S
+    "LAP-C401S-WAAA": "fan",  # Alt ID Model Core400S
     "Core600S": "fan",
+    "LAP-C601S-WUS": "fan",  # Alt ID Model Core600S
+    "LAP-C601S-WUSR": "fan",  # Alt ID Model Core600S
+    "LAP-C601S-WEU": "fan",  # Alt ID Model Core600S
 }
 
 FAN_MODE_AUTO = "auto"
@@ -31,17 +41,37 @@ FAN_MODE_SLEEP = "sleep"
 
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "LV-RH131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model LV-PUR131S
     "Core200S": [FAN_MODE_SLEEP],
+    "LAP-C201S-AUSR": [FAN_MODE_SLEEP],  # Alt ID Model Core200S
+    "LAP-C202S-WUSR": [FAN_MODE_SLEEP],  # Alt ID Model Core200S
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "LAP-C301S-WJP": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core300S
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "LAP-C401S-WJP": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core400S
+    "LAP-C401S-WUSR": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core400S
+    "LAP-C401S-WAAA": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core400S
     "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "LAP-C601S-WUS": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core600S
+    "LAP-C601S-WUSR": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core600S
+    "LAP-C601S-WEU": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core600S
 }
 SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
+    "LV-RH131S": (1, 3),  # ALt ID Model LV-PUR131S
     "Core200S": (1, 3),
+    "LAP-C201S-AUSR": (1, 3),  # ALt ID Model Core200S
+    "LAP-C202S-WUSR": (1, 3),  # ALt ID Model Core200S
     "Core300S": (1, 3),
+    "LAP-C301S-WJP": (1, 3),  # ALt ID Model Core300S
     "Core400S": (1, 4),
+    "LAP-C401S-WJP": (1, 4),  # ALt ID Model Core400S
+    "LAP-C401S-WUSR": (1, 4),  # ALt ID Model Core400S
+    "LAP-C401S-WAAA": (1, 4),  # ALt ID Model Core400S
     "Core600S": (1, 4),
+    "LAP-C601S-WUS": (1, 4),  # ALt ID Model Core600S
+    "LAP-C601S-WUSR": (1, 4),  # ALt ID Model Core600S
+    "LAP-C601S-WEU": (1, 4),  # ALt ID Model Core600S
 }
 
 
@@ -83,15 +113,12 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     def __init__(self, fan):
         """Initialize the VeSync fan device."""
         super().__init__(fan)
         self.smartfan = fan
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
     @property
     def percentage(self):
@@ -144,8 +171,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if hasattr(self.smartfan, "night_light"):
             attr["night_light"] = self.smartfan.night_light
 
-        if hasattr(self.smartfan, "air_quality"):
-            attr["air_quality"] = self.smartfan.air_quality
+        if self.smartfan.details.get("air_quality_value") is not None:
+            attr["air_quality"] = self.smartfan.details["air_quality_value"]
 
         if hasattr(self.smartfan, "mode"):
             attr["mode"] = self.smartfan.mode

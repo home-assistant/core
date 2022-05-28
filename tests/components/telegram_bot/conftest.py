@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 import pytest
-from telegram.ext.dispatcher import Dispatcher
 
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS,
@@ -176,12 +175,3 @@ async def polling_platform(hass, config_polling):
         config_polling,
     )
     await hass.async_block_till_done()
-
-
-@pytest.fixture(autouse=True)
-def clear_dispatcher():
-    """Clear the singleton that telegram.ext.dispatcher.Dispatcher sets on itself."""
-    yield
-    Dispatcher._set_singleton(None)
-    # This is how python-telegram-bot resets the dispatcher in their test suite
-    Dispatcher._Dispatcher__singleton_semaphore.release()

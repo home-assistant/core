@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "unknown": "Unerwarteter Fehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {

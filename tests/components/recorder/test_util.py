@@ -2,26 +2,32 @@
 from datetime import datetime, timedelta
 import os
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.engine.result import ChunkedIteratorResult
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import run_information_with_session, util
+from homeassistant.components.recorder import history, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
-from homeassistant.components.recorder.models import RecorderRuns
+from homeassistant.components.recorder.models import RecorderRuns, UnsupportedDialect
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
     session_scope,
 )
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file
+from .common import corrupt_db_file, run_information_with_session
 
-from tests.common import async_init_recorder_component
+from tests.common import SetupRecorderInstanceT, async_test_home_assistant
+from tests.components.recorder.common import wait_recording_done
 
 
 def test_session_scope_not_setup(hass_recorder):
@@ -43,7 +49,7 @@ def test_recorder_bad_commit(hass_recorder):
         session.execute(text("select * from notthere"))
 
     with patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
@@ -64,7 +70,7 @@ def test_recorder_bad_execute(hass_recorder):
     mck1.to_native = to_native
 
     with pytest.raises(SQLAlchemyError), patch(
-        "homeassistant.components.recorder.time.sleep"
+        "homeassistant.components.recorder.core.time.sleep"
     ) as e_mock:
         util.execute((mck1,), to_native=True)
 
@@ -95,50 +101,77 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
-async def test_last_run_was_recently_clean(hass):
+async def test_last_run_was_recently_clean(
+    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+):
     """Test we can check if the last recorder run was recently clean."""
-    await async_init_recorder_component(hass, {recorder.CONF_COMMIT_INTERVAL: 1})
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
+        recorder.CONF_COMMIT_INTERVAL: 1,
+    }
+    hass = await async_test_home_assistant(None)
+
+    return_values = []
+    real_last_run_was_recently_clean = util.last_run_was_recently_clean
+
+    def _last_run_was_recently_clean(cursor):
+        return_values.append(real_last_run_was_recently_clean(cursor))
+        return return_values[-1]
+
+    # Test last_run_was_recently_clean is not called on new DB
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        await async_setup_recorder_instance(hass, config)
+        await hass.async_block_till_done()
+        last_run_was_recently_clean_mock.assert_not_called()
+
+    # Restart HA, last_run_was_recently_clean should return True
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
+    await hass.async_stop()
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock:
+        hass = await async_test_home_assistant(None)
+        await async_setup_recorder_instance(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is True
 
-    assert (
-        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-        is False
-    )
-
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE]._end_session)
+    # Restart HA with a long downtime, last_run_was_recently_clean should return False
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-
-    assert (
-        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-        is True
-    )
+    await hass.async_stop()
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
     with patch(
-        "homeassistant.components.recorder.dt_util.utcnow",
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        wraps=_last_run_was_recently_clean,
+    ) as last_run_was_recently_clean_mock, patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        assert (
-            await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
-            is False
-        )
+        hass = await async_test_home_assistant(None)
+        await async_setup_recorder_instance(hass, config)
+        last_run_was_recently_clean_mock.assert_called_once()
+        assert return_values[-1] is False
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_stop()
 
 
 @pytest.mark.parametrize(
-    "mysql_version, db_supports_row_number",
-    [
-        ("10.2.0-MariaDB", True),
-        ("10.1.0-MariaDB", False),
-        ("5.8.0", True),
-        ("5.7.0", False),
-    ],
+    "mysql_version",
+    ["10.3.0-MariaDB", "8.0.0"],
 )
-def test_setup_connection_for_dialect_mysql(mysql_version, db_supports_row_number):
+def test_setup_connection_for_dialect_mysql(mysql_version):
     """Test setting up the connection for a mysql dialect."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -163,19 +196,14 @@ def test_setup_connection_for_dialect_mysql(mysql_version, db_supports_row_numbe
     assert execute_args[0] == "SET session wait_timeout=28800"
     assert execute_args[1] == "SELECT VERSION()"
 
-    assert instance_mock._db_supports_row_number == db_supports_row_number
-
 
 @pytest.mark.parametrize(
-    "sqlite_version, db_supports_row_number",
-    [
-        ("3.25.0", True),
-        ("3.24.0", False),
-    ],
+    "sqlite_version",
+    ["3.31.0"],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_number):
+def test_setup_connection_for_dialect_sqlite(sqlite_version):
     """Test setting up the connection for a sqlite dialect."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -196,20 +224,65 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_num
 
     util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
 
-    assert len(execute_args) == 4
+    assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
     assert execute_args[1] == "SELECT sqlite_version()"
-    assert execute_args[2] == "PRAGMA cache_size = -8192"
-    assert execute_args[3] == "PRAGMA foreign_keys=ON"
+    assert execute_args[2] == "PRAGMA cache_size = -16384"
+    assert execute_args[3] == "PRAGMA synchronous=NORMAL"
+    assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
     util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
 
-    assert len(execute_args) == 2
-    assert execute_args[0] == "PRAGMA cache_size = -8192"
-    assert execute_args[1] == "PRAGMA foreign_keys=ON"
+    assert len(execute_args) == 3
+    assert execute_args[0] == "PRAGMA cache_size = -16384"
+    assert execute_args[1] == "PRAGMA synchronous=NORMAL"
+    assert execute_args[2] == "PRAGMA foreign_keys=ON"
 
-    assert instance_mock._db_supports_row_number == db_supports_row_number
+
+@pytest.mark.parametrize(
+    "sqlite_version",
+    ["3.31.0"],
+)
+def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
+    sqlite_version,
+):
+    """Test setting up the connection for a sqlite dialect with a zero commit interval."""
+    instance_mock = MagicMock(commit_interval=0)
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[sqlite_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+
+    assert len(execute_args) == 5
+    assert execute_args[0] == "PRAGMA journal_mode=WAL"
+    assert execute_args[1] == "SELECT sqlite_version()"
+    assert execute_args[2] == "PRAGMA cache_size = -16384"
+    assert execute_args[3] == "PRAGMA synchronous=FULL"
+    assert execute_args[4] == "PRAGMA foreign_keys=ON"
+
+    execute_args = []
+    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+
+    assert len(execute_args) == 3
+    assert execute_args[0] == "PRAGMA cache_size = -16384"
+    assert execute_args[1] == "PRAGMA synchronous=FULL"
+    assert execute_args[2] == "PRAGMA foreign_keys=ON"
 
 
 @pytest.mark.parametrize(
@@ -229,9 +302,9 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version, db_supports_row_num
         ),
     ],
 )
-def test_warn_outdated_mysql(caplog, mysql_version, message):
+def test_fail_outdated_mysql(caplog, mysql_version, message):
     """Test setting up the connection for an outdated mysql version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -250,7 +323,10 @@ def test_warn_outdated_mysql(caplog, mysql_version, message):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    with pytest.raises(UnsupportedDialect):
+        util.setup_connection_for_dialect(
+            instance_mock, "mysql", dbapi_connection, True
+        )
 
     assert message in caplog.text
 
@@ -264,7 +340,7 @@ def test_warn_outdated_mysql(caplog, mysql_version, message):
 )
 def test_supported_mysql(caplog, mysql_version):
     """Test setting up the connection for a supported mysql version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -305,9 +381,9 @@ def test_supported_mysql(caplog, mysql_version):
         ),
     ],
 )
-def test_warn_outdated_pgsql(caplog, pgsql_version, message):
+def test_fail_outdated_pgsql(caplog, pgsql_version, message):
     """Test setting up the connection for an outdated PostgreSQL version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -326,9 +402,10 @@ def test_warn_outdated_pgsql(caplog, pgsql_version, message):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(
-        instance_mock, "postgresql", dbapi_connection, True
-    )
+    with pytest.raises(UnsupportedDialect):
+        util.setup_connection_for_dialect(
+            instance_mock, "postgresql", dbapi_connection, True
+        )
 
     assert message in caplog.text
 
@@ -339,7 +416,7 @@ def test_warn_outdated_pgsql(caplog, pgsql_version, message):
 )
 def test_supported_pgsql(caplog, pgsql_version):
     """Test setting up the connection for a supported PostgreSQL version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -382,9 +459,9 @@ def test_supported_pgsql(caplog, pgsql_version):
         ),
     ],
 )
-def test_warn_outdated_sqlite(caplog, sqlite_version, message):
+def test_fail_outdated_sqlite(caplog, sqlite_version, message):
     """Test setting up the connection for an outdated sqlite version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -403,7 +480,10 @@ def test_warn_outdated_sqlite(caplog, sqlite_version, message):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    with pytest.raises(UnsupportedDialect):
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
 
     assert message in caplog.text
 
@@ -417,7 +497,7 @@ def test_warn_outdated_sqlite(caplog, sqlite_version, message):
 )
 def test_supported_sqlite(caplog, sqlite_version):
     """Test setting up the connection for a supported sqlite version."""
-    instance_mock = MagicMock(_db_supports_row_number=True)
+    instance_mock = MagicMock()
     execute_args = []
     close_mock = MagicMock()
 
@@ -454,7 +534,10 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
     instance_mock = MagicMock()
     dbapi_connection = MagicMock()
 
-    util.setup_connection_for_dialect(instance_mock, dialect, dbapi_connection, True)
+    with pytest.raises(UnsupportedDialect):
+        util.setup_connection_for_dialect(
+            instance_mock, dialect, dbapi_connection, True
+        )
 
     assert message in caplog.text
 
@@ -476,8 +559,10 @@ def test_basic_sanity_check(hass_recorder):
 def test_combined_checks(hass_recorder, caplog):
     """Run Checks on the open database."""
     hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    instance.db_retry_wait = 0
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    cursor = instance.engine.raw_connection().cursor()
 
     assert util.run_checks_on_open_db("fake_db_path", cursor) is None
     assert "could not validate that the sqlite3 database" in caplog.text
@@ -550,11 +635,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_perodic_db_cleanups(hass_recorder):
-    """Test perodic db cleanups."""
+def test_periodic_db_cleanups(hass_recorder):
+    """Test periodic db cleanups."""
     hass = hass_recorder()
     with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
+        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -563,13 +648,21 @@ def test_perodic_db_cleanups(hass_recorder):
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
-async def test_write_lock_db(hass, tmp_path):
+@patch("homeassistant.components.recorder.pool.check_loop")
+async def test_write_lock_db(
+    skip_check_loop,
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    tmp_path,
+):
     """Test database write lock."""
     from sqlalchemy.exc import OperationalError
 
     # Use file DB, in memory DB cannot do write locks.
-    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
-    await async_init_recorder_component(hass, config)
+    config = {
+        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
+    }
+    await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 
     instance = hass.data[DATA_INSTANCE]
@@ -599,3 +692,71 @@ def test_is_second_sunday():
     assert is_second_sunday(datetime(2022, 5, 8, 0, 0, 0, tzinfo=dt_util.UTC)) is True
 
     assert is_second_sunday(datetime(2022, 1, 10, 0, 0, 0, tzinfo=dt_util.UTC)) is False
+
+
+def test_build_mysqldb_conv():
+    """Test building the MySQLdb connect conv param."""
+    mock_converters = Mock(conversions={"original": "preserved"})
+    mock_constants = Mock(FIELD_TYPE=Mock(DATETIME="DATETIME"))
+    with patch.dict(
+        "sys.modules",
+        **{"MySQLdb.constants": mock_constants, "MySQLdb.converters": mock_converters},
+    ):
+        conv = util.build_mysqldb_conv()
+
+    assert conv["original"] == "preserved"
+    assert conv["DATETIME"]("INVALID") is None
+    assert conv["DATETIME"]("2022-05-13T22:33:12.741") == datetime(
+        2022, 5, 13, 22, 33, 12, 741000, tzinfo=None
+    )
+
+
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+def test_execute_stmt_lambda_element(hass_recorder):
+    """Test executing with execute_stmt_lambda_element."""
+    hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    hass.states.set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    wait_recording_done(hass)
+    now = dt_util.utcnow()
+    tomorrow = now + timedelta(days=1)
+    one_week_from_now = now + timedelta(days=7)
+
+    class MockExecutor:
+        def __init__(self, stmt):
+            assert isinstance(stmt, StatementLambdaElement)
+            self.calls = 0
+
+        def all(self):
+            self.calls += 1
+            if self.calls == 2:
+                return ["mock_row"]
+            raise SQLAlchemyError
+
+    with session_scope(hass=hass) as session:
+        # No time window, we always get a list
+        stmt = history._get_single_entity_states_stmt(
+            instance.schema_version, dt_util.utcnow(), "sensor.on", False
+        )
+        rows = util.execute_stmt_lambda_element(session, stmt)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].entity_id == new_state.entity_id
+
+        # Time window >= 2 days, we get a ChunkedIteratorResult
+        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
+        assert isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.entity_id == new_state.entity_id
+
+        # Time window < 2 days, we get a list
+        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].entity_id == new_state.entity_id
+
+        with patch.object(session, "execute", MockExecutor):
+            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
+            assert rows == ["mock_row"]

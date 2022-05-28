@@ -24,7 +24,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SENSORS = (
+INFO_SENSORS = (
     SensorEntityDescription(
         key="date",
         name="Date",
@@ -143,7 +143,7 @@ async def async_setup_platform(
 
     sensors = [
         JewishCalendarSensor(hass.data[DOMAIN], description)
-        for description in DATA_SENSORS
+        for description in INFO_SENSORS
     ]
     sensors.extend(
         JewishCalendarTimeSensor(hass.data[DOMAIN], description)

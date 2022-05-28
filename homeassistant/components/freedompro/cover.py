@@ -5,11 +5,9 @@ from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -66,7 +64,9 @@ class Device(CoordinatorEntity, CoverEntity):
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
         self._attr_supported_features = (
-            SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
+            CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.SET_POSITION
         )
         self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
 

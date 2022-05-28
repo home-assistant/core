@@ -12,6 +12,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
+from .frame import report
+from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
 DATA_REGISTRY = "area_registry"
@@ -47,9 +49,7 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
-        )
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
@@ -145,7 +145,7 @@ class AreaRegistry:
 
         normalized_name = None
 
-        if name is not UNDEFINED:
+        if name is not UNDEFINED and name != old.name:
             normalized_name = normalize_area_name(name)
 
             if normalized_name != old.normalized_name and self.async_get_area_by_name(
@@ -176,7 +176,7 @@ class AreaRegistry:
 
         areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
-        if data is not None:
+        if isinstance(data, dict):
             for area in data["areas"]:
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
@@ -227,6 +227,9 @@ async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
+    report(
+        "uses deprecated `async_get_registry` to access area registry, use async_get instead"
+    )
     return async_get(hass)
 
 

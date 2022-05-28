@@ -13,7 +13,7 @@ from .entity import RokuEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", bound=RokuEntity)
+_RokuEntityT = TypeVar("_RokuEntityT", bound=RokuEntity)
 _P = ParamSpec("_P")
 
 
@@ -25,14 +25,21 @@ def format_channel_name(channel_number: str, channel_name: str | None = None) ->
     return channel_number
 
 
-def roku_exception_handler(ignore_timeout: bool = False) -> Callable[..., Callable]:
+def roku_exception_handler(
+    ignore_timeout: bool = False,
+) -> Callable[
+    [Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]]],
+    Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]],
+]:
     """Decorate Roku calls to handle Roku exceptions."""
 
     def decorator(
-        func: Callable[Concatenate[_T, _P], Awaitable[None]],  # type: ignore[misc]
-    ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
+        func: Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]],
+    ) -> Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]]:
         @wraps(func)
-        async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        async def wrapper(
+            self: _RokuEntityT, *args: _P.args, **kwargs: _P.kwargs
+        ) -> None:
             try:
                 await func(self, *args, **kwargs)
             except RokuConnectionTimeoutError as error:

@@ -5,12 +5,7 @@ from typing import Any
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.siren import (
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SirenEntity,
-)
+from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.components.siren.const import ATTR_TONE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -25,8 +20,6 @@ from . import (
     async_setup_platform_entry,
 )
 from .const import CONF_OFF_DELAY
-
-SUPPORT_RFXTRX = SUPPORT_TURN_ON | SUPPORT_TONES
 
 SECURITY_PANIC_ON = "Panic"
 SECURITY_PANIC_OFF = "End Panic"
@@ -129,13 +122,13 @@ class RfxtrxOffDelayMixin(Entity):
 class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     """Representation of a RFXtrx chime."""
 
+    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
     _device: rfxtrxmod.ChimeDevice
 
     def __init__(self, device, device_id, off_delay=None, event=None):
         """Initialize the entity."""
         super().__init__(device, device_id, event)
         self._attr_available_tones = list(self._device.COMMANDS.values())
-        self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TONES
         self._default_tone = next(iter(self._device.COMMANDS))
         self._off_delay = off_delay
 
@@ -180,12 +173,12 @@ class RfxtrxChime(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
 class RfxtrxSecurityPanic(RfxtrxCommandEntity, SirenEntity, RfxtrxOffDelayMixin):
     """Representation of a security device."""
 
+    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
     _device: rfxtrxmod.SecurityDevice
 
     def __init__(self, device, device_id, off_delay=None, event=None):
         """Initialize the entity."""
         super().__init__(device, device_id, event)
-        self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         self._on_value = get_first_key(self._device.STATUS, SECURITY_PANIC_ON)
         self._off_value = get_first_key(self._device.STATUS, SECURITY_PANIC_OFF)
         self._off_delay = off_delay

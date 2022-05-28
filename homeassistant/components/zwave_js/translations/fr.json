@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Cl\u00e9 r\u00e9seau",
                     "s0_legacy_key": "Cl\u00e9 S0 (h\u00e9rit\u00e9e)",
                     "s2_access_control_key": "Cl\u00e9 de contr\u00f4le d'acc\u00e8s S2",
                     "s2_authenticated_key": "Cl\u00e9 d'authentification S2",
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Voulez-vous configurer {name} avec le plugin Z-Wave JS ?"
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter le serveur Z-Wave\u00a0JS portant l'ID {home_id} et trouv\u00e9 sur {url} \u00e0 Home Assistant\u00a0?",
+                "title": "Serveur Z-Wave\u00a0JS d\u00e9couvert"
             }
         }
     },
@@ -113,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "\u00c9muler le mat\u00e9riel",
                     "log_level": "Niveau du journal",
-                    "network_key": "Cl\u00e9 r\u00e9seau",
                     "s0_legacy_key": "Cl\u00e9 S0 (h\u00e9rit\u00e9e)",
                     "s2_access_control_key": "Cl\u00e9 de contr\u00f4le d'acc\u00e8s S2",
                     "s2_authenticated_key": "Cl\u00e9 d'authentification S2",
@@ -142,6 +144,5 @@
                 "title": "Le module compl\u00e9mentaire Z-Wave JS d\u00e9marre."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

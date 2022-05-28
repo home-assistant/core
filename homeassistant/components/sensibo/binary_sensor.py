@@ -82,14 +82,6 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
-    SensiboDeviceBinarySensorEntityDescription(
-        key="update_available",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        name="Update Available",
-        icon="mdi:rocket-launch",
-        value_fn=lambda data: data.update_available,
-    ),
 )
 
 

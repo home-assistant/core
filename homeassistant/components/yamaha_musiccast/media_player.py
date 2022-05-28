@@ -8,7 +8,11 @@ from aiomusiccast import MusicCastGroupException, MusicCastMediaContent
 from aiomusiccast.features import ZoneFeature
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
@@ -17,23 +21,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_TRACK,
     MEDIA_TYPE_MUSIC,
     REPEAT_MODE_OFF,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_GROUPING,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
@@ -58,12 +45,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MUSIC_PLAYER_BASE_SUPPORT = (
-    SUPPORT_SHUFFLE_SET
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SELECT_SOUND_MODE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_GROUPING
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.GROUPING
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 
@@ -288,7 +275,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         if self.state == STATE_OFF:
@@ -449,23 +438,28 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         zone = self.coordinator.data.zones[self._zone_id]
 
         if ZoneFeature.POWER in zone.features:
-            supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+            supported_features |= (
+                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+            )
         if ZoneFeature.VOLUME in zone.features:
-            supported_features |= SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+            supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
         if ZoneFeature.MUTE in zone.features:
-            supported_features |= SUPPORT_VOLUME_MUTE
+            supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
 
         if self._is_netusb or self._is_tuner:
-            supported_features |= SUPPORT_PREVIOUS_TRACK
-            supported_features |= SUPPORT_NEXT_TRACK
+            supported_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            supported_features |= MediaPlayerEntityFeature.NEXT_TRACK
 
         if self._is_netusb:
-            supported_features |= SUPPORT_PAUSE
-            supported_features |= SUPPORT_PLAY
-            supported_features |= SUPPORT_STOP
+            supported_features |= MediaPlayerEntityFeature.PAUSE
+            supported_features |= MediaPlayerEntityFeature.PLAY
+            supported_features |= MediaPlayerEntityFeature.STOP
 
         if self.state != STATE_OFF:
-            supported_features |= SUPPORT_BROWSE_MEDIA
+            supported_features |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         return supported_features
 

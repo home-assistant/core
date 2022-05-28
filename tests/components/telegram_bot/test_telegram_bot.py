@@ -1,4 +1,5 @@
 """Tests for the telegram_bot component."""
+import pytest
 from telegram import Update
 from telegram.ext.dispatcher import Dispatcher
 
@@ -6,6 +7,15 @@ from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 
 from tests.common import async_capture_events
+
+
+@pytest.fixture(autouse=True)
+def clear_dispatcher():
+    """Clear the singleton that telegram.ext.dispatcher.Dispatcher sets on itself."""
+    yield
+    Dispatcher._set_singleton(None)
+    # This is how python-telegram-bot resets the dispatcher in their test suite
+    Dispatcher._Dispatcher__singleton_semaphore.release()
 
 
 async def test_webhook_platform_init(hass, webhook_platform):

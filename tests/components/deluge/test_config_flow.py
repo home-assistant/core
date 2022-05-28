@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.deluge.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CONF_DATA, IMPORT_DATA
+from . import CONF_DATA
 
 from tests.common import MockConfigEntry
 
@@ -100,33 +100,6 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown_error):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
-
-
-async def test_flow_import(hass: HomeAssistant, api):
-    """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Deluge Torrent"
-    assert result["data"] == CONF_DATA
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant, api):
-    """Test import step already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-    )
-
-    entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_flow_reauth(hass: HomeAssistant, api):

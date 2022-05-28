@@ -27,14 +27,11 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -74,7 +71,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
+    LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
+    | LightEntityFeature.TRANSITION
+    | SUPPORT_WHITE_VALUE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -285,10 +285,10 @@ class LightGroup(GroupEntity, LightEntity):
         if all_color_modes:
             # Report the most common color mode, select brightness and onoff last
             color_mode_count = Counter(itertools.chain(all_color_modes))
-            if COLOR_MODE_ONOFF in color_mode_count:
-                color_mode_count[COLOR_MODE_ONOFF] = -1
-            if COLOR_MODE_BRIGHTNESS in color_mode_count:
-                color_mode_count[COLOR_MODE_BRIGHTNESS] = 0
+            if ColorMode.ONOFF in color_mode_count:
+                color_mode_count[ColorMode.ONOFF] = -1
+            if ColorMode.BRIGHTNESS in color_mode_count:
+                color_mode_count[ColorMode.BRIGHTNESS] = 0
             self._attr_color_mode = color_mode_count.most_common(1)[0][0]
 
         self._attr_supported_color_modes = None

@@ -63,7 +63,7 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int:
         """Return the current position. 0 is closed. 100 is open."""
-        return self._value
+        return int(self._value)
 
     @property
     def is_closed(self) -> bool:
