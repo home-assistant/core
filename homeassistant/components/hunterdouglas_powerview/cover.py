@@ -464,14 +464,12 @@ class PowerViewShadeWithTilt(PowerViewShade):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_supported_features |= (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-            | CoverEntityFeature.OPEN_TILT
+            CoverEntityFeature.OPEN_TILT
             | CoverEntityFeature.CLOSE_TILT
-            | CoverEntityFeature.STOP_TILT
             | CoverEntityFeature.SET_TILT_POSITION
         )
+        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
     @property
     def current_cover_tilt_position(self) -> int:
