@@ -102,6 +102,24 @@ async def test_existing_token_missing_scope(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.parametrize("config_entry_options", [{CONF_CALENDAR_ACCESS: "read_only"}])
+async def test_config_entry_scope_reauth(
+    hass: HomeAssistant,
+    token_scopes: list[str],
+    component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test setup where the config entry options requires reauth to match the scope."""
+    config_entry.add_to_hass(hass)
+    assert await component_setup()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
 @pytest.mark.parametrize("calendars_config", [[{"cal_id": "invalid-schema"}]])
 async def test_calendar_yaml_missing_required_fields(
     hass: HomeAssistant,
@@ -629,3 +647,24 @@ async def test_calendar_yaml_update(
 
     # No yaml config loaded that overwrites the entity name
     assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+async def test_update_will_reload(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test updating config entry options will trigger a reload."""
+    await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {}
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_CALENDAR_ACCESS: "read_only"}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()

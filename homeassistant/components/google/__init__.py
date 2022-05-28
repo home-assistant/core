@@ -217,7 +217,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    async_upgrade_entry(hass, entry)
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -240,10 +239,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    access = FeatureAccess[entry.options[CONF_CALENDAR_ACCESS]]
+    access = get_feature_access(hass, entry)
     token_scopes = session.token.get("scope", [])
     if access.scope not in token_scopes:
-        _LOGGER.debug("Scope '%s' not in scopes '%s'", access.scope, token_scopes)
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
@@ -265,18 +263,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def async_upgrade_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Upgrade the config entry if needed."""
-    if entry.options:
-        return
-    hass.config_entries.async_update_entry(
-        entry,
-        options={
-            CONF_CALENDAR_ACCESS: get_feature_access(hass).name,
-        },
-    )
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -284,8 +270,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when it changed."""
-    # Avoid race if reload happens while integration is still setting up
-    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_services(
