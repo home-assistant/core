@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable
 import json
 from typing import Any
 
-from sqlalchemy import Column, not_, or_
+from sqlalchemy import JSON, Column, Text, cast, not_, or_
 from sqlalchemy.sql.elements import ClauseList
 
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
@@ -18,8 +18,11 @@ DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
 
 GLOB_TO_SQL_CHARS = {
-    42: "%",  # *
-    46: "_",  # .
+    ord("*"): "%",
+    ord("?"): "_",
+    ord("%"): "\\%",
+    ord("_"): "\\_",
+    ord("\\"): "\\\\",
 }
 
 
@@ -110,8 +113,7 @@ class Filters:
         """Generate the entity filter query."""
         _encoder = json.dumps
         return or_(
-            (ENTITY_ID_IN_EVENT == _encoder(None))
-            & (OLD_ENTITY_ID_IN_EVENT == _encoder(None)),
+            (ENTITY_ID_IN_EVENT == JSON.NULL) & (OLD_ENTITY_ID_IN_EVENT == JSON.NULL),
             self._generate_filter_for_columns(
                 (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder
             ).self_group(),
@@ -123,7 +125,9 @@ def _globs_to_like(
 ) -> ClauseList:
     """Translate glob to sql."""
     return or_(
-        column.like(encoder(glob_str.translate(GLOB_TO_SQL_CHARS)))
+        cast(column, Text()).like(
+            encoder(glob_str).translate(GLOB_TO_SQL_CHARS), escape="\\"
+        )
         for glob_str in glob_strs
         for column in columns
     )
@@ -133,7 +137,7 @@ def _entity_matcher(
     entity_ids: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     return or_(
-        column.in_([encoder(entity_id) for entity_id in entity_ids])
+        cast(column, Text()).in_([encoder(entity_id) for entity_id in entity_ids])
         for column in columns
     )
 
@@ -142,5 +146,7 @@ def _domain_matcher(
     domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     return or_(
-        column.like(encoder(f"{domain}.%")) for domain in domains for column in columns
+        cast(column, Text()).like(encoder(f"{domain}.%"))
+        for domain in domains
+        for column in columns
     )
