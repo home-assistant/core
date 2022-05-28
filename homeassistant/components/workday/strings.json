@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "incorrect_province": "Incorrect subdivision from yaml import"
+    },
     "step": {
       "user": {
         "data": {

@@ -181,6 +181,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["add_holidays"] = "add_holiday_error"
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
+            except NotImplementedError:
+                self.async_abort(reason="incorrect_province")
 
             if not errors:
                 name = self.data.get(CONF_NAME, user_input.get(CONF_NAME))
@@ -196,7 +198,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="options",
             data_schema=new_schema,
-            errors={},
+            errors=errors,
         )
 
 

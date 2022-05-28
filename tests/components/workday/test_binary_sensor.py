@@ -45,8 +45,16 @@ async def test_valid_country_yaml() -> None:
         binary_sensor.valid_country("HomeAssistantLand")
 
 
+async def test_day_to_string() -> None:
+    """Test if day_to_string is behaving correctly."""
+    assert binary_sensor.day_to_string(0) == "mon"
+    assert binary_sensor.day_to_string(1) == "tue"
+    assert binary_sensor.day_to_string(7) == "holiday"
+    assert binary_sensor.day_to_string(8) is None
+
+
 @pytest.mark.parametrize(
-    ("config", "expected_state"),
+    "config, expected_state",
     [
         (TEST_CONFIG_WITH_PROVINCE, "off"),
         (TEST_CONFIG_NO_PROVINCE, "off"),
@@ -76,6 +84,34 @@ async def test_setup(
         "workdays": config["workdays"],
         "excludes": config["excludes"],
         "days_offset": config["days_offset"],
+    }
+
+
+async def test_setup_from_import(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup from various configs."""
+    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Monday
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "DE",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state.state == "off"
+    assert state.attributes == {
+        "friendly_name": "Workday Sensor",
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
     }
 
 

@@ -114,7 +114,7 @@ async def async_setup_entry(
     country: str = entry.options[CONF_COUNTRY]
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
-    province: str = entry.options[CONF_PROVINCE]
+    province: str | None = entry.options.get(CONF_PROVINCE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
@@ -129,7 +129,7 @@ async def async_setup_entry(
             return
 
     # Add custom holidays
-    if add_holidays != []:
+    try:
         obj_holidays.append(add_holidays)
     except ValueError as error:
         LOGGER.error("Could not add custom holidays: %s", error)

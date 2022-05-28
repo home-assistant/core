@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "incorrect_province": "Incorrect subdivision from yaml import"
+        },
         "error": {
             "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
             "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
