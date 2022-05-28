@@ -386,12 +386,6 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_top"
         self._attr_name = f"{self._shade_name} Top"
-        self._shade.open_position = {
-            ATTR_POSITION1: MIN_POSITION,
-            ATTR_POSITION2: MAX_POSITION,
-            ATTR_POSKIND1: POS_KIND_PRIMARY,
-            ATTR_POSKIND2: POS_KIND_SECONDARY,
-        }
 
     @property
     def is_closed(self):
