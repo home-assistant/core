@@ -13,6 +13,7 @@ from aiopvapi.helpers.constants import (
     ATTR_POSITION_DATA,
     ATTR_POSKIND1,
     ATTR_POSKIND2,
+    ATTR_SHADE,
 )
 from aiopvapi.resources.shade import MIN_POSITION
 
@@ -22,6 +23,19 @@ from .util import async_map_data_by_id
 POSITIONS = ((ATTR_POSITION1, ATTR_POSKIND1), (ATTR_POSITION2, ATTR_POSKIND2))
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PowerviewShadeMove:
+    """Request to move a powerview shade."""
+
+    # The positions to request on the hub
+    request: dict[str, int]
+
+    # The positions that will also change
+    # as a result of the request that the
+    # hub will not send back
+    new_positions: dict[int, int]
 
 
 @dataclass
@@ -75,13 +89,25 @@ class PowerviewShadeData:
         elif kind == POS_KIND_VANE:
             positions.vane = position
 
-    def update_shade_positions(self, data: dict[int | str, Any]) -> None:
-        """Update a shades from data dict."""
-        _LOGGER.debug("Raw data update: %s", data)
-        shade_id = data[ATTR_ID]
-        position_data = data[ATTR_POSITION_DATA]
+    def update_from_position_data(
+        self, shade_id: int, position_data: dict[str, Any]
+    ) -> None:
+        """Update the shade positions from the position data."""
         for position_key, kind_key in POSITIONS:
             if position_key in position_data:
                 self.update_shade_position(
                     shade_id, position_data[position_key], position_data[kind_key]
                 )
+
+    def update_shade_positions(self, data: dict[int | str, Any]) -> None:
+        """Update a shades from data dict."""
+        _LOGGER.debug("Raw data update: %s", data)
+        shade_id = data[ATTR_ID]
+        position_data = data[ATTR_POSITION_DATA]
+        self.update_from_position_data(shade_id, position_data)
+
+    def update_from_response(self, response: dict[str, Any]) -> None:
+        """Update from the response to a command."""
+        if response and ATTR_SHADE in response:
+            shade_data: dict[int | str, Any] = response[ATTR_SHADE]
+            self.update_shade_positions(shade_data)
