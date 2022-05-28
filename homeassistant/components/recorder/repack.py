@@ -34,7 +34,7 @@ def repack_database(instance: Recorder) -> None:
         with instance.engine.connect().execution_options(
             isolation_level="AUTOCOMMIT"
         ) as conn:
-            conn.execute(text("VACUUM"))
+            conn.execute(text("VACUUM FULL"))
             conn.commit()
         return
 
