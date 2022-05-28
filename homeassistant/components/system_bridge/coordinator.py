@@ -191,4 +191,6 @@ class SystemBridgeDataUpdateCoordinator(
         if not self.websocket_client.connected:
             await self._setup_websocket()
 
+        self.logger.debug("_async_update_data done")
+
         return self.systembridge_data
