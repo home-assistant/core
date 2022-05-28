@@ -23,7 +23,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
