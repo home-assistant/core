@@ -18,17 +18,28 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, IALARMXR_TO_HASS
+from .const import DOMAIN
 from .utils import async_get_ialarmxr_mac
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
 _LOGGER = logging.getLogger(__name__)
+
+IALARMXR_TO_HASS = {
+    IAlarmXR.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+    IAlarmXR.ARMED_STAY: STATE_ALARM_ARMED_HOME,
+    IAlarmXR.DISARMED: STATE_ALARM_DISARMED,
+    IAlarmXR.TRIGGERED: STATE_ALARM_TRIGGERED,
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
