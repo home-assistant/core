@@ -225,7 +225,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self.data.update_from_position_data(self._shade.id, move.request)
         for kind, position in move.new_positions.items():
             self.data.update_shade_position(self._shade.id, position, kind)
-        return command_result
+        self.data.update_shade_positions(command_result)
 
     async def _async_set_cover_position(self, target_hass_position: int) -> None:
         """Move the shade to a position."""
@@ -234,12 +234,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._async_schedule_update_for_transition(
             abs(current_hass_position - target_hass_position)
         )
-        command_result = await self._async_execute_move(
-            self._get_shade_move(target_hass_position)
-        )
+        await self._async_execute_move(self._get_shade_move(target_hass_position))
         self._attr_is_opening = target_hass_position > current_hass_position
         self._attr_is_closing = target_hass_position < current_hass_position
-        self._async_update_from_command(command_result)
+        self.async_write_ha_state()
 
     @callback
     def _async_update_from_command(self, raw_data: dict[str | int, Any] | None) -> None:
@@ -468,14 +466,12 @@ class PowerViewShadeWithTilt(PowerViewShade):
             - self.get_transition_steps,
         )
         position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
-        self._async_update_from_command(
-            await self._async_execute_move(
-                PowerviewShadeMove(
-                    {ATTR_POSITION1: position_vane, ATTR_POSKIND1: POS_KIND_VANE},
-                    {POS_KIND_PRIMARY: MIN_POSITION},
-                )
-            )
+        move = PowerviewShadeMove(
+            {ATTR_POSITION1: position_vane, ATTR_POSKIND1: POS_KIND_VANE},
+            {POS_KIND_PRIMARY: MIN_POSITION},
         )
+        await self._async_execute_move(move)
+        self.async_write_ha_state()
 
     @callback
     def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
