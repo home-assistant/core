@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from . import HiveEntity, refresh_system
-from .const import DOMAIN
+from .const import ATTR_MODE, DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -74,6 +74,9 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.light.getLight(self.device)
         self.attributes.update(self.device.get("attributes", {}))
+        self._attr_extra_state_attributes = {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
         self._attr_available = self.device["deviceData"].get("online")
         if self._attr_available:
             self._attr_is_on = self.device["status"]["state"]
