@@ -264,9 +264,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> FlowResult:
         """Create an entry for auth."""
         # Flow has been triggered by external data
-        if user_input:
+        if user_input is not None:
             self.external_data = user_input
-            next_step = "creation" if "code" in user_input else "authorize_rejected"
+            next_step = "authorize_rejected" if "error" in user_input else "creation"
             return self.async_external_step_done(next_step_id=next_step)
 
         try:
