@@ -64,9 +64,7 @@ class IAlarmXRPanel(
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-        if self.coordinator.state in IALARMXR_TO_HASS:
-            return IALARMXR_TO_HASS[self.coordinator.state]
-        return None
+        return IALARMXR_TO_HASS.get(self.coordinator.state)
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
