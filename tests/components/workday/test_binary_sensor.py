@@ -45,14 +45,6 @@ async def test_valid_country_yaml() -> None:
         binary_sensor.valid_country("HomeAssistantLand")
 
 
-async def test_day_to_string() -> None:
-    """Test if day_to_string is behaving correctly."""
-    assert binary_sensor.day_to_string(0) == "mon"
-    assert binary_sensor.day_to_string(1) == "tue"
-    assert binary_sensor.day_to_string(7) == "holiday"
-    assert binary_sensor.day_to_string(8) is None
-
-
 @pytest.mark.parametrize(
     "config, expected_state",
     [
