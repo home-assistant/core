@@ -1,6 +1,8 @@
 """The powerview integration base entity."""
 
-from aiopvapi.resources.shade import ATTR_TYPE
+from typing import Any
+
+from aiopvapi.resources.shade import ATTR_TYPE, BaseShade
 
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION
 import homeassistant.helpers.device_registry as dr
@@ -27,7 +29,13 @@ from .shade_data import PowerviewShadeData, PowerviewShadePositions
 class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
 
-    def __init__(self, coordinator, device_info, room_name, unique_id):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        unique_id: str,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._room_name = room_name
@@ -60,7 +68,14 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
 class ShadeEntity(HDEntity):
     """Base class for hunter douglas shade entities."""
 
-    def __init__(self, coordinator, device_info, room_name, shade, shade_name):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        shade_name: str,
+    ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name

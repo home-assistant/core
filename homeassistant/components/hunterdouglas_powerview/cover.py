@@ -156,6 +156,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     # The hub frequently reports stale states
     _attr_assumed_state = True
     _attr_device_class = CoverDeviceClass.SHADE
+    _attr_supported_features = 0
 
     def __init__(
         self,
@@ -171,7 +172,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._attr_name = self._shade_name
         self._scheduled_transition_update: CALLBACK_TYPE | None = None
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
-            self._attr_supported_features = CoverEntityFeature.STOP
+            self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
 
     @property
@@ -332,11 +333,21 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 class PowerViewShade(PowerViewShadeBase):
     """Represent a standard shade."""
 
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-    )
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_supported_features |= (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
 
 
 class PowerViewShadeTDBU(PowerViewShade):
@@ -439,18 +450,28 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
 class PowerViewShadeWithTilt(PowerViewShade):
     """Representation of a PowerView shade with tilt capabilities."""
 
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
-        | CoverEntityFeature.SET_TILT_POSITION
-    )
-
     _max_tilt = MAX_POSITION
     _tilt_steps = 10
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_supported_features |= (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+            | CoverEntityFeature.SET_TILT_POSITION
+        )
 
     @property
     def current_cover_tilt_position(self) -> int:
