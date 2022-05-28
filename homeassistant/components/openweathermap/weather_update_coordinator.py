@@ -253,6 +253,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
 
+    def update_location(self, latitude, longitude):
+        """Update the location for which we retrieve data."""
+        self._latitude = latitude
+        self._longitude = longitude
+
 
 class LegacyWeather:
     """Class to harmonize weather data model for hourly, daily and One Call APIs."""

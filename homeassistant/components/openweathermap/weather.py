@@ -1,10 +1,19 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,6 +36,8 @@ from .const import (
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
+SERVICE_UPDATE_LOCATION = "update_location"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -42,6 +53,16 @@ async def async_setup_entry(
     owm_weather = OpenWeatherMapWeather(name, unique_id, weather_coordinator)
 
     async_add_entities([owm_weather], False)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_LOCATION,
+        {
+            vol.Required("latitude"): cv.latitude,
+            vol.Required("longitude"): cv.longitude,
+        },
+        "async_update_location",
+    )
 
 
 class OpenWeatherMapWeather(WeatherEntity):
@@ -125,3 +146,15 @@ class OpenWeatherMapWeather(WeatherEntity):
     async def async_update(self) -> None:
         """Get the latest data from OWM and updates the states."""
         await self._weather_coordinator.async_request_refresh()
+
+    async def async_update_location(self, latitude, longitude):
+        """Update location of this entity."""
+        config_entries = self.hass.config_entries
+        config_entry = self.platform.config_entry
+
+        new_data = {**config_entry.data}
+        new_data[CONF_LATITUDE] = latitude
+        new_data[CONF_LONGITUDE] = longitude
+        config_entries.async_update_entry(config_entry, data=new_data)
+
+        self._weather_coordinator.update_location(latitude, longitude)

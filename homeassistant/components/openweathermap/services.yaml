@@ -1,0 +1,20 @@
+update_location:
+  name: Update location
+  description: Update the latitude and longitude for an existing weather entity.
+  target:
+    entity:
+      integration: openweathermap
+      domain: weather
+  fields:
+    latitude:
+      name: Latitude
+      description: Latitude of the new location.
+      example: "34.20291"
+      selector:
+        text:
+    longitude:
+      name: Longitude
+      description: Longitude of the new location.
+      example: "-77.80302"
+      selector:
+        text:
