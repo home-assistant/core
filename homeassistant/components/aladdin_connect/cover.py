@@ -103,7 +103,7 @@ class AladdinDevice(CoverEntity):
             """Schedule a state update."""
             self.async_schedule_update_ha_state(True)
 
-        await self._acc.register_callback(update_callback)
+        self._acc.register_callback(update_callback)
         await self._acc.get_doors()
         await self.async_update()
 
