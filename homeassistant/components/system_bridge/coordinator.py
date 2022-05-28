@@ -23,7 +23,12 @@ from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -54,14 +59,17 @@ class SystemBridgeDataUpdateCoordinator(
         LOGGER: logging.Logger,
         *,
         entry: ConfigEntry,
-        websocket_client: WebSocketClient,
     ) -> None:
         """Initialize global System Bridge data updater."""
         self.title = entry.title
         self.unsub: Callable | None = None
 
         self.systembridge_data = SystemBridgeCoordinatorData()
-        self.websocket_client = websocket_client
+        self.websocket_client = WebSocketClient(
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data[CONF_API_KEY],
+        )
 
         super().__init__(
             hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
@@ -71,6 +79,16 @@ class SystemBridgeDataUpdateCoordinator(
         """Call update on all listeners."""
         for update_callback in self._listeners:
             update_callback()
+
+    async def async_get_data(
+        self,
+        modules: list[str],
+    ) -> None:
+        """Get data from WebSocket."""
+        if not self.websocket_client.connected:
+            await self._setup_websocket()
+
+        await self.websocket_client.get_data(modules)
 
     async def async_handle_module(
         self,
@@ -121,39 +139,39 @@ class SystemBridgeDataUpdateCoordinator(
 
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates."""
+        try:
+            async with async_timeout.timeout(20):
+                await self.websocket_client.connect(
+                    session=async_get_clientsession(self.hass),
+                )
+        except AuthenticationException as exception:
+            self.last_update_success = False
+            self.logger.error("Authentication failed for %s: %s", self.title, exception)
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+            self.last_update_success = False
+            self.update_listeners()
+        except ConnectionErrorException as exception:
+            self.logger.warning(
+                "Connection error occurred for %s. Will retry: %s",
+                self.title,
+                exception,
+            )
+            self.last_update_success = False
+            self.update_listeners()
+        except asyncio.TimeoutError as exception:
+            self.logger.warning(
+                "Timed out waiting for %s. Will retry: %s",
+                self.title,
+                exception,
+            )
+            self.last_update_success = False
+            self.update_listeners()
 
-        if not self.websocket_client.connected:
-            try:
-                async with async_timeout.timeout(20):
-                    await self.websocket_client.connect(
-                        session=async_get_clientsession(self.hass),
-                    )
-            except AuthenticationException as exception:
-                self.last_update_success = False
-                self.logger.error(
-                    "Authentication failed for %s: %s", self.title, exception
-                )
-                if self.unsub:
-                    self.unsub()
-                    self.unsub = None
-                self.last_update_success = False
-                self.update_listeners()
-            except ConnectionErrorException as exception:
-                self.logger.warning(
-                    "Connection error occurred for %s. Will retry: %s",
-                    self.title,
-                    exception,
-                )
-                self.last_update_success = False
-                self.update_listeners()
-            except asyncio.TimeoutError as exception:
-                self.logger.warning(
-                    "Timed out waiting for %s. Will retry: %s",
-                    self.title,
-                    exception,
-                )
-                self.last_update_success = False
-                self.update_listeners()
+        self.hass.async_create_task(self._listen_for_data())
+        self.last_update_success = True
+        self.update_listeners()
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
@@ -172,7 +190,5 @@ class SystemBridgeDataUpdateCoordinator(
         )
         if not self.websocket_client.connected:
             await self._setup_websocket()
-
-        self.hass.async_create_task(self._listen_for_data())
 
         return self.systembridge_data

@@ -10,22 +10,13 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_URL,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PATH, CONF_URL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -52,17 +43,14 @@ SERVICE_SEND_TEXT = "send_text"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
 
-    websocket_client = WebSocketClient(
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
-        entry.data[CONF_API_KEY],
+    coordinator = SystemBridgeDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        entry=entry,
     )
     try:
         async with async_timeout.timeout(30):
-            await websocket_client.connect(session=async_get_clientsession(hass))
-            await websocket_client.get_data(MODULES)
-            message = await websocket_client.receive_message()
-            _LOGGER.debug("Received message: %s", message)
+            await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed from exception
@@ -75,12 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
 
-    coordinator = SystemBridgeDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        entry=entry,
-        websocket_client=websocket_client,
-    )
     await coordinator.async_config_entry_first_refresh()
 
     _LOGGER.debug("Data: %s", coordinator.data)
