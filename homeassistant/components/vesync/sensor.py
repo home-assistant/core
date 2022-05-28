@@ -7,7 +7,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -148,3 +153,88 @@ class VeSyncEnergySensor(VeSyncSensorEntity):
         """Update outlet details and energy usage."""
         self.smartplug.update()
         self.smartplug.update_energy()
+
+
+class VeSyncPm25Sensor(VeSyncSensorEntity):
+    """Sensor for concentration of particulate matter less than 2.5 micrometers."""
+
+    def __init__(self, fan):
+        """Initialize the VeSync fan device."""
+        super().__init__(fan)
+        self.smartfan = fan
+        self._attr_device_class = SensorDeviceClass.PM25
+        self._attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self):
+        """Return an integer representing the concentration of particulate matter less than 2.5 micrometers."""
+
+        return self.smartfan.details["air_quality_value"]
+
+    @property
+    def name(self):
+        """Return sensor name."""
+        return f"{super().name} PM2.5"
+
+    @property
+    def unique_id(self):
+        """Return unique ID for power sensor on device."""
+        return f"{super().unique_id}-pm25"
+
+
+class VeSyncAirQualitySensor(VeSyncSensorEntity):
+    """Sensor for air quality levels.
+
+    Note: On the LV-PUR131S and derivatives this will be a text string.
+    """
+
+    def __init__(self, fan):
+        """Initialize the VeSync fan device."""
+        super().__init__(fan)
+        self.smartfan = fan
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self):
+        """Return the air quality level.
+
+        Note: On the LV-PUR131S and derivatives this will be a text string.
+        """
+        return self.smartfan.details["air_quality"]
+
+    @property
+    def name(self):
+        """Return sensor name."""
+        return f"{super().name} Air Quality"
+
+    @property
+    def unique_id(self):
+        """Return unique ID for power sensor on device."""
+        return f"{super().unique_id}-air-quality"
+
+
+class VeSyncFilterLifeSensor(VeSyncSensorEntity):
+    """Sensor for remaining filter life as a percentage."""
+
+    def __init__(self, fan):
+        """Initialize the VeSync fan device."""
+        super().__init__(fan)
+        self.smartfan = fan
+        self._attr_native_unit_of_measurement = PERCENTAGE
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self):
+        """Return the remaining filter life as a percentage."""
+        return self.smartfan.details["filter_life"]
+
+    @property
+    def name(self):
+        """Return sensor name."""
+        return f"{super().name} Filter Life"
+
+    @property
+    def unique_id(self):
+        """Return unique ID for power sensor on device."""
+        return f"{super().unique_id}-filter-life"

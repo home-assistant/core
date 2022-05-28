@@ -15,6 +15,7 @@ from homeassistant.util.percentage import (
 
 from .common import VeSyncDevice
 from .const import DOMAIN, VS_DISCOVERY, VS_FANS
+from .sensor import VeSyncAirQualitySensor, VeSyncFilterLifeSensor, VeSyncPm25Sensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +74,35 @@ SPEED_RANGE = {  # off is not included
     "LAP-C601S-WUSR": (1, 4),  # ALt ID Model Core600S
     "LAP-C601S-WEU": (1, 4),  # ALt ID Model Core600S
 }
+SUPPORTED_FEATURES = {
+    "LV-PUR131S": ["air_quality"],
+    "LV-RH131S": ["air_quality"],  # Alt ID Model LV-PUR131S
+    "Core200S": ["night_light", "display_toggle"],
+    "LAP-C201S-AUSR": ["night_light", "display_toggle"],  # Alt ID Model Core200S
+    "LAP-C202S-WUSR": ["night_light", "display_toggle"],  # Alt ID Model Core200S
+    "Core300S": ["display_toggle"],
+    "LAP-C301S-WJP": ["display_toggle"],  # Alt ID Model Core300S
+    "Core400S": ["air_quality", "pm25", "display_toggle"],
+    "LAP-C401S-WJP": ["air_quality", "pm25", "display_toggle"],  # Alt ID Model Core400S
+    "LAP-C401S-WUSR": [
+        "air_quality",
+        "pm25",
+        "display_toggle",
+    ],  # Alt ID Model Core400S
+    "LAP-C401S-WAAA": [
+        "air_quality",
+        "pm25",
+        "display_toggle",
+    ],  # Alt ID Model Core400S
+    "Core600S": ["air_quality", "pm25", "display_toggle"],
+    "LAP-C601S-WUS": ["air_quality", "pm25", "display_toggle"],  # Alt ID Model Core600S
+    "LAP-C601S-WUSR": [
+        "air_quality",
+        "pm25",
+        "display_toggle",
+    ],  # Alt ID Model Core600S
+    "LAP-C601S-WEU": ["air_quality", "pm25", "display_toggle"],  # Alt ID Model Core600S
+}
 
 
 async def async_setup_entry(
@@ -101,6 +131,11 @@ def _setup_entities(devices, async_add_entities):
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
             entities.append(VeSyncFanHA(dev))
+            entities.append(VeSyncFilterLifeSensor(dev))
+            if "pm25" in SUPPORTED_FEATURES.get(dev.device_type):
+                entities.append(VeSyncPm25Sensor(dev))
+            if "air_quality" in SUPPORTED_FEATURES.get(dev.device_type):
+                entities.append(VeSyncAirQualitySensor(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
