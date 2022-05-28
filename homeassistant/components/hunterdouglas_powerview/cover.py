@@ -465,13 +465,20 @@ class PowerViewShadeWithTilt(PowerViewShade):
             + self.current_cover_tilt_position
             - self.get_transition_steps,
         )
+        move = self._get_shade_tilt_move(target_hass_tilt_position)
+        await self._async_execute_move(move)
+        self.async_write_ha_state()
+
+    @callback
+    def _get_shade_tilt_move(
+        self, target_hass_tilt_position: int
+    ) -> PowerviewShadeMove:
+        """Return a PowerviewShadeMove for a tilt."""
         position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
-        move = PowerviewShadeMove(
+        return PowerviewShadeMove(
             {ATTR_POSITION1: position_vane, ATTR_POSKIND1: POS_KIND_VANE},
             {POS_KIND_PRIMARY: MIN_POSITION},
         )
-        await self._async_execute_move(move)
-        self.async_write_ha_state()
 
     @callback
     def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
