@@ -199,11 +199,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _LOGGER.warning(
         "Configuration of Google Calendar in YAML in configuration.yaml is "
         "is deprecated and will be removed in a future release; Your existing "
-        "OAuth Application Credentials and other settings have been imported "
+        "OAuth Application Credentials and access settings have been imported "
         "into the UI automatically and can be safely removed from your "
         "configuration.yaml file"
     )
-
+    if conf.get(CONF_TRACK_NEW) is False:
+        # The track_new as False would previously result in new entries
+        # in google_calendars.yaml with track set to Fasle which is
+        # handled at calendar entity creation time.
+        _LOGGER.warning(
+            "You must manually set the integration System Options in the "
+            "UI to disable newly discovered entities going forward"
+        )
     return True
 
 
@@ -260,23 +267,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def async_upgrade_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Upgrade the config entry if needed."""
-    if DATA_CONFIG not in hass.data[DOMAIN] and entry.options:
+    if entry.options:
         return
-
-    options = (
-        entry.options
-        if entry.options
-        else {
-            CONF_CALENDAR_ACCESS: get_feature_access(hass).name,
-        }
-    )
-    disable_new_entities = (
-        not hass.data[DOMAIN].get(DATA_CONFIG, {}).get(CONF_TRACK_NEW, True)
-    )
     hass.config_entries.async_update_entry(
         entry,
-        options=options,
-        pref_disable_new_entities=disable_new_entities,
+        options={
+            CONF_CALENDAR_ACCESS: get_feature_access(hass).name,
+        },
     )
 
 
