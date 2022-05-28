@@ -652,19 +652,47 @@ async def test_calendar_yaml_update(
 async def test_update_will_reload(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
+    setup_config_entry: Any,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test updating config entry options will trigger a reload."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     await component_setup()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.options == {}
+    assert config_entry.options == {}  # read_write is default
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=None,
     ) as mock_reload:
+        # No-op does not reload
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_CALENDAR_ACCESS: "read_write"}
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # Data change does not trigger reload
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                "example": "field",
+            },
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # Reload when options changed
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_CALENDAR_ACCESS: "read_only"}
         )
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         mock_reload.assert_called_once()

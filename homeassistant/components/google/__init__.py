@@ -257,20 +257,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    # Reload entry when options are updated
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    entry.async_on_unload(entry.add_update_listener(UpdateListener(access).async_call))
 
     return True
+
+
+class UpdateListener:
+    """Listener that will reload the integration when options change."""
+
+    def __init__(self, access: FeatureAccess) -> None:
+        """Initialize UpdateListener."""
+        self._access = access
+
+    async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Reload the config entry when access options changed."""
+        new_access = get_feature_access(hass, entry)
+        if self._access != new_access:
+            await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_services(
