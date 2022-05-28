@@ -73,12 +73,12 @@ async def test_update_intervals(
     ].update_interval == timedelta(minutes=32)
     assert len(tomorrowio_config_entry_update.call_args_list) == 1
 
-    # 30 minutes in, no updates yet
+    # Before the update interval, no updates yet
     async_fire_time_changed(hass, now + timedelta(minutes=30))
     await hass.async_block_till_done()
     assert len(tomorrowio_config_entry_update.call_args_list) == 1
 
-    # 32 minutes in, we get a new update
+    # On the update interval, we get a new update
     async_fire_time_changed(hass, now + timedelta(minutes=32))
     await hass.async_block_till_done()
     assert len(tomorrowio_config_entry_update.call_args_list) == 2
