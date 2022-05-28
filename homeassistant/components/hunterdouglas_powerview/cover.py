@@ -47,7 +47,6 @@ from .const import (
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .shade_data import PowerviewShadePositions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,11 +141,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
-
-    @property
-    def positions(self) -> PowerviewShadePositions:
-        """Return the PowerviewShadeData."""
-        return self.coordinator.data.get_shade_positions(self._shade.id)
 
     @property
     def extra_state_attributes(self):
