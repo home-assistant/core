@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
 from .const import (
-    ATTR_COORDINATOR,
+    ATTR_COORDINATORS,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
@@ -91,18 +91,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
-    sensor_devices = [
-        device
-        for device in coordinator.yl_devices
-        if device.device_type in SENSOR_DEVICE_TYPE
+    device_coordinators = hass.data[DOMAIN][ATTR_COORDINATORS]
+    sensor_device_coordinators = [
+        device_coordinator
+        for device_coordinator in device_coordinators.values()
+        if device_coordinator.device.device_type in SENSOR_DEVICE_TYPE
     ]
     entities = []
-    for sensor_device in sensor_devices:
+    for sensor_device_coordinator in sensor_device_coordinators:
         for description in SENSOR_TYPES:
-            if description.exists_fn(sensor_device):
+            if description.exists_fn(sensor_device_coordinator.device):
                 entities.append(
-                    YoLinkSensorEntity(coordinator, description, sensor_device)
+                    YoLinkSensorEntity(
+                        sensor_device_coordinator,
+                        description,
+                    )
                 )
     async_add_entities(entities)
 
@@ -116,18 +119,21 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
-        device: YoLinkDevice,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
-        self._attr_name = f"{device.device_name} ({self.entity_description.name})"
+        self._attr_unique_id = (
+            f"{coordinator.device.device_id} {self.entity_description.key}"
+        )
+        self._attr_name = (
+            f"{coordinator.device.device_name} ({self.entity_description.name})"
+        )
 
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         self._attr_native_value = self.entity_description.value(
-            state[self.entity_description.key]
+            state.get(self.entity_description.key)
         )
         self.async_write_ha_state()
