@@ -291,7 +291,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             est_time_to_complete_transition,
         )
 
-        # Schedule an update for when we expect the transition
+        # Schedule an forced update for when we expect the transition
         # to be completed.
         self._scheduled_transition_update = async_call_later(
             self.hass,
