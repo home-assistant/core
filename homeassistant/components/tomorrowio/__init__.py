@@ -261,8 +261,9 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             # If we have an event, we need to wait for it to be set before we proceed
             await self._coordinator_ready.wait()
-            # If we're not getting new data, we don't need to schedule a refresh
-            if entry.entry_id not in self.entry_id_to_location_dict:
+            # If we're not getting new data because we already know this entry, we
+            # don't need to schedule a refresh
+            if entry.entry_id in self.entry_id_to_location_dict:
                 return
             # We need a refresh, but it's going to be a partial refresh so we can
             # minimize repeat API calls
