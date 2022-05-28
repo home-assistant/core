@@ -20,6 +20,8 @@ async def async_process_devices(hass, manager):
 
     if manager.fans:
         devices[VS_FANS].extend(manager.fans)
+        # Expose fan sensors separately
+        devices[VS_SENSORS].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.bulbs:

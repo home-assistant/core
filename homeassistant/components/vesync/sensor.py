@@ -24,6 +24,24 @@ from .switch import DEV_TYPE_TO_HA
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORTED_SENSORS = {
+    "LV-PUR131S": ["air_quality", "filter_life"],
+    "LV-RH131S": ["air_quality", "filter_life"],  # Alt ID Model LV-PUR131S
+    "Core200S": ["night_light", "filter_life"],
+    "LAP-C201S-AUSR": ["night_light", "filter_life"],  # Alt ID Model Core200S
+    "LAP-C202S-WUSR": ["night_light", "filter_life"],  # Alt ID Model Core200S
+    "Core300S": ["filter_life"],
+    "LAP-C301S-WJP": ["filter_life"],  # Alt ID Model Core300S
+    "Core400S": ["air_quality", "pm25", "filter_life"],
+    "LAP-C401S-WJP": ["air_quality", "pm25", "filter_life"],  # Alt ID Model Core400S
+    "LAP-C401S-WUSR": ["air_quality", "pm25", "filter_life"],  # Alt ID Model Core400S
+    "LAP-C401S-WAAA": ["air_quality", "pm25", "filter_life"],  # Alt ID Model Core400S
+    "Core600S": ["air_quality", "pm25", "filter_life"],
+    "LAP-C601S-WUS": ["air_quality", "pm25", "filter_life"],  # Alt ID Model Core600S
+    "LAP-C601S-WUSR": ["air_quality", "pm25", "filter_life"],  # Alt ID Model Core600S
+    "LAP-C601S-WEU": ["air_quality", "pm25", "filter_life"],  # Alt ID Model Core600S
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -49,11 +67,15 @@ def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) != "outlet":
-            # Not an outlet that supports energy/power, so do not create sensor entities
-            continue
-        entities.append(VeSyncPowerSensor(dev))
-        entities.append(VeSyncEnergySensor(dev))
+        if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
+            entities.append(VeSyncPowerSensor(dev))
+            entities.append(VeSyncEnergySensor(dev))
+        if "filter_life" in SUPPORTED_SENSORS.get(dev.device_type):
+            entities.append(VeSyncFilterLifeSensor(dev))
+        if "pm25" in SUPPORTED_SENSORS.get(dev.device_type):
+            entities.append(VeSyncPm25Sensor(dev))
+        if "air_quality" in SUPPORTED_SENSORS.get(dev.device_type):
+            entities.append(VeSyncAirQualitySensor(dev))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -158,19 +180,19 @@ class VeSyncEnergySensor(VeSyncSensorEntity):
 class VeSyncPm25Sensor(VeSyncSensorEntity):
     """Sensor for concentration of particulate matter less than 2.5 micrometers."""
 
-    def __init__(self, fan):
-        """Initialize the VeSync fan device."""
-        super().__init__(fan)
-        self.smartfan = fan
+    def __init__(self, device):
+        """Initialize the VeSync device."""
+        super().__init__(device)
+        self.device = device
         self._attr_device_class = SensorDeviceClass.PM25
         self._attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
-        """Return an integer representing the concentration of particulate matter less than 2.5 micrometers."""
+        """Return the concentration of particulate matter less than 2.5 micrometers."""
 
-        return self.smartfan.details["air_quality_value"]
+        return self.device.details["air_quality_value"]
 
     @property
     def name(self):
@@ -189,10 +211,10 @@ class VeSyncAirQualitySensor(VeSyncSensorEntity):
     Note: On the LV-PUR131S and derivatives this will be a text string.
     """
 
-    def __init__(self, fan):
-        """Initialize the VeSync fan device."""
-        super().__init__(fan)
-        self.smartfan = fan
+    def __init__(self, device):
+        """Initialize the VeSync device."""
+        super().__init__(device)
+        self.device = device
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
@@ -201,7 +223,7 @@ class VeSyncAirQualitySensor(VeSyncSensorEntity):
 
         Note: On the LV-PUR131S and derivatives this will be a text string.
         """
-        return self.smartfan.details["air_quality"]
+        return self.device.details["air_quality"]
 
     @property
     def name(self):
@@ -217,17 +239,17 @@ class VeSyncAirQualitySensor(VeSyncSensorEntity):
 class VeSyncFilterLifeSensor(VeSyncSensorEntity):
     """Sensor for remaining filter life as a percentage."""
 
-    def __init__(self, fan):
-        """Initialize the VeSync fan device."""
-        super().__init__(fan)
-        self.smartfan = fan
+    def __init__(self, device):
+        """Initialize the VeSync device."""
+        super().__init__(device)
+        self.device = device
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
         """Return the remaining filter life as a percentage."""
-        return self.smartfan.details["filter_life"]
+        return self.device.details["filter_life"]
 
     @property
     def name(self):
