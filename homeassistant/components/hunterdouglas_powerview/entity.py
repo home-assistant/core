@@ -21,7 +21,7 @@ from .const import (
     MANUFACTURER,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
-from .shade_data import PowerviewShadeData
+from .shade_data import PowerviewShadeData, PowerviewShadePositions
 
 
 class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
@@ -70,6 +70,11 @@ class ShadeEntity(HDEntity):
         super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name
         self._shade = shade
+
+    @property
+    def positions(self) -> PowerviewShadePositions:
+        """Return the PowerviewShadeData."""
+        return self.data.get_shade_positions(self._shade.id)
 
     @property
     def device_info(self) -> DeviceInfo:
