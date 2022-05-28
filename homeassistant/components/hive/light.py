@@ -48,8 +48,6 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
         elif self.device["hiveType"] == "colourtuneablelight":
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
-            rgb = self.device["status"].get("hs_color")
-            self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
 
         self._attr_min_mireds = self.device.get("min_mireds")
         self._attr_max_mireds = self.device.get("max_mireds")
@@ -97,5 +95,5 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_is_on = self.device["status"]["state"]
             self._attr_brightness = self.device["status"]["brightness"]
             if self.device["hiveType"] == "colourtuneablelight":
-                rgb = self.device["status"].get("hs_color")
+                rgb = self.device["status"]["hs_color"]
                 self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
