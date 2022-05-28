@@ -48,6 +48,7 @@ from .const import (
     USER_DATA,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
+from .shade_data import PowerviewShadeData
 from .util import async_map_data_by_id
 
 PARALLEL_UPDATES = 1
@@ -95,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
     coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub_address)
+    coordinator.async_set_updated_data(PowerviewShadeData())
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         PV_API: pv_request,
         PV_ROOM_DATA: room_data,
