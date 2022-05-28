@@ -32,7 +32,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -157,14 +157,21 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     _attr_assumed_state = True
     _attr_device_class = CoverDeviceClass.SHADE
 
-    def __init__(self, coordinator, device_info, room_name, shade, name):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._shade: BaseShade = shade
         self._attr_name = self._shade_name
-        self._scheduled_transition_update = None
+        self._scheduled_transition_update: CALLBACK_TYPE | None = None
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
-            self._attr_supported_features |= CoverEntityFeature.STOP
+            self._attr_supported_features = CoverEntityFeature.STOP
         self._forced_resync = None
 
     @property
@@ -248,7 +255,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._attr_is_closing = False
 
     @callback
-    def _async_cancel_scheduled_transition_update(self):
+    def _async_cancel_scheduled_transition_update(self) -> None:
         """Cancel any previous updates."""
         if self._scheduled_transition_update:
             self._scheduled_transition_update()
@@ -258,7 +265,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             self._forced_resync = None
 
     @callback
-    def _async_schedule_update_for_transition(self, steps):
+    def _async_schedule_update_for_transition(self, steps: int) -> None:
         # Cancel any previous updates
         self._async_cancel_scheduled_transition_update()
 
@@ -290,30 +297,30 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             self.hass, RESYNC_DELAY, self._async_force_resync
         )
 
-    async def _async_force_resync(self, *_):
+    async def _async_force_resync(self, *_: Any) -> None:
         """Force a resync after an update since the hub may have stale state."""
         self._forced_resync = None
         _LOGGER.debug("Force resync of shade %s", self.name)
         await self._async_force_refresh_state()
 
-    async def _async_force_refresh_state(self):
+    async def _async_force_refresh_state(self) -> None:
         """Refresh the cover state and force the device cache to be bypassed."""
         await self._shade.refresh()
         self._async_update_shade_data(self._shade.raw_data)
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending refreshes."""
         self._async_cancel_scheduled_transition_update()
 
     @callback
-    def _async_update_shade_from_group(self):
+    def _async_update_shade_from_group(self) -> None:
         """Update with new data from the coordinator."""
         if self._scheduled_transition_update or self._forced_resync:
             # If a transition is in progress the data will be wrong
@@ -336,7 +343,7 @@ class PowerViewShadeTDBU(PowerViewShade):
     """Representation of a PowerView shade with top/down bottom/up capabilities."""
 
     @property
-    def get_transition_steps(self):
+    def get_transition_steps(self) -> int:
         """Return the steps to make a move."""
         return hd_position_to_hass(
             self.positions.primary, MAX_POSITION
@@ -346,7 +353,14 @@ class PowerViewShadeTDBU(PowerViewShade):
 class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
     """Representation of a top down bottom up powerview shade."""
 
-    def __init__(self, coordinator, device_info, room_name, shade, name):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_bottom"
@@ -376,7 +390,14 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
 class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
     """Representation of a top down bottom up powerview shade."""
 
-    def __init__(self, coordinator, device_info, room_name, shade, name):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_top"
