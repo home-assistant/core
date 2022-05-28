@@ -47,7 +47,8 @@ from .const import (
     SHADE_DATA,
     USER_DATA,
 )
-from .coordinator import PowerviewShadeUpdateCoordinator, async_map_data_by_id
+from .coordinator import PowerviewShadeUpdateCoordinator
+from .util import async_map_data_by_id
 
 PARALLEL_UPDATES = 1
 
