@@ -228,15 +228,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def _async_execute_move(self, move: PowerviewShadeMove) -> None:
         """Execute a move that can affect multiple positions."""
         response = await self._shade.move(move.request)
-
-        # Process the request data
-        self.data.update_from_position_data(self._shade.id, move.request)
-
         # Process any positions we know will update as result
         # of the request since the hub won't return them
         for kind, position in move.new_positions.items():
             self.data.update_shade_position(self._shade.id, position, kind)
-
         # Finally process the response
         self.data.update_from_response(response)
 
