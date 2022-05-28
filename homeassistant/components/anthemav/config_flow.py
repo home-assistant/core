@@ -31,7 +31,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -59,6 +58,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
+
+        if CONF_NAME not in user_input:
+            user_input[CONF_NAME] = DEFAULT_NAME
 
         errors = {}
 

@@ -27,7 +27,6 @@ async def test_form_with_valid_connection(
             {
                 "host": "1.1.1.1",
                 "port": 14999,
-                "name": "Anthem Av",
             },
         )
 
@@ -37,7 +36,7 @@ async def test_form_with_valid_connection(
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 14999,
-        "name": "Anthem Av",
+        "name": "Anthem AV",
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }
@@ -59,7 +58,6 @@ async def test_form_timeout_device_info(hass: HomeAssistant) -> None:
             {
                 "host": "1.1.1.1",
                 "port": 14999,
-                "name": "Anthem Av",
             },
         )
 
@@ -90,7 +88,6 @@ async def test_form_invalid_macaddress(
             {
                 "host": "1.1.1.1",
                 "port": 14999,
-                "name": "Anthem Av",
             },
         )
 
@@ -121,7 +118,6 @@ async def test_form_invalid_model(
             {
                 "host": "1.1.1.1",
                 "port": 14999,
-                "name": "Anthem Av",
             },
         )
 
@@ -146,7 +142,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {
                 "host": "1.1.1.1",
                 "port": 14999,
-                "name": "Anthem Av",
             },
         )
 
@@ -171,7 +166,6 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             {
                 "host": "1.1.1.1",
                 "port": 14999,
-                "name": "Anthem Av",
             },
         )
 
@@ -188,7 +182,7 @@ async def test_import_configuration(
     config = {
         "host": "1.1.1.1",
         "port": 14999,
-        "name": "Anthem Av",
+        "name": "Anthem Av Import",
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -198,7 +192,7 @@ async def test_import_configuration(
     assert result["data"] == {
         "host": "1.1.1.1",
         "port": 14999,
-        "name": "Anthem Av",
+        "name": "Anthem Av Import",
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }
