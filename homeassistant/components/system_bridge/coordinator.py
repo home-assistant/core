@@ -72,24 +72,22 @@ class SystemBridgeDataUpdateCoordinator(
         for update_callback in self._listeners:
             update_callback()
 
-    async def async_handle_data(
+    async def async_handle_module(
         self,
-        module: str,
-        data: dict,
-        module_handler: Callable,
+        module_name: str,
+        module,
     ) -> None:
         """Handle data from the WebSocket client."""
-        if module in MODULES:
-            self.logger.debug("Set new data for: %s", module)
-            setattr(self.systembridge_data, module, module_handler(**data))
-            self.async_set_updated_data(self.systembridge_data)
+        self.logger.debug("Set new data for: %s", module_name)
+        setattr(self.systembridge_data, module_name, module)
+        self.async_set_updated_data(self.systembridge_data)
 
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
 
         try:
             await self.websocket_client.register_data_listener(MODULES)
-            await self.websocket_client.listen_for_data(callback=self.async_handle_data)
+            await self.websocket_client.listen(callback=self.async_handle_module)
         except AuthenticationException as exception:
             self.last_update_success = False
             self.logger.error("Authentication failed for %s: %s", self.title, exception)
