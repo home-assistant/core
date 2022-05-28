@@ -12,6 +12,7 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
+from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.engine import Engine
@@ -34,6 +35,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from . import migration, statistics
@@ -159,6 +161,7 @@ class Recorder(threading.Thread):
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
+        self.engine_version: AwesomeVersion | None = None
         self.async_db_ready: asyncio.Future[bool] = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
@@ -459,10 +462,18 @@ class Recorder(threading.Thread):
 
     @callback
     def async_update_statistics_metadata(
-        self, statistic_id: str, unit_of_measurement: str | None
+        self,
+        statistic_id: str,
+        *,
+        new_statistic_id: str | UndefinedType = UNDEFINED,
+        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
-        self.queue_task(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
+        self.queue_task(
+            UpdateStatisticsMetadataTask(
+                statistic_id, new_statistic_id, new_unit_of_measurement
+            )
+        )
 
     @callback
     def async_external_statistics(
@@ -1009,12 +1020,13 @@ class Recorder(threading.Thread):
         ) -> None:
             """Dbapi specific connection settings."""
             assert self.engine is not None
-            setup_connection_for_dialect(
+            if version := setup_connection_for_dialect(
                 self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,
-            )
+            ):
+                self.engine_version = version
             self._completed_first_database_setup = True
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:

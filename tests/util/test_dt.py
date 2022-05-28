@@ -1,4 +1,6 @@
 """Test Home Assistant date util methods."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import pytest
@@ -140,6 +142,32 @@ def test_parse_datetime_converts_correctly():
 def test_parse_datetime_returns_none_for_incorrect_format():
     """Test parse_datetime returns None if incorrect format."""
     assert dt_util.parse_datetime("not a datetime string") is None
+
+
+@pytest.mark.parametrize(
+    "duration_string,expected_result",
+    [
+        ("PT10M", timedelta(minutes=10)),
+        ("PT0S", timedelta(0)),
+        ("P10DT11H11M01S", timedelta(days=10, hours=11, minutes=11, seconds=1)),
+        (
+            "4 1:20:30.111111",
+            timedelta(days=4, hours=1, minutes=20, seconds=30, microseconds=111111),
+        ),
+        ("4 1:2:30", timedelta(days=4, hours=1, minutes=2, seconds=30)),
+        ("3 days 04:05:06", timedelta(days=3, hours=4, minutes=5, seconds=6)),
+        ("P1YT10M", None),
+        ("P1MT10M", None),
+        ("1MT10M", None),
+        ("P1MT100M", None),
+        ("P1234", None),
+    ],
+)
+def test_parse_duration(
+    duration_string: str, expected_result: timedelta | None
+) -> None:
+    """Test that parse_duration returns the expected result."""
+    assert dt_util.parse_duration(duration_string) == expected_result
 
 
 def test_get_age():

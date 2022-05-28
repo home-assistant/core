@@ -19,6 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -144,6 +146,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             HERETravelTimeSensor(
+                config_entry.entry_id,
                 config_entry.data[CONF_NAME],
                 config_entry.options[CONF_TRAFFIC_MODE],
                 hass.data[DOMAIN][config_entry.entry_id],
@@ -157,6 +160,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
 
     def __init__(
         self,
+        unique_id_prefix: str,
         name: str,
         traffic_mode: str,
         coordinator: HereTravelTimeDataUpdateCoordinator,
@@ -166,6 +170,13 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self._traffic_mode = traffic_mode == TRAFFIC_MODE_ENABLED
         self._attr_native_unit_of_measurement = TIME_MINUTES
         self._attr_name = name
+        self._attr_unique_id = unique_id_prefix
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id_prefix)},
+            entry_type=DeviceEntryType.SERVICE,
+            name=name,
+            manufacturer="HERE Technologies",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Wait for start so origin and destination entities can be resolved."""

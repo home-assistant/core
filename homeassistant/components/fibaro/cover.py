@@ -6,6 +6,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     ENTITY_ID_FORMAT,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -41,6 +42,11 @@ class FibaroCover(FibaroDevice, CoverEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
+        if self._is_open_close_only():
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+            )
+
     @staticmethod
     def bound(position):
         """Normalize the position."""
@@ -52,6 +58,14 @@ class FibaroCover(FibaroDevice, CoverEntity):
         if position >= 95:
             return 100
         return position
+
+    def _is_open_close_only(self) -> bool:
+        """Return if only open / close is supported."""
+        # Normally positionable devices report the position over value,
+        # so if it is missing we have a device which supports open / close only
+        if "value" not in self.fibaro_device.properties:
+            return True
+        return False
 
     @property
     def current_cover_position(self):
@@ -74,6 +88,9 @@ class FibaroCover(FibaroDevice, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
+        if self._is_open_close_only():
+            return self.fibaro_device.properties.state.lower() == "closed"
+
         if self.current_cover_position is None:
             return None
         return self.current_cover_position == 0

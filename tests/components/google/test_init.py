@@ -6,7 +6,7 @@ import datetime
 import http
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -19,6 +19,7 @@ from homeassistant.components.google import (
     SERVICE_ADD_EVENT,
     SERVICE_SCAN_CALENDARS,
 )
+from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
@@ -229,7 +230,10 @@ async def test_found_calendar_from_api(
     assert not hass.states.get(TEST_YAML_ENTITY)
 
 
-@pytest.mark.parametrize("calendars_config,google_config", [([], {})])
+@pytest.mark.parametrize(
+    "calendars_config,google_config,config_entry_options",
+    [([], {}, {CONF_CALENDAR_ACCESS: "read_write"})],
+)
 async def test_load_application_credentials(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
@@ -604,3 +608,48 @@ async def test_expired_token_requires_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    "calendars_config,expect_write_calls",
+    [
+        (
+            [
+                {
+                    "cal_id": "ignored",
+                    "entities": {"device_id": "existing", "name": "existing"},
+                }
+            ],
+            True,
+        ),
+        ([], False),
+    ],
+    ids=["has_yaml", "no_yaml"],
+)
+async def test_calendar_yaml_update(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml: Mock,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    setup_config_entry: MockConfigEntry,
+    calendars_config: dict[str, Any],
+    expect_write_calls: bool,
+) -> None:
+    """Test updating the yaml file with a new calendar."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    mock_calendars_yaml().read.assert_called()
+    mock_calendars_yaml().write.called is expect_write_calls
+
+    state = hass.states.get(TEST_API_ENTITY)
+    assert state
+    assert state.name == TEST_API_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # No yaml config loaded that overwrites the entity name
+    assert not hass.states.get(TEST_YAML_ENTITY)

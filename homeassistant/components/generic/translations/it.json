@@ -15,6 +15,7 @@
             "stream_no_video": "Il flusso non ha video",
             "stream_not_permitted": "Operazione non consentita durante il tentativo di connessione al . Protocollo di trasporto RTSP errato?",
             "stream_unauthorised": "Autorizzazione non riuscita durante il tentativo di connessione al flusso",
+            "template_error": "Errore durante l'esecuzione del modello. Esamina il registro per ulteriori informazioni.",
             "timeout": "Timeout durante il caricamento dell'URL",
             "unable_still_load": "Impossibile caricare un'immagine valida dall'URL dell'immagine fissa (ad es. host, URL non valido o errore di autenticazione). Esamina il registro per ulteriori informazioni.",
             "unknown": "Errore imprevisto"
@@ -57,6 +58,7 @@
             "stream_no_video": "Il flusso non ha video",
             "stream_not_permitted": "Operazione non consentita durante il tentativo di connessione al . Protocollo di trasporto RTSP errato?",
             "stream_unauthorised": "Autorizzazione non riuscita durante il tentativo di connessione al flusso",
+            "template_error": "Errore durante l'esecuzione del modello. Esamina il registro per ulteriori informazioni.",
             "timeout": "Timeout durante il caricamento dell'URL",
             "unable_still_load": "Impossibile caricare un'immagine valida dall'URL dell'immagine fissa (ad es. host, URL non valido o errore di autenticazione). Esamina il registro per ulteriori informazioni.",
             "unknown": "Errore imprevisto"

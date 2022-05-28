@@ -20,9 +20,11 @@ from .const import (
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
 )
+from .coordinator import PowerviewShadeUpdateCoordinator
+from .shade_data import PowerviewShadeData, PowerviewShadePositions
 
 
-class HDEntity(CoordinatorEntity):
+class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
 
     def __init__(self, coordinator, device_info, room_name, unique_id):
@@ -31,6 +33,11 @@ class HDEntity(CoordinatorEntity):
         self._room_name = room_name
         self._attr_unique_id = unique_id
         self._device_info = device_info
+
+    @property
+    def data(self) -> PowerviewShadeData:
+        """Return the PowerviewShadeData."""
+        return self.coordinator.data
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -58,6 +65,11 @@ class ShadeEntity(HDEntity):
         super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name
         self._shade = shade
+
+    @property
+    def positions(self) -> PowerviewShadePositions:
+        """Return the PowerviewShadeData."""
+        return self.data.get_shade_positions(self._shade.id)
 
     @property
     def device_info(self) -> DeviceInfo:
