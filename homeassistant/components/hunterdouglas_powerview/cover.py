@@ -149,7 +149,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return self.coordinator.data
 
     @property
-    def position(self) -> PowerviewShadePositions:
+    def positions(self) -> PowerviewShadePositions:
         """Return the PowerviewShadeData."""
         return self.coordinator.data.get_shade_positions(self._shade.id)
 
@@ -161,7 +161,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self.position.primary == MIN_POSITION
+        return self.positions.primary == MIN_POSITION
 
     @property
     def is_opening(self):
@@ -176,7 +176,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return hd_position_to_hass(self.position.primary, MAX_POSITION)
+        return hd_position_to_hass(self.positions.primary, MAX_POSITION)
 
     @property
     def name(self):
@@ -206,7 +206,9 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 
     async def _async_move(self, target_hass_position):
         """Move the shade to a position."""
-        current_hass_position = hd_position_to_hass(self.position.primary, MAX_POSITION)
+        current_hass_position = hd_position_to_hass(
+            self.positions.primary, MAX_POSITION
+        )
         steps_to_move = abs(current_hass_position - target_hass_position)
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(
@@ -347,18 +349,22 @@ class PowerViewShadeWithTilt(PowerViewShade):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return the current cover tile position."""
-        return hd_position_to_hass(self.position.vane, self._max_tilt)
+        return hd_position_to_hass(self.positions.vane, self._max_tilt)
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        current_hass_position = hd_position_to_hass(self.position.primary, MAX_POSITION)
+        current_hass_position = hd_position_to_hass(
+            self.positions.primary, MAX_POSITION
+        )
         steps_to_move = current_hass_position + self._tilt_steps
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(await self._shade.tilt_open())
 
     async def async_close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        current_hass_position = hd_position_to_hass(self.position.primary, MAX_POSITION)
+        current_hass_position = hd_position_to_hass(
+            self.positions.primary, MAX_POSITION
+        )
         steps_to_move = current_hass_position + self._tilt_steps
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(await self._shade.tilt_close())
@@ -366,7 +372,9 @@ class PowerViewShadeWithTilt(PowerViewShade):
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         target_hass_tilt_position = kwargs[ATTR_TILT_POSITION]
-        current_hass_position = hd_position_to_hass(self.position.primary, MAX_POSITION)
+        current_hass_position = hd_position_to_hass(
+            self.positions.primary, MAX_POSITION
+        )
         steps_to_move = current_hass_position + self._tilt_steps
 
         self._async_schedule_update_for_transition(steps_to_move)
