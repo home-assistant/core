@@ -72,16 +72,18 @@ async def test_update_intervals(
         config_entry.data[CONF_API_KEY]
     ].update_interval == timedelta(minutes=32)
     assert len(tomorrowio_config_entry_update.call_args_list) == 1
+    tomorrowio_config_entry_update.reset_mock()
 
     # Before the update interval, no updates yet
     async_fire_time_changed(hass, now + timedelta(minutes=30))
     await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 1
+    assert len(tomorrowio_config_entry_update.call_args_list) == 0
 
     # On the update interval, we get a new update
     async_fire_time_changed(hass, now + timedelta(minutes=32))
     await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 2
+    assert len(tomorrowio_config_entry_update.call_args_list) == 1
+    tomorrowio_config_entry_update.reset_mock()
 
     with patch(
         "homeassistant.helpers.update_coordinator.utcnow",
@@ -102,18 +104,20 @@ async def test_update_intervals(
         assert hass.data[DOMAIN][
             config_entry.data[CONF_API_KEY]
         ].update_interval == timedelta(minutes=64)
-        # We should get an immediate call once the new config entry is setup
-        assert len(tomorrowio_config_entry_update.call_args_list) == 3
+        # We should get an immediate call once the new config entry is setup for a
+        # partial update
+        assert len(tomorrowio_config_entry_update.call_args_list) == 1
+        tomorrowio_config_entry_update.reset_mock()
 
     # We should get no new calls on our old interval
     async_fire_time_changed(hass, now + timedelta(minutes=64))
     await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 3
+    assert len(tomorrowio_config_entry_update.call_args_list) == 0
 
-    # We should get two calls on our new interval
+    # We should get two calls on our new interval, one for each entry
     async_fire_time_changed(hass, now + timedelta(minutes=96))
     await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 5
+    assert len(tomorrowio_config_entry_update.call_args_list) == 2
 
 
 async def test_climacell_migration_logic(
