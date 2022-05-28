@@ -1,6 +1,8 @@
 """Interfaces with iAlarmXR control panels."""
 from __future__ import annotations
 
+from pyialarmxr import IAlarmXR
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -21,11 +23,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import IAlarmXRDataUpdateCoordinator
 from .const import DOMAIN
 
-ALARM_STATE_TO_HASS = {
-    "disarmed": STATE_ALARM_DISARMED,
-    "armed_home": STATE_ALARM_ARMED_HOME,
-    "armed_away": STATE_ALARM_ARMED_AWAY,
-    "triggered": STATE_ALARM_TRIGGERED,
+IALARMXR_TO_HASS = {
+    IAlarmXR.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+    IAlarmXR.ARMED_STAY: STATE_ALARM_ARMED_HOME,
+    IAlarmXR.DISARMED: STATE_ALARM_DISARMED,
+    IAlarmXR.TRIGGERED: STATE_ALARM_TRIGGERED,
 }
 
 
@@ -62,8 +64,8 @@ class IAlarmXRPanel(
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-        if self.coordinator.state in ALARM_STATE_TO_HASS:
-            return ALARM_STATE_TO_HASS[self.coordinator.state]
+        if self.coordinator.state in IALARMXR_TO_HASS:
+            return IALARMXR_TO_HASS[self.coordinator.state]
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
