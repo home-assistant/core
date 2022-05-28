@@ -256,20 +256,18 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             self._coordinator_ready = asyncio.Event()
             for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
                 self.add_entry_to_location_dict(entry_)
-            await super().async_config_entry_first_refresh()
+            await self.async_config_entry_first_refresh()
             self._coordinator_ready.set()
         else:
             # If we have an event, we need to wait for it to be set before we proceed
             await self._coordinator_ready.wait()
-            # If we're loading a new config entry that's not already mapped, we need
-            # to do a refresh. We're going to do a partial refresh though so we can
-            # minimize repeat API calls
-            if entry.entry_id not in self.entry_id_to_location_dict:
-                self.add_entry_to_location_dict(entry)
-                await super().async_refresh()
             # If we're not getting new data, we don't need to schedule a refresh
-            else:
+            if entry.entry_id not in self.entry_id_to_location_dict:
                 return
+            # We need a refresh, but it's going to be a partial refresh so we can
+            # minimize repeat API calls
+            self.add_entry_to_location_dict(entry)
+            await self.async_refresh()
 
         self.update_interval = async_set_update_interval(self.hass, self._api)
         self._schedule_refresh()
@@ -295,12 +293,12 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         ):
             data = self.data
 
-        try:
-            for entry_id, location in self.entry_id_to_location_dict.items():
-                if entry_id in data:
-                    continue
-                entry = self.hass.config_entries.async_get_entry(entry_id)
-                assert entry
+        for entry_id, location in self.entry_id_to_location_dict.items():
+            if entry_id in data:
+                continue
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            try:
                 data[entry_id] = await self._api.realtime_and_all_forecasts(
                     [
                         # Weather
@@ -354,13 +352,13 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
                     nowcast_timestep=entry.options[CONF_TIMESTEP],
                     location=location,
                 )
-        except (
-            CantConnectException,
-            InvalidAPIKeyException,
-            RateLimitedException,
-            UnknownException,
-        ) as error:
-            raise UpdateFailed from error
+            except (
+                CantConnectException,
+                InvalidAPIKeyException,
+                RateLimitedException,
+                UnknownException,
+            ) as error:
+                raise UpdateFailed from error
 
         return data
 
