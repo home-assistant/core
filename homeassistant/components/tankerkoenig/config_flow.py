@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     LENGTH_KILOMETERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
@@ -27,6 +27,24 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_TYPES
+
+
+async def async_get_nearby_stations(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
+    """Fetch nearby stations."""
+    try:
+        return await hass.async_add_executor_job(
+            getNearbyStations,
+            data[CONF_API_KEY],
+            data[CONF_LOCATION][CONF_LATITUDE],
+            data[CONF_LOCATION][CONF_LONGITUDE],
+            data[CONF_RADIUS],
+            "all",
+            "dist",
+        )
+    except customException as err:
+        return {"ok": False, "message": err, "exception": True}
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,7 +75,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         selected_station_ids: list[str] = []
         # add all nearby stations
-        nearby_stations = await self._get_nearby_stations(config)
+        nearby_stations = await async_get_nearby_stations(self.hass, config)
         for station in nearby_stations.get("stations", []):
             selected_station_ids.append(station["id"])
 
@@ -91,7 +109,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._abort_if_unique_id_configured()
 
-        data = await self._get_nearby_stations(user_input)
+        data = await async_get_nearby_stations(self.hass, user_input)
         if not data.get("ok"):
             return self._show_form_user(
                 user_input, errors={CONF_API_KEY: "invalid_auth"}
@@ -182,21 +200,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             options=options,
         )
 
-    async def _get_nearby_stations(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Fetch nearby stations."""
-        try:
-            return await self.hass.async_add_executor_job(
-                getNearbyStations,
-                data[CONF_API_KEY],
-                data[CONF_LOCATION][CONF_LATITUDE],
-                data[CONF_LOCATION][CONF_LONGITUDE],
-                data[CONF_RADIUS],
-                "all",
-                "dist",
-            )
-        except customException as err:
-            return {"ok": False, "message": err, "exception": True}
-
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an options flow."""
@@ -204,13 +207,35 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
+        self._stations: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    CONF_STATIONS: user_input.pop(CONF_STATIONS),
+                },
+            )
             return self.async_create_entry(title="", data=user_input)
+
+        nearby_stations = await async_get_nearby_stations(
+            self.hass, dict(self.config_entry.data)
+        )
+        if stations := nearby_stations.get("stations"):
+            for station in stations:
+                self._stations[
+                    station["id"]
+                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
+
+        # add possible extra selected stations from import
+        for selected_station in self.config_entry.data[CONF_STATIONS]:
+            if selected_station not in self._stations:
+                self._stations[selected_station] = f"id: {selected_station}"
 
         return self.async_show_form(
             step_id="init",
@@ -220,6 +245,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options[CONF_SHOW_ON_MAP],
                     ): bool,
+                    vol.Required(
+                        CONF_STATIONS, default=self.config_entry.data[CONF_STATIONS]
+                    ): cv.multi_select(self._stations),
                 }
             ),
         )
