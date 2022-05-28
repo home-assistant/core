@@ -76,6 +76,15 @@ RESYNC_DELAY = 60
 CLOSED_POSITION = (0.75 / 100) * (MAX_POSITION - MIN_POSITION)
 
 
+def _get_shade_data_from_response(
+    response: dict[str, Any]
+) -> dict[str | int, Any] | None:
+    """Find the shade data in a response."""
+    if response and (shade_data := response.get(SHADE_RESPONSE)):
+        return shade_data
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -207,7 +216,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Stop the cover."""
         self._async_cancel_scheduled_transition_update()
         response = await self._shade.stop()
-        if response and (shade_data := response.get(SHADE_RESPONSE)):
+        if shade_data := _get_shade_data_from_response(response):
             self._async_update_shade_data(shade_data)
         await self._async_force_refresh_state()
 
@@ -230,11 +239,19 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 
     async def _async_execute_move(self, move: PowerviewShadeMove) -> None:
         """Execute a move that can affect multiple positions."""
-        command_result = await self._shade.move(move.request)
+        response = await self._shade.move(move.request)
+
+        # Process the request data
         self.data.update_from_position_data(self._shade.id, move.request)
+
+        # Process any positions we know will update as result
+        # of the request since the hub won't return them
         for kind, position in move.new_positions.items():
             self.data.update_shade_position(self._shade.id, position, kind)
-        self.data.update_shade_positions(command_result)
+
+        # Finally process the response
+        if shade_data := _get_shade_data_from_response(response):
+            self.data.update_shade_positions(shade_data)
 
     async def _async_set_cover_position(self, target_hass_position: int) -> None:
         """Move the shade to a position."""
