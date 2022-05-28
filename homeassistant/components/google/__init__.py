@@ -239,7 +239,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    if not _async_entry_has_scopes(hass, entry):
+    if not async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
@@ -260,7 +260,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Verify that the config entry desired scope is present in the oauth token."""
     access = get_feature_access(hass, entry)
     token_scopes = entry.data.get("token", {}).get("scope", [])
     return access.scope in token_scopes
@@ -273,7 +274,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry if the access options change."""
-    if not _async_entry_has_scopes(hass, entry):
+    if not async_entry_has_scopes(hass, entry):
         await hass.config_entries.async_reload(entry.entry_id)
 
 
