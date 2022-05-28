@@ -674,7 +674,6 @@ async def test_update_will_reload(
             config_entry, options={CONF_CALENDAR_ACCESS: "read_write"}
         )
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
         # Data change does not trigger reload
@@ -686,13 +685,11 @@ async def test_update_will_reload(
             },
         )
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
         # Reload when options changed
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_CALENDAR_ACCESS: "read_only"}
         )
-        await hass.async_block_till_done()
         await hass.async_block_till_done()
         mock_reload.assert_called_once()

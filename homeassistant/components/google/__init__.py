@@ -239,9 +239,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    access = get_feature_access(hass, entry)
-    token_scopes = session.token.get("scope", [])
-    if access.scope not in token_scopes:
+    if not _async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
@@ -252,33 +250,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_services(hass, calendar_service)
     # Only expose the add event service if we have the correct permissions
-    if access is FeatureAccess.read_write:
+    if get_feature_access(hass, entry) is FeatureAccess.read_write:
         await async_setup_add_event_service(hass, calendar_service)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(UpdateListener(access).async_call))
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
 
-class UpdateListener:
-    """Listener that will reload the integration when options change."""
-
-    def __init__(self, access: FeatureAccess) -> None:
-        """Initialize UpdateListener."""
-        self._access = access
-
-    async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Reload the config entry when access options changed."""
-        new_access = get_feature_access(hass, entry)
-        if self._access != new_access:
-            await hass.config_entries.async_reload(entry.entry_id)
+def _async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    access = get_feature_access(hass, entry)
+    token_scopes = entry.data.get("token", {}).get("scope", [])
+    return access.scope in token_scopes
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry if the access options change."""
+    if not _async_entry_has_scopes(hass, entry):
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_services(
