@@ -39,6 +39,21 @@ async def async_setup_entry(
 class HiveDeviceLight(HiveEntity, LightEntity):
     """Hive Active Light Device."""
 
+    def __init__(self, hive, hive_device):
+        """Initialise hive light."""
+        super().__init__(hive, hive_device)
+        if self.device["hiveType"] == "warmwhitelight":
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        elif self.device["hiveType"] == "tuneablelight":
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+        elif self.device["hiveType"] == "colourtuneablelight":
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            rgb = self.device["status"].get("hs_color")
+            self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
+
+        self._attr_min_mireds = self.device.get("min_mireds")
+        self._attr_max_mireds = self.device.get("max_mireds")
+
     @refresh_system
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -81,13 +96,6 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         if self._attr_available:
             self._attr_is_on = self.device["status"]["state"]
             self._attr_brightness = self.device["status"]["brightness"]
-            self._attr_min_mireds = self.device.get("min_mireds")
-            self._attr_max_mireds = self.device.get("max_mireds")
-            if self.device["hiveType"] == "warmwhitelight":
-                self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-            elif self.device["hiveType"] == "tuneablelight":
-                self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
-            elif self.device["hiveType"] == "colourtuneablelight":
-                self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            if self.device["hiveType"] == "colourtuneablelight":
                 rgb = self.device["status"].get("hs_color")
                 self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
