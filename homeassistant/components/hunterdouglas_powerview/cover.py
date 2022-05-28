@@ -47,7 +47,7 @@ from .const import (
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .shade_data import PowerviewShadeData, PowerviewShadePositions
+from .shade_data import PowerviewShadePositions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ async def async_setup_entry(
                 name_before_refresh,
             )
             continue
-        coordinator.data.update_shade(shade.raw_data)
+        coordinator.data.update_shade_positions(shade.raw_data)
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
@@ -142,11 +142,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
-
-    @property
-    def data(self) -> PowerviewShadeData:
-        """Return the PowerviewShadeData."""
-        return self.coordinator.data
 
     @property
     def positions(self) -> PowerviewShadePositions:
@@ -239,7 +234,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     def _async_update_shade_data(self, shade_data: dict[str | int, Any]) -> None:
         """Update the current cover position from the data."""
         _LOGGER.debug("Raw data update: %s", shade_data)
-        self.data.update_shade(shade_data)
+        self.data.update_shade_positions(shade_data)
         self._is_opening = False
         self._is_closing = False
 

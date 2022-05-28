@@ -38,6 +38,10 @@ class PowerviewShadeData:
         self._group_data_by_id: dict[int, dict[str | int, Any]] = {}
         self.positions: dict[int, PowerviewShadePositions] = {}
 
+    def get_raw_data(self, shade_id: int) -> dict[str | int, Any]:
+        """Get data for the shade."""
+        return self._group_data_by_id[shade_id]
+
     def get_shade_positions(self, shade_id: int) -> PowerviewShadePositions:
         """Get positions for a shade."""
         if shade_id not in self.positions:
@@ -46,7 +50,7 @@ class PowerviewShadeData:
 
     def update_from_group_data(self, shade_id: int) -> None:
         """Process an update from the group data."""
-        self.update_shade(self._group_data_by_id[shade_id])
+        self.update_shade_positions(self._group_data_by_id[shade_id])
 
     def store_group_data(self, shade_data: Iterable[dict[str | int, Any]]) -> None:
         """Store data from the all shades endpoint.
@@ -68,7 +72,7 @@ class PowerviewShadeData:
         elif kind == POS_KIND_VANE:
             positions.vane = position
 
-    def update_shade(self, data: dict[int | str, Any]) -> None:
+    def update_shade_positions(self, data: dict[int | str, Any]) -> None:
         """Update a single shade."""
         shade_id = data[ATTR_ID]
         position_data = data[ATTR_POSITION_DATA]
