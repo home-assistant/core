@@ -90,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ConfigEntryNotReady:
             # Not failure by fetching device state
             device_coordinator.data = {}
-            device_coordinators[device.device_id] = device_coordinator
         device_coordinators[device.device_id] = device_coordinator
     hass.data[DOMAIN][ATTR_COORDINATORS] = device_coordinators
 
