@@ -789,8 +789,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
         super().__init__(**kwargs)
         if reason is not None:
             self.reason = reason
-        # Reload lock to prevent conflicting reloads
-        self.reload_lock = asyncio.Lock()
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
