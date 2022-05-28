@@ -243,35 +243,13 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 
     async def _async_move(self, target_hass_position: int) -> None:
         """Move the shade to a position."""
-        self._async_cover_transition_begin(
-            self.current_cover_position, target_hass_position
+        current_hass_position = self.current_cover_position
+        self._async_schedule_update_for_transition(
+            abs(current_hass_position - target_hass_position)
         )
-
         await self._async_execute_move(self._get_shade_move(target_hass_position))
-
-        self._async_cover_transition_complete(
-            self.current_cover_position, target_hass_position
-        )
-
-    @callback
-    def _async_cover_transition_begin(
-        self, current_hass_position, target_hass_position
-    ):
-        """Calculate and schedule transition timeframe."""
-        steps_to_move = abs(current_hass_position - target_hass_position)
-        self._async_schedule_update_for_transition(steps_to_move)
-
-    @callback
-    def _async_cover_transition_complete(
-        self, current_hass_position, target_hass_position
-    ):
-        """Write state back to the ha model."""
-        self._is_opening = False
-        self._is_closing = False
-        if target_hass_position > current_hass_position:
-            self._is_opening = True
-        elif target_hass_position < current_hass_position:
-            self._is_closing = True
+        self._is_opening = target_hass_position > current_hass_position
+        self._is_closing = target_hass_position < current_hass_position
         self.async_write_ha_state()
 
     @callback
@@ -299,8 +277,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 
     @callback
     def _async_schedule_update_for_transition(self, steps):
-        self.async_write_ha_state()
-
         # Cancel any previous updates
         self._async_cancel_scheduled_transition_update()
 
@@ -505,9 +481,10 @@ class PowerViewShadeWithTilt(PowerViewShade):
 
     async def _async_tilt(self, target_hass_tilt_position):
         """Move the cover tilt to a specific position."""
-        self._async_cover_transition_begin(
-            self.current_cover_position + self.current_cover_tilt_position,
-            self.get_transition_steps,
+        self._async_schedule_update_for_transition(
+            self.current_cover_position
+            + self.current_cover_tilt_position
+            - self.get_transition_steps,
         )
         await self._async_execute_move(
             self._get_shade_tilt_move(target_hass_tilt_position)
