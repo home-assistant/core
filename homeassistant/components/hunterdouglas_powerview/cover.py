@@ -50,7 +50,6 @@ from .const import (
     PV_SHADE_DATA,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
-    SHADE_RESPONSE,
     STATE_ATTRIBUTE_ROOM_NAME,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -74,15 +73,6 @@ RESYNC_DELAY = 60
 # The means currently 491.5125 or less is closed position
 # implemented for top/down shades, but also works fine with normal shades
 CLOSED_POSITION = (0.75 / 100) * (MAX_POSITION - MIN_POSITION)
-
-
-def _get_shade_data_from_response(
-    response: dict[str, Any]
-) -> dict[str | int, Any] | None:
-    """Find the shade data in a response."""
-    if response and (shade_data := response.get(SHADE_RESPONSE)):
-        return shade_data
-    return None
 
 
 async def async_setup_entry(
@@ -215,9 +205,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._async_cancel_scheduled_transition_update()
-        response = await self._shade.stop()
-        if shade_data := _get_shade_data_from_response(response):
-            self._async_update_shade_data(shade_data)
+        self.data.update_from_response(await self._shade.stop())
         await self._async_force_refresh_state()
 
     @callback
@@ -250,8 +238,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             self.data.update_shade_position(self._shade.id, position, kind)
 
         # Finally process the response
-        if shade_data := _get_shade_data_from_response(response):
-            self.data.update_shade_positions(shade_data)
+        self.data.update_from_response(response)
 
     async def _async_set_cover_position(self, target_hass_position: int) -> None:
         """Move the shade to a position."""

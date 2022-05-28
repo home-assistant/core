@@ -13,6 +13,7 @@ from aiopvapi.helpers.constants import (
     ATTR_POSITION_DATA,
     ATTR_POSKIND1,
     ATTR_POSKIND2,
+    ATTR_SHADE,
 )
 from aiopvapi.resources.shade import MIN_POSITION
 
@@ -104,3 +105,9 @@ class PowerviewShadeData:
         shade_id = data[ATTR_ID]
         position_data = data[ATTR_POSITION_DATA]
         self.update_from_position_data(shade_id, position_data)
+
+    def update_from_response(self, response: dict[str, Any]) -> None:
+        """Update from the response to a command."""
+        if response and ATTR_SHADE in response:
+            shade_data: dict[int | str, Any] = response[ATTR_SHADE]
+            self.update_shade_positions(shade_data)
