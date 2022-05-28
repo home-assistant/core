@@ -7,7 +7,6 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiResponseStatu
 
 DOMAIN = "hunterdouglas_powerview"
 
-
 MANUFACTURER = "Hunter Douglas"
 
 HUB_ADDRESS = "address"
@@ -81,9 +80,7 @@ DEFAULT_LEGACY_MAINPROCESSOR = {
     FIRMWARE_NAME: LEGACY_DEVICE_MODEL,
 }
 
-
 API_PATH_FWVERSION = "api/fwversion"
-
 
 POS_KIND_NONE = 0
 POS_KIND_PRIMARY = 1

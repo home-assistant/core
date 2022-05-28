@@ -1,4 +1,4 @@
-"""The nexia integration base entity."""
+"""The powerview integration base entity."""
 
 from aiopvapi.resources.shade import ATTR_TYPE
 
@@ -31,18 +31,13 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._room_name = room_name
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._device_info = device_info
 
     @property
     def data(self) -> PowerviewShadeData:
         """Return the PowerviewShadeData."""
         return self.coordinator.data
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -90,7 +85,7 @@ class ShadeEntity(HDEntity):
         )
 
         for shade in self._shade.shade_types:
-            if shade.shade_type == device_info[ATTR_MODEL]:
+            if str(shade.shade_type) == device_info[ATTR_MODEL]:
                 device_info[ATTR_MODEL] = shade.description
                 break
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from aiopvapi.helpers.constants import (
@@ -19,6 +20,21 @@ from .const import POS_KIND_PRIMARY, POS_KIND_SECONDARY, POS_KIND_VANE
 from .util import async_map_data_by_id
 
 POSITIONS = ((ATTR_POSITION1, ATTR_POSKIND1), (ATTR_POSITION2, ATTR_POSKIND2))
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PowerviewShadeMove:
+    """Request to move a powerview shade."""
+
+    # The positions to request on the hub
+    request: dict[str, int]
+
+    # The positions that will change
+    # as a result of the request that the
+    # hub will not send back
+    new_positions: dict[int, int] = {}
 
 
 @dataclass
@@ -63,7 +79,7 @@ class PowerviewShadeData:
         self._group_data_by_id = async_map_data_by_id(shade_data)
 
     def update_shade_position(self, shade_id: int, position: int, kind: int) -> None:
-        """Update a shade position."""
+        """Update a single shade position."""
         positions = self.get_shade_positions(shade_id)
         if kind == POS_KIND_PRIMARY:
             positions.primary = position
@@ -72,12 +88,19 @@ class PowerviewShadeData:
         elif kind == POS_KIND_VANE:
             positions.vane = position
 
-    def update_shade_positions(self, data: dict[int | str, Any]) -> None:
-        """Update a single shade."""
-        shade_id = data[ATTR_ID]
-        position_data = data[ATTR_POSITION_DATA]
+    def update_from_position_data(
+        self, shade_id: int, position_data: dict[str, Any]
+    ) -> None:
+        """Update the shade positions from the position data."""
         for position_key, kind_key in POSITIONS:
             if position_key in position_data:
                 self.update_shade_position(
                     shade_id, position_data[position_key], position_data[kind_key]
                 )
+
+    def update_shade_positions(self, data: dict[int | str, Any]) -> None:
+        """Update a shades from data dict."""
+        _LOGGER.debug("Raw data update: %s", data)
+        shade_id = data[ATTR_ID]
+        position_data = data[ATTR_POSITION_DATA]
+        self.update_from_position_data(shade_id, position_data)
