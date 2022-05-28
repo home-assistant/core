@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -177,9 +178,9 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        if self.sensor_data:
-            return self.entity_description.value_fn(self.sensor_data)
-        return None
+        if TYPE_CHECKING:
+            assert self.sensor_data
+        return self.entity_description.value_fn(self.sensor_data)
 
 
 class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):

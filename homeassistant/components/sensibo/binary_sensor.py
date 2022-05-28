@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -145,9 +146,9 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        if self.sensor_data:
-            return self.entity_description.value_fn(self.sensor_data)
-        return None
+        if TYPE_CHECKING:
+            assert self.sensor_data
+        return self.entity_description.value_fn(self.sensor_data)
 
 
 class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):

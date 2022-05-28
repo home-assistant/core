@@ -1,7 +1,7 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -118,11 +118,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         hvac_modes = []
-        if self.device_data.hvac_modes is None:
-            return [HVACMode.OFF]
+        if TYPE_CHECKING:
+            assert self.device_data.hvac_modes
         for mode in self.device_data.hvac_modes:
-            if mode:
-                hvac_modes.append(SENSIBO_TO_HA[mode])
+            hvac_modes.append(SENSIBO_TO_HA[mode])
         return hvac_modes if hvac_modes else [HVACMode.OFF]
 
     @property
