@@ -20,9 +20,10 @@ from .const import (
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
 )
+from .coordinator import PowerviewShadeUpdateCoordinator
 
 
-class HDEntity(CoordinatorEntity):
+class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
 
     def __init__(self, coordinator, device_info, room_name, unique_id):
