@@ -68,9 +68,6 @@ async def test_update_intervals(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.data[DOMAIN][
-        config_entry.data[CONF_API_KEY]
-    ].update_interval == timedelta(minutes=32)
     assert len(tomorrowio_config_entry_update.call_args_list) == 1
     tomorrowio_config_entry_update.reset_mock()
 
@@ -101,9 +98,6 @@ async def test_update_intervals(
         assert await hass.config_entries.async_setup(config_entry_2.entry_id)
         await hass.async_block_till_done()
         assert config_entry.data[CONF_API_KEY] == config_entry_2.data[CONF_API_KEY]
-        assert hass.data[DOMAIN][
-            config_entry.data[CONF_API_KEY]
-        ].update_interval == timedelta(minutes=64)
         # We should get an immediate call once the new config entry is setup for a
         # partial update
         assert len(tomorrowio_config_entry_update.call_args_list) == 1
