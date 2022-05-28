@@ -438,7 +438,7 @@ async def test_measure(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
@@ -519,7 +519,7 @@ async def test_async_on_entire_period(hass, recorder_mock):
 
     assert hass.states.get("sensor.on_sensor1").state == "1.0"
     assert hass.states.get("sensor.on_sensor2").state == "1.0"
-    assert hass.states.get("sensor.on_sensor3").state == "0"
+    assert hass.states.get("sensor.on_sensor3").state == "1"
     assert hass.states.get("sensor.on_sensor4").state == "100.0"
 
 
@@ -886,7 +886,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
     assert hass.states.get("sensor.sensor2").state == "0.0"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "0.0"
 
     one_hour_in = start_time + timedelta(minutes=60)
@@ -896,7 +896,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.0"
     assert hass.states.get("sensor.sensor2").state == "1.0"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "50.0"
 
     turn_off_time = start_time + timedelta(minutes=90)
@@ -908,7 +908,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
     assert hass.states.get("sensor.sensor2").state == "1.5"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "75.0"
 
     turn_back_on_time = start_time + timedelta(minutes=105)
@@ -918,7 +918,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
     assert hass.states.get("sensor.sensor2").state == "1.5"
-    assert hass.states.get("sensor.sensor3").state == "0"
+    assert hass.states.get("sensor.sensor3").state == "1"
     assert hass.states.get("sensor.sensor4").state == "75.0"
 
     with freeze_time(turn_back_on_time):
@@ -927,7 +927,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.5"
     assert hass.states.get("sensor.sensor2").state == "1.5"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "75.0"
 
     end_time = start_time + timedelta(minutes=120)
@@ -937,7 +937,7 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
 
     assert hass.states.get("sensor.sensor1").state == "1.75"
     assert hass.states.get("sensor.sensor2").state == "1.75"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "87.5"
 
 
@@ -1198,7 +1198,7 @@ async def test_measure_sliding_window(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
     past_next_update = start_time + timedelta(minutes=30)
@@ -1211,7 +1211,7 @@ async def test_measure_sliding_window(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "41.7"
 
 
@@ -1291,7 +1291,7 @@ async def test_measure_from_end_going_backwards(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
     past_next_update = start_time + timedelta(minutes=30)
@@ -1304,7 +1304,7 @@ async def test_measure_from_end_going_backwards(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 
@@ -1385,7 +1385,7 @@ async def test_measure_cet(hass, recorder_mock):
 
     assert hass.states.get("sensor.sensor1").state == "0.83"
     assert hass.states.get("sensor.sensor2").state == "0.83"
-    assert hass.states.get("sensor.sensor3").state == "1"
+    assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "83.3"
 
 

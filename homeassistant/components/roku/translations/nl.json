@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -15,16 +15,13 @@
                     "one": "Een",
                     "other": "Ander"
                 },
-                "description": "Wilt u {name} instellen?",
-                "title": "Roku"
+                "description": "Wilt u {name} instellen?"
             },
             "ssdp_confirm": {
                 "data": {
                     "one": "Leeg",
                     "other": "Leeg"
-                },
-                "description": "Wilt u {name} instellen?",
-                "title": "Roku"
+                }
             },
             "user": {
                 "data": {

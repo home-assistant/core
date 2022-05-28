@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -37,8 +38,10 @@ PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    if (app_config := await store.async_load()) is None:
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    if (app_config := await store.async_load()) is None or not isinstance(
+        app_config, dict
+    ):
         app_config = {
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],

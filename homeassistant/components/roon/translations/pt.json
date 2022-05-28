@@ -6,13 +6,6 @@
         "error": {
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Servidor"
-                }
-            }
         }
     }
 }

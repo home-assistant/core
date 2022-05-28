@@ -1025,15 +1025,20 @@ class ToggleEntity(Entity):
         """Turn the entity off."""
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
+    @final
     def toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
-        if self.is_on:
-            self.turn_off(**kwargs)
-        else:
-            self.turn_on(**kwargs)
+        """Toggle the entity.
+
+        This method will never be called by Home Assistant and should not be implemented
+        by integrations.
+        """
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
+        """Toggle the entity.
+
+        This method should typically not be implemented by integrations, it's enough to
+        implement async_turn_on + async_turn_off or turn_on + turn_off.
+        """
         if self.is_on:
             await self.async_turn_off(**kwargs)
         else:

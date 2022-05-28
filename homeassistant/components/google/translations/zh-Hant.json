@@ -27,5 +27,14 @@
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant \u5b58\u53d6 Google Calendar"
+                }
+            }
+        }
     }
 }

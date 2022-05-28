@@ -13,13 +13,19 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
+    DEFAULT_IMPORT_NAME,
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DOMAIN,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
@@ -29,11 +35,13 @@ from tests.common import mock_platform
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
 DEVELOPER_CREDENTIAL = ClientCredential(CLIENT_ID, CLIENT_SECRET)
+NAMED_CREDENTIAL = ClientCredential(CLIENT_ID, CLIENT_SECRET, "Name")
 ID = "fake_integration_some_client_id"
 AUTHORIZE_URL = "https://example.com/auth"
 TOKEN_URL = "https://example.com/oauth2/v4/token"
 REFRESH_TOKEN = "mock-refresh-token"
 ACCESS_TOKEN = "mock-access-token"
+NAME = "Name"
 
 TEST_DOMAIN = "fake_integration"
 
@@ -118,6 +126,7 @@ class OAuthFixture:
         self.hass_client = hass_client
         self.aioclient_mock = aioclient_mock
         self.client_id = CLIENT_ID
+        self.title = CLIENT_ID
 
     async def complete_external_step(
         self, result: data_entry_flow.FlowResult
@@ -152,7 +161,7 @@ class OAuthFixture:
 
         result = await self.hass.config_entries.flow.async_configure(result["flow_id"])
         assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result.get("title") == self.client_id
+        assert result.get("title") == self.title
         assert "data" in result
         assert "token" in result["data"]
         return result
@@ -348,6 +357,7 @@ async def test_websocket_import_config(
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
             CONF_AUTH_DOMAIN: TEST_DOMAIN,
+            CONF_NAME: DEFAULT_IMPORT_NAME,
         }
     ]
 
@@ -375,6 +385,29 @@ async def test_import_duplicate_credentials(
             CONF_CLIENT_SECRET: CLIENT_SECRET,
             "id": ID,
             CONF_AUTH_DOMAIN: TEST_DOMAIN,
+            CONF_NAME: DEFAULT_IMPORT_NAME,
+        }
+    ]
+
+
+@pytest.mark.parametrize("config_credential", [NAMED_CREDENTIAL])
+async def test_import_named_credential(
+    ws_client: ClientFixture,
+    config_credential: ClientCredential,
+    import_config_credential: Any,
+):
+    """Test websocket list command for an imported credential."""
+    client = await ws_client()
+
+    # Imported creds returned from websocket
+    assert await client.cmd_result("list") == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            "id": ID,
+            CONF_AUTH_DOMAIN: TEST_DOMAIN,
+            CONF_NAME: NAME,
         }
     ]
 
@@ -445,6 +478,10 @@ async def test_config_flow(
     assert not resp.get("success")
     assert "error" in resp
     assert resp["error"].get("code") == "unknown_error"
+    assert (
+        resp["error"].get("message")
+        == "Cannot delete credential in use by integration fake_integration"
+    )
 
 
 async def test_config_flow_multiple_entries(
@@ -483,6 +520,7 @@ async def test_config_flow_multiple_entries(
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     oauth_fixture.client_id = CLIENT_ID + "2"
+    oauth_fixture.title = CLIENT_ID + "2"
     result = await oauth_fixture.complete_external_step(result)
     assert (
         result["data"].get("auth_implementation") == "fake_integration_some_client_id2"
@@ -528,6 +566,7 @@ async def test_config_flow_with_config_credential(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
@@ -649,6 +688,7 @@ async def test_platform_with_auth_implementation(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    oauth_fixture.title = DEFAULT_IMPORT_NAME
     result = await oauth_fixture.complete_external_step(result)
     # Uses the imported auth domain for compatibility
     assert result["data"].get("auth_implementation") == TEST_DOMAIN
@@ -663,3 +703,47 @@ async def test_websocket_integration_list(ws_client: ClientFixture):
         assert await client.cmd_result("config") == {
             "domains": ["example1", "example2"]
         }
+
+
+async def test_name(
+    hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
+):
+    """Test a credential with a name set."""
+    client = await ws_client()
+    result = await client.cmd_result(
+        "create",
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            CONF_NAME: NAME,
+        },
+    )
+    assert result == {
+        CONF_DOMAIN: TEST_DOMAIN,
+        CONF_CLIENT_ID: CLIENT_ID,
+        CONF_CLIENT_SECRET: CLIENT_SECRET,
+        CONF_NAME: NAME,
+        "id": ID,
+    }
+
+    result = await client.cmd_result("list")
+    assert result == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            CONF_NAME: NAME,
+            "id": ID,
+        }
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    oauth_fixture.title = NAME
+    result = await oauth_fixture.complete_external_step(result)
+    assert (
+        result["data"].get("auth_implementation") == "fake_integration_some_client_id"
+    )

@@ -27,5 +27,14 @@
                 "title": "Integration erneut authentifizieren"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant-Zugriff auf Google Kalender"
+                }
+            }
+        }
     }
 }

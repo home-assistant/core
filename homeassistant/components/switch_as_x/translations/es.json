@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Conmutador",
+                    "target_domain": "Nuevo tipo"
+                }
+            }
+        }
+    },
+    "title": "Cambia el tipo de dispositivo de un conmutador"
+}

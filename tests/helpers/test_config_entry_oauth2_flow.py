@@ -114,6 +114,17 @@ async def test_abort_if_no_implementation(hass, flow_handler):
     assert result["reason"] == "missing_configuration"
 
 
+async def test_missing_credentials_for_domain(hass, flow_handler):
+    """Check flow abort for integration supporting application credentials."""
+    flow = flow_handler()
+    flow.hass = hass
+
+    with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
+        result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "missing_credentials"
+
+
 async def test_abort_if_authorization_timeout(
     hass, flow_handler, local_impl, current_request_with_host
 ):

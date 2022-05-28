@@ -101,6 +101,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.google.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -126,6 +127,7 @@ homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
+homeassistant.components.ialarm_xr.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -138,6 +140,7 @@ homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lametric.*
+homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
@@ -165,6 +168,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
+homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*

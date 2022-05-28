@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
-import configparser
 import difflib
 import importlib
 import os
@@ -11,6 +10,11 @@ import sys
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
@@ -94,9 +98,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.5.0
+anyio==3.6.1
 h11==0.12.0
-httpcore==0.14.7
+httpcore==0.15.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -166,10 +170,10 @@ def explore_module(package, explore_children):
 
 
 def core_requirements():
-    """Gather core requirements out of setup.cfg."""
-    parser = configparser.ConfigParser()
-    parser.read("setup.cfg")
-    return parser["options"]["install_requires"].strip().split("\n")
+    """Gather core requirements out of pyproject.toml."""
+    with open("pyproject.toml", "rb") as fp:
+        data = tomllib.load(fp)
+    return data["project"]["dependencies"]
 
 
 def gather_recursive_requirements(domain, seen=None):

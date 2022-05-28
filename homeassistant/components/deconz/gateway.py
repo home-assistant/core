@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
 from pydeconz import DeconzSession, errors
-from pydeconz.models import ResourceGroup
-from pydeconz.models.alarm_system import AlarmSystem as DeconzAlarmSystem
-from pydeconz.models.group import Group as DeconzGroup
-from pydeconz.models.light import LightBase as DeconzLight
-from pydeconz.models.sensor import SensorBase as DeconzSensor
+from pydeconz.interfaces.api import APIItems, GroupedAPIItems
+from pydeconz.models.event import EventType
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -55,7 +53,6 @@ class DeconzGateway:
         self.config_entry = config_entry
         self.api = api
 
-        api.add_device_callback = self.async_add_device_callback
         api.connection_status_callback = self.async_connection_status_callback
 
         self.available = True
@@ -65,20 +62,16 @@ class DeconzGateway:
         self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
         self.signal_reload_clip_sensors = f"deconz_reload_clip_{config_entry.entry_id}"
 
-        self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
-        self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
-
-        self.deconz_resource_type_to_signal_new_device = {
-            ResourceGroup.LIGHT.value: self.signal_new_light,
-            ResourceGroup.SENSOR.value: self.signal_new_sensor,
-        }
-
         self.deconz_ids: dict[str, str] = {}
         self.entities: dict[str, set[str]] = {}
         self.events: list[DeconzAlarmEvent | DeconzEvent] = []
+        self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
 
         self._option_allow_deconz_groups = self.config_entry.options.get(
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
+        )
+        self.option_allow_new_devices = self.config_entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
         )
 
     @property
@@ -112,12 +105,41 @@ class DeconzGateway:
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
         )
 
-    @property
-    def option_allow_new_devices(self) -> bool:
-        """Allow automatic adding of new devices."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+    @callback
+    def register_platform_add_device_callback(
+        self,
+        add_device_callback: Callable[[EventType, str], None],
+        deconz_device_interface: APIItems | GroupedAPIItems,
+    ) -> None:
+        """Wrap add_device_callback to check allow_new_devices option."""
+
+        def async_add_device(event: EventType, device_id: str) -> None:
+            """Add device or add it to ignored_devices set.
+
+            If ignore_state_updates is True means device_refresh service is used.
+            Device_refresh is expected to load new devices.
+            """
+            if not self.option_allow_new_devices and not self.ignore_state_updates:
+                self.ignored_devices.add((async_add_device, device_id))
+                return
+            add_device_callback(event, device_id)
+
+        self.config_entry.async_on_unload(
+            deconz_device_interface.subscribe(
+                async_add_device,
+                EventType.ADDED,
+            )
         )
+
+        for device_id in deconz_device_interface:
+            add_device_callback(EventType.ADDED, device_id)
+
+    @callback
+    def load_ignored_devices(self) -> None:
+        """Load previously ignored devices."""
+        for add_entities, device_id in self.ignored_devices:
+            add_entities(EventType.ADDED, device_id)
+        self.ignored_devices.clear()
 
     # Callbacks
 
@@ -127,37 +149,6 @@ class DeconzGateway:
         self.available = available
         self.ignore_state_updates = False
         async_dispatcher_send(self.hass, self.signal_reachable)
-
-    @callback
-    def async_add_device_callback(
-        self,
-        resource_type: str,
-        device: DeconzAlarmSystem
-        | DeconzGroup
-        | DeconzLight
-        | DeconzSensor
-        | list[DeconzAlarmSystem | DeconzGroup | DeconzLight | DeconzSensor]
-        | None = None,
-        force: bool = False,
-    ) -> None:
-        """Handle event of new device creation in deCONZ."""
-        if (
-            not force
-            and not self.option_allow_new_devices
-            or resource_type not in self.deconz_resource_type_to_signal_new_device
-        ):
-            return
-
-        args = []
-
-        if device is not None and not isinstance(device, list):
-            args.append([device])
-
-        async_dispatcher_send(
-            self.hass,
-            self.deconz_resource_type_to_signal_new_device[resource_type],
-            *args,  # Don't send device if None, it would override default value in listeners
-        )
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
@@ -211,8 +202,9 @@ class DeconzGateway:
         """Manage entities affected by config entry options."""
         deconz_ids = []
 
+        # Allow CLIP sensors
+
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(ResourceGroup.SENSOR.value)
             async_dispatcher_send(self.hass, self.signal_reload_clip_sensors)
 
         else:
@@ -222,6 +214,8 @@ class DeconzGateway:
                 if sensor.type.startswith("CLIP")
             ]
 
+        # Allow Groups
+
         if self.option_allow_deconz_groups:
             if not self._option_allow_deconz_groups:
                 async_dispatcher_send(self.hass, self.signal_reload_groups)
@@ -229,6 +223,18 @@ class DeconzGateway:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
         self._option_allow_deconz_groups = self.option_allow_deconz_groups
+
+        # Allow adding new devices
+
+        option_allow_new_devices = self.config_entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+        )
+        if option_allow_new_devices != self.option_allow_new_devices:
+            self.option_allow_new_devices = option_allow_new_devices
+            if option_allow_new_devices:
+                self.load_ignored_devices()
+
+        # Remove entities based on above categories
 
         entity_registry = er.async_get(self.hass)
 
@@ -281,6 +287,7 @@ async def get_deconz_session(
         config[CONF_HOST],
         config[CONF_PORT],
         config[CONF_API_KEY],
+        legacy_add_device=False,
     )
     try:
         async with async_timeout.timeout(10):
