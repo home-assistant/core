@@ -154,57 +154,6 @@ async def test_calendar_yaml_error(
     assert hass.states.get(TEST_API_ENTITY)
 
 
-@pytest.mark.parametrize(
-    "google_config_track_new,calendars_config,expected_state",
-    [
-        (
-            None,
-            [],
-            State(
-                TEST_API_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_API_ENTITY_NAME,
-                },
-            ),
-        ),
-        (
-            True,
-            [],
-            State(
-                TEST_API_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_API_ENTITY_NAME,
-                },
-            ),
-        ),
-        (False, [], None),
-    ],
-    ids=["default", "True", "False"],
-)
-async def test_track_new(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
-    mock_calendars_yaml: None,
-    expected_state: State,
-    setup_config_entry: MockConfigEntry,
-) -> None:
-    """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
-
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    assert await component_setup()
-
-    state = hass.states.get(TEST_API_ENTITY)
-    assert_state(state, expected_state)
-
-
 @pytest.mark.parametrize("calendars_config", [[]])
 async def test_found_calendar_from_api(
     hass: HomeAssistant,
@@ -263,7 +212,7 @@ async def test_load_application_credentials(
 
 
 @pytest.mark.parametrize(
-    "calendars_config_track,expected_state",
+    "calendars_config_track,expected_state,google_config_track_new",
     [
         (
             True,
@@ -275,8 +224,35 @@ async def test_load_application_credentials(
                     "friendly_name": TEST_YAML_ENTITY_NAME,
                 },
             ),
+            None,
         ),
-        (False, None),
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+            True,
+        ),
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+            False,  # Has no effect
+        ),
+        (False, None, None),
+        (False, None, True),
+        (False, None, False),
     ],
 )
 async def test_calendar_config_track_new(
