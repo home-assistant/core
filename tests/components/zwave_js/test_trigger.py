@@ -361,7 +361,7 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
             },
         )
 
-    # Test that no value filter is triggered
+    # Test that no value filter is NOT triggered because automation failed setup
     event = Event(
         type="value updated",
         data={
@@ -844,7 +844,8 @@ async def test_zwave_js_event_bypass_dynamic_validation_no_nodes(
             },
         )
 
-    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    # Test that `node no event data filter` is NOT triggered because automation failed
+    # setup
     event = Event(
         type="interview stage completed",
         data={
