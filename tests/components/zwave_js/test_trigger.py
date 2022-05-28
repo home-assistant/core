@@ -269,6 +269,122 @@ async def test_zwave_js_value_updated(hass, client, lock_schlage_be469, integrat
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
 
+async def test_zwave_js_value_updated_bypass_dynamic_validation(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test zwave_js.value_updated trigger when bypassing dynamic validation."""
+    trigger_type = f"{DOMAIN}.value_updated"
+    node: Node = lock_schlage_be469
+
+    no_value_filter = async_capture_events(hass, "no_value_filter")
+
+    with patch(
+        "homeassistant.components.zwave_js.triggers.value_updated.async_bypass_dynamic_config_validation",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    # no value filter
+                    {
+                        "trigger": {
+                            "platform": trigger_type,
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                        },
+                        "action": {
+                            "event": "no_value_filter",
+                        },
+                    },
+                ]
+            },
+        )
+
+    # Test that no value filter is triggered
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "boo",
+                "prevValue": "hiss",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(no_value_filter) == 1
+
+
+async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test value_updated trigger when bypassing dynamic validation with no nodes."""
+    trigger_type = f"{DOMAIN}.value_updated"
+    node: Node = lock_schlage_be469
+
+    no_value_filter = async_capture_events(hass, "no_value_filter")
+
+    with patch(
+        "homeassistant.components.zwave_js.triggers.value_updated.async_bypass_dynamic_config_validation",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    # no value filter
+                    {
+                        "trigger": {
+                            "platform": trigger_type,
+                            "entity_id": "sensor.test",
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                        },
+                        "action": {
+                            "event": "no_value_filter",
+                        },
+                    },
+                ]
+            },
+        )
+
+    # Test that no value filter is triggered
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "boo",
+                "prevValue": "hiss",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(no_value_filter) == 0
+
+
 async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     """Test for zwave_js.event automation trigger."""
     trigger_type = f"{DOMAIN}.event"
@@ -642,6 +758,106 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
 
     with patch("homeassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+
+async def test_zwave_js_event_bypass_dynamic_validation(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test zwave_js.event trigger when bypassing dynamic config validation."""
+    trigger_type = f"{DOMAIN}.event"
+    node: Node = lock_schlage_be469
+
+    node_no_event_data_filter = async_capture_events(hass, "node_no_event_data_filter")
+
+    with patch(
+        "homeassistant.components.zwave_js.triggers.event.async_bypass_dynamic_config_validation",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    # node filter: no event data
+                    {
+                        "trigger": {
+                            "platform": trigger_type,
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "event_source": "node",
+                            "event": "interview stage completed",
+                        },
+                        "action": {
+                            "event": "node_no_event_data_filter",
+                        },
+                    },
+                ]
+            },
+        )
+
+    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": node.node_id,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(node_no_event_data_filter) == 1
+
+
+async def test_zwave_js_event_bypass_dynamic_validation_no_nodes(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test event trigger when bypassing dynamic validation with no nodes."""
+    trigger_type = f"{DOMAIN}.event"
+    node: Node = lock_schlage_be469
+
+    node_no_event_data_filter = async_capture_events(hass, "node_no_event_data_filter")
+
+    with patch(
+        "homeassistant.components.zwave_js.triggers.event.async_bypass_dynamic_config_validation",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    # node filter: no event data
+                    {
+                        "trigger": {
+                            "platform": trigger_type,
+                            "entity_id": "sensor.fake",
+                            "event_source": "node",
+                            "event": "interview stage completed",
+                        },
+                        "action": {
+                            "event": "node_no_event_data_filter",
+                        },
+                    },
+                ]
+            },
+        )
+
+    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": node.node_id,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(node_no_event_data_filter) == 0
 
 
 async def test_zwave_js_event_invalid_config_entry_id(
