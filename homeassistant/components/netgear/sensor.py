@@ -31,6 +31,7 @@ from .const import (
     KEY_COORDINATOR,
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
+    KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
 from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
@@ -244,6 +245,23 @@ SENSOR_SPEED_TYPES = [
     ),
 ]
 
+SENSOR_UTILIZATION = [
+    NetgearSensorEntityDescription(
+        key="NewCPUUtilization",
+        name="CPU Utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:cpu-64-bit",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewMemoryUtilization",
+        name="Memory Utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -253,6 +271,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
     coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
     coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
+    coordinator_utilization = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_UTIL]
 
     # Router entities
     router_entities = []
@@ -265,6 +284,11 @@ async def async_setup_entry(
     for description in SENSOR_SPEED_TYPES:
         router_entities.append(
             NetgearRouterSensorEntity(coordinator_speed, router, description)
+        )
+
+    for description in SENSOR_UTILIZATION:
+        router_entities.append(
+            NetgearRouterSensorEntity(coordinator_utilization, router, description)
         )
 
     async_add_entities(router_entities)
