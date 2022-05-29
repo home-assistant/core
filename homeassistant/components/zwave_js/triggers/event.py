@@ -145,7 +145,7 @@ async def async_attach_trigger(
     dev_reg = dr.async_get(hass)
     nodes = async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)
     if config[ATTR_EVENT_SOURCE] == "node" and not nodes:
-        raise vol.Invalid(
+        raise ValueError(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
 
