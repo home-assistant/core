@@ -30,9 +30,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
 from .model import DoorDevice
 
-# from homeassistant.components.aladdin_connect import SCAN_INTERVAL
-
-
 _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
@@ -73,7 +70,6 @@ async def async_setup_entry(
         raise PlatformNotReady("Error from Aladdin Connect getting doors")
     async_add_entities(
         (AladdinDevice(acc, door, config_entry) for door in doors),
-        # update_before_add=True,
     )
 
 

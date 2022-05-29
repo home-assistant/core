@@ -28,6 +28,7 @@ def fixture_mock_aladdinconnect_api():
         mock_opener.get_rssi_status = AsyncMock(return_value="-55")
         mock_opener.get_doors = AsyncMock(return_value=[DEVICE_CONFIG_OPEN])
 
+        mock_opener.register_callback = mock.Mock(return_value=True)
         mock_opener.open_door = AsyncMock(return_value=True)
         mock_opener.close_door = AsyncMock(return_value=True)
 
