@@ -34,7 +34,7 @@ CONF_UPNP_BIND_MULTICAST = "upnp_bind_multicast"
 DEFAULT_LIGHTS_ALL_DIMMABLE = False
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
-DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ["script", "scene"]
+DEFAULT_OFF_MAPS_TO_ON_DOMAINS = {"script", "scene"}
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     "switch",
@@ -94,8 +94,10 @@ class Config:
         # Get domains that cause both "on" and "off" commands to map to "on"
         # This is primarily useful for things like scenes or scripts, which
         # don't really have a concept of being off
-        self.off_maps_to_on_domains = conf.get(CONF_OFF_MAPS_TO_ON_DOMAINS)
-        if not isinstance(self.off_maps_to_on_domains, list):
+        off_maps_to_on_domains = conf.get(CONF_OFF_MAPS_TO_ON_DOMAINS)
+        if isinstance(off_maps_to_on_domains, list):
+            self.off_maps_to_on_domains = set(off_maps_to_on_domains)
+        else:
             self.off_maps_to_on_domains = DEFAULT_OFF_MAPS_TO_ON_DOMAINS
 
         # Get whether or not entities should be exposed by default, or if only
@@ -155,13 +157,14 @@ class Config:
         self.store.async_delay_save(lambda: self.numbers, SAVE_DELAY)
         return number
 
-    def number_to_entity_id(self, number: int | str) -> int | str | None:
+    def number_to_entity_id(self, number: int | str) -> str | None:
         """Convert unique number to entity id."""
         if self.type == TYPE_ALEXA:
+            assert isinstance(number, str)
             return number
 
         # Google Home
-        assert isinstance(number, str)
+        assert isinstance(number, int)
         return self.numbers.get(number)
 
     def get_entity_name(self, entity: State) -> str:
@@ -176,10 +179,11 @@ class Config:
 
     def is_entity_exposed(self, entity: State) -> bool:
         """Cache determine if an entity should be exposed on the emulated bridge."""
-        entity_id = entity.entity_id
-        if entity_id not in self._exposed_cache:
-            self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
-        return self._exposed_cache[entity_id]
+        if (exposed := self._exposed_cache.get(entity.entity_id)) is not None:
+            return exposed
+        exposed = self._is_entity_exposed(entity)
+        self._exposed_cache[entity.entity_id] = exposed
+        return exposed
 
     def filter_exposed_entities(self, states: Iterable[State]) -> list[State]:
         """Filter a list of all states down to exposed entities."""

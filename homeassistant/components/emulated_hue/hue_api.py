@@ -437,7 +437,7 @@ class HueOneLightChangeView(HomeAssistantView):
         service: str | None = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
 
         # Construct what we need to send to the service
-        data = {ATTR_ENTITY_ID: entity_id}
+        data: dict[str, Any] = {ATTR_ENTITY_ID: entity_id}
 
         # If the requested entity is a light, set the brightness, hue,
         # saturation and color temp
@@ -727,7 +727,7 @@ def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
 
     state = get_entity_state(config, entity)
 
-    retval = {
+    retval: dict[str, Any] = {
         "state": {
             HUE_API_STATE_ON: state[STATE_ON],
             "reachable": entity.state != STATE_UNAVAILABLE,
@@ -831,10 +831,12 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
     }
 
 
-def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
+def create_list_of_entities(
+    config: Config, request: web.Request
+) -> dict[str | int, Any]:
     """Create a list of all entities."""
     hass: core.HomeAssistant = request.app["hass"]
-    json_response: dict[str, Any] = {
+    json_response: dict[str | int, Any] = {
         config.entity_id_to_number(entity.entity_id): entity_to_json(config, entity)
         for entity in config.filter_exposed_entities(hass.states.async_all())
     }
