@@ -163,7 +163,6 @@ class Config:
             return number
 
         # Google Home
-        assert isinstance(number, str)
         return self.numbers.get(number)
 
     def get_entity_name(self, entity: State) -> str:
