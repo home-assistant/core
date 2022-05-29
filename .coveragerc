@@ -512,6 +512,8 @@ omit =
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
     homeassistant/components/hunterdouglas_powerview/util.py
+    homeassistant/components/huum/__init__.py
+    homeassistant/components/huum/climate.py
     homeassistant/components/hvv_departures/binary_sensor.py
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py

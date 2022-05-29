@@ -1,0 +1,9 @@
+{
+  "domain": "huum",
+  "name": "Huum",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/huum",
+  "requirements": ["huum==0.5.0"],
+  "codeowners": ["@frwickst"],
+  "iot_class": "cloud_polling"
+}

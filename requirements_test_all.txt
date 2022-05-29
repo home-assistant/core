@@ -609,6 +609,9 @@ huawei-lte-api==1.6.0
 # homeassistant.components.huisbaasje
 huisbaasje-client==0.1.0
 
+# homeassistant.components.huum
+huum==0.5.0
+
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
 
