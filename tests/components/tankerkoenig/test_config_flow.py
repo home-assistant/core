@@ -8,7 +8,7 @@ from homeassistant.components.tankerkoenig.const import (
     CONF_STATIONS,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -220,6 +220,55 @@ async def test_import(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
+
+
+async def test_reauth(hass: HomeAssistant):
+    """Test starting a flow by user to re-auth."""
+
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_DATA, **MOCK_STATIONS_DATA},
+        unique_id=f"{MOCK_USER_DATA[CONF_LOCATION][CONF_LATITUDE]}_{MOCK_USER_DATA[CONF_LOCATION][CONF_LONGITUDE]}",
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
+    ) as mock_nearby_stations:
+        # re-auth initialized
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
+            data=mock_config.data,
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        # re-auth unsuccessful
+        mock_nearby_stations.return_value = {"ok": False}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        # re-auth successful
+        mock_nearby_stations.return_value = MOCK_NEARVY_STATIONS_OK
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
+
+    mock_setup_entry.assert_called()
 
 
 async def test_options_flow(hass: HomeAssistant):
