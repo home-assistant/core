@@ -19,6 +19,7 @@ from oauth2client.client import (
 )
 
 from homeassistant.components.application_credentials import AuthImplementation
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import async_track_time_interval
@@ -127,8 +128,17 @@ class DeviceFlow:
         )
 
 
-def get_feature_access(hass: HomeAssistant) -> FeatureAccess:
+def get_feature_access(
+    hass: HomeAssistant, config_entry: ConfigEntry | None = None
+) -> FeatureAccess:
     """Return the desired calendar feature access."""
+    if (
+        config_entry
+        and config_entry.options
+        and CONF_CALENDAR_ACCESS in config_entry.options
+    ):
+        return FeatureAccess[config_entry.options[CONF_CALENDAR_ACCESS]]
+
     # This may be called during config entry setup without integration setup running when there
     # is no google entry in configuration.yaml
     return cast(
