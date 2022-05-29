@@ -61,7 +61,7 @@ class Config:
         """Initialize the instance."""
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
-        self.numbers: dict[int | str, str] = {}
+        self.numbers: dict[str, str] = {}
         self.store: storage.Store | None = None
         self.cached_states: dict[str, list] = {}
         self._exposed_cache: dict[str, bool] = {}
@@ -139,7 +139,7 @@ class Config:
             or {}
         )
 
-    def entity_id_to_number(self, entity_id: str) -> int | str:
+    def entity_id_to_number(self, entity_id: str) -> str:
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
             return entity_id
@@ -157,14 +157,13 @@ class Config:
         self.store.async_delay_save(lambda: self.numbers, SAVE_DELAY)
         return number
 
-    def number_to_entity_id(self, number: int | str) -> str | None:
+    def number_to_entity_id(self, number: str) -> str | None:
         """Convert unique number to entity id."""
         if self.type == TYPE_ALEXA:
-            assert isinstance(number, str)
             return number
 
         # Google Home
-        assert isinstance(number, int)
+        assert isinstance(number, str)
         return self.numbers.get(number)
 
     def get_entity_name(self, entity: State) -> str:
