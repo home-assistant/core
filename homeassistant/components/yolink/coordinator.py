@@ -38,7 +38,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                 device_state_resp = await self.device.fetch_state_with_api()
                 if ATTR_DEVICE_STATE in device_state_resp.data:
                     return device_state_resp.data[ATTR_DEVICE_STATE]
-                return {"state": None}
+                return {}
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
