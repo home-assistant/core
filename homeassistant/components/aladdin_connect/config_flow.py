@@ -35,7 +35,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD], None)
     login = await acc.login()
     await acc.close()
-
+    if not login:
+        raise InvalidAuth
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

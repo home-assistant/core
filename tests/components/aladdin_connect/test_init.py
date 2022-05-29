@@ -1,26 +1,28 @@
 """Test for Aladdin Connect init logic."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import AsyncMock, MockConfigEntry
 
 YAML_CONFIG = {"username": "test-user", "password": "test-password"}
 
 
-async def test_entry_password_fail(hass: HomeAssistant):
+async def test_entry_password_fail(
+    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+):
     """Test password fail during entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"username": "test-user", "password": "test-password"},
     )
     entry.add_to_hass(hass)
-
+    mock_aladdinconnect_api.login = AsyncMock(return_value=False)
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=False,
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
     ):
 
         await hass.config_entries.async_setup(entry.entry_id)
@@ -28,7 +30,9 @@ async def test_entry_password_fail(hass: HomeAssistant):
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_load_and_unload(hass: HomeAssistant) -> None:
+async def test_load_and_unload(
+    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+) -> None:
     """Test loading and unloading Aladdin Connect entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -36,9 +40,10 @@ async def test_load_and_unload(hass: HomeAssistant) -> None:
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
+
     with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
     ):
 
         await hass.config_entries.async_setup(config_entry.entry_id)

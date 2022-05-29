@@ -125,6 +125,7 @@ class AladdinDevice(CoverEntity):
         status = STATES_MAP.get(
             await self._acc.get_door_status(self._device_id, self._number)
         )
+
         self._attr_is_opening = status == STATE_OPENING
         self._attr_is_closing = status == STATE_CLOSING
         self._attr_is_closed = None if status is None else status == STATE_CLOSED
