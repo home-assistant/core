@@ -55,9 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 class Config:
     """Hold configuration variables for the emulated hue bridge."""
 
-    def __init__(
-        self, hass: HomeAssistant, conf: ConfigType, local_ip: str | None
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, conf: ConfigType, local_ip: str) -> None:
         """Initialize the instance."""
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
@@ -73,17 +71,10 @@ class Config:
             )
 
         # Get the IP address that will be passed to the Echo during discovery
-        self.host_ip_addr = conf.get(CONF_HOST_IP)
-        if self.host_ip_addr is None:
-            self.host_ip_addr = local_ip
+        self.host_ip_addr: str = conf.get(CONF_HOST_IP) or local_ip
 
         # Get the port that the Hue bridge will listen on
-        self.listen_port = conf.get(CONF_LISTEN_PORT)
-        if not isinstance(self.listen_port, int):
-            self.listen_port = DEFAULT_LISTEN_PORT
-            _LOGGER.info(
-                "Listen port not specified, defaulting to %s", self.listen_port
-            )
+        self.listen_port: int = conf.get(CONF_LISTEN_PORT) or DEFAULT_LISTEN_PORT
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
@@ -113,11 +104,11 @@ class Config:
         )
 
         # Calculated effective advertised IP and port for network isolation
-        self.advertise_ip = conf.get(CONF_ADVERTISE_IP) or self.host_ip_addr
+        self.advertise_ip: str = conf.get(CONF_ADVERTISE_IP) or self.host_ip_addr
 
-        self.advertise_port = conf.get(CONF_ADVERTISE_PORT) or self.listen_port
+        self.advertise_port: int = conf.get(CONF_ADVERTISE_PORT) or self.listen_port
 
-        self.entities = conf.get(CONF_ENTITIES, {})
+        self.entities: dict[str, dict[str, str]] = conf.get(CONF_ENTITIES, {})
 
         self._entities_with_hidden_attr_in_config = {}
         for entity_id in self.entities:
@@ -163,7 +154,6 @@ class Config:
             return number
 
         # Google Home
-        assert isinstance(number, str)
         return self.numbers.get(number)
 
     def get_entity_name(self, entity: State) -> str:
