@@ -18,22 +18,30 @@ from .const import DOMAIN, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
+SKU_TO_BASE_DEVICE = {
+    "LV-PUR131S": "LV-PUR131S",
+    "LV-RH131S": "LV-PUR131S",  # Alt ID Model LV-PUR131S
+    "Core200S": "Core200S",
+    "LAP-C201S-AUSR": "Core200S",  # Alt ID Model Core200S
+    "LAP-C202S-WUSR": "Core200S",  # Alt ID Model Core200S
+    "Core300S": "Core300S",
+    "LAP-C301S-WJP": "Core300S",  # Alt ID Model Core300S
+    "Core400S": "Core400S",
+    "LAP-C401S-WJP": "Core400S",  # Alt ID Model Core400S
+    "LAP-C401S-WUSR": "Core400S",  # Alt ID Model Core400S
+    "LAP-C401S-WAAA": "Core400S",  # Alt ID Model Core400S
+    "Core600S": "Core600S",
+    "LAP-C601S-WUS": "Core600S",  # Alt ID Model Core600S
+    "LAP-C601S-WUSR": "Core600S",  # Alt ID Model Core600S
+    "LAP-C601S-WEU": "Core600S",  # Alt ID Model Core600S
+}
+
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
-    "LV-RH131S": "fan",  # Alt ID Model LV-PUR131S
     "Core200S": "fan",
-    "LAP-C201S-AUSR": "fan",  # Alt ID Model Core200S
-    "LAP-C202S-WUSR": "fan",  # Alt ID Model Core200S
     "Core300S": "fan",
-    "LAP-C301S-WJP": "fan",  # Alt ID Model Core300S
     "Core400S": "fan",
-    "LAP-C401S-WJP": "fan",  # Alt ID Model Core400S
-    "LAP-C401S-WUSR": "fan",  # Alt ID Model Core400S
-    "LAP-C401S-WAAA": "fan",  # Alt ID Model Core400S
     "Core600S": "fan",
-    "LAP-C601S-WUS": "fan",  # Alt ID Model Core600S
-    "LAP-C601S-WUSR": "fan",  # Alt ID Model Core600S
-    "LAP-C601S-WEU": "fan",  # Alt ID Model Core600S
 }
 
 FAN_MODE_AUTO = "auto"
@@ -41,37 +49,17 @@ FAN_MODE_SLEEP = "sleep"
 
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "LV-RH131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model LV-PUR131S
     "Core200S": [FAN_MODE_SLEEP],
-    "LAP-C201S-AUSR": [FAN_MODE_SLEEP],  # Alt ID Model Core200S
-    "LAP-C202S-WUSR": [FAN_MODE_SLEEP],  # Alt ID Model Core200S
     "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "LAP-C301S-WJP": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core300S
     "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "LAP-C401S-WJP": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core400S
-    "LAP-C401S-WUSR": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core400S
-    "LAP-C401S-WAAA": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core400S
     "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "LAP-C601S-WUS": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core600S
-    "LAP-C601S-WUSR": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core600S
-    "LAP-C601S-WEU": [FAN_MODE_AUTO, FAN_MODE_SLEEP],  # Alt ID Model Core600S
 }
 SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
-    "LV-RH131S": (1, 3),  # ALt ID Model LV-PUR131S
     "Core200S": (1, 3),
-    "LAP-C201S-AUSR": (1, 3),  # ALt ID Model Core200S
-    "LAP-C202S-WUSR": (1, 3),  # ALt ID Model Core200S
     "Core300S": (1, 3),
-    "LAP-C301S-WJP": (1, 3),  # ALt ID Model Core300S
     "Core400S": (1, 4),
-    "LAP-C401S-WJP": (1, 4),  # ALt ID Model Core400S
-    "LAP-C401S-WUSR": (1, 4),  # ALt ID Model Core400S
-    "LAP-C401S-WAAA": (1, 4),  # ALt ID Model Core400S
     "Core600S": (1, 4),
-    "LAP-C601S-WUS": (1, 4),  # ALt ID Model Core600S
-    "LAP-C601S-WUSR": (1, 4),  # ALt ID Model Core600S
-    "LAP-C601S-WEU": (1, 4),  # ALt ID Model Core600S
 }
 
 
@@ -99,7 +87,7 @@ def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type)) == "fan":
             entities.append(VeSyncFanHA(dev))
         else:
             _LOGGER.warning(
@@ -128,19 +116,21 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             and (current_level := self.smartfan.fan_level) is not None
         ):
             return ranged_value_to_percentage(
-                SPEED_RANGE[self.device.device_type], current_level
+                SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], current_level
             )
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE[self.device.device_type])
+        return int_states_in_range(
+            SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]]
+        )
 
     @property
     def preset_modes(self):
         """Get the list of available preset modes."""
-        return PRESET_MODES[self.device.device_type]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE.get(self.device.device_type)]
 
     @property
     def preset_mode(self):
@@ -189,7 +179,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan.change_fan_speed(
             math.ceil(
                 percentage_to_ranged_value(
-                    SPEED_RANGE[self.device.device_type], percentage
+                    SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
                 )
             )
         )
