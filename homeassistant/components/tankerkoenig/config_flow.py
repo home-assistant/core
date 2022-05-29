@@ -1,6 +1,7 @@
 """Config flow for Tankerkoenig."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytankerkoenig import customException, getNearbyStations
@@ -30,7 +31,7 @@ from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_
 
 
 async def async_get_nearby_stations(
-    hass: HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Fetch nearby stations."""
     try:
@@ -224,7 +225,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         nearby_stations = await async_get_nearby_stations(
-            self.hass, dict(self.config_entry.data)
+            self.hass, self.config_entry.data
         )
         if stations := nearby_stations.get("stations"):
             for station in stations:
