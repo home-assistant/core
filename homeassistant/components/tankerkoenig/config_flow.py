@@ -115,14 +115,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form_user(
                 user_input, errors={CONF_API_KEY: "invalid_auth"}
             )
-        if stations := data.get("stations"):
-            for station in stations:
-                self._stations[
-                    station["id"]
-                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
-
-        else:
+        if len(stations := data.get("stations", [])) == 0:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})
+        for station in stations:
+            self._stations[
+                station["id"]
+            ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
 
         self._data = user_input
 
@@ -181,7 +179,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
                     ): NumberSelector(
                         NumberSelectorConfig(
-                            min=0.1,
+                            min=1.0,
                             max=25,
                             step=0.1,
                             unit_of_measurement=LENGTH_KILOMETERS,
