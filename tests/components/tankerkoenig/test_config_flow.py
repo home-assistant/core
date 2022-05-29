@@ -95,7 +95,7 @@ async def test_user(hass: HomeAssistant):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry"
+        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
         "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
         return_value=MOCK_NEARVY_STATIONS_OK,
@@ -147,6 +147,7 @@ async def test_user_already_configured(hass: HomeAssistant):
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_exception_security(hass: HomeAssistant):
@@ -238,7 +239,7 @@ async def test_options_flow(hass: HomeAssistant):
         "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
         return_value=MOCK_NEARVY_STATIONS_OK,
     ):
-        await mock_config.async_setup(hass)
+        await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
         assert mock_setup_entry.called
 
