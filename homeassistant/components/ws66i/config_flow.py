@@ -5,7 +5,7 @@ from typing import Any
 from pyws66i import WS66i, get_ws66i
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import (
@@ -62,8 +62,12 @@ async def validate_input(
 
     def _verify_connection(ws66i: WS66i) -> bool:
         """Verify a connection can be made to the WS66i."""
-        ws66i.open()
-        # No exception. Verify correct port was opened
+        try:
+            ws66i.open()
+        except ConnectionError as err:
+            raise CannotConnect from err
+
+        # Connection successful. Verify correct port was opened
         # Test on FIRST_ZONE because this zone will always be valid
         ret_val = ws66i.zone_status(FIRST_ZONE)
 
@@ -73,7 +77,7 @@ async def validate_input(
 
     is_valid: bool = await hass.async_add_executor_job(_verify_connection, ws66i)
     if not is_valid:
-        raise ConnectionError("Not a valid WS66i connection")
+        raise CannotConnect("Not a valid WS66i connection")
 
     # Return info that you want to store in the config entry.
     return {CONF_IP_ADDRESS: input_data[CONF_IP_ADDRESS]}
@@ -90,7 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except ConnectionError:
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -149,3 +153,7 @@ class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(options),
         )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""

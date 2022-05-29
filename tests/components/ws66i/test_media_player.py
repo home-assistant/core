@@ -17,6 +17,7 @@ from homeassistant.components.ws66i.const import (
     MAX_VOL,
     POLL_INTERVAL,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     SERVICE_TURN_OFF,
@@ -128,6 +129,7 @@ async def test_setup_success(hass):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
         assert hass.states.get(ZONE_1_ID) is not None
 
 
@@ -488,27 +490,3 @@ async def test_register_entities_in_1_amp_only(hass):
 
     entry = registry.async_get(ZONE_7_ID)
     assert entry is None
-
-
-async def test_unload_config_entry(hass):
-    """Test unloading config entry."""
-    with patch(
-        "homeassistant.components.ws66i.get_ws66i",
-        new=lambda *a: MockWs66i(),
-    ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
-        )
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert hass.data[DOMAIN][config_entry.entry_id]
-
-    with patch.object(MockWs66i, "close") as method_call:
-        await config_entry.async_unload(hass)
-        await hass.async_block_till_done()
-
-        assert method_call.called
-
-    assert not hass.data[DOMAIN]
