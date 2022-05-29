@@ -25,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the tankerkoenig binary sensors."""
 
-    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
+    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     stations = coordinator.stations.values()
     entities = []

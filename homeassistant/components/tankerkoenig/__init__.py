@@ -109,9 +109,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set a tankerkoenig configuration entry up."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][
-        entry.unique_id
-    ] = coordinator = TankerkoenigDataUpdateCoordinator(
+    hass.data[DOMAIN][entry.entry_id] = coordinator = TankerkoenigDataUpdateCoordinator(
         hass,
         entry,
         _LOGGER,
