@@ -547,6 +547,7 @@ class Entity(ABC):
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
+        _LOGGER.warning("Write state: %s", self.entity_id)
         if self._platform_state == EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
             return
