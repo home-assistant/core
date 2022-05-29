@@ -122,13 +122,13 @@ async def test_setup_works(hass):
     """Test setup works."""
     hass.config.components.add("network")
     with patch(
-        "homeassistant.components.emulated_hue.create_upnp_datagram_endpoint",
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint",
         AsyncMock(),
     ) as mock_create_upnp_datagram_endpoint, patch(
         "homeassistant.components.emulated_hue.async_get_source_ip"
     ):
         assert await async_setup_component(hass, "emulated_hue", {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-    assert len(mock_create_upnp_datagram_endpoint.mock_calls) == 2
+    assert len(mock_create_upnp_datagram_endpoint.mock_calls) == 1

@@ -53,7 +53,9 @@ def hue_client(aiohttp_client):
 
 async def setup_hue(hass):
     """Set up the emulated_hue integration."""
-    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
+    with patch(
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+    ):
         assert await setup.async_setup_component(
             hass,
             emulated_hue.DOMAIN,
