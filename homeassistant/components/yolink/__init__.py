@@ -64,14 +64,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
         entry_data = hass.data[DOMAIN].get(entry.entry_id)
         if entry_data is None:
-            return None
+            return
         device_coordinators = entry_data.get(ATTR_COORDINATORS)
         if device_coordinators is None:
-            return None
+            return
         device_coordinator = device_coordinators.get(device_id)
         if device_coordinator is None:
-            return None
-        return device_coordinator.async_set_updated_data(resolved_state)
+            return
+        device_coordinator.async_set_updated_data(resolved_state)
 
     try:
         async with async_timeout.timeout(10):
