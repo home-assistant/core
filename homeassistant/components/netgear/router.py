@@ -235,7 +235,7 @@ class NetgearRouter:
                 self._api.allow_block_device, mac, allow_block
             )
 
-    async def async_get_utilization(self, mac: str, allow_block: str) -> None:
+    async def async_get_utilization(self) -> dict[str, Any] | None:
         """Get the system information about utilization of the router."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._api.get_system_info)
