@@ -1,10 +1,15 @@
 """Support for a Hue API to control Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 import hashlib
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import time
+from typing import Any
+
+from aiohttp import web
 
 from homeassistant import core
 from homeassistant.components import (
@@ -58,8 +63,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import State
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.network import is_local
+
+from .config import Config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +119,7 @@ class HueUnauthorizedUser(HomeAssistantView):
     extra_urls = ["/api/"]
     requires_auth = False
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> web.Response:
         """Handle a GET request."""
         return self.json(UNAUTHORIZED_USER)
 
@@ -124,8 +132,9 @@ class HueUsernameView(HomeAssistantView):
     extra_urls = ["/api/"]
     requires_auth = False
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
@@ -147,13 +156,14 @@ class HueAllGroupsStateView(HomeAssistantView):
     name = "emulated_hue:all_groups:state"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
     @core.callback
-    def get(self, request, username):
+    def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to make the Brilliant Lightpad work."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
@@ -167,13 +177,14 @@ class HueGroupView(HomeAssistantView):
     name = "emulated_hue:groups:state"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
     @core.callback
-    def put(self, request, username):
+    def put(self, request: web.Request, username: str) -> web.Response:
         """Process a request to make the Logitech Pop working."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
@@ -197,13 +208,14 @@ class HueAllLightsStateView(HomeAssistantView):
     name = "emulated_hue:lights:state"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
     @core.callback
-    def get(self, request, username):
+    def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to get the list of available lights."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
@@ -217,13 +229,14 @@ class HueFullStateView(HomeAssistantView):
     name = "emulated_hue:username:state"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
     @core.callback
-    def get(self, request, username):
+    def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to get the list of available lights."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTPStatus.UNAUTHORIZED)
         if username != HUE_API_USERNAME:
@@ -245,13 +258,14 @@ class HueConfigView(HomeAssistantView):
     name = "emulated_hue:username:config"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
     @core.callback
-    def get(self, request, username=""):
+    def get(self, request: web.Request, username: str = "") -> web.Response:
         """Process a request to get the configuration."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
@@ -267,17 +281,18 @@ class HueOneLightStateView(HomeAssistantView):
     name = "emulated_hue:light:state"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
     @core.callback
-    def get(self, request, username, entity_id):
+    def get(self, request: web.Request, username: str, entity_id: str) -> web.Response:
         """Process a request to get the state of an individual light."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
-        hass = request.app["hass"]
+        hass: core.HomeAssistant = request.app["hass"]
         hass_entity_id = self.config.number_to_entity_id(entity_id)
 
         if hass_entity_id is None:
@@ -307,17 +322,20 @@ class HueOneLightChangeView(HomeAssistantView):
     name = "emulated_hue:light:state"
     requires_auth = False
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         """Initialize the instance of the view."""
         self.config = config
 
-    async def put(self, request, username, entity_number):  # noqa: C901
+    async def put(  # noqa: C901
+        self, request: web.Request, username: str, entity_number: int
+    ) -> web.Response:
         """Process a request to set the state of an individual light."""
+        assert request.remote is not None
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         config = self.config
-        hass = request.app["hass"]
+        hass: core.HomeAssistant = request.app["hass"]
         entity_id = config.number_to_entity_id(entity_number)
 
         if entity_id is None:
@@ -344,7 +362,7 @@ class HueOneLightChangeView(HomeAssistantView):
             color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
 
         # Parse the request
-        parsed = {
+        parsed: dict[str, Any] = {
             STATE_ON: False,
             STATE_BRIGHTNESS: None,
             STATE_HUE: None,
@@ -416,7 +434,7 @@ class HueOneLightChangeView(HomeAssistantView):
         turn_on_needed = False
 
         # Convert the resulting "on" status into the service we need to call
-        service = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
+        service: str | None = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
 
         # Construct what we need to send to the service
         data = {ATTR_ENTITY_ID: entity_id}
@@ -596,7 +614,7 @@ class HueOneLightChangeView(HomeAssistantView):
         return self.json(json_response)
 
 
-def get_entity_state(config, entity):
+def get_entity_state(config: Config, entity: State) -> dict[str, Any]:
     """Retrieve and convert state and brightness values for an entity."""
     cached_state_entry = config.cached_states.get(entity.entity_id, None)
     cached_state = None
@@ -617,7 +635,7 @@ def get_entity_state(config, entity):
             # Remove the now stale cached entry.
             config.cached_states.pop(entity.entity_id)
 
-    data = {
+    data: dict[str, Any] = {
         STATE_ON: False,
         STATE_BRIGHTNESS: None,
         STATE_HUE: None,
@@ -700,7 +718,7 @@ def get_entity_state(config, entity):
     return data
 
 
-def entity_to_json(config, entity):
+def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
     color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
@@ -793,13 +811,15 @@ def entity_to_json(config, entity):
     return retval
 
 
-def create_hue_success_response(entity_number, attr, value):
+def create_hue_success_response(
+    entity_number: int, attr: str, value: str
+) -> dict[str, Any]:
     """Create a success response for an attribute set on a light."""
     success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
 
 
-def create_config_model(config, request):
+def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a config resource."""
     return {
         "mac": "00:00:00:00:00:00",
@@ -811,29 +831,29 @@ def create_config_model(config, request):
     }
 
 
-def create_list_of_entities(config, request):
+def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
-    hass = request.app["hass"]
-    json_response = {}
-
-    for entity in config.filter_exposed_entities(hass.states.async_all()):
-        number = config.entity_id_to_number(entity.entity_id)
-        json_response[number] = entity_to_json(config, entity)
-
+    hass: core.HomeAssistant = request.app["hass"]
+    json_response: dict[str, Any] = {
+        config.entity_id_to_number(entity.entity_id): entity_to_json(config, entity)
+        for entity in config.filter_exposed_entities(hass.states.async_all())
+    }
     return json_response
 
 
-def hue_brightness_to_hass(value):
+def hue_brightness_to_hass(value: int) -> int:
     """Convert hue brightness 1..254 to hass format 0..255."""
     return min(255, round((value / HUE_API_STATE_BRI_MAX) * 255))
 
 
-def hass_to_hue_brightness(value):
+def hass_to_hue_brightness(value: int) -> int:
     """Convert hass brightness 0..255 to hue 1..254 scale."""
     return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
 
 
-async def wait_for_state_change_or_timeout(hass, entity_id, timeout):
+async def wait_for_state_change_or_timeout(
+    hass: core.HomeAssistant, entity_id: str, timeout: float
+) -> None:
     """Wait for an entity to change state."""
     ev = asyncio.Event()
 
