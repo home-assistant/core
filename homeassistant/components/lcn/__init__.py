@@ -203,7 +203,12 @@ def _async_fire_access_control_event(
 
     if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
         event_data.update(
-            {"level": inp.level, "key": inp.key, "action": inp.action.value}
+            {
+                "level": inp.level,
+                "key": inp.key,
+                "action": inp.action.value,
+                "battery": inp.battery.value,
+            }
         )
 
     event_name = f"lcn_{inp.periphery.value.lower()}"
