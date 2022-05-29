@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_ID,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LOCATION,
@@ -24,8 +25,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_FUEL_TYPES,
@@ -239,3 +246,20 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.stations[station_id] = station
         _LOGGER.debug("add_station called for station: %s", station)
+
+
+class TankerkoenigCoordinatorEntity(CoordinatorEntity):
+    """Tankerkoenig base entity."""
+
+    def __init__(
+        self, coordinator: TankerkoenigDataUpdateCoordinator, station: dict
+    ) -> None:
+        """Initialize the Tankerkoenig base entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(ATTR_ID, station["id"])},
+            name=f"{station['brand']} {station['street']} {station['houseNumber']}",
+            model=station["brand"],
+            configuration_url="https://www.tankerkoenig.de",
+            entry_type=DeviceEntryType.SERVICE,
+        )
