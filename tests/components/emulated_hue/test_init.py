@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.emulated_hue import (
+from homeassistant.components.emulated_hue.config import (
     DATA_KEY,
     DATA_VERSION,
     SAVE_DELAY,
