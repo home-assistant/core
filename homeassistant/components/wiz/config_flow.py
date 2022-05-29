@@ -9,8 +9,8 @@ from pywizlight.discovery import DiscoveredBulb
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.util.network import is_ip_address
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEVICE = "device"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiZ."""
 
     VERSION = 1
@@ -58,7 +58,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered device: %s", device)
         ip_address = device.ip_address
         mac = device.mac_address
-        await self.async_set_unique_id(mac)
+        if current_entry := await self.async_set_unique_id(mac):
+            if (
+                current_entry.state is ConfigEntryState.SETUP_RETRY
+                and current_entry.data[CONF_HOST] == ip_address
+            ):
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(current_entry.entry_id)
+                )
+                return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
         await self._async_connect_discovered_or_abort()
         return await self.async_step_discovery_confirm()
