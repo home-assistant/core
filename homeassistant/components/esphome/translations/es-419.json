@@ -6,7 +6,7 @@
         },
         "error": {
             "connection_error": "No se puede conectar a ESP. Aseg\u00farese de que su archivo YAML contenga una l\u00ednea 'api:'.",
-            "resolve_error": "No se puede resolver la direcci\u00f3n de la ESP. Si este error persiste, configure una direcci\u00f3n IP est\u00e1tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "No se puede resolver la direcci\u00f3n de la ESP. Si este error persiste, configure una direcci\u00f3n IP est\u00e1tica: https://esphome.io/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
         "step": {
@@ -25,7 +25,7 @@
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "description": "Por favor Ingrese la configuraci\u00f3n de conexi\u00f3n de su nodo [ESPHome] (https://esphomelib.com/)."
+                "description": "Por favor Ingrese la configuraci\u00f3n de conexi\u00f3n de su nodo [ESPHome] (https://esphome.io/)."
             }
         }
     }
