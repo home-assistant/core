@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     yolink_http_client = YoLinkClient(auth_mgr)
     yolink_mqtt_client = MqttClient(auth_mgr)
 
-    def on_message_callback(message: tuple[str, BRDP]):
+    def on_message_callback(message: tuple[str, BRDP]) -> None:
         data = message[1]
         device_id = message[0]
         if data.event is None:
@@ -62,11 +62,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         resolved_state = data.data
         if resolved_state is None:
             return
-        device_coordinators = hass.data[DOMAIN][ATTR_COORDINATORS]
-        if device_coordinators is not None:
-            device_coordinator = device_coordinators.get(device_id)
-            if device_coordinator is not None:
-                device_coordinator.async_set_updated_data(resolved_state)
+        entry_data = hass.data[DOMAIN].get(entry.entry_id)
+        if entry_data is None:
+            return None
+        device_coordinators = entry_data.get(ATTR_COORDINATORS)
+        if device_coordinators is None:
+            return None
+        device_coordinator = device_coordinators.get(device_id)
+        if device_coordinator is None:
+            return None
+        return device_coordinator.async_set_updated_data(resolved_state)
 
     try:
         async with async_timeout.timeout(10):
@@ -80,6 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (YoLinkClientError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
+    hass.data[DOMAIN][entry.entry_id] = {
+        ATTR_CLIENT: yolink_http_client,
+        ATTR_MQTT_CLIENT: yolink_mqtt_client,
+    }
     auth_devices = device_response.data[ATTR_DEVICE]
     device_coordinators = {}
     for device_info in auth_devices:
@@ -91,12 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Not failure by fetching device state
             device_coordinator.data = {}
         device_coordinators[device.device_id] = device_coordinator
-    hass.data[DOMAIN][ATTR_COORDINATORS] = device_coordinators
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        ATTR_CLIENT: yolink_http_client,
-        ATTR_MQTT_CLIENT: yolink_mqtt_client,
-    }
+    hass.data[DOMAIN][entry.entry_id][ATTR_COORDINATORS] = device_coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 

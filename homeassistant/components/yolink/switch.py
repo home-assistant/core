@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
     switch_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()

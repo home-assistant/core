@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_COORDINATORS, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import YoLinkCoordinator
 
 
@@ -34,9 +34,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update state."""
-        data = self.coordinator.hass.data[DOMAIN][ATTR_COORDINATORS][
-            self.device_id
-        ].data
+        data = self.coordinator.data
         if data is not None:
             self.update_entity_state(data)
 
