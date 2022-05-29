@@ -25,9 +25,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up an ``RemootioCover`` entity based on the given configuration entry."""
 
-    _LOGGER.debug("config_entry [%s]", config_entry.as_dict())
     _LOGGER.debug(
-        "hass.data[%s][%s] [%s]]",
+        "Doing async_setup_entry. config_entry [%s] hass.data[%s][%s] [%s]",
+        config_entry.as_dict(),
         DOMAIN,
         config_entry.entry_id,
         hass.data[DOMAIN][config_entry.entry_id],
@@ -77,6 +77,9 @@ class RemootioCover(cover.CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register listeners to the used Remootio client to be notified on state changes and events."""
+
+        _LOGGER.debug("Doing async_added_to_hass")
+
         await self._remootio_client.add_state_change_listener(
             RemootioCoverStateChangeListener(self)
         )
@@ -87,6 +90,9 @@ class RemootioCover(cover.CoverEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Terminate the used Remootio client."""
+
+        _LOGGER.debug("Doing async_will_remove_from_hass")
+
         await self._remootio_client.terminate()
 
     async def async_update(self) -> None:
