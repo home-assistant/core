@@ -1,10 +1,13 @@
 """Support for local control of entities by emulating a Philips Hue bridge."""
+from __future__ import annotations
+
 from collections.abc import Iterable
 import logging
 
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import storage
+from homeassistant.helpers.typing import ConfigType
 
 TYPE_ALEXA = "alexa"
 TYPE_GOOGLE = "google_home"
@@ -52,14 +55,16 @@ _LOGGER = logging.getLogger(__name__)
 class Config:
     """Hold configuration variables for the emulated hue bridge."""
 
-    def __init__(self, hass, conf, local_ip):
+    def __init__(
+        self, hass: HomeAssistant, conf: ConfigType, local_ip: str | None
+    ) -> None:
         """Initialize the instance."""
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
-        self.numbers = None
-        self.store = None
-        self.cached_states = {}
-        self._exposed_cache = {}
+        self.numbers: dict[int | str, str] = {}
+        self.store: storage.Store | None = None
+        self.cached_states: dict[str, list] = {}
+        self._exposed_cache: dict[str, bool] = {}
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning(
@@ -122,9 +127,9 @@ class Config:
         # for compatibility with older installations.
         self.lights_all_dimmable = conf.get(CONF_LIGHTS_ALL_DIMMABLE)
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up and migrate to storage."""
-        self.store = storage.Store(self.hass, DATA_VERSION, DATA_KEY)
+        self.store = storage.Store(self.hass, DATA_VERSION, DATA_KEY)  # type: ignore[arg-type]
         self.numbers = (
             await storage.async_migrator(
                 self.hass, self.hass.config.path(NUMBERS_FILE), self.store
@@ -132,7 +137,7 @@ class Config:
             or {}
         )
 
-    def entity_id_to_number(self, entity_id):
+    def entity_id_to_number(self, entity_id: str) -> int | str:
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
             return entity_id
@@ -146,10 +151,11 @@ class Config:
         if self.numbers:
             number = str(max(int(k) for k in self.numbers) + 1)
         self.numbers[number] = entity_id
+        assert self.store is not None
         self.store.async_delay_save(lambda: self.numbers, SAVE_DELAY)
         return number
 
-    def number_to_entity_id(self, number):
+    def number_to_entity_id(self, number: int | str) -> int | str | None:
         """Convert unique number to entity id."""
         if self.type == TYPE_ALEXA:
             return number
@@ -158,7 +164,7 @@ class Config:
         assert isinstance(number, str)
         return self.numbers.get(number)
 
-    def get_entity_name(self, entity):
+    def get_entity_name(self, entity: State) -> str:
         """Get the name of an entity."""
         if (
             entity.entity_id in self.entities
@@ -177,13 +183,9 @@ class Config:
 
     def filter_exposed_entities(self, states: Iterable[State]) -> list[State]:
         """Filter a list of all states down to exposed entities."""
-        exposed: list[State] = []
-        for entity in states:
-            entity_id = entity.entity_id
-            if entity_id not in self._exposed_cache:
-                self._exposed_cache[entity_id] = self._is_entity_exposed(entity)
-            if self._exposed_cache[entity_id]:
-                exposed.append(entity)
+        exposed: list[State] = [
+            state for state in states if self.is_entity_exposed(state)
+        ]
         return exposed
 
     def _is_entity_exposed(self, entity: State) -> bool:
