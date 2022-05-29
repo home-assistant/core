@@ -220,13 +220,11 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 
             _LOGGER.debug("Received data: %s", data)
             if not data["ok"]:
-                _LOGGER.error(
-                    "Error fetching data from tankerkoenig.de: %s", data["message"]
-                )
                 raise UpdateFailed(data["message"])
             if "prices" not in data:
-                _LOGGER.error("Did not receive price information from tankerkoenig.de")
-                raise UpdateFailed("No prices in data")
+                raise UpdateFailed(
+                    "Did not receive price information from tankerkoenig.de"
+                )
             prices.update(data["prices"])
         return prices
 
