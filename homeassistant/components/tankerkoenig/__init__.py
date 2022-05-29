@@ -192,7 +192,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                     station_id,
                     station_data["message"],
                 )
-                return False
+                continue
             self.add_station(station_data["station"])
         if len(self.stations) > 10:
             _LOGGER.warning(
