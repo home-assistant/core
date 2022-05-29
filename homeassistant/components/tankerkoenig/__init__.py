@@ -170,7 +170,6 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._api_key: str = entry.data[CONF_API_KEY]
         self._selected_stations: list[str] = entry.data[CONF_STATIONS]
-        self._hass = hass
         self.stations: dict[str, dict] = {}
         self.fuel_types: list[str] = entry.data[CONF_FUEL_TYPES]
         self.show_on_map: bool = entry.options[CONF_SHOW_ON_MAP]
@@ -213,7 +212,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
         # The API seems to only return at most 10 results, so split the list in chunks of 10
         # and merge it together.
         for index in range(ceil(len(station_ids) / 10)):
-            data = await self._hass.async_add_executor_job(
+            data = await self.hass.async_add_executor_job(
                 pytankerkoenig.getPriceList,
                 self._api_key,
                 station_ids[index * 10 : (index + 1) * 10],
