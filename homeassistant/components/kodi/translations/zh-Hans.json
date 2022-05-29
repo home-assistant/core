@@ -43,8 +43,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_off": "[entity_name} \u88ab\u8981\u6c42\u5173\u95ed",
-            "turn_on": "[entity_name} \u88ab\u8981\u6c42\u6253\u5f00"
+            "turn_off": "{entity_name} \u88ab\u8981\u6c42\u5173\u95ed",
+            "turn_on": "{entity_name} \u88ab\u8981\u6c42\u6253\u5f00"
         }
     }
 }
