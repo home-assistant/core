@@ -323,6 +323,7 @@ FLOWS = {
         "pvoutput",
         "pvpc_hourly_pricing",
         "qingping",
+        "pylontech_us",
         "qnap_qsw",
         "rachio",
         "radarr",
