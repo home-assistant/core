@@ -51,6 +51,22 @@ def _sources_from_config(data):
     }
 
 
+def _verify_connection(ws66i: WS66i) -> bool:
+    """Verify a connection can be made to the WS66i."""
+    try:
+        ws66i.open()
+    except ConnectionError as err:
+        raise CannotConnect from err
+
+    # Connection successful. Verify correct port was opened
+    # Test on FIRST_ZONE because this zone will always be valid
+    ret_val = ws66i.zone_status(FIRST_ZONE)
+
+    ws66i.close()
+
+    return bool(ret_val)
+
+
 async def validate_input(
     hass: core.HomeAssistant, input_data: dict[str, Any]
 ) -> dict[str, Any]:
@@ -59,21 +75,6 @@ async def validate_input(
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     ws66i: WS66i = get_ws66i(input_data[CONF_IP_ADDRESS])
-
-    def _verify_connection(ws66i: WS66i) -> bool:
-        """Verify a connection can be made to the WS66i."""
-        try:
-            ws66i.open()
-        except ConnectionError as err:
-            raise CannotConnect from err
-
-        # Connection successful. Verify correct port was opened
-        # Test on FIRST_ZONE because this zone will always be valid
-        ret_val = ws66i.zone_status(FIRST_ZONE)
-
-        ws66i.close()
-
-        return bool(ret_val)
 
     is_valid: bool = await hass.async_add_executor_job(_verify_connection, ws66i)
     if not is_valid:

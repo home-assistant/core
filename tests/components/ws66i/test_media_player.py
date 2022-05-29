@@ -119,48 +119,52 @@ class MockWs66i:
 
 async def test_setup_success(hass):
     """Test connection success."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
+    )
+    config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: MockWs66i(),
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
-        )
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.LOADED
-        assert hass.states.get(ZONE_1_ID) is not None
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ZONE_1_ID) is not None
 
 
 async def _setup_ws66i(hass, ws66i) -> MockConfigEntry:
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_DEFAULT_OPTIONS
+    )
+    config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_DEFAULT_OPTIONS
-        )
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        return config_entry
+    return config_entry
 
 
 async def _setup_ws66i_with_options(hass, ws66i) -> MockConfigEntry:
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
+    )
+    config_entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.ws66i.get_ws66i",
         new=lambda *a: ws66i,
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
-        )
-        config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        return config_entry
+    return config_entry
 
 
 async def _call_media_player_service(hass, name, data):
