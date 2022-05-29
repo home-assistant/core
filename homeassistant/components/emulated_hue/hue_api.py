@@ -327,7 +327,7 @@ class HueOneLightChangeView(HomeAssistantView):
         self.config = config
 
     async def put(  # noqa: C901
-        self, request: web.Request, username: str, entity_number: int
+        self, request: web.Request, username: str, entity_number: str
     ) -> web.Response:
         """Process a request to set the state of an individual light."""
         assert request.remote is not None
@@ -812,7 +812,7 @@ def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
 
 
 def create_hue_success_response(
-    entity_number: int, attr: str, value: str
+    entity_number: str, attr: str, value: str
 ) -> dict[str, Any]:
     """Create a success response for an attribute set on a light."""
     success_key = f"/lights/{entity_number}/state/{attr}"
@@ -831,12 +831,10 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
     }
 
 
-def create_list_of_entities(
-    config: Config, request: web.Request
-) -> dict[str | int, Any]:
+def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
     hass: core.HomeAssistant = request.app["hass"]
-    json_response: dict[str | int, Any] = {
+    json_response: dict[str, Any] = {
         config.entity_id_to_number(entity.entity_id): entity_to_json(config, entity)
         for entity in config.filter_exposed_entities(hass.states.async_all())
     }
