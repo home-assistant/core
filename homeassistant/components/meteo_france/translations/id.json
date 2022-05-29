@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Kota"
                 },
-                "description": "Pilih kota Anda dari daftar",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Pilih kota Anda dari daftar"
             },
             "user": {
                 "data": {
                     "city": "Kota"
                 },
-                "description": "Masukkan kode pos (hanya untuk Prancis, disarankan) atau nama kota",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Masukkan kode pos (hanya untuk Prancis, disarankan) atau nama kota"
             }
         }
     },

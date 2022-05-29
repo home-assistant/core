@@ -30,6 +30,7 @@ async def test_get_triggers(hass, client):
         "domain": DOMAIN,
         "type": "webostv.turn_on",
         "device_id": device.id,
+        "metadata": {},
     }
 
     triggers = await async_get_device_automations(

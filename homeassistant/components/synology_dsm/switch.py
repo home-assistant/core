@@ -14,8 +14,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +84,10 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
         super().__init__(api, coordinator, description)
         self._version = version
 
+        self._attr_name = (
+            f"{self._api.network.hostname} Surveillance Station {description.name}"
+        )
+
     @property
     def is_on(self) -> bool:
         """Return the state."""
@@ -125,7 +130,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
                     f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
-            name="Surveillance Station",
+            name=f"{self._api.network.hostname} Surveillance Station",
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._version,

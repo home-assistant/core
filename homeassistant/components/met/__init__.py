@@ -21,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -33,6 +34,7 @@ from .const import (
     DOMAIN,
 )
 
+# Dedicated Home Assistant endpoint - do not change!
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
 PLATFORMS = [Platform.WEATHER]
@@ -80,6 +82,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+class CannotConnect(HomeAssistantError):
+    """Unable to connect to the web site."""
 
 
 class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
@@ -173,7 +179,9 @@ class MetWeatherData:
 
     async def fetch_data(self) -> MetWeatherData:
         """Fetch data from API - (current weather and forecast)."""
-        await self._weather_data.fetching_data()
+        resp = await self._weather_data.fetching_data()
+        if not resp:
+            raise CannotConnect()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)

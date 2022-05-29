@@ -10,10 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
-                },
-                "description": "Digite seu DSN Sentry",
-                "title": "Sentry"
+                    "dsn": "Sentinela DSN"
+                }
             }
         }
     },

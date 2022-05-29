@@ -1000,7 +1000,7 @@ async def test_if_fails_setup_for_without_time(hass, calls):
                 automation.DOMAIN: {
                     "trigger": {"platform": "event", "event_type": "bla"},
                     "condition": {
-                        "platform": "state",
+                        "condition": "state",
                         "entity_id": "test.entity",
                         "state": "on",
                         "for": {},
@@ -1019,9 +1019,9 @@ async def test_if_fails_setup_for_without_entity(hass, calls):
             automation.DOMAIN,
             {
                 automation.DOMAIN: {
-                    "trigger": {"event_type": "bla"},
+                    "trigger": {"platform": "event", "event_type": "bla"},
                     "condition": {
-                        "platform": "state",
+                        "condition": "state",
                         "state": "on",
                         "for": {"seconds": 5},
                     },

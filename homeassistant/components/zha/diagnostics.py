@@ -29,6 +29,7 @@ KEYS_TO_REDACT = {
     CONF_UNIQUE_ID,
     "network_key",
     CONF_NWK_EXTENDED_PAN_ID,
+    "partner_ieee",
 }
 
 
@@ -50,7 +51,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict:
     """Return diagnostics for a config entry."""
-    config: dict = hass.data[DATA_ZHA][DATA_ZHA_CONFIG]
+    config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
     gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     return async_redact_data(
         {
@@ -75,5 +76,5 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict:
     """Return diagnostics for a device."""
-    zha_device: ZHADevice = await async_get_zha_device(hass, device.id)
+    zha_device: ZHADevice = async_get_zha_device(hass, device.id)
     return async_redact_data(zha_device.zha_device_info, KEYS_TO_REDACT)

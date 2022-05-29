@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_CHOOSE,
     CONF_CONDITION,
     CONF_CONDITIONS,
+    CONF_CONTINUE_ON_ERROR,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_COUNT,
     CONF_DEFAULT,
@@ -43,6 +44,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ELSE,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_ERROR,
@@ -50,9 +52,11 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_FOR_EACH,
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
+    CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -969,6 +973,41 @@ def custom_serializer(schema: Any) -> Any:
     return voluptuous_serialize.UNSUPPORTED
 
 
+def expand_condition_shorthand(value: Any | None) -> Any:
+    """Expand boolean condition shorthand notations."""
+
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return value
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        try:
+            schema(value)
+            return {
+                CONF_CONDITION: key,
+                CONF_CONDITIONS: value[key],
+                **{k: value[k] for k in value if k != key},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    if isinstance(value.get(CONF_CONDITION), list):
+        try:
+            CONDITION_SHORTHAND_SCHEMA(value)
+            return {
+                CONF_CONDITION: "and",
+                CONF_CONDITIONS: value[CONF_CONDITION],
+                **{k: value[k] for k in value if k != CONF_CONDITION},
+            }
+        except vol.MultipleInvalid:
+            pass
+
+    return value
+
+
 # Schemas
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -1055,7 +1094,11 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
-SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+SCRIPT_ACTION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 EVENT_SCHEMA = vol.Schema(
     {
@@ -1093,7 +1136,10 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
-CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+CONDITION_BASE_SCHEMA = {
+    vol.Optional(CONF_ALIAS): string,
+    vol.Optional(CONF_ENABLED): boolean,
+}
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
@@ -1225,11 +1271,33 @@ AND_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("and"): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
 OR_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
+OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("or"): vol.All(
             ensure_list,
             # pylint: disable=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
@@ -1249,12 +1317,24 @@ NOT_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("not"): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1269,24 +1349,37 @@ dynamic_template_condition_action = vol.All(
     },
 )
 
+CONDITION_SHORTHAND_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
 
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
-        key_value_schemas(
-            CONF_CONDITION,
-            {
-                "and": AND_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "state": STATE_CONDITION_SCHEMA,
-                "sun": SUN_CONDITION_SCHEMA,
-                "template": TEMPLATE_CONDITION_SCHEMA,
-                "time": TIME_CONDITION_SCHEMA,
-                "trigger": TRIGGER_CONDITION_SCHEMA,
-                "zone": ZONE_CONDITION_SCHEMA,
-            },
+        vol.All(
+            expand_condition_shorthand,
+            key_value_schemas(
+                CONF_CONDITION,
+                {
+                    "and": AND_CONDITION_SCHEMA,
+                    "device": DEVICE_CONDITION_SCHEMA,
+                    "not": NOT_CONDITION_SCHEMA,
+                    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                    "or": OR_CONDITION_SCHEMA,
+                    "state": STATE_CONDITION_SCHEMA,
+                    "sun": SUN_CONDITION_SCHEMA,
+                    "template": TEMPLATE_CONDITION_SCHEMA,
+                    "time": TIME_CONDITION_SCHEMA,
+                    "trigger": TRIGGER_CONDITION_SCHEMA,
+                    "zone": ZONE_CONDITION_SCHEMA,
+                },
+            ),
         ),
         dynamic_template_condition_action,
     )
@@ -1307,23 +1400,26 @@ dynamic_template_condition_action = vol.All(
 
 
 CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
-    key_value_schemas(
-        CONF_CONDITION,
-        {
-            "and": AND_CONDITION_SCHEMA,
-            "device": DEVICE_CONDITION_SCHEMA,
-            "not": NOT_CONDITION_SCHEMA,
-            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-            "or": OR_CONDITION_SCHEMA,
-            "state": STATE_CONDITION_SCHEMA,
-            "sun": SUN_CONDITION_SCHEMA,
-            "template": TEMPLATE_CONDITION_SCHEMA,
-            "time": TIME_CONDITION_SCHEMA,
-            "trigger": TRIGGER_CONDITION_SCHEMA,
-            "zone": ZONE_CONDITION_SCHEMA,
-        },
-        dynamic_template_condition_action,
-        "a valid template",
+    vol.All(
+        expand_condition_shorthand,
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+            },
+            dynamic_template_condition_action,
+            "a list of conditions or a valid template",
+        ),
     )
 )
 
@@ -1332,6 +1428,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_ENABLED): boolean,
     }
 )
 
@@ -1369,6 +1466,7 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_DEVICE_ID): string,
         vol.Required(CONF_DOMAIN): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -1384,6 +1482,9 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
+                vol.Exclusive(CONF_FOR_EACH, "repeat"): vol.Any(
+                    dynamic_template, vol.All(list, template_complex)
+                ),
                 vol.Exclusive(CONF_WHILE, "repeat"): vol.All(
                     ensure_list, [CONDITION_SCHEMA]
                 ),
@@ -1392,7 +1493,7 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
                 ),
                 vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
-            has_at_least_one_key(CONF_COUNT, CONF_WHILE, CONF_UNTIL),
+            has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
         ),
     }
 )
@@ -1445,15 +1546,34 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
+        vol.Optional(CONF_ERROR, default=False): boolean,
     }
 )
 
-_SCRIPT_ERROR_SCHEMA = vol.Schema(
+_SCRIPT_PARALLEL_SEQUENCE = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Optional(CONF_ERROR): vol.Any(None, string),
+        vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
     }
 )
+
+_parallel_sequence_action = vol.All(
+    # Wrap a shorthand sequences in a parallel action
+    SCRIPT_SCHEMA,
+    lambda config: {
+        CONF_SEQUENCE: config,
+    },
+)
+
+_SCRIPT_PARALLEL_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_PARALLEL): vol.All(
+            ensure_list, [vol.Any(_SCRIPT_PARALLEL_SEQUENCE, _parallel_sequence_action)]
+        ),
+    }
+)
+
 
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
@@ -1467,8 +1587,8 @@ SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
-SCRIPT_ACTION_ERROR = "error"
 SCRIPT_ACTION_IF = "if"
+SCRIPT_ACTION_PARALLEL = "parallel"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1479,7 +1599,7 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_WAIT_TEMPLATE in action:
         return SCRIPT_ACTION_WAIT_TEMPLATE
 
-    if CONF_CONDITION in action:
+    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
         return SCRIPT_ACTION_CHECK_CONDITION
 
     if CONF_EVENT in action:
@@ -1512,8 +1632,8 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_STOP in action:
         return SCRIPT_ACTION_STOP
 
-    if CONF_ERROR in action:
-        return SCRIPT_ACTION_ERROR
+    if CONF_PARALLEL in action:
+        return SCRIPT_ACTION_PARALLEL
 
     raise ValueError("Unable to determine action")
 
@@ -1531,8 +1651,8 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
     SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
-    SCRIPT_ACTION_ERROR: _SCRIPT_ERROR_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
+    SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
 }
 
 

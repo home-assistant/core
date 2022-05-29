@@ -212,7 +212,7 @@ def get_forecast(ec_data, hourly):
         for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: hour["period"],
+                    ATTR_FORECAST_TIME: hour["period"].isoformat(),
                     ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hour["icon_code"])

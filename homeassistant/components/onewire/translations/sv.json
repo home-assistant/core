@@ -1,9 +1,9 @@
 {
-    "config": {
+    "options": {
         "step": {
-            "owserver": {
+            "device_selection": {
                 "data": {
-                    "port": "Port"
+                    "device_selection": "V\u00e4lj enheter att konfigurera"
                 }
             }
         }

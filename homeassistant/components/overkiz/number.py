@@ -38,6 +38,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="My Position",
         icon="mdi:content-save-cog",
         command=OverkizCommand.SET_MEMORIZED_1_POSITION,
+        min_value=0,
+        max_value=100,
         entity_category=EntityCategory.CONFIG,
     ),
     # WaterHeater: Expected Number Of Shower (2 - 4)
@@ -84,6 +86,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         key=OverkizState.CORE_LEVEL,
         icon="mdi:patio-heater",
         command=OverkizCommand.SET_LEVEL,
+        min_value=0,
+        max_value=100,
         inverted=True,
     ),
 ]

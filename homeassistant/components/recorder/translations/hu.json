@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Aktu\u00e1lis futtat\u00e1s kezd\u00e9si id\u0151pontja",
+            "database_engine": "Adatb\u00e1zis motor",
+            "database_version": "Adatb\u00e1zis verzi\u00f3",
+            "estimated_db_size": "Az adatb\u00e1zis becs\u00fclt m\u00e9rete (MiB)",
+            "oldest_recorder_run": "Legr\u00e9gebbi futtat\u00e1s kezd\u00e9si id\u0151pontja"
+        }
+    }
+}

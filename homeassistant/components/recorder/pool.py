@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import NullPool, SingletonThreadPool, StaticPool
 
 from homeassistant.helpers.frame import report
+from homeassistant.util.async_ import check_loop
 
 from .const import DB_WORKER_PREFIX
 
@@ -18,6 +19,10 @@ DEBUG_MUTEX_POOL = True
 DEBUG_MUTEX_POOL_TRACE = False
 
 POOL_SIZE = 5
+
+ADVISE_MSG = (
+    "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job()"
+)
 
 
 class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
@@ -50,7 +55,12 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def shutdown(self) -> None:
         """Close the connection."""
-        if self.recorder_or_dbworker and self._conn and (conn := self._conn.current()):
+        if (
+            self.recorder_or_dbworker
+            and self._conn
+            and hasattr(self._conn, "current")
+            and (conn := self._conn.current())
+        ):
             conn.close()
 
     def dispose(self) -> None:
@@ -62,9 +72,17 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     def _do_get(self) -> Any:
         if self.recorder_or_dbworker:
             return super()._do_get()
+        check_loop(
+            self._do_get_db_connection_protected,
+            strict=True,
+            advise_msg=ADVISE_MSG,
+        )
+        return self._do_get_db_connection_protected()
+
+    def _do_get_db_connection_protected(self) -> Any:
         report(
             "accesses the database without the database executor; "
-            "Use homeassistant.components.recorder.get_instance(hass).async_add_executor_job() "
+            f"{ADVISE_MSG} "
             "for faster database operations",
             exclude_integrations={"recorder"},
             error_if_core=False,
@@ -112,7 +130,6 @@ class MutexPool(StaticPool):  # type: ignore[misc]
 
         if DEBUG_MUTEX_POOL:
             _LOGGER.debug("%s wait conn%s", threading.current_thread().name, trace_msg)
-        # pylint: disable-next=consider-using-with
         got_lock = MutexPool.pool_lock.acquire(timeout=1)
         if not got_lock:
             raise SQLAlchemyError

@@ -29,8 +29,12 @@ from homeassistant.components.media_player.const import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.stream import Stream, create_stream
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
+from homeassistant.components.stream import (
+    FORMAT_CONTENT_TYPE,
+    OUTPUT_FORMATS,
+    Stream,
+    create_stream,
+)
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -50,6 +54,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -103,7 +108,7 @@ class CameraEntityFeature(IntEnum):
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
 
-RTSP_PREFIXES = {"rtsp://", "rtsps://"}
+RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
@@ -394,7 +399,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_update_token()
             entity.async_write_ha_state()
 
-    hass.helpers.event.async_track_time_interval(update_tokens, TOKEN_CHANGE_INTERVAL)
+    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
@@ -450,7 +455,7 @@ class Camera(Entity):
     def __init__(self) -> None:
         """Initialize a camera."""
         self.stream: Stream | None = None
-        self.stream_options: dict[str, str] = {}
+        self.stream_options: dict[str, str | bool] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False
@@ -549,7 +554,6 @@ class Camera(Entity):
         This is used by cameras with CameraEntityFeature.STREAM
         and StreamType.HLS.
         """
-        # pylint: disable=no-self-use
         return None
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:

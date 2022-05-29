@@ -1,8 +1,6 @@
 """Provides device triggers for remotes."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -36,7 +34,7 @@ async def async_attach_trigger(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers."""
     return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
 

@@ -21,8 +21,13 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
-from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API
+from .entity import (
+    SynologyDSMBaseEntity,
+    SynologyDSMDeviceEntity,
+    SynologyDSMEntityDescription,
+)
 
 
 @dataclass

@@ -5,15 +5,24 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import media_source, tts
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.tts as tts
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
+
+
+async def get_media_source_url(hass, media_content_id):
+    """Get the media source url."""
+    if media_source.DOMAIN not in hass.config.components:
+        assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
+    return resolved.url
 
 
 @pytest.fixture(autouse=True)
@@ -58,11 +67,13 @@ async def test_service_say(hass):
             blocking=True,
         )
 
+        url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {})
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+    assert url.endswith(".wav")
 
 
 async def test_service_say_with_effect(hass):
@@ -89,11 +100,13 @@ async def test_service_say_with_effect(hass):
             blocking=True,
         )
 
+        url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+    assert url.endswith(".wav")
 
 
 async def test_service_say_http_error(hass):
@@ -120,5 +133,7 @@ async def test_service_say_http_error(hass):
         )
         await hass.async_block_till_done()
 
+        with pytest.raises(Exception):
+            await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+
     mock_speak.assert_called_once()
-    assert len(calls) == 0

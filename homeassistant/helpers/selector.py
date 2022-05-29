@@ -5,11 +5,13 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, cast
 
 import voluptuous as vol
+import yaml
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
+from homeassistant.util.yaml.dumper import represent_odict
 
 from . import config_validation as cv
 
@@ -611,8 +613,8 @@ class NumberSelector(Selector):
                     vol.Coerce(float), vol.Range(min=1e-3)
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.Coerce(
-                    NumberSelectorMode
+                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                    vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
             }
         ),
@@ -702,7 +704,9 @@ class SelectSelector(Selector):
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.Coerce(SelectSelectorMode),
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
         }
     )
 
@@ -765,6 +769,28 @@ class TargetSelector(Selector):
         return target
 
 
+class TemplateSelectorConfig(TypedDict):
+    """Class to represent an template selector config."""
+
+
+@SELECTORS.register("template")
+class TemplateSelector(Selector):
+    """Selector for an template."""
+
+    selector_type = "template"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: TemplateSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        template = cv.template(data)
+        return template.template
+
+
 class TextSelectorConfig(TypedDict, total=False):
     """Class to represent a text selector config."""
 
@@ -803,7 +829,9 @@ class TextSelector(Selector):
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.Coerce(TextSelectorType),
+            vol.Optional("type"): vol.All(
+                vol.Coerce(TextSelectorType), lambda val: val.value
+            ),
         }
     )
 
@@ -859,3 +887,11 @@ class TimeSelector(Selector):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+yaml.SafeDumper.add_representer(
+    Selector,
+    lambda dumper, value: represent_odict(
+        dumper, "tag:yaml.org,2002:map", value.serialize()
+    ),
+)

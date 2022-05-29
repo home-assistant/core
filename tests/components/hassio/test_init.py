@@ -20,8 +20,19 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
 
+@pytest.fixture()
+def os_info():
+    """Mock os/info."""
+    return {
+        "json": {
+            "result": "ok",
+            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
+        }
+    }
+
+
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request):
+def mock_all(aioclient_mock, request, os_info):
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -64,7 +75,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
+        **os_info,
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -646,7 +657,8 @@ async def test_device_registry_calls(hass):
 
 
 async def test_coordinator_updates(hass, caplog):
-    """Test coordinator."""
+    """Test coordinator updates."""
+    await async_setup_component(hass, "homeassistant", {})
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
         "homeassistant.components.hassio.HassIO.refresh_updates"
     ) as refresh_updates_mock:
@@ -658,12 +670,71 @@ async def test_coordinator_updates(hass, caplog):
 
     with patch(
         "homeassistant.components.hassio.HassIO.refresh_updates",
+    ) as refresh_updates_mock:
+        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
+        await hass.async_block_till_done()
+        assert refresh_updates_mock.call_count == 0
+
+    with patch(
+        "homeassistant.components.hassio.HassIO.refresh_updates",
+    ) as refresh_updates_mock:
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
+        )
+        assert refresh_updates_mock.call_count == 1
+
+    # There is a 10s cooldown on the debouncer
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.hassio.HassIO.refresh_updates",
         side_effect=HassioAPIError("Unknown"),
     ) as refresh_updates_mock:
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
-        await hass.async_block_till_done()
-        assert refresh_updates_mock.call_count == 1
-        assert (
-            "Error fetching hassio data: Error on Supervisor API: Unknown"
-            in caplog.text
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {
+                "entity_id": [
+                    "update.home_assistant_core_update",
+                    "update.home_assistant_supervisor_update",
+                ]
+            },
+            blocking=True,
         )
+        assert refresh_updates_mock.call_count == 1
+        assert "Error on Supervisor API: Unknown" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "os_info",
+    [
+        {
+            "json": {
+                "result": "ok",
+                "data": {"version_latest": "1.0.0", "version": "1.0.0", "board": "rpi"},
+            }
+        }
+    ],
+)
+async def test_setup_hardware_integration(hass, aioclient_mock):
+    """Test setup initiates hardware integration."""
+
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.raspberry_pi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await async_setup_component(hass, "hassio", {"hassio": {}})
+        assert result
+        await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 15
+    assert len(mock_setup_entry.mock_calls) == 1

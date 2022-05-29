@@ -12,6 +12,7 @@ import async_timeout
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 
@@ -102,9 +103,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
             hass, smart_home_config, alexa_changed_entity, alexa_properties
         )
 
-    return hass.helpers.event.async_track_state_change(
-        MATCH_ALL, async_entity_state_listener
-    )
+    return async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 
 
 async def async_send_changereport_message(

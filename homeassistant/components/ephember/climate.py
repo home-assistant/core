@@ -17,17 +17,11 @@ from pyephember.pyephember import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -45,16 +39,16 @@ _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
-OPERATION_LIST = [HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
 EPH_TO_HA_STATE = {
-    "AUTO": HVAC_MODE_HEAT_COOL,
-    "ON": HVAC_MODE_HEAT,
-    "OFF": HVAC_MODE_OFF,
+    "AUTO": HVACMode.HEAT_COOL,
+    "ON": HVACMode.HEAT,
+    "OFF": HVACMode.OFF,
 }
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
@@ -132,9 +126,9 @@ class EphEmberThermostat(ClimateEntity):
     def hvac_action(self):
         """Return current HVAC action."""
         if zone_is_active(self._zone):
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
 
-        return CURRENT_HVAC_IDLE
+        return HVACAction.IDLE
 
     @property
     def hvac_mode(self):
@@ -216,4 +210,4 @@ class EphEmberThermostat(ClimateEntity):
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to Home Assistant mode."""
-        return EPH_TO_HA_STATE.get(operation_mode.name, HVAC_MODE_HEAT_COOL)
+        return EPH_TO_HA_STATE.get(operation_mode.name, HVACMode.HEAT_COOL)

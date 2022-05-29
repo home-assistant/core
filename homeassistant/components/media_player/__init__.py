@@ -147,6 +147,19 @@ ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 
+class MediaPlayerEnqueue(StrEnum):
+    """Enqueue types for playing media."""
+
+    # add given media item to end of the queue
+    ADD = "add"
+    # play the given media item next, keep queue
+    NEXT = "next"
+    # play the given media item now, keep queue
+    PLAY = "play"
+    # play the given media item now, clear queue
+    REPLACE = "replace"
+
+
 class MediaPlayerDeviceClass(StrEnum):
     """Device class for media players."""
 
@@ -169,7 +182,9 @@ DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Any(
+        cv.boolean, vol.Coerce(MediaPlayerEnqueue)
+    ),
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
@@ -350,10 +365,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_select_sound_mode",
         [MediaPlayerEntityFeature.SELECT_SOUND_MODE],
     )
+
+    # Remove in Home Assistant 2022.9
+    def _rewrite_enqueue(value):
+        """Rewrite the enqueue value."""
+        if ATTR_MEDIA_ENQUEUE not in value:
+            pass
+        elif value[ATTR_MEDIA_ENQUEUE] is True:
+            value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.ADD
+            _LOGGER.warning(
+                "Playing media with enqueue set to True is deprecated. Use 'add' instead"
+            )
+        elif value[ATTR_MEDIA_ENQUEUE] is False:
+            value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.PLAY
+            _LOGGER.warning(
+                "Playing media with enqueue set to False is deprecated. Use 'play' instead"
+            )
+
+        return value
+
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
             cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+            _rewrite_enqueue,
             _rename_keys(
                 media_type=ATTR_MEDIA_CONTENT_TYPE,
                 media_id=ATTR_MEDIA_CONTENT_ID,
@@ -540,7 +575,6 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
-        # pylint: disable=no-self-use
         return None, None
 
     @property

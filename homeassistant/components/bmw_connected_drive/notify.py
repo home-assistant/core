@@ -4,19 +4,25 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle import MyBMWVehicle
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_LATITUDE, ATTR_LOCATION, ATTR_LONGITUDE, ATTR_NAME
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LOCATION,
+    ATTR_LONGITUDE,
+    ATTR_NAME,
+    CONF_ENTITY_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveAccount
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from .const import DOMAIN
+from .coordinator import BMWDataUpdateCoordinator
 
 ATTR_LAT = "lat"
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
@@ -33,31 +39,27 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> BMWNotificationService:
     """Get the BMW notification service."""
-    accounts: list[BMWConnectedDriveAccount] = [
-        e[CONF_ACCOUNT] for e in hass.data[BMW_DOMAIN][DATA_ENTRIES].values()
+    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][
+        (discovery_info or {})[CONF_ENTITY_ID]
     ]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
-    svc = BMWNotificationService()
-    svc.setup(accounts)
-    return svc
+
+    targets = {}
+    if not coordinator.read_only:
+        targets.update({v.name: v for v in coordinator.account.vehicles})
+    return BMWNotificationService(targets)
 
 
 class BMWNotificationService(BaseNotificationService):
     """Send Notifications to BMW."""
 
-    def __init__(self) -> None:
+    def __init__(self, targets: dict[str, MyBMWVehicle]) -> None:
         """Set up the notification service."""
-        self.targets: dict[str, ConnectedDriveVehicle] = {}
-
-    def setup(self, accounts: list[BMWConnectedDriveAccount]) -> None:
-        """Get the BMW vehicle(s) for the account(s)."""
-        for account in accounts:
-            self.targets.update({v.name: v for v in account.account.vehicles})
+        self.targets: dict[str, MyBMWVehicle] = targets
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message or POI to the car."""
         for vehicle in kwargs[ATTR_TARGET]:
-            vehicle = cast(ConnectedDriveVehicle, vehicle)
+            vehicle = cast(MyBMWVehicle, vehicle)
             _LOGGER.debug("Sending message to %s", vehicle.name)
 
             # Extract params from data dict

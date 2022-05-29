@@ -9,12 +9,12 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "cannot_communicate": "Impossibile comunicare",
             "cannot_connect": "Impossibile connettersi",
-            "one": "Pi\u00f9",
-            "other": "Altri"
+            "one": "Vuoto",
+            "other": "Vuoti"
         },
         "step": {
-            "one": "Pi\u00f9",
-            "other": "Altri",
+            "one": "Vuoto",
+            "other": "Vuoti",
             "setup_network": {
                 "data": {
                     "dsmr_version": "Seleziona la versione DSMR",

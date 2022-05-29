@@ -60,6 +60,7 @@ async def test_cover_intents_loading(hass):
         )
 
     assert await async_setup_component(hass, "cover", {})
+    await hass.async_block_till_done()
 
     hass.states.async_set("cover.garage_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
@@ -81,6 +82,7 @@ async def test_turn_on_intent(hass):
     """Test HassTurnOn intent."""
     result = await async_setup_component(hass, "homeassistant", {})
     result = await async_setup_component(hass, "intent", {})
+    await hass.async_block_till_done()
     assert result
 
     hass.states.async_set("light.test_light", "off")

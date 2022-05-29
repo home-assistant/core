@@ -1,9 +1,10 @@
 """The CO2 Signal integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import CO2Signal
 
@@ -106,7 +107,7 @@ class UnknownError(CO2Error):
     """Raised when an unknown error occurs."""
 
 
-def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
+def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalResponse:
     """Get data from the API."""
     if CONF_COUNTRY_CODE in config:
         latitude = None

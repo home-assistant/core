@@ -6,7 +6,7 @@ from typing import Final
 from .backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -116,6 +116,7 @@ CONF_COMMAND_STATE: Final = "command_state"
 CONF_COMMAND_STOP: Final = "command_stop"
 CONF_CONDITION: Final = "condition"
 CONF_CONDITIONS: Final = "conditions"
+CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COVERS: Final = "covers"
@@ -142,6 +143,7 @@ CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
 CONF_ELSE: Final = "else"
 CONF_EMAIL: Final = "email"
+CONF_ENABLED: Final = "enabled"
 CONF_ENTITIES: Final = "entities"
 CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
@@ -156,6 +158,7 @@ CONF_EXTERNAL_URL: Final = "external_url"
 CONF_FILENAME: Final = "filename"
 CONF_FILE_PATH: Final = "file_path"
 CONF_FOR: Final = "for"
+CONF_FOR_EACH: Final = "for_each"
 CONF_FORCE_UPDATE: Final = "force_update"
 CONF_FRIENDLY_NAME: Final = "friendly_name"
 CONF_FRIENDLY_NAME_TEMPLATE: Final = "friendly_name_template"
@@ -189,6 +192,7 @@ CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
 CONF_PACKAGES: Final = "packages"
+CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
 CONF_PASSWORD: Final = "password"
 CONF_PATH: Final = "path"
@@ -319,6 +323,7 @@ STATE_OPEN: Final = "open"
 STATE_OPENING: Final = "opening"
 STATE_CLOSED: Final = "closed"
 STATE_CLOSING: Final = "closing"
+STATE_BUFFERING: Final = "buffering"
 STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
@@ -759,11 +764,9 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 # use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORY_SYSTEM: Final = "system"
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_SYSTEM,
 ]
 
 # The ID of the Home Assistant Media Player Cast App

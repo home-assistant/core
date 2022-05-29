@@ -9,13 +9,9 @@ from homeassistant.components.recorder.backup import async_post_backup, async_pr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import async_init_recorder_component
 
-
-async def test_async_pre_backup(hass: HomeAssistant) -> None:
+async def test_async_pre_backup(hass: HomeAssistant, recorder_mock) -> None:
     """Test pre backup."""
-    await async_init_recorder_component(hass)
-
     with patch(
         "homeassistant.components.recorder.backup.Recorder.lock_database"
     ) as lock_mock:
@@ -23,10 +19,10 @@ async def test_async_pre_backup(hass: HomeAssistant) -> None:
         assert lock_mock.called
 
 
-async def test_async_pre_backup_with_timeout(hass: HomeAssistant) -> None:
+async def test_async_pre_backup_with_timeout(
+    hass: HomeAssistant, recorder_mock
+) -> None:
     """Test pre backup with timeout."""
-    await async_init_recorder_component(hass)
-
     with patch(
         "homeassistant.components.recorder.backup.Recorder.lock_database",
         side_effect=TimeoutError(),
@@ -35,10 +31,10 @@ async def test_async_pre_backup_with_timeout(hass: HomeAssistant) -> None:
         assert lock_mock.called
 
 
-async def test_async_pre_backup_with_migration(hass: HomeAssistant) -> None:
+async def test_async_pre_backup_with_migration(
+    hass: HomeAssistant, recorder_mock
+) -> None:
     """Test pre backup with migration."""
-    await async_init_recorder_component(hass)
-
     with patch(
         "homeassistant.components.recorder.backup.async_migration_in_progress",
         return_value=True,
@@ -46,10 +42,8 @@ async def test_async_pre_backup_with_migration(hass: HomeAssistant) -> None:
         await async_pre_backup(hass)
 
 
-async def test_async_post_backup(hass: HomeAssistant) -> None:
+async def test_async_post_backup(hass: HomeAssistant, recorder_mock) -> None:
     """Test post backup."""
-    await async_init_recorder_component(hass)
-
     with patch(
         "homeassistant.components.recorder.backup.Recorder.unlock_database"
     ) as unlock_mock:
@@ -57,10 +51,8 @@ async def test_async_post_backup(hass: HomeAssistant) -> None:
         assert unlock_mock.called
 
 
-async def test_async_post_backup_failure(hass: HomeAssistant) -> None:
+async def test_async_post_backup_failure(hass: HomeAssistant, recorder_mock) -> None:
     """Test post backup failure."""
-    await async_init_recorder_component(hass)
-
     with patch(
         "homeassistant.components.recorder.backup.Recorder.unlock_database",
         return_value=False,

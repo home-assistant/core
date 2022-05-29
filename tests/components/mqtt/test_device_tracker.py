@@ -1,22 +1,17 @@
-"""The tests for the MQTT device tracker platform."""
+"""The tests for the MQTT device tracker platform using configuration.yaml."""
 from unittest.mock import patch
-
-import pytest
 
 from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
+from .test_common import help_test_setup_manual_entity_from_yaml
+
 from tests.common import async_fire_mqtt_message
 
 
-@pytest.fixture(autouse=True)
-def setup_comp(hass, mqtt_mock):
-    """Set up mqtt component."""
-    pass
-
-
-async def test_ensure_device_tracker_platform_validation(hass):
+# Deprecated in HA Core 2022.6
+async def test_legacy_ensure_device_tracker_platform_validation(hass, mqtt_mock):
     """Test if platform validation was done."""
 
     async def mock_setup_scanner(hass, config, see, discovery_info=None):
@@ -37,7 +32,8 @@ async def test_ensure_device_tracker_platform_validation(hass):
         assert mock_sp.call_count == 1
 
 
-async def test_new_message(hass, mock_device_tracker_conf):
+# Deprecated in HA Core 2022.6
+async def test_legacy_new_message(hass, mock_device_tracker_conf, mqtt_mock):
     """Test new message."""
     dev_id = "paulus"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -53,7 +49,10 @@ async def test_new_message(hass, mock_device_tracker_conf):
     assert hass.states.get(entity_id).state == location
 
 
-async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
+# Deprecated in HA Core 2022.6
+async def test_legacy_single_level_wildcard_topic(
+    hass, mock_device_tracker_conf, mqtt_mock
+):
     """Test single level wildcard topic."""
     dev_id = "paulus"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -72,7 +71,10 @@ async def test_single_level_wildcard_topic(hass, mock_device_tracker_conf):
     assert hass.states.get(entity_id).state == location
 
 
-async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
+# Deprecated in HA Core 2022.6
+async def test_legacy_multi_level_wildcard_topic(
+    hass, mock_device_tracker_conf, mqtt_mock
+):
     """Test multi level wildcard topic."""
     dev_id = "paulus"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -91,7 +93,10 @@ async def test_multi_level_wildcard_topic(hass, mock_device_tracker_conf):
     assert hass.states.get(entity_id).state == location
 
 
-async def test_single_level_wildcard_topic_not_matching(hass, mock_device_tracker_conf):
+# Deprecated in HA Core 2022.6
+async def test_legacy_single_level_wildcard_topic_not_matching(
+    hass, mock_device_tracker_conf, mqtt_mock
+):
     """Test not matching single level wildcard topic."""
     dev_id = "paulus"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -110,7 +115,10 @@ async def test_single_level_wildcard_topic_not_matching(hass, mock_device_tracke
     assert hass.states.get(entity_id) is None
 
 
-async def test_multi_level_wildcard_topic_not_matching(hass, mock_device_tracker_conf):
+# Deprecated in HA Core 2022.6
+async def test_legacy_multi_level_wildcard_topic_not_matching(
+    hass, mock_device_tracker_conf, mqtt_mock
+):
     """Test not matching multi level wildcard topic."""
     dev_id = "paulus"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -129,8 +137,9 @@ async def test_multi_level_wildcard_topic_not_matching(hass, mock_device_tracker
     assert hass.states.get(entity_id) is None
 
 
-async def test_matching_custom_payload_for_home_and_not_home(
-    hass, mock_device_tracker_conf
+# Deprecated in HA Core 2022.6
+async def test_legacy_matching_custom_payload_for_home_and_not_home(
+    hass, mock_device_tracker_conf, mqtt_mock
 ):
     """Test custom payload_home sets state to home and custom payload_not_home sets state to not_home."""
     dev_id = "paulus"
@@ -161,8 +170,9 @@ async def test_matching_custom_payload_for_home_and_not_home(
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
 
-async def test_not_matching_custom_payload_for_home_and_not_home(
-    hass, mock_device_tracker_conf
+# Deprecated in HA Core 2022.6
+async def test_legacy_not_matching_custom_payload_for_home_and_not_home(
+    hass, mock_device_tracker_conf, mqtt_mock
 ):
     """Test not matching payload does not set state to home or not_home."""
     dev_id = "paulus"
@@ -191,7 +201,8 @@ async def test_not_matching_custom_payload_for_home_and_not_home(
     assert hass.states.get(entity_id).state != STATE_NOT_HOME
 
 
-async def test_matching_source_type(hass, mock_device_tracker_conf):
+# Deprecated in HA Core 2022.6
+async def test_legacy_matching_source_type(hass, mock_device_tracker_conf, mqtt_mock):
     """Test setting source type."""
     dev_id = "paulus"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -215,3 +226,21 @@ async def test_matching_source_type(hass, mock_device_tracker_conf):
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).attributes["source_type"] == SOURCE_TYPE_BLUETOOTH
+
+
+async def test_setup_with_modern_schema(
+    hass, caplog, tmp_path, mock_device_tracker_conf
+):
+    """Test setup using the modern schema."""
+    dev_id = "jan"
+    entity_id = f"{DOMAIN}.{dev_id}"
+    topic = "/location/jan"
+
+    hass.config.components = {"zone"}
+    config = {"name": dev_id, "state_topic": topic}
+
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, DOMAIN, config
+    )
+
+    assert hass.states.get(entity_id) is not None

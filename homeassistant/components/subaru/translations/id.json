@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "PIN harus terdiri dari 4 angka",
+            "bad_validation_code_format": "Kode validasi harus terdiri dari 6 angka",
             "cannot_connect": "Gagal terhubung",
             "incorrect_pin": "PIN salah",
-            "invalid_auth": "Autentikasi tidak valid"
+            "incorrect_validation_code": "Kode validasi salah",
+            "invalid_auth": "Autentikasi tidak valid",
+            "two_factor_request_failed": "Permintaan kode 2FA gagal, coba lagi"
         },
         "step": {
             "pin": {
@@ -16,6 +19,20 @@
                     "pin": "PIN"
                 },
                 "description": "Masukkan PIN MySubaru Anda\nCATATAN: Semua kendaraan dalam akun harus memiliki PIN yang sama",
+                "title": "Konfigurasi Subaru Starlink"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Pilih metode kontak:"
+                },
+                "description": "Diperlukan autentikasi dua faktor",
+                "title": "Konfigurasi Subaru Starlink"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Kode validasi"
+                },
+                "description": "Masukkan kode validasi yang diterima",
                 "title": "Konfigurasi Subaru Starlink"
             },
             "user": {

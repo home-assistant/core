@@ -30,20 +30,15 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_home_and_node_id_from_device_entry,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
+from .helpers import async_bypass_dynamic_config_validation
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
 PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
-
-EVENT_MODEL_MAP = {
-    "controller": CONTROLLER_EVENT_MODEL_MAP,
-    "driver": DRIVER_EVENT_MODEL_MAP,
-    "node": NODE_EVENT_MODEL_MAP,
-}
 
 
 def validate_non_node_event_source(obj: dict) -> dict:
@@ -58,7 +53,12 @@ def validate_event_name(obj: dict) -> dict:
     event_source = obj[ATTR_EVENT_SOURCE]
     event_name = obj[ATTR_EVENT]
     # the keys to the event source's model map are the event names
-    vol.In(EVENT_MODEL_MAP[event_source])(event_name)
+    if event_source == "controller":
+        vol.In(CONTROLLER_EVENT_MODEL_MAP)(event_name)
+    elif event_source == "driver":
+        vol.In(DRIVER_EVENT_MODEL_MAP)(event_name)
+    else:
+        vol.In(NODE_EVENT_MODEL_MAP)(event_name)
     return obj
 
 
@@ -68,11 +68,16 @@ def validate_event_data(obj: dict) -> dict:
     if ATTR_EVENT_DATA not in obj:
         return obj
 
-    event_source = obj[ATTR_EVENT_SOURCE]
-    event_name = obj[ATTR_EVENT]
-    event_data = obj[ATTR_EVENT_DATA]
+    event_source: str = obj[ATTR_EVENT_SOURCE]
+    event_name: str = obj[ATTR_EVENT]
+    event_data: dict = obj[ATTR_EVENT_DATA]
     try:
-        EVENT_MODEL_MAP[event_source][event_name](**event_data)
+        if event_source == "controller":
+            CONTROLLER_EVENT_MODEL_MAP[event_name](**event_data)
+        elif event_source == "driver":
+            DRIVER_EVENT_MODEL_MAP[event_name](**event_data)
+        else:
+            NODE_EVENT_MODEL_MAP[event_name](**event_data)
     except ValidationError as exc:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
@@ -90,7 +95,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
             vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_EVENT_SOURCE): vol.In(EVENT_MODEL_MAP),
+            vol.Required(ATTR_EVENT_SOURCE): vol.In(["controller", "driver", "node"]),
             vol.Required(ATTR_EVENT): cv.string,
             vol.Optional(ATTR_EVENT_DATA): dict,
             vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
@@ -111,6 +116,9 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
+    if async_bypass_dynamic_config_validation(hass, config):
+        return config
+
     if config[ATTR_EVENT_SOURCE] == "node":
         config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
         if not config[ATTR_NODES]:
@@ -122,11 +130,8 @@ async def async_validate_trigger_config(
         return config
 
     entry_id = config[ATTR_CONFIG_ENTRY_ID]
-    if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+    if hass.config_entries.async_get_entry(entry_id) is None:
         raise vol.Invalid(f"Config entry '{entry_id}' not found")
-
-    if entry.state is not ConfigEntryState.LOADED:
-        raise vol.Invalid(f"Config entry '{entry_id}' not loaded")
 
     return config
 
@@ -200,14 +205,16 @@ async def async_attach_trigger(
     if not nodes:
         entry_id = config[ATTR_CONFIG_ENTRY_ID]
         client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+        assert client.driver
         if event_source == "controller":
-            source = client.driver.controller
+            unsubs.append(client.driver.controller.on(event_name, async_on_event))
         else:
-            source = client.driver
-        unsubs.append(source.on(event_name, async_on_event))
+            unsubs.append(client.driver.on(event_name, async_on_event))
 
     for node in nodes:
-        device_identifier = get_device_id(node.client, node)
+        driver = node.client.driver
+        assert driver is not None  # The node comes from the driver.
+        device_identifier = get_device_id(driver, node)
         device = dev_reg.async_get_device({device_identifier})
         assert device
         # We need to store the device for the callback
