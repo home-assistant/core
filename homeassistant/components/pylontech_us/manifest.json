@@ -1,0 +1,13 @@
+{
+  "domain": "pylontech_us",
+  "name": "pylontech_rs485",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pylontech_us",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@danielschramm"],
+  "iot_class": "local_polling"
+}
