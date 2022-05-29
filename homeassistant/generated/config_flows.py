@@ -218,6 +218,7 @@ FLOWS = {
         "hue",
         "huisbaasje",
         "hunterdouglas_powerview",
+        "huum",
         "hvv_departures",
         "hydrawise",
         "hyperion",

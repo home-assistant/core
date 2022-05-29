@@ -2563,6 +2563,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "huum": {
+      "name": "Huum",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "hvv_departures": {
       "name": "HVV Departures",
       "integration_type": "hub",
