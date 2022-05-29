@@ -194,7 +194,7 @@ async def test_user_no_stations(hass: HomeAssistant):
 async def test_import(hass: HomeAssistant):
     """Test starting a flow by import."""
     with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry"
+        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
         "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
         return_value=MOCK_NEARVY_STATIONS_OK,
@@ -234,7 +234,7 @@ async def test_options_flow(hass: HomeAssistant):
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry"
+        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
     ) as mock_setup_entry, patch(
         "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
         return_value=MOCK_NEARVY_STATIONS_OK,
