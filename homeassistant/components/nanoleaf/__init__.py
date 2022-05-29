@@ -85,9 +85,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Receive touch event."""
             gesture_type = TOUCH_GESTURE_TRIGGER_MAP.get(event.gesture_id)
             if gesture_type is None:
-                _LOGGER.debug("Received unknown touch gesture ID %s", event.gesture_id)
+                _LOGGER.warning(
+                    "Received unknown touch gesture ID %s", event.gesture_id
+                )
                 return
-            _LOGGER.warning("Received touch gesture %s", gesture_type)
+            _LOGGER.debug("Received touch gesture %s", gesture_type)
             hass.bus.async_fire(
                 NANOLEAF_EVENT,
                 {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: gesture_type},
