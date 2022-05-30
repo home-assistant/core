@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -88,18 +88,14 @@ async def async_setup_entry(
     for obj in eight.users.values():
         for sensor in EIGHT_USER_SENSORS:
             all_sensors.append(
-                EightUserSensor(
-                    entry, user_coordinator, eight, obj.userid, sensor
-                )
+                EightUserSensor(entry, user_coordinator, eight, obj.userid, sensor)
             )
         for sensor in EIGHT_HEAT_SENSORS:
             all_sensors.append(
                 EightHeatSensor(entry, heat_coordinator, eight, obj.userid, sensor)
             )
     for sensor in EIGHT_ROOM_SENSORS:
-        all_sensors.append(
-            EightRoomSensor(entry, user_coordinator, eight, sensor)
-        )
+        all_sensors.append(EightRoomSensor(entry, user_coordinator, eight, sensor))
 
     async_add_entities(all_sensors)
 
