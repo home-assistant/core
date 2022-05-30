@@ -858,7 +858,7 @@ async def wait_for_state_change_or_timeout(
     ev = asyncio.Event()
 
     @core.callback
-    def _async_event_changed(_):
+    def _async_event_changed(event: core.Event) -> None:
         ev.set()
 
     unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)
