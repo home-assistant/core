@@ -111,7 +111,7 @@ async def test_tilt_support(hass, mqtt_mock, setup_tasmota):
     assert state.attributes["supported_features"] == COVER_SUPPORT
 
 
-async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_controlling_state_via_mqtt_tilt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 3
@@ -281,7 +281,10 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.attributes["current_position"] == 100
 
 
-async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmota):
+@pytest.mark.parametrize("tilt", ("", ',"Tilt":0'))
+async def test_controlling_state_via_mqtt_inverted(
+    hass, mqtt_mock, setup_tasmota, tilt
+):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 3
@@ -310,7 +313,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/tele/SENSOR",
-        '{"Shutter1":{"Position":54,"Direction":-1}}',
+        '{"Shutter1":{"Position":54,"Direction":-1' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "opening"
@@ -319,21 +322,25 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/tele/SENSOR",
-        '{"Shutter1":{"Position":100,"Direction":1}}',
+        '{"Shutter1":{"Position":100,"Direction":1' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closing"
     assert state.attributes["current_position"] == 0
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/SENSOR", '{"Shutter1":{"Position":0,"Direction":0}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":0,"Direction":0' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
     assert state.attributes["current_position"] == 100
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/SENSOR", '{"Shutter1":{"Position":99,"Direction":0}}'
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"Shutter1":{"Position":99,"Direction":0' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
@@ -342,7 +349,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/tele/SENSOR",
-        '{"Shutter1":{"Position":100,"Direction":0}}',
+        '{"Shutter1":{"Position":100,"Direction":0' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closed"
@@ -352,7 +359,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"Shutter1":{"Position":54,"Direction":-1}}}',
+        '{"StatusSNS":{"Shutter1":{"Position":54,"Direction":-1' + tilt + "}}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "opening"
@@ -361,7 +368,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":1}}}',
+        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":1' + tilt + "}}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closing"
@@ -370,7 +377,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"Shutter1":{"Position":0,"Direction":0}}}',
+        '{"StatusSNS":{"Shutter1":{"Position":0,"Direction":0' + tilt + "}}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
@@ -379,7 +386,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"Shutter1":{"Position":99,"Direction":0}}}',
+        '{"StatusSNS":{"Shutter1":{"Position":99,"Direction":0' + tilt + "}}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
@@ -388,7 +395,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":0}}}',
+        '{"StatusSNS":{"Shutter1":{"Position":100,"Direction":0' + tilt + "}}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closed"
@@ -398,7 +405,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/RESULT",
-        '{"Shutter1":{"Position":54,"Direction":-1}}',
+        '{"Shutter1":{"Position":54,"Direction":-1' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "opening"
@@ -407,21 +414,25 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/RESULT",
-        '{"Shutter1":{"Position":100,"Direction":1}}',
+        '{"Shutter1":{"Position":100,"Direction":1' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closing"
     assert state.attributes["current_position"] == 0
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/stat/RESULT", '{"Shutter1":{"Position":0,"Direction":0}}'
+        hass,
+        "tasmota_49A3BC/stat/RESULT",
+        '{"Shutter1":{"Position":0,"Direction":0' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
     assert state.attributes["current_position"] == 100
 
     async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/stat/RESULT", '{"Shutter1":{"Position":1,"Direction":0}}'
+        hass,
+        "tasmota_49A3BC/stat/RESULT",
+        '{"Shutter1":{"Position":1,"Direction":0' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "open"
@@ -430,7 +441,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/stat/RESULT",
-        '{"Shutter1":{"Position":100,"Direction":0}}',
+        '{"Shutter1":{"Position":100,"Direction":0' + tilt + "}}",
     )
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == "closed"
