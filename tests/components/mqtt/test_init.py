@@ -2924,7 +2924,7 @@ async def test_setup_manual_items_with_unique_ids(
     assert bool("Platform mqtt does not generate unique IDs." in caplog.text) != unique
 
 
-async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock):
+async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog):
     """Test unknown keys in config entry data is removed."""
     mqtt_config = {
         mqtt.CONF_BROKER: "mock-broker",
@@ -2943,3 +2943,8 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock):
     await hass.async_block_till_done()
 
     assert mqtt.CONF_PROTOCOL not in entry.data
+    assert (
+        "The following unsupported configuration options were removed from the "
+        "MQTT config entry: {'protocol'}. Add them to configuration.yaml if they "
+        "are needed"
+    ) in caplog.text

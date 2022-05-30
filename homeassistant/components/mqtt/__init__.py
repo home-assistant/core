@@ -204,6 +204,11 @@ def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
         k: entry.data[k] for k in CONFIG_ENTRY_CONFIG_KEYS if k in entry.data
     }
     if entry.data.keys() != filtered_data.keys():
+        _LOGGER.warning(
+            "The following unsupported configuration options were removed from the "
+            "MQTT config entry: %s. Add them to configuration.yaml if they are needed",
+            entry.data.keys() - filtered_data.keys(),
+        )
         hass.config_entries.async_update_entry(entry, data=filtered_data)
 
 
