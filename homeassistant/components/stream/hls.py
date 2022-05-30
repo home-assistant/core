@@ -80,14 +80,20 @@ class HlsStreamOutput(StreamOutput):
         )
 
     def discontinuity(self) -> None:
-        """Remove incomplete segment from deque."""
+        """Fix incomplete segment at end of deque."""
         self._hass.loop.call_soon_threadsafe(self._async_discontinuity)
 
     @callback
     def _async_discontinuity(self) -> None:
-        """Remove incomplete segment from deque in event loop."""
-        if self._segments and not self._segments[-1].complete:
-            self._segments.pop()
+        """Fix incomplete segment at end of deque in event loop."""
+        # Fill in the segment duration or delete the segment if empty
+        if self._segments:
+            if (last_segment := self._segments[-1]).parts:
+                last_segment.duration = sum(
+                    part.duration for part in last_segment.parts
+                )
+            else:
+                self._segments.pop()
 
 
 class HlsMasterPlaylistView(StreamView):

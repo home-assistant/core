@@ -85,7 +85,7 @@ class StreamState:
         # simple to check for discontinuity at output time, and to determine
         # the discontinuity sequence number.
         self._stream_id += 1
-        # Call discontinuity to remove incomplete segment from the HLS output
+        # Call discontinuity to fix incomplete segment in HLS output
         if hls_output := self._outputs_callback().get(HLS_PROVIDER):
             cast(HlsStreamOutput, hls_output).discontinuity()
 
