@@ -61,7 +61,7 @@ class DataUpdateCoordinator(Generic[_T]):
         # when it was already checked during setup.
         self.data: _T = None  # type: ignore[assignment]
 
-        self._listeners: list[CALLBACK_TYPE] = []
+        self._listeners: dict[CALLBACK_TYPE, CALLBACK_TYPE] = {}
         self._job = HassJob(self._handle_refresh_interval)
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -86,25 +86,25 @@ class DataUpdateCoordinator(Generic[_T]):
         """Listen for data updates."""
         schedule_refresh = not self._listeners
 
-        self._listeners.append(update_callback)
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._listeners.pop(remove_listener)
+            if not self._listeners:
+                self._unschedule_refresh()
+
+        self._listeners[remove_listener] = update_callback
 
         # This is the first listener, set up interval.
         if schedule_refresh:
             self._schedule_refresh()
 
-        @callback
-        def remove_listener() -> None:
-            """Remove update listener."""
-            self.async_remove_listener(update_callback)
-
         return remove_listener
 
     @callback
-    def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
-        """Remove data update."""
-        self._listeners.remove(update_callback)
-
-        if not self._listeners and self._unsub_refresh:
+    def _unschedule_refresh(self) -> None:
+        """Unschedule any pending refresh since there is no longer any listeners."""
+        if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
 
@@ -266,7 +266,7 @@ class DataUpdateCoordinator(Generic[_T]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        for update_callback in self._listeners:
+        for update_callback in list(self._listeners.values()):
             update_callback()
 
     @callback
@@ -288,16 +288,14 @@ class DataUpdateCoordinator(Generic[_T]):
         if self._listeners:
             self._schedule_refresh()
 
-        for update_callback in self._listeners:
+        for update_callback in list(self._listeners.values()):
             update_callback()
 
     @callback
     def _async_stop_refresh(self, _: Event) -> None:
         """Stop refreshing when Home Assistant is stopping."""
         self.update_interval = None
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        self._unschedule_refresh()
 
 
 class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):

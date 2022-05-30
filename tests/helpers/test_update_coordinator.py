@@ -109,12 +109,6 @@ async def test_async_refresh(crd):
     await crd.async_refresh()
     assert updates == [2]
 
-    # Test unsubscribing through method
-    crd.async_add_listener(update_callback)
-    crd.async_remove_listener(update_callback)
-    await crd.async_refresh()
-    assert updates == [2]
-
 
 async def test_request_refresh(crd):
     """Test request refresh for update coordinator."""
@@ -191,7 +185,7 @@ async def test_update_interval(hass, crd):
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    unsub = crd.async_add_listener(update_callback)
 
     # Test twice we update with subscriber
     async_fire_time_changed(hass, utcnow() + crd.update_interval)
@@ -203,7 +197,7 @@ async def test_update_interval(hass, crd):
     assert crd.data == 2
 
     # Test removing listener
-    crd.async_remove_listener(update_callback)
+    unsub()
 
     async_fire_time_changed(hass, utcnow() + crd.update_interval)
     await hass.async_block_till_done()
@@ -222,7 +216,7 @@ async def test_update_interval_not_present(hass, crd_without_update_interval):
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    unsub = crd.async_add_listener(update_callback)
 
     # Test twice we don't update with subscriber with no update interval
     async_fire_time_changed(hass, utcnow() + DEFAULT_UPDATE_INTERVAL)
@@ -234,7 +228,7 @@ async def test_update_interval_not_present(hass, crd_without_update_interval):
     assert crd.data is None
 
     # Test removing listener
-    crd.async_remove_listener(update_callback)
+    unsub()
 
     async_fire_time_changed(hass, utcnow() + DEFAULT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
