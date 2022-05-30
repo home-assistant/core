@@ -261,24 +261,6 @@ SCHEMA_BASE = {
 
 MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
 
-# Will be removed when all platforms support a modern platform schema
-MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
-# Will be removed when all platforms support a modern platform schema
-MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    }
-)
-# Will be removed when all platforms support a modern platform schema
-MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-    }
-)
-
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
@@ -685,14 +667,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # User has configuration.yaml config, warn about config entry overrides
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
-        override = {k: entry.data[k] for k in shared_keys}
+        override = {k: entry.data[k] for k in shared_keys if conf[k] != entry.data[k]}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
-        _LOGGER.warning(
-            "Deprecated configuration settings found in configuration.yaml. "
-            "These settings from your configuration entry will override: %s",
-            override,
-        )
+        if override:
+            _LOGGER.warning(
+                "Deprecated configuration settings found in configuration.yaml. "
+                "These settings from your configuration entry will override: %s",
+                override,
+            )
 
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)
