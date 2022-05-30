@@ -5,13 +5,10 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from ipaddress import ip_address
 from typing import Any
 
 from async_upnp_client.exceptions import UpnpCommunicationError, UpnpConnectionError
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
@@ -19,10 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,7 +25,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_LOCAL_IP,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
@@ -39,49 +33,21 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .device import Device, async_get_mac_address_from_host
+from .device import Device, async_create_device, async_get_mac_address_from_host
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                vol.All(
-                    cv.deprecated(CONF_LOCAL_IP),
-                    {
-                        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-                    },
-                )
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up UPnP component."""
-    hass.data[DOMAIN] = {}
-
-    # Only start if set up via configuration.yaml.
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.entry_id)
+
+    hass.data.setdefault(DOMAIN, {})
 
     udn = entry.data[CONFIG_ENTRY_UDN]
     st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
@@ -113,8 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await asyncio.wait_for(device_discovered_event.wait(), timeout=10)
     except asyncio.TimeoutError as err:
-        LOGGER.debug("Device not discovered: %s", usn)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
     finally:
         cancel_discovered_callback()
 
@@ -123,12 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert discovery_info.ssdp_location is not None
     location = discovery_info.ssdp_location
     try:
-        device = await Device.async_create_device(hass, location)
+        device = await async_create_device(hass, location)
     except UpnpConnectionError as err:
-        LOGGER.debug(
-            "Error connecting to device at location: %s, err: %s", location, err
-        )
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Error connecting to device at location: {location}, err: {err}"
+        ) from err
 
     # Track the original UDN such that existing sensors do not change their unique_id.
     if CONFIG_ENTRY_ORIGINAL_UDN not in entry.data:
@@ -255,21 +219,15 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             name=device.name,
             update_interval=update_interval,
-            update_method=self._async_fetch_data,
         )
 
-    async def _async_fetch_data(self) -> Mapping[str, Any]:
+    async def _async_update_data(self) -> Mapping[str, Any]:
         """Update data."""
         try:
             update_values = await asyncio.gather(
                 self.device.async_get_traffic_data(),
                 self.device.async_get_status(),
             )
-
-            return {
-                **update_values[0],
-                **update_values[1],
-            }
         except UpnpCommunicationError as exception:
             LOGGER.debug(
                 "Caught exception when updating device: %s, exception: %s",
@@ -279,6 +237,11 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"Unable to communicate with IGD at: {self.device.device_url}"
             ) from exception
+
+        return {
+            **update_values[0],
+            **update_values[1],
+        }
 
 
 class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):

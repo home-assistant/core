@@ -95,7 +95,9 @@ class EsphomeMediaPlayer(
     ) -> None:
         """Send the play command with media url to the media player."""
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = sourced_media.url
 
         media_id = async_process_play_media_url(self.hass, media_id)

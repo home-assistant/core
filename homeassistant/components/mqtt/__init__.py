@@ -159,6 +159,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
@@ -189,17 +190,7 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
 )
 
 PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
-    {
-        vol.Optional(Platform.ALARM_CONTROL_PANEL.value): cv.ensure_list,
-        vol.Optional(Platform.BINARY_SENSOR.value): cv.ensure_list,
-        vol.Optional(Platform.BUTTON.value): cv.ensure_list,
-        vol.Optional(Platform.CAMERA.value): cv.ensure_list,
-        vol.Optional(Platform.CLIMATE.value): cv.ensure_list,
-        vol.Optional(Platform.FAN.value): cv.ensure_list,
-        vol.Optional(Platform.LIGHT.value): cv.ensure_list,
-        vol.Optional(Platform.LOCK.value): cv.ensure_list,
-        vol.Optional(Platform.VACUUM.value): cv.ensure_list,
-    }
+    {vol.Optional(platform.value): cv.ensure_list for platform in PLATFORMS}
 )
 
 CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
@@ -269,24 +260,6 @@ SCHEMA_BASE = {
 }
 
 MQTT_BASE_SCHEMA = vol.Schema(SCHEMA_BASE)
-
-# Will be removed when all platforms support a modern platform schema
-MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
-# Will be removed when all platforms support a modern platform schema
-MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    }
-)
-# Will be removed when all platforms support a modern platform schema
-MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-    }
-)
 
 # Sensor type platforms subscribe to MQTT events
 MQTT_RO_SCHEMA = MQTT_BASE_SCHEMA.extend(
@@ -694,14 +667,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # User has configuration.yaml config, warn about config entry overrides
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
-        override = {k: entry.data[k] for k in shared_keys}
+        override = {k: entry.data[k] for k in shared_keys if conf[k] != entry.data[k]}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
-        _LOGGER.warning(
-            "Deprecated configuration settings found in configuration.yaml. "
-            "These settings from your configuration entry will override: %s",
-            override,
-        )
+        if override:
+            _LOGGER.warning(
+                "Deprecated configuration settings found in configuration.yaml. "
+                "These settings from your configuration entry will override: %s",
+                override,
+            )
 
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)
@@ -811,14 +785,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-        for component in PLATFORMS:
-            config_entries_key = f"{component}.mqtt"
-            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, component)
-                )
+    async def async_forward_entry_setup():
+        """Forward the config entry setup to the platforms."""
+        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
+            for component in PLATFORMS:
+                config_entries_key = f"{component}.mqtt"
+                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+                    await hass.config_entries.async_forward_entry_setup(
+                        entry, component
+                    )
+
+    hass.async_create_task(async_forward_entry_setup())
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(hass, conf, entry)

@@ -79,6 +79,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.FGT001": Platform.CLIMATE,
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
+    "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -490,6 +491,9 @@ class FibaroDevice(Entity):
         self.ha_id = fibaro_device.ha_id
         self._attr_name = fibaro_device.friendly_name
         self._attr_unique_id = fibaro_device.unique_id_str
+        # propagate hidden attribute set in fibaro home center to HA
+        if "visible" in fibaro_device and fibaro_device.visible is False:
+            self._attr_entity_registry_visible_default = False
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""

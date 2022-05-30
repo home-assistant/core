@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from yolink.device import YoLinkDevice
 
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_COORDINATOR,
+    ATTR_COORDINATORS,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
@@ -31,8 +32,8 @@ class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    key: str = "state"
-    value: Callable[[str], bool | None] = lambda _: None
+    state_key: str = "state"
+    value: Callable[[Any], bool | None] = lambda _: None
 
 
 SENSOR_DEVICE_TYPE = [
@@ -43,23 +44,26 @@ SENSOR_DEVICE_TYPE = [
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
+        key="door_state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
-        value=lambda value: value == "open",
+        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
+        key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
-        value=lambda value: value == "alert",
+        value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
     ),
     YoLinkBinarySensorEntityDescription(
+        key="leak_state",
         name="Leak",
         icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        value=lambda value: value == "alert",
+        value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
     ),
 )
@@ -71,18 +75,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
-    sensor_devices = [
-        device
-        for device in coordinator.yl_devices
-        if device.device_type in SENSOR_DEVICE_TYPE
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    binary_sensor_device_coordinators = [
+        device_coordinator
+        for device_coordinator in device_coordinators.values()
+        if device_coordinator.device.device_type in SENSOR_DEVICE_TYPE
     ]
     entities = []
-    for sensor_device in sensor_devices:
+    for binary_sensor_device_coordinator in binary_sensor_device_coordinators:
         for description in SENSOR_TYPES:
-            if description.exists_fn(sensor_device):
+            if description.exists_fn(binary_sensor_device_coordinator.device):
                 entities.append(
-                    YoLinkBinarySensorEntity(coordinator, description, sensor_device)
+                    YoLinkBinarySensorEntity(
+                        binary_sensor_device_coordinator, description
+                    )
                 )
     async_add_entities(entities)
 
@@ -96,18 +102,21 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         self,
         coordinator: YoLinkCoordinator,
         description: YoLinkBinarySensorEntityDescription,
-        device: YoLinkDevice,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
-        self._attr_name = f"{device.device_name} ({self.entity_description.name})"
+        self._attr_unique_id = (
+            f"{coordinator.device.device_id} {self.entity_description.key}"
+        )
+        self._attr_name = (
+            f"{coordinator.device.device_name} ({self.entity_description.name})"
+        )
 
     @callback
-    def update_entity_state(self, state: dict) -> None:
+    def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         self._attr_is_on = self.entity_description.value(
-            state[self.entity_description.key]
+            state.get(self.entity_description.state_key)
         )
         self.async_write_ha_state()

@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "\u00dcgyn\u00f6k verzi\u00f3",
             "board": "Alaplap",
             "disk_total": "\u00d6sszes hely",
             "disk_used": "Felhaszn\u00e1lt hely",

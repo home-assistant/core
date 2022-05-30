@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_TYPE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -66,8 +70,8 @@ def async_describe_events(
         else:
             message = f"Event {data[CONF_EVENT]}"  # v1
         return {
-            "name": name,
-            "message": str(message),
+            LOGBOOK_ENTRY_NAME: name,
+            LOGBOOK_ENTRY_MESSAGE: message,
         }
 
     async_describe_event(DOMAIN, ATTR_HUE_EVENT, async_describe_hue_event)

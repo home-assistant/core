@@ -18,7 +18,7 @@
             },
             "reauth_confirm": {
                 "description": "De Geocaching integratie moet uw account herauthenticeren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
         }
     }

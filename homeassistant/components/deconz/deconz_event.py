@@ -58,28 +58,17 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
         elif isinstance(sensor, AncillaryControl):
             new_event = DeconzAlarmEvent(sensor, gateway)
 
-        else:
-            return None
-
         gateway.hass.async_create_task(new_event.async_update_device_registry())
         gateway.events.append(new_event)
 
-    gateway.config_entry.async_on_unload(
-        gateway.api.sensors.ancillary_control.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.switch,
     )
-
-    gateway.config_entry.async_on_unload(
-        gateway.api.sensors.switch.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.ancillary_control,
     )
-
-    for sensor_id in gateway.api.sensors:
-        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 @callback

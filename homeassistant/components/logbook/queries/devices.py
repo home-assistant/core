@@ -4,23 +4,20 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime as dt
 
-from sqlalchemy import Column, lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import Events, States
+from homeassistant.components.recorder.models import DEVICE_ID_IN_EVENT, Events, States
 
 from .common import (
-    EVENT_DATA_JSON,
     select_events_context_id_subquery,
     select_events_context_only,
     select_events_without_states,
     select_states_context_only,
 )
-
-DEVICE_ID_IN_EVENT: Column = EVENT_DATA_JSON["device_id"]
 
 
 def _select_device_id_context_ids_sub_query(
