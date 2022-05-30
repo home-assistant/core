@@ -685,7 +685,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # User has configuration.yaml config, warn about config entry overrides
     elif any(key in conf for key in entry.data):
         shared_keys = conf.keys() & entry.data.keys()
-        override = {k: entry.data[k] for k in shared_keys}
+        override = {k: entry.data[k] for k in shared_keys if conf[k] != entry.data[k]}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
         _LOGGER.warning(
