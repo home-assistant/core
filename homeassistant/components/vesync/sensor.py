@@ -23,9 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .common import VeSyncBaseEntity, VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_SENSORS
-from .fan import SKU_TO_BASE_DEVICE
-from .switch import DEV_TYPE_TO_HA
+from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,15 +51,19 @@ def update_energy(device):
     device.update_energy()
 
 
-def sku_from_device(device):
+def sku_supported(device, supported):
     """Get the base device of which a device is an instance."""
-    return SKU_TO_BASE_DEVICE.get(device.device_type)
+    return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
 
 
 def ha_dev_type(device):
     """Get the homeassistant device_type for a given device."""
     return DEV_TYPE_TO_HA.get(device.device_type)
 
+
+FILTER_LIFE_SUPPORTED = ["LV-PUR131S", "Core200S", "Core300S", "Core400S", "Core600S"]
+AIR_QUALITY_SUPPORTED = ["LV-PUR131S", "Core400S", "Core600S"]
+PM25_SUPPORTED = ["Core400S", "Core600S"]
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
@@ -71,22 +73,14 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.details["filter_life"],
-        exists_fn=lambda device: sku_from_device(device)
-        in [
-            "LV-PUR131S",
-            "Core200S",
-            "Core300S",
-            "Core400S",
-            "Core600S",
-        ],
+        exists_fn=lambda device: sku_supported(device, FILTER_LIFE_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="air-quality",
         name="Air Quality",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["air_quality"],
-        exists_fn=lambda device: sku_from_device(device)
-        in ["LV-PUR131S", "Core400S", "Core600S"],
+        exists_fn=lambda device: sku_supported(device, AIR_QUALITY_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="pm25",
@@ -95,7 +89,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["air_quality_value"],
-        exists_fn=lambda device: sku_from_device(device) in ["Core400S", "Core600S"],
+        exists_fn=lambda device: sku_supported(device, PM25_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="power",
