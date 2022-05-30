@@ -118,6 +118,9 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+    if config[CONF_TYPE] == "humidifier_action_changed":
+        return {}
+
     if config[CONF_TYPE] == "target_humidity_changed":
         return {
             "extra_fields": vol.Schema(

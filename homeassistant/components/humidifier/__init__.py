@@ -30,6 +30,7 @@ from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
     ATTR_AVAILABLE_MODES,
+    ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -129,6 +130,7 @@ class HumidifierEntity(ToggleEntity):
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
     _attr_device_class: HumidifierDeviceClass | str | None
+    _attr_humidifier_action: str | None = None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
@@ -169,7 +171,8 @@ class HumidifierEntity(ToggleEntity):
 
         if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_MODE] = self.mode
-
+        if self.humidifier_action:
+            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
         return data
 
     @property
@@ -192,6 +195,14 @@ class HumidifierEntity(ToggleEntity):
         Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_available_modes
+
+    @property
+    def humidifier_action(self) -> str | None:
+        """Return the current running humidifier operation (humidifying/dehumidifying) if supported.
+
+        Need to be one of CURRENT_HUMIDIFIER_*.
+        """
+        return self._attr_humidifier_action
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""

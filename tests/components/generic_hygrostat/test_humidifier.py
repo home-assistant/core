@@ -614,8 +614,8 @@ async def test_set_target_humidity_dry_off(hass, setup_comp_3):
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def test_turn_away_mode_on_drying(hass, setup_comp_3):
-    """Test the setting away mode when drying."""
+async def test_turn_away_mode_on_dehumidifying(hass, setup_comp_3):
+    """Test the setting away mode when dehumidifying."""
     await _setup_switch(hass, True)
     _setup_sensor(hass, 50)
     await hass.async_block_till_done()

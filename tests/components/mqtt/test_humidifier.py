@@ -13,6 +13,10 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
+from homeassistant.components.humidifier.const import (
+    ATTR_HUMIDIFIER_ACTION,
+    CURRENT_HUMIDIFIER_ACTIONS,
+)
 from homeassistant.components.mqtt.humidifier import (
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
@@ -1195,3 +1199,47 @@ async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
         hass, caplog, tmp_path, platform, config
     )
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_handle_action_received(hass, mqtt_mock):
+    """Test getting the action received via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["humidifier"]["action_topic"] = "action"
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Cycle through valid modes and also check for wrong input such as "None" (str(None))
+    async_fire_mqtt_message(hass, "action", "None")
+    state = hass.states.get("humidifier.test")
+    humidifier_action = state.attributes.get(ATTR_HUMIDIFIER_ACTION)
+    assert humidifier_action is None
+    actions = ["off", "dehumidifying", "humidifying", "idle"]
+    assert all(elem in actions for elem in CURRENT_HUMIDIFIER_ACTIONS)
+    for action in actions:
+        async_fire_mqtt_message(hass, "action", action)
+        state = hass.states.get("humidifier.test")
+        humidifier_action = state.attributes.get(ATTR_HUMIDIFIER_ACTION)
+        assert humidifier_action == action
+
+
+async def test_get_with_templates(hass, mqtt_mock, caplog):
+    """Test getting various attributes with templates."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["humidifier"]["action_template"] = "{{ value_json }}"
+    config["humidifier"]["action_topic"] = "action"
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Action
+    async_fire_mqtt_message(hass, "action", '"humidifying"')
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == "humidifying"
+
+    # Test ignoring null values
+    async_fire_mqtt_message(hass, "action", "null")
+    state = hass.states.get("humidifier.test")
+    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == "humidifying"
+    assert (
+        "Invalid ['off', 'humidifying', 'dehumidifying', 'idle'] action: None, ignoring"
+        in caplog.text
+    )

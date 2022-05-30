@@ -58,6 +58,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         entity_id,
         STATE_ON,
         {
+            const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_IDLE,
             const.ATTR_HUMIDITY: 23,
             ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
@@ -145,6 +146,7 @@ async def test_if_fires_on_state_change(hass, calls):
         "humidifier.entity",
         STATE_ON,
         {
+            const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_IDLE,
             const.ATTR_HUMIDITY: 23,
             ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
@@ -277,13 +279,27 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
     # Fake that the humidity is changing
-    hass.states.async_set("humidifier.entity", STATE_ON, {const.ATTR_HUMIDITY: 7})
+    hass.states.async_set(
+        "humidifier.entity",
+        STATE_ON,
+        {
+            const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_HUMIDIFY,
+            const.ATTR_HUMIDITY: 7,
+        },
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "target_humidity_changed_below"
 
     # Fake that the humidity is changing
-    hass.states.async_set("humidifier.entity", STATE_ON, {const.ATTR_HUMIDITY: 37})
+    hass.states.async_set(
+        "humidifier.entity",
+        STATE_ON,
+        {
+            const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_HUMIDIFY,
+            const.ATTR_HUMIDITY: 37,
+        },
+    )
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "target_humidity_changed_above"
@@ -295,7 +311,14 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[2].data["some"] == "target_humidity_changed_above_for"
 
     # Fake turn off
-    hass.states.async_set("humidifier.entity", STATE_OFF, {const.ATTR_HUMIDITY: 37})
+    hass.states.async_set(
+        "humidifier.entity",
+        STATE_OFF,
+        {
+            const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_HUMIDIFY,
+            const.ATTR_HUMIDITY: 37,
+        },
+    )
     await hass.async_block_till_done()
     assert len(calls) == 5
     assert {calls[3].data["some"], calls[4].data["some"]} == {
@@ -304,7 +327,14 @@ async def test_if_fires_on_state_change(hass, calls):
     }
 
     # Fake turn on
-    hass.states.async_set("humidifier.entity", STATE_ON, {const.ATTR_HUMIDITY: 37})
+    hass.states.async_set(
+        "humidifier.entity",
+        STATE_ON,
+        {
+            const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_HUMIDIFY,
+            const.ATTR_HUMIDITY: 37,
+        },
+    )
     await hass.async_block_till_done()
     assert len(calls) == 7
     assert {calls[5].data["some"], calls[6].data["some"]} == {

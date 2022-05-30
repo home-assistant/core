@@ -12,6 +12,10 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
+    CURRENT_HUMIDIFIER_DEHUMIDIFY,
+    CURRENT_HUMIDIFIER_HUMIDIFY,
+    CURRENT_HUMIDIFIER_IDLE,
+    CURRENT_HUMIDIFIER_OFF,
     MODE_AWAY,
     MODE_NORMAL,
 )
@@ -233,6 +237,20 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def is_on(self):
         """Return true if the hygrostat is on."""
         return self._state
+
+    @property
+    def humidifier_action(self):
+        """Return the current running humidifier operation if supported.
+
+        Need to be one of CURRENT_HUMIDIFIER_*.
+        """
+        if not self._state:
+            return CURRENT_HUMIDIFIER_OFF
+        if not self._is_device_active:
+            return CURRENT_HUMIDIFIER_IDLE
+        if self._device_class == HumidifierDeviceClass.HUMIDIFIER:
+            return CURRENT_HUMIDIFIER_HUMIDIFY
+        return CURRENT_HUMIDIFIER_DEHUMIDIFY
 
     @property
     def target_humidity(self):

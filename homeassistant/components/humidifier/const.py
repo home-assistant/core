@@ -11,10 +11,25 @@ MODE_SLEEP = "sleep"
 MODE_AUTO = "auto"
 MODE_BABY = "baby"
 
+# This are support current states of humidifier
+CURRENT_HUMIDIFIER_OFF = "off"
+CURRENT_HUMIDIFIER_HUMIDIFY = "humidifying"
+CURRENT_HUMIDIFIER_DEHUMIDIFY = "dehumidifying"
+CURRENT_HUMIDIFIER_IDLE = "idle"
+
+# A list of possible humidifier actions.
+CURRENT_HUMIDIFIER_ACTIONS = [
+    CURRENT_HUMIDIFIER_OFF,
+    CURRENT_HUMIDIFIER_HUMIDIFY,
+    CURRENT_HUMIDIFIER_DEHUMIDIFY,
+    CURRENT_HUMIDIFIER_IDLE,
+]
+
 ATTR_AVAILABLE_MODES = "available_modes"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
+ATTR_HUMIDIFIER_ACTION = "humidifier_action"
 
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100

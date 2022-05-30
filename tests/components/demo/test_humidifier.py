@@ -4,9 +4,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.humidifier.const import (
+    ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    CURRENT_HUMIDIFIER_DEHUMIDIFY,
     DOMAIN,
     MODE_AWAY,
     MODE_ECO,
@@ -55,6 +57,7 @@ def test_default_setup_params(hass):
 async def test_set_target_humidity_bad_attr(hass):
     """Test setting the target humidity without required attribute."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DEHUMIDIFY
     assert state.attributes.get(ATTR_HUMIDITY) == 54
 
     with pytest.raises(vol.Invalid):
@@ -67,6 +70,7 @@ async def test_set_target_humidity_bad_attr(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DEHUMIDIFY
     assert state.attributes.get(ATTR_HUMIDITY) == 54
 
 
