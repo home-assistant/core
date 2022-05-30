@@ -41,14 +41,17 @@ from .client import (  # noqa: F401
     subscribe,
 )
 from .config import CONFIG_SCHEMA_BASE, DEFAULT_VALUES, DEPRECATED_CONFIG_KEYS
-from .const import (
+from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_QOS,
+    CONF_STATE_TOPIC,
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
@@ -68,6 +71,7 @@ from .const import (
 from .models import (  # noqa: F401
     MqttCommandTemplate,
     MqttValueTemplate,
+    PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
 )
