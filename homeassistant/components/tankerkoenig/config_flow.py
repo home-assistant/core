@@ -116,7 +116,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="select_station",
-                description_placeholders={"stations_count": len(self._stations)},
+                description_placeholders={"stations_count": str(len(self._stations))},
                 data_schema=vol.Schema(
                     {vol.Required(CONF_STATIONS): cv.multi_select(self._stations)}
                 ),
