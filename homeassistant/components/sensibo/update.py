@@ -20,6 +20,8 @@ from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass
 class DeviceBaseEntityDescriptionMixin:

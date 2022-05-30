@@ -21,6 +21,7 @@ from . import (
     CONF_OPTIONS_2,
     create_entry,
     patch_interface,
+    patch_interface_private,
     patch_user_interface_null,
 )
 
@@ -212,6 +213,25 @@ async def test_options_flow_timeout(hass: HomeAssistant) -> None:
     entry = create_entry(hass)
     with patch_interface() as servicemock:
         servicemock.side_effect = steam.api.HTTPTimeoutError
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_ACCOUNTS: [ACCOUNT_1]},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == CONF_OPTIONS
+
+
+async def test_options_flow_unauthorized(hass: HomeAssistant) -> None:
+    """Test updating options when user's friends list is not public."""
+    entry = create_entry(hass)
+    with patch_interface_private():
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 import datetime
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 from gcal_sync.auth import AbstractAuth
@@ -19,6 +19,7 @@ from oauth2client.client import (
 )
 
 from homeassistant.components.application_credentials import AuthImplementation
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import async_track_time_interval
@@ -76,12 +77,12 @@ class DeviceFlow:
     @property
     def verification_url(self) -> str:
         """Return the verification url that the user should visit to enter the code."""
-        return self._device_flow_info.verification_url
+        return self._device_flow_info.verification_url  # type: ignore[no-any-return]
 
     @property
     def user_code(self) -> str:
         """Return the code that the user should enter at the verification url."""
-        return self._device_flow_info.user_code
+        return self._device_flow_info.user_code  # type: ignore[no-any-return]
 
     async def start_exchange_task(
         self, finished_cb: Callable[[Credentials | None], Awaitable[None]]
@@ -127,14 +128,26 @@ class DeviceFlow:
         )
 
 
-def get_feature_access(hass: HomeAssistant) -> FeatureAccess:
+def get_feature_access(
+    hass: HomeAssistant, config_entry: ConfigEntry | None = None
+) -> FeatureAccess:
     """Return the desired calendar feature access."""
+    if (
+        config_entry
+        and config_entry.options
+        and CONF_CALENDAR_ACCESS in config_entry.options
+    ):
+        return FeatureAccess[config_entry.options[CONF_CALENDAR_ACCESS]]
+
     # This may be called during config entry setup without integration setup running when there
     # is no google entry in configuration.yaml
-    return (
-        hass.data.get(DOMAIN, {})
-        .get(DATA_CONFIG, {})
-        .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
+    return cast(
+        FeatureAccess,
+        (
+            hass.data.get(DOMAIN, {})
+            .get(DATA_CONFIG, {})
+            .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
+        ),
     )
 
 
@@ -157,7 +170,7 @@ async def async_create_device_flow(
     return DeviceFlow(hass, oauth_flow, device_flow_info)
 
 
-class ApiAuthImpl(AbstractAuth):
+class ApiAuthImpl(AbstractAuth):  # type: ignore[misc]
     """Authentication implementation for google calendar api library."""
 
     def __init__(
@@ -172,10 +185,10 @@ class ApiAuthImpl(AbstractAuth):
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._session.async_ensure_token_valid()
-        return self._session.token["access_token"]
+        return cast(str, self._session.token["access_token"])
 
 
-class AccessTokenAuthImpl(AbstractAuth):
+class AccessTokenAuthImpl(AbstractAuth):  # type: ignore[misc]
     """Authentication implementation used during config flow, without refresh.
 
     This exists to allow the config flow to use the API before it has fully

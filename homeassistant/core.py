@@ -37,7 +37,6 @@ from typing import (
 )
 from urllib.parse import urlparse
 
-import attr
 import voluptuous as vol
 import yarl
 
@@ -716,13 +715,26 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=True)
 class Context:
     """The context that triggered something."""
 
-    user_id: str | None = attr.ib(default=None)
-    parent_id: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=ulid_util.ulid)
+    __slots__ = ("user_id", "parent_id", "id", "origin_event")
+
+    def __init__(
+        self,
+        user_id: str | None = None,
+        parent_id: str | None = None,
+        id: str | None = None,  # pylint: disable=redefined-builtin
+    ) -> None:
+        """Init the context."""
+        self.id = id or ulid_util.ulid()
+        self.user_id = user_id
+        self.parent_id = parent_id
+        self.origin_event: Event | None = None
+
+    def __eq__(self, other: Any) -> bool:
+        """Compare contexts."""
+        return bool(self.__class__ == other.__class__ and self.id == other.id)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -866,6 +878,8 @@ class EventBus:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
+        if not event.context.origin_event:
+            event.context.origin_event = event
 
         _LOGGER.debug("Bus:Handling %s", event)
 
@@ -1160,6 +1174,24 @@ class State:
             context,
         )
 
+    def expire(self) -> None:
+        """Mark the state as old.
+
+        We give up the original reference to the context to ensure
+        the context can be garbage collected by replacing it with
+        a new one with the same id to ensure the old state
+        can still be examined for comparison against the new state.
+
+        Since we are always going to fire a EVENT_STATE_CHANGED event
+        after we remove a state from the state machine we need to make
+        sure we don't end up holding a reference to the original context
+        since it can never be garbage collected as each event would
+        reference the previous one.
+        """
+        self.context = Context(
+            self.context.user_id, self.context.parent_id, self.context.id
+        )
+
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
         return (  # type: ignore[no-any-return]
@@ -1300,6 +1332,7 @@ class StateMachine:
         if old_state is None:
             return False
 
+        old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
@@ -1393,7 +1426,6 @@ class StateMachine:
 
         if context is None:
             context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
-
         state = State(
             entity_id,
             new_state,
@@ -1403,6 +1435,8 @@ class StateMachine:
             context,
             old_state is None,
         )
+        if old_state is not None:
+            old_state.expire()
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,

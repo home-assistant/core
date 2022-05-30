@@ -101,6 +101,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.google.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -126,6 +127,7 @@ homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
+homeassistant.components.ialarm_xr.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -194,6 +196,7 @@ homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
+homeassistant.components.sensibo.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
 homeassistant.components.senz.*

@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Arkada\u015f listesi k\u0131s\u0131tland\u0131: L\u00fctfen di\u011fer t\u00fcm arkada\u015flar\u0131 nas\u0131l g\u00f6rece\u011finizle ilgili belgelere bak\u0131n"
+        },
         "step": {
             "init": {
                 "data": {

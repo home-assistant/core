@@ -6,6 +6,7 @@
 
 # Home Assistant Core
 setup.cfg @home-assistant/core
+pyproject.toml @home-assistant/core
 /homeassistant/*.py @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
@@ -416,6 +417,10 @@ build.json @home-assistant/supervisor
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @ASMfreaK @leikoilja
 /tests/components/habitica/ @ASMfreaK @leikoilja
+/homeassistant/components/hardkernel/ @home-assistant/core
+/tests/components/hardkernel/ @home-assistant/core
+/homeassistant/components/hardware/ @home-assistant/core
+/tests/components/hardware/ @home-assistant/core
 /homeassistant/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
@@ -470,6 +475,8 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
+/homeassistant/components/ialarm_xr/ @bigmoby
+/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -821,12 +828,14 @@ build.json @home-assistant/supervisor
 /homeassistant/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
-/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert
-/tests/components/rainforest_eagle/ @gtdiehl @jcalbert
+/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /homeassistant/components/rainmachine/ @bachya
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
 /tests/components/random/ @fabaff
+/homeassistant/components/raspberry_pi/ @home-assistant/core
+/tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck
 /tests/components/rdw/ @frenck
 /homeassistant/components/recollect_waste/ @bachya
@@ -1116,8 +1125,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velux/ @Julius2342
 /homeassistant/components/venstar/ @garbled1
 /tests/components/venstar/ @garbled1
-/homeassistant/components/vera/ @pavoni
-/tests/components/vera/ @pavoni
 /homeassistant/components/verisure/ @frenck
 /tests/components/verisure/ @frenck
 /homeassistant/components/versasense/ @flamm3blemuff1n
