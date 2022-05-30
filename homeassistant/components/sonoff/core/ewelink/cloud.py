@@ -82,7 +82,7 @@ class XRegistryCloud(ResponseWaiter, XRegistryBase):
     auth: dict = None
     devices: dict = None
     last_ts = 0
-    online = False
+    online = None
     region = "eu"
 
     task: asyncio.Task = None

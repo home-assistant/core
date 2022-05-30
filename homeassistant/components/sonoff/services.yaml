@@ -7,6 +7,3 @@ send_command:
     cmd:
       description: A single command to send.
       example: 'switch'
-
-update_consumption:
-  description: Power consumption update of all Pow devices.

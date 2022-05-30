@@ -37,6 +37,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.data_entry_flow import UnknownFlow
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -49,13 +50,11 @@ from .config_flow import in_progess_instances
 from .const import (
     ALEXA_COMPONENTS,
     CONF_ACCOUNTS,
-    CONF_COOKIES_TXT,
     CONF_DEBUG,
     CONF_EXCLUDE_DEVICES,
     CONF_EXTENDED_ENTITY_DISCOVERY,
     CONF_INCLUDE_DEVICES,
     CONF_OAUTH,
-    CONF_OAUTH_LOGIN,
     CONF_OTPSECRET,
     CONF_QUEUE_DELAY,
     DATA_ALEXAMEDIA,
@@ -151,7 +150,6 @@ async def async_setup(hass, config, discovery_info=None):
                             ].total_seconds(),
                             CONF_OAUTH: account.get(CONF_OAUTH, {}),
                             CONF_OTPSECRET: account.get(CONF_OTPSECRET, ""),
-                            CONF_OAUTH_LOGIN: account.get(CONF_OAUTH_LOGIN, True),
                         },
                     )
                     entry_found = True
@@ -172,7 +170,6 @@ async def async_setup(hass, config, discovery_info=None):
                         CONF_SCAN_INTERVAL: account[CONF_SCAN_INTERVAL].total_seconds(),
                         CONF_OAUTH: account.get(CONF_OAUTH, {}),
                         CONF_OTPSECRET: account.get(CONF_OTPSECRET, ""),
-                        CONF_OAUTH_LOGIN: account.get(CONF_OAUTH_LOGIN, True),
                     },
                 )
             )
@@ -217,12 +214,11 @@ async def async_setup_entry(hass, config_entry):
                     otp_secret=account.get(CONF_OTPSECRET, ""),
                     oauth=account.get(CONF_OAUTH, {}),
                     uuid=uuid,
-                    oauth_login=bool(
-                        account.get(CONF_OAUTH, {}).get("access_token")
-                        or account.get(CONF_OAUTH_LOGIN)
-                    ),
+                    oauth_login=True,
                 )
                 hass.data[DATA_ALEXAMEDIA]["accounts"][email]["login_obj"] = login_obj
+            else:
+                login_obj.oauth_login = True
             await login_obj.reset()
             # await login_obj.login()
             if await test_login_status(hass, config_entry, login_obj):
@@ -309,10 +305,7 @@ async def async_setup_entry(hass, config_entry):
             otp_secret=account.get(CONF_OTPSECRET, ""),
             oauth=account.get(CONF_OAUTH, {}),
             uuid=uuid,
-            oauth_login=bool(
-                account.get(CONF_OAUTH, {}).get("access_token")
-                or account.get(CONF_OAUTH_LOGIN)
-            ),
+            oauth_login=True,
         ),
     )
     hass.data[DATA_ALEXAMEDIA]["accounts"][email]["login_obj"] = login
@@ -321,11 +314,14 @@ async def async_setup_entry(hass, config_entry):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, complete_startup)
     hass.bus.async_listen("alexa_media_relogin_required", relogin)
     hass.bus.async_listen("alexa_media_relogin_success", login_success)
-    await login.login(cookies=await login.load_cookie())
-    if await test_login_status(hass, config_entry, login):
-        await setup_alexa(hass, config_entry, login)
-        return True
-    return False
+    try:
+        await login.login(cookies=await login.load_cookie())
+        if await test_login_status(hass, config_entry, login):
+            await setup_alexa(hass, config_entry, login)
+            return True
+        return False
+    except AlexapyConnectionError as err:
+        raise ConfigEntryNotReady(str(err) or "Connection Error during login") from err
 
 
 async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
@@ -616,7 +612,7 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
 
         hass.data[DATA_ALEXAMEDIA]["accounts"][email]["new_devices"] = False
         # prune stale devices
-        device_registry = await dr.async_get_registry(hass)
+        device_registry = dr.async_get(hass)
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, config_entry.entry_id
         ):
@@ -796,6 +792,7 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
         This will only attempt one login before failing.
         """
         websocket: Optional[WebsocketEchoClient] = None
+        email = login_obj.email
         try:
             if login_obj.session.closed:
                 _LOGGER.debug(
@@ -812,6 +809,17 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
             )
             _LOGGER.debug("%s: Websocket created: %s", hide_email(email), websocket)
             await websocket.async_run()
+        except AlexapyLoginError as exception_:
+            _LOGGER.debug(
+                "%s: Login Error detected from websocket: %s",
+                hide_email(email),
+                exception_,
+            )
+            hass.bus.async_fire(
+                "alexa_media_relogin_required",
+                event_data={"email": hide_email(email), "url": login_obj.url},
+            )
+            return
         except BaseException as exception_:  # pylint: disable=broad-except
             _LOGGER.debug(
                 "%s: Websocket creation failed: %s", hide_email(email), exception_
@@ -983,6 +991,7 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                 "PUSH_LIST_ITEM_CHANGE",  # update shopping list
                 "PUSH_CONTENT_FOCUS_CHANGE",  # likely prime related refocus
                 "PUSH_DEVICE_SETUP_STATE_CHANGE",  # likely device changes mid setup
+                "PUSH_MEDIA_PREFERENCE_CHANGE",  # disliking or liking songs, https://github.com/custom-components/alexa_media_player/issues/1599
             ]:
                 pass
             else:
@@ -1325,7 +1334,6 @@ async def test_login_status(hass, config_entry, login) -> bool:
             CONF_SCAN_INTERVAL: account[CONF_SCAN_INTERVAL].total_seconds()
             if isinstance(account[CONF_SCAN_INTERVAL], timedelta)
             else account[CONF_SCAN_INTERVAL],
-            CONF_COOKIES_TXT: account.get(CONF_COOKIES_TXT, ""),
             CONF_OTPSECRET: account.get(CONF_OTPSECRET, ""),
         },
     )

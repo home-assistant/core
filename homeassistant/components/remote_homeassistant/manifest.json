@@ -1,0 +1,18 @@
+{
+  "domain": "remote_homeassistant",
+  "name": "Remote Home-Assistant",
+  "issue_tracker": "https://github.com/custom-components/remote_homeassistant/issues",
+  "documentation": "https://github.com/custom-components/remote_homeassistant",
+  "dependencies": ["http"],
+  "config_flow": true,
+  "codeowners": [
+    "@lukas-hetzenecker",
+    "@postlund"
+  ],
+  "requirements": [],
+  "zeroconf": [
+    "_home-assistant._tcp.local."
+  ],
+  "version": "3.6",
+  "iot_class": "local_push"
+}

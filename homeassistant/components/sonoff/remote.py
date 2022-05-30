@@ -26,12 +26,7 @@ async def async_setup_entry(hass, config_entry, add_entities):
     )
 
 
-def rfbridge_childs(remotes: list):
-    try:
-        yaml = XRegistry.config["rfbridge"]
-    except Exception:
-        yaml = {}
-
+def rfbridge_childs(remotes: list, config: dict = None):
     childs = {}
     # For dual RF sensors: {payload_on channel: payload_off name}
     duals = {}
@@ -47,8 +42,8 @@ def rfbridge_childs(remotes: list):
                 child = {"name": remote["name"]}
 
             # everride child params from YAML
-            if child["name"] in yaml:
-                child.update(yaml[child["name"]])
+            if config and child["name"] in config:
+                child.update(config[child["name"]])
 
                 if "payload_off" in child:
                     duals[channel] = child["payload_off"]
@@ -63,7 +58,11 @@ def rfbridge_childs(remotes: list):
             childs[channel] = child
 
     for ch, name in duals.items():
-        ch_off = next(k for k, v in childs.items() if v["name"] == name)
+        try:
+            ch_off = next(k for k, v in childs.items() if v["name"] == name)
+        except StopIteration:
+            _LOGGER.warning("Can't find payload_off: " + name)
+            continue
         # move off channel to end of the dict
         childs[ch_off] = childs.pop(ch_off)
         childs[ch_off]["channel_on"] = ch
@@ -83,9 +82,11 @@ class XRemote(XEntity, RemoteEntity):
             # only learned channels
             channels = [str(c["rfChl"]) for c in device["params"]["rfList"]]
 
-            childs = rfbridge_childs(device["tags"]["zyx_info"])
-            for ch, child in childs.items():
+            config = ewelink.config and ewelink.config.get("rfbridge")
+            childs = rfbridge_childs(device["tags"]["zyx_info"], config)
+            for ch, child in list(childs.items()):
                 if ch not in channels:
+                    childs.pop(ch)
                     continue
 
                 if "channel_on" in child:

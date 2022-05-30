@@ -62,24 +62,6 @@
         "description": "**{email} - alexa.{url}**\nВведите одноразовый пароль.\n{message}",
         "title": "Alexa Media Player - Двух факторная идентификация"
       },
-      "user_legacy": {
-        "data": {
-          "cookies_txt": "config::step::user::data::cookies_txt",
-          "debug": "Расширенные возможности отладки",
-          "email": "Адрес электронной почты",
-          "exclude_devices": "Исключенные устройства (через запятую)",
-          "include_devices": "Включенные устройства (разделенное запятыми)",
-          "oauth_login": "Enable oauth-token app method",
-          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
-          "password": "Пароль",
-          "proxy": "Use Login Proxy method (2FA not required)",
-          "scan_interval": "Секунды между сканированиями",
-          "securitycode": "2FA Code (recommended to avoid login issues)",
-          "url": "Домен региона Amazon (например, amazon.co.uk)"
-        },
-        "description": "Пожалуйста, введите свои данные.{message}",
-        "title": "Alexa Media Player - Legacy Configuration"
-      },
       "user": {
         "data": {
           "cookies_txt": "config::step::user::data::cookies_txt",
@@ -98,6 +80,24 @@
         },
         "description": "Пожалуйста, подтвердите информацию ниже. Для старой конфигурации отключите опцию `Use Login Proxy method`.",
         "title": "Alexa Media Player - Конфигурация"
+      },
+      "user_legacy": {
+        "data": {
+          "cookies_txt": "config::step::user::data::cookies_txt",
+          "debug": "Расширенные возможности отладки",
+          "email": "Адрес электронной почты",
+          "exclude_devices": "Исключенные устройства (через запятую)",
+          "include_devices": "Включенные устройства (разделенное запятыми)",
+          "oauth_login": "Enable oauth-token app method",
+          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
+          "password": "Пароль",
+          "proxy": "Use Login Proxy method (2FA not required)",
+          "scan_interval": "Секунды между сканированиями",
+          "securitycode": "2FA Code (recommended to avoid login issues)",
+          "url": "Домен региона Amazon (например, amazon.co.uk)"
+        },
+        "description": "Пожалуйста, введите свои данные.{message}",
+        "title": "Alexa Media Player - Legacy Configuration"
       }
     }
   },

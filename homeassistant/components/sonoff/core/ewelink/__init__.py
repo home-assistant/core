@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import time
-from typing import Dict, List
+from typing import Dict, List, Callable
 
 from aiohttp import ClientSession
 
@@ -30,8 +30,10 @@ class XRegistry(XRegistryBase):
         self.local = XRegistryLocal(session)
         self.local.dispatcher_connect(SIGNAL_UPDATE, self.local_update)
 
-    def setup_devices(self, devices: List[XDevice]):
+    def setup_devices(self, devices: List[XDevice]) -> list:
         from ..devices import get_spec
+
+        entities = []
 
         for device in devices:
             did = device["deviceid"]
@@ -44,14 +46,16 @@ class XRegistry(XRegistryBase):
                 uiid = device['extra']['uiid']
                 _LOGGER.debug(f"{did} UIID {uiid:04} | %s", device["params"])
 
-                spec = get_spec(device)
-                entities = [cls(self, device) for cls in spec]
-                self.dispatcher_send(SIGNAL_ADD_ENTITIES, entities)
+                # at this moment entities can catch signals with device_id and
+                # update their states, but they can be added to hass later
+                entities += [cls(self, device) for cls in get_spec(device)]
 
                 self.devices[did] = device
 
             except Exception as e:
                 _LOGGER.warning(f"{did} !! can't setup device", exc_info=e)
+
+        return entities
 
     async def stop(self, *args):
         self.devices.clear()
@@ -115,7 +119,14 @@ class XRegistry(XRegistryBase):
         assert "switches" in params
 
         if "params_bulk" in device:
-            device["params_bulk"]["switches"] += params["switches"]
+            for new in params["switches"]:
+                for old in device["params_bulk"]["switches"]:
+                    # check on duplicates
+                    if new["outlet"] == old["outlet"]:
+                        old["switch"] = new["switch"]
+                        break
+                else:
+                    device["params_bulk"]["switches"].append(new)
             return
 
         device["params_bulk"] = params
@@ -141,7 +152,7 @@ class XRegistry(XRegistryBase):
         for deviceid in self.devices.keys():
             self.dispatcher_send(deviceid)
 
-        if not self.task or self.task.done():
+        if self.cloud.online and (not self.task or self.task.done()):
             self.task = asyncio.create_task(self.pow_helper())
 
     def cloud_update(self, msg: dict):
@@ -187,7 +198,8 @@ class XRegistry(XRegistryBase):
 
             from ..devices import setup_diy
             device = setup_diy(msg)
-            self.setup_devices([device])
+            entities = self.setup_devices([device])
+            self.dispatcher_send(SIGNAL_ADD_ENTITIES, entities)
 
         elif not params:
             if "devicekey" not in device:

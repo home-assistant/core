@@ -381,7 +381,7 @@ class AlexaMediaNotificationSensor(Entity):
             _LOGGER.debug(
                 "%s with recurrence %s set to %s",
                 value[1]["type"],
-                RECURRING_PATTERN[recurring_pattern],
+                RECURRING_PATTERN.get(recurring_pattern),
                 alarm,
             )
             value[1][self._sensor_property] = alarm
@@ -500,7 +500,9 @@ class AlexaMediaNotificationSensor(Entity):
         account_dict = self.hass.data[DATA_ALEXAMEDIA]["accounts"][self._account]
         self._timestamp = account_dict["notifications"]["process_timestamp"]
         try:
-            self._n_dict = account_dict["notifications"][self._dev_id][self._type]
+            self._n_dict = account_dict["notifications"][
+                self._client.device_serial_number
+            ][self._type]
         except KeyError:
             self._n_dict = None
         self._process_raw_notifications()
@@ -526,13 +528,13 @@ class AlexaMediaNotificationSensor(Entity):
     def recurrence(self):
         """Return the recurrence pattern of the sensor."""
         return (
-            RECURRING_PATTERN[self._next.get("recurringPattern")]
+            RECURRING_PATTERN.get(self._next.get("recurringPattern"))
             if self._next
             else None
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional attributes."""
         import json
 
@@ -638,8 +640,8 @@ class ReminderSensor(AlexaMediaNotificationSensor):
         return self._next["reminderLabel"] if self._next else None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the scene state attributes."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         attr.update({"reminder": self.reminder})
         return attr

@@ -23,7 +23,7 @@ def async_register(
     register.async_register_info(system_health_info)
 
 
-async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
+async def system_health_info(hass: HomeAssistant):
     cloud_online = local_online = cloud_total = local_total = 0
 
     for registry in hass.data[DOMAIN].values():

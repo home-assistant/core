@@ -1,12 +1,12 @@
 {
   "domain": "alexa_media",
   "name": "Alexa Media Player",
-  "version": "3.10.8",
+  "version": "4.0.1",
   "config_flow": true,
   "documentation": "https://github.com/custom-components/alexa_media_player/wiki",
   "issue_tracker": "https://github.com/custom-components/alexa_media_player/issues",
   "dependencies": ["persistent_notification", "http"],
-  "codeowners": ["@keatontaylor", "@alandtse"],
-  "requirements": ["alexapy==1.25.1", "packaging>=20.3", "wrapt~=1.12.1"],
+  "codeowners": ["@alandtse", "@keatontaylor"],
+  "requirements": ["alexapy==1.25.6", "packaging>=20.3", "wrapt>=1.12.1"],
   "iot_class": "cloud_polling"
 }

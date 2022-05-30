@@ -239,6 +239,6 @@ class AlexaAlarmControlPanel(AlarmControlPanel, AlexaMedia, CoordinatorEntity):
         return not last_refresh_success
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs

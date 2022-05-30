@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "Konfigurasi Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Kode negara akun Anda (mis., 1 untuk AS atau 86 untuk China)",
+                    "password": "Kata Sandi",
+                    "platform": "Aplikasi tempat akun Anda mendaftar",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan kredensial Tuya Anda.",
+                "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "error": {
+            "dev_multi_type": "Untuk konfigurasi sekaligus, beberapa perangkat yang dipilih harus berjenis sama",
+            "dev_not_config": "Jenis perangkat tidak dapat dikonfigurasi",
+            "dev_not_found": "Perangkat tidak ditemukan"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Rentang kecerahan yang digunakan oleh perangkat",
+                    "curr_temp_divider": "Pembagi nilai suhu saat ini (0 = gunakan bawaan)",
+                    "max_kelvin": "Suhu warna maksimal yang didukung dalam Kelvin",
+                    "max_temp": "Suhu target maksimal (gunakan min dan maks = 0 untuk bawaan)",
+                    "min_kelvin": "Suhu warna minimal yang didukung dalam Kelvin",
+                    "min_temp": "Suhu target minimal (gunakan min dan maks = 0 untuk bawaan)",
+                    "set_temp_divided": "Gunakan nilai suhu terbagi untuk mengirimkan perintah mengatur suhu",
+                    "support_color": "Paksa dukungan warna",
+                    "temp_divider": "Pembagi nilai suhu (0 = gunakan bawaan)",
+                    "temp_step_override": "Langkah Suhu Target",
+                    "tuya_max_coltemp": "Suhu warna maksimal yang dilaporkan oleh perangkat",
+                    "unit_of_measurement": "Satuan suhu yang digunakan oleh perangkat"
+                },
+                "description": "Konfigurasikan opsi untuk menyesuaikan informasi yang ditampilkan untuk perangkat {device_type} `{device_name}`",
+                "title": "Konfigurasi Perangkat Tuya"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Interval polling penemuan perangkat dalam detik",
+                    "list_devices": "Pilih perangkat yang akan dikonfigurasi atau biarkan kosong untuk menyimpan konfigurasi",
+                    "query_device": "Pilih perangkat yang akan menggunakan metode kueri untuk pembaruan status lebih cepat",
+                    "query_interval": "Interval polling perangkat kueri dalam detik"
+                },
+                "description": "Jangan atur nilai interval polling terlalu rendah karena panggilan akan gagal menghasilkan pesan kesalahan dalam log",
+                "title": "Konfigurasikan Opsi Tuya"
+            }
+        }
+    }
+}
