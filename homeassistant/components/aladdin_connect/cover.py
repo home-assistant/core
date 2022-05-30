@@ -35,7 +35,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
-SCAN_INTERVAL = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(seconds=240)
 
 
 async def async_setup_platform(
@@ -97,6 +97,7 @@ class AladdinDevice(CoverEntity):
         async def update_callback() -> None:
             """Schedule a state update."""
             self.async_schedule_update_ha_state(True)
+            await self.async_update()
 
         self._acc.register_callback(update_callback)
         await self._acc.get_doors()

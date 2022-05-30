@@ -1,10 +1,10 @@
 """Test the Aladdin Connect Cover."""
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
+from homeassistant.components.aladdin_connect.cover import SCAN_INTERVAL
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -161,6 +161,8 @@ async def test_cover_open(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        mock_aladdinconnect_api.get_door_status.assert_called_once()
+        mock_aladdinconnect_api.get_door_status.reset_mock()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -174,6 +176,7 @@ async def test_cover_open(
     )
     await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_OPEN
+    mock_aladdinconnect_api.get_door_status.assert_called_once()
 
 
 async def test_cover_close(
@@ -197,6 +200,8 @@ async def test_cover_close(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        mock_aladdinconnect_api.get_door_status.assert_called_once()
+        mock_aladdinconnect_api.get_door_status.reset_mock()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -210,6 +215,7 @@ async def test_cover_close(
     )
     await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_CLOSED
+    mock_aladdinconnect_api.get_door_status.assert_called_once()
 
 
 async def test_cover_closing(
@@ -235,6 +241,8 @@ async def test_cover_closing(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        mock_aladdinconnect_api.get_door_status.assert_called_once()
+        mock_aladdinconnect_api.get_door_status.reset_mock()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -243,10 +251,11 @@ async def test_cover_closing(
     await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
-        utcnow() + timedelta(seconds=300),
+        utcnow() + SCAN_INTERVAL,
     )
     await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_CLOSING
+    mock_aladdinconnect_api.get_door_status.assert_called_once()
 
 
 async def test_cover_openning(
@@ -276,14 +285,17 @@ async def test_cover_openning(
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert COVER_DOMAIN in hass.config.components
+    mock_aladdinconnect_api.get_door_status.assert_called_once()
+    mock_aladdinconnect_api.get_door_status.reset_mock()
 
     await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
-        utcnow() + timedelta(seconds=300),
+        utcnow() + SCAN_INTERVAL,
     )
     await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_OPENING
+    mock_aladdinconnect_api.get_door_status.assert_called_once()
 
 
 async def test_yaml_import(
@@ -334,7 +346,9 @@ async def test_callback(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    mock_aladdinconnect_api.get_door_status = AsyncMock(return_value=STATE_CLOSING)
+    mock_aladdinconnect_api.get_door_status.return_value = (
+        STATE_CLOSING  # = AsyncMock(return_value=STATE_CLOSING)
+    )
 
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
@@ -342,10 +356,11 @@ async def test_callback(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-
+        mock_aladdinconnect_api.get_door_status.assert_called_once()
+        mock_aladdinconnect_api.get_door_status.reset_mock()
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient._call_back",
-        AsyncMock(return_value={"door": 1, "door_status": "opening"}),
+        AsyncMock(),
     ):
         mock_calls = mock_aladdinconnect_api.register_callback.mock_calls
 
@@ -353,3 +368,4 @@ async def test_callback(
         await callback()
 
     assert hass.states.get("cover.home").state == STATE_CLOSING
+    mock_aladdinconnect_api.get_door_status.assert_called_once()
