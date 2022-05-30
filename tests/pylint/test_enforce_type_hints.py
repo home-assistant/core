@@ -1,5 +1,6 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
 # pylint:disable=protected-access
+from __future__ import annotations
 
 import re
 from types import ModuleType
@@ -12,6 +13,25 @@ from pylint.testutils.unittest_linter import UnittestLinter
 import pytest
 
 from . import assert_adds_messages, assert_no_messages
+
+
+@pytest.mark.parametrize(
+    ("module_name", "expected_platform"),
+    [
+        ("homeassistant", None),
+        ("homeassistant.components", None),
+        ("homeassistant.components.pylint_test", "__init__"),
+        ("homeassistant.components.pylint_test.device_tracker", "device_tracker"),
+        ("homeassistant.components.pylint_test.device_tracker.sub", None),
+    ],
+)
+def test_regex_get_module_platform(
+    hass_enforce_type_hints: ModuleType, module_name: str, expected_platform: str | None
+) -> None:
+    """Test _get_module_platform regex."""
+    platform = hass_enforce_type_hints._get_module_platform(module_name)
+
+    assert platform == expected_platform
 
 
 @pytest.mark.parametrize(
