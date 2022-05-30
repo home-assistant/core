@@ -158,17 +158,17 @@ class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE:
-            self._attr_is_on = self.coordinator.data["freeze"]
+            self._attr_is_on = self.coordinator.data.get("freeze")
         elif self.entity_description.key == TYPE_HOURLY:
-            self._attr_is_on = self.coordinator.data["hourly"]
+            self._attr_is_on = self.coordinator.data.get("hourly")
         elif self.entity_description.key == TYPE_MONTH:
-            self._attr_is_on = self.coordinator.data["month"]
+            self._attr_is_on = self.coordinator.data.get("month")
         elif self.entity_description.key == TYPE_RAINDELAY:
-            self._attr_is_on = self.coordinator.data["rainDelay"]
+            self._attr_is_on = self.coordinator.data.get("rainDelay")
         elif self.entity_description.key == TYPE_RAINSENSOR:
-            self._attr_is_on = self.coordinator.data["rainSensor"]
+            self._attr_is_on = self.coordinator.data.get("rainSensor")
         elif self.entity_description.key == TYPE_WEEKDAY:
-            self._attr_is_on = self.coordinator.data["weekDay"]
+            self._attr_is_on = self.coordinator.data.get("weekDay")
 
 
 class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
@@ -188,6 +188,6 @@ class UniversalRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE_PROTECTION:
-            self._attr_is_on = self.coordinator.data["freezeProtectEnabled"]
+            self._attr_is_on = self.coordinator.data.get("freezeProtectEnabled")
         elif self.entity_description.key == TYPE_HOT_DAYS:
-            self._attr_is_on = self.coordinator.data["hotDaysExtraWatering"]
+            self._attr_is_on = self.coordinator.data.get("hotDaysExtraWatering")
