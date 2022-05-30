@@ -3435,6 +3435,7 @@ async def test_max_mireds(hass, mqtt_mock_entry):
 
     assert await async_setup_component(hass, light.DOMAIN, config)
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153

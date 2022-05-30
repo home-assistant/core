@@ -2403,6 +2403,7 @@ async def test_valid_device_class(hass, mqtt_mock_entry):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("cover.test")
     assert state.attributes.get("device_class") == "garage"

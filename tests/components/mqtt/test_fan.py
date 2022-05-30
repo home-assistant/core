@@ -74,12 +74,13 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_fail_setup_if_no_command_topic(hass, caplog):
+async def test_fail_setup_if_no_command_topic(hass, caplog, mqtt_mock_entry):
     """Test if command fails with command topic."""
     assert await async_setup_component(
         hass, fan.DOMAIN, {fan.DOMAIN: {"platform": "mqtt", "name": "test"}}
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
     assert hass.states.get("fan.test") is None
     assert (
         "Invalid config for [fan.mqtt]: required key not provided @ data['command_topic']"

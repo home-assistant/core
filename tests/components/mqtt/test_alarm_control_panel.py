@@ -112,9 +112,9 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
 }
 
 
-async def test_fail_setup_without_state_topic(hass, mqtt_client_mock):
+async def test_fail_setup_without_state_topic(hass, mqtt_mock_entry):
     """Test for failing with no state topic."""
-    with assert_setup_component(0) as config:
+    with assert_setup_component(0, alarm_control_panel.DOMAIN) as config:
         assert await async_setup_component(
             hass,
             alarm_control_panel.DOMAIN,
@@ -126,12 +126,13 @@ async def test_fail_setup_without_state_topic(hass, mqtt_client_mock):
             },
         )
         await hass.async_block_till_done()
+        await mqtt_mock_entry()
         assert not config[alarm_control_panel.DOMAIN]
 
 
-async def test_fail_setup_without_command_topic(hass, mqtt_client_mock):
+async def test_fail_setup_without_command_topic(hass, mqtt_mock_entry):
     """Test failing with no command topic."""
-    with assert_setup_component(0) as config:
+    with assert_setup_component(0, alarm_control_panel.DOMAIN) as config:
         assert await async_setup_component(
             hass,
             alarm_control_panel.DOMAIN,
@@ -143,6 +144,7 @@ async def test_fail_setup_without_command_topic(hass, mqtt_client_mock):
             },
         )
         await hass.async_block_till_done()
+        await mqtt_mock_entry()
         assert not config[alarm_control_panel.DOMAIN]
 
 

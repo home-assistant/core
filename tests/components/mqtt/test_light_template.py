@@ -90,65 +90,49 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_setup_fails(hass, mqtt_client_mock):
+@pytest.mark.parametrize(
+    "test_config",
+    [
+        ({"platform": "mqtt", "schema": "template", "name": "test"},),
+        (
+            {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_topic",
+            },
+        ),
+        (
+            {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_topic",
+                "command_on_template": "on",
+            },
+        ),
+        (
+            {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_topic",
+                "command_off_template": "off",
+            },
+        ),
+    ],
+)
+async def test_setup_fails(hass, mqtt_mock_entry, test_config):
     """Test that setup fails with missing required configuration items."""
-    with assert_setup_component(0, light.DOMAIN):
+    with assert_setup_component(0, light.DOMAIN) as setup_config:
         assert await async_setup_component(
             hass,
             light.DOMAIN,
-            {light.DOMAIN: {"platform": "mqtt", "schema": "template", "name": "test"}},
+            {light.DOMAIN: test_config},
         )
         await hass.async_block_till_done()
-    assert hass.states.get("light.test") is None
-
-    with assert_setup_component(0, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "template",
-                    "name": "test",
-                    "command_topic": "test_topic",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-    assert hass.states.get("light.test") is None
-
-    with assert_setup_component(0, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "template",
-                    "name": "test",
-                    "command_topic": "test_topic",
-                    "command_on_template": "on",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-    assert hass.states.get("light.test") is None
-
-    with assert_setup_component(0, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "template",
-                    "name": "test",
-                    "command_topic": "test_topic",
-                    "command_off_template": "off",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+        await mqtt_mock_entry()
+        assert not setup_config[light.DOMAIN]
     assert hass.states.get("light.test") is None
 
 

@@ -617,6 +617,7 @@ async def test_invalid_device_class(hass, mqtt_mock_entry):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     state = hass.states.get("sensor.test")
     assert state is None

@@ -527,7 +527,6 @@ async def test_if_fires_on_mqtt_message_after_update(
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
 
     # Fake short press.
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
@@ -641,7 +640,6 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
 
     # Fake short press.
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")

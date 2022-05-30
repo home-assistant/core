@@ -65,12 +65,12 @@ async def help_test_availability_when_connection_lost(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def help_test_availability_without_topic(hass, mqtt_mock_client, domain, config):
+async def help_test_availability_without_topic(hass, mqtt_mock_entry, domain, config):
     """Test availability without defined availability topic."""
     assert "availability_topic" not in config[domain]
     assert await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
-    await mqtt_mock_client()
+    await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE

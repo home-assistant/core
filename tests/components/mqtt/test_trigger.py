@@ -20,8 +20,8 @@ def calls(hass):
 @pytest.fixture(autouse=True)
 async def setup_comp(hass, mqtt_mock_entry):
     """Initialize components."""
-    await mqtt_mock_entry()
     mock_component(hass, "group")
+    return await mqtt_mock_entry()
 
 
 async def test_if_fires_on_topic_match(hass, calls):
@@ -214,9 +214,8 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_encoding_default(hass, calls, mqtt_mock_entry):
+async def test_encoding_default(hass, calls, setup_comp):
     """Test default encoding."""
-    mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -228,12 +227,11 @@ async def test_encoding_default(hass, calls, mqtt_mock_entry):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
+    setup_comp.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
 
 
-async def test_encoding_custom(hass, calls, mqtt_mock_entry):
+async def test_encoding_custom(hass, calls, setup_comp):
     """Test default encoding."""
-    mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -245,4 +243,4 @@ async def test_encoding_custom(hass, calls, mqtt_mock_entry):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)
+    setup_comp.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)
