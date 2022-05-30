@@ -360,3 +360,42 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=ALIAS),
+        ),
+        (
+            config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS, CONF_NAME: ALIAS},
+        ),
+    ],
+)
+async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_retry(
+    hass, source, data
+):
+    """Test dhcp or discovery kicks off setup when in retry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(no_device=True), _patch_single_discovery(no_device=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+    with _patch_discovery(), _patch_single_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED

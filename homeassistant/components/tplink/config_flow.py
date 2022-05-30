@@ -45,7 +45,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self, host: str, mac: str) -> FlowResult:
         """Handle any discovery."""
-        await self.async_set_unique_id(dr.format_mac(mac))
+        formatted_mac = dr.format_mac(mac)
+        if current_entry := await self.async_set_unique_id(formatted_mac):
+            if (
+                current_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+                and current_entry.data[CONF_HOST] == host
+            ):
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(current_entry.entry_id)
+                )
+                return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
