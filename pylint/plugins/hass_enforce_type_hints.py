@@ -510,17 +510,11 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     def __init__(self, linter: PyLinter | None = None) -> None:
         super().__init__(linter)
-        self.current_package: str | None = None
         self.module: str | None = None
 
     def visit_module(self, node: astroid.Module) -> None:
         """Called when a Module node is visited."""
         self.module = node.name
-        if node.package:
-            self.current_package = node.name
-        else:
-            # Strip name of the current module
-            self.current_package = node.name[: node.name.rfind(".")]
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
