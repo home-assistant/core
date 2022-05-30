@@ -1,4 +1,4 @@
-"""The tests the recorder filters."""
+"""The tests for recorder filters."""
 
 from homeassistant.components.recorder.filters import (
     extract_include_exclude_filter_conf,
