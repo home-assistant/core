@@ -1,6 +1,7 @@
 """Config flow for Tankerkoenig."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytankerkoenig import customException, getNearbyStations
@@ -30,7 +31,7 @@ from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_
 
 
 async def async_get_nearby_stations(
-    hass: HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Fetch nearby stations."""
     try:
@@ -114,14 +115,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form_user(
                 user_input, errors={CONF_API_KEY: "invalid_auth"}
             )
-        if stations := data.get("stations"):
-            for station in stations:
-                self._stations[
-                    station["id"]
-                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
-
-        else:
+        if len(stations := data.get("stations", [])) == 0:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})
+        for station in stations:
+            self._stations[
+                station["id"]
+            ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
 
         self._data = user_input
 
@@ -180,7 +179,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
                     ): NumberSelector(
                         NumberSelectorConfig(
-                            min=0.1,
+                            min=1.0,
                             max=25,
                             step=0.1,
                             unit_of_measurement=LENGTH_KILOMETERS,
@@ -224,7 +223,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         nearby_stations = await async_get_nearby_stations(
-            self.hass, dict(self.config_entry.data)
+            self.hass, self.config_entry.data
         )
         if stations := nearby_stations.get("stations"):
             for station in stations:
