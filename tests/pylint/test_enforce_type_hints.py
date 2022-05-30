@@ -16,22 +16,27 @@ from . import assert_adds_messages, assert_no_messages
 
 
 @pytest.mark.parametrize(
-    ("module_name", "expected_platform"),
+    ("module_name", "expected_platform", "in_platforms"),
     [
-        ("homeassistant", None),
-        ("homeassistant.components", None),
-        ("homeassistant.components.pylint_test", "__init__"),
-        ("homeassistant.components.pylint_test.device_tracker", "device_tracker"),
-        ("homeassistant.components.pylint_test.device_tracker.sub", None),
+        ("homeassistant", None, False),
+        ("homeassistant.components", None, False),
+        ("homeassistant.components.pylint_test", "__init__", False),
+        ("homeassistant.components.pylint_test.config_flow", "config_flow", False),
+        ("homeassistant.components.pylint_test.light", "light", True),
+        ("homeassistant.components.pylint_test.light.v1", None, False),
     ],
 )
 def test_regex_get_module_platform(
-    hass_enforce_type_hints: ModuleType, module_name: str, expected_platform: str | None
+    hass_enforce_type_hints: ModuleType,
+    module_name: str,
+    expected_platform: str | None,
+    in_platforms: bool,
 ) -> None:
     """Test _get_module_platform regex."""
     platform = hass_enforce_type_hints._get_module_platform(module_name)
 
     assert platform == expected_platform
+    assert (platform in hass_enforce_type_hints._PLATFORMS) == in_platforms
 
 
 @pytest.mark.parametrize(
