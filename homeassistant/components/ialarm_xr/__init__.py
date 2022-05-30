@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, IALARMXR_TO_HASS
+from .const import DOMAIN
 from .utils import async_get_ialarmxr_mac
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
@@ -74,7 +74,7 @@ class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, ialarmxr: IAlarmXR, mac: str) -> None:
         """Initialize global iAlarm data updater."""
         self.ialarmxr: IAlarmXR = ialarmxr
-        self.state: str | None = None
+        self.state: int | None = None
         self.host: str = ialarmxr.host
         self.mac: str = mac
 
@@ -90,7 +90,7 @@ class IAlarmXRDataUpdateCoordinator(DataUpdateCoordinator):
         status: int = self.ialarmxr.get_status()
         _LOGGER.debug("iAlarmXR status: %s", status)
 
-        self.state = IALARMXR_TO_HASS.get(status)
+        self.state = status
 
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarmXR."""
