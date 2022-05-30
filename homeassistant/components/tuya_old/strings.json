@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tuya",
+        "description": "Enter your Tuya credentials.",
+        "data": {
+          "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "platform": "The app where your account is registered",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    },
+    "abort": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "init": {
+        "title": "Configure Tuya Options",
+        "description": "Do not set pollings interval values too low or the calls will fail generating error message in the log",
+        "data": {
+          "discovery_interval": "Discovery device polling interval in seconds",
+          "query_device": "Select device that will use query method for faster status update",
+          "query_interval": "Query device polling interval in seconds",
+          "list_devices": "Select the devices to configure or leave empty to save configuration"
+        }
+      },
+      "device": {
+        "title": "Configure Tuya Device",
+        "description": "Configure options to adjust displayed information for {device_type} device `{device_name}`",
+        "data": {
+          "support_color": "Force color support",
+          "brightness_range_mode": "Brightness range used by device",
+          "min_kelvin": "Min color temperature supported in kelvin",
+          "max_kelvin": "Max color temperature supported in kelvin",
+          "tuya_max_coltemp": "Max color temperature reported by device",
+          "unit_of_measurement": "Temperature unit used by device",
+          "temp_divider": "Temperature values divider (0 = use default)",
+          "curr_temp_divider": "Current Temperature value divider (0 = use default)",
+          "set_temp_divided": "Use divided Temperature value for set temperature command",
+          "temp_step_override": "Target Temperature step",
+          "min_temp": "Min target temperature (use min and max = 0 for default)",
+          "max_temp": "Max target temperature (use min and max = 0 for default)"
+        }
+      }
+    },
+    "error": {
+      "dev_multi_type": "Multiple selected devices to configure must be of the same type",
+      "dev_not_config": "Device type not configurable",
+      "dev_not_found": "Device not found"
+    }
+  }
+}

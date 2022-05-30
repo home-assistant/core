@@ -28,7 +28,7 @@ LOOKIN_COMMANDS_ENCODING = [ENC_PRONTO, ENC_RAW]
 ESPHOME_COMMANDS_ENCODING = [ENC_RAW]
 
 
-def get_controller(hass, controller, encoding, controller_data):
+def get_controller(hass, controller, encoding, controller_data, delay):
     """Return a controller compatible with the specification provided."""
     controllers = {
         BROADLINK_CONTROLLER: BroadlinkController,
@@ -38,19 +38,20 @@ def get_controller(hass, controller, encoding, controller_data):
         ESPHOME_CONTROLLER: ESPHomeController
     }
     try:
-        return controllers[controller](hass, controller, encoding, controller_data)
+        return controllers[controller](hass, controller, encoding, controller_data, delay)
     except KeyError:
         raise Exception("The controller is not supported.")
 
 
 class AbstractController(ABC):
     """Representation of a controller."""
-    def __init__(self, hass, controller, encoding, controller_data):
+    def __init__(self, hass, controller, encoding, controller_data, delay):
         self.check_encoding(encoding)
         self.hass = hass
         self._controller = controller
         self._encoding = encoding
         self._controller_data = controller_data
+        self._delay = delay
 
     @abstractmethod
     def check_encoding(self, encoding):
@@ -103,7 +104,8 @@ class BroadlinkController(AbstractController):
 
         service_data = {
             ATTR_ENTITY_ID: self._controller_data,
-            'command':  commands
+            'command':  commands,
+            'delay_secs': self._delay
         }
 
         await self.hass.services.async_call(

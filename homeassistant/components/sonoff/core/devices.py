@@ -63,6 +63,35 @@ SPEC_2CH = [Switch1, Switch2, LED, RSSI]
 SPEC_3CH = [Switch1, Switch2, Switch3, LED, RSSI]
 SPEC_4CH = [Switch1, Switch2, Switch3, Switch4, LED, RSSI]
 
+Current1 = spec(XSensor100, param="current_00", uid="current_1")
+Current2 = spec(XSensor100, param="current_01", uid="current_2")
+Current3 = spec(XSensor100, param="current_02", uid="current_3")
+Current4 = spec(XSensor100, param="current_03", uid="current_4")
+Voltage1 = spec(XSensor100, param="voltage_00", uid="voltage_1")
+Voltage2 = spec(XSensor100, param="voltage_01", uid="voltage_2")
+Voltage3 = spec(XSensor100, param="voltage_02", uid="voltage_3")
+Voltage4 = spec(XSensor100, param="voltage_03", uid="voltage_4")
+Power1 = spec(XSensor100, param="actPow_00", uid="power_1")
+Power2 = spec(XSensor100, param="actPow_01", uid="power_2")
+Power3 = spec(XSensor100, param="actPow_02", uid="power_3")
+Power4 = spec(XSensor100, param="actPow_03", uid="power_4")
+Energy1 = spec(
+    XEnergySensor, param="kwhHistories_00", uid="energy_1",
+    get_params={"getKwh_00": 2}
+)
+Energy2 = spec(
+    XEnergySensor, param="kwhHistories_01", uid="energy_2",
+    get_params={"getKwh_01": 2}
+)
+Energy3 = spec(
+    XEnergySensor, param="kwhHistories_01", uid="energy_3",
+    get_params={"getKwh_02": 2}
+)
+Energy4 = spec(
+    XEnergySensor, param="kwhHistories_01", uid="energy_4",
+    get_params={"getKwh_03": 2}
+)
+
 # https://github.com/CoolKit-Technologies/eWeLink-API/blob/main/en/UIIDProtocol.md
 DEVICES = {
     1: SPEC_SWITCH,
@@ -125,19 +154,16 @@ DEVICES = {
     104: [XLightB05B, RSSI],  # Sonoff B05-B RGB+CCT color bulb
     107: SPEC_1CH,
     126: [
-        Switch1, Switch2, RSSI,
-        spec(XSensor100, param="current_00", uid="current_1"),
-        spec(XSensor100, param="current_01", uid="current_2"),
-        spec(XSensor100, param="voltage_00", uid="voltage_1"),
-        spec(XSensor100, param="voltage_01", uid="voltage_2"),
-        spec(XSensor100, param="actPow_00", uid="power_1"),
-        spec(XSensor100, param="actPow_01", uid="power_2"),
-        spec(XEnergySensor, param="kwhHistories_00", uid="energy_1",
-             get_params={"getKwh_00": 2}),
-        spec(XEnergySensor, param="kwhHistories_01", uid="energy_2",
-             get_params={"getKwh_01": 2}),
+        Switch1, Switch2, RSSI, Current1, Current2, Voltage1, Voltage2,
+        Power1, Power2, Energy1, Energy2,
     ],  # Sonoff DualR3
     127: [XThermostat],  # https://github.com/AlexxIT/SonoffLAN/issues/358
+    128: [LED],  # SPM-Main
+    130: [
+        Switch1, Switch2, Switch3, Switch4, Current1, Current2, Current3,
+        Current4, Voltage1, Voltage2, Voltage3, Voltage4, Power1, Power2,
+        Power3, Power4, Energy1, Energy2, Energy3, Energy4
+    ],  # SPM-4Relay, https://github.com/AlexxIT/SonoffLAN/issues/658
     133: [
         # Humidity. ALWAYS 50... NSPanel DOESN'T HAVE HUMIDITY SENSOR
         # https://github.com/AlexxIT/SonoffLAN/issues/751
@@ -182,6 +208,7 @@ POW_UI_ACTIVE = {
     5: (3600, {"uiActive": 7200}),
     32: (3600, {"uiActive": 7200}),
     126: (3600, {"uiActive": {"all": 1, "time": 7200}}),
+    130: (3600, {"uiActive": {"all": 1, "time": 7200}}),
     182: (0, {"uiActive": 180}),  # maximum for this model
 }
 

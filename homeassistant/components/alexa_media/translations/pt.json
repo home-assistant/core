@@ -62,24 +62,6 @@
         "description": "**{email} - alexa.{url}**  \nDigite a senha de uso único (OTP).  \n{message}",
         "title": "Alexa Media Player - autenticação de dois fatores"
       },
-      "user_legacy": {
-        "data": {
-          "cookies_txt": "Dados de cookies.txt",
-          "debug": "Depuração avançada",
-          "email": "Endereço de e-mail",
-          "exclude_devices": "Dispositivo excluído (separado por vírgula)",
-          "include_devices": "Dispositivo incluído (separado por vírgula)",
-          "oauth_login": "Habilitar método de aplicativo oauth-token",
-          "otp_secret": "Chave de aplicativo 2FA integrada (gerar códigos 2FA automaticamente)",
-          "password": "Senha",
-          "proxy": "Usar método de proxy de login (2FA não é necessário)",
-          "scan_interval": "Segundos entre análises",
-          "securitycode": "Código 2FA (recomendado para evitar problemas de login)",
-          "url": "Região do domínio Amazon (ex. amazon.com.br)"
-        },
-        "description": "Por favor, introduza a sua [informação](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) pode ser mais fácil!**   \n**Aviso: a Amazon informa incorretamente 'Insira um e-mail ou número de celular válido' quando [2FA Code é necessário](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
-        "title": "Alexa Media Player - Configuração de Compatibilidade"
-      },
       "user": {
         "data": {
           "cookies_txt": "Dados de cookies.txt",
@@ -98,6 +80,24 @@
         },
         "description": "Por favor, confirme as informações abaixo. Para configuração de compatibilidade, desative a opção 'Usar método de proxy de login'.",
         "title": "Alexa Media Player - Configuração"
+      },
+      "user_legacy": {
+        "data": {
+          "cookies_txt": "Dados de cookies.txt",
+          "debug": "Depuração avançada",
+          "email": "Endereço de e-mail",
+          "exclude_devices": "Dispositivo excluído (separado por vírgula)",
+          "include_devices": "Dispositivo incluído (separado por vírgula)",
+          "oauth_login": "Habilitar método de aplicativo oauth-token",
+          "otp_secret": "Chave de aplicativo 2FA integrada (gerar códigos 2FA automaticamente)",
+          "password": "Senha",
+          "proxy": "Usar método de proxy de login (2FA não é necessário)",
+          "scan_interval": "Segundos entre análises",
+          "securitycode": "Código 2FA (recomendado para evitar problemas de login)",
+          "url": "Região do domínio Amazon (ex. amazon.com.br)"
+        },
+        "description": "Por favor, introduza a sua [informação](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) pode ser mais fácil!**   \n**Aviso: a Amazon informa incorretamente 'Insira um e-mail ou número de celular válido' quando [2FA Code é necessário](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
+        "title": "Alexa Media Player - Configuração de Compatibilidade"
       }
     }
   },

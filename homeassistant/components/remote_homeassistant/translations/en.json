@@ -1,0 +1,83 @@
+{
+  "config": {
+    "flow_title": "Remote: {name}",
+    "step": {
+      "user": {
+        "title": "Select installation type",
+        "description": "The remote node is the instance on which the states are gathered from"
+      },
+      "connection_details": {
+        "title": "Connection details",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "secure": "Secure",
+          "verify_ssl": "Verify SSL",
+          "access_token": "Access token"
+        }
+      }
+    },
+    "error": {
+      "api_problem": "Bad response from server",
+      "cannot_connect": "Failed to connect to server",
+      "invalid_auth": "Invalid credentials",
+      "unsupported_version": "Unsupported version. At least version 0.111 is required.",
+      "unknown": "An unknown error occurred",
+      "missing_endpoint": "You need to install Remote Home Assistant on this host and add remote_homeassistant: to its configuration."
+    },
+    "abort": {
+      "already_configured": "Already configured"
+    }
+  },
+  "state": {
+    "_": {
+      "disconnected": "Disconnected",
+      "connecting": "Connecting",
+      "connected": "Connected",
+      "reconnecting": "Re-connecting",
+      "auth_invalid": "Invalid access token",
+      "auth_required": "Authentication Required"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Basic Options (step 1/4)",
+        "data": {
+            "entity_prefix": "Entity prefix (optional)",
+            "load_components": "Load component (if not loaded)",
+            "service_prefix": "Service prefix",
+            "services": "Remote Services"
+        }
+      },
+      "domain_entity_filters": {
+        "title": "Domain and entity filters (step 2/4)",
+        "data": {
+          "include_domains": "Include domains",
+          "include_entities": "Include entities",
+          "exclude_domains": "Exclude domains",
+          "exclude_entities": "Exclude entities"
+        }
+      },
+      "general_filters": {
+        "title": "Filters (step 3/4)",
+        "description": "Add a new filter by specifying `Entity ID`, one or more filter attributes and press `Submit`. Remove existing filters by unticking them in `Filters`.\n\nLeave `Entity ID` empty and press `Submit` to make no further changes.",
+        "data": {
+          "filter": "Filters",
+          "entity_id": "Entity ID",
+          "unit_of_measurement": "Unit of measurement",
+          "above": "Above",
+          "below": "Below"
+        }
+      },
+      "events": {
+        "title": "Subscribed events (step 4/4)",
+        "description": "Add a new subscribed event by entering its name in `Add new event` and press `Submit`. Remove existing events by unticking them in `Events`.\n\nLeave `Add new event` and press `Submit` to make no further changes.",
+        "data": {
+            "subscribe_events": "Events",
+            "add_new_event": "Add new event"
+        }
+      }
+    }
+  }
+}

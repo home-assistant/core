@@ -62,24 +62,6 @@
         "description": "**{email} - alexa.{url}**  \nGeef de verificatiecode in.  \n{message}",
         "title": "Alexa Media Player - Tweestapsverificatie"
       },
-      "user_legacy": {
-        "data": {
-          "cookies_txt": "config::step::user::data::cookies_txt",
-          "debug": "Geavanceerd debuggen",
-          "email": "E-mailadres",
-          "exclude_devices": "Apparaten uitsluiten (Scheiding: komma)",
-          "include_devices": "Apparaten toevoegen (Scheiding: komma)",
-          "oauth_login": "Enable oauth-token app method",
-          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
-          "password": "Paswoord",
-          "proxy": "Use Login Proxy method (2FA not required)",
-          "scan_interval": "Aantal seconden tussen scans",
-          "securitycode": "2FA Code (recommended to avoid login issues)",
-          "url": "Domeinnaam van Amazon regio (bv.amazon.co.uk)"
-        },
-        "description": "Please enter your [information](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) may be easiest!**   \n**WARNING: Amazon incorrectly reports 'Enter a valid email or mobile number' when [2FA Code is required](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
-        "title": "Alexa Media Player - Legacy Configuration"
-      },
       "user": {
         "data": {
           "cookies_txt": "config::step::user::data::cookies_txt",
@@ -98,6 +80,24 @@
         },
         "description": "Vul je gegevens in a.u.b.",
         "title": "Alexa Media Player - Configuratie"
+      },
+      "user_legacy": {
+        "data": {
+          "cookies_txt": "config::step::user::data::cookies_txt",
+          "debug": "Geavanceerd debuggen",
+          "email": "E-mailadres",
+          "exclude_devices": "Apparaten uitsluiten (Scheiding: komma)",
+          "include_devices": "Apparaten toevoegen (Scheiding: komma)",
+          "oauth_login": "Enable oauth-token app method",
+          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
+          "password": "Paswoord",
+          "proxy": "Use Login Proxy method (2FA not required)",
+          "scan_interval": "Aantal seconden tussen scans",
+          "securitycode": "2FA Code (recommended to avoid login issues)",
+          "url": "Domeinnaam van Amazon regio (bv.amazon.co.uk)"
+        },
+        "description": "Please enter your [information](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) may be easiest!**   \n**WARNING: Amazon incorrectly reports 'Enter a valid email or mobile number' when [2FA Code is required](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
+        "title": "Alexa Media Player - Legacy Configuration"
       }
     }
   },

@@ -62,24 +62,6 @@
         "description": "**{email} - alexa.{url}**  \nSkriv inn engangspassordet (OTP).  \n>{message}",
         "title": "Alexa Media Player - Tofaktorautentisering"
       },
-      "user_legacy": {
-        "data": {
-          "cookies_txt": "config::step::user::data::cookies_txt",
-          "debug": "Avansert feilsøking",
-          "email": "Epostadresse",
-          "exclude_devices": "Ekskludert enhet (kommaseparert)",
-          "include_devices": "Inkluder enhet (kommaseparert)",
-          "oauth_login": "Enable oauth-token app method",
-          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
-          "password": "Passord",
-          "proxy": "Use Login Proxy method (2FA not required)",
-          "scan_interval": "Sekunder mellom skanninger",
-          "securitycode": "2FA-kode (anbefales for å unngå påloggingsproblemer)",
-          "url": "Amazon-regiondomenet (f.eks. Amazon.co.uk)"
-        },
-        "description": "Please enter your [information](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) may be easiest!**   \n**WARNING: Amazon incorrectly reports 'Enter a valid email or mobile number' when [2FA Code is required](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
-        "title": "Alexa Media Player - Legacy Configuration"
-      },
       "user": {
         "data": {
           "cookies_txt": "config::step::user::data::cookies_txt",
@@ -98,6 +80,24 @@
         },
         "description": "Bekreft informasjonen nedenfor. For eldre konfigurasjon, deaktiver alternativet \"Bruk innlogging proxy-metode\".",
         "title": "Alexa Media Player - Konfigurasjon"
+      },
+      "user_legacy": {
+        "data": {
+          "cookies_txt": "config::step::user::data::cookies_txt",
+          "debug": "Avansert feilsøking",
+          "email": "Epostadresse",
+          "exclude_devices": "Ekskludert enhet (kommaseparert)",
+          "include_devices": "Inkluder enhet (kommaseparert)",
+          "oauth_login": "Enable oauth-token app method",
+          "otp_secret": "Built-in 2FA App Key (automatically generate 2FA Codes)",
+          "password": "Passord",
+          "proxy": "Use Login Proxy method (2FA not required)",
+          "scan_interval": "Sekunder mellom skanninger",
+          "securitycode": "2FA-kode (anbefales for å unngå påloggingsproblemer)",
+          "url": "Amazon-regiondomenet (f.eks. Amazon.co.uk)"
+        },
+        "description": "Please enter your [information](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) may be easiest!**   \n**WARNING: Amazon incorrectly reports 'Enter a valid email or mobile number' when [2FA Code is required](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
+        "title": "Alexa Media Player - Legacy Configuration"
       }
     }
   },

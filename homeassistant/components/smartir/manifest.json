@@ -4,11 +4,12 @@
   "documentation": "https://github.com/smartHomeHub/SmartIR",
   "dependencies": [],
   "codeowners": ["@smartHomeHub"],
-  "requirements": ["aiofiles==0.5.0"],
-  "homeassistant": "0.115.0",
+  "requirements": ["aiofiles==0.6.0"],
+  "homeassistant": "2022.4.0",
+  "version": "1.17.6",
   "updater": {
-    "version": "1.13.2",
-    "releaseNotes": "-- Fixes Broadlink commands sequence #481",
+    "version": "1.17.6",
+    "releaseNotes": "-- Removes legacy imports to the fan component",
     "files": [
       "__init__.py",
       "climate.py",

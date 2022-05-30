@@ -62,24 +62,6 @@
         "description": "**{email} - alexa.{url}**  \nInsira a senha de uso único (OTP).\n{message}",
         "title": "Alexa Media Player - Autenticação de dois fatores"
       },
-      "user_legacy": {
-        "data": {
-          "cookies_txt": "Cookies.txt data",
-          "debug": "Depuração avançada",
-          "email": "Endereço de email",
-          "exclude_devices": "Dispositivos exclusos (separados por virgula)",
-          "include_devices": "Dispositivos inclusos (separados por vírgula)",
-          "oauth_login": "Habilitar o aplicativo para método auth-token",
-          "otp_secret": "Aplicativo integrado para chaves 2FA (Automaticamente gera códigos 2FA)",
-          "password": "Senha",
-          "proxy": "Usar método Login Proxy (Não requer 2FA)",
-          "scan_interval": "Segundos entre varreduras",
-          "securitycode": "Código 2FA (recomendado para evitar problemas de login)",
-          "url": "Domínio regional da amazon (ex: amazon.co.uk)"
-        },
-        "description": "Por favor insira sua [informação](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) pode ser mais fácil!**   \n**AVISO! A amazon reporta incorretamente 'Insira um email ou número de telefone válido' quando [Código de 2FA é requirido](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
-        "title": "Alexa Media Player - Configurações legado"
-      },
       "user": {
         "data": {
           "cookies_txt": "Dados de cookies.txt",
@@ -98,6 +80,24 @@
         },
         "description": "Por favor, confirme as informações abaixo. Para configuração legada, desative a opção `Usar método de proxy de login'.",
         "title": "Alexa Media Player - Configurações"
+      },
+      "user_legacy": {
+        "data": {
+          "cookies_txt": "Cookies.txt data",
+          "debug": "Depuração avançada",
+          "email": "Endereço de email",
+          "exclude_devices": "Dispositivos exclusos (separados por virgula)",
+          "include_devices": "Dispositivos inclusos (separados por vírgula)",
+          "oauth_login": "Habilitar o aplicativo para método auth-token",
+          "otp_secret": "Aplicativo integrado para chaves 2FA (Automaticamente gera códigos 2FA)",
+          "password": "Senha",
+          "proxy": "Usar método Login Proxy (Não requer 2FA)",
+          "scan_interval": "Segundos entre varreduras",
+          "securitycode": "Código 2FA (recomendado para evitar problemas de login)",
+          "url": "Domínio regional da amazon (ex: amazon.co.uk)"
+        },
+        "description": "Por favor insira sua [informação](https://github.com/custom-components/alexa_media_player/wiki/Configuration#integrations-page). **[Cookie import](https://github.com/custom-components/alexa_media_player/wiki/Configuration#cookie-import) pode ser mais fácil!**   \n**AVISO! A amazon reporta incorretamente 'Insira um email ou número de telefone válido' quando [Código de 2FA é requirido](https://github.com/custom-components/alexa_media_player/wiki/Configuration#enable-two-factor-authentication-for-your-amazon-account).**  \n>{message}",
+        "title": "Alexa Media Player - Configurações legado"
       }
     }
   },

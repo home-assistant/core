@@ -30,24 +30,29 @@ class XCover(XEntity, CoverEntity):
         )
 
     def set_state(self, params: dict):
-        if "sequence" in params or self.current_cover_position is None:
+        # => command to cover from mobile app
+        if len(params) == 1:
+            if "switch" in params:
+                # device receive command - on=open/off=close/pause=stop
+                self._attr_is_opening = params["switch"] == "on"
+                self._attr_is_closing = params["switch"] == "off"
+            elif "setclose" in params:
+                # device receive command - mode to position
+                pos = 100 - params["setclose"]
+                self._attr_is_closing = pos < self.current_cover_position
+                self._attr_is_opening = pos > self.current_cover_position
+
+        # BINTHEN BCM Series payload:
+        #   {"sequence":"1652428259464","setclose":38}
+        # KingArt KING-Q4 payloads:
+        #   {"switch":"off","setclose":21} or {"switch":"on","setclose":0}
+        elif "setclose" in params:
             # the device has finished the action
             # reversed position: HA closed at 0, eWeLink closed at 100
             self._attr_current_cover_position = 100 - params["setclose"]
-            self._attr_is_closed = self._attr_current_cover_position == 0
+            self._attr_is_closed = self.current_cover_position == 0
             self._attr_is_closing = False
             self._attr_is_opening = False
-
-        elif "setclose" in params:
-            # device receive command - mode to position
-            pos = 100 - params["setclose"]
-            self._attr_is_closing = pos < self._attr_current_cover_position
-            self._attr_is_opening = pos > self._attr_current_cover_position
-
-        elif "switch" in params:
-            # device receive command - on=open/off=close/pause=stop
-            self._attr_is_opening = params["switch"] == "on"
-            self._attr_is_closing = params["switch"] == "off"
 
     async def async_stop_cover(self, **kwargs):
         params = {"switch": "pause"}
