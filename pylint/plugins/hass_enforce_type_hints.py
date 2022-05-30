@@ -20,7 +20,7 @@ class TypeHintMatch:
 
     function_name: str
     arg_types: dict[int, str]
-    return_type: list[str] | str | None | object
+    return_type: list[str] | str | None
 
 
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
@@ -387,9 +387,7 @@ _METHOD_MATCH: dict[str, list[TypeHintMatch]] = {
 }
 
 
-def _is_valid_type(
-    expected_type: list[str] | str | None | object, node: astroid.NodeNG
-) -> bool:
+def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
         return True
