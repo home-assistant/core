@@ -18,10 +18,9 @@ UNDEFINED = object()
 class TypeHintMatch:
     """Class for pattern matching."""
 
-    module_filter: re.Pattern
     function_name: str
     arg_types: dict[int, str]
-    return_type: list[str] | str | None
+    return_type: list[str] | str | None | object
 
 
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
@@ -66,342 +65,331 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
 }
 
-_METHOD_MATCH: list[TypeHintMatch] = [
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["init"],
-        function_name="setup",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["init"],
-        function_name="async_setup",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["init"],
-        function_name="async_setup_entry",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["init"],
-        function_name="async_remove_entry",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["init"],
-        function_name="async_unload_entry",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["init"],
-        function_name="async_migrate_entry",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["any_platform"],
-        function_name="setup_platform",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-            2: "AddEntitiesCallback",
-            3: "DiscoveryInfoType | None",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["any_platform"],
-        function_name="async_setup_platform",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-            2: "AddEntitiesCallback",
-            3: "DiscoveryInfoType | None",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["any_platform"],
-        function_name="async_setup_entry",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-            2: "AddEntitiesCallback",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["application_credentials"],
-        function_name="async_get_auth_implementation",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-            2: "ClientCredential",
-        },
-        return_type="AbstractOAuth2Implementation",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["application_credentials"],
-        function_name="async_get_authorization_server",
-        arg_types={
-            0: "HomeAssistant",
-        },
-        return_type="AuthorizationServer",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["backup"],
-        function_name="async_pre_backup",
-        arg_types={
-            0: "HomeAssistant",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["backup"],
-        function_name="async_post_backup",
-        arg_types={
-            0: "HomeAssistant",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["cast"],
-        function_name="async_get_media_browser_root_object",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-        },
-        return_type="list[BrowseMedia]",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["cast"],
-        function_name="async_browse_media",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-            2: "str",
-            3: "str",
-        },
-        return_type=["BrowseMedia", "BrowseMedia | None"],
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["cast"],
-        function_name="async_play_media",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-            2: "Chromecast",
-            3: "str",
-            4: "str",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["config_flow"],
-        function_name="_async_has_devices",
-        arg_types={
-            0: "HomeAssistant",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_action"],
-        function_name="async_validate_action_config",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="ConfigType",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_action"],
-        function_name="async_call_action_from_config",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-            2: "TemplateVarsType",
-            3: "Context | None",
-        },
-        return_type=None,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_action"],
-        function_name="async_get_action_capabilities",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="dict[str, Schema]",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_action"],
-        function_name="async_get_actions",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-        },
-        return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_condition"],
-        function_name="async_validate_condition_config",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="ConfigType",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_condition"],
-        function_name="async_condition_from_config",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="ConditionCheckerType",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_condition"],
-        function_name="async_get_condition_capabilities",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="dict[str, Schema]",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_condition"],
-        function_name="async_get_conditions",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-        },
-        return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_tracker"],
-        function_name="setup_scanner",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-            2: "Callable[..., None]",
-            3: "DiscoveryInfoType | None",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_tracker"],
-        function_name="async_setup_scanner",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-            2: "Callable[..., Awaitable[None]]",
-            3: "DiscoveryInfoType | None",
-        },
-        return_type="bool",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_tracker"],
-        function_name="get_scanner",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type=["DeviceScanner", "DeviceScanner | None"],
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_tracker"],
-        function_name="async_get_scanner",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type=["DeviceScanner", "DeviceScanner | None"],
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_trigger"],
-        function_name="async_validate_condition_config",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="ConfigType",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_trigger"],
-        function_name="async_attach_trigger",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-            2: "AutomationActionType",
-            3: "AutomationTriggerInfo",
-        },
-        return_type="CALLBACK_TYPE",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_trigger"],
-        function_name="async_get_trigger_capabilities",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigType",
-        },
-        return_type="dict[str, Schema]",
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["device_trigger"],
-        function_name="async_get_triggers",
-        arg_types={
-            0: "HomeAssistant",
-            1: "str",
-        },
-        return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["diagnostics"],
-        function_name="async_get_config_entry_diagnostics",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-        },
-        return_type=UNDEFINED,
-    ),
-    TypeHintMatch(
-        module_filter=_MODULE_FILTERS["diagnostics"],
-        function_name="async_get_device_diagnostics",
-        arg_types={
-            0: "HomeAssistant",
-            1: "ConfigEntry",
-            2: "DeviceEntry",
-        },
-        return_type=UNDEFINED,
-    ),
-]
+_METHOD_MATCH: dict[str, list[TypeHintMatch]] = {
+    "init": [
+        TypeHintMatch(
+            function_name="setup",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_setup",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_setup_entry",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+            },
+            return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_remove_entry",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+            },
+            return_type=None,
+        ),
+        TypeHintMatch(
+            function_name="async_unload_entry",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+            },
+            return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_migrate_entry",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+            },
+            return_type="bool",
+        ),
+    ],
+    "any_platform": [
+        TypeHintMatch(
+            function_name="setup_platform",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "AddEntitiesCallback",
+                3: "DiscoveryInfoType | None",
+            },
+            return_type=None,
+        ),
+        TypeHintMatch(
+            function_name="async_setup_platform",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "AddEntitiesCallback",
+                3: "DiscoveryInfoType | None",
+            },
+            return_type=None,
+        ),
+        TypeHintMatch(
+            function_name="async_setup_entry",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+                2: "AddEntitiesCallback",
+            },
+            return_type=None,
+        ),
+    ],
+    "application_credentials": [
+        TypeHintMatch(
+            function_name="async_get_auth_implementation",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+                2: "ClientCredential",
+            },
+            return_type="AbstractOAuth2Implementation",
+        ),
+        TypeHintMatch(
+            function_name="async_get_authorization_server",
+            arg_types={
+                0: "HomeAssistant",
+            },
+            return_type="AuthorizationServer",
+        ),
+    ],
+    "backup": [
+        TypeHintMatch(
+            function_name="async_pre_backup",
+            arg_types={
+                0: "HomeAssistant",
+            },
+            return_type=None,
+        ),
+        TypeHintMatch(
+            function_name="async_post_backup",
+            arg_types={
+                0: "HomeAssistant",
+            },
+            return_type=None,
+        ),
+    ],
+    "cast": [
+        TypeHintMatch(
+            function_name="async_get_media_browser_root_object",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type="list[BrowseMedia]",
+        ),
+        TypeHintMatch(
+            function_name="async_browse_media",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+                2: "str",
+                3: "str",
+            },
+            return_type=["BrowseMedia", "BrowseMedia | None"],
+        ),
+        TypeHintMatch(
+            function_name="async_play_media",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+                2: "Chromecast",
+                3: "str",
+                4: "str",
+            },
+            return_type="bool",
+        ),
+    ],
+    "config_flow": [
+        TypeHintMatch(
+            function_name="_async_has_devices",
+            arg_types={
+                0: "HomeAssistant",
+            },
+            return_type="bool",
+        ),
+    ],
+    "device_action": [
+        TypeHintMatch(
+            function_name="async_validate_action_config",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="ConfigType",
+        ),
+        TypeHintMatch(
+            function_name="async_call_action_from_config",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "TemplateVarsType",
+                3: "Context | None",
+            },
+            return_type=None,
+        ),
+        TypeHintMatch(
+            function_name="async_get_action_capabilities",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="dict[str, Schema]",
+        ),
+        TypeHintMatch(
+            function_name="async_get_actions",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+        ),
+    ],
+    "device_condition": [
+        TypeHintMatch(
+            function_name="async_validate_condition_config",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="ConfigType",
+        ),
+        TypeHintMatch(
+            function_name="async_condition_from_config",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="ConditionCheckerType",
+        ),
+        TypeHintMatch(
+            function_name="async_get_condition_capabilities",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="dict[str, Schema]",
+        ),
+        TypeHintMatch(
+            function_name="async_get_conditions",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+        ),
+    ],
+    "device_tracker": [
+        TypeHintMatch(
+            function_name="setup_scanner",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "Callable[..., None]",
+                3: "DiscoveryInfoType | None",
+            },
+            return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_setup_scanner",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "Callable[..., Awaitable[None]]",
+                3: "DiscoveryInfoType | None",
+            },
+            return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="get_scanner",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type=["DeviceScanner", "DeviceScanner | None"],
+        ),
+        TypeHintMatch(
+            function_name="async_get_scanner",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type=["DeviceScanner", "DeviceScanner | None"],
+        ),
+    ],
+    "device_trigger": [
+        TypeHintMatch(
+            function_name="async_validate_condition_config",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="ConfigType",
+        ),
+        TypeHintMatch(
+            function_name="async_attach_trigger",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+                2: "AutomationActionType",
+                3: "AutomationTriggerInfo",
+            },
+            return_type="CALLBACK_TYPE",
+        ),
+        TypeHintMatch(
+            function_name="async_get_trigger_capabilities",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigType",
+            },
+            return_type="dict[str, Schema]",
+        ),
+        TypeHintMatch(
+            function_name="async_get_triggers",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
+        ),
+    ],
+    "diagnostics": [
+        TypeHintMatch(
+            function_name="async_get_config_entry_diagnostics",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+            },
+            return_type=UNDEFINED,
+        ),
+        TypeHintMatch(
+            function_name="async_get_device_diagnostics",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+                2: "DeviceEntry",
+            },
+            return_type=UNDEFINED,
+        ),
+    ],
+}
 
 
-def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) -> bool:
+def _is_valid_type(
+    expected_type: list[str] | str | None | object, node: astroid.NodeNG
+) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
         return True
@@ -510,32 +498,32 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     def __init__(self, linter: PyLinter | None = None) -> None:
         super().__init__(linter)
-        self.module: str | None = None
+        self._function_matchers: list[TypeHintMatch] = []
 
     def visit_module(self, node: astroid.Module) -> None:
         """Called when a Module node is visited."""
-        self.module = node.name
+        self._function_matchers = []
+        for key, pattern in _MODULE_FILTERS.items():
+            if pattern.match(node.name) and (matches := _METHOD_MATCH.get(key)):
+                self._function_matchers.extend(matches)
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
-        for match in _METHOD_MATCH:
-            self._visit_functiondef(node, match)
+        self._visit_functiondef(node)
 
     def visit_asyncfunctiondef(self, node: astroid.AsyncFunctionDef) -> None:
         """Called when an AsyncFunctionDef node is visited."""
-        for match in _METHOD_MATCH:
-            self._visit_functiondef(node, match)
+        self._visit_functiondef(node)
 
-    def _visit_functiondef(
-        self, node: astroid.FunctionDef, match: TypeHintMatch
-    ) -> None:
-        if node.name != match.function_name:
-            return
-        if node.is_method():
-            return
-        if not match.module_filter.match(self.module):
-            return
+    def _visit_functiondef(self, node: astroid.FunctionDef) -> None:
+        for match in self._function_matchers:
+            if node.name != match.function_name:
+                continue
+            if node.is_method():
+                continue
+            self._check_function(node, match)
 
+    def _check_function(self, node: astroid.FunctionDef, match: TypeHintMatch) -> None:
         # Check that at least one argument is annotated.
         annotations = _get_all_annotations(node)
         if node.returns is None and not _has_valid_annotations(annotations):
