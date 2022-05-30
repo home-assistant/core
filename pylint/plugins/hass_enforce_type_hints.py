@@ -34,39 +34,10 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
     "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
 
-_MODULE_FILTERS: dict[str, re.Pattern] = {
-    # init matches only in the package root (__init__.py)
-    "init": re.compile(r"^homeassistant\.components\.\w+$"),
-    # any_platform matches any platform in the package root ({platform}.py)
-    "any_platform": re.compile(
-        f"^homeassistant\\.components\\.\\w+\\.({'|'.join([platform.value for platform in Platform])})$"
-    ),
-    # application_credentials matches only in the package root (application_credentials.py)
-    "application_credentials": re.compile(
-        r"^homeassistant\.components\.\w+\.(application_credentials)$"
-    ),
-    # backup matches only in the package root (backup.py)
-    "backup": re.compile(r"^homeassistant\.components\.\w+\.(backup)$"),
-    # cast matches only in the package root (cast.py)
-    "cast": re.compile(r"^homeassistant\.components\.\w+\.(cast)$"),
-    # config_flow matches only in the package root (config_flow.py)
-    "config_flow": re.compile(r"^homeassistant\.components\.\w+\.(config_flow)$"),
-    # device_action matches only in the package root (device_action.py)
-    "device_action": re.compile(r"^homeassistant\.components\.\w+\.(device_action)$"),
-    # device_condition matches only in the package root (device_condition.py)
-    "device_condition": re.compile(
-        r"^homeassistant\.components\.\w+\.(device_condition)$"
-    ),
-    # device_tracker matches only in the package root (device_tracker.py)
-    "device_tracker": re.compile(r"^homeassistant\.components\.\w+\.(device_tracker)$"),
-    # device_trigger matches only in the package root (device_trigger.py)
-    "device_trigger": re.compile(r"^homeassistant\.components\.\w+\.(device_trigger)$"),
-    # diagnostics matches only in the package root (diagnostics.py)
-    "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
-}
+_MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
-    "init": [
+    "__init__": [
         TypeHintMatch(
             function_name="setup",
             arg_types={
@@ -116,7 +87,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type="bool",
         ),
     ],
-    "any_platform": [
+    "__any_platform__": [
         TypeHintMatch(
             function_name="setup_platform",
             arg_types={
@@ -473,6 +444,19 @@ def _has_valid_annotations(
     return False
 
 
+def _get_module_platform(module_name: str) -> str | None:
+    """Called when a Module node is visited."""
+    if not (module_match := _MODULE_REGEX.match(module_name)):
+        # Ensure `homeassistant.components.<component>`
+        # Or `homeassistant.components.<component>.<platform>`
+        return None
+
+    platform = module_match.groups()[0]
+    if platform is None:
+        return "__init__"
+    return platform[1:]
+
+
 class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     """Checker for setup type hints."""
 
@@ -501,9 +485,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def visit_module(self, node: astroid.Module) -> None:
         """Called when a Module node is visited."""
         self._function_matchers = []
-        for key, pattern in _MODULE_FILTERS.items():
-            if pattern.match(node.name) and (matches := _FUNCTION_MATCH.get(key)):
-                self._function_matchers.extend(matches)
+
+        if (module_platform := _get_module_platform(node.name)) is None:
+            return
+
+        if module_platform in [platform.value for platform in Platform]:
+            self._function_matchers.extend(_FUNCTION_MATCH["__any_platform__"])
+
+        if matches := _FUNCTION_MATCH.get(module_platform):
+            self._function_matchers.extend(matches)
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
