@@ -83,6 +83,7 @@ homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
+homeassistant.components.emulated_hue.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
