@@ -393,7 +393,7 @@ class RainMachineZone(RainMachineActivitySwitch):
             ATTR_CURRENT_CYCLE: data["cycle"],
             ATTR_ID: data["uid"],
             ATTR_NO_CYCLES: data["noOfCycles"],
-            ATTR_RESTRICTIONS: data("restriction"),
+            ATTR_RESTRICTIONS: data["restriction"],
             ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
             ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
             ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
