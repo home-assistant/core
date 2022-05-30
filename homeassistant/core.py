@@ -37,6 +37,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+from typing_extensions import ParamSpec
 import voluptuous as vol
 import yarl
 
@@ -98,6 +99,7 @@ block_async_io.enable()
 _T = TypeVar("_T")
 _R = TypeVar("_R")
 _R_co = TypeVar("_R_co", covariant=True)
+_P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
@@ -182,7 +184,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
-class HassJob(Generic[_R_co]):
+class HassJob(Generic[_P, _R_co]):
     """Represent a job to be run later.
 
     We check the callable type in advance
@@ -192,7 +194,7 @@ class HassJob(Generic[_R_co]):
 
     __slots__ = ("job_type", "target")
 
-    def __init__(self, target: Callable[..., _R_co]) -> None:
+    def __init__(self, target: Callable[_P, _R_co]) -> None:
         """Create a job object."""
         self.target = target
         self.job_type = _get_hassjob_callable_job_type(target)
@@ -416,20 +418,20 @@ class HomeAssistant:
     @overload
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[Coroutine[Any, Any, _R]], *args: Any
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_add_hass_job(
-        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
 
@@ -512,20 +514,20 @@ class HomeAssistant:
     @overload
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[Coroutine[Any, Any, _R]], *args: Any
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @overload
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         ...
 
     @callback
     def async_run_hass_job(
-        self, hassjob: HassJob[Coroutine[Any, Any, _R] | _R], *args: Any
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
     ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
@@ -814,7 +816,7 @@ class Event:
 class _FilterableJob(NamedTuple):
     """Event listener job to be executed with optional filter."""
 
-    job: HassJob[None | Awaitable[None]]
+    job: HassJob[[Event], None | Awaitable[None]]
     event_filter: Callable[[Event], bool] | None
     run_immediately: bool
 
