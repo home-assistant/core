@@ -95,7 +95,11 @@ def test_ignore_not_annotations(
     hass_enforce_type_hints: ModuleType, type_hint_checker: BaseChecker, code: str
 ) -> None:
     """Ensure that _is_valid_type is not run if there are no annotations."""
-    func_node = astroid.extract_node(code)
+    func_node = astroid.extract_node(
+        code,
+        "homeassistant.components.pylint_test",
+    )
+    type_hint_checker.visit_module(func_node.parent)
 
     with patch.object(
         hass_enforce_type_hints, "_is_valid_type", return_value=True
@@ -131,7 +135,11 @@ def test_dont_ignore_partial_annotations(
     hass_enforce_type_hints: ModuleType, type_hint_checker: BaseChecker, code: str
 ) -> None:
     """Ensure that _is_valid_type is run if there is at least one annotation."""
-    func_node = astroid.extract_node(code)
+    func_node = astroid.extract_node(
+        code,
+        "homeassistant.components.pylint_test",
+    )
+    type_hint_checker.visit_module(func_node.parent)
 
     with patch.object(
         hass_enforce_type_hints, "_is_valid_type", return_value=True
@@ -144,7 +152,6 @@ def test_invalid_discovery_info(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_tracker"
     func_node, discovery_info_node = astroid.extract_node(
         """
     async def async_setup_scanner( #@
@@ -154,8 +161,10 @@ def test_invalid_discovery_info(
         discovery_info: dict[str, Any] | None = None, #@
     ) -> bool:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_tracker",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_adds_messages(
         linter,
@@ -176,7 +185,6 @@ def test_valid_discovery_info(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure valid hints are accepted for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_tracker"
     func_node = astroid.extract_node(
         """
     async def async_setup_scanner( #@
@@ -186,8 +194,10 @@ def test_valid_discovery_info(
         discovery_info: DiscoveryInfoType | None = None,
     ) -> bool:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_tracker",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_no_messages(linter):
         type_hint_checker.visit_asyncfunctiondef(func_node)
@@ -197,7 +207,6 @@ def test_invalid_list_dict_str_any(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_trigger"
     func_node = astroid.extract_node(
         """
     async def async_get_triggers( #@
@@ -205,8 +214,10 @@ def test_invalid_list_dict_str_any(
         device_id: str
     ) -> list:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_trigger",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_adds_messages(
         linter,
@@ -227,7 +238,6 @@ def test_valid_list_dict_str_any(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure valid hints are accepted for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_trigger"
     func_node = astroid.extract_node(
         """
     async def async_get_triggers( #@
@@ -235,8 +245,10 @@ def test_valid_list_dict_str_any(
         device_id: str
     ) -> list[dict[str, Any]]:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_trigger",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_no_messages(linter):
         type_hint_checker.visit_asyncfunctiondef(func_node)
