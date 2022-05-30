@@ -122,7 +122,6 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(entry, coordinator, eight, user_id, sensor)
-        self._attr_native_unit_of_measurement = PERCENTAGE
         assert self._user_obj
 
         _LOGGER.debug(
