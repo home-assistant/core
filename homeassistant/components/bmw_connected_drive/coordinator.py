@@ -6,7 +6,7 @@ import logging
 
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
-from bimmer_connected.vehicle.models import GPSPosition
+from bimmer_connected.models import GPSPosition
 from httpx import HTTPError, TimeoutException
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +32,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             entry.data[CONF_PASSWORD],
             get_region_from_name(entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
+            use_metric_units=hass.config.units.is_metric,
         )
         self.read_only = entry.options[CONF_READ_ONLY]
         self._entry = entry
