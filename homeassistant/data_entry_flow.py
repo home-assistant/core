@@ -52,7 +52,7 @@ class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
     def __init__(
-        self, reason: str, description_placeholders: dict[str, str | None] | None = None
+        self, reason: str, description_placeholders: Mapping[str, str] | None = None
     ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
@@ -75,7 +75,7 @@ class FlowResult(TypedDict, total=False):
     required: bool
     errors: dict[str, str] | None
     description: str | None
-    description_placeholders: dict[str, str | None] | None
+    description_placeholders: Mapping[str, str | None] | None
     progress_action: str
     url: str
     reason: str
@@ -422,7 +422,7 @@ class FlowHandler:
         step_id: str,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: dict[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
@@ -444,7 +444,7 @@ class FlowHandler:
         title: str,
         data: Mapping[str, Any],
         description: str | None = None,
-        description_placeholders: dict[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
         return {
@@ -463,7 +463,7 @@ class FlowHandler:
         self,
         *,
         reason: str,
-        description_placeholders: dict[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Abort the config flow."""
         return _create_abort_data(
@@ -476,7 +476,7 @@ class FlowHandler:
         *,
         step_id: str,
         url: str,
-        description_placeholders: dict[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Return the definition of an external step for the user to take."""
         return {
@@ -504,7 +504,7 @@ class FlowHandler:
         *,
         step_id: str,
         progress_action: str,
-        description_placeholders: dict[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return {
@@ -532,7 +532,7 @@ class FlowHandler:
         *,
         step_id: str,
         menu_options: list[str] | dict[str, str],
-        description_placeholders: dict[str, str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a navigation menu to the user.
 
@@ -554,7 +554,7 @@ def _create_abort_data(
     flow_id: str,
     handler: str,
     reason: str,
-    description_placeholders: dict[str, str | None] | None = None,
+    description_placeholders: Mapping[str, str] | None = None,
 ) -> FlowResult:
     """Return the definition of an external step for the user to take."""
     return {
