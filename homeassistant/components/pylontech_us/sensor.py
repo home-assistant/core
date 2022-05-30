@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,10 +17,7 @@ from homeassistant.const import (  # CONF_PORT,; ELECTRIC_CURRENT_AMPERE,; ELECT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# from .const import DOMAIN
-
-SCAN_INTERVAL = timedelta(seconds=5)
-
+from .const import DOMAIN
 
 # @dataclass
 # class PylontechRequiredKeysMixin:
@@ -123,7 +119,7 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     entities.extend(
-        PylontechStackSensor(desc, config_entry.entry_id)
+        PylontechStackSensor(hass, desc, config_entry.entry_id)
         for desc in PYLONTECH_STACK_SENSORS
     )
 
@@ -133,7 +129,9 @@ async def async_setup_entry(
 class PylontechStackSensor(SensorEntity):
     """Representation of an Pylontech sensor."""
 
-    def __init__(self, desc: PylontechSensorEntityDescription, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, desc: PylontechSensorEntityDescription, entry_id: str
+    ) -> None:
         """Stack summery value."""
         self._charge = 54.321
         self._attr_name = desc.name
@@ -141,12 +139,14 @@ class PylontechStackSensor(SensorEntity):
         self._attr_native_unit_of_measurement = desc.native_unit_of_measurement
         self._attr_device_class = desc.device_class
         self._attr_icon = desc.icon
-        self.entry_id = entry_id
+        self._entry_id = entry_id
+        self._hass = hass
+        self._key = desc.key
 
     @property
     def unique_id(self) -> str:
         """Device Uniqueid."""
-        return "pylontech_stack_" + self.entry_id + "_" + str(self._attr_name)
+        return "pylontech_stack_" + self._entry_id + "_" + str(self._attr_name)
 
     @property
     def native_value(self) -> float:
@@ -155,7 +155,6 @@ class PylontechStackSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Poll battery stack."""
+        result = self._hass.data[DOMAIN][self._entry_id].get_result()
         # result = await hass.async_add_executor_job(hub.update)
-        self._charge = self._charge + 0.1
-        if self._charge >= 100.0:
-            self._charge = 0.0
+        self._charge = result["Calculated"][self._key]
