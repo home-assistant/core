@@ -110,6 +110,30 @@ async def test_async_refresh(crd):
     assert updates == [2]
 
 
+async def test_update_context(crd: update_coordinator.DataUpdateCoordinator[int]):
+    """Test update contexts for the update coordinator."""
+    await crd.async_refresh()
+    assert not set(crd.async_contexts())
+
+    def update_callback1():
+        pass
+
+    def update_callback2():
+        pass
+
+    unsub1 = crd.async_add_listener(update_callback1, 1)
+    assert set(crd.async_contexts()) == {1}
+
+    unsub2 = crd.async_add_listener(update_callback2, 2)
+    assert set(crd.async_contexts()) == {1, 2}
+
+    unsub1()
+    assert set(crd.async_contexts()) == {2}
+
+    unsub2()
+    assert not set(crd.async_contexts())
+
+
 async def test_request_refresh(crd):
     """Test request refresh for update coordinator."""
     assert crd.data is None
