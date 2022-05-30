@@ -54,7 +54,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id="user", 
+            data_schema=vol.Schema(fields), 
+            errors=errors,
+            description_placeholders={"esphome_url": "https://esphome.io/"},
         )
 
     async def async_step_user(
