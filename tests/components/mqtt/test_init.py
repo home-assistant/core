@@ -2922,3 +2922,24 @@ async def test_setup_manual_items_with_unique_ids(
     assert hass.states.get("light.test1") is not None
     assert (hass.states.get("light.test2") is not None) == unique
     assert bool("Platform mqtt does not generate unique IDs." in caplog.text) != unique
+
+
+async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock):
+    """Test unknown keys in config entry data is removed."""
+    mqtt_config = {
+        mqtt.CONF_BROKER: "mock-broker",
+        mqtt.CONF_BIRTH_MESSAGE: {},
+        mqtt.CONF_PROTOCOL: mqtt.PROTOCOL_311,
+    }
+
+    entry = MockConfigEntry(
+        data=mqtt_config,
+        domain=mqtt.DOMAIN,
+        title="MQTT",
+    )
+
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mqtt.CONF_PROTOCOL not in entry.data
