@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components import media_source, tts
 from homeassistant.components.demo.tts import DemoProvider
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ALERT,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
@@ -92,7 +92,7 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
     )
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_ALERT] is True
+    assert calls[0].data[ATTR_MEDIA_ANNOUNCE] is True
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])

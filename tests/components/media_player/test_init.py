@@ -310,7 +310,7 @@ async def test_enqueue_alert_exclusive(hass):
                 "media_content_type": "music",
                 "media_content_id": "1234",
                 "enqueue": "play",
-                "alert": True,
+                "announce": True,
             },
             blocking=True,
         )

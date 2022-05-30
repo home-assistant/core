@@ -166,9 +166,9 @@ play_media:
               value: "add"
             - label: "Play now and clear queue"
               value: "replace"
-    alert:
-      name: Alert
-      description: If the media should be played as an alert.
+    announce:
+      name: Announce
+      description: If the media should be played as an announcement.
       required: false
       example: "true"
       selector:
