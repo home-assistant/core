@@ -272,7 +272,7 @@ class DataUpdateCoordinator(Generic[_T]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        for update_callback in list(self._listeners.values()):
+        for update_callback, _ in list(self._listeners.values()):
             update_callback()
 
     @callback
@@ -294,7 +294,7 @@ class DataUpdateCoordinator(Generic[_T]):
         if self._listeners:
             self._schedule_refresh()
 
-        for update_callback in list(self._listeners.values()):
+        for update_callback, _ in list(self._listeners.values()):
             update_callback()
 
     @callback
