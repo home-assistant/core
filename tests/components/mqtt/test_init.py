@@ -1715,11 +1715,6 @@ async def test_update_incomplete_entry(
         "The 'broker' option is deprecated, please remove it from your configuration"
         in caplog.text
     )
-    assert (
-        "Deprecated configuration settings found in configuration.yaml. These settings "
-        "from your configuration entry will override: {'broker': 'yaml_broker'}"
-        in caplog.text
-    )
 
     # Discover a device to verify the entry was setup correctly
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
