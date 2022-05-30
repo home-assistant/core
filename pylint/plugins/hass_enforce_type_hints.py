@@ -34,6 +34,9 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
     "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
 
+# Current implementation assumes there is no overlap between the regex
+# If an overlap appears, we will need to adjust `visit_module` accordingly
+
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     # init matches only in the package root (__init__.py)
     "init": re.compile(r"^homeassistant\.components\.\w+$"),
