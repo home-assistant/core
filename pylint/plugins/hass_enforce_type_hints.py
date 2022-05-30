@@ -507,7 +507,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         for key, pattern in _MODULE_FILTERS.items():
             if pattern.match(node.name):
                 if matches := _FUNCTION_MATCH.get(key):
-                    self._function_matchers.extend(matches)
+                    self._function_matchers = matches
                 break
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
