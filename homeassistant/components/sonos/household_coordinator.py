@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
 from soco import SoCo
 
@@ -35,7 +36,7 @@ class SonosHouseholdCoordinator:
     async def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
-        self.async_poll = Debouncer(
+        self.async_poll = Debouncer[[], Coroutine[Any, Any, None]](
             self.hass,
             _LOGGER,
             cooldown=3,

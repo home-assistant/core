@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
@@ -44,7 +44,8 @@ class DataUpdateCoordinator(Generic[_T]):
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_T]] | None = None,
-        request_refresh_debouncer: Debouncer | None = None,
+        request_refresh_debouncer: Debouncer[[], Coroutine[Any, Any, None]]
+        | None = None,
     ) -> None:
         """Initialize global data updater."""
         self.hass = hass
