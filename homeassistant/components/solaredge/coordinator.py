@@ -90,16 +90,13 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
         # while values for last Year, Month and Day energy are still OK.
         # See https://github.com/home-assistant/core/issues/59285 .
-        # Use a tolerance factor so that we don't fail by small variances.
-        # See https://github.com/home-assistant/core/issues/69600 .
-        validity_tolerance = 0.9
         if set(energy_keys).issubset(self.data.keys()):
             for index, key in enumerate(energy_keys, start=1):
                 # All coming values in list should be larger than the current value.
-                if any(
-                    self.data[k] * validity_tolerance > self.data[key]
-                    for k in energy_keys[index:]
-                ):
+                if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
+                    LOGGER.info(
+                        "Ignoring invalid energy value %s for %s", self.data[key], key
+                    )
                     self.data.pop(key)
 
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)

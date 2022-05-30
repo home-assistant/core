@@ -72,20 +72,6 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
-    # Small variations should not be considered invalid.
-    mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100002
-    mock_overview_data["overview"]["lastYearData"][
-        "energy"
-    ] = 100004  # just slightly larger
-    mock_solaredge().get_overview.return_value = mock_overview_data
-    async_fire_time_changed(hass, dt_util.utcnow() + OVERVIEW_UPDATE_DELAY)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.solaredge_lifetime_energy")
-    assert state
-    assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
-    await hass.async_block_till_done()
-
     # Invalid energy values, lastYearData energy is lower than last month or day.
     mock_overview_data["overview"]["lastYearData"]["energy"] = 0
     mock_solaredge().get_overview.return_value = mock_overview_data
@@ -95,6 +81,10 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     state = hass.states.get("sensor.solaredge_energy_this_year")
     assert state
     assert state.state == STATE_UNKNOWN
+    # Check that the valid lastMonthData is still available
+    state = hass.states.get("sensor.solaredge_energy_this_month")
+    assert state
+    assert state.state == str(mock_overview_data["overview"]["lastMonthData"]["energy"])
 
     # All zero energy values should also be valid.
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0.0
