@@ -364,6 +364,7 @@ build.json @home-assistant/supervisor
 /tests/components/fronius/ @nielstron @farmio
 /homeassistant/components/frontend/ @home-assistant/frontend
 /tests/components/frontend/ @home-assistant/frontend
+/homeassistant/components/frontier_silicon/ @wlcrs
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gdacs/ @exxamalte

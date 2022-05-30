@@ -32,7 +32,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Update-Intervall",
-                    "show_on_map": "Stationen auf der Karte anzeigen"
+                    "show_on_map": "Stationen auf der Karte anzeigen",
+                    "stations": "Stationen"
                 },
                 "title": "Tankerkoenig Optionen"
             }

@@ -86,7 +86,7 @@ adguardhome==0.5.1
 advantage_air==0.3.1
 
 # homeassistant.components.frontier_silicon
-afsapi==0.0.4
+afsapi==0.2.4
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -394,7 +394,7 @@ beautifulsoup4==4.11.1
 bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.0
+bimmer_connected==0.9.3
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -433,7 +433,7 @@ bravia-tv==1.0.11
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.1.0
+brother==1.2.3
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -795,7 +795,7 @@ hass-nabucasa==0.54.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.5.0
+hatasmota==0.5.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1550,7 +1550,7 @@ pyhomeworks==0.0.6
 pyialarm==1.9.0
 
 # homeassistant.components.ialarm_xr
-pyialarmxr==1.0.13
+pyialarmxr==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -1792,7 +1792,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.14
+pysensibo==1.0.15
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1838,7 +1838,7 @@ pysmarty==0.8
 pysml==0.0.7
 
 # homeassistant.components.snmp
-pysnmp==4.4.12
+pysnmplib==5.0.15
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -2014,7 +2014,7 @@ pyvesync==2.0.3
 pyvizio==0.1.57
 
 # homeassistant.components.velux
-pyvlx==0.2.19
+pyvlx==0.2.20
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
