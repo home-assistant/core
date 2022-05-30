@@ -120,7 +120,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: data[CONF_PORT],
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
-                        CONF_PROTOCOL: data.get(CONF_PROTOCOL),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
