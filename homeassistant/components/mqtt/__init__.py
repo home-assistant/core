@@ -196,9 +196,7 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
 CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
     {
         vol.Optional(CONF_CLIENT_ID): cv.string,
-        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
-            vol.Coerce(int), vol.Range(min=15)
-        ),
+        vol.Optional(CONF_KEEPALIVE): vol.All(vol.Coerce(int), vol.Range(min=15)),
         vol.Optional(CONF_BROKER): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
@@ -212,7 +210,7 @@ CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
         ): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_TLS_VERSION): vol.Any("auto", "1.0", "1.1", "1.2"),
-        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
+        vol.Optional(CONF_PROTOCOL): vol.All(
             cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
         ),
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
@@ -220,9 +218,7 @@ CONFIG_SCHEMA_BASE = PLATFORM_CONFIG_SCHEMA_BASE.extend(
         vol.Optional(CONF_DISCOVERY): cv.boolean,
         # discovery_prefix must be a valid publish topic because if no
         # state topic is specified, it will be created with the given prefix.
-        vol.Optional(
-            CONF_DISCOVERY_PREFIX, default=DEFAULT_PREFIX
-        ): valid_publish_topic,
+        vol.Optional(CONF_DISCOVERY_PREFIX): valid_publish_topic,
     }
 )
 
@@ -607,7 +603,9 @@ async def _async_setup_discovery(
 
     This method is a coroutine.
     """
-    await discovery.async_start(hass, conf[CONF_DISCOVERY_PREFIX], config_entry)
+    await discovery.async_start(
+        hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), config_entry
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -851,7 +849,7 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config[CONF_PROTOCOL] == PROTOCOL_31:
+        if config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         else:
             proto = mqtt.MQTTv311
@@ -1009,7 +1007,7 @@ class MQTT:
                 self._mqttc.connect,
                 self.conf[CONF_BROKER],
                 self.conf[CONF_PORT],
-                self.conf[CONF_KEEPALIVE],
+                self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
             )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
