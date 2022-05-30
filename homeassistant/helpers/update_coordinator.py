@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
@@ -61,7 +61,7 @@ class DataUpdateCoordinator(Generic[_T]):
         # when it was already checked during setup.
         self.data: _T = None  # type: ignore[assignment]
 
-        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object]] = {}
+        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._job = HassJob(self._handle_refresh_interval)
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -110,9 +110,11 @@ class DataUpdateCoordinator(Generic[_T]):
             self._unsub_refresh()
             self._unsub_refresh = None
 
-    def async_contexts(self) -> list[object]:
-        """Return all listening contexts."""
-        return list(self._listeners.values())
+    def async_contexts(self) -> Generator[object, None, None]:
+        """Return all registered contexts."""
+        yield from (
+            context for _, context in self._listeners.values() if context is not None
+        )
 
     @callback
     def _schedule_refresh(self) -> None:
