@@ -7,7 +7,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import frontend
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.filters import (
+    extract_include_exclude_filter_conf,
+    merge_include_exclude_filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )
 from homeassistant.const import (
@@ -115,9 +118,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, "logbook", "logbook", "hass:format-list-bulleted-type"
     )
 
-    if conf := config.get(DOMAIN, {}):
-        filters = sqlalchemy_filter_from_include_exclude_conf(conf)
-        entities_filter = convert_include_exclude_filter(conf)
+    recorder_conf = config.get(RECORDER_DOMAIN, {})
+    logbook_conf = config.get(DOMAIN, {})
+    recorder_filter = extract_include_exclude_filter_conf(recorder_conf)
+    logbook_filter = extract_include_exclude_filter_conf(logbook_conf)
+    merged_filter = merge_include_exclude_filters(recorder_filter, logbook_filter)
+
+    possible_merged_filter = convert_include_exclude_filter(merged_filter)
+    if not possible_merged_filter.empty_filter:
+        filters = sqlalchemy_filter_from_include_exclude_conf(merged_filter)
+        entities_filter = possible_merged_filter
     else:
         filters = None
         entities_filter = None
