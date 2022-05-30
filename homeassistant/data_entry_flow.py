@@ -52,7 +52,7 @@ class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
     def __init__(
-        self, reason: str, description_placeholders: dict | None = None
+        self, reason: str, description_placeholders: dict[str, Any] | None = None
     ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
@@ -444,7 +444,7 @@ class FlowHandler:
         title: str,
         data: Mapping[str, Any],
         description: str | None = None,
-        description_placeholders: dict | None = None,
+        description_placeholders: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
         return {
@@ -460,7 +460,7 @@ class FlowHandler:
 
     @callback
     def async_abort(
-        self, *, reason: str, description_placeholders: dict | None = None
+        self, *, reason: str, description_placeholders: dict[str, Any] | None = None
     ) -> FlowResult:
         """Abort the config flow."""
         return _create_abort_data(
@@ -469,7 +469,11 @@ class FlowHandler:
 
     @callback
     def async_external_step(
-        self, *, step_id: str, url: str, description_placeholders: dict | None = None
+        self,
+        *,
+        step_id: str,
+        url: str,
+        description_placeholders: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Return the definition of an external step for the user to take."""
         return {
@@ -497,7 +501,7 @@ class FlowHandler:
         *,
         step_id: str,
         progress_action: str,
-        description_placeholders: dict | None = None,
+        description_placeholders: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return {
@@ -525,7 +529,7 @@ class FlowHandler:
         *,
         step_id: str,
         menu_options: list[str] | dict[str, str],
-        description_placeholders: dict | None = None,
+        description_placeholders: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show a navigation menu to the user.
 
@@ -547,7 +551,7 @@ def _create_abort_data(
     flow_id: str,
     handler: str,
     reason: str,
-    description_placeholders: dict | None = None,
+    description_placeholders: dict[str, Any] | None = None,
 ) -> FlowResult:
     """Return the definition of an external step for the user to take."""
     return {

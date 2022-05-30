@@ -1386,7 +1386,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @callback
     def async_abort(
-        self, *, reason: str, description_placeholders: dict | None = None
+        self, *, reason: str, description_placeholders: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Abort the config flow."""
         # Remove reauth notification if no reauth flows are in progress
@@ -1460,7 +1460,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         title: str,
         data: Mapping[str, Any],
         description: str | None = None,
-        description_placeholders: dict | None = None,
+        description_placeholders: dict[str, Any] | None = None,
         options: Mapping[str, Any] | None = None,
     ) -> data_entry_flow.FlowResult:
         """Finish config flow and create a config entry."""
