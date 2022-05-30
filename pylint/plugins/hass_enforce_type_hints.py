@@ -65,7 +65,7 @@ _MODULE_FILTERS: dict[str, re.Pattern] = {
     "diagnostics": re.compile(r"^homeassistant\.components\.\w+\.(diagnostics)$"),
 }
 
-_METHOD_MATCH: dict[str, list[TypeHintMatch]] = {
+_FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     "init": [
         TypeHintMatch(
             function_name="setup",
@@ -503,7 +503,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         self._function_matchers = []
         for key, pattern in _MODULE_FILTERS.items():
             if pattern.match(node.name):
-                if matches := _METHOD_MATCH.get(key):
+                if matches := _FUNCTION_MATCH.get(key):
                     self._function_matchers.extend(matches)
                 break
 
