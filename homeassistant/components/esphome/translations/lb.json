@@ -7,7 +7,7 @@
         "error": {
             "connection_error": "Keng Verbindung zum ESP. Iwwerpr\u00e9ift d'Pr\u00e4sens vun der Zeil api: am YAML Fichier.",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "resolve_error": "Kann d'Adresse vum ESP net opl\u00e9isen. Falls d\u00ebse Problem weiderhi besteet dann defin\u00e9iert eng statesch IP Adresse:\nhttps://esphome.io/components/wifi.html#manual-ips"
+            "resolve_error": "Kann d'Adresse vum ESP net opl\u00e9isen. Falls d\u00ebse Problem weiderhi besteet dann defin\u00e9iert eng statesch IP Adresse:\nhttps://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
         "step": {
@@ -26,7 +26,7 @@
                     "host": "Apparat",
                     "port": "Port"
                 },
-                "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphome.io/) an."
+                "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an."
             }
         }
     }

@@ -7,7 +7,7 @@
         },
         "error": {
             "connection_error": "Kan inte ansluta till ESP. Se till att din YAML-fil inneh\u00e5ller en 'api:' line.",
-            "resolve_error": "Det g\u00e5r inte att hitta IP-adressen f\u00f6r ESP med DNS-namnet. Om det h\u00e4r felet kvarst\u00e5r anger du en statisk IP-adress: https://esphome.io/components/wifi.html#manual-ips"
+            "resolve_error": "Det g\u00e5r inte att hitta IP-adressen f\u00f6r ESP med DNS-namnet. Om det h\u00e4r felet kvarst\u00e5r anger du en statisk IP-adress: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
         "step": {
@@ -26,7 +26,7 @@
                     "host": "V\u00e4rddatorn",
                     "port": "Port"
                 },
-                "description": "Ange anslutningsinst\u00e4llningarna f\u00f6r noden [ESPHome](https://esphome.io/)."
+                "description": "Ange anslutningsinst\u00e4llningarna f\u00f6r noden [ESPHome](https://esphomelib.com/)."
             }
         }
     }
