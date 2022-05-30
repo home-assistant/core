@@ -22,7 +22,7 @@ from homeassistant.components.media_source.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN
+from .const import CONF_RADIO_BROWSER, DOMAIN
 
 CODEC_TO_MIMETYPE = {
     "MP3": "audio/mpeg",
@@ -44,6 +44,7 @@ class RadioMediaSource(MediaSource):
     """Provide Radio stations as media sources."""
 
     name = "Radio Browser"
+    hass: HomeAssistant
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize CameraMediaSource."""
@@ -54,7 +55,8 @@ class RadioMediaSource(MediaSource):
     @property
     def radios(self) -> RadioBrowser | None:
         """Return the radio browser."""
-        return self.hass.data.get(DOMAIN)
+        domain_info = self.hass.data.get(DOMAIN)
+        return domain_info[CONF_RADIO_BROWSER]  # type: ignore[index]
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""

@@ -1,0 +1,21 @@
+start_radio:
+  description: "Start playing a radio."
+  fields:
+    favorite:
+      description: "The favorite number of the radio to play."
+      example: "1"
+    entity_id:
+      description: "A media player Entity ID."
+      example: "media_player.my_chromecast"
+next_radio:
+  description: "Switches to the next radio in the list."
+  fields:
+    entity_id:
+      description: "The media player Entity ID where the current radio is playing."
+      example: "media_player.my_chromecast"
+prev_radio:
+  description: "Switches to the previous radio in the list."
+  fields:
+    entity_id:
+      description: "The media player Entity ID where the current radio is playing."
+      example: "media_player.my_chromecast"
