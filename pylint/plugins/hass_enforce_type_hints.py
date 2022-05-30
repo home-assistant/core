@@ -35,6 +35,7 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
 }
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
+_PLATFORMS: list[str] = [platform.value for platform in Platform]
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     "__init__": [
@@ -489,7 +490,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if (module_platform := _get_module_platform(node.name)) is None:
             return
 
-        if module_platform in [platform.value for platform in Platform]:
+        if module_platform in _PLATFORMS:
             self._function_matchers.extend(_FUNCTION_MATCH["__any_platform__"])
 
         if matches := _FUNCTION_MATCH.get(module_platform):
