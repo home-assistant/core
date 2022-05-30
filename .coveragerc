@@ -407,6 +407,7 @@ omit =
     homeassistant/components/fritzbox_callmonitor/const.py
     homeassistant/components/fritzbox_callmonitor/base.py
     homeassistant/components/fritzbox_callmonitor/sensor.py
+    homeassistant/components/frontier_silicon/const.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
@@ -505,10 +506,13 @@ omit =
     homeassistant/components/huawei_lte/switch.py
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
-    homeassistant/components/hunterdouglas_powerview/scene.py
-    homeassistant/components/hunterdouglas_powerview/sensor.py
+    homeassistant/components/hunterdouglas_powerview/coordinator.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/sensor.py
+    homeassistant/components/hunterdouglas_powerview/shade_data.py
+    homeassistant/components/hunterdouglas_powerview/util.py
     homeassistant/components/hvv_departures/binary_sensor.py
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py

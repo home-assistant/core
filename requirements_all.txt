@@ -86,7 +86,7 @@ adguardhome==0.5.1
 advantage_air==0.3.1
 
 # homeassistant.components.frontier_silicon
-afsapi==0.0.4
+afsapi==0.2.4
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -2014,7 +2014,7 @@ pyvesync==2.0.3
 pyvizio==0.1.57
 
 # homeassistant.components.velux
-pyvlx==0.2.19
+pyvlx==0.2.20
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
