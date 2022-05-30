@@ -50,7 +50,9 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_input(self, user_input: Mapping[str, Any]):
+    async def _async_validate_input(
+        self, user_input: Mapping[str, Any]
+    ) -> tuple[dict[str, str] | None, dict[str, str]]:
         """Validate form input."""
         errors = {}
         info = None
@@ -71,7 +73,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             info, errors = await self._async_validate_input(user_input)
             if info:
@@ -85,7 +87,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle re-auth if login is invalid."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             _, errors = await self._async_validate_input(user_input)
