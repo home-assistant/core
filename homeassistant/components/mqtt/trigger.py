@@ -9,7 +9,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.const import CONF_PAYLOAD, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
@@ -22,6 +22,7 @@ from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAUL
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
+        vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
