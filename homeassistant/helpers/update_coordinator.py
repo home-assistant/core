@@ -61,7 +61,7 @@ class DataUpdateCoordinator(Generic[_T]):
         # when it was already checked during setup.
         self.data: _T = None  # type: ignore[assignment]
 
-        self._listeners: dict[CALLBACK_TYPE, CALLBACK_TYPE] = {}
+        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object]] = {}
         self._job = HassJob(self._handle_refresh_interval)
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -82,7 +82,9 @@ class DataUpdateCoordinator(Generic[_T]):
         self._debounced_refresh = request_refresh_debouncer
 
     @callback
-    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: object | None = None
+    ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
 
@@ -93,7 +95,7 @@ class DataUpdateCoordinator(Generic[_T]):
             if not self._listeners:
                 self._unschedule_refresh()
 
-        self._listeners[remove_listener] = update_callback
+        self._listeners[remove_listener] = (update_callback, context)
 
         # This is the first listener, set up interval.
         if schedule_refresh:
@@ -107,6 +109,10 @@ class DataUpdateCoordinator(Generic[_T]):
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
+
+    def async_contexts(self) -> list[object]:
+        """Return all listening contexts."""
+        return list(self._listeners.values())
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -301,9 +307,12 @@ class DataUpdateCoordinator(Generic[_T]):
 class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: _DataUpdateCoordinatorT) -> None:
+    def __init__(
+        self, coordinator: _DataUpdateCoordinatorT, context: object | None = None
+    ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
+        self.coordinator_context = context
 
     @property
     def should_poll(self) -> bool:
@@ -319,7 +328,9 @@ class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update, self.coordinator_context
+            )
         )
 
     @callback
