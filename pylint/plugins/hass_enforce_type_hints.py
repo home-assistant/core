@@ -509,19 +509,14 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
-        self._visit_functiondef(node)
-
-    def visit_asyncfunctiondef(self, node: astroid.AsyncFunctionDef) -> None:
-        """Called when an AsyncFunctionDef node is visited."""
-        self._visit_functiondef(node)
-
-    def _visit_functiondef(self, node: astroid.FunctionDef) -> None:
         for match in self._function_matchers:
             if node.name != match.function_name:
                 continue
             if node.is_method():
                 continue
             self._check_function(node, match)
+
+    visit_asyncfunctiondef = visit_functiondef
 
     def _check_function(self, node: astroid.FunctionDef, match: TypeHintMatch) -> None:
         # Check that at least one argument is annotated.
