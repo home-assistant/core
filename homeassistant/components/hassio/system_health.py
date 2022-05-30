@@ -6,8 +6,8 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import get_host_info, get_info, get_os_info, get_supervisor_info
 
-SUPERVISOR_PING = f"http://{os.environ['HASSIO']}/supervisor/ping"
-OBSERVER_URL = f"http://{os.environ['HASSIO']}:4357"
+SUPERVISOR_PING = f"http://{os.environ['SUPERVISOR']}/supervisor/ping"
+OBSERVER_URL = f"http://{os.environ['SUPERVISOR']}:4357"
 
 
 @callback

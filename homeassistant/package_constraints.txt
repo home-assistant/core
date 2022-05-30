@@ -8,7 +8,7 @@ async-upnp-client==0.30.1
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
-awesomeversion==22.5.1
+awesomeversion==22.5.2
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0

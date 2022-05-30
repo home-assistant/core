@@ -102,6 +102,24 @@ async def test_existing_token_missing_scope(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.parametrize("config_entry_options", [{CONF_CALENDAR_ACCESS: "read_only"}])
+async def test_config_entry_scope_reauth(
+    hass: HomeAssistant,
+    token_scopes: list[str],
+    component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test setup where the config entry options requires reauth to match the scope."""
+    config_entry.add_to_hass(hass)
+    assert await component_setup()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
 @pytest.mark.parametrize("calendars_config", [[{"cal_id": "invalid-schema"}]])
 async def test_calendar_yaml_missing_required_fields(
     hass: HomeAssistant,
@@ -152,57 +170,6 @@ async def test_calendar_yaml_error(
 
     assert not hass.states.get(TEST_YAML_ENTITY)
     assert hass.states.get(TEST_API_ENTITY)
-
-
-@pytest.mark.parametrize(
-    "google_config_track_new,calendars_config,expected_state",
-    [
-        (
-            None,
-            [],
-            State(
-                TEST_API_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_API_ENTITY_NAME,
-                },
-            ),
-        ),
-        (
-            True,
-            [],
-            State(
-                TEST_API_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_API_ENTITY_NAME,
-                },
-            ),
-        ),
-        (False, [], None),
-    ],
-    ids=["default", "True", "False"],
-)
-async def test_track_new(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
-    mock_calendars_yaml: None,
-    expected_state: State,
-    setup_config_entry: MockConfigEntry,
-) -> None:
-    """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
-
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    assert await component_setup()
-
-    state = hass.states.get(TEST_API_ENTITY)
-    assert_state(state, expected_state)
 
 
 @pytest.mark.parametrize("calendars_config", [[]])
@@ -263,7 +230,7 @@ async def test_load_application_credentials(
 
 
 @pytest.mark.parametrize(
-    "calendars_config_track,expected_state",
+    "calendars_config_track,expected_state,google_config_track_new",
     [
         (
             True,
@@ -275,8 +242,35 @@ async def test_load_application_credentials(
                     "friendly_name": TEST_YAML_ENTITY_NAME,
                 },
             ),
+            None,
         ),
-        (False, None),
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+            True,
+        ),
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+            False,  # Has no effect
+        ),
+        (False, None, None),
+        (False, None, True),
+        (False, None, False),
     ],
 )
 async def test_calendar_config_track_new(
@@ -653,3 +647,49 @@ async def test_calendar_yaml_update(
 
     # No yaml config loaded that overwrites the entity name
     assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+async def test_update_will_reload(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    setup_config_entry: Any,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test updating config entry options will trigger a reload."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {}  # read_write is default
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        # No-op does not reload
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_CALENDAR_ACCESS: "read_write"}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # Data change does not trigger reload
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                "example": "field",
+            },
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # Reload when options changed
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_CALENDAR_ACCESS: "read_only"}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()

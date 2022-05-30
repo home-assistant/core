@@ -199,18 +199,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _LOGGER.warning(
         "Configuration of Google Calendar in YAML in configuration.yaml is "
         "is deprecated and will be removed in a future release; Your existing "
-        "OAuth Application Credentials and other settings have been imported "
+        "OAuth Application Credentials and access settings have been imported "
         "into the UI automatically and can be safely removed from your "
         "configuration.yaml file"
     )
-
+    if conf.get(CONF_TRACK_NEW) is False:
+        # The track_new as False would previously result in new entries
+        # in google_calendars.yaml with track set to Fasle which is
+        # handled at calendar entity creation time.
+        _LOGGER.warning(
+            "You must manually set the integration System Options in the "
+            "UI to disable newly discovered entities going forward"
+        )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    async_upgrade_entry(hass, entry)
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -233,10 +239,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    access = FeatureAccess[entry.options[CONF_CALENDAR_ACCESS]]
-    token_scopes = session.token.get("scope", [])
-    if access.scope not in token_scopes:
-        _LOGGER.debug("Scope '%s' not in scopes '%s'", access.scope, token_scopes)
+    if not async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed(
             "Required scopes are not available, reauth required"
         )
@@ -247,37 +250,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_services(hass, calendar_service)
     # Only expose the add event service if we have the correct permissions
-    if access is FeatureAccess.read_write:
+    if get_feature_access(hass, entry) is FeatureAccess.read_write:
         await async_setup_add_event_service(hass, calendar_service)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    # Reload entry when options are updated
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
 
-def async_upgrade_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Upgrade the config entry if needed."""
-    if DATA_CONFIG not in hass.data[DOMAIN] and entry.options:
-        return
-
-    options = (
-        entry.options
-        if entry.options
-        else {
-            CONF_CALENDAR_ACCESS: get_feature_access(hass).name,
-        }
-    )
-    disable_new_entities = (
-        not hass.data[DOMAIN].get(DATA_CONFIG, {}).get(CONF_TRACK_NEW, True)
-    )
-    hass.config_entries.async_update_entry(
-        entry,
-        options=options,
-        pref_disable_new_entities=disable_new_entities,
-    )
+def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Verify that the config entry desired scope is present in the oauth token."""
+    access = get_feature_access(hass, entry)
+    token_scopes = entry.data.get("token", {}).get("scope", [])
+    return access.scope in token_scopes
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -286,8 +273,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    """Reload config entry if the access options change."""
+    if not async_entry_has_scopes(hass, entry):
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_services(

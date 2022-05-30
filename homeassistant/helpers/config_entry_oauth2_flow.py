@@ -271,9 +271,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> FlowResult:
         """Create an entry for auth."""
         # Flow has been triggered by external data
-        if user_input:
+        if user_input is not None:
             self.external_data = user_input
-            return self.async_external_step_done(next_step_id="creation")
+            next_step = "authorize_rejected" if "error" in user_input else "creation"
+            return self.async_external_step_done(next_step_id=next_step)
 
         try:
             async with async_timeout.timeout(10):
@@ -309,6 +310,13 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         return await self.async_oauth_create_entry(
             {"auth_implementation": self.flow_impl.domain, "token": token}
+        )
+
+    async def async_step_authorize_rejected(self, data: None = None) -> FlowResult:
+        """Step to handle flow rejection."""
+        return self.async_abort(
+            reason="user_rejected_authorize",
+            description_placeholders={"error": self.external_data["error"]},
         )
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
@@ -400,10 +408,8 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Receive authorization code."""
-        if "code" not in request.query or "state" not in request.query:
-            return web.Response(
-                text=f"Missing code or state parameter in {request.url}"
-            )
+        if "state" not in request.query:
+            return web.Response(text="Missing state parameter")
 
         hass = request.app["hass"]
 
@@ -412,9 +418,17 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         if state is None:
             return web.Response(text="Invalid state")
 
+        user_input: dict[str, Any] = {"state": state}
+
+        if "code" in request.query:
+            user_input["code"] = request.query["code"]
+        elif "error" in request.query:
+            user_input["error"] = request.query["error"]
+        else:
+            return web.Response(text="Missing code or error parameter")
+
         await hass.config_entries.flow.async_configure(
-            flow_id=state["flow_id"],
-            user_input={"state": state, "code": request.query["code"]},
+            flow_id=state["flow_id"], user_input=user_input
         )
 
         return web.Response(
