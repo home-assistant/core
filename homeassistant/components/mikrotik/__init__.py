@@ -1,10 +1,12 @@
 """The Mikrotik component."""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import ATTR_MANUFACTURER, DOMAIN, PLATFORMS
 from .hub import MikrotikHub
+
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
