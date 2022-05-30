@@ -34,9 +34,6 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
     "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
 
-# Current implementation assumes there is no overlap between the regex
-# If an overlap appears, we will need to adjust `visit_module` accordingly
-
 _MODULE_FILTERS: dict[str, re.Pattern] = {
     # init matches only in the package root (__init__.py)
     "init": re.compile(r"^homeassistant\.components\.\w+$"),
@@ -505,10 +502,8 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         """Called when a Module node is visited."""
         self._function_matchers = []
         for key, pattern in _MODULE_FILTERS.items():
-            if pattern.match(node.name):
-                if matches := _FUNCTION_MATCH.get(key):
-                    self._function_matchers = matches
-                break
+            if pattern.match(node.name) and (matches := _FUNCTION_MATCH.get(key)):
+                self._function_matchers.extend(matches)
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
