@@ -504,8 +504,10 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         """Called when a Module node is visited."""
         self._function_matchers = []
         for key, pattern in _MODULE_FILTERS.items():
-            if pattern.match(node.name) and (matches := _METHOD_MATCH.get(key)):
-                self._function_matchers.extend(matches)
+            if pattern.match(node.name):
+                if matches := _METHOD_MATCH.get(key):
+                    self._function_matchers.extend(matches)
+                break
 
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
