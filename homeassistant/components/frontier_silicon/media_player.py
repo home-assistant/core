@@ -84,6 +84,8 @@ async def async_setup_platform(
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
+    _attr_media_content_type: str = MEDIA_TYPE_MUSIC
+
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -108,72 +110,11 @@ class AFSAPIDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
             name=name,
         )
+        self._attr_name = name
 
-        self._state = None
-
-        self._name = name
-        self._title = None
-        self._artist = None
-        self._album_name = None
-        self._mute = None
-        self._source = None
-        self._source_list = None
-        self._media_image_url = None
         self._max_volume = None
-        self._volume_level = None
 
         self.__modes_by_label = None
-
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._name
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._title
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self._artist
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self._album_name
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def state(self):
-        """Return the state of the player."""
-        return self._state
-
-    # source
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_list
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
-
-    @property
-    def media_image_url(self):
-        """Image url of current playing media."""
-        return self._media_image_url
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume_level
 
     async def async_update(self):
         """Get the latest date and update device state."""
@@ -181,7 +122,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         try:
             if await afsapi.get_power():
                 status = await afsapi.get_play_status()
-                self._state = {
+                self._attr_state = {
                     PlayState.PLAYING: STATE_PLAYING,
                     PlayState.PAUSED: STATE_PAUSED,
                     PlayState.STOPPED: STATE_IDLE,
@@ -189,12 +130,12 @@ class AFSAPIDevice(MediaPlayerEntity):
                     None: STATE_IDLE,
                 }.get(status)
             else:
-                self._state = STATE_OFF
+                self._attr_state = STATE_OFF
         except FSConnectionError:
             if self._attr_available:
                 _LOGGER.warning(
                     "Could not connect to %s. Did it go offline?",
-                    self._name or afsapi.webfsapi_endpoint,
+                    self.name or afsapi.webfsapi_endpoint,
                 )
                 self._attr_available = False
                 return
@@ -202,18 +143,18 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._attr_available:
             _LOGGER.info(
                 "Reconnected to %s",
-                self._name or afsapi.webfsapi_endpoint,
+                self.name or afsapi.webfsapi_endpoint,
             )
 
             self._attr_available = True
-        if not self._name:
-            self._name = await afsapi.get_friendly_name()
+        if not self._attr_name:
+            self._attr_name = await afsapi.get_friendly_name()
 
-        if not self._source_list:
+        if not self._attr_source_list:
             self.__modes_by_label = {
                 mode.label: mode.key for mode in await afsapi.get_modes()
             }
-            self._source_list = list(self.__modes_by_label)
+            self._attr_source_list = list(self.__modes_by_label)
 
         # The API seems to include 'zero' in the number of steps (e.g. if the range is
         # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
@@ -221,32 +162,34 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
-        if self._state != STATE_OFF:
+        if self._attr_state != STATE_OFF:
             info_name = await afsapi.get_play_name()
             info_text = await afsapi.get_play_text()
 
-            self._title = " - ".join(filter(None, [info_name, info_text]))
-            self._artist = await afsapi.get_play_artist()
-            self._album_name = await afsapi.get_play_album()
+            self._attr_media_title = " - ".join(filter(None, [info_name, info_text]))
+            self._attr_media_artist = await afsapi.get_play_artist()
+            self._attr_media_album_name = await afsapi.get_play_album()
 
-            self._source = (await afsapi.get_mode()).label
-            self._mute = await afsapi.get_mute()
-            self._media_image_url = await afsapi.get_play_graphic()
+            self._attr_source = (await afsapi.get_mode()).label
+
+            self._attr_is_volume_muted = await afsapi.get_mute()
+            self._attr_media_image_url = await afsapi.get_play_graphic()
 
             volume = await self.fs_device.get_volume()
 
             # Prevent division by zero if max_volume not known yet
-            self._volume_level = float(volume or 0) / (self._max_volume or 1)
+            self._attr_volume_level = float(volume or 0) / (self._max_volume or 1)
         else:
-            self._title = None
-            self._artist = None
-            self._album_name = None
+            self._attr_media_title = None
+            self._attr_media_artist = None
+            self._attr_media_album_name = None
 
-            self._source = None
-            self._mute = None
-            self._media_image_url = None
+            self._attr_source = None
 
-            self._volume_level = None
+            self._attr_is_volume_muted = None
+            self._attr_media_image_url = None
+
+            self._attr_volume_level = None
 
     # Management actions
     # power control
@@ -268,7 +211,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_media_play_pause(self):
         """Send play/pause command."""
-        if self._state == STATE_PLAYING:
+        if self._attr_state == STATE_PLAYING:
             await self.fs_device.pause()
         else:
             await self.fs_device.play()
@@ -284,12 +227,6 @@ class AFSAPIDevice(MediaPlayerEntity):
     async def async_media_next_track(self):
         """Send next track command (results in fast-forward)."""
         await self.fs_device.forward()
-
-    # mute
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._mute
 
     async def async_mute_volume(self, mute):
         """Send mute command."""
