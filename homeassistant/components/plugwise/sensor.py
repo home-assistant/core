@@ -61,6 +61,13 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="outdoor_air_temperature",
+        name="Outdoor Air Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
         key="water_temperature",
         name="Water Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,

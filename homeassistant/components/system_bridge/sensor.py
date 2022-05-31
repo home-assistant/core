@@ -484,7 +484,6 @@ async def async_setup_entry(
 class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
     """Define a System Bridge sensor."""
 
-    coordinator: SystemBridgeDataUpdateCoordinator
     entity_description: SystemBridgeSensorEntityDescription
 
     def __init__(

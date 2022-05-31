@@ -22,7 +22,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
 
       - name: Get information
         id: info
@@ -50,13 +50,13 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -74,15 +74,15 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: requirements_diff
 
@@ -96,10 +96,10 @@ jobs:
           wheels-user: wheels
           env-file: true
           apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;cargo"
-          pip: "Cython;numpy"
+          pip: "Cython;numpy==1.21.6"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: 'requirements_diff.txt'
+          requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
 
   integrations:
@@ -115,15 +115,15 @@ jobs:
           - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: requirements_diff
 
@@ -134,7 +134,6 @@ jobs:
             sed -i "s|# pybluez|pybluez|g" ${requirement_file}
             sed -i "s|# bluepy|bluepy|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
-            sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
             sed -i "s|# evdev|evdev|g" ${requirement_file}
@@ -163,5 +162,5 @@ jobs:
           pip: "Cython;numpy;scikit-build"
           skip-binary: aiohttp,grpcio
           constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: 'requirements_diff.txt'
+          requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txt"

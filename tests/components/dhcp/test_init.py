@@ -3,7 +3,6 @@ import datetime
 import threading
 from unittest.mock import MagicMock, patch
 
-import pytest
 from scapy import arch  # pylint: disable=unused-import  # noqa: F401
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
@@ -973,27 +972,3 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
         hostname="connect",
         macaddress="b8b7f16db533",
     )
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = dhcp.DhcpServiceInfo(
-        ip="192.168.210.56",
-        hostname="connect",
-        macaddress="b8b7f16db533",
-    )
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["ip"] == "192.168.210.56"
-    assert "Detected integration that accessed discovery_info['ip']" in caplog.text
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info.get("ip") == "192.168.210.56"
-    assert "Detected integration that accessed discovery_info.get('ip')" in caplog.text
-
-    assert discovery_info.get("ip", "fallback_host") == "192.168.210.56"
-    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"

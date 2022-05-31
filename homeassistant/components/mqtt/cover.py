@@ -1,6 +1,7 @@
 """Support for MQTT cover devices."""
 from __future__ import annotations
 
+import asyncio
 import functools
 from json import JSONDecodeError, loads as json_loads
 import logging
@@ -12,15 +13,8 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -52,8 +46,10 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +98,10 @@ DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
 
 TILT_FEATURES = (
-    SUPPORT_OPEN_TILT
-    | SUPPORT_CLOSE_TILT
-    | SUPPORT_STOP_TILT
-    | SUPPORT_SET_TILT_POSITION
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.STOP_TILT
+    | CoverEntityFeature.SET_TILT_POSITION
 )
 
 MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
@@ -156,7 +152,7 @@ def validate_options(value):
     return value
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -201,9 +197,16 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     validate_options,
+)
+
+# Configuring MQTT Covers under the cover platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    validate_options,
+    warn_for_legacy_schema(cover.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -219,7 +222,8 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT cover through configuration.yaml."""
+    """Set up MQTT covers configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, cover.DOMAIN, config, async_add_entities, _async_setup_entity
     )
@@ -230,7 +234,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT cover dynamically through MQTT discovery."""
+    """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, cover.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -519,14 +533,14 @@ class MqttCover(MqttEntity, CoverEntity):
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             if self._config.get(CONF_PAYLOAD_OPEN) is not None:
-                supported_features |= SUPPORT_OPEN
+                supported_features |= CoverEntityFeature.OPEN
             if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
-                supported_features |= SUPPORT_CLOSE
+                supported_features |= CoverEntityFeature.CLOSE
             if self._config.get(CONF_PAYLOAD_STOP) is not None:
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
 
         if self._config.get(CONF_SET_POSITION_TOPIC) is not None:
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self._config.get(CONF_TILT_COMMAND_TOPIC) is not None:
             supported_features |= TILT_FEATURES

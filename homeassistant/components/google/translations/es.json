@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
+            "oauth_error": "Se han recibido datos token inv\u00e1lidos.",
+            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3n exitosa"
+        },
+        "step": {
+            "auth": {
+                "title": "Vincular cuenta de Google"
+            },
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    }
+}

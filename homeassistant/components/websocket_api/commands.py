@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATONS,
 )
@@ -106,20 +105,21 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+            connection.send_message(
+                lambda: messages.cached_event_message(msg["id"], event)
+            )
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
-
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+            connection.send_message(
+                lambda: messages.cached_event_message(msg["id"], event)
+            )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events
+        event_type, forward_events, run_immediately=True
     )
 
     connection.send_result(msg["id"])
@@ -290,14 +290,16 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
+        connection.send_message(
+            lambda: messages.cached_state_diff_message(msg["id"], event)
+        )
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        "state_changed", forward_entity_changes
+        EVENT_STATE_CHANGED, forward_entity_changes, run_immediately=True
     )
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
@@ -357,15 +359,19 @@ def handle_get_config(
     connection.send_result(msg["id"], hass.config.as_dict())
 
 
-@decorators.websocket_command({vol.Required("type"): "manifest/list"})
+@decorators.websocket_command(
+    {vol.Required("type"): "manifest/list", vol.Optional("integrations"): [str]}
+)
 @decorators.async_response
 async def handle_manifest_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    loaded_integrations = async_get_loaded_integrations(hass)
+    wanted_integrations = msg.get("integrations")
+    if wanted_integrations is None:
+        wanted_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in loaded_integrations)
+        *(async_get_integration(hass, domain) for domain in wanted_integrations)
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]

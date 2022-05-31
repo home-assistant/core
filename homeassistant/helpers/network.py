@@ -62,7 +62,13 @@ def get_supervisor_network_url(
 
 def is_hass_url(hass: HomeAssistant, url: str) -> bool:
     """Return if the URL points at this Home Assistant instance."""
-    parsed = yarl.URL(normalize_url(url))
+    parsed = yarl.URL(url)
+
+    if not parsed.is_absolute():
+        return False
+
+    if parsed.is_default_port():
+        parsed = parsed.with_port(None)
 
     def host_ip() -> str | None:
         if hass.config.api is None or is_loopback(ip_address(hass.config.api.local_ip)):
@@ -230,7 +236,8 @@ def _get_internal_url(
             scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
         )
         if (
-            not is_loopback(ip_address(ip_url.host))
+            ip_url.host
+            and not is_loopback(ip_address(ip_url.host))
             and (not require_current_request or ip_url.host == _get_request_host())
             and (not require_standard_port or ip_url.is_default_port())
         ):

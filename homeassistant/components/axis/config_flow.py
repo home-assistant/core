@@ -1,16 +1,20 @@
 """Config flow to configure Axis devices."""
+from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import ip_address
+from typing import Any
 from urllib.parse import urlsplit
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.config_entries import SOURCE_IGNORE
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,14 +26,13 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
 from .const import (
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from .device import get_device
+from .device import AxisNetworkDevice, get_device
 from .errors import AuthenticationRequired, CannotConnect
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
@@ -43,18 +46,18 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> AxisOptionsFlowHandler:
         """Get the options flow for this handler."""
         return AxisOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Axis config flow."""
-        self.device_config = {}
-        self.discovery_schema = {}
-        self.import_schema = {}
-        self.serial = None
+        self.device_config: dict[str, Any] = {}
+        self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a Axis config flow start.
 
         Manage device specific parameters.
@@ -71,8 +74,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     password=user_input[CONF_PASSWORD],
                 )
 
-                self.serial = device.vapix.serial_number
-                await self.async_set_unique_id(format_mac(self.serial))
+                serial = device.vapix.serial_number
+                await self.async_set_unique_id(format_mac(serial))
 
                 self._abort_if_unique_id_configured(
                     updates={
@@ -91,7 +94,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     CONF_MODEL: device.vapix.product_number,
                 }
 
-                return await self._create_entry()
+                return await self._create_entry(serial)
 
             except AuthenticationRequired:
                 errors["base"] = "invalid_auth"
@@ -113,7 +116,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             errors=errors,
         )
 
-    async def _create_entry(self):
+    async def _create_entry(self, serial: str) -> FlowResult:
         """Create entry for device.
 
         Generate a name to be used as a prefix for device entities.
@@ -133,10 +136,10 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         self.device_config[CONF_NAME] = name
 
-        title = f"{model} - {self.serial}"
+        title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_reauth(self, device_config: dict):
+    async def async_step_reauth(self, device_config: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
             CONF_NAME: device_config[CONF_NAME],
@@ -188,7 +191,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-    async def _process_discovered_device(self, device: dict):
+    async def _process_discovered_device(self, device: dict[str, Any]) -> FlowResult:
         """Prepare configuration for a discovered Axis device."""
         if device[CONF_MAC][:8] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
@@ -228,18 +231,22 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 class AxisOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Axis device options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Axis device options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
-        self.device = None
+        self.device: AxisNetworkDevice | None = None
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Axis device options."""
         self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.unique_id]
         return await self.async_step_configure_stream()
 
-    async def async_step_configure_stream(self, user_input=None):
+    async def async_step_configure_stream(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Axis device stream options."""
         if user_input is not None:
             self.options.update(user_input)
@@ -247,6 +254,7 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
 
         schema = {}
 
+        assert self.device
         vapix = self.device.api.vapix
 
         # Stream profiles

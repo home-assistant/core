@@ -5,6 +5,14 @@ import librouteros
 
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 
 from . import ARP_DATA, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
 
@@ -56,17 +64,17 @@ async def test_hub_setup_successful(hass):
         hub = await setup_mikrotik_entry(hass)
 
     assert hub.config_entry.data == {
-        mikrotik.CONF_NAME: "Mikrotik",
-        mikrotik.CONF_HOST: "0.0.0.0",
-        mikrotik.CONF_USERNAME: "user",
-        mikrotik.CONF_PASSWORD: "pass",
-        mikrotik.CONF_PORT: 8278,
-        mikrotik.CONF_VERIFY_SSL: False,
+        CONF_NAME: "Mikrotik",
+        CONF_HOST: "0.0.0.0",
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "pass",
+        CONF_PORT: 8278,
+        CONF_VERIFY_SSL: False,
     }
     assert hub.config_entry.options == {
-        mikrotik.hub.CONF_FORCE_DHCP: False,
-        mikrotik.CONF_ARP_PING: False,
-        mikrotik.CONF_DETECTION_TIME: 300,
+        mikrotik.const.CONF_FORCE_DHCP: False,
+        mikrotik.const.CONF_ARP_PING: False,
+        mikrotik.const.CONF_DETECTION_TIME: 300,
     }
 
     assert hub.api.available is True

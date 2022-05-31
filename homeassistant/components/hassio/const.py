@@ -6,6 +6,7 @@ DOMAIN = "hassio"
 ATTR_ADDON = "addon"
 ATTR_ADDONS = "addons"
 ATTR_ADMIN = "admin"
+ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"
 ATTR_DATA = "data"
 ATTR_DISCOVERY = "discovery"
@@ -39,10 +40,12 @@ WS_TYPE_SUBSCRIBE = "supervisor/subscribe"
 
 EVENT_SUPERVISOR_EVENT = "supervisor_event"
 
+ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_UPDATE_AVAILABLE = "update_available"
 ATTR_CPU_PERCENT = "cpu_percent"
+ATTR_CHANGELOG = "changelog"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
 ATTR_STATE = "state"
@@ -53,6 +56,8 @@ ATTR_REPOSITORY = "repository"
 
 DATA_KEY_ADDONS = "addons"
 DATA_KEY_OS = "os"
+DATA_KEY_SUPERVISOR = "supervisor"
+DATA_KEY_CORE = "core"
 
 
 class SupervisorEntityModel(str, Enum):
@@ -60,3 +65,5 @@ class SupervisorEntityModel(str, Enum):
 
     ADDON = "Home Assistant Add-on"
     OS = "Home Assistant Operating System"
+    CORE = "Home Assistant Core"
+    SUPERVIOSR = "Home Assistant Supervisor"

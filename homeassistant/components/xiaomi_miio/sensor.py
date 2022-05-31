@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_HOST,
+    CONF_MODEL,
     CONF_TOKEN,
     LIGHT_LUX,
     PERCENTAGE,
@@ -49,7 +50,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -681,8 +681,10 @@ async def async_setup_entry(
             )
         # Gateway sub devices
         sub_devices = gateway.devices
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                sub_device.sid
+            ]
             for sensor, description in SENSOR_TYPES.items():
                 if sensor not in sub_device.status:
                     continue

@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_upb_file": "Ontbrekend of ongeldig UPB UPStart-exportbestand, controleer de naam en het pad van het bestand.",
             "unknown": "Onverwachte fout"
         },

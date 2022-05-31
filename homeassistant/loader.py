@@ -16,7 +16,7 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -24,6 +24,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -87,6 +88,7 @@ class Manifest(TypedDict, total=False):
     name: str
     disabled: str
     domain: str
+    integration_type: Literal["integration", "helper"]
     dependencies: list[str]
     after_dependencies: list[str]
     requirements: list[str]
@@ -180,24 +182,47 @@ async def async_get_custom_components(
     return cast(dict[str, "Integration"], reg_or_evt)
 
 
-async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
+async def async_get_config_flows(
+    hass: HomeAssistant,
+    type_filter: Literal["helper", "integration"] | None = None,
+) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
-    flows: set[str] = set()
-    flows.update(FLOWS)
-
     integrations = await async_get_custom_components(hass)
+    flows: set[str] = set()
+
+    if type_filter is not None:
+        flows.update(FLOWS[type_filter])
+    else:
+        for type_flows in FLOWS.values():
+            flows.update(type_flows)
+
     flows.update(
         [
             integration.domain
             for integration in integrations.values()
             if integration.config_flow
+            and (type_filter is None or integration.integration_type == type_filter)
         ]
     )
 
     return flows
+
+
+async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
+    """Return cached list of application credentials."""
+    integrations = await async_get_custom_components(hass)
+
+    return [
+        *APPLICATION_CREDENTIALS,
+        *[
+            integration.domain
+            for integration in integrations.values()
+            if "application_credentials" in integration.dependencies
+        ],
+    ]
 
 
 def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
@@ -473,6 +498,11 @@ class Integration:
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
+
+    @property
+    def integration_type(self) -> Literal["integration", "helper"]:
+        """Return the integration type."""
+        return self.manifest.get("integration_type", "integration")
 
     @property
     def mqtt(self) -> list[str] | None:

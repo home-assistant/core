@@ -6,15 +6,14 @@ import math
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
+from bond_async import Action, BPUPSubscriptions, DeviceType, Direction
 import voluptuous as vol
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -90,9 +89,9 @@ class BondFan(BondEntity, FanEntity):
         """Flag supported features."""
         features = 0
         if self._device.supports_speed():
-            features |= SUPPORT_SET_SPEED
+            features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():
-            features |= SUPPORT_DIRECTION
+            features |= FanEntityFeature.DIRECTION
 
         return features
 

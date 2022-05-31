@@ -6,6 +6,7 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "discover_timeout": "Hue k\u00f6pr\u00fcleri bulunam\u0131yor",
+            "invalid_host": "Ge\u00e7ersiz sunucu",
             "no_bridges": "Philips Hue k\u00f6pr\u00fcs\u00fc bulunamad\u0131",
             "not_hue_bridge": "Hue k\u00f6pr\u00fcs\u00fc de\u011fil",
             "unknown": "Beklenmeyen hata"

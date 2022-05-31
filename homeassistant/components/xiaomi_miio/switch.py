@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_TEMPERATURE,
     CONF_HOST,
+    CONF_MODEL,
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -32,7 +33,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
@@ -369,10 +369,12 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway sub devices
         sub_devices = gateway.devices
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
             if sub_device.device_type != "Switch":
                 continue
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                sub_device.sid
+            ]
             switch_variables = set(sub_device.status) & set(GATEWAY_SWITCH_VARS)
             if switch_variables:
                 entities.extend(

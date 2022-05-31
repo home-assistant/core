@@ -17,12 +17,14 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-class TwenteMilieuEntity(CoordinatorEntity[dict[WasteType, list[date]]], Entity):
+class TwenteMilieuEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[WasteType, list[date]]]], Entity
+):
     """Defines a Twente Milieu entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],
         entry: ConfigEntry,
     ) -> None:
         """Initialize the Twente Milieu entity."""

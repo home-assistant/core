@@ -1,5 +1,6 @@
 """Fixtures for pywemo."""
 import asyncio
+import contextlib
 from unittest.mock import create_autospec, patch
 
 import pytest
@@ -15,6 +16,9 @@ MOCK_PORT = 50000
 MOCK_NAME = "WemoDeviceName"
 MOCK_SERIAL_NUMBER = "WemoSerialNumber"
 MOCK_FIRMWARE_VERSION = "WeMo_WW_2.00.XXXXX.PVT-OWRT"
+MOCK_INSIGHT_CURRENT_WATTS = 0.01
+MOCK_INSIGHT_TODAY_KWH = 3.33
+MOCK_INSIGHT_STATE_THRESHOLD_POWER = 8.0
 
 
 @pytest.fixture(name="pywemo_model")
@@ -49,9 +53,9 @@ def pywemo_discovery_responder_fixture():
         yield
 
 
-@pytest.fixture(name="pywemo_device")
-def pywemo_device_fixture(pywemo_registry, pywemo_model):
-    """Fixture for WeMoDevice instances."""
+@contextlib.contextmanager
+def create_pywemo_device(pywemo_registry, pywemo_model):
+    """Create a WeMoDevice instance."""
     cls = getattr(pywemo, pywemo_model)
     device = create_autospec(cls, instance=True)
     device.host = MOCK_HOST
@@ -64,11 +68,33 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
     device.get_state.return_value = 0  # Default to Off
     device.supports_long_press.return_value = cls.supports_long_press()
 
+    if issubclass(cls, pywemo.Insight):
+        device.standby_state = pywemo.StandbyState.OFF
+        device.current_power_watts = MOCK_INSIGHT_CURRENT_WATTS
+        device.today_kwh = MOCK_INSIGHT_TODAY_KWH
+        device.threshold_power_watts = MOCK_INSIGHT_STATE_THRESHOLD_POWER
+        device.on_for = 1234
+        device.today_on_time = 5678
+        device.total_on_time = 9012
+
+    if issubclass(cls, pywemo.Maker):
+        device.has_sensor = 1
+        device.sensor_state = 1
+        device.switch_mode = 1
+        device.switch_state = 0
+
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
     with patch("pywemo.setup_url_for_address", return_value=url), patch(
         "pywemo.discovery.device_from_description", return_value=device
     ):
         yield device
+
+
+@pytest.fixture(name="pywemo_device")
+def pywemo_device_fixture(pywemo_registry, pywemo_model):
+    """Fixture for WeMoDevice instances."""
+    with create_pywemo_device(pywemo_registry, pywemo_model) as pywemo_device:
+        yield pywemo_device
 
 
 @pytest.fixture(name="wemo_entity_suffix")
@@ -77,9 +103,8 @@ def wemo_entity_suffix_fixture():
     return ""
 
 
-@pytest.fixture(name="wemo_entity")
-async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
-    """Fixture for a Wemo entity in hass."""
+async def async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix):
+    """Create a hass entity for a wemo device."""
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -94,7 +119,13 @@ async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
 
     entity_registry = er.async_get(hass)
     for entry in entity_registry.entities.values():
-        if entry.entity_id.endswith(wemo_entity_suffix):
+        if entry.entity_id.endswith(wemo_entity_suffix or pywemo_device.name.lower()):
             return entry
 
     return None
+
+
+@pytest.fixture(name="wemo_entity")
+async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
+    """Fixture for a Wemo entity in hass."""
+    return await async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix)

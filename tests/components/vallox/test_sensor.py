@@ -51,7 +51,7 @@ async def test_remaining_filter_returns_timestamp(
     """Test that the remaining time for filter sensor returns a timestamp."""
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=dt.now().date(),
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -68,7 +68,7 @@ async def test_remaining_time_for_filter_none_returned_from_vallox(
     """Test that the remaining time for filter sensor returns 'unknown' when Vallox returns None."""
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=None,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -98,7 +98,7 @@ async def test_remaining_time_for_filter_in_the_future(
 
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=mocked_filter_end_date,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -122,7 +122,7 @@ async def test_remaining_time_for_filter_today(
 
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=mocked_filter_end_date,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -146,7 +146,7 @@ async def test_remaining_time_for_filter_in_the_past(
 
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=mocked_filter_end_date,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -158,3 +158,88 @@ async def test_remaining_time_for_filter_in_the_past(
         mocked_filter_end_date,
         _now_at_13(),
     )
+
+
+async def test_cell_state_sensor_heat_recovery(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in heat recovery state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 0}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Heat Recovery"
+
+
+async def test_cell_state_sensor_cool_recovery(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in cool recovery state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 1}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Cool Recovery"
+
+
+async def test_cell_state_sensor_bypass(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in bypass state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 2}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Bypass"
+
+
+async def test_cell_state_sensor_defrosting(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in defrosting state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 3}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "Defrosting"
+
+
+async def test_cell_state_sensor_unknown_state(
+    mock_entry: MockConfigEntry, hass: HomeAssistant
+):
+    """Test cell state sensor in unknown state."""
+    # Arrange
+    metrics = {"A_CYC_CELL_STATE": 4}
+
+    # Act
+    with patch_metrics(metrics=metrics):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == "unknown"

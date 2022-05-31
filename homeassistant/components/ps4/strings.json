@@ -2,25 +2,26 @@
   "config": {
     "step": {
       "creds": {
-        "title": "PlayStation 4",
         "description": "Credentials needed. Press 'Submit' and then in the PS4 2nd Screen App, refresh devices and select the 'Home-Assistant' device to continue."
       },
       "mode": {
-        "title": "PlayStation 4",
-        "description": "Select mode for configuration. The [%key:common::config_flow::data::ip%] field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
         "data": {
           "mode": "Config Mode",
           "ip_address": "[%key:common::config_flow::data::ip%] (Leave empty if using Auto Discovery)."
+        },
+        "data_description": {
+          "ip_address": "Leave blank if selecting auto-discovery."
         }
       },
       "link": {
-        "title": "PlayStation 4",
-        "description": "Enter your PlayStation 4 information. For [%key:common::config_flow::data::pin%], navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the [%key:common::config_flow::data::pin%] that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
         "data": {
           "region": "Region",
           "name": "[%key:common::config_flow::data::name%]",
           "code": "[%key:common::config_flow::data::pin%]",
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "code": "Navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device' to get the pin."
         }
       }
     },

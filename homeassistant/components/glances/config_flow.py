@@ -82,11 +82,6 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, import_config):
-        """Import from Glances sensor config."""
-
-        return await self.async_step_user(user_input=import_config)
-
 
 class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Glances client options."""

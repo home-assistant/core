@@ -2,10 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Sentry",
-        "description": "Enter your Sentry DSN",
         "data": {
-          "dsn": "DSN"
+          "dsn": "Sentry DSN"
         }
       }
     },

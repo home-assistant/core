@@ -13,7 +13,15 @@ from pyatv.const import (
 )
 from pyatv.helpers import is_streamable
 
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_MUSIC,
@@ -22,21 +30,6 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -60,45 +53,49 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 # We always consider these to be supported
-SUPPORT_BASE = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_BASE = MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
 
 # This is the "optimistic" view of supported features and will be returned until the
 # actual set of supported feature have been determined (will always be all or a subset
 # of these).
 SUPPORT_APPLE_TV = (
     SUPPORT_BASE
-    | SUPPORT_BROWSE_MEDIA
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_SEEK
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SHUFFLE_SET
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SHUFFLE_SET
 )
 
 
 # Map features in pyatv to Home Assistant
 SUPPORT_FEATURE_MAPPING = {
-    FeatureName.PlayUrl: SUPPORT_PLAY_MEDIA,
-    FeatureName.StreamFile: SUPPORT_PLAY_MEDIA,
-    FeatureName.Pause: SUPPORT_PAUSE,
-    FeatureName.Play: SUPPORT_PLAY,
-    FeatureName.SetPosition: SUPPORT_SEEK,
-    FeatureName.Stop: SUPPORT_STOP,
-    FeatureName.Next: SUPPORT_NEXT_TRACK,
-    FeatureName.Previous: SUPPORT_PREVIOUS_TRACK,
-    FeatureName.VolumeUp: SUPPORT_VOLUME_STEP,
-    FeatureName.VolumeDown: SUPPORT_VOLUME_STEP,
-    FeatureName.SetRepeat: SUPPORT_REPEAT_SET,
-    FeatureName.SetShuffle: SUPPORT_SHUFFLE_SET,
-    FeatureName.SetVolume: SUPPORT_VOLUME_SET,
-    FeatureName.AppList: SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE,
-    FeatureName.LaunchApp: SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE,
+    FeatureName.PlayUrl: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA,
+    FeatureName.StreamFile: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA,
+    FeatureName.Pause: MediaPlayerEntityFeature.PAUSE,
+    FeatureName.Play: MediaPlayerEntityFeature.PLAY,
+    FeatureName.SetPosition: MediaPlayerEntityFeature.SEEK,
+    FeatureName.Stop: MediaPlayerEntityFeature.STOP,
+    FeatureName.Next: MediaPlayerEntityFeature.NEXT_TRACK,
+    FeatureName.Previous: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    FeatureName.VolumeUp: MediaPlayerEntityFeature.VOLUME_STEP,
+    FeatureName.VolumeDown: MediaPlayerEntityFeature.VOLUME_STEP,
+    FeatureName.SetRepeat: MediaPlayerEntityFeature.REPEAT_SET,
+    FeatureName.SetShuffle: MediaPlayerEntityFeature.SHUFFLE_SET,
+    FeatureName.SetVolume: MediaPlayerEntityFeature.VOLUME_SET,
+    FeatureName.AppList: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE,
+    FeatureName.LaunchApp: MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SELECT_SOURCE,
 }
 
 
@@ -285,11 +282,22 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         # RAOP. Otherwise try to play it with regular AirPlay.
         if media_type == MEDIA_TYPE_APP:
             await self.atv.apps.launch_app(media_id)
-        elif self._is_feature_available(FeatureName.StreamFile) and (
-            await is_streamable(media_id) or media_type == MEDIA_TYPE_MUSIC
+
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+            media_type = MEDIA_TYPE_MUSIC
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        if self._is_feature_available(FeatureName.StreamFile) and (
+            media_type == MEDIA_TYPE_MUSIC or await is_streamable(media_id)
         ):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id)
+
         elif self._is_feature_available(FeatureName.PlayUrl):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
             await self.atv.stream.play_url(media_id)
@@ -389,7 +397,37 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         media_content_id=None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return build_app_list(self._app_list)
+        if media_content_id == "apps" or (
+            # If we can't stream files or URLs, we can't browse media.
+            # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
+            not self._is_feature_available(FeatureName.PlayUrl)
+            and not self._is_feature_available(FeatureName.StreamFile)
+        ):
+            return build_app_list(self._app_list)
+
+        if self._app_list:
+            kwargs = {}
+        else:
+            # If it has no apps, assume it has no display
+            kwargs = {
+                "content_filter": lambda item: item.media_content_type.startswith(
+                    "audio/"
+                ),
+            }
+
+        cur_item = await media_source.async_browse_media(
+            self.hass, media_content_id, **kwargs
+        )
+
+        # If media content id is not None, we're browsing into a media source
+        if media_content_id is not None:
+            return cur_item
+
+        # Add app item if we have one
+        if self._app_list and cur_item.children:
+            cur_item.children.insert(0, build_app_list(self._app_list))
+
+        return cur_item
 
     async def async_turn_on(self):
         """Turn the media player on."""

@@ -10,8 +10,9 @@
                     "lights": "Identificadors de dispositiu dels commutadors Vera a tractar com a llums a Home Assistant.",
                     "vera_controller_url": "URL del controlador"
                 },
-                "description": "Proporciona un URL pel controlador Vera. Hauria de ser similar al seg\u00fcent: http://192.168.1.161:3480.",
-                "title": "Configuraci\u00f3 del controlador Vera"
+                "data_description": {
+                    "vera_controller_url": "Hauria de tenir aquest aspecte: http://192.168.1.161:3480"
+                }
             }
         }
     },

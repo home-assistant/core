@@ -14,6 +14,8 @@ from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass
 class SensiboEntityDescriptionMixin:
@@ -29,7 +31,7 @@ class SensiboNumberEntityDescription(
     """Class describing Sensibo Number entities."""
 
 
-NUMBER_TYPES = (
+DEVICE_NUMBER_TYPES = (
     SensiboNumberEntityDescription(
         key="calibration_temp",
         remote_key="temperature",
@@ -65,7 +67,7 @@ async def async_setup_entry(
     async_add_entities(
         SensiboNumber(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for description in NUMBER_TYPES
+        for description in DEVICE_NUMBER_TYPES
     )
 
 
@@ -84,25 +86,20 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = (
-            f"{coordinator.data.parsed[device_id]['name']} {entity_description.name}"
-        )
+        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def value(self) -> float | None:
         """Return the value from coordinator data."""
-        return self.coordinator.data.parsed[self._device_id][
-            self.entity_description.key
-        ]
+        value: float | None = getattr(self.device_data, self.entity_description.key)
+        return value
 
     async def async_set_value(self, value: float) -> None:
         """Set value for calibration."""
         data = {self.entity_description.remote_key: value}
         result = await self.async_send_command("set_calibration", {"data": data})
         if result["status"] == "success":
-            self.coordinator.data.parsed[self._device_id][
-                self.entity_description.key
-            ] = value
+            setattr(self.device_data, self.entity_description.key, value)
             self.async_write_ha_state()
             return
         raise HomeAssistantError(f"Could not set calibration for device {self.name}")

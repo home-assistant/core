@@ -6,26 +6,14 @@ Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 from datetime import timedelta
 import json
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -42,24 +30,6 @@ from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
-
-SUPPORT_VOLUMIO = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_STOP
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_CLEAR_PLAYLIST
-    | SUPPORT_BROWSE_MEDIA
-)
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=15)
 
@@ -83,6 +53,24 @@ async def async_setup_entry(
 
 class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     def __init__(self, volumio, uid, name, info):
         """Initialize the media player."""
@@ -202,11 +190,6 @@ class Volumio(MediaPlayerEntity):
     def source(self):
         """Name of the current input source."""
         return self._currentplaylist
-
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return SUPPORT_VOLUMIO
 
     async def async_media_next_track(self):
         """Send media_next command to media player."""

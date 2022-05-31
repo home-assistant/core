@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "\u53d7\u4fe1\u6a5f\u306e\u8ffd\u52a0\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044",
-                "title": "\u30c7\u30ce\u30f3(Denon)AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc"
+                "description": "\u53d7\u4fe1\u6a5f\u306e\u8ffd\u52a0\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "IP\u30a2\u30c9\u30ec\u30b9"
                 },
-                "description": "\u53d7\u4fe1\u6a5f\u306b\u63a5\u7d9a\u3057\u307e\u3059\u3002IP\u30a2\u30c9\u30ec\u30b9\u304c\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u306a\u3044\u5834\u5408\u306f\u3001\u81ea\u52d5\u691c\u51fa\u304c\u4f7f\u7528\u3055\u308c\u307e\u3059",
-                "title": "\u30c7\u30ce\u30f3(Denon)AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc"
+                "data_description": {
+                    "host": "\u81ea\u52d5\u691c\u51fa\u3092\u4f7f\u7528\u3059\u308b\u306b\u306f\u3001\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u307e\u3059"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "\u30be\u30fc\u30f32\u306e\u8a2d\u5b9a",
                     "zone3": "\u30be\u30fc\u30f33\u306e\u8a2d\u5b9a"
                 },
-                "description": "\u30aa\u30d7\u30b7\u30e7\u30f3\u8a2d\u5b9a\u306e\u6307\u5b9a",
-                "title": "\u30c7\u30ce\u30f3(Denon)AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc"
+                "description": "\u30aa\u30d7\u30b7\u30e7\u30f3\u8a2d\u5b9a\u306e\u6307\u5b9a"
             }
         }
     }

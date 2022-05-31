@@ -11,18 +11,18 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: 'Full run (regardless of changes)'
+        description: "Full run (regardless of changes)"
         default: false
         type: boolean
       lint-only:
-        description: 'Skip pytest'
+        description: "Skip pytest"
         default: false
         type: boolean
 
 env:
   CACHE_VERSION: 9
   PIP_CACHE_VERSION: 3
-  HA_SHORT_VERSION: 2022.4
+  HA_SHORT_VERSION: 2022.7
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
         id: core
@@ -119,7 +119,8 @@ jobs:
             || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
             || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
             || [[ "${{ steps.core.outputs.any }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.full }}" == "true" ]];
+            || [[ "${{ github.event.inputs.full }}" == "true" ]] \
+            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
             test_groups="[1, 2, 3, 4, 5, 6]"
             test_group_count=6
@@ -151,10 +152,10 @@ jobs:
       pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Generate partial Python venv restore key
@@ -171,7 +172,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: >-
@@ -188,7 +189,7 @@ jobs:
           #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -202,7 +203,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.1" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.2" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt --use-deprecated=legacy-resolver
       - name: Generate partial pre-commit restore key
         id: generate-pre-commit-key
@@ -211,7 +212,7 @@ jobs:
             hashFiles('.pre-commit-config.yaml') }}"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -232,15 +233,15 @@ jobs:
       - prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -252,7 +253,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -282,15 +283,15 @@ jobs:
       - prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -302,7 +303,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -333,15 +334,15 @@ jobs:
     needs: prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -353,7 +354,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -375,15 +376,15 @@ jobs:
       - prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -395,7 +396,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -433,6 +434,19 @@ jobs:
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual check-json --all-files
+
+      - name: Run prettier (fully)
+        if: needs.changes.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --all-files
+
+      - name: Run prettier (partially)
+        if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/*
 
       - name: Register check executables problem matcher
         run: |
@@ -485,10 +499,10 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -509,15 +523,15 @@ jobs:
     needs: prepare-base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v3.0.0
+        uses: actions/setup-python@v3.1.2
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -544,7 +558,7 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Generate partial Python venv restore key
         id: generate-python-key
         run: >-
@@ -559,7 +573,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: >-
@@ -576,7 +590,7 @@ jobs:
           #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
       - name: Restore pip wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
@@ -594,7 +608,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.1" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.2" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
           pip install -e .
@@ -612,10 +626,10 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -654,10 +668,10 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -698,10 +712,10 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -741,10 +755,10 @@ jobs:
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@v3.0.2
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -769,7 +783,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Run pytest (fully)
         if: needs.changes.outputs.test_full_suite == 'true'
-        timeout-minutes: 45
+        timeout-minutes: 60
         run: |
           . venv/bin/activate
           python --version
@@ -813,7 +827,7 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -829,14 +843,14 @@ jobs:
       - pytest
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.0
+        uses: actions/checkout@v3.0.2
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
         if: needs.changes.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3.1.0
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.changes.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v3.1.0

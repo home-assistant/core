@@ -78,10 +78,11 @@ async def async_setup_entry(
     )
 
 
-class PureEnergieSensorEntity(CoordinatorEntity[PureEnergieData], SensorEntity):
+class PureEnergieSensorEntity(
+    CoordinatorEntity[PureEnergieDataUpdateCoordinator], SensorEntity
+):
     """Defines an Pure Energie sensor."""
 
-    coordinator: PureEnergieDataUpdateCoordinator
     entity_description: PureEnergieSensorEntityDescription
 
     def __init__(

@@ -53,11 +53,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return YaleOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        return await self.async_step_user(user_input=config)
-
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

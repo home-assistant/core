@@ -17,8 +17,7 @@
                 "data": {
                     "host": "TV ime gostitelja ali IP naslov"
                 },
-                "description": "Nastavite integracijo Sony Bravia TV. \u010ce imate te\u017eave s konfiguracijo, pojdite na: https://www.home-assistant.io/integrations/braviatv \n\n Prepri\u010dajte se, da je va\u0161 televizor vklopljen.",
-                "title": "Sony Bravia TV"
+                "description": "Nastavite integracijo Sony Bravia TV. \u010ce imate te\u017eave s konfiguracijo, pojdite na: https://www.home-assistant.io/integrations/braviatv \n\n Prepri\u010dajte se, da je va\u0161 televizor vklopljen."
             }
         }
     },

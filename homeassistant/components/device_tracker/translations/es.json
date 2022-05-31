@@ -12,8 +12,8 @@
     "state": {
         "_": {
             "home": "En casa",
-            "not_home": "Fuera de casa"
+            "not_home": "Fuera"
         }
     },
-    "title": "Rastreador de dispositivo"
+    "title": "Seguimiento de dispositivos"
 }

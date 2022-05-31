@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-from bond_api import BPUPSubscriptions
+from bond_async import BPUPSubscriptions
 
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -156,9 +156,13 @@ class BondEntity(Entity):
         self._apply_state(state)
 
     @callback
-    def _async_bpup_callback(self, state: dict) -> None:
+    def _async_bpup_callback(self, json_msg: dict) -> None:
         """Process a state change from BPUP."""
-        self._async_state_callback(state)
+        topic = json_msg["t"]
+        if topic != f"devices/{self._device_id}/state":
+            return
+
+        self._async_state_callback(json_msg["b"])
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
