@@ -59,6 +59,16 @@ async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
     return None
 
 
+def async_get_devices_by_type(
+    api: ProtectApiClient, device_type: ModelType
+) -> dict[str, ProtectDeviceModel]:
+    """Get devices by type."""
+    devices: dict[str, ProtectDeviceModel] = getattr(
+        api.bootstrap, f"{device_type.value}s"
+    )
+    return devices
+
+
 @callback
 def async_get_devices(
     api: ProtectApiClient, model_type: Iterable[ModelType]
@@ -67,5 +77,5 @@ def async_get_devices(
     return (
         device
         for device_type in model_type
-        for device in getattr(api.bootstrap, f"{device_type.value}s")
+        for device in async_get_devices_by_type(api, device_type).values()
     )
