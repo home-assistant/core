@@ -6,13 +6,10 @@ from datetime import timedelta
 from panacotta import PanasonicBD
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -31,9 +28,6 @@ DEFAULT_NAME = "Panasonic Blu-Ray"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-SUPPORT_PANASONIC_BD = (
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,6 +53,14 @@ def setup_platform(
 class PanasonicBluRay(MediaPlayerEntity):
     """Representation of a Panasonic Blu-ray device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PAUSE
+    )
+
     def __init__(self, ip, name):
         """Initialize the Panasonic Blue-ray device."""
         self._device = PanasonicBD(ip)
@@ -82,11 +84,6 @@ class PanasonicBluRay(MediaPlayerEntity):
     def state(self):
         """Return _state variable, containing the appropriate constant."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_PANASONIC_BD
 
     @property
     def media_duration(self):

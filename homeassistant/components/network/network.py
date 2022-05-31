@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
@@ -37,9 +38,7 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
-        )
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
         self._data: dict[str, Any] = {}
         self.adapters: list[Adapter] = []
 

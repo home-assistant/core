@@ -127,7 +127,10 @@ class SelectedEntities:
         if not parts:
             return
 
-        _LOGGER.warning("Unable to find referenced %s", ", ".join(parts))
+        _LOGGER.warning(
+            "Unable to find referenced %s or it is/they are currently not available",
+            ", ".join(parts),
+        )
 
 
 @bind_hass
@@ -218,9 +221,12 @@ def async_prepare_call_from_config(
 
             if CONF_ENTITY_ID in target:
                 registry = entity_registry.async_get(hass)
-                target[CONF_ENTITY_ID] = entity_registry.async_validate_entity_ids(
-                    registry, cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
-                )
+                entity_ids = cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+                if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
+                    entity_ids = entity_registry.async_validate_entity_ids(
+                        registry, entity_ids
+                    )
+                target[CONF_ENTITY_ID] = entity_ids
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
@@ -527,7 +533,7 @@ def async_set_service_schema(
 
 
 @bind_hass
-async def entity_service_call(
+async def entity_service_call(  # noqa: C901
     hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
     func: str | Callable[..., Any],
@@ -646,6 +652,12 @@ async def entity_service_call(
                 for feature_set in required_features
             )
         ):
+            # If entity explicitly referenced, raise an error
+            if referenced is not None and entity.entity_id in referenced.referenced:
+                raise HomeAssistantError(
+                    f"Entity {entity.entity_id} does not support this service."
+                )
+
             continue
 
         entities.append(entity)
@@ -768,7 +780,7 @@ def verify_domain_control(
                     user_id=call.context.user_id,
                 )
 
-            reg = await hass.helpers.entity_registry.async_get_registry()
+            reg = entity_registry.async_get(hass)
 
             authorized = False
 

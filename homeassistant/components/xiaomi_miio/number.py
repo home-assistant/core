@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEGREE, TIME_MINUTES
+from homeassistant.const import CONF_MODEL, DEGREE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,

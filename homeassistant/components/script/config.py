@@ -35,6 +35,7 @@ from .const import (
     CONF_REQUIRED,
     CONF_TRACE,
     DOMAIN,
+    LOGGER,
 )
 from .helpers import async_get_blueprints
 
@@ -110,6 +111,9 @@ async def async_validate_config(hass, config):
     scripts = {}
     for _, p_config in config_per_platform(config, DOMAIN):
         for object_id, cfg in p_config.items():
+            if object_id in scripts:
+                LOGGER.warning("Duplicate script detected with name: '%s'", object_id)
+                continue
             cfg = await _try_async_validate_config_item(hass, object_id, cfg, config)
             if cfg is not None:
                 scripts[object_id] = cfg

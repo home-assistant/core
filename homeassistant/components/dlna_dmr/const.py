@@ -16,6 +16,7 @@ DOMAIN: Final = "dlna_dmr"
 CONF_LISTEN_PORT: Final = "listen_port"
 CONF_CALLBACK_URL_OVERRIDE: Final = "callback_url_override"
 CONF_POLL_AVAILABILITY: Final = "poll_availability"
+CONF_BROWSE_UNFILTERED: Final = "browse_unfiltered"
 
 DEFAULT_NAME: Final = "DLNA Digital Media Renderer"
 

@@ -6,9 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StateAttributes, States
-from homeassistant.components.recorder.util import execute, session_scope
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -29,6 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -298,7 +297,7 @@ class Plant(Entity):
         This only needs to be done once during startup.
         """
 
-        start_date = datetime.now() - timedelta(days=self._conf_check_days)
+        start_date = dt_util.utcnow() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
         if entity_id is None:
             _LOGGER.debug(
@@ -306,36 +305,22 @@ class Plant(Entity):
                 "there is no brightness sensor configured"
             )
             return
-
         _LOGGER.debug("Initializing values for %s from the database", self._name)
-        with session_scope(hass=self.hass) as session:
-            query = (
-                session.query(States, StateAttributes)
-                .filter(
-                    (States.entity_id == entity_id.lower())
-                    and (States.last_updated > start_date)
+        lower_entity_id = entity_id.lower()
+        history_list = history.state_changes_during_period(
+            self.hass,
+            start_date,
+            entity_id=lower_entity_id,
+            no_attributes=True,
+        )
+        for state in history_list.get(lower_entity_id, []):
+            # filter out all None, NaN and "unknown" states
+            # only keep real values
+            with suppress(ValueError):
+                self._brightness_history.add_measurement(
+                    int(state.state), state.last_updated
                 )
-                .outerjoin(
-                    StateAttributes,
-                    States.attributes_id == StateAttributes.attributes_id,
-                )
-                .order_by(States.last_updated.asc())
-            )
-            states = []
-            if results := execute(query, to_native=False, validate_entity_ids=False):
-                for state, attributes in results:
-                    native = state.to_native()
-                    if not native.attributes:
-                        native.attributes = attributes.to_native()
-                    states.append(native)
 
-            for state in states:
-                # filter out all None, NaN and "unknown" states
-                # only keep real values
-                with suppress(ValueError):
-                    self._brightness_history.add_measurement(
-                        int(state.state), state.last_updated
-                    )
         _LOGGER.debug("Initializing from database completed")
 
     @property

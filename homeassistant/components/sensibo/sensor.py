@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING
+
+from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,8 +27,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import MotionSensor, SensiboDataUpdateCoordinator
+from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -40,7 +44,7 @@ class MotionBaseEntityDescriptionMixin:
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[SensiboDevice], StateType]
 
 
 @dataclass
@@ -98,7 +102,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         value_fn=lambda data: data.temperature,
     ),
 )
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
@@ -106,13 +110,13 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         name="PM2.5",
         icon="mdi:air-filter",
-        value_fn=lambda data: data["pm25"],
+        value_fn=lambda data: data.pm25,
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
         name="Pure Sensitivity",
         icon="mdi:air-filter",
-        value_fn=lambda data: data["pure_sensitivity"],
+        value_fn=lambda data: data.pure_sensitivity,
     ),
 )
 
@@ -126,18 +130,20 @@ async def async_setup_entry(
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 
-    entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data["motion_sensors"].items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data["motion_sensors"]
-    )
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_SENSOR_TYPES
-        if device_data[description.key] is not None
+        for description in PURE_SENSOR_TYPES
+        if device_data.model == "pure"
     )
     async_add_entities(entities)
 
@@ -166,12 +172,14 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
         self._attr_name = (
-            f"{self.device_data['name']} Motion Sensor {entity_description.name}"
+            f"{self.device_data.name} Motion Sensor {entity_description.name}"
         )
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
+        if TYPE_CHECKING:
+            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 
@@ -193,7 +201,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data['name']} {entity_description.name}"
+        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def native_value(self) -> StateType:

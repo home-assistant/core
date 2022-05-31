@@ -11,11 +11,10 @@ from . import UptimeRobotDataUpdateCoordinator
 from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN
 
 
-class UptimeRobotEntity(CoordinatorEntity):
+class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
     """Base UptimeRobot entity."""
 
     _attr_attribution = ATTRIBUTION
-    coordinator: UptimeRobotDataUpdateCoordinator
 
     def __init__(
         self,

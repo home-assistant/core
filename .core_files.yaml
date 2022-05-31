@@ -39,6 +39,7 @@ base_platforms: &base_platforms
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
   - homeassistant/components/tts/**
+  - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
@@ -47,6 +48,7 @@ base_platforms: &base_platforms
 components: &components
   - homeassistant/components/alert/**
   - homeassistant/components/alexa/**
+  - homeassistant/components/application_credentials/**
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
@@ -130,7 +132,7 @@ requirements: &requirements
   - homeassistant/package_constraints.txt
   - script/pip_check
   - requirements*.txt
-  - setup.cfg
+  - pyproject.toml
 
 any:
   - *base_platforms

@@ -38,9 +38,9 @@ from tests.common import MockConfigEntry
 async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
     """Test starting a flow by user."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
         return_value=MOCK_FIRMWARE_INFO,
     ), patch(
@@ -91,9 +91,9 @@ async def test_user_already_configured(
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
         return_value=MOCK_FIRMWARE_INFO,
     ), patch(
@@ -134,9 +134,9 @@ async def test_exception_security(hass: HomeAssistant, mock_get_source_ip):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=FritzSecurityError,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ):
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -157,9 +157,9 @@ async def test_exception_connection(hass: HomeAssistant, mock_get_source_ip):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=FritzConnectionException,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ):
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -180,9 +180,9 @@ async def test_exception_unknown(hass: HomeAssistant, mock_get_source_ip):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=OSError,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ):
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
@@ -202,9 +202,9 @@ async def test_reauth_successful(
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
         return_value=MOCK_FIRMWARE_INFO,
     ), patch(
@@ -252,9 +252,9 @@ async def test_reauth_not_successful(
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=FritzConnectionException,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -291,9 +291,9 @@ async def test_ssdp_already_configured(
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
         return_value=MOCK_IPS["fritz.box"],
     ):
@@ -318,9 +318,9 @@ async def test_ssdp_already_configured_host(
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
         return_value=MOCK_IPS["fritz.box"],
     ):
@@ -345,9 +345,9 @@ async def test_ssdp_already_configured_host_uuid(
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.config_flow.socket.gethostbyname",
         return_value=MOCK_IPS["fritz.box"],
     ):
@@ -364,9 +364,9 @@ async def test_ssdp_already_in_progress_host(
 ):
     """Test starting a flow from discovery twice."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -387,9 +387,9 @@ async def test_ssdp_already_in_progress_host(
 async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
     """Test starting a flow from discovery."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+    ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
         return_value=MOCK_FIRMWARE_INFO,
     ), patch(
@@ -430,9 +430,9 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
 async def test_ssdp_exception(hass: HomeAssistant, mock_get_source_ip):
     """Test starting a flow from discovery but no device found."""
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=FritzConnectionException,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -459,11 +459,9 @@ async def test_options_flow(hass: HomeAssistant, fc_class_mock, mock_get_source_
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.common.FritzConnection",
+        "homeassistant.components.fritz.config_flow.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
-        "homeassistant.components.fritz.common.FritzBoxTools"
-    ):
+    ), patch("homeassistant.components.fritz.common.FritzBoxTools"):
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "init"

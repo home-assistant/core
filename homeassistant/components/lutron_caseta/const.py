@@ -33,3 +33,7 @@ ACTION_RELEASE = "release"
 CONF_SUBTYPE = "subtype"
 
 BRIDGE_TIMEOUT = 35
+
+UNASSIGNED_AREA = "Unassigned"
+
+CONFIG_URL = "https://device-login.lutron.com"

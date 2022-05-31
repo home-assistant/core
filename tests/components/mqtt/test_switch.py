@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import switch
-from homeassistant.components.mqtt.switch import MQTT_SWITCH_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
@@ -40,6 +39,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -292,7 +292,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
 async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, MQTT_SWITCH_ATTRIBUTES_BLOCKED
+        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG, {}
     )
 
 
@@ -586,3 +586,15 @@ async def test_encoding_subscribable_topics(
         attribute,
         attribute_value,
     )
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = switch.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

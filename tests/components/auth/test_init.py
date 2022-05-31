@@ -81,6 +81,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+    assert tokens["ha_auth_provider"] == "insecure_example"
 
     # Use refresh token to get more tokens.
     resp = await client.post(
@@ -193,7 +194,7 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     user = refresh_token.user
     client = await hass_ws_client(hass, hass_access_token)
 
-    await client.send_json({"id": 5, "type": auth.WS_TYPE_CURRENT_USER})
+    await client.send_json({"id": 5, "type": "auth/current_user"})
 
     result = await client.receive_json()
     assert result["success"], result
@@ -410,7 +411,7 @@ async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_toke
     await ws_client.send_json(
         {
             "id": 5,
-            "type": auth.WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            "type": "auth/long_lived_access_token",
             "client_name": "GPS Logger",
             "lifespan": 365,
         }
@@ -434,7 +435,7 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    await ws_client.send_json({"id": 5, "type": auth.WS_TYPE_REFRESH_TOKENS})
+    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
 
     result = await ws_client.receive_json()
     assert result["success"], result
@@ -450,6 +451,7 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token["is_current"] is True
     assert token["last_used_at"] == refresh_token.last_used_at.isoformat()
     assert token["last_used_ip"] == refresh_token.last_used_ip
+    assert token["auth_provider_type"] == "homeassistant"
 
 
 async def test_ws_delete_refresh_token(
@@ -468,7 +470,7 @@ async def test_ws_delete_refresh_token(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": auth.WS_TYPE_DELETE_REFRESH_TOKEN,
+            "type": "auth/delete_refresh_token",
             "refresh_token_id": refresh_token.id,
         }
     )
@@ -490,7 +492,7 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
         await ws_client.send_json(
             {
                 "id": 5,
-                "type": auth.WS_TYPE_SIGN_PATH,
+                "type": "auth/sign_path",
                 "path": "/api/hello",
                 "expires": 20,
             }

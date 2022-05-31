@@ -22,6 +22,7 @@ class Info:
     authentication: str = attr.ib(default=None)
     discoverable: str = attr.ib(default=None)
     oauth2: str = attr.ib(default=None)
+    helper: str = attr.ib(default=None)
 
     files_added: set[Path] = attr.ib(factory=set)
     tests_added: set[Path] = attr.ib(factory=set)

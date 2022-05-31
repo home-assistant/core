@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
-            },
             "discovery_confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} ({host})?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP c\u00edm",
-                    "name": "N\u00e9v"
+                    "host": "IP c\u00edm"
                 },
                 "description": "Ha az IP-c\u00edmet \u00fcresen hagyja, akkor az eszk\u00f6z\u00f6k keres\u00e9se a felder\u00edt\u00e9ssel t\u00f6rt\u00e9nik."
             }

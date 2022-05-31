@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Twinkly device\u306e\u30db\u30b9\u30c8(\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9)"
-                },
-                "description": "Twinkly led string\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7",
-                "title": "Twinkly"
+                }
             }
         }
     }

@@ -5,10 +5,9 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera, StateType
-from pyunifiprotect.data.devices import CameraChannel
+from pyunifiprotect.data import Camera as UFPCamera, CameraChannel, StateType
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -134,7 +133,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             None if disable_stream else rtsp_url
         )
         self._attr_supported_features: int = (
-            SUPPORT_STREAM if self._stream_source else 0
+            CameraEntityFeature.STREAM if self._stream_source else 0
         )
 
     @callback

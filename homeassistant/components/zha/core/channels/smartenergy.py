@@ -7,7 +7,12 @@ from functools import partialmethod
 from zigpy.zcl.clusters import smartenergy
 
 from .. import registries, typing as zha_typing
-from ..const import REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_OP
+from ..const import (
+    REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_OP,
+    SIGNAL_ATTR_UPDATED,
+)
 from .base import ZigbeeChannel
 
 
@@ -65,7 +70,7 @@ class Metering(ZigbeeChannel):
         "divisor": True,
         "metering_device_type": True,
         "multiplier": True,
-        "summa_formatting": True,
+        "summation_formatting": True,
         "unit_of_measure": True,
     }
 
@@ -159,9 +164,28 @@ class Metering(ZigbeeChannel):
         self._format_spec = self.get_formatting(fmting)
 
         fmting = self.cluster.get(
-            "summa_formatting", 0xF9
+            "summation_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
+
+    async def async_force_update(self) -> None:
+        """Retrieve latest state."""
+        self.debug("async_force_update")
+
+        attrs = [
+            a["attr"]
+            for a in self.REPORT_CONFIG
+            if a["attr"] not in self.cluster.unsupported_attributes
+        ]
+        result = await self.get_attributes(attrs, from_cache=False, only_cache=False)
+        if result:
+            for attr, value in result.items():
+                self.async_send_signal(
+                    f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                    self.cluster.find_attribute(attr).id,
+                    attr,
+                    value,
+                )
 
     @staticmethod
     def get_formatting(formatting: int) -> str:

@@ -10,20 +10,19 @@ import logging
 import time
 from typing import Any, NamedTuple, cast
 
-from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
     ResponseErrorException,
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
 from requests.exceptions import Timeout
-from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MODEL,
@@ -48,6 +47,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -187,9 +187,12 @@ class Router:
         try:
             self.data[key] = func()
         except ResponseErrorLoginRequiredException:
-            if isinstance(self.connection, AuthorizedConnection):
+            if not self.config_entry.options.get(CONF_UNAUTHENTICATED_MODE):
                 _LOGGER.debug("Trying to authorize again")
-                if self.connection.enforce_authorized_connection():
+                if self.client.user.login(
+                    self.config_entry.data.get(CONF_USERNAME, ""),
+                    self.config_entry.data.get(CONF_PASSWORD, ""),
+                ):
                     _LOGGER.debug(
                         "success, %s will be updated by a future periodic run",
                         key,
@@ -277,8 +280,6 @@ class Router:
 
     def logout(self) -> None:
         """Log out router session."""
-        if not isinstance(self.connection, AuthorizedConnection):
-            return
         try:
             self.client.user.logout()
         except ResponseErrorNotSupportedException:
@@ -294,55 +295,19 @@ class Router:
         self.subscriptions.clear()
 
         self.logout()
+        self.connection.requests_session.close()
 
 
 class HuaweiLteData(NamedTuple):
     """Shared state."""
 
     hass_config: ConfigType
-    # Our YAML config, keyed by router URL
-    config: dict[str, dict[str, Any]]
     routers: dict[str, Router]
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
-
-    # Override settings from YAML config, but only if they're changed in it
-    # Old values are stored as *_from_yaml in the config entry
-    if yaml_config := hass.data[DOMAIN].config.get(url):
-        # Config values
-        new_data = {}
-        for key in CONF_USERNAME, CONF_PASSWORD:
-            if key in yaml_config:
-                value = yaml_config[key]
-                if value != entry.data.get(f"{key}_from_yaml"):
-                    new_data[f"{key}_from_yaml"] = value
-                    new_data[key] = value
-        # Options
-        new_options = {}
-        yaml_recipient = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_RECIPIENT)
-        if yaml_recipient is not None and yaml_recipient != entry.options.get(
-            f"{CONF_RECIPIENT}_from_yaml"
-        ):
-            new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
-            new_options[CONF_RECIPIENT] = yaml_recipient
-        yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
-        if yaml_notify_name is not None and yaml_notify_name != entry.options.get(
-            f"{CONF_NAME}_from_yaml"
-        ):
-            new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
-            new_options[CONF_NAME] = yaml_notify_name
-        # Update entry if overrides were found
-        if new_data or new_options:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={**entry.data, **new_data},
-                options={**entry.options, **new_options},
-            )
 
     def get_connection() -> Connection:
         """Set up a connection."""
@@ -353,7 +318,7 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = AuthorizedConnection(
+            connection = Connection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
             )
         return connection
@@ -512,14 +477,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # https://github.com/quandyfactory/dicttoxml/issues/60
     logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
-    # Arrange our YAML config to dict with normalized URLs as keys
-    domain_config: dict[str, dict[str, Any]] = {}
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData(
-            hass_config=config, config=domain_config, routers={}
-        )
-    for router_config in config.get(DOMAIN, []):
-        domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
+        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
     def service_handler(service: ServiceCall) -> None:
         """
@@ -559,7 +518,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
-            result = router.client.device.reboot()
+            result = router.client.device.set_control(ControlModeEnum.REBOOT)
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
@@ -573,24 +532,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("%s: unsupported service", service.service)
 
     for service in ADMIN_SERVICES:
-        hass.helpers.service.async_register_admin_service(
+        async_register_admin_service(
+            hass,
             DOMAIN,
             service,
             service_handler,
             schema=SERVICE_SCHEMA,
-        )
-
-    for url, router_config in domain_config.items():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_URL: url,
-                    CONF_USERNAME: router_config.get(CONF_USERNAME),
-                    CONF_PASSWORD: router_config.get(CONF_PASSWORD),
-                },
-            )
         )
 
     return True
@@ -612,6 +559,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         data[CONF_MAC] = []
         hass.config_entries.async_update_entry(config_entry, data=data)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    # There can be no longer needed *_from_yaml data and options things left behind
+    # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and
+    # migrate to version > 3 for some other reason.
     return True
 
 

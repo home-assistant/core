@@ -18,6 +18,7 @@ class TadoDeviceEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
             identifiers={(DOMAIN, self.device_id)},
             name=self.device_name,
             manufacturer=DEFAULT_NAME,
@@ -45,6 +46,7 @@ class TadoHomeEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url="https://app.tado.com",
             identifiers={(DOMAIN, self.home_id)},
             manufacturer=DEFAULT_NAME,
             model=TADO_HOME,
@@ -66,6 +68,7 @@ class TadoZoneEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url=f"https://app.tado.com/en/main/home/zoneV2/{self.zone_id}",
             identifiers={(DOMAIN, self._device_zone_id)},
             name=self.zone_name,
             manufacturer=DEFAULT_NAME,

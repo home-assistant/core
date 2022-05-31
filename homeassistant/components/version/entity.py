@@ -8,7 +8,7 @@ from .const import DOMAIN, HOME_ASSISTANT
 from .coordinator import VersionDataUpdateCoordinator
 
 
-class VersionEntity(CoordinatorEntity):
+class VersionEntity(CoordinatorEntity[VersionDataUpdateCoordinator]):
     """Common entity class for Version integration."""
 
     _attr_device_info = DeviceInfo(
@@ -17,8 +17,6 @@ class VersionEntity(CoordinatorEntity):
         manufacturer=HOME_ASSISTANT,
         entry_type=DeviceEntryType.SERVICE,
     )
-
-    coordinator: VersionDataUpdateCoordinator
 
     def __init__(
         self,

@@ -12,13 +12,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PlugwiseData, PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseDataUpdateCoordinator
 
 
-class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
+class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     """Represent a PlugWise Entity."""
-
-    coordinator: PlugwiseDataUpdateCoordinator
 
     def __init__(
         self,
@@ -47,8 +45,8 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseData]):
             manufacturer=data.get("vendor"),
             model=data.get("model"),
             name=f"Smile {coordinator.data.gateway['smile_name']}",
-            sw_version=data.get("fw"),
-            hw_version=data.get("hw"),
+            sw_version=data.get("firmware"),
+            hw_version=data.get("hardware"),
         )
 
         if device_id != coordinator.data.gateway["gateway_id"]:

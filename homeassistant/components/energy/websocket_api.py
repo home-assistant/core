@@ -260,7 +260,7 @@ async def ws_get_fossil_energy_consumption(
     statistic_ids.append(msg["co2_statistic_id"])
 
     # Fetch energy + CO2 statistics
-    statistics = await hass.async_add_executor_job(
+    statistics = await recorder.get_instance(hass).async_add_executor_job(
         recorder.statistics.statistics_during_period,
         hass,
         start_time,

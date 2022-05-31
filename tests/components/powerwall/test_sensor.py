@@ -1,5 +1,7 @@
 """The sensor tests for the powerwall platform."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+from tesla_powerwall.error import MissingAttributeError
 
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -112,3 +114,26 @@ async def test_sensors(hass, entity_registry_enabled_by_default):
     # HA changes the implementation and a new one appears
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value
+
+
+async def test_sensor_backup_reserve_unavailable(hass):
+    """Confirm that backup reserve sensor is not added if data is unavailable from the device."""
+
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    mock_powerwall.get_backup_reserve_percentage = Mock(
+        side_effect=MissingAttributeError(Mock(), "backup_reserve_percent", "operation")
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.powerwall_backup_reserve")
+    assert state is None

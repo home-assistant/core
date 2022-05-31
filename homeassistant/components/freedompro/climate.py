@@ -1,4 +1,6 @@
 """Support for Freedompro climate."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -7,10 +9,8 @@ from pyfreedompro import put_state
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
@@ -25,14 +25,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 HVAC_MAP = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
 }
 
 HVAC_INVERT_MAP = {v: k for k, v in HVAC_MAP.items()}
 
-SUPPORTED_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL]
+SUPPORTED_HVAC_MODES = [
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+]
 
 
 async def async_setup_entry(
@@ -72,10 +76,10 @@ class Device(CoordinatorEntity, ClimateEntity):
             model=device["type"],
             name=self.name,
         )
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_current_temperature = 0
         self._attr_target_temperature = 0
-        self._attr_hvac_mode = HVAC_MODE_OFF
+        self._attr_hvac_mode = HVACMode.OFF
 
     @callback
     def _handle_coordinator_update(self) -> None:

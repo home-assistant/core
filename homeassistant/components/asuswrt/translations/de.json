@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "invalid_unique_id": "Unm\u00f6glich, eine g\u00fcltige eindeutige Kennung f\u00fcr das Ger\u00e4t zu ermitteln",
+            "no_unique_id": "Ein Ger\u00e4t ohne g\u00fcltige, eindeutige ID ist bereits konfiguriert. Die Konfiguration mehrerer Instanzen ist nicht m\u00f6glich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -18,7 +19,7 @@
                     "mode": "Modus",
                     "name": "Name",
                     "password": "Passwort",
-                    "port": "Port",
+                    "port": "Port (leer lassen f\u00fcr Protokollstandard)",
                     "protocol": "Zu verwendendes Kommunikationsprotokoll",
                     "ssh_key": "Pfad zu deiner SSH-Schl\u00fcsseldatei (anstelle des Passworts)",
                     "username": "Benutzername"

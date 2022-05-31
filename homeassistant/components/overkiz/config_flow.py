@@ -9,6 +9,7 @@ from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    TooManyAttemptsBannedException,
     TooManyRequestsException,
 )
 from pyoverkiz.models import obfuscate_id
@@ -48,15 +49,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
         session = async_create_clientsession(self.hass)
 
-        async with OverkizClient(
+        client = OverkizClient(
             username=username, password=password, server=server, session=session
-        ) as client:
-            await client.login()
+        )
 
-            # Set first gateway id as unique id
-            if gateways := await client.get_gateways():
-                gateway_id = gateways[0].id
-                await self.async_set_unique_id(gateway_id)
+        await client.login(register_event_listener=False)
+
+        # Set first gateway id as unique id
+        if gateways := await client.get_gateways():
+            gateway_id = gateways[0].id
+            await self.async_set_unique_id(gateway_id)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,6 +80,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
+            except TooManyAttemptsBannedException:
+                errors["base"] = "too_many_attempts"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
@@ -136,8 +140,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle ZeroConf discovery."""
-
-        # abort if we already have exactly this bridge id/host
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
 
@@ -160,6 +162,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
+
+        self.context["title_placeholders"] = {
+            "gateway_id": self._config_entry.unique_id
+        }
 
         self._default_user = self._config_entry.data[CONF_USERNAME]
         self._default_hub = self._config_entry.data[CONF_HUB]

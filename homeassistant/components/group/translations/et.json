@@ -5,6 +5,7 @@
                 "data": {
                     "all": "K\u00f5ik olemid",
                     "entities": "Liikmed",
+                    "hide_members": "Peida grupi liikmed",
                     "name": "Nimi"
                 },
                 "description": "Kui \"k\u00f5ik olemid\" on lubatud,on r\u00fchma olek sees ainult siis kui k\u00f5ik liikmed on sisse l\u00fclitatud. Kui \"k\u00f5ik olemid\" on keelatud, on r\u00fchma olek sees kui m\u00f5ni liige on sisse l\u00fclitatud.",
@@ -13,100 +14,115 @@
             "cover": {
                 "data": {
                     "entities": "Liikmed",
-                    "name": "Nimi",
-                    "title": "Uus r\u00fchm"
+                    "hide_members": "Peida grupi liikmed",
+                    "name": "Nimi"
                 },
-                "description": "R\u00fchmasuvandite valimine"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "R\u00fchma liikmed"
-                },
-                "description": "R\u00fchmasuvandite valimine"
+                "title": "Uus grupp"
             },
             "fan": {
                 "data": {
                     "entities": "Liikmed",
-                    "name": "Nimi",
-                    "title": "Uus r\u00fchm"
+                    "hide_members": "Peida grupi liikmed",
+                    "name": "Nimi"
                 },
-                "description": "R\u00fchmasuvandite valimine"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "R\u00fchma liikmed"
-                },
-                "description": "R\u00fchmasuvandite valimine"
-            },
-            "init": {
-                "data": {
-                    "group_type": "R\u00fchma t\u00fc\u00fcp"
-                },
-                "description": "Vali r\u00fchma t\u00fc\u00fcp"
+                "title": "Uus grupp"
             },
             "light": {
                 "data": {
                     "entities": "Liikmed",
-                    "name": "Nimi",
-                    "title": "Uus r\u00fchm"
+                    "hide_members": "Peida grupi liikmed",
+                    "name": "Nimi"
                 },
-                "description": "R\u00fchmasuvandite valimine"
+                "title": "Uus grupp"
             },
-            "light_options": {
+            "lock": {
                 "data": {
-                    "entities": "R\u00fchma liikmed"
+                    "entities": "Liikmed",
+                    "hide_members": "Peida liikmed",
+                    "name": "Nimi"
                 },
-                "description": "R\u00fchmasuvandite valimine"
+                "title": "Uus grupp"
             },
             "media_player": {
                 "data": {
                     "entities": "Liikmed",
-                    "name": "Nimi",
-                    "title": "Uus r\u00fchm"
+                    "hide_members": "Peida grupi liikmed",
+                    "name": "Nimi"
                 },
-                "description": "R\u00fchmasuvandite valimine"
+                "title": "Uus grupp"
             },
-            "media_player_options": {
+            "switch": {
                 "data": {
-                    "entities": "R\u00fchma liikmed"
+                    "entities": "Liikmed",
+                    "hide_members": "Peida grupi liikmed",
+                    "name": "Nimi"
                 },
-                "description": "R\u00fchmasuvandite valimine"
+                "title": "Uus grupp"
             },
             "user": {
-                "data": {
-                    "group_type": "R\u00fchma t\u00fc\u00fcp"
+                "description": "R\u00fchmad v\u00f5imaldavad luua uue olemi,mis esindab mitut sama t\u00fc\u00fcpi olemit.",
+                "menu_options": {
+                    "binary_sensor": "Olekuandurite r\u00fchm",
+                    "cover": "Aknakatete r\u00fchm",
+                    "fan": "Ventilaatorite r\u00fchm",
+                    "light": "Valgustite r\u00fchm",
+                    "lock": "Lukusta grupp",
+                    "media_player": "Meediumipleieri r\u00fchm",
+                    "switch": "Grupi vahetamine"
                 },
-                "title": "Uus r\u00fchm"
+                "title": "Lisa grupp"
             }
         }
     },
     "options": {
         "step": {
-            "binary_sensor_options": {
+            "binary_sensor": {
                 "data": {
                     "all": "K\u00f5ik olemid",
-                    "entities": "Liikmed"
+                    "entities": "Grupi liikmed",
+                    "hide_members": "Peida grupi liikmed"
+                },
+                "description": "Kui \"k\u00f5ik olemid\" on lubatud,on r\u00fchma olek sees ainult siis kui k\u00f5ik liikmed on sisse l\u00fclitatud. Kui \"k\u00f5ik olemid\" on keelatud, on r\u00fchma olek sees kui m\u00f5ni liige on sisse l\u00fclitatud."
+            },
+            "cover": {
+                "data": {
+                    "entities": "Grupi liikmed",
+                    "hide_members": "Peida grupi liikmed"
                 }
             },
-            "cover_options": {
+            "fan": {
                 "data": {
-                    "entities": "Liikmed"
+                    "entities": "Grupi liikmed",
+                    "hide_members": "Peida grupi liikmed"
                 }
             },
-            "fan_options": {
+            "light": {
                 "data": {
-                    "entities": "Liikmed"
+                    "all": "K\u00f5ik olemid",
+                    "entities": "Grupi liikmed",
+                    "hide_members": "Peida grupi liikmed"
+                },
+                "description": "Kui \"k\u00f5ik olemid\" on lubatud,on r\u00fchma olek sees ainult siis kui k\u00f5ik liikmed on sisse l\u00fclitatud. Kui \"k\u00f5ik olemid\" on keelatud, on r\u00fchma olek sees kui m\u00f5ni liige on sisse l\u00fclitatud."
+            },
+            "lock": {
+                "data": {
+                    "entities": "Liikmed",
+                    "hide_members": "Peida liikmed"
                 }
             },
-            "light_options": {
+            "media_player": {
                 "data": {
-                    "entities": "Liikmed"
+                    "entities": "Grupi liikmed",
+                    "hide_members": "Peida grupi liikmed"
                 }
             },
-            "media_player_options": {
+            "switch": {
                 "data": {
-                    "entities": "Liikmed"
-                }
+                    "all": "K\u00f5ik olemid",
+                    "entities": "Liikmed",
+                    "hide_members": "Peida grupi liikmed"
+                },
+                "description": "Kui \"k\u00f5ik olemid\" on lubatud,on r\u00fchma olek sees ainult siis kui k\u00f5ik liikmed on sisse l\u00fclitatud. Kui \"k\u00f5ik olemid\" on keelatud, on r\u00fchma olek sees kui m\u00f5ni liige on sisse l\u00fclitatud."
             }
         }
     },

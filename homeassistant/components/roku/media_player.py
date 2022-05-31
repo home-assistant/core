@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -24,17 +25,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_URL,
     MEDIA_TYPE_VIDEO,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.config_entries import ConfigEntry
@@ -67,20 +57,6 @@ from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_ROKU = (
-    SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_BROWSE_MEDIA
-)
 
 
 STREAM_FORMAT_TO_MEDIA_TYPE = {
@@ -137,6 +113,20 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
+
     def __init__(
         self, unique_id: str | None, coordinator: RokuDataUpdateCoordinator
     ) -> None:
@@ -148,7 +138,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         self._attr_name = coordinator.data.info.name
         self._attr_unique_id = unique_id
-        self._attr_supported_features = SUPPORT_ROKU
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
@@ -395,15 +384,14 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = MEDIA_TYPE_URL
             media_id = sourced_media.url
             mime_type = sourced_media.mime_type
             stream_name = original_media_id
             stream_format = guess_stream_format(media_id, mime_type)
-
-        # If media ID is a relative URL, we serve it from HA.
-        media_id = async_process_play_media_url(self.hass, media_id)
 
         if media_type == FORMAT_CONTENT_TYPE[HLS_PROVIDER]:
             media_type = MEDIA_TYPE_VIDEO
@@ -412,6 +400,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             stream_format = "hls"
 
         if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, MEDIA_TYPE_VIDEO):
+            # If media ID is a relative URL, we serve it from HA.
+            media_id = async_process_play_media_url(self.hass, media_id)
+
             parsed = yarl.URL(media_id)
 
             if mime_type is None:

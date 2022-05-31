@@ -102,14 +102,6 @@ class SmartPlugSwitch(SwitchEntity):
         return attrs
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in Watt."""
-        try:
-            return float(self.data.current_consumption)
-        except (ValueError, TypeError):
-            return None
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
         return self.data.state == "ON"

@@ -6,10 +6,7 @@
     "country": "USA",
     "location": {
       "type": "Point",
-      "coordinates": [
-        -105.06415,
-        39.75304
-      ]
+      "coordinates": [-105.06415, 39.75304]
     },
     "current": {
       "weather": {
