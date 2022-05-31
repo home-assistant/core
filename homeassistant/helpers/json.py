@@ -76,7 +76,7 @@ def json_dumps(data: Any) -> str:
     be serialized.
 
     If it turns out to be a problem we can disable this
-    with options=orjson.OPT_PASSTHROUGH_DATACLASS and it
+    with option |= orjson.OPT_PASSTHROUGH_DATACLASS and it
     will fallback to as_dict
     """
     return orjson.dumps(
