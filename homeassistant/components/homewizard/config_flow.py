@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, UnsupportedError
@@ -160,9 +160,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_PRODUCT_TYPE: self.config[CONF_PRODUCT_TYPE],
-                CONF_SERIAL: self.config[CONF_SERIAL],
-                CONF_IP_ADDRESS: self.config[CONF_IP_ADDRESS],
+                CONF_PRODUCT_TYPE: cast(str, self.config[CONF_PRODUCT_TYPE]),
+                CONF_SERIAL: cast(str, self.config[CONF_SERIAL]),
+                CONF_IP_ADDRESS: cast(str, self.config[CONF_IP_ADDRESS]),
             },
         )
 

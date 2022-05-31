@@ -579,6 +579,7 @@ omit =
     homeassistant/components/isy994/sensor.py
     homeassistant/components/isy994/services.py
     homeassistant/components/isy994/switch.py
+    homeassistant/components/isy994/util.py
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
     homeassistant/components/jellyfin/__init__.py
@@ -969,6 +970,7 @@ omit =
     homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
+    homeassistant/components/rainmachine/util.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py

@@ -7,6 +7,8 @@ import json
 import logging
 from typing import Any
 
+import orjson
+
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,7 +32,7 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore[no-any-return]
+            return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -56,7 +58,10 @@ def save_json(
     Returns True on success.
     """
     try:
-        json_data = json.dumps(data, indent=4, cls=encoder)
+        if encoder:
+            json_data = json.dumps(data, indent=2, cls=encoder)
+        else:
+            json_data = orjson.dumps(data, option=orjson.OPT_INDENT_2).decode("utf-8")
     except TypeError as error:
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)
