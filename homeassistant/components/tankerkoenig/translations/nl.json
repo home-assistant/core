@@ -32,7 +32,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Update Interval",
-                    "show_on_map": "Toon stations op kaart"
+                    "show_on_map": "Toon stations op kaart",
+                    "stations": "Stations"
                 },
                 "title": "Tankerkoenig opties"
             }

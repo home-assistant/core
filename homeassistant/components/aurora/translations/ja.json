@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "threshold": "\u3057\u304d\u3044\u5024(%)"
+                    "threshold": "\u95be\u5024(%)"
                 }
             }
         }
