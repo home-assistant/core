@@ -16,6 +16,7 @@ from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
     ATTR_NUKI_ID,
+    ATTR_RING_ACTION_STATE,
     ATTR_RING_ACTION_TIMESTAMP,
     ATTR_UNLATCH,
     DATA_COORDINATOR,
@@ -154,6 +155,7 @@ class NukiOpenerEntity(NukiDeviceEntity):
         attrs[ATTR_RING_ACTION_TIMESTAMP] = dt_util.parse_datetime(
             self._nuki_device.ring_action_timestamp
         )
+        attrs[ATTR_RING_ACTION_STATE] = self._nuki_device.ring_action_state
 
         return attrs
 

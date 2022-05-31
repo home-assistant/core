@@ -7,6 +7,7 @@ ATTR_NUKI_ID = "nuki_id"
 ATTR_ENABLE = "enable"
 ATTR_UNLATCH = "unlatch"
 ATTR_RING_ACTION_TIMESTAMP = "ring_action_timestamp"
+ATTR_RING_ACTION_STATE = "ring_action_state"
 
 # Data
 DATA_BRIDGE = "nuki_bridge_data"
