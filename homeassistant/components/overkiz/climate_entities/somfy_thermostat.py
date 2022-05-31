@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyoverkiz.enums import OverkizCommand, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -22,15 +22,8 @@ from ..entity import OverkizEntity
 PRESET_FREEZE = "freeze"
 PRESET_NIGHT = "night"
 
-STATE_DEROGATION_FURTHER_NOTICE = "further_notice"
 STATE_DEROGATION_ACTIVE = "active"
 STATE_DEROGATION_INACTIVE = "inactive"
-STATE_PRESET_AT_HOME = "atHomeMode"
-STATE_PRESET_AWAY = "awayMode"
-STATE_PRESET_FREEZE = "freezeMode"
-STATE_PRESET_MANUAL = "manualMode"
-STATE_PRESET_SLEEPING_MODE = "sleepingMode"
-STATE_PRESET_SUDDEN_DROP_MODE = "suddenDropMode"
 
 
 OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
@@ -39,13 +32,13 @@ OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
 }
 HVAC_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODES.items()}
 
-OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
-    STATE_PRESET_AT_HOME: PRESET_HOME,
-    STATE_PRESET_AWAY: PRESET_AWAY,
-    STATE_PRESET_FREEZE: PRESET_FREEZE,
-    STATE_PRESET_MANUAL: PRESET_NONE,
-    STATE_PRESET_SLEEPING_MODE: PRESET_NIGHT,
-    STATE_PRESET_SUDDEN_DROP_MODE: PRESET_NONE,
+OVERKIZ_TO_PRESET_MODES: dict[OverkizCommandParam, str] = {
+    OverkizCommandParam.AT_HOME_MODE: PRESET_HOME,
+    OverkizCommandParam.AWAY_MODE: PRESET_AWAY,
+    OverkizCommandParam.FREEZE_MODE: PRESET_FREEZE,
+    OverkizCommandParam.MANUAL_MODE: PRESET_NONE,
+    OverkizCommandParam.SLEEPING_MODE: PRESET_NIGHT,
+    OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
 }
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
 TARGET_TEMP_TO_OVERKIZ = {
@@ -102,12 +95,9 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
 
-        return OVERKIZ_TO_PRESET_MODES[
-            cast(
-                str,
-                self.executor.select_state(state_key),
-            )
-        ]
+        state = cast(str, self.executor.select_state(state_key))
+
+        return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(state)]
 
     @property
     def current_temperature(self) -> float | None:
@@ -136,10 +126,14 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_DEROGATION, temperature, STATE_DEROGATION_FURTHER_NOTICE
+            OverkizCommand.SET_DEROGATION,
+            temperature,
+            OverkizCommandParam.FURTHER_NOTICE,
         )
         await self.executor.async_execute_command(
-            OverkizCommand.SET_MODE_TEMPERATURE, STATE_PRESET_MANUAL, temperature
+            OverkizCommand.SET_MODE_TEMPERATURE,
+            OverkizCommandParam.MANUAL_MODE,
+            temperature,
         )
         await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
 
@@ -157,17 +151,17 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DEROGATION,
                 PRESET_MODES_TO_OVERKIZ[preset_mode],
-                STATE_DEROGATION_FURTHER_NOTICE,
+                OverkizCommandParam.FURTHER_NOTICE,
             )
         elif preset_mode == PRESET_NONE:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DEROGATION,
                 self.target_temperature,
-                STATE_DEROGATION_FURTHER_NOTICE,
+                OverkizCommandParam.FURTHER_NOTICE,
             )
             await self.executor.async_execute_command(
                 OverkizCommand.SET_MODE_TEMPERATURE,
-                STATE_PRESET_MANUAL,
+                OverkizCommandParam.MANUAL_MODE,
                 self.target_temperature,
             )
         await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
