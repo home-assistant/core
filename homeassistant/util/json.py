@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Callable
-import json
 import logging
 from typing import Any
+
+import orjson
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +31,7 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore[no-any-return]
+            return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -56,7 +57,7 @@ def save_json(
     Returns True on success.
     """
     try:
-        json_data = json.dumps(data, indent=4, cls=encoder)
+        json_data = orjson.dumps(data, indent=4, cls=encoder)
     except TypeError as error:
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)
@@ -77,7 +78,7 @@ def format_unserializable_data(data: dict[str, Any]) -> str:
 
 
 def find_paths_unserializable_data(
-    bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
+    bad_data: Any, *, dump: Callable[[Any], str] = orjson.dumps
 ) -> dict[str, Any]:
     """Find the paths to unserializable data.
 
