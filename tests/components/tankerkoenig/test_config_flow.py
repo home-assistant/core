@@ -251,7 +251,7 @@ async def test_reauth(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
+                CONF_API_KEY: "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx",
             },
         )
         assert result["type"] == RESULT_TYPE_FORM
@@ -263,7 +263,7 @@ async def test_reauth(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
+                CONF_API_KEY: "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx",
             },
         )
         assert result["type"] == RESULT_TYPE_ABORT
@@ -272,7 +272,7 @@ async def test_reauth(hass: HomeAssistant):
     mock_setup_entry.assert_called()
 
     entry = hass.config_entries.async_get_entry(mock_config.entry_id)
-    assert entry.data[CONF_API_KEY] == "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx"
+    assert entry.data[CONF_API_KEY] == "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx"
 
 
 async def test_options_flow(hass: HomeAssistant):
