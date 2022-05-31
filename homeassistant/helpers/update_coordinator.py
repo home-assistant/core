@@ -104,6 +104,12 @@ class DataUpdateCoordinator(Generic[_T]):
         return remove_listener
 
     @callback
+    def async_update_listeners(self) -> None:
+        """Update all registered listeners."""
+        for update_callback, _ in list(self._listeners.values()):
+            update_callback()
+
+    @callback
     def _unschedule_refresh(self) -> None:
         """Unschedule any pending refresh since there is no longer any listeners."""
         if self._unsub_refresh:
@@ -274,8 +280,7 @@ class DataUpdateCoordinator(Generic[_T]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+        self.async_update_listeners()
 
     @callback
     def async_set_updated_data(self, data: _T) -> None:
@@ -296,8 +301,7 @@ class DataUpdateCoordinator(Generic[_T]):
         if self._listeners:
             self._schedule_refresh()
 
-        for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+        self.async_update_listeners()
 
     @callback
     def _async_stop_refresh(self, _: Event) -> None:

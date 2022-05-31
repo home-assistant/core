@@ -114,12 +114,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.options = options
         self._notify_future: asyncio.Task | None = None
 
-        @callback
-        def _update_listeners():
-            for update_callback in self._listeners:
-                update_callback()
-
-        self.turn_on = PluggableAction(_update_listeners)
+        self.turn_on = PluggableAction(self.async_update_listeners)
 
         super().__init__(
             hass,
