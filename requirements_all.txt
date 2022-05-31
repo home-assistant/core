@@ -2176,7 +2176,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.1
+simplisafe-python==2022.05.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
