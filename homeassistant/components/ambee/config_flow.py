@@ -1,6 +1,7 @@
 """Config flow to configure the Ambee integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from ambee import Ambee, AmbeeAuthenticationError, AmbeeError
@@ -71,7 +72,7 @@ class AmbeeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Ambee."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
