@@ -33,8 +33,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -51,6 +51,8 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,11 +154,11 @@ def validate_options(value):
     return value
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_GET_POSITION_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): vol.Any(
@@ -172,24 +174,24 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
-        vol.Optional(CONF_SET_POSITION_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
         vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
         vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
         vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
         vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
         vol.Optional(CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED): cv.string,
-        vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
             CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
         ): int,
-        vol.Optional(CONF_TILT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
         vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
         vol.Optional(CONF_TILT_OPEN_POSITION, default=DEFAULT_TILT_OPEN_POSITION): int,
         vol.Optional(
             CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC
         ): cv.boolean,
-        vol.Optional(CONF_TILT_STATUS_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TILT_STATUS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TILT_STATUS_TEMPLATE): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
