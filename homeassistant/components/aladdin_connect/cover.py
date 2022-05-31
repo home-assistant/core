@@ -1,6 +1,7 @@
 """Platform for the Aladdin Connect cover component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, Final
@@ -35,7 +36,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
-SCAN_INTERVAL = timedelta(seconds=240)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 
 async def async_setup_platform(
@@ -89,6 +90,7 @@ class AladdinDevice(CoverEntity):
         self._number = device["door_number"]
         self._attr_name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
+        self._door_status: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
@@ -96,11 +98,12 @@ class AladdinDevice(CoverEntity):
         @callback
         async def update_callback() -> None:
             """Schedule a state update."""
-            await self.async_update()
+            self._door_status = STATES_MAP.get(
+                await self._acc.async_get_door_status(self._device_id, self._number)
+            )
             self.async_write_ha_state()
 
         self._acc.register_callback(update_callback)
-        await self._acc.get_doors()
         await self.async_update()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -119,25 +122,39 @@ class AladdinDevice(CoverEntity):
         """Update status of cover."""
         await self._acc.get_doors()
 
-        status = STATES_MAP.get(
-            await self._acc.get_door_status(self._device_id, self._number)
+        self._door_status = STATES_MAP.get(
+            await self._acc.async_get_door_status(self._device_id, self._number)
         )
 
-        self._attr_is_opening = status == STATE_OPENING
-        self._attr_is_closing = status == STATE_CLOSING
-        self._attr_is_closed = None if status is None else status == STATE_CLOSED
-
-        extra = {}
-        extra.update(
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Update state attributes."""
+        extra_attributes = {}
+        extra_attributes.update(
             {
-                "battery_level": await self._acc.get_battery_status(
+                "battery_level": self._acc.get_battery_status(
                     self._device_id, self._number
                 )
             }
         )
 
-        extra.update(
-            {"RSSI": await self._acc.get_rssi_status(self._device_id, self._number)}
+        extra_attributes.update(
+            {"RSSI": self._acc.get_rssi_status(self._device_id, self._number)}
         )
 
-        self._attr_extra_state_attributes = extra
+        return extra_attributes
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Update is closed attribute."""
+        return None if self._door_status is None else self._door_status == STATE_CLOSED
+
+    @property
+    def is_closing(self) -> bool:
+        """Update is closing attribute."""
+        return self._door_status == STATE_CLOSING
+
+    @property
+    def is_opening(self) -> bool:
+        """Update is opening attribute."""
+        return self._door_status == STATE_OPENING
