@@ -31,8 +31,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -50,6 +50,8 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +87,7 @@ DEFAULT_NAME = "MQTT Alarm"
 REMOTE_CODE = "REMOTE_CODE"
 REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
@@ -94,7 +96,7 @@ PLATFORM_SCHEMA_MODERN = mqtt.MQTT_BASE_SCHEMA.extend(
         vol.Optional(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE
         ): cv.template,
-        vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
@@ -107,8 +109,8 @@ PLATFORM_SCHEMA_MODERN = mqtt.MQTT_BASE_SCHEMA.extend(
         ): cv.string,
         vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
         vol.Optional(CONF_PAYLOAD_TRIGGER, default=DEFAULT_TRIGGER): cv.string,
-        vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-        vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
