@@ -51,6 +51,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_STOP,
     CONF_TARGET,
+    CONF_TEMPLATE_SEQUENCE,
     CONF_THEN,
     CONF_TIMEOUT,
     CONF_UNTIL,
@@ -245,6 +246,7 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_ACTIVATE_SCENE,
     cv.SCRIPT_ACTION_VARIABLES,
     cv.SCRIPT_ACTION_STOP,
+    cv.SCRIPT_ACTION_TEMPLATE_SEQUENCE,
 )
 
 
@@ -987,6 +989,13 @@ class _ScriptRun:
         self._step_log("setting variables")
         self._variables = self._action[CONF_VARIABLES].async_render(
             self._hass, self._variables, render_as_defaults=False
+        )
+
+    async def _async_template_sequence_step(self):
+        """Run a templated sequence of actions."""
+        actions = self._action[CONF_TEMPLATE_SEQUENCE].async_render(self._variables)
+        await self._async_run_script(
+            Script(self._hass, actions, "", "template sequence")
         )
 
     async def _async_stop_step(self):
