@@ -1123,7 +1123,7 @@ async def test_restore_subscriptions_on_reconnect(hass, mqtt_client_mock, mqtt_m
     assert mqtt_client_mock.subscribe.call_count == 1
 
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0):
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.call_count == 2
@@ -1157,7 +1157,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
     mqtt_client_mock.on_disconnect(None, None, 0)
-    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0):
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0):
         mqtt_client_mock.on_connect(None, None, None, 0)
         await hass.async_block_till_done()
 
@@ -1188,7 +1188,7 @@ async def test_logs_error_if_no_connect_broker(
     )
 
 
-@patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.3)
+@patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.3)
 async def test_handle_mqtt_on_callback(hass, caplog, mqtt_mock, mqtt_client_mock):
     """Test receiving an ACK callback before waiting for it."""
     # Simulate an ACK for mid == 1, this will call mqtt_mock._mqtt_handle_mid(mid)
@@ -1331,7 +1331,7 @@ async def test_setup_mqtt_client_protocol(hass):
     """Test MQTT client protocol setup."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "test-broker", mqtt.CONF_PROTOCOL: "3.1"},
+        data={mqtt.CONF_BROKER: "test-broker", mqtt.config.CONF_PROTOCOL: "3.1"},
     )
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client.on_connect(return_value=0)
@@ -1341,7 +1341,7 @@ async def test_setup_mqtt_client_protocol(hass):
         assert mock_client.call_args[1]["protocol"] == 3
 
 
-@patch("homeassistant.components.mqtt.TIMEOUT_ACK", 0.2)
+@patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
 async def test_handle_mqtt_timeout_on_callback(hass, caplog):
     """Test publish without receiving an ACK callback."""
     mid = 0
@@ -1486,7 +1486,7 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
         """Handle birth message."""
         birth.set()
 
-    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "birth", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
@@ -1516,7 +1516,7 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
         """Handle birth message."""
         birth.set()
 
-    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
@@ -1532,7 +1532,7 @@ async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test disabling birth message."""
-    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
         await asyncio.sleep(0.2)
@@ -1580,7 +1580,7 @@ async def test_delayed_birth_message(hass, mqtt_client_mock, mqtt_config, mqtt_m
         """Handle birth message."""
         birth.set()
 
-    with patch("homeassistant.components.mqtt.DISCOVERY_COOLDOWN", 0.1):
+    with patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.1):
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
@@ -1713,11 +1713,6 @@ async def test_update_incomplete_entry(
     # Warnings about broker deprecated, but not about other keys with default values
     assert (
         "The 'broker' option is deprecated, please remove it from your configuration"
-        in caplog.text
-    )
-    assert (
-        "Deprecated configuration settings found in configuration.yaml. These settings "
-        "from your configuration entry will override: {'broker': 'yaml_broker'}"
         in caplog.text
     )
 

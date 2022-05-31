@@ -13,10 +13,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conex\u00e3o"
+                    "flow_type": "Tipo de conex\u00e3o",
+                    "host": "Endere\u00e7o IP",
+                    "password": "ID do Smile",
+                    "port": "Porta",
+                    "username": "Nome de usu\u00e1rio do Smile"
                 },
-                "description": "Produto:",
-                "title": "Tipo Plugwise"
+                "description": "Por favor, insira",
+                "title": "Conecte-se ao Smile"
             },
             "user_gateway": {
                 "data": {

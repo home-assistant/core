@@ -102,7 +102,8 @@ class MikrotikHubTracker(ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name of the client."""
-        return self.device.name
+        # Stringify to ensure we return a string
+        return str(self.device.name)
 
     @property
     def hostname(self) -> str:

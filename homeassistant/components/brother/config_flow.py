@@ -42,7 +42,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.brother: Brother = None
+        self.brother: Brother
         self.host: str | None = None
 
     async def async_step_user(

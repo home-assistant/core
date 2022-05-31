@@ -156,10 +156,7 @@ async def ssdp_no_discovery():
     ) as mock_register, patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
         return_value=[],
-    ) as mock_get_info, patch(
-        "homeassistant.components.upnp.config_flow.SSDP_SEARCH_TIMEOUT",
-        0.1,
-    ):
+    ) as mock_get_info:
         yield (mock_register, mock_get_info)
 
 

@@ -18,9 +18,46 @@ DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
 
 GLOB_TO_SQL_CHARS = {
-    42: "%",  # *
-    46: "_",  # .
+    ord("*"): "%",
+    ord("?"): "_",
+    ord("%"): "\\%",
+    ord("_"): "\\_",
+    ord("\\"): "\\\\",
 }
+
+FILTER_TYPES = (CONF_EXCLUDE, CONF_INCLUDE)
+FITLER_MATCHERS = (CONF_ENTITIES, CONF_DOMAINS, CONF_ENTITY_GLOBS)
+
+
+def extract_include_exclude_filter_conf(conf: ConfigType) -> dict[str, Any]:
+    """Extract an include exclude filter from configuration.
+
+    This makes a copy so we do not alter the original data.
+    """
+    return {
+        filter_type: {
+            matcher: set(conf.get(filter_type, {}).get(matcher, []))
+            for matcher in FITLER_MATCHERS
+        }
+        for filter_type in FILTER_TYPES
+    }
+
+
+def merge_include_exclude_filters(
+    base_filter: dict[str, Any], add_filter: dict[str, Any]
+) -> dict[str, Any]:
+    """Merge two filters.
+
+    This makes a copy so we do not alter the original data.
+    """
+    return {
+        filter_type: {
+            matcher: base_filter[filter_type][matcher]
+            | add_filter[filter_type][matcher]
+            for matcher in FITLER_MATCHERS
+        }
+        for filter_type in FILTER_TYPES
+    }
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf: ConfigType) -> Filters | None:
@@ -43,13 +80,13 @@ class Filters:
 
     def __init__(self) -> None:
         """Initialise the include and exclude filters."""
-        self.excluded_entities: list[str] = []
-        self.excluded_domains: list[str] = []
-        self.excluded_entity_globs: list[str] = []
+        self.excluded_entities: Iterable[str] = []
+        self.excluded_domains: Iterable[str] = []
+        self.excluded_entity_globs: Iterable[str] = []
 
-        self.included_entities: list[str] = []
-        self.included_domains: list[str] = []
-        self.included_entity_globs: list[str] = []
+        self.included_entities: Iterable[str] = []
+        self.included_domains: Iterable[str] = []
+        self.included_entity_globs: Iterable[str] = []
 
     @property
     def has_config(self) -> bool:
@@ -122,7 +159,9 @@ def _globs_to_like(
 ) -> ClauseList:
     """Translate glob to sql."""
     return or_(
-        cast(column, Text()).like(encoder(glob_str.translate(GLOB_TO_SQL_CHARS)))
+        cast(column, Text()).like(
+            encoder(glob_str).translate(GLOB_TO_SQL_CHARS), escape="\\"
+        )
         for glob_str in glob_strs
         for column in columns
     )
