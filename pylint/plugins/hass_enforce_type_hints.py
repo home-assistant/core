@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
-from astroid import nodes
+import astroid
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -432,7 +432,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 
 
 def _is_valid_type(
-    expected_type: list[str] | str | None | object, node: nodes.NodeNG
+    expected_type: list[str] | str | None | object, node: astroid.NodeNG
 ) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
@@ -446,18 +446,18 @@ def _is_valid_type(
 
     # Const occurs when the type is None
     if expected_type is None or expected_type == "None":
-        return isinstance(node, nodes.Const) and node.value is None
+        return isinstance(node, astroid.Const) and node.value is None
 
     assert isinstance(expected_type, str)
 
     # Const occurs when the type is an Ellipsis
     if expected_type == "...":
-        return isinstance(node, nodes.Const) and node.value == Ellipsis
+        return isinstance(node, astroid.Const) and node.value == Ellipsis
 
     # Special case for `xxx | yyy`
     if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):
         return (
-            isinstance(node, nodes.BinOp)
+            isinstance(node, astroid.BinOp)
             and _is_valid_type(match.group(1), node.left)
             and _is_valid_type(match.group(2), node.right)
         )
@@ -465,11 +465,11 @@ def _is_valid_type(
     # Special case for xxx[yyy[zzz, aaa]]`
     if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
         return (
-            isinstance(node, nodes.Subscript)
+            isinstance(node, astroid.Subscript)
             and _is_valid_type(match.group(1), node.value)
-            and isinstance(subnode := node.slice, nodes.Subscript)
+            and isinstance(subnode := node.slice, astroid.Subscript)
             and _is_valid_type(match.group(2), subnode.value)
-            and isinstance(subnode.slice, nodes.Tuple)
+            and isinstance(subnode.slice, astroid.Tuple)
             and _is_valid_type(match.group(3), subnode.slice.elts[0])
             and _is_valid_type(match.group(4), subnode.slice.elts[1])
         )
@@ -477,9 +477,9 @@ def _is_valid_type(
     # Special case for xxx[yyy, zzz]`
     if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
         return (
-            isinstance(node, nodes.Subscript)
+            isinstance(node, astroid.Subscript)
             and _is_valid_type(match.group(1), node.value)
-            and isinstance(node.slice, nodes.Tuple)
+            and isinstance(node.slice, astroid.Tuple)
             and _is_valid_type(match.group(2), node.slice.elts[0])
             and _is_valid_type(match.group(3), node.slice.elts[1])
         )
@@ -487,22 +487,22 @@ def _is_valid_type(
     # Special case for xxx[yyy]`
     if match := _TYPE_HINT_MATCHERS["x_of_y"].match(expected_type):
         return (
-            isinstance(node, nodes.Subscript)
+            isinstance(node, astroid.Subscript)
             and _is_valid_type(match.group(1), node.value)
             and _is_valid_type(match.group(2), node.slice)
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
-    if isinstance(node, nodes.Name) and node.name == expected_type:
+    if isinstance(node, astroid.Name) and node.name == expected_type:
         return True
 
     # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-    return isinstance(node, nodes.Attribute) and node.attrname == expected_type
+    return isinstance(node, astroid.Attribute) and node.attrname == expected_type
 
 
-def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
+def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
     args = node.args
-    annotations: list[nodes.NodeNG | None] = (
+    annotations: list[astroid.NodeNG | None] = (
         args.posonlyargs_annotations + args.annotations + args.kwonlyargs_annotations
     )
     if args.vararg is not None:
@@ -513,7 +513,7 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
 
 
 def _has_valid_annotations(
-    annotations: list[nodes.NodeNG | None],
+    annotations: list[astroid.NodeNG | None],
 ) -> bool:
     for annotation in annotations:
         if annotation is not None:
@@ -558,7 +558,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         self._function_matchers: list[TypeHintMatch] = []
         self._class_matchers: list[ClassTypeHintMatch] = []
 
-    def visit_module(self, node: nodes.Module) -> None:
+    def visit_module(self, node: astroid.Module) -> None:
         """Called when a Module node is visited."""
         self._function_matchers = []
         self._class_matchers = []
@@ -575,20 +575,21 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if class_matches := _CLASS_MATCH.get(module_platform):
             self._class_matchers = class_matches
 
-    def visit_classdef(self, node: nodes.ClassDef) -> None:
+    def visit_classdef(self, node: astroid.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         for class_matches in self._class_matchers:
             for base in node.bases:
                 if (
-                    isinstance(base, nodes.Name) and base.name in class_matches.classes
+                    isinstance(base, astroid.Name)
+                    and base.name in class_matches.classes
                 ) or (
-                    isinstance(base, nodes.Attribute)
+                    isinstance(base, astroid.Attribute)
                     and base.attrname in class_matches.classes
                 ):
                     self._visit_class_functions(node, class_matches.matches)
 
     def _visit_class_functions(
-        self, node: nodes.ClassDef, matches: list[TypeHintMatch]
+        self, node: astroid.ClassDef, matches: list[TypeHintMatch]
     ) -> None:
         for match in matches:
             for function_node in node.mymethods():
@@ -602,7 +603,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 ):
                     self._check_function(function_node, match)
 
-    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
+    def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
         for match in self._function_matchers:
             if node.name != match.function_name or node.is_method():
@@ -611,7 +612,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_function(self, node: nodes.FunctionDef, match: TypeHintMatch) -> None:
+    def _check_function(self, node: astroid.FunctionDef, match: TypeHintMatch) -> None:
         # Check that at least one argument is annotated.
         annotations = _get_all_annotations(node)
         if node.returns is None and not _has_valid_annotations(annotations):
