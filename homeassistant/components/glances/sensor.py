@@ -23,19 +23,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GlancesData
-from .const import CPU_ICON, DATA_UPDATED, DOMAIN
+from . import GlancesDataUpdateCoordinator
+from .const import CPU_ICON, DOMAIN
 
 
 @dataclass
 class GlancesSensorEntityDescription(SensorEntityDescription):
     """Describe Glances sensor entity."""
 
-    type: str | None = None
+    type: str = ""
     name_suffix: str | None = None
 
 
@@ -234,9 +234,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glances sensors."""
 
-    client: GlancesData = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data.get(CONF_NAME)
-    dev = []
+    entities = []
 
     @callback
     def _migrate_old_unique_ids(
@@ -256,15 +256,15 @@ async def async_setup_entry(
     for description in SENSOR_TYPES:
         if description.type == "fs":
             # fs will provide a list of disks attached
-            for disk in client.api.data[description.type]:
+            for disk in coordinator.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    f"{client.host}-{name} {disk['mnt_point']} {description.name_suffix}",
+                    f"{coordinator.host}-{name} {disk['mnt_point']} {description.name_suffix}",
                     f"{disk['mnt_point']}-{description.key}",
                 )
-                dev.append(
+                entities.append(
                     GlancesSensor(
-                        client,
+                        coordinator,
                         name,
                         disk["mnt_point"],
                         description,
@@ -272,48 +272,50 @@ async def async_setup_entry(
                 )
         elif description.type == "sensors":
             # sensors will provide temp for different devices
-            for sensor in client.api.data[description.type]:
+            for sensor in coordinator.data[description.type]:
                 if sensor["type"] == description.key:
                     _migrate_old_unique_ids(
                         hass,
-                        f"{client.host}-{name} {sensor['label']} {description.name_suffix}",
+                        f"{coordinator.host}-{name} {sensor['label']} {description.name_suffix}",
                         f"{sensor['label']}-{description.key}",
                     )
-                    dev.append(
+                    entities.append(
                         GlancesSensor(
-                            client,
+                            coordinator,
                             name,
                             sensor["label"],
                             description,
                         )
                     )
         elif description.type == "raid":
-            for raid_device in client.api.data[description.type]:
+            for raid_device in coordinator.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    f"{client.host}-{name} {raid_device} {description.name_suffix}",
+                    f"{coordinator.host}-{name} {raid_device} {description.name_suffix}",
                     f"{raid_device}-{description.key}",
                 )
-                dev.append(GlancesSensor(client, name, raid_device, description))
-        elif client.api.data[description.type]:
+                entities.append(
+                    GlancesSensor(coordinator, name, raid_device, description)
+                )
+        elif coordinator.data[description.type]:
             _migrate_old_unique_ids(
                 hass,
-                f"{client.host}-{name}  {description.name_suffix}",
+                f"{coordinator.host}-{name}  {description.name_suffix}",
                 f"-{description.key}",
             )
-            dev.append(
+            entities.append(
                 GlancesSensor(
-                    client,
+                    coordinator,
                     name,
                     "",
                     description,
                 )
             )
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
-class GlancesSensor(SensorEntity):
+class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntity):
     """Implementation of a Glances sensor."""
 
     entity_description: GlancesSensorEntityDescription
@@ -322,50 +324,30 @@ class GlancesSensor(SensorEntity):
 
     def __init__(
         self,
-        glances_data: GlancesData,
+        coordinator: GlancesDataUpdateCoordinator,
         name: str | None,
         sensor_name_prefix: str,
         description: GlancesSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self.glances_data = glances_data
+        super().__init__(coordinator)
         self._sensor_name_prefix = sensor_name_prefix
-        self.unsub_update: CALLBACK_TYPE | None = None
+        self._state = None
 
         self.entity_description = description
         self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, glances_data.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Glances",
-            name=name or glances_data.config_entry.data[CONF_HOST],
+            name=name or coordinator.config_entry.data[CONF_HOST],
         )
-        self._attr_unique_id = f"{self.glances_data.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 
     @property
-    def available(self) -> bool:
-        """Could the device be accessed during the last update call."""
-        return self.glances_data.available
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.unsub_update = async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
-
-    @callback
-    def _schedule_immediate_update(self) -> None:
-        self.async_schedule_update_ha_state(True)
-
-    async def will_remove_from_hass(self) -> None:
-        """Unsubscribe from update dispatcher."""
-        if self.unsub_update:
-            self.unsub_update()
-        self.unsub_update = None
-
-    async def async_update(self) -> None:  # noqa: C901
-        """Get the latest data from REST API."""
-        if (value := self.glances_data.api.data) is None:
-            return
+    def native_value(self):  # noqa: C901
+        """Return the state of the resources."""
+        if (value := self.coordinator.data) is None:
+            return None
 
         if self.entity_description.type == "fs":
             for var in value["fs"]:
@@ -470,4 +452,6 @@ class GlancesSensor(SensorEntity):
         elif self.entity_description.type == "raid":
             for raid_device, raid in value["raid"].items():
                 if raid_device == self._sensor_name_prefix:
-                    self._attr_native_value = raid[self.entity_description.key]
+                    self._state = raid[self.entity_description.key]
+
+        return self._state
