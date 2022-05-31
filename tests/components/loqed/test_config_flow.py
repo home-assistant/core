@@ -8,7 +8,7 @@ from loqedAPI import loqed
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.loqed.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -27,6 +27,7 @@ async def test_form(hass: HomeAssistant) -> None:
     loqed_integration_config = load_fixture("loqed/integration_config.json")
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
+    webhook_id = "Webhook_ID"
 
     with patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock",
@@ -34,6 +35,8 @@ async def test_form(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.loqed.async_setup_entry",
         return_value=True,
+    ), patch(
+        "homeassistant.components.webhook.async_generate_id", return_value=webhook_id
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -54,6 +57,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "key_id": int(json_config["lock_key_local_id"]),
         "api_key": json_config["lock_key_key"],
         "config": loqed_integration_config,
+        CONF_WEBHOOK_ID: webhook_id,
     }
     mock_lock.getWebhooks.assert_awaited()
 
@@ -79,6 +83,29 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
+    """Test we handle cannot unexpected exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    loqed_integration_config = load_fixture("loqed/integration_config.json")
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "config": loqed_integration_config,
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_zeroconf_wrong_config(hass: HomeAssistant) -> None:

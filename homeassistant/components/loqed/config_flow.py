@@ -10,7 +10,8 @@ from loqedAPI import loqed
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.components import webhook
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -54,8 +55,6 @@ async def validate_input(
     except (aiohttp.ClientError):
         _LOGGER.error("HTTP Connection error to loqed lock")
         raise CannotConnect from aiohttp.ClientError
-    except Exception:
-        raise CannotConnect from Exception
     return newdata
 
 
@@ -73,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = discovery_info.hostname.rstrip(".")
 
         session = async_get_clientsession(self.hass)
-        apiclient = loqed.APIClient(session, "http://" + self._host)
+        apiclient = loqed.APIClient(session, f"http://{self._host}")
         api = loqed.LoqedAPI(apiclient)
         lock_data = await api.async_get_lock_details()
 
@@ -118,7 +117,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title="LOQED Touch Smart Lock", data=user_input
+                title="LOQED Touch Smart Lock",
+                data=(user_input | {CONF_WEBHOOK_ID: webhook.async_generate_id()}),
             )
 
         return self.async_show_form(

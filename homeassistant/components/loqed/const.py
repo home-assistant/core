@@ -1,4 +1,7 @@
 """Constants for the loqed integration."""
 
+
 DOMAIN = "loqed"
-WEBHOOK_PREFIX = "p87yh9pb787yhup"
+CONF_WEBHOOK_INDEX = "webhook_index"
+CONF_COORDINATOR = "coordinator"
+CONF_LOCK = "lock"
