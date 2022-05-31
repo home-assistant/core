@@ -1232,7 +1232,7 @@ async def websocket_replace_failed_node(
 
     try:
         result = await controller.async_replace_failed_node(
-            node_id,
+            controller.nodes[node_id],
             INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
             force_security=force_security,
             provisioning=provisioning,
@@ -1291,7 +1291,7 @@ async def websocket_remove_failed_node(
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("node removed", node_removed)]
 
-    await controller.async_remove_failed_node(node.node_id)
+    await controller.async_remove_failed_node(node)
     connection.send_result(msg[ID])
 
 
@@ -1414,7 +1414,7 @@ async def websocket_heal_node(
     assert driver is not None  # The node comes from the driver instance.
     controller = driver.controller
 
-    result = await controller.async_heal_node(node.node_id)
+    result = await controller.async_heal_node(node)
     connection.send_result(
         msg[ID],
         result,

@@ -66,7 +66,7 @@ ZW_HVAC_MODE_MAP: dict[int, HVACMode] = {
     ThermostatMode.AUTO: HVACMode.HEAT_COOL,
     ThermostatMode.AUXILIARY: HVACMode.HEAT,
     ThermostatMode.FAN: HVACMode.FAN_ONLY,
-    ThermostatMode.FURNANCE: HVACMode.HEAT,
+    ThermostatMode.FURNACE: HVACMode.HEAT,
     ThermostatMode.DRY: HVACMode.DRY,
     ThermostatMode.AUTO_CHANGE_OVER: HVACMode.HEAT_COOL,
     ThermostatMode.HEATING_ECON: HVACMode.HEAT,
