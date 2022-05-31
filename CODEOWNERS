@@ -1065,8 +1065,8 @@ build.json @home-assistant/supervisor
 /tests/components/todoist/ @boralyl
 /homeassistant/components/tolo/ @MatthiasLohr
 /tests/components/tolo/ @MatthiasLohr
-/homeassistant/components/tomorrowio/ @raman325
-/tests/components/tomorrowio/ @raman325
+/homeassistant/components/tomorrowio/ @raman325 @lymanepp
+/tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
 /homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
