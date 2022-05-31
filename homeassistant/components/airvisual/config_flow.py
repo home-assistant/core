@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -70,7 +72,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._entry_data_for_reauth: dict[str, str] = {}
+        self._entry_data_for_reauth: Mapping[str, Any] = {}
         self._geo_id: str | None = None
 
     @property
@@ -219,7 +221,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._entry_data_for_reauth = data
         self._geo_id = async_get_geography_id(data)
