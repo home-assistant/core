@@ -77,6 +77,7 @@ async def async_setup_platform(
         _LOGGER.error(
             "Could not add the FSAPI device at %s:%s -> %s", host, port, password
         )
+        return
     afsapi = AFSAPI(webfsapi_url, password)
     async_add_entities([AFSAPIDevice(name, afsapi)], True)
 
@@ -221,7 +222,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
-        if self._state not in [STATE_OFF, STATE_UNAVAILABLE]:
+        if self._state != STATE_OFF:
             info_name = await afsapi.get_play_name()
             info_text = await afsapi.get_play_text()
 
