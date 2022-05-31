@@ -154,16 +154,25 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._method = integration_method
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
-        self._unit_template = (
-            f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
-        )
+        self._unit_template = f"{'' if unit_prefix is None else unit_prefix}{{}}"
         self._unit_of_measurement = None
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+        self._unit_time_str = unit_time
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_icon = "mdi:chart-histogram"
         self._attr_should_poll = False
         self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
+
+    def _unit(self, source_unit: str) -> str:
+        """Derive unit from the source sensor, SI prefix and time unit."""
+        unit_time = self._unit_time_str
+        if source_unit.endswith(f"/{unit_time}"):
+            integral_unit = source_unit[0 : (-(1 + len(unit_time)))]
+        else:
+            integral_unit = f"{source_unit}{unit_time}"
+
+        return self._unit_template.format(integral_unit)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -203,7 +212,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             update_state = False
             unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit is not None:
-                new_unit_of_measurement = self._unit_template.format(unit)
+                new_unit_of_measurement = self._unit(unit)
                 if self._unit_of_measurement != new_unit_of_measurement:
                     self._unit_of_measurement = new_unit_of_measurement
                     update_state = True
