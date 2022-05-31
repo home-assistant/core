@@ -27,8 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -46,6 +46,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def validate_config(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
