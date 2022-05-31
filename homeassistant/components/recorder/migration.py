@@ -715,15 +715,14 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             # Ensure the row format is dynamic or the index
             # unique will be too large
-            with contextlib.suppress(SQLAlchemyError):
-                with session_scope(session=session_maker()) as session:
-                    connection = session.connection()
-                    # This is safe to run multiple times and fast since the table is small
-                    connection.execute(
-                        text(
-                            "ALTER TABLE statistics_meta ENGINE=InnoDB, ROW_FORMAT=DYNAMIC"
-                        )
+            with session_scope(session=session_maker()) as session:
+                connection = session.connection()
+                # This is safe to run multiple times and fast since the table is small
+                connection.execute(
+                    text(
+                        "ALTER TABLE statistics_meta ENGINE=InnoDB, ROW_FORMAT=DYNAMIC"
                     )
+                )
         try:
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
