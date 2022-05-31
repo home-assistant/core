@@ -114,7 +114,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             changed = new_data != dict(entry.data)
             if changed:
                 hass.config_entries.async_update_entry(entry, data=new_data)
-            if changed or entry.state is ConfigEntryState.SETUP_RETRY:
                 entry_id = entry.entry_id
                 hass.async_create_task(hass.config_entries.async_reload(entry_id))
             raise AbortFlow("already_configured")
