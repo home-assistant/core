@@ -1,7 +1,6 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from afsapi import AFSAPI, ConnectionError as FSConnectionError, PlayState
@@ -42,8 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
     }
 )
-
-SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_platform(
@@ -87,7 +84,7 @@ async def async_setup_platform(
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
-    _attr_media_content_type: str | None = MEDIA_TYPE_MUSIC
+    _attr_media_content_type: str = MEDIA_TYPE_MUSIC
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -138,7 +135,7 @@ class AFSAPIDevice(MediaPlayerEntity):
             if self._attr_available:
                 _LOGGER.warning(
                     "Could not connect to %s. Did it go offline?",
-                    self._attr_name or afsapi.webfsapi_endpoint,
+                    self.name or afsapi.webfsapi_endpoint,
                 )
                 self._attr_available = False
                 return
@@ -146,7 +143,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._attr_available:
             _LOGGER.info(
                 "Reconnected to %s",
-                self._attr_name or afsapi.webfsapi_endpoint,
+                self.name or afsapi.webfsapi_endpoint,
             )
 
             self._attr_available = True
@@ -175,7 +172,6 @@ class AFSAPIDevice(MediaPlayerEntity):
 
             self._attr_source = (await afsapi.get_mode()).label
 
-            self._attr_sound_mode = (await afsapi.get_eq_preset()).label
             self._attr_is_volume_muted = await afsapi.get_mute()
             self._attr_media_image_url = await afsapi.get_play_graphic()
 
@@ -190,7 +186,6 @@ class AFSAPIDevice(MediaPlayerEntity):
 
             self._attr_source = None
 
-            self._attr_sound_mode = None
             self._attr_is_volume_muted = None
             self._attr_media_image_url = None
 
