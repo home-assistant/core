@@ -6,7 +6,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from . import device_trigger
-from .. import mqtt
+from .config import MQTT_BASE_SCHEMA
 from .mixins import async_setup_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
@@ -17,7 +17,7 @@ CONF_AUTOMATION_TYPE = "automation_type"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA},
     extra=vol.ALLOW_EXTRA,
-).extend(mqtt.MQTT_BASE_SCHEMA.schema)
+).extend(MQTT_BASE_SCHEMA.schema)
 
 
 async def async_setup_entry(hass, config_entry):
