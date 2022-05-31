@@ -44,8 +44,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
@@ -56,6 +56,8 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -232,33 +234,33 @@ def valid_preset_mode_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AUX_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_AUX_STATE_TOPIC): valid_subscribe_topic,
         # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
-        vol.Optional(CONF_CURRENT_TEMP_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(
             CONF_FAN_MODE_LIST,
             default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
         ): cv.ensure_list,
         vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_FAN_MODE_STATE_TOPIC): valid_subscribe_topic,
         # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
         vol.Optional(CONF_HOLD_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_HOLD_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_HOLD_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_HOLD_LIST): cv.ensure_list,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_MODE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(
             CONF_MODE_LIST,
             default=[
@@ -271,54 +273,54 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_BASE_SCHEMA.extend(
             ],
         ): cv.ensure_list,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-        vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_POWER_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
-        vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         vol.Optional(CONF_SEND_IF_OFF): cv.boolean,
         vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
-        vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_ACTION_TOPIC): valid_subscribe_topic,
         # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
-        ): mqtt.valid_publish_topic,
+        ): valid_publish_topic,
         vol.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
         ): cv.ensure_list,
         vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(
             CONF_SWING_MODE_LIST, default=[SWING_ON, SWING_OFF]
         ): cv.ensure_list,
         vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SWING_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
         vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }

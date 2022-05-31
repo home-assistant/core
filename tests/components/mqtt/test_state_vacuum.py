@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import vacuum
-from homeassistant.components.mqtt import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
+from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
 from homeassistant.components.mqtt.vacuum.const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
