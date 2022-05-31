@@ -13,6 +13,8 @@ from homeassistant.const import Platform
 
 UNDEFINED = object()
 
+_PLATFORMS: set[str] = {platform.value for platform in Platform}
+
 
 @dataclass
 class TypeHintMatch:
@@ -35,7 +37,6 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
 }
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
-_PLATFORMS: list[str] = [platform.value for platform in Platform]
 
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     "__init__": [
@@ -453,9 +454,7 @@ def _get_module_platform(module_name: str) -> str | None:
         return None
 
     platform = module_match.groups()[0]
-    if platform is None:
-        return "__init__"
-    return platform[1:]
+    return platform.lstrip(".") if platform else "__init__"
 
 
 class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
