@@ -9,12 +9,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
     ATTR_NUKI_ID,
+    ATTR_RING_ACTION_TIMESTAMP,
     ATTR_UNLATCH,
     DATA_COORDINATOR,
     DATA_LOCKS,
@@ -143,6 +145,17 @@ class NukiOpenerEntity(NukiDeviceEntity):
             self._nuki_device.is_rto_activated
             or self._nuki_device.mode == MODE_OPENER_CONTINUOUS
         )
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs = super().extra_state_attributes
+
+        attrs[ATTR_RING_ACTION_TIMESTAMP] = dt_util.parse_datetime(
+            self._nuki_device.ring_action_timestamp
+        )
+
+        return attrs
 
     def lock(self, **kwargs):
         """Disable ring-to-open."""
