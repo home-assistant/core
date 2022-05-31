@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -63,6 +64,9 @@ async def test_entity_config(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get("sensor.snmp_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.snmp_sensor")
     assert state.state == "hello"
