@@ -405,7 +405,7 @@ async def _continue_flow(
         (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-            if flow["context"]["unique_id"] == unique_id
+            if flow["context"].get("unique_id") == unique_id
         ),
         None,
     )
