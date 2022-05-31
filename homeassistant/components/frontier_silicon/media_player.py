@@ -21,8 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_OPENING,
     STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
+    STATE_PLAYING
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -269,7 +268,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_media_play_pause(self):
         """Send play/pause command."""
-        if "playing" in self._state:
+        if self._state == STATE_PLAYING:
             await self.fs_device.pause()
         else:
             await self.fs_device.play()
