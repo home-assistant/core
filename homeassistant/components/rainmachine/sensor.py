@@ -133,7 +133,7 @@ async def async_setup_entry(
             entry, coordinator, controller, description
         )
         for description in SENSOR_DESCRIPTIONS
-        if (coordinator := coordinators[description.api_category])
+        if (coordinator := coordinators[description.api_category]) is not None
         and key_exists(coordinator.data, description.data_key)
     ]
 
