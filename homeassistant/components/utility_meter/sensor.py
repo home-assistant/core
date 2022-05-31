@@ -167,7 +167,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
         "async_calibrate",
     )
 
@@ -244,7 +244,7 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
         "async_calibrate",
     )
 
