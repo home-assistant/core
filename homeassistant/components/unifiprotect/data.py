@@ -17,10 +17,10 @@ from pyunifiprotect.data import (
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, DOMAIN, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES
+from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES, DOMAIN
 from .utils import async_get_adoptable_devices_by_type, async_get_devices
 
 _LOGGER = logging.getLogger(__name__)
