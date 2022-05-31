@@ -6,6 +6,7 @@ from pyownet import protocol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
 from .onewirehub import CannotConnect, OneWireHub
@@ -33,6 +34,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    onewirehub: OneWireHub = hass.data[DOMAIN][config_entry.entry_id]
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device.id) for device in onewirehub.devices or []
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
