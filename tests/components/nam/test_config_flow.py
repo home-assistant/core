@@ -79,7 +79,6 @@ async def test_form_create_entry_with_auth(hass):
             result["flow_id"],
             VALID_CONFIG,
         )
-        await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "credentials"
