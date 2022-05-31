@@ -132,6 +132,12 @@ def async_subscribe_events(
         if not _is_state_filtered(ent_reg, state):
             target(event)
 
+    if device_ids and not entity_ids:
+        # No entities to subscribe to but we are filtering
+        # on device ids so we do not want to get any state
+        # changed events
+        return
+
     if entity_ids:
         subscriptions.append(
             async_track_state_change_event(
