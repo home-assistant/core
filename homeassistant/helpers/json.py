@@ -1,6 +1,7 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
 import datetime
 import json
+from pathlib import Path
 from typing import Any, Final
 
 import orjson
@@ -33,6 +34,8 @@ def json_encoder_default(obj: Any) -> Any:
         return list(obj)
     if hasattr(obj, "as_dict"):
         return obj.as_dict()
+    if isinstance(obj, Path):
+        return obj.as_posix()
     raise TypeError
 
 
@@ -64,7 +67,18 @@ def json_bytes(data: Any) -> bytes:
 
 
 def json_dumps(data: Any) -> str:
-    """Dump json string."""
+    """Dump json string.
+
+    orjson supports serializing dataclasses natively which
+    eliminates the need to implement as_dict in many places
+    when the data is already in a dataclass. This works
+    well as long as all the data in the dataclass can also
+    be serialized.
+
+    If it turns out to be a problem we can disable this
+    with options=orjson.OPT_PASSTHROUGH_DATACLASS and it
+    will fallback to as_dict
+    """
     return orjson.dumps(
         data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
     ).decode("utf-8")
