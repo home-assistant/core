@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 from ipaddress import IPv4Address
@@ -69,9 +68,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DISCOVERY_INTERVAL = 60
+DISCOVERY_INTERVAL = 10
 MESSAGE_TIMEOUT = 1
-MESSAGE_RETRIES = 3
+MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
@@ -254,14 +253,6 @@ def merge_hsbk(base, change):
     return [b if c is None else c for b, c in zip(base, change)]
 
 
-@dataclass
-class InFlightDiscovery:
-    """Represent a LIFX discovery that is inflight."""
-
-    device: Light
-    lock: asyncio.Lock
-
-
 class LIFXManager:
     """Representation of all known LIFX entities."""
 
@@ -274,7 +265,7 @@ class LIFXManager:
     ) -> None:
         """Initialize the light."""
         self.entities: dict[str, LIFXLight] = {}
-        self.discoveries_inflight: dict[str, InFlightDiscovery] = {}
+        self.switch_devices: list[str] = []
         self.hass = hass
         self.platform = platform
         self.config_entry = config_entry
@@ -394,26 +385,31 @@ class LIFXManager:
 
     @callback
     def register(self, bulb: Light) -> None:
-        """Allow a single in-flight discovery per bulb."""
-        if bulb.mac_addr not in self.discoveries_inflight:
-            inflight = InFlightDiscovery(bulb, asyncio.Lock())
-            self.discoveries_inflight[bulb.mac_addr] = inflight
-            _LOGGER.debug("Discovered %s (%s)", bulb.ip_addr, bulb.mac_addr)
-        else:
-            _LOGGER.debug("Duplicate LIFX discovery response detected from %s (%s)")
-        self.hass.async_create_task(self._handle_discovery(inflight))
+        """Try and skip processing LIFX Switches as early as possible."""
+        if bulb.mac_addr not in self.switch_devices:
+            self.hass.async_create_task(self._handle_discovery(bulb))
 
-    async def _handle_discovery(self, inflight: InFlightDiscovery) -> None:
+    async def _handle_discovery(self, bulb: Light) -> None:
         """Handle LIFX bulb registration lifecycle."""
-        # Only process one discovery at a time
-        async with inflight.lock:
-            if entity := self.entities.get(inflight.device.mac_addr):
-                entity.registered = True
-                _LOGGER.debug("Reconnected to %s", entity.who)
-                await entity.update_hass()
+        if entity := self.entities.get(bulb.mac_addr):
+            entity.registered = True
+            _LOGGER.debug("Reconnected to %s", entity.who)
+            await entity.update_hass()
+            return
+
+        # Don't process LIFX Switch devices and ignore them in future
+        if bulb.version is None:
+            version_resp = await AwaitAioLIFX().wait(bulb.get_version)
+            if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
+                self.switch_devices.append(bulb.mac_addr)
+                _LOGGER.debug(
+                    "Adding LIFX Switch %s (%s) to ignore list",
+                    str(bulb.mac_addr).replace(":", ""),
+                    bulb.ip_addr,
+                )
                 return
 
-            await self._async_process_discovery(inflight.device)
+        await self._async_process_discovery(bulb)
 
     async def _async_process_discovery(self, bulb: Light) -> None:
         """Process discovery of a device."""
@@ -422,23 +418,12 @@ class LIFXManager:
         # Read initial state
         ack = AwaitAioLIFX().wait
 
-        # Get the product info first so that LIFX Switches
-        # can be ignored.
-        version_resp = await ack(bulb.get_version)
-        if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
-            _LOGGER.debug(
-                "Not connecting to LIFX Switch %s (%s)",
-                str(bulb.mac_addr).replace(":", ""),
-                bulb.ip_addr,
-            )
-            return
-
         color_resp = await ack(bulb.get_color)
 
-        if color_resp is None or version_resp is None:
+        if color_resp is None:
             _LOGGER.error("Failed to connect to %s", bulb.ip_addr)
             bulb.registered = False
-            self.discoveries_inflight.pop(bulb.mac_addr)
+
             return
 
         bulb.timeout = MESSAGE_TIMEOUT
@@ -454,14 +439,13 @@ class LIFXManager:
 
         _LOGGER.debug("Connected to %s", entity.who)
         self.entities[bulb.mac_addr] = entity
-        self.discoveries_inflight.pop(bulb.mac_addr, None)
         self.async_add_entities([entity], True)
 
     @callback
     def unregister(self, bulb: Light) -> None:
         """Disconnect and unregister non-responsive bulbs."""
         if bulb.mac_addr in self.entities:
-            entity = self.entities[bulb.mac_addr]
+            entity = self.entities.pop(bulb.mac_addr)
             _LOGGER.debug("Disconnected from %s", entity.who)
             entity.registered = False
             entity.async_write_ha_state()
