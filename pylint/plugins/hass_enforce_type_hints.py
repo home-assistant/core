@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
-import astroid
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -23,6 +23,14 @@ class TypeHintMatch:
     function_name: str
     arg_types: dict[int, str]
     return_type: list[str] | str | None | object
+
+
+@dataclass
+class ClassTypeHintMatch:
+    """Class for pattern matching."""
+
+    classes: set[str]
+    matches: list[TypeHintMatch]
 
 
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
@@ -359,9 +367,72 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     ],
 }
 
+_CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "config_flow": [
+        ClassTypeHintMatch(
+            classes={
+                "AbstractOAuth2FlowHandler",
+                "ConfigFlow",
+                "SchemaConfigFlowHandler",
+            },
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_dhcp",
+                    arg_types={
+                        1: "DhcpServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_hassio",
+                    arg_types={
+                        1: "HassioServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_homekit",
+                    arg_types={
+                        1: "ZeroconfServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_mqtt",
+                    arg_types={
+                        1: "MqttServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_ssdp",
+                    arg_types={
+                        1: "SsdpServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_usb",
+                    arg_types={
+                        1: "UsbServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_zeroconf",
+                    arg_types={
+                        1: "ZeroconfServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+            ],
+        ),
+    ]
+}
+
 
 def _is_valid_type(
-    expected_type: list[str] | str | None | object, node: astroid.NodeNG
+    expected_type: list[str] | str | None | object, node: nodes.NodeNG
 ) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
@@ -375,18 +446,18 @@ def _is_valid_type(
 
     # Const occurs when the type is None
     if expected_type is None or expected_type == "None":
-        return isinstance(node, astroid.Const) and node.value is None
+        return isinstance(node, nodes.Const) and node.value is None
 
     assert isinstance(expected_type, str)
 
     # Const occurs when the type is an Ellipsis
     if expected_type == "...":
-        return isinstance(node, astroid.Const) and node.value == Ellipsis
+        return isinstance(node, nodes.Const) and node.value == Ellipsis
 
     # Special case for `xxx | yyy`
     if match := _TYPE_HINT_MATCHERS["a_or_b"].match(expected_type):
         return (
-            isinstance(node, astroid.BinOp)
+            isinstance(node, nodes.BinOp)
             and _is_valid_type(match.group(1), node.left)
             and _is_valid_type(match.group(2), node.right)
         )
@@ -394,11 +465,11 @@ def _is_valid_type(
     # Special case for xxx[yyy[zzz, aaa]]`
     if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
         return (
-            isinstance(node, astroid.Subscript)
+            isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
-            and isinstance(subnode := node.slice, astroid.Subscript)
+            and isinstance(subnode := node.slice, nodes.Subscript)
             and _is_valid_type(match.group(2), subnode.value)
-            and isinstance(subnode.slice, astroid.Tuple)
+            and isinstance(subnode.slice, nodes.Tuple)
             and _is_valid_type(match.group(3), subnode.slice.elts[0])
             and _is_valid_type(match.group(4), subnode.slice.elts[1])
         )
@@ -406,9 +477,9 @@ def _is_valid_type(
     # Special case for xxx[yyy, zzz]`
     if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
         return (
-            isinstance(node, astroid.Subscript)
+            isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
-            and isinstance(node.slice, astroid.Tuple)
+            and isinstance(node.slice, nodes.Tuple)
             and _is_valid_type(match.group(2), node.slice.elts[0])
             and _is_valid_type(match.group(3), node.slice.elts[1])
         )
@@ -416,22 +487,22 @@ def _is_valid_type(
     # Special case for xxx[yyy]`
     if match := _TYPE_HINT_MATCHERS["x_of_y"].match(expected_type):
         return (
-            isinstance(node, astroid.Subscript)
+            isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
             and _is_valid_type(match.group(2), node.slice)
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
-    if isinstance(node, astroid.Name) and node.name == expected_type:
+    if isinstance(node, nodes.Name) and node.name == expected_type:
         return True
 
     # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-    return isinstance(node, astroid.Attribute) and node.attrname == expected_type
+    return isinstance(node, nodes.Attribute) and node.attrname == expected_type
 
 
-def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | None]:
+def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     args = node.args
-    annotations: list[astroid.NodeNG | None] = (
+    annotations: list[nodes.NodeNG | None] = (
         args.posonlyargs_annotations + args.annotations + args.kwonlyargs_annotations
     )
     if args.vararg is not None:
@@ -442,7 +513,7 @@ def _get_all_annotations(node: astroid.FunctionDef) -> list[astroid.NodeNG | Non
 
 
 def _has_valid_annotations(
-    annotations: list[astroid.NodeNG | None],
+    annotations: list[nodes.NodeNG | None],
 ) -> bool:
     for annotation in annotations:
         if annotation is not None:
@@ -485,10 +556,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def __init__(self, linter: PyLinter | None = None) -> None:
         super().__init__(linter)
         self._function_matchers: list[TypeHintMatch] = []
+        self._class_matchers: list[ClassTypeHintMatch] = []
 
-    def visit_module(self, node: astroid.Module) -> None:
+    def visit_module(self, node: nodes.Module) -> None:
         """Called when a Module node is visited."""
         self._function_matchers = []
+        self._class_matchers = []
 
         if (module_platform := _get_module_platform(node.name)) is None:
             return
@@ -496,10 +569,40 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if module_platform in _PLATFORMS:
             self._function_matchers.extend(_FUNCTION_MATCH["__any_platform__"])
 
-        if matches := _FUNCTION_MATCH.get(module_platform):
-            self._function_matchers.extend(matches)
+        if function_matches := _FUNCTION_MATCH.get(module_platform):
+            self._function_matchers.extend(function_matches)
 
-    def visit_functiondef(self, node: astroid.FunctionDef) -> None:
+        if class_matches := _CLASS_MATCH.get(module_platform):
+            self._class_matchers = class_matches
+
+    def visit_classdef(self, node: nodes.ClassDef) -> None:
+        """Called when a ClassDef node is visited."""
+        for class_matches in self._class_matchers:
+            for base in node.bases:
+                if (
+                    isinstance(base, nodes.Name) and base.name in class_matches.classes
+                ) or (
+                    isinstance(base, nodes.Attribute)
+                    and base.attrname in class_matches.classes
+                ):
+                    self._visit_class_functions(node, class_matches.matches)
+
+    def _visit_class_functions(
+        self, node: nodes.ClassDef, matches: list[TypeHintMatch]
+    ) -> None:
+        for match in matches:
+            for function_node in node.mymethods():
+                function_name: str | None = function_node.name
+                if match.function_name == function_name:
+                    self._check_function(function_node, match)
+                elif (
+                    function_name is not None
+                    and match.function_name.endswith("*")
+                    and function_name.startswith(match.function_name[:-1])
+                ):
+                    self._check_function(function_node, match)
+
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
         for match in self._function_matchers:
             if node.name != match.function_name or node.is_method():
@@ -508,7 +611,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_function(self, node: astroid.FunctionDef, match: TypeHintMatch) -> None:
+    def _check_function(self, node: nodes.FunctionDef, match: TypeHintMatch) -> None:
         # Check that at least one argument is annotated.
         annotations = _get_all_annotations(node)
         if node.returns is None and not _has_valid_annotations(annotations):
