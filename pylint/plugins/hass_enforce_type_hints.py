@@ -502,9 +502,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def visit_functiondef(self, node: astroid.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
         for match in self._function_matchers:
-            if node.name != match.function_name:
-                continue
-            if node.is_method():
+            if node.name != match.function_name or node.is_method():
                 continue
             self._check_function(node, match)
 
