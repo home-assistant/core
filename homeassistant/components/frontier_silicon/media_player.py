@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -74,12 +73,12 @@ async def async_setup_platform(
         webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
             f"http://{host}:{port}/device"
         )
-        afsapi = AFSAPI(webfsapi_url, password)
-        async_add_entities([AFSAPIDevice(name, afsapi)], True)
     except FSConnectionError:
         _LOGGER.error(
             "Could not add the FSAPI device at %s:%s -> %s", host, port, password
         )
+    afsapi = AFSAPI(webfsapi_url, password)
+    async_add_entities([AFSAPIDevice(name, afsapi)], True)
 
 
 class AFSAPIDevice(MediaPlayerEntity):
@@ -188,7 +187,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                     PlayState.STOPPED: STATE_IDLE,
                     PlayState.LOADING: STATE_OPENING,
                     None: STATE_IDLE,
-                }.get(status, STATE_UNKNOWN)
+                }.get(status)
             else:
                 self._state = STATE_OFF
         except FSConnectionError:
@@ -197,30 +196,30 @@ class AFSAPIDevice(MediaPlayerEntity):
                     "Could not connect to %s. Did it go offline?",
                     self._name or afsapi.webfsapi_endpoint,
                 )
-                self._state = STATE_UNAVAILABLE
                 self._attr_available = False
-        else:
-            if not self._attr_available:
-                _LOGGER.info(
-                    "Reconnected to %s",
-                    self._name or afsapi.webfsapi_endpoint,
-                )
+                return
 
-                self._attr_available = True
-            if not self._name:
-                self._name = await afsapi.get_friendly_name()
+        if not self._attr_available:
+            _LOGGER.info(
+                "Reconnected to %s",
+                self._name or afsapi.webfsapi_endpoint,
+            )
 
-            if not self._source_list:
-                self.__modes_by_label = {
-                    mode.label: mode.key for mode in await afsapi.get_modes()
-                }
-                self._source_list = list(self.__modes_by_label.keys())
+            self._attr_available = True
+        if not self._name:
+            self._name = await afsapi.get_friendly_name()
 
-            # The API seems to include 'zero' in the number of steps (e.g. if the range is
-            # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
-            # If call to get_volume fails set to 0 and try again next time.
-            if not self._max_volume:
-                self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
+        if not self._source_list:
+            self.__modes_by_label = {
+                mode.label: mode.key for mode in await afsapi.get_modes()
+            }
+            self._source_list = list(self.__modes_by_label)
+
+        # The API seems to include 'zero' in the number of steps (e.g. if the range is
+        # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
+        # If call to get_volume fails set to 0 and try again next time.
+        if not self._max_volume:
+            self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
         if self._state not in [STATE_OFF, STATE_UNAVAILABLE]:
             info_name = await afsapi.get_play_name()
