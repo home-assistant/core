@@ -78,6 +78,22 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="boiler_supply_temperature",
+        name="Boiler Supply Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getBoilerCommonSupplyTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="hotwater_out_temperature",
+        name="Hot water out Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterOutletTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
         key="hotwater_gas_consumption_today",
         name="Hot water gas consumption today",
         value_getter=lambda api: api.getGasConsumptionDomesticHotWaterToday(),
