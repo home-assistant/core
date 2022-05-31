@@ -14,14 +14,14 @@ from pyunifiprotect.data import (
     ModelType,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data.base import ProtectDeviceModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES
-from .utils import async_get_devices
+from .utils import async_get_devices, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,14 +57,10 @@ class ProtectData:
 
     def get_by_types(
         self, device_types: Iterable[ModelType]
-    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+    ) -> Generator[ProtectDeviceModel, None, None]:
         """Get all devices matching types."""
         for device_type in device_types:
-            attr = f"{device_type.value}s"
-            devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-                self.api.bootstrap, attr
-            )
-            yield from devices.values()
+            yield from async_get_devices_by_type(self.api, device_type).values()
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
