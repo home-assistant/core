@@ -76,6 +76,7 @@ from .const import (  # noqa: F401
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
@@ -182,9 +183,10 @@ DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Any(
+    vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): vol.Any(
         cv.boolean, vol.Coerce(MediaPlayerEnqueue)
     ),
+    vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 

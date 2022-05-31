@@ -1,7 +1,9 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
 import datetime
 import json
-from typing import Any
+from typing import Any, Final
+
+import orjson
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -22,6 +24,18 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
+def json_encoder_default(obj: Any) -> Any:
+    """Convert Home Assistant objects.
+
+    Hand other objects to the original method.
+    """
+    if isinstance(obj, set):
+        return list(obj)
+    if hasattr(obj, "as_dict"):
+        return obj.as_dict()
+    raise TypeError
+
+
 class ExtendedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
 
@@ -40,3 +54,20 @@ class ExtendedJSONEncoder(JSONEncoder):
             return super().default(o)
         except TypeError:
             return {"__type": str(type(o)), "repr": repr(o)}
+
+
+def json_bytes(data: Any) -> bytes:
+    """Dump json bytes."""
+    return orjson.dumps(
+        data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
+    )
+
+
+def json_dumps(data: Any) -> str:
+    """Dump json string."""
+    return orjson.dumps(
+        data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
+    ).decode("utf-8")
+
+
+JSON_DUMP: Final = json_dumps
