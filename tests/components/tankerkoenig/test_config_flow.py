@@ -256,6 +256,7 @@ async def test_reauth(hass: HomeAssistant):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
 
         # re-auth successful
         mock_nearby_stations.return_value = MOCK_NEARVY_STATIONS_OK
@@ -269,6 +270,9 @@ async def test_reauth(hass: HomeAssistant):
         assert result["reason"] == "reauth_successful"
 
     mock_setup_entry.assert_called()
+
+    entry = hass.config_entries.async_get_entry(mock_config.entry_id)
+    assert entry.data[CONF_API_KEY] == "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx"
 
 
 async def test_options_flow(hass: HomeAssistant):
