@@ -103,6 +103,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Setup the config entry
         self.data["tokens"] = self.tokens
+        self.data["device_data"] = await self.hive_auth.getDeviceData()
         if self.context["source"] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
                 self.entry, title=self.data["username"], data=self.data

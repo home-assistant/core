@@ -1,7 +1,7 @@
 """oAuth2 functions and classes for Geocaching API integration."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -9,7 +9,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ENVIRONMENT, ENVIRONMENT_URLS
 
@@ -65,13 +64,3 @@ class GeocachingOAuth2Implementation(AuthImplementation):
 
         new_token = await self._token_request(data)
         return {**token, **new_token}
-
-    async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
-        data["client_id"] = self.client_id
-        if self.client_secret is not None:
-            data["client_secret"] = self.client_secret
-        session = async_get_clientsession(self.hass)
-        resp = await session.post(ENVIRONMENT_URLS[ENVIRONMENT]["token_url"], data=data)
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
