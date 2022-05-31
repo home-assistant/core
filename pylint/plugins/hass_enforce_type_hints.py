@@ -393,12 +393,16 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="async_get_options_flow",
-                    arg_types={0: "ConfigEntry"},
+                    arg_types={
+                        0: "ConfigEntry",
+                    },
                     return_type=UNDEFINED,
                 ),
                 TypeHintMatch(
                     function_name="async_step_reauth",
-                    arg_types={0: "Mapping[str, Any]"},
+                    arg_types={
+                        1: "Mapping[str, Any]",
+                    },
                     return_type="FlowResult",
                 ),
                 TypeHintMatch(
