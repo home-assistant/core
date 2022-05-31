@@ -3,5 +3,6 @@
   "name": "Radarr",
   "documentation": "https://www.home-assistant.io/integrations/radarr",
   "codeowners": [],
+  "requirements": ["aiopyarr==22.2.2"],
   "iot_class": "local_polling"
 }

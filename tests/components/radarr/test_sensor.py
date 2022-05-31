@@ -8,12 +8,12 @@ from homeassistant.setup import async_setup_component
 
 
 def mocked_exception(*args, **kwargs):
-    """Mock exception thrown by requests.get."""
+    """Mock exception thrown by aiopyarr.request_client.ClientSession.request."""
     raise OSError
 
 
-def mocked_requests_get(*args, **kwargs):
-    """Mock requests.get invocations."""
+async def mocked_requests_get(*args, **kwargs):
+    """Mock aiopyarr.request_client.ClientSession.request invocations."""
 
     class MockResponse:
         """Class to represent a mocked response."""
@@ -21,14 +21,14 @@ def mocked_requests_get(*args, **kwargs):
         def __init__(self, json_data, status_code):
             """Initialize the mock response class."""
             self.json_data = json_data
-            self.status_code = status_code
+            self.status = status_code
 
-        def json(self):
+        async def json(self):
             """Return the json of the response."""
             return self.json_data
 
-    url = str(args[0])
-    if "api/calendar" in url:
+    url = str(kwargs["url"])
+    if "calendar" in url:
         return MockResponse(
             [
                 {
@@ -81,7 +81,7 @@ def mocked_requests_get(*args, **kwargs):
             ],
             200,
         )
-    if "api/command" in url:
+    if "command" in url:
         return MockResponse(
             [
                 {
@@ -89,13 +89,13 @@ def mocked_requests_get(*args, **kwargs):
                     "startedOn": "0001-01-01T00:00:00Z",
                     "stateChangeTime": "2014-02-05T05:09:09.2366139Z",
                     "sendUpdatesToClient": "true",
-                    "state": "pending",
+                    "status": "pending",
                     "id": 24,
                 }
             ],
             200,
         )
-    if "api/movie" in url:
+    if "movie" in url:
         return MockResponse(
             [
                 {
@@ -147,7 +147,7 @@ def mocked_requests_get(*args, **kwargs):
             ],
             200,
         )
-    if "api/diskspace" in url:
+    if "diskspace" in url:
         return MockResponse(
             [
                 {
@@ -159,7 +159,7 @@ def mocked_requests_get(*args, **kwargs):
             ],
             200,
         )
-    if "api/system/status" in url:
+    if "system/status" in url:
         return MockResponse(
             {
                 "version": "0.2.0.210",
@@ -203,7 +203,7 @@ async def test_diskspace_no_paths(hass):
     }
 
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -232,7 +232,7 @@ async def test_diskspace_paths(hass):
     }
 
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -261,7 +261,7 @@ async def test_commands(hass):
     }
 
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -290,7 +290,7 @@ async def test_movies(hass):
     }
 
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -319,7 +319,7 @@ async def test_upcoming_multiple_days(hass):
     }
 
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -331,7 +331,7 @@ async def test_upcoming_multiple_days(hass):
         assert entity.attributes["icon"] == "mdi:television"
         assert entity.attributes["unit_of_measurement"] == "Movies"
         assert entity.attributes["friendly_name"] == "Radarr Upcoming"
-        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00Z"
+        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00"
 
 
 @pytest.mark.skip
@@ -351,7 +351,7 @@ async def test_upcoming_today(hass):
         }
     }
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -361,7 +361,7 @@ async def test_upcoming_today(hass):
         assert entity.attributes["icon"] == "mdi:television"
         assert entity.attributes["unit_of_measurement"] == "Movies"
         assert entity.attributes["friendly_name"] == "Radarr Upcoming"
-        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00Z"
+        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00"
 
 
 async def test_system_status(hass):
@@ -377,7 +377,7 @@ async def test_system_status(hass):
         }
     }
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -404,7 +404,7 @@ async def test_ssl(hass):
         }
     }
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_requests_get,
     ):
         assert await async_setup_component(hass, "sensor", config)
@@ -415,7 +415,7 @@ async def test_ssl(hass):
         assert entity.attributes["icon"] == "mdi:television"
         assert entity.attributes["unit_of_measurement"] == "Movies"
         assert entity.attributes["friendly_name"] == "Radarr Upcoming"
-        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00Z"
+        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00"
 
 
 async def test_exception_handling(hass):
@@ -431,7 +431,7 @@ async def test_exception_handling(hass):
         }
     }
     with patch(
-        "requests.get",
+        "aiopyarr.request_client.ClientSession.request",
         side_effect=mocked_exception,
     ):
         assert await async_setup_component(hass, "sensor", config)

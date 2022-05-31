@@ -1,13 +1,14 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from http import HTTPStatus
+from collections.abc import Mapping
+from datetime import date, datetime, timedelta
 import logging
-import time
 from typing import Any
 
-import requests
+from aiopyarr.exceptions import ArrException
+from aiopyarr.models.host_configuration import PyArrHostConfiguration
+from aiopyarr.radarr_client import RadarrClient, RadarrMovie
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -32,10 +33,10 @@ from homeassistant.const import (
     DATA_ZETTABYTES,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +57,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="diskspace",
         name="Disk Space",
-        native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
     ),
     SensorEntityDescription(
@@ -87,14 +87,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-ENDPOINTS = {
-    "diskspace": "{0}://{1}:{2}/{3}api/diskspace",
-    "upcoming": "{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
-    "movies": "{0}://{1}:{2}/{3}api/movie",
-    "commands": "{0}://{1}:{2}/{3}api/command",
-    "status": "{0}://{1}:{2}/{3}api/system/status",
-}
-
 # Support to Yottabytes for the future, why not
 BYTE_SIZES = [
     DATA_BYTES,
@@ -110,7 +102,7 @@ BYTE_SIZES = [
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
+        vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): vol.Coerce(int),
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=["movies"]): vol.All(
@@ -124,141 +116,172 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radarr platform."""
     conditions = config[CONF_MONITORED_CONDITIONS]
-    # deprecated in 2022.3
     entities = [
         RadarrSensor(hass, config, description)
         for description in SENSOR_TYPES
         if description.key in conditions
     ]
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class RadarrSensor(SensorEntity):
     """Implementation of the Radarr sensor."""
 
-    def __init__(self, hass, conf, description: SensorEntityDescription):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        conf: ConfigType,
+        description: SensorEntityDescription,
+    ) -> None:
         """Create Radarr entity."""
         self.entity_description = description
-
-        self.conf = conf
-        self.host = conf.get(CONF_HOST)
-        self.port = conf.get(CONF_PORT)
-        self.urlbase = conf.get(CONF_URLBASE)
-        if self.urlbase:
-            self.urlbase = f"{self.urlbase.strip('/')}/"
-        self.apikey = conf.get(CONF_API_KEY)
+        url_base = conf.get(CONF_URLBASE)
+        if url_base:
+            url_base = f"{url_base.strip('/')}/"
+        self.host_config = PyArrHostConfiguration(
+            api_token=conf[CONF_API_KEY],
+            hostname=conf[CONF_HOST],
+            port=conf[CONF_PORT],
+            ssl=conf[CONF_SSL],
+            base_api_path=url_base,
+        )
+        self.client = RadarrClient(
+            self.host_config, session=async_get_clientsession(hass)
+        )
         self.included = conf.get(CONF_INCLUDED)
-        self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "https" if conf.get(CONF_SSL) else "http"
-        self.data: list[Any] = []
+        self.days = conf[CONF_DAYS]
+        self.data: dict[str, Any] = {}
+
         self._attr_name = f"Radarr {description.name}"
+        self._attr_available = True
         if description.key == "diskspace":
-            self._attr_native_unit_of_measurement = conf.get(CONF_UNIT)
-        self._attr_available = False
+            self._attr_native_unit_of_measurement = conf[CONF_UNIT]
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        attributes = {}
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra state attributes for entity."""
         sensor_type = self.entity_description.key
-        if sensor_type == "upcoming":
-            for movie in self.data:
-                attributes[to_key(movie)] = get_release_date(movie)
-        elif sensor_type == "commands":
-            for command in self.data:
-                attributes[command["name"]] = command["state"]
-        elif sensor_type == "diskspace":
-            for data in self.data:
-                free_space = to_unit(data["freeSpace"], self.native_unit_of_measurement)
+        if sensor_type == "diskspace":
+            data = {}
+            for volume in self.data[sensor_type]:
+                free_space = to_unit(volume.freeSpace, self.native_unit_of_measurement)
                 total_space = to_unit(
-                    data["totalSpace"], self.native_unit_of_measurement
+                    volume.totalSpace, self.native_unit_of_measurement
                 )
                 percentage_used = (
                     0 if total_space == 0 else free_space / total_space * 100
                 )
-                attributes[data["path"]] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
+                data[volume.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
                     free_space,
                     total_space,
                     self.native_unit_of_measurement,
                     percentage_used,
                 )
-        elif sensor_type == "movies":
-            for movie in self.data:
-                attributes[to_key(movie)] = movie["downloaded"]
-        elif sensor_type == "status":
-            attributes = self.data
+            return data
 
-        return attributes
+        if sensor_type == "upcoming":
+            return {
+                movie_title(movie): get_release_date(movie)
+                for movie in self.data[sensor_type]
+            }
 
-    def update(self):
-        """Update the data for the sensor."""
+        if sensor_type == "movies":
+            return {
+                movie_title(movie): movie.attributes.get("hasFile", False)
+                for movie in self.data[sensor_type]
+            }
+
+        if sensor_type == "commands":
+            return {command.name: command.status for command in self.data[sensor_type]}
+
+        if sensor_type == "status":
+            return self.data[sensor_type].attributes
+
+        return {}
+
+    @property
+    def native_value(self) -> str | int | None:
+        """Return the native value of the entity."""
         sensor_type = self.entity_description.key
-        time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
-        start = get_date(time_zone)
-        end = get_date(time_zone, self.days)
-        try:
-            res = requests.get(
-                ENDPOINTS[sensor_type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start, end
-                ),
-                headers={"X-Api-Key": self.apikey},
-                timeout=10,
-            )
-        except OSError:
-            _LOGGER.warning("Host %s is not available", self.host)
-            self._attr_available = False
-            self._attr_native_value = None
-            return
-
-        if res.status_code == HTTPStatus.OK:
-            if sensor_type in ("upcoming", "movies", "commands"):
-                self.data = res.json()
-                self._attr_native_value = len(self.data)
-            elif sensor_type == "diskspace":
-                # If included paths are not provided, use all data
-                if self.included == []:
-                    self.data = res.json()
-                else:
-                    # Filter to only show lists that are included
-                    self.data = list(
-                        filter(lambda x: x["path"] in self.included, res.json())
-                    )
-                self._attr_native_value = "{:.2f}".format(
-                    to_unit(
-                        sum(data["freeSpace"] for data in self.data),
-                        self.native_unit_of_measurement,
-                    )
+        if sensor_type == "diskspace":
+            return "{:.2f}".format(
+                to_unit(
+                    sum(volume.freeSpace for volume in self.data[sensor_type]),
+                    self.native_unit_of_measurement,
                 )
+            )
+
+        if sensor_type == "upcoming":
+            return len(self.data[sensor_type])
+
+        if sensor_type == "movies":
+            return len(self.data[sensor_type])
+
+        if sensor_type == "commands":
+            return len(self.data[sensor_type])
+
+        if sensor_type == "status":
+            return self.data[sensor_type].version
+
+        return None
+
+    async def async_update(self) -> None:
+        """Update the sensor."""
+        sensor_type = self.entity_description.key
+        start = datetime.combine(date.today(), datetime.min.time())
+        end = start + timedelta(days=self.days)
+        try:
+            if sensor_type == "diskspace":
+                self.data[sensor_type] = await self.client.async_get_diskspace()
+            elif sensor_type == "upcoming":
+                self.data[sensor_type] = await self.client.async_get_calendar(
+                    start, end
+                )
+            elif sensor_type == "movies":
+                self.data[sensor_type] = await self.client.async_get_movies()
+                if not isinstance(self.data[sensor_type], list):
+                    self.data[sensor_type] = [self.data[sensor_type]]
+            elif sensor_type == "commands":
+                self.data[sensor_type] = await self.client.async_get_commands()
+                if not isinstance(self.data[sensor_type], list):
+                    self.data[sensor_type] = [self.data[sensor_type]]
             elif sensor_type == "status":
-                self.data = res.json()
-                self._attr_native_value = self.data["version"]
+                self.data[sensor_type] = await self.client.async_get_system_status()
+            else:
+                raise ValueError(f"Unknown sensor type {sensor_type}")
+        except ArrException as err:
+            if self._attr_available:
+                _LOGGER.warning(err)
+            self._attr_available = False
+        else:
             self._attr_available = True
+            if sensor_type == "diskspace" and self.included:
+                self.data[sensor_type] = [
+                    volume
+                    for volume in self.data[sensor_type]
+                    if volume.path in self.included
+                ]
 
 
-def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days."""
-    day = 60 * 60 * 24
-    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
-
-
-def get_release_date(data):
+def get_release_date(movie: RadarrMovie) -> str | None:
     """Get release date."""
-    if not (date := data.get("physicalRelease")):
-        date = data.get("inCinemas")
-    return date
+    for key in ("digitalRelease", "physicalRelease", "inCinemas"):
+        if key in movie.attributes:
+            return getattr(movie, key).isoformat()
+    return None
 
 
-def to_key(data):
+def movie_title(movie: RadarrMovie) -> str:
     """Get key."""
-    return "{} ({})".format(data["title"], data["year"])
+    return f"{movie.title} ({movie.year})"
 
 
 def to_unit(value, unit):
