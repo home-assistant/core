@@ -1743,6 +1743,8 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     assert msg["type"] == "event"
     assert msg["event"]["events"] == []
 
+    hass.states.async_set("binary_sensor.should_not_appear", STATE_ON)
+    hass.states.async_set("binary_sensor.should_not_appear", STATE_OFF)
     hass.bus.async_fire("mock_event", {"device_id": device.id})
     await hass.async_block_till_done()
 
