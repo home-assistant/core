@@ -227,7 +227,7 @@ async def test_encoding_default(hass, calls, setup_comp):
         },
     )
 
-    setup_comp.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
+    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, "utf-8")
 
 
 async def test_encoding_custom(hass, calls, setup_comp):
@@ -243,4 +243,4 @@ async def test_encoding_custom(hass, calls, setup_comp):
         },
     )
 
-    setup_comp.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)
+    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, None)

@@ -1074,6 +1074,10 @@ async def help_test_entity_id_update_subscriptions(
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
+    assert mqtt_mock.async_subscribe.call_count == len(topics) + 3
+    for topic in topics:
+        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+    mqtt_mock.async_subscribe.reset_mock()
 
     registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
     await hass.async_block_till_done()

@@ -139,7 +139,7 @@ async def test_qos_encoding_default(hass, mqtt_mock_entry, caplog):
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 0, "utf-8")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 0, "utf-8")
 
 
 async def test_qos_encoding_custom(hass, mqtt_mock_entry, caplog):
@@ -165,7 +165,7 @@ async def test_qos_encoding_custom(hass, mqtt_mock_entry, caplog):
         },
     )
     await async_subscribe_topics(hass, sub_state)
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 1, "utf-16")
+    mqtt_mock.async_subscribe.assert_called_with("test-topic1", ANY, 1, "utf-16")
 
 
 async def test_no_change(hass, mqtt_mock_entry, caplog):

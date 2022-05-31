@@ -366,7 +366,7 @@ async def test_status_docked(hass, mqtt_mock_entry):
     assert state.state == STATE_OFF
 
 
-async def test_status_charging(hass, mqtt_mock):
+async def test_status_charging(hass, mqtt_mock_entry):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
@@ -375,6 +375,7 @@ async def test_status_charging(hass, mqtt_mock):
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
     await hass.async_block_till_done()
+    await mqtt_mock_entry()
 
     message = """{
         "charging": true
