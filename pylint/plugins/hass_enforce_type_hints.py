@@ -22,10 +22,10 @@ class TypeHintMatch:
 
     function_name: str
     arg_types: dict[int, str]
-    return_type: list[str] | str | None
+    return_type: list[str] | str | None | object
 
 
-_TYPE_HINT_MATCHERS: dict[str, re.Pattern] = {
+_TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
     # x_of_y matches items such as "Awaitable[None]"
@@ -360,7 +360,9 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 }
 
 
-def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) -> bool:
+def _is_valid_type(
+    expected_type: list[str] | str | None | object, node: astroid.NodeNG
+) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
         return True
@@ -374,6 +376,8 @@ def _is_valid_type(expected_type: list[str] | str | None, node: astroid.NodeNG) 
     # Const occurs when the type is None
     if expected_type is None or expected_type == "None":
         return isinstance(node, astroid.Const) and node.value is None
+
+    assert isinstance(expected_type, str)
 
     # Const occurs when the type is an Ellipsis
     if expected_type == "...":
