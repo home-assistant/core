@@ -8,7 +8,7 @@ import socket
 from typing import Any
 
 from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data.base import ProtectDeviceModel
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -64,6 +64,16 @@ def async_get_devices_by_type(
 ) -> dict[str, ProtectDeviceModel]:
     """Get devices by type."""
     devices: dict[str, ProtectDeviceModel] = getattr(
+        api.bootstrap, f"{device_type.value}s"
+    )
+    return devices
+
+
+def async_get_adoptable_devices_by_type(
+    api: ProtectApiClient, device_type: ModelType
+) -> dict[str, ProtectAdoptableDeviceModel]:
+    """Get adoptable devices by type."""
+    devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
         api.bootstrap, f"{device_type.value}s"
     )
     return devices
