@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import vacuum
-from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
+from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC
 from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_legacy import (

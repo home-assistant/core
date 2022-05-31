@@ -35,8 +35,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -57,6 +57,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -74,7 +75,7 @@ CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
 STATE = "state"
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_RW_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,

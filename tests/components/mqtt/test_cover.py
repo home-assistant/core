@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
 )
-from homeassistant.components.mqtt import CONF_STATE_TOPIC
+from homeassistant.components.mqtt.const import CONF_STATE_TOPIC
 from homeassistant.components.mqtt.cover import (
     CONF_GET_POSITION_TEMPLATE,
     CONF_GET_POSITION_TOPIC,
