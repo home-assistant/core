@@ -40,7 +40,10 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    return True
+    onewirehub: OneWireHub = hass.data[DOMAIN][config_entry.entry_id]
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device.id) for device in onewirehub.devices or []
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
