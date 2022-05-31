@@ -475,7 +475,7 @@ async def ws_get_events(
     )
 
     connection.send_message(
-        await hass.async_add_executor_job(
+        await get_instance(hass).async_add_executor_job(
             _ws_formatted_get_events,
             msg["id"],
             start_time,
