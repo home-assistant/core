@@ -2073,7 +2073,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.05.0
+regenmaschine==2022.05.1
 
 # homeassistant.components.renault
 renault-api==0.1.11

@@ -1372,7 +1372,7 @@ rachiopy==1.0.3
 radios==0.1.1
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.05.0
+regenmaschine==2022.05.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
