@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_OPENING,
     STATE_PAUSED,
-    STATE_PLAYING
+    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
