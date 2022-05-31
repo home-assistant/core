@@ -423,10 +423,13 @@ class TemplateSensor(TemplateEntity, SensorEntity):
         self,
         hass: HomeAssistant,
         config: dict[str, Any],
+        fallback_name: str | None,
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(
+            hass, config=config, fallback_name=fallback_name, unique_id=unique_id
+        )
 
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)

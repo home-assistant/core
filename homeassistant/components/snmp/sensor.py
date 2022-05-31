@@ -17,6 +17,7 @@ from pysnmp.hlapi.asyncio import (
 )
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -47,6 +48,7 @@ from .const import (
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_HOST,
+    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
@@ -60,7 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BASEOID): cv.string,
         vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
@@ -150,7 +152,9 @@ class SnmpSensor(TemplateSensor):
 
     def __init__(self, hass, data, config, unique_id):
         """Initialize the sensor."""
-        super().__init__(hass, config=config, unique_id=unique_id)
+        super().__init__(
+            hass, config=config, unique_id=unique_id, fallback_name=DEFAULT_NAME
+        )
         self.data = data
         self._state = None
         self._value_template = config.get(CONF_VALUE_TEMPLATE)
