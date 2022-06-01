@@ -600,6 +600,7 @@ build.json @home-assistant/supervisor
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
 /homeassistant/components/matrix/ @tinloaf
+/tests/components/matrix/ @tinloaf
 /homeassistant/components/mazda/ @bdr99
 /tests/components/mazda/ @bdr99
 /homeassistant/components/meater/ @Sotolotl @emontnemery

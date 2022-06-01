@@ -684,6 +684,9 @@ lxml==4.8.0
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
 
+# homeassistant.components.matrix
+matrix-nio==0.19.0
+
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
 

@@ -12,7 +12,6 @@ from PIL import Image
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
 from nio.events.room_events import RoomMessageText
-from nio.exceptions import LocalProtocolError, RemoteProtocolError
 from nio.responses import (
     ErrorResponse,
     JoinError,
@@ -20,6 +19,7 @@ from nio.responses import (
     LoginError,
     Response,
     UploadError,
+    UploadResponse,
 )
 import voluptuous as vol
 
@@ -33,7 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
@@ -74,7 +74,7 @@ COMMAND_SCHEMA = vol.All(
             vol.Exclusive(CONF_WORD, "trigger"): cv.string,
             vol.Exclusive(CONF_EXPRESSION, "trigger"): cv.is_regex,
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_ROOMS): vol.All(cv.ensure_list, [cv.string]),
         }
     ),
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
@@ -114,26 +114,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
 
-    try:
-        bot = MatrixBot(
-            hass,
-            os.path.join(hass.config.path(), SESSION_FILE),
-            config[CONF_HOMESERVER],
-            config[CONF_VERIFY_SSL],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_ROOMS],
-            config[CONF_COMMANDS],
-        )
-        hass.data[DOMAIN] = bot
-    except LocalProtocolError as exception:
-        _LOGGER.exception("Matrix failed to log in: %s", exception)
-        return False
+    matrix_bot = MatrixBot(
+        hass,
+        os.path.join(hass.config.path(), SESSION_FILE),
+        config[CONF_HOMESERVER],
+        config[CONF_VERIFY_SSL],
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        config[CONF_ROOMS],
+        config[CONF_COMMANDS],
+    )
+    hass.data[DOMAIN] = matrix_bot
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        bot.handle_send_message,
+        matrix_bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
     )
 
@@ -142,6 +138,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 class MatrixBot:
     """The Matrix Bot."""
+
+    _client: AsyncClient
 
     def __init__(
         self,
@@ -165,6 +163,10 @@ class MatrixBot:
         self._mx_id = username
         self._password = password
 
+        self._client = AsyncClient(
+            homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
+        )
+
         self._listening_rooms = listening_rooms
 
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
@@ -173,7 +175,8 @@ class MatrixBot:
 
         async def stop_client(_) -> None:
             """Run once when Home Assistant stops."""
-            return await self._client.close()
+            if self._client is not None:
+                return await self._client.close()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
@@ -182,6 +185,8 @@ class MatrixBot:
             self._auth_tokens = await self._get_auth_tokens()
             await self._login()
             await self._join_rooms()
+            # Sync once so that we don't respond to past events.
+            await self._client.sync(timeout=30_000)
 
             self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
@@ -218,9 +223,9 @@ class MatrixBot:
         if event.body.startswith("!"):
             # Could trigger a single-word command.
             pieces = event.body.split()
-            cmd = WordCommand(pieces[0].rstrip("!"))
+            word = WordCommand(pieces[0].lstrip("!"))
 
-            if command := self._word_commands.get(room_id, {}).get(cmd):
+            if command := self._word_commands.get(room_id, {}).get(word):
                 event_data = {
                     "command": command[CONF_NAME],
                     "sender": event.sender,
@@ -247,19 +252,18 @@ class MatrixBot:
         join_response = await self._client.join(room_id_or_alias)
 
         if isinstance(join_response, JoinResponse):
-            _LOGGER.debug("Joined or already in room %s", room_id_or_alias)
+            _LOGGER.debug("Joined or already in room '%s'", room_id_or_alias)
         elif isinstance(join_response, JoinError):
-            raise RemoteProtocolError(
-                f"Could not join room '{room_id_or_alias}': {join_response}"
+            _LOGGER.error(
+                "Could not join room '%s': %s",
+                room_id_or_alias,
+                join_response,
             )
 
     async def _join_rooms(self):
         """Join the Matrix rooms that we listen for commands in."""
         rooms = {self._join_room(room_id) for room_id in self._listening_rooms}
-        try:
-            await asyncio.wait(rooms)
-        except RemoteProtocolError as exception:
-            _LOGGER.exception(str(exception))
+        await asyncio.wait(rooms)
 
     async def _get_auth_tokens(self) -> dict[str, str]:
         """Read sorted authentication tokens from disk."""
@@ -292,46 +296,44 @@ class MatrixBot:
         )
 
     async def _login(self):
-        """Login to the Matrix homeserver and return the client instance."""
-        # Attempt to generate a valid client using either of the two possible
-        # login methods:
+        """
+        Login to the Matrix homeserver.
 
-        client = AsyncClient(
-            homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
-        )
+        Attempts to use the stored authentication token.
+        If that fails, then tries using the password.
+        If that also fails, raises LocalProtocolError.
+        """
 
         # If we have an authentication token
-        if token := self._auth_tokens.get(self._mx_id) is not None:
-            response = await client.login(token=token)
+        if (token := self._auth_tokens.get(self._mx_id)) is not None:
+            response = await self._client.login(token=token)
             _LOGGER.debug("Logging in using stored token")
 
             if isinstance(response, LoginError):
                 _LOGGER.warning(
-                    "Login by token failed, falling back to password: %d, %s",
+                    "Login by token failed: %s, %s",
                     response.status_code,
                     response.message,
                 )
 
         # If the token login did not succeed
-        if not client.logged_in:
-            response = await client.login(password=self._password)
+        if not self._client.logged_in:
+            response = await self._client.login(password=self._password)
             _LOGGER.debug("Logging in using password")
 
             if isinstance(response, LoginError):
                 _LOGGER.warning(
-                    "Login by password failed: %d, %s",
+                    "Login by password failed: %s, %s",
                     response.status_code,
                     response.message,
                 )
 
-        if not client.logged_in:
-            raise LocalProtocolError(
+        if not self._client.logged_in:
+            raise ConfigEntryAuthFailed(
                 "Login failed, both token and username/password are invalid"
             )
 
-        await self._store_auth_token(client.access_token)
-
-        self._client = client
+        await self._store_auth_token(self._client.access_token)
 
     async def _send_image(self, image_path: str, target_rooms: list[RoomID]) -> None:
         """Upload an image, then send it to all target_rooms."""
@@ -343,12 +345,11 @@ class MatrixBot:
         image = Image.open(image_path)
         (width, height) = image.size
         mime_type = mimetypes.guess_type(image_path)[0]
-
         file_stat = await aiofiles.os.stat(image_path)
 
         _LOGGER.debug("Uploading file from path, %s", image_path)
         async with aiofiles.open(image_path, "r+b") as image_file:
-            response, _ = await self._client.upload(
+            response = await self._client.upload(
                 image_file,
                 content_type=mime_type,
                 filename=os.path.basename(image_path),
@@ -357,6 +358,9 @@ class MatrixBot:
         if isinstance(response, UploadError):
             _LOGGER.error("Unable to upload image to the homeserver: %s", response)
             return
+
+        assert isinstance(response, UploadResponse)
+        _LOGGER.debug("Successfully uploaded image to the homeserver")
 
         content = {
             "body": os.path.basename(image_path),
@@ -374,10 +378,11 @@ class MatrixBot:
             await self._client.room_send(
                 room_id=room, message_type="m.room.message", content=content
             )
+            _LOGGER.debug("Image '%s' sent to room '%s'", image_path, room)
 
     async def _send_message(
-        self, message: str, data: dict | None, target_rooms: list[RoomID]
-    ):
+        self, message: str, target_rooms: list[RoomID], data: dict | None
+    ) -> None:
         """Send a message to the Matrix server."""
         for target_room in target_rooms:
             response: Response = await self._client.room_send(
@@ -395,13 +400,13 @@ class MatrixBot:
                 _LOGGER.debug("Message delivered to room '%s'", target_room)
 
         if data is not None and len(target_rooms) > 0:
-            for img in data.get(ATTR_IMAGES, []):
-                await self._send_image(img, target_rooms)
+            for image_path in data.get(ATTR_IMAGES, []):
+                await self._send_image(image_path, target_rooms)
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
         return await self._send_message(
-            service.data.get(ATTR_MESSAGE),  # type: ignore[arg-type]
-            service.data.get(ATTR_DATA),
+            service.data[ATTR_MESSAGE],
             service.data[ATTR_TARGET],
+            service.data.get(ATTR_DATA),
         )
