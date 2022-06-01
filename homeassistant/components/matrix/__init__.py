@@ -32,7 +32,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -173,14 +173,14 @@ class MatrixBot:
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
         self._load_commands(commands)
 
-        async def stop_client(_) -> None:
+        async def stop_client(event: HassEvent) -> None:
             """Run once when Home Assistant stops."""
             if self._client is not None:
-                return await self._client.close()
+                await self._client.close()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
-        async def handle_startup(_) -> None:
+        async def handle_startup(event: HassEvent) -> None:
             """Run once when Home Assistant finished startup."""
             self._auth_tokens = await self._get_auth_tokens()
             await self._login()
@@ -190,11 +190,11 @@ class MatrixBot:
 
             self._client.add_event_callback(self._handle_room_message, RoomMessageText)
 
-            return await self._client.sync_forever(timeout=30_000)  # milliseconds.
+            await self._client.sync_forever(timeout=30_000)  # milliseconds.
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
-    def _load_commands(self, commands: list[ConfigCommand]):
+    def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
             command.setdefault(CONF_ROOMS, self._listening_rooms)  # type: ignore[misc]
@@ -260,7 +260,7 @@ class MatrixBot:
                 join_response,
             )
 
-    async def _join_rooms(self):
+    async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
         rooms = {self._join_room(room_id) for room_id in self._listening_rooms}
         await asyncio.wait(rooms)
@@ -287,7 +287,7 @@ class MatrixBot:
             return auth_tokens
         return {}
 
-    async def _store_auth_token(self, token: str):
+    async def _store_auth_token(self, token: str) -> None:
         """Store authentication token to session and persistent storage."""
         self._auth_tokens[self._mx_id] = token
 
@@ -295,7 +295,7 @@ class MatrixBot:
             save_json, self._session_filepath, self._auth_tokens
         )
 
-    async def _login(self):
+    async def _login(self) -> None:
         """
         Login to the Matrix homeserver.
 
