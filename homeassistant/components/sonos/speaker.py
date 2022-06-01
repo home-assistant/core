@@ -57,6 +57,7 @@ from .const import (
     SONOS_VANISHED,
     SUBSCRIPTION_TIMEOUT,
 )
+from .exception import S1BatteryMissing, SonosUpdateError
 from .favorites import SonosFavorites
 from .helpers import soco_error
 from .media import SonosMedia
@@ -81,16 +82,6 @@ UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
-    """Fetch battery_info from the given SoCo object.
-
-    Returns None if the device doesn't support battery info
-    or if the device is offline.
-    """
-    with contextlib.suppress(ConnectionError, TimeoutError, SoCoException):
-        return soco.get_battery_info()
 
 
 class SonosSpeaker:
@@ -146,6 +137,7 @@ class SonosSpeaker:
         self.cross_fade: bool | None = None
         self.bass: int | None = None
         self.treble: int | None = None
+        self.loudness: bool | None = None
 
         # Home theater
         self.audio_delay: int | None = None
@@ -207,8 +199,11 @@ class SonosSpeaker:
                 self.hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, self, audio_format
             )
 
-        if battery_info := fetch_battery_info_or_none(self.soco):
-            self.battery_info = battery_info
+        try:
+            self.battery_info = self.fetch_battery_info()
+        except SonosUpdateError:
+            _LOGGER.debug("No battery available for %s", self.zone_name)
+        else:
             # Battery events can be infrequent, polling is still necessary
             self._battery_poll_timer = track_time_interval(
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
@@ -512,6 +507,9 @@ class SonosSpeaker:
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
 
+        if loudness := variables.get("loudness"):
+            self.loudness = loudness["Master"] == "1"
+
         for bool_var in (
             "dialog_level",
             "night_mode",
@@ -530,6 +528,13 @@ class SonosSpeaker:
     #
     # Speaker availability methods
     #
+    @soco_error()
+    def ping(self) -> None:
+        """Test device availability. Failure will raise SonosUpdateError."""
+        self.soco.renderingControl.GetVolume(
+            [("InstanceID", 0), ("Channel", "Master")], timeout=1
+        )
+
     @callback
     def speaker_activity(self, source):
         """Track the last activity on this speaker, set availability and resubscribe."""
@@ -560,23 +565,13 @@ class SonosSpeaker:
             return
 
         try:
-            # Make a short-timeout call as a final check
-            # before marking this speaker as unavailable
-            await self.hass.async_add_executor_job(
-                partial(
-                    self.soco.renderingControl.GetVolume,
-                    [("InstanceID", 0), ("Channel", "Master")],
-                    timeout=1,
-                )
-            )
-        except OSError:
+            await self.hass.async_add_executor_job(self.ping)
+        except SonosUpdateError:
             _LOGGER.warning(
                 "No recent activity and cannot reach %s, marking unavailable",
                 self.zone_name,
             )
             await self.async_offline()
-        else:
-            self.speaker_activity("timeout poll")
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
@@ -619,6 +614,15 @@ class SonosSpeaker:
     #
     # Battery management
     #
+    @soco_error()
+    def fetch_battery_info(self) -> dict[str, Any]:
+        """Fetch battery_info for the speaker."""
+        battery_info = self.soco.get_battery_info()
+        if not battery_info:
+            # S1 firmware returns an empty payload
+            raise S1BatteryMissing
+        return battery_info
+
     async def async_update_battery_info(self, more_info: str) -> None:
         """Update battery info using a SonosEvent payload value."""
         battery_dict = dict(x.split(":") for x in more_info.split(","))
@@ -658,11 +662,17 @@ class SonosSpeaker:
 
         if is_charging == self.charging:
             self.battery_info.update({"Level": int(battery_dict["BattPct"])})
+        elif not is_charging:
+            # Avoid polling the speaker if possible
+            self.battery_info["PowerSource"] = "BATTERY"
         else:
-            if battery_info := await self.hass.async_add_executor_job(
-                fetch_battery_info_or_none, self.soco
-            ):
-                self.battery_info = battery_info
+            # Poll to obtain current power source not provided by event
+            try:
+                self.battery_info = await self.hass.async_add_executor_job(
+                    self.fetch_battery_info
+                )
+            except SonosUpdateError as err:
+                _LOGGER.debug("Could not request current power source: %s", err)
 
     @property
     def power_source(self) -> str | None:
@@ -692,10 +702,13 @@ class SonosSpeaker:
         ):
             return
 
-        if battery_info := await self.hass.async_add_executor_job(
-            fetch_battery_info_or_none, self.soco
-        ):
-            self.battery_info = battery_info
+        try:
+            self.battery_info = await self.hass.async_add_executor_job(
+                self.fetch_battery_info
+            )
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not poll battery info: %s", err)
+        else:
             self.async_write_entity_states()
 
     #

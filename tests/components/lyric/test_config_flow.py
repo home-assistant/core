@@ -41,7 +41,7 @@ async def test_abort_if_no_configuration(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "missing_credentials"
 
 
 async def test_full_flow(

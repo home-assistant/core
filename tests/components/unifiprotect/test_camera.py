@@ -6,9 +6,7 @@ from copy import copy
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera as ProtectCamera
-from pyunifiprotect.data.devices import CameraChannel
-from pyunifiprotect.data.types import StateType
+from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (

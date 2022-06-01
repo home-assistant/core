@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
-            "no_devices": "Hesapta cihaz bulunamad\u0131",
             "unknown": "Beklenmeyen hata"
         },
         "step": {

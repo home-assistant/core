@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "authorize_url_timeout": "Tiempo de espera agotado durante la generaci\u00f3n de la URL de autorizaci\u00f3n.",
             "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
@@ -18,6 +18,5 @@
                 "title": "\u00bfQuieres iniciar la configuraci\u00f3n?"
             }
         }
-    },
-    "title": "Neato Botvac"
+    }
 }

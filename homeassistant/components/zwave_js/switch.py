@@ -9,6 +9,7 @@ from zwave_js_server.const import TARGET_VALUE_PROPERTY
 from zwave_js_server.const.command_class.barrier_operator import (
     BarrierEventSignalingSubsystemState,
 )
+from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +37,15 @@ async def async_setup_entry(
     @callback
     def async_add_switch(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Switch."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "barrier_event_signaling_state":
             entities.append(
-                ZWaveBarrierEventSignalingSwitch(config_entry, client, info)
+                ZWaveBarrierEventSignalingSwitch(config_entry, driver, info)
             )
         else:
-            entities.append(ZWaveSwitch(config_entry, client, info))
+            entities.append(ZWaveSwitch(config_entry, driver, info))
 
         async_add_entities(entities)
 
@@ -57,10 +62,10 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize the switch."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
@@ -89,11 +94,11 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZWaveBarrierEventSignalingSwitch entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self._state: bool | None = None
 
         self._update_state()

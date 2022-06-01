@@ -1,7 +1,6 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
-from functools import partial
 import math
 from statistics import mean
 from unittest.mock import patch
@@ -30,6 +29,7 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
+    do_adhoc_statistics,
     wait_recording_done,
 )
 
@@ -101,7 +101,6 @@ def test_compile_hourly_statistics(
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -113,7 +112,7 @@ def test_compile_hourly_statistics(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -157,7 +156,6 @@ def test_compile_hourly_statistics_purged_state_changes(
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -181,7 +179,7 @@ def test_compile_hourly_statistics_purged_state_changes(
     hist = history.get_significant_states(hass, zero, four)
     assert not hist
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -218,7 +216,6 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     """Test compiling hourly statistics for unsupported sensor."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     four, states = record_states(hass, zero, "sensor.test1", attributes)
@@ -250,7 +247,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -361,7 +358,6 @@ async def test_compile_hourly_sum_statistics_amount(
     period2_end = period0 + timedelta(minutes=15)
     client = await hass_ws_client()
     hass.config.units = units
-    recorder = hass.data[DATA_INSTANCE]
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -382,17 +378,11 @@ async def test_compile_hourly_sum_statistics_amount(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    await hass.async_add_executor_job(
-        partial(recorder.do_adhoc_statistics, start=period0)
-    )
+    do_adhoc_statistics(hass, start=period0)
     await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(
-        partial(recorder.do_adhoc_statistics, start=period1)
-    )
+    do_adhoc_statistics(hass, start=period1)
     await async_wait_recording_done(hass)
-    await hass.async_add_executor_job(
-        partial(recorder.do_adhoc_statistics, start=period2)
-    )
+    do_adhoc_statistics(hass, start=period2)
     await async_wait_recording_done(hass)
     statistic_ids = await hass.async_add_executor_job(list_statistic_ids, hass)
     assert statistic_ids == [
@@ -525,7 +515,6 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -573,8 +562,8 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=zero)
-    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=5))
+    do_adhoc_statistics(hass, start=zero)
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=5))
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -632,7 +621,6 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -666,7 +654,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -712,7 +700,6 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     """Test compiling hourly statistics with nan and inf states."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -742,7 +729,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -817,7 +804,6 @@ def test_compile_hourly_sum_statistics_negative_state(
     zero = dt_util.utcnow()
     hass = hass_recorder()
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
-    recorder = hass.data[DATA_INSTANCE]
 
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -855,7 +841,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     )
     assert dict(states)[entity_id] == dict(hist)[entity_id]
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert {
@@ -911,7 +897,6 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -930,11 +915,11 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
+    do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
+    do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period2)
+    do_adhoc_statistics(hass, start=period2)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1006,7 +991,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1025,11 +1009,11 @@ def test_compile_hourly_sum_statistics_total_increasing(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
+    do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
+    do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period2)
+    do_adhoc_statistics(hass, start=period2)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1099,7 +1083,6 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1118,15 +1101,15 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
+    do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
+    do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
         "strictly increasing."
     ) not in caplog.text
-    recorder.do_adhoc_statistics(start=period2)
+    do_adhoc_statistics(hass, start=period2)
     wait_recording_done(hass)
     state = states["sensor.test1"][6].state
     previous_state = float(states["sensor.test1"][5].state)
@@ -1196,7 +1179,6 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     sns1_attr = {
@@ -1225,11 +1207,11 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
+    do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
+    do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period2)
+    do_adhoc_statistics(hass, start=period2)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1290,7 +1272,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     sns1_attr = {**ENERGY_SENSOR_ATTRIBUTES, "last_reset": None}
@@ -1317,11 +1298,11 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(start=period0)
+    do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period1)
+    do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(start=period2)
+    do_adhoc_statistics(hass, start=period2)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1483,7 +1464,6 @@ def test_compile_hourly_statistics_unchanged(
     """Test compiling hourly statistics, with no changes during the hour."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1495,7 +1475,7 @@ def test_compile_hourly_statistics_unchanged(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=four)
+    do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
     stats = statistics_during_period(hass, four, period="5minute")
     assert stats == {
@@ -1520,7 +1500,6 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     """Test compiling hourly statistics, with the sensor being partially unavailable."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     four, states = record_states_partially_unavailable(
@@ -1529,7 +1508,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -1572,7 +1551,6 @@ def test_compile_hourly_statistics_unavailable(
     """Test compiling hourly statistics, with the sensor being unavailable."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1588,7 +1566,7 @@ def test_compile_hourly_statistics_unavailable(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=four)
+    do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
     stats = statistics_during_period(hass, four, period="5minute")
     assert stats == {
@@ -1613,14 +1591,13 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
     """Test compiling hourly statistics throws."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics",
         side_effect=Exception,
     ):
-        recorder.do_adhoc_statistics(start=zero)
+        do_adhoc_statistics(hass, start=zero)
         wait_recording_done(hass)
     assert "Error while processing event StatisticsTask" in caplog.text
 
@@ -1737,7 +1714,6 @@ def test_compile_hourly_statistics_changing_units_1(
     """Test compiling hourly statistics where units change from one hour to the next."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1758,7 +1734,7 @@ def test_compile_hourly_statistics_changing_units_1(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
@@ -1789,7 +1765,7 @@ def test_compile_hourly_statistics_changing_units_1(
         ]
     }
 
-    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=10))
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert (
         "The unit of sensor.test1 (cats) does not match the unit of already compiled "
@@ -1840,7 +1816,6 @@ def test_compile_hourly_statistics_changing_units_2(
     """Test compiling hourly statistics where units change during an hour."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1857,7 +1832,7 @@ def test_compile_hourly_statistics_changing_units_2(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=zero + timedelta(seconds=30 * 5))
+    do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 5))
     wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" in caplog.text
     assert "and matches the unit of already compiled statistics" not in caplog.text
@@ -1893,7 +1868,6 @@ def test_compile_hourly_statistics_changing_units_3(
     """Test compiling hourly statistics where units change from one hour to the next."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -1914,7 +1888,7 @@ def test_compile_hourly_statistics_changing_units_3(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
@@ -1945,7 +1919,7 @@ def test_compile_hourly_statistics_changing_units_3(
         ]
     }
 
-    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=10))
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" in caplog.text
     assert f"matches the unit of already compiled statistics ({unit})" in caplog.text
@@ -1991,7 +1965,6 @@ def test_compile_hourly_statistics_changing_device_class_1(
     """Test compiling hourly statistics where device class changes from one hour to the next."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
 
@@ -2002,7 +1975,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
@@ -2047,7 +2020,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     assert dict(states) == dict(hist)
 
     # Run statistics again, we get a warning, and no additional statistics is generated
-    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=10))
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert (
         f"The normalized unit of sensor.test1 ({statistic_unit}) does not match the "
@@ -2095,7 +2068,6 @@ def test_compile_hourly_statistics_changing_device_class_2(
     """Test compiling hourly statistics where device class changes from one hour to the next."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
 
@@ -2107,7 +2079,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
 
-    recorder.do_adhoc_statistics(start=zero)
+    do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
     assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
@@ -2152,7 +2124,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     assert dict(states) == dict(hist)
 
     # Run statistics again, we get a warning, and no additional statistics is generated
-    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=10))
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert (
         f"The unit of sensor.test1 ({state_unit}) does not match the "
@@ -2202,7 +2174,6 @@ def test_compile_hourly_statistics_changing_statistics(
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period0 + timedelta(minutes=10)
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes_1 = {
@@ -2216,7 +2187,7 @@ def test_compile_hourly_statistics_changing_statistics(
         "unit_of_measurement": unit,
     }
     four, states = record_states(hass, period0, "sensor.test1", attributes_1)
-    recorder.do_adhoc_statistics(start=period0)
+    do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -2250,7 +2221,7 @@ def test_compile_hourly_statistics_changing_statistics(
     hist = history.get_significant_states(hass, period0, four)
     assert dict(states) == dict(hist)
 
-    recorder.do_adhoc_statistics(start=period1)
+    do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -2308,13 +2279,7 @@ def test_compile_hourly_statistics_changing_statistics(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-@pytest.mark.parametrize(
-    "db_supports_row_number,in_log,not_in_log",
-    [(True, "row_number", None), (False, None, "row_number")],
-)
-def test_compile_statistics_hourly_daily_monthly_summary(
-    hass_recorder, caplog, db_supports_row_number, in_log, not_in_log
-):
+def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     """Test compiling hourly statistics + monthly and daily summary."""
     zero = dt_util.utcnow()
     # August 31st, 23:00 local time
@@ -2328,7 +2293,6 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         # Remove this after dropping the use of the hass_recorder fixture
         hass.config.set_time_zone("America/Regina")
     recorder = hass.data[DATA_INSTANCE]
-    recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -2447,7 +2411,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     # Generate 5-minute statistics for two hours
     start = zero
     for i in range(24):
-        recorder.do_adhoc_statistics(start=start)
+        do_adhoc_statistics(hass, start=start)
         wait_recording_done(hass)
         start += timedelta(minutes=5)
 
@@ -2722,10 +2686,6 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     assert stats == expected_stats
 
     assert "Error while processing event StatisticsTask" not in caplog.text
-    if in_log:
-        assert in_log in caplog.text
-    if not_in_log:
-        assert not_in_log not in caplog.text
 
 
 def record_states(hass, zero, entity_id, attributes, seq=None):
@@ -2841,7 +2801,7 @@ async def test_validate_statistics_supported_device_class(
 
     # Statistics has run, invalid state - expect error
     await async_recorder_block_till_done(hass)
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     hass.states.async_set(
         "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
@@ -2856,7 +2816,7 @@ async def test_validate_statistics_supported_device_class(
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
@@ -2915,7 +2875,7 @@ async def test_validate_statistics_supported_device_class_2(
     await assert_validation_result(client, {})
 
     # Statistics has run, device class set - expect error
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", 12, attributes=attributes)
     await hass.async_block_till_done()
@@ -3004,7 +2964,7 @@ async def test_validate_statistics_unsupported_state_class(
     await assert_validation_result(client, {})
 
     # Statistics has run, empty response
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
@@ -3068,7 +3028,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     await assert_validation_result(client, {})
 
     # Statistics has run, empty response
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
@@ -3141,7 +3101,7 @@ async def test_validate_statistics_sensor_not_recorded(
         await assert_validation_result(client, expected)
 
         # Statistics has run, expect same error
-        hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+        do_adhoc_statistics(hass, start=now)
         await async_recorder_block_till_done(hass)
         await assert_validation_result(client, expected)
 
@@ -3187,7 +3147,7 @@ async def test_validate_statistics_sensor_removed(
     await assert_validation_result(client, {})
 
     # Statistics has run, empty response
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
@@ -3243,7 +3203,6 @@ async def test_validate_statistics_unsupported_device_class(
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
-    rec = hass.data[DATA_INSTANCE]
 
     # No statistics, no state - empty response
     await assert_validation_result(client, {})
@@ -3260,7 +3219,7 @@ async def test_validate_statistics_unsupported_device_class(
 
     # Run statistics, no statistics will be generated because of conflicting units
     await async_recorder_block_till_done(hass)
-    rec.do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids([])
 
@@ -3272,7 +3231,7 @@ async def test_validate_statistics_unsupported_device_class(
 
     # Run statistics one hour later, only the "dogs" state will be considered
     await async_recorder_block_till_done(hass)
-    rec.do_adhoc_statistics(start=now + timedelta(hours=1))
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
         [{"statistic_id": "sensor.test", "unit_of_measurement": "dogs"}]
@@ -3305,7 +3264,7 @@ async def test_validate_statistics_unsupported_device_class(
 
     # Valid state, statistic runs again - empty response
     await async_recorder_block_till_done(hass)
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 

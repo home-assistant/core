@@ -43,7 +43,6 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.structure import InfoTrait, Structure
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -319,12 +318,11 @@ class NestFlowHandler(
             if not (subscriber_id := data.get(CONF_SUBSCRIBER_ID, "")):
                 subscriber_id = _generate_subscription_id(cloud_project_id)
             _LOGGER.debug("Creating subscriber id '%s'", subscriber_id)
-            # Create a placeholder ConfigEntry to use since with the auth we've already created.
-            entry = ConfigEntry(
-                version=1, domain=DOMAIN, title="", data=self._data, source=""
-            )
-            subscriber = await api.new_subscriber_with_impl(
-                self.hass, entry, subscriber_id, self.flow_impl
+            subscriber = api.new_subscriber_with_token(
+                self.hass,
+                self._data["token"]["access_token"],
+                config[CONF_PROJECT_ID],
+                subscriber_id,
             )
             try:
                 await subscriber.create_subscription()

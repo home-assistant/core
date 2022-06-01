@@ -43,6 +43,7 @@ homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
+homeassistant.components.airzone.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
@@ -54,6 +55,7 @@ homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
 homeassistant.components.automation.*
 homeassistant.components.backup.*
+homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -81,6 +83,7 @@ homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
+homeassistant.components.emulated_hue.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
@@ -96,8 +99,10 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
+homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.google.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -123,6 +128,7 @@ homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
+homeassistant.components.ialarm_xr.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -135,6 +141,7 @@ homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lametric.*
+homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
@@ -162,6 +169,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
+homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
@@ -174,26 +182,11 @@ homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.pvoutput.*
 homeassistant.components.pure_energie.*
+homeassistant.components.qnap_qsw.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
-homeassistant.components.recorder
-homeassistant.components.recorder.const
-homeassistant.components.recorder.core
-homeassistant.components.recorder.backup
-homeassistant.components.recorder.executor
-homeassistant.components.recorder.history
-homeassistant.components.recorder.models
-homeassistant.components.recorder.pool
-homeassistant.components.recorder.purge
-homeassistant.components.recorder.repack
-homeassistant.components.recorder.run_history
-homeassistant.components.recorder.services
-homeassistant.components.recorder.statistics
-homeassistant.components.recorder.system_health
-homeassistant.components.recorder.tasks
-homeassistant.components.recorder.util
-homeassistant.components.recorder.websocket_api
+homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.ridwell.*
@@ -204,6 +197,7 @@ homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
+homeassistant.components.sensibo.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
 homeassistant.components.senz.*

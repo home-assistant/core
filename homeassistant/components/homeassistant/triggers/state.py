@@ -7,6 +7,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -92,9 +96,9 @@ async def async_validate_trigger_config(
 
 async def async_attach_trigger(
     hass: HomeAssistant,
-    config,
-    action,
-    automation_info,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
     *,
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:

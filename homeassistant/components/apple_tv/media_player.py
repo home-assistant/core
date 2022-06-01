@@ -284,7 +284,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             await self.atv.apps.launch_app(media_id)
 
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
             media_type = MEDIA_TYPE_MUSIC
 
@@ -296,7 +298,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id)
 
-        if self._is_feature_available(FeatureName.PlayUrl):
+        elif self._is_feature_available(FeatureName.PlayUrl):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
             await self.atv.stream.play_url(media_id)
         else:

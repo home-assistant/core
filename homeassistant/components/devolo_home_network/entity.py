@@ -21,17 +21,14 @@ class DevoloEntity(CoordinatorEntity):
         """Initialize a devolo home network device."""
         super().__init__(coordinator)
 
-        self._device = device
-        self._device_name = device_name
+        self.device = device
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{self._device.ip}",
-            identifiers={(DOMAIN, str(self._device.serial_number))},
+            configuration_url=f"http://{device.ip}",
+            identifiers={(DOMAIN, str(device.serial_number))},
             manufacturer="devolo",
-            model=self._device.product,
-            name=self._device_name,
-            sw_version=self._device.firmware_version,
+            model=device.product,
+            name=device_name,
+            sw_version=device.firmware_version,
         )
-        self._attr_unique_id = (
-            f"{self._device.serial_number}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{device.serial_number}_{self.entity_description.key}"

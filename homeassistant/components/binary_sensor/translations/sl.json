@@ -52,8 +52,6 @@
             "connected": "{entity_name} povezan",
             "gas": "{entity_name} za\u010del zaznavati plin",
             "hot": "{entity_name} je postal vro\u010d",
-            "is_not_tampered": "{entity_name} je prenehal zaznavati nedovoljena dejanja",
-            "is_tampered": "{entity_name} je za\u010del zaznavati nedovoljeno poseganje",
             "light": "{entity_name} za\u010del zaznavati svetlobo",
             "locked": "{entity_name} zaklenjen",
             "moist": "{entity_name} postal vla\u017een",

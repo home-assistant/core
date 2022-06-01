@@ -27,7 +27,6 @@ from .const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -118,7 +117,7 @@ async def _async_reproduce_states(
         if features & MediaPlayerEntityFeature.PLAY_MEDIA:
             await call_service(
                 SERVICE_PLAY_MEDIA,
-                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_ENQUEUE],
+                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID],
             )
         already_playing = True
 

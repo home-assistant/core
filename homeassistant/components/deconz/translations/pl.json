@@ -5,7 +5,6 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
-            "not_deconz_bridge": "To nie jest mostek deCONZ",
             "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {

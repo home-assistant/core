@@ -162,8 +162,16 @@ class VlcDevice(MediaPlayerEntity):
         data = info.data
         LOGGER.debug("Info data: %s", data)
 
-        self._media_artist = data.get(0, {}).get("artist")
-        self._media_title = data.get(0, {}).get("title")
+        self._attr_media_album_name = data.get("data", {}).get("album")
+        self._media_artist = data.get("data", {}).get("artist")
+        self._media_title = data.get("data", {}).get("title")
+        now_playing = data.get("data", {}).get("now_playing")
+
+        # Many radio streams put artist/title/album in now_playing and title is the station name.
+        if now_playing:
+            if not self._media_artist:
+                self._media_artist = self._media_title
+            self._media_title = now_playing
 
         if self._media_title:
             return
@@ -288,7 +296,9 @@ class VlcDevice(MediaPlayerEntity):
         """Play media from a URL or file."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
 

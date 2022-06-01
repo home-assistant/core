@@ -33,14 +33,15 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, recorder
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import (
-    DeviceEntryType,
-    DeviceRegistry,
-    async_get_registry,
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    recorder,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.loader import bind_hass
@@ -202,6 +203,10 @@ MAP_SERVICE_API = {
         None,
         True,
     ),
+}
+
+HARDWARE_INTEGRATIONS = {
+    "rpi": "raspberry_pi",
 }
 
 
@@ -500,7 +505,7 @@ def get_supervisor_ip() -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
-    for env in ("HASSIO", "HASSIO_TOKEN"):
+    for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
         if os.environ.get(env):
             continue
         _LOGGER.error("Missing %s environment variable", env)
@@ -512,14 +517,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async_load_websocket_api(hass)
 
-    host = os.environ["HASSIO"]
+    host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
 
@@ -637,8 +642,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         except HassioAPIError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
 
-        hass.helpers.event.async_track_point_in_utc_time(
-            update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
+        async_track_point_in_utc_time(
+            hass, update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
         )
 
     # Fetch data
@@ -704,6 +709,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Init add-on ingress panels
     await async_setup_addon_panel(hass, hassio)
 
+    # Setup hardware integration for the detected board type
+    async def _async_setup_hardware_integration(hass):
+        """Set up hardaware integration for the detected board type."""
+        if (os_info := get_os_info(hass)) is None:
+            # os info not yet fetched from supervisor, retry later
+            async_track_point_in_utc_time(
+                hass,
+                _async_setup_hardware_integration,
+                utcnow() + HASSIO_UPDATE_INTERVAL,
+            )
+            return
+        if (board := os_info.get("board")) is None:
+            return
+        if (hw_integration := HARDWARE_INTEGRATIONS.get(board)) is None:
+            return
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                hw_integration, context={"source": "system"}
+            )
+        )
+
+    await _async_setup_hardware_integration(hass)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
@@ -713,7 +741,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_config_entry_first_refresh()
@@ -735,7 +763,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @callback
 def async_register_addons_in_dev_reg(
-    entry_id: str, dev_reg: DeviceRegistry, addons: list[dict[str, Any]]
+    entry_id: str, dev_reg: dr.DeviceRegistry, addons: list[dict[str, Any]]
 ) -> None:
     """Register addons in the device registry."""
     for addon in addons:
@@ -744,7 +772,7 @@ def async_register_addons_in_dev_reg(
             model=SupervisorEntityModel.ADDON,
             sw_version=addon[ATTR_VERSION],
             name=addon[ATTR_NAME],
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=dr.DeviceEntryType.SERVICE,
             configuration_url=f"homeassistant://hassio/addon/{addon[ATTR_SLUG]}",
         )
         if manufacturer := addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL):
@@ -754,7 +782,7 @@ def async_register_addons_in_dev_reg(
 
 @callback
 def async_register_os_in_dev_reg(
-    entry_id: str, dev_reg: DeviceRegistry, os_dict: dict[str, Any]
+    entry_id: str, dev_reg: dr.DeviceRegistry, os_dict: dict[str, Any]
 ) -> None:
     """Register OS in the device registry."""
     params = DeviceInfo(
@@ -763,7 +791,7 @@ def async_register_os_in_dev_reg(
         model=SupervisorEntityModel.OS,
         sw_version=os_dict[ATTR_VERSION],
         name="Home Assistant Operating System",
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
     dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
@@ -771,7 +799,7 @@ def async_register_os_in_dev_reg(
 @callback
 def async_register_core_in_dev_reg(
     entry_id: str,
-    dev_reg: DeviceRegistry,
+    dev_reg: dr.DeviceRegistry,
     core_dict: dict[str, Any],
 ) -> None:
     """Register OS in the device registry."""
@@ -781,7 +809,7 @@ def async_register_core_in_dev_reg(
         model=SupervisorEntityModel.CORE,
         sw_version=core_dict[ATTR_VERSION],
         name="Home Assistant Core",
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
     dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
@@ -789,7 +817,7 @@ def async_register_core_in_dev_reg(
 @callback
 def async_register_supervisor_in_dev_reg(
     entry_id: str,
-    dev_reg: DeviceRegistry,
+    dev_reg: dr.DeviceRegistry,
     supervisor_dict: dict[str, Any],
 ) -> None:
     """Register OS in the device registry."""
@@ -799,13 +827,15 @@ def async_register_supervisor_in_dev_reg(
         model=SupervisorEntityModel.SUPERVIOSR,
         sw_version=supervisor_dict[ATTR_VERSION],
         name="Home Assistant Supervisor",
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
     dev_reg.async_get_or_create(config_entry_id=entry_id, **params)
 
 
 @callback
-def async_remove_addons_from_dev_reg(dev_reg: DeviceRegistry, addons: set[str]) -> None:
+def async_remove_addons_from_dev_reg(
+    dev_reg: dr.DeviceRegistry, addons: set[str]
+) -> None:
     """Remove addons from the device registry."""
     for addon_slug in addons:
         if dev := dev_reg.async_get_device({(DOMAIN, addon_slug)}):
@@ -816,7 +846,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io status."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: DeviceRegistry
+        self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
     ) -> None:
         """Initialize coordinator."""
         super().__init__(

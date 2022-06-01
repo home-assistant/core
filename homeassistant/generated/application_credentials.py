@@ -6,5 +6,15 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 APPLICATION_CREDENTIALS = [
-    "xbox"
+    "geocaching",
+    "google",
+    "home_connect",
+    "lyric",
+    "neato",
+    "netatmo",
+    "senz",
+    "spotify",
+    "withings",
+    "xbox",
+    "yolink"
 ]

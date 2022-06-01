@@ -1041,7 +1041,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         if self.coordinator.data.is_on:
-            self._percentage = self.coordinator.data.fan_speed
+            self._percentage = self.coordinator.data.speed
         else:
             self._percentage = 0
 

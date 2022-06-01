@@ -1,5 +1,5 @@
 """Test the WiZ Platform config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
@@ -21,8 +21,10 @@ from . import (
     FAKE_SOCKET,
     TEST_CONNECTION,
     TEST_SYSTEM_INFO,
+    _mocked_wizlight,
     _patch_discovery,
     _patch_wizlight,
+    async_setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -307,6 +309,35 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == FAKE_IP
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_retry(
+    hass, source, data
+):
+    """Test dhcp or discovery kicks off setup when in retry."""
+    bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
+    bulb.getMac = AsyncMock(side_effect=OSError)
+    _, entry = await async_setup_integration(hass, wizlight=bulb)
+    assert entry.data[CONF_HOST] == FAKE_IP
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    bulb.getMac = AsyncMock(return_value=FAKE_MAC)
+
+    with _patch_wizlight():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 async def test_setup_via_discovery(hass):
