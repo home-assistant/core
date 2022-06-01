@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "De Sonarr-integratie moet handmatig opnieuw worden geverifieerd met de Sonarr-API die wordt gehost op: {url}",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

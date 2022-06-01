@@ -195,7 +195,9 @@ def async_condition_from_config(
     return condition.async_numeric_state_from_config(numeric_state_config)
 
 
-async def async_get_condition_capabilities(hass, config):
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     try:
         unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])

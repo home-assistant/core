@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 from typing import Any, Generator, TypeVar
-from unittest.mock import mock_open, patch
+from unittest.mock import Mock, mock_open, patch
 
 from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
@@ -104,11 +104,11 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
 def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
-) -> None:
+) -> Generator[Mock, None, None]:
     """Fixture that prepares the google_calendars.yaml mocks."""
     mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
     with patch("homeassistant.components.google.open", mocked_open_function):
-        yield
+        yield mocked_open_function
 
 
 class FakeStorage:
@@ -171,9 +171,16 @@ def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
 
 
 @pytest.fixture
+def config_entry_options() -> dict[str, Any] | None:
+    """Fixture to set initial config entry options."""
+    return None
+
+
+@pytest.fixture
 def config_entry(
     token_scopes: list[str],
     config_entry_token_expiry: float,
+    config_entry_options: dict[str, Any] | None,
 ) -> MockConfigEntry:
     """Fixture to create a config entry for the integration."""
     return MockConfigEntry(
@@ -188,6 +195,7 @@ def config_entry(
                 "expires_at": config_entry_token_expiry,
             },
         },
+        options=config_entry_options,
     )
 
 

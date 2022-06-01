@@ -198,7 +198,7 @@ class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE_TEMP:
-            self._attr_native_value = self.coordinator.data["freezeProtectTemp"]
+            self._attr_native_value = self.coordinator.data.get("freezeProtectTemp")
 
 
 class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
