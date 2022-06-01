@@ -176,7 +176,7 @@ class HLSSync:
         self.check_requests_ready()
         return self._original_not_found()
 
-    def response(self, body, headers, status=HTTPStatus.OK):
+    def response(self, body, headers=None, status=HTTPStatus.OK):
         """Intercept the Response call so we know when the web handler is finished."""
         self._num_finished += 1
         self.check_requests_ready()

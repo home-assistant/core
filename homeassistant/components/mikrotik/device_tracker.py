@@ -34,7 +34,7 @@ async def async_setup_entry(
 
     tracked: dict[str, MikrotikHubTracker] = {}
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
 
     # Restore clients that is not a part of active clients list.
     for entity in registry.entities.values():
@@ -102,7 +102,8 @@ class MikrotikHubTracker(ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name of the client."""
-        return self.device.name
+        # Stringify to ensure we return a string
+        return str(self.device.name)
 
     @property
     def hostname(self) -> str:

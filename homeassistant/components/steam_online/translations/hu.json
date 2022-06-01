@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "A Steam integr\u00e1ci\u00f3t manu\u00e1lisan \u00fajra kell hiteles\u00edteni .\n\nA kulcs itt tal\u00e1lhat\u00f3: https://steamcommunity.com/dev/apikey",
+                "description": "A Steam integr\u00e1ci\u00f3t manu\u00e1lisan \u00fajra kell hiteles\u00edteni .\n\nA kulcs itt tal\u00e1lhat\u00f3: {api_key_url}",
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             },
             "user": {
@@ -20,11 +20,14 @@
                     "account": "Steam fi\u00f3k azonos\u00edt\u00f3ja",
                     "api_key": "API kulcs"
                 },
-                "description": "A https://steamid.io haszn\u00e1lat\u00e1val kaphat\u00f3 meg a Steam fi\u00f3kazonos\u00edt\u00f3"
+                "description": "A {account_id_url} haszn\u00e1lat\u00e1val kaphat\u00f3 meg a Steam fi\u00f3kazonos\u00edt\u00f3"
             }
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Bar\u00e1ti lista korl\u00e1tozott: K\u00e9rj\u00fck, olvassa el a dokument\u00e1ci\u00f3t arr\u00f3l, hogyan l\u00e1thatja az \u00f6sszes t\u00f6bbi bar\u00e1tot."
+        },
         "step": {
             "init": {
                 "data": {

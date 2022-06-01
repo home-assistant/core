@@ -446,7 +446,7 @@ class ZigbeeChannel(LogMixin):
             try:
                 self.debug("Reading attributes in chunks: %s", chunk)
                 read, _ = await self.cluster.read_attributes(
-                    attributes,
+                    chunk,
                     allow_cache=from_cache,
                     only_cache=only_cache,
                     manufacturer=manufacturer,

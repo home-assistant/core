@@ -5,7 +5,10 @@ import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.diagnostics.const import REDACTED
-from homeassistant.components.zwave_js.diagnostics import async_get_device_diagnostics
+from homeassistant.components.zwave_js.diagnostics import (
+    ZwaveValueMatcher,
+    async_get_device_diagnostics,
+)
 from homeassistant.components.zwave_js.discovery import async_discover_node_values
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.helpers.device_registry import async_get
@@ -51,7 +54,7 @@ async def test_device_diagnostics(
 ):
     """Test the device level diagnostics data dump."""
     dev_reg = async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, multisensor_6)})
+    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
     assert device
 
     # Update a value and ensure it is reflected in the node state
@@ -89,7 +92,16 @@ async def test_device_diagnostics(
     assert len(diagnostics_data["entities"]) == len(
         list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
     )
-    assert diagnostics_data["state"] == multisensor_6.data
+    assert diagnostics_data["state"] == {
+        **multisensor_6.data,
+        "statistics": {
+            "commandsDroppedRX": 0,
+            "commandsDroppedTX": 0,
+            "commandsRX": 0,
+            "commandsTX": 0,
+            "timeoutResponse": 0,
+        },
+    }
 
 
 async def test_device_diagnostics_error(hass, integration):
@@ -100,3 +112,9 @@ async def test_device_diagnostics_error(hass, integration):
     )
     with pytest.raises(ValueError):
         await async_get_device_diagnostics(hass, integration, device)
+
+
+async def test_empty_zwave_value_matcher():
+    """Test empty ZwaveValueMatcher is invalid."""
+    with pytest.raises(ValueError):
+        ZwaveValueMatcher()

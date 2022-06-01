@@ -1,0 +1,8 @@
+{
+    "state": {
+        "homekit_controller__ecobee_mode": {
+            "away": "Afuera",
+            "sleep": "Durmiendo"
+        }
+    }
+}

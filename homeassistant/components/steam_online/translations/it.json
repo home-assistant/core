@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "L'integrazione di Steam richiede una nuova autenticazione manuale \n\nPuoi trovare la tua chiave qui: https://steamcommunity.com/dev/apikey",
+                "description": "L'integrazione Steam richiede una nuova autenticazione manuale \n\nPuoi trovare la tua chiave qui: {api_key_url}",
                 "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
@@ -20,11 +20,14 @@
                     "account": "ID dell'account Steam",
                     "api_key": "Chiave API"
                 },
-                "description": "Usa https://steamid.io per trovare l'ID del tuo account Steam"
+                "description": "Usa {account_id_url} per trovare l'ID del tuo account Steam"
             }
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Elenco amici limitato: consultare la documentazione su come vedere tutti gli altri amici."
+        },
         "step": {
             "init": {
                 "data": {

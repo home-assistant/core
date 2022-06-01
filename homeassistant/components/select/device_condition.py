@@ -38,7 +38,7 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Select devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     return [
         {
             CONF_CONDITION: "device",

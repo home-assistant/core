@@ -4,7 +4,8 @@
             "address_already_configured": "Ya est\u00e1 configurado un Elk-M1 con esta direcci\u00f3n",
             "already_configured": "Ya est\u00e1 configurado un Elk-M1 con este prefijo",
             "already_in_progress": "La configuraci\u00f3n ya se encuentra en proceso",
-            "cannot_connect": "Error al conectar"
+            "cannot_connect": "Error al conectar",
+            "unknown": "Error inesperado"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -20,7 +21,7 @@
                     "temperature_unit": "La unidad de temperatura que el ElkM1 usa.",
                     "username": "Usuario"
                 },
-                "description": "Con\u00e9ctese al sistema detectado: {mac_address} ({host})",
+                "description": "Con\u00e9ctate al sistema descubierto: {mac_address} ({host})",
                 "title": "Conectar con Control Elk-M1"
             },
             "manual_connection": {

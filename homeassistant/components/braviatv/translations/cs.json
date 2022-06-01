@@ -20,8 +20,7 @@
                 "data": {
                     "host": "Hostitel"
                 },
-                "description": "Nastavte integraci televize Sony Bravia. Pokud m\u00e1te s nastaven\u00edm probl\u00e9my, pod\u00edvejte se na: https://www.home-assistant.io/integrations/braviatv\n\n Ujist\u011bte se, \u017ee va\u0161e televize je zapnut\u00e1.",
-                "title": "Televize Sony Bravia"
+                "description": "Nastavte integraci televize Sony Bravia. Pokud m\u00e1te s nastaven\u00edm probl\u00e9my, pod\u00edvejte se na: https://www.home-assistant.io/integrations/braviatv\n\n Ujist\u011bte se, \u017ee va\u0161e televize je zapnut\u00e1."
             }
         }
     },

@@ -12,6 +12,11 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
 )
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -34,14 +39,10 @@ from .const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
-    FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
-    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS.keys()),
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
     }
 )
 
@@ -157,14 +158,10 @@ class GenericCamera(Camera):
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
-            self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
-                CONF_RTSP_TRANSPORT
-            ]
+            self.stream_options[CONF_RTSP_TRANSPORT] = device_info[CONF_RTSP_TRANSPORT]
         self._auth = generate_auth(device_info)
         if device_info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-            self.stream_options[
-                FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]
-            ] = "1"
+            self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
 
         self._last_url = None
         self._last_image = None

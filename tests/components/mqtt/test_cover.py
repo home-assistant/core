@@ -1,4 +1,6 @@
 """The tests for the MQTT cover platform."""
+
+import copy
 from unittest.mock import patch
 
 import pytest
@@ -68,6 +70,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -3206,3 +3209,15 @@ async def test_encoding_subscribable_topics(
         attribute_value,
         skip_raw_test=True,
     )
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = cover.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

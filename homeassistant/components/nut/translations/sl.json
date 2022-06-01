@@ -8,16 +8,9 @@
             "unknown": "Nepri\u010dakovana napaka"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Viri"
-                },
-                "title": "Izberite vire za spremljanje"
-            },
             "ups": {
                 "data": {
-                    "alias": "Vzdevek",
-                    "resources": "Viri"
+                    "alias": "Vzdevek"
                 },
                 "title": "Izberite UPS za spremljanje"
             },
@@ -36,10 +29,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Viri",
                     "scan_interval": "Interval skeniranja (sekunde)"
-                },
-                "description": "Izberite vire senzorja."
+                }
             }
         }
     }

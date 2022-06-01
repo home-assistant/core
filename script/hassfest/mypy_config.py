@@ -199,7 +199,11 @@ IGNORED_MODULES: Final[list[str]] = [
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
+    "homeassistant.components.application_credentials.*",
     "homeassistant.components.diagnostics.*",
+    "homeassistant.components.spotify.*",
+    "homeassistant.components.stream.*",
+    "homeassistant.components.update.*",
 }
 
 HEADER: Final = """
@@ -221,6 +225,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
     "enable_error_code": "ignore-without-code",
+    # Strict_concatenate breaks passthrough ParamSpec typing
+    "strict_concatenate": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -361,7 +367,9 @@ def generate_and_validate(config: Config) -> str:
         if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
-    for reexport_module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
+    for reexport_module in sorted(
+        NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules)
+    ):
         reexport_section = f"mypy-{reexport_module}"
         mypy_config.add_section(reexport_section)
         mypy_config.set(reexport_section, "no_implicit_reexport", "true")

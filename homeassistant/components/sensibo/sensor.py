@@ -99,7 +99,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         value_fn=lambda data: data.temperature,
     ),
 )
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
@@ -137,8 +137,8 @@ async def async_setup_entry(
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_SENSOR_TYPES
-        if getattr(device_data, description.key) is not None
+        for description in PURE_SENSOR_TYPES
+        if device_data.model == "pure"
     )
     async_add_entities(entities)
 

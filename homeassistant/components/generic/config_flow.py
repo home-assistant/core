@@ -16,7 +16,13 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.stream.const import SOURCE_TIMEOUT
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
+    SOURCE_TIMEOUT,
+    convert_stream_options,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -38,15 +44,11 @@ from .const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DEFAULT_NAME,
     DOMAIN,
-    FFMPEG_OPTION_MAP,
     GET_IMAGE_TIMEOUT,
-    RTSP_TRANSPORTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -196,26 +198,35 @@ async def async_test_stream(hass, info) -> dict[str, str]:
     """Verify that the stream is valid before we create an entity."""
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
         return {}
+    if not isinstance(stream_source, template_helper.Template):
+        stream_source = template_helper.Template(stream_source, hass)
+    try:
+        stream_source = stream_source.async_render(parse_result=False)
+    except TemplateError as err:
+        _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
+        return {CONF_STREAM_SOURCE: "template_error"}
     try:
         # For RTSP streams, prefer TCP. This code is duplicated from
         # homeassistant.components.stream.__init__.py:create_stream()
         # It may be possible & better to call create_stream() directly.
-        stream_options: dict[str, str] = {}
+        stream_options: dict[str, bool | str] = {}
+        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+            stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
+        if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+            stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+        pyav_options = convert_stream_options(stream_options)
         if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-            stream_options = {
+            pyav_options = {
                 "rtsp_flags": "prefer_tcp",
                 "stimeout": "5000000",
+                **pyav_options,
             }
-        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
-            stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = rtsp_transport
-        if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-            stream_options[FFMPEG_OPTION_MAP[CONF_USE_WALLCLOCK_AS_TIMESTAMPS]] = "1"
         _LOGGER.debug("Attempting to open stream %s", stream_source)
         container = await hass.async_add_executor_job(
             partial(
                 av.open,
                 stream_source,
-                options=stream_options,
+                options=pyav_options,
                 timeout=SOURCE_TIMEOUT,
             )
         )
@@ -368,7 +379,10 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     CONF_FRAMERATE: user_input[CONF_FRAMERATE],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                        self.config_entry.options.get(
+                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                        ),
                     ),
                 }
                 return self.async_create_entry(

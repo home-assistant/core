@@ -452,6 +452,10 @@ def stream_worker(
 ) -> None:
     """Handle consuming streams."""
 
+    if av.library_versions["libavformat"][0] >= 59 and "stimeout" in options:
+        # the stimeout option was renamed to timeout as of ffmpeg 5.0
+        options["timeout"] = options["stimeout"]
+        del options["stimeout"]
     try:
         container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:

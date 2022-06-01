@@ -20,9 +20,7 @@
                     "device_class": "The type of device",
                     "host": "Host",
                     "port": "Port"
-                },
-                "description": "Set required parameters to connect to your Android TV device",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Configure state detection rules",
                     "turn_off_command": "ADB shell turn off command (leave empty for default)",
                     "turn_on_command": "ADB shell turn on command (leave empty for default)"
-                },
-                "title": "Android TV Options"
+                }
             },
             "rules": {
                 "data": {

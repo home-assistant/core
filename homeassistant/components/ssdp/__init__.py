@@ -25,7 +25,6 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
@@ -45,6 +44,8 @@ ATTR_SSDP_SERVER = "ssdp_server"
 ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
 ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
+ATTR_ST = "st"
+ATTR_NT = "nt"
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
 ATTR_UPNP_MANUFACTURER = "manufacturer"
@@ -61,7 +62,13 @@ ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
 ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
-PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
+PRIMARY_MATCH_KEYS = [
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_NT,
+    ATTR_UPNP_MANUFACTURER_URL,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,63 +109,6 @@ class SsdpServiceInfo(
     BaseServiceInfo,
 ):
     """Prepared info from ssdp/upnp entries."""
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}, "
-            f"discovery_info.upnp['{name}'] "
-            f"or discovery_info.ssdp_headers['{name}']; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        # Use a property if it is available, fallback to upnp data
-        if hasattr(self, name):
-            return getattr(self, name)
-        if name in self.ssdp_headers and name not in self.upnp:
-            return self.ssdp_headers.get(name)
-        return self.upnp[name]
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}, "
-            f"discovery_info.upnp.get('{name}') "
-            f"or discovery_info.ssdp_headers.get('{name}'); "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return self.upnp.get(name, self.ssdp_headers.get(name, default))
-
-    def __contains__(self, name: str) -> bool:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info.__contains__('{name}') "
-            f"instead of discovery_info.upnp.__contains__('{name}') "
-            f"or discovery_info.ssdp_headers.__contains__('{name}'); "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        if hasattr(self, name):
-            return getattr(self, name) is not None
-        return name in self.upnp or name in self.ssdp_headers
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")

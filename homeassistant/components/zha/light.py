@@ -26,9 +26,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -91,10 +89,10 @@ SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 SUPPORT_GROUP_LIGHT = (
     SUPPORT_BRIGHTNESS
     | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
+    | LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
     | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
+    | LightEntityFeature.TRANSITION
 )
 
 
@@ -290,7 +288,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             effect == light.EFFECT_COLORLOOP
-            and self.supported_features & light.SUPPORT_EFFECT
+            and self.supported_features & light.LightEntityFeature.EFFECT
         ):
             result = await self._color_channel.color_loop_set(
                 UPDATE_COLORLOOP_ACTION
@@ -306,7 +304,7 @@ class BaseLight(LogMixin, light.LightEntity):
         elif (
             self._effect == light.EFFECT_COLORLOOP
             and effect != light.EFFECT_COLORLOOP
-            and self.supported_features & light.SUPPORT_EFFECT
+            and self.supported_features & light.LightEntityFeature.EFFECT
         ):
             result = await self._color_channel.color_loop_set(
                 UPDATE_COLORLOOP_ACTION,
@@ -318,7 +316,10 @@ class BaseLight(LogMixin, light.LightEntity):
             t_log["color_loop_set"] = result
             self._effect = None
 
-        if flash is not None and self._supported_features & light.SUPPORT_FLASH:
+        if (
+            flash is not None
+            and self._supported_features & light.LightEntityFeature.FLASH
+        ):
             result = await self._identify_channel.trigger_effect(
                 FLASH_EFFECTS[flash], EFFECT_DEFAULT_VARIANT
             )
@@ -373,7 +374,7 @@ class Light(BaseLight, ZhaEntity):
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
-            self._supported_features |= light.SUPPORT_TRANSITION
+            self._supported_features |= light.LightEntityFeature.TRANSITION
             self._brightness = self._level_channel.current_level
 
         if self._color_channel:
@@ -394,13 +395,13 @@ class Light(BaseLight, ZhaEntity):
                     self._hs_color = (0, 0)
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
-                self._supported_features |= light.SUPPORT_EFFECT
+                self._supported_features |= light.LightEntityFeature.EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
                 if self._color_channel.color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
 
         if self._identify_channel:
-            self._supported_features |= light.SUPPORT_FLASH
+            self._supported_features |= light.LightEntityFeature.FLASH
 
         if effect_list:
             self._effect_list = effect_list

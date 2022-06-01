@@ -1351,6 +1351,25 @@ async def test_manifest_list(hass, websocket_client):
     ]
 
 
+async def test_manifest_list_specific_integrations(hass, websocket_client):
+    """Test loading manifests for specific integrations."""
+    websocket_api = await async_get_integration(hass, "websocket_api")
+
+    await websocket_client.send_json(
+        {"id": 5, "type": "manifest/list", "integrations": ["hue", "websocket_api"]}
+    )
+    hue = await async_get_integration(hass, "hue")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert sorted(msg["result"], key=lambda manifest: manifest["domain"]) == [
+        hue.manifest,
+        websocket_api.manifest,
+    ]
+
+
 async def test_manifest_get(hass, websocket_client):
     """Test getting a manifest."""
     hue = await async_get_integration(hass, "hue")

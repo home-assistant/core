@@ -287,7 +287,7 @@ class ConfiguredDoorBird:
         self.device.change_favorite("http", f"Home Assistant ({event})", url)
         if not self.webhook_is_registered(url):
             _LOGGER.warning(
-                'Unable to set favorite URL "%s". ' 'Event "%s" will not fire',
+                'Unable to set favorite URL "%s". Event "%s" will not fire',
                 url,
                 event,
             )

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ya se ha a\u00f1adido a este alumno.",
+            "reauth_successful": "Re-autenticaci\u00f3n exitosa"
+        },
+        "error": {
+            "expired_token": "Token caducado, genera un nuevo token",
+            "invalid_symbol": "S\u00edmbolo inv\u00e1lido",
+            "invalid_token": "Token inv\u00e1lido"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "region": "S\u00edmbolo"
+                }
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "Selecciona al alumno"
+                }
+            }
+        }
+    }
+}
