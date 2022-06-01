@@ -12,7 +12,7 @@ COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
 # hadolint ignore=DL4006
 RUN \ 
-   cat homeassistant/requirements.txt | grep -v ^# | grep -v ^- | xargs -P 6 -n 4 -- \
+   grep -v '^[#-]' < homeassistant/requirements.txt | xargs -P 6 -n 4 -- \
    pip3 download --no-index --only-binary=:all: \
    --find-links "${WHEELS_LINKS}" --use-deprecated=legacy-resolver \
    --cache-dir "/tmp/pip_cache"
@@ -22,7 +22,7 @@ RUN \
 COPY requirements_all.txt homeassistant/
 # hadolint ignore=DL4006
 RUN \ 
-   cat homeassistant/requirements_all.txt | grep -v ^# | grep -v ^- | xargs -P 8 -n 120 -- \
+   grep -v '^[#-]' < homeassistant/requirements_all.txt | xargs -P 8 -n 120 -- \
    pip3 download --no-index --only-binary=:all: \
    --find-links "${WHEELS_LINKS}" --use-deprecated=legacy-resolver \
    --cache-dir "/tmp/pip_cache" ; exit 0
