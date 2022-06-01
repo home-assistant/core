@@ -162,8 +162,6 @@ async def test_cover_open(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        mock_aladdinconnect_api.async_get_door_status.assert_called_once()
-        mock_aladdinconnect_api.async_get_door_status.reset_mock()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -201,8 +199,6 @@ async def test_cover_close(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        mock_aladdinconnect_api.async_get_door_status.assert_called_once()
-        mock_aladdinconnect_api.async_get_door_status.reset_mock()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -244,8 +240,6 @@ async def test_cover_closing(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        mock_aladdinconnect_api.async_get_door_status.assert_called_once()
-        mock_aladdinconnect_api.async_get_door_status.reset_mock()
 
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -290,8 +284,6 @@ async def test_cover_openning(
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert COVER_DOMAIN in hass.config.components
-    mock_aladdinconnect_api.async_get_door_status.assert_called_once()
-    mock_aladdinconnect_api.async_get_door_status.reset_mock()
 
     await hass.async_block_till_done()
     async_fire_time_changed(
@@ -356,8 +348,6 @@ async def test_callback(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        mock_aladdinconnect_api.async_get_door_status.assert_called_once()
-        mock_aladdinconnect_api.async_get_door_status.reset_mock()
 
     mock_aladdinconnect_api.async_get_door_status.return_value = STATE_CLOSING
     mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSING

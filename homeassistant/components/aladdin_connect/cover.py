@@ -90,7 +90,6 @@ class AladdinDevice(CoverEntity):
         self._number = device["door_number"]
         self._attr_name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
-        self._door_status: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
@@ -98,9 +97,6 @@ class AladdinDevice(CoverEntity):
         @callback
         async def update_callback() -> None:
             """Schedule a state update."""
-            self._door_status = STATES_MAP.get(
-                await self._acc.async_get_door_status(self._device_id, self._number)
-            )
             self.async_write_ha_state()
 
         self._acc.register_callback(update_callback)
@@ -121,10 +117,6 @@ class AladdinDevice(CoverEntity):
     async def async_update(self) -> None:
         """Update status of cover."""
         await self._acc.get_doors()
-
-        self._door_status = STATES_MAP.get(
-            await self._acc.async_get_door_status(self._device_id, self._number)
-        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
