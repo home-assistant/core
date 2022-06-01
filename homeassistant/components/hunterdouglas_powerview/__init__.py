@@ -87,8 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async with async_timeout.timeout(10):
             shades = Shades(pv_request)
-            shade_entries = await shades.get_resources()
-            shade_data = async_map_data_by_id(shade_entries[SHADE_DATA])
+            shade_data = async_map_data_by_id(
+                (await shades.get_resources())[SHADE_DATA]
+            )
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             f"Connection error to PowerView hub: {hub_address}: {err}"
@@ -98,7 +99,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub_address)
     coordinator.async_set_updated_data(PowerviewShadeData())
-    coordinator.data.store_group_data(shade_entries[SHADE_DATA])
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         PV_API: pv_request,
