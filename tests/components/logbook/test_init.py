@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import logbook
+from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import LazyEventPartialState
@@ -2796,3 +2796,39 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert results[3]["context_state"] == "off"
     assert results[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
     assert "context_event_type" not in results[3]
+
+
+async def test_logbook_with_empty_config(hass, recorder_mock):
+    """Test we handle a empty configuration."""
+    assert await async_setup_component(
+        hass,
+        logbook.DOMAIN,
+        {
+            logbook.DOMAIN: {},
+            recorder.DOMAIN: {},
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_logbook_with_non_iterable_entity_filter(hass, recorder_mock):
+    """Test we handle a non-iterable entity filter."""
+    assert await async_setup_component(
+        hass,
+        logbook.DOMAIN,
+        {
+            logbook.DOMAIN: {
+                CONF_EXCLUDE: {
+                    CONF_ENTITIES: ["light.additional_excluded"],
+                }
+            },
+            recorder.DOMAIN: {
+                CONF_EXCLUDE: {
+                    CONF_ENTITIES: None,
+                    CONF_DOMAINS: None,
+                    CONF_ENTITY_GLOBS: None,
+                }
+            },
+        },
+    )
+    await hass.async_block_till_done()
