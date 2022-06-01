@@ -155,6 +155,7 @@ async def test_cover_open(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_OPEN)
+    mock_aladdinconnect_api.get_door_status.return_value = STATE_OPEN
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -193,6 +194,7 @@ async def test_cover_close(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_CLOSED)
+    mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSED
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -234,6 +236,7 @@ async def test_cover_closing(
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_CLOSING
     )
+    mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSING
 
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
@@ -275,6 +278,7 @@ async def test_cover_openning(
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_OPENING
     )
+    mock_aladdinconnect_api.get_door_status.return_value = STATE_OPENING
 
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
@@ -356,6 +360,7 @@ async def test_callback(
         mock_aladdinconnect_api.async_get_door_status.reset_mock()
 
     mock_aladdinconnect_api.async_get_door_status.return_value = STATE_CLOSING
+    mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSING
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -363,9 +368,7 @@ async def test_callback(
         "homeassistant.components.aladdin_connect.AladdinConnectClient._call_back",
         AsyncMock(),
     ):
-        mock_calls = mock_aladdinconnect_api.register_callback.mock_calls
-
-        callback = mock_calls[0][1][0]
+        callback = mock_aladdinconnect_api.register_callback.call_args[0][0]
         await callback()
         async_fire_time_changed(
             hass,

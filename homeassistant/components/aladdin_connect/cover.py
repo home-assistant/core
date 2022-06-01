@@ -147,14 +147,28 @@ class AladdinDevice(CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Update is closed attribute."""
-        return None if self._door_status is None else self._door_status == STATE_CLOSED
+        return (
+            None
+            if STATES_MAP.get(self._acc.get_door_status(self._device_id, self._number))
+            is None
+            else STATES_MAP.get(
+                self._acc.get_door_status(self._device_id, self._number)
+            )
+            == STATE_CLOSED
+        )
 
     @property
     def is_closing(self) -> bool:
         """Update is closing attribute."""
-        return self._door_status == STATE_CLOSING
+        return (
+            STATES_MAP.get(self._acc.get_door_status(self._device_id, self._number))
+            == STATE_CLOSING
+        )
 
     @property
     def is_opening(self) -> bool:
         """Update is opening attribute."""
-        return self._door_status == STATE_OPENING
+        return (
+            STATES_MAP.get(self._acc.get_door_status(self._device_id, self._number))
+            == STATE_OPENING
+        )
