@@ -122,6 +122,10 @@ authlib<1.0
 # Pin backoff for compatibility until most libraries have been updated
 # https://github.com/home-assistant/core/pull/70817
 backoff<2.0
+
+# Breaking change in version
+# https://github.com/samuelcolvin/pydantic/issues/4092
+pydantic!=1.9.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
