@@ -129,6 +129,20 @@ class CarbonDioxideConcentration(ZigbeeChannel):
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.PM25.cluster_id
+)
+class PM25(ZigbeeChannel):
+    """Particulate Matter 2.5 microns or less measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.1),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
     measurement.FormaldehydeConcentration.cluster_id
 )
 class FormaldehydeConcentration(ZigbeeChannel):
