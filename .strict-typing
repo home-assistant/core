@@ -255,3 +255,4 @@ homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*
+pylint.*
