@@ -195,7 +195,7 @@ class SensorTemplate(TemplateSensor):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config, unique_id)
+        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
         self._template = config.get(CONF_STATE)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(

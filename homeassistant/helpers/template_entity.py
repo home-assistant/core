@@ -422,6 +422,7 @@ class TemplateSensor(TemplateEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         config: dict[str, Any],
         fallback_name: str | None,
         unique_id: str | None,
