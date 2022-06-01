@@ -285,8 +285,11 @@ def test_invalid_config_flow_step(
     """Ensure invalid hints are rejected for ConfigFlow step."""
     class_node, func_node, arg_node = astroid.extract_node(
         """
+    class ConfigFlow():
+        pass
+
     class AxisFlowHandler( #@
-        config_entries.ConfigFlow, domain=AXIS_DOMAIN
+        ConfigFlow, domain=AXIS_DOMAIN
     ):
         async def async_step_zeroconf( #@
             self,
@@ -304,18 +307,18 @@ def test_invalid_config_flow_step(
             msg_id="hass-argument-type",
             node=arg_node,
             args=(2, "ZeroconfServiceInfo"),
-            line=7,
+            line=10,
             col_offset=8,
-            end_line=7,
+            end_line=10,
             end_col_offset=27,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
             args="FlowResult",
-            line=5,
+            line=8,
             col_offset=4,
-            end_line=5,
+            end_line=8,
             end_col_offset=33,
         ),
     ):
@@ -328,8 +331,11 @@ def test_valid_config_flow_step(
     """Ensure valid hints are accepted for ConfigFlow step."""
     class_node = astroid.extract_node(
         """
+    class ConfigFlow():
+        pass
+
     class AxisFlowHandler( #@
-        config_entries.ConfigFlow, domain=AXIS_DOMAIN
+        ConfigFlow, domain=AXIS_DOMAIN
     ):
         async def async_step_zeroconf(
             self,
