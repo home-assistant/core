@@ -29,7 +29,7 @@ class TypeHintMatch:
 class ClassTypeHintMatch:
     """Class for pattern matching."""
 
-    classes: set[str]
+    base_class: str
     matches: list[TypeHintMatch]
 
 
@@ -370,11 +370,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
-            classes={
-                "AbstractOAuth2FlowHandler",
-                "ConfigFlow",
-                "SchemaConfigFlowHandler",
-            },
+            base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
                     function_name="async_step_dhcp",
@@ -581,9 +577,10 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             for ancestor in node.ancestors(True):
                 if (
                     isinstance(ancestor, astroid.ClassDef)
-                    and ancestor.name in class_matches.classes
+                    and ancestor.name == class_matches.base_class
                 ):
                     self._visit_class_functions(node, class_matches.matches)
+                    break
 
     def _visit_class_functions(
         self, node: astroid.ClassDef, matches: list[TypeHintMatch]
