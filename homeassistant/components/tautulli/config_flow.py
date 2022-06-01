@@ -1,6 +1,7 @@
 """Config flow for Tautulli."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytautulli import (
@@ -70,7 +71,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
