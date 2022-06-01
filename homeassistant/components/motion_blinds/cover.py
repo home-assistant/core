@@ -380,11 +380,13 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     def supported_features(self):
         """Flag supported features."""
         supported_features = (
-            CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT | CoverEntityFeature.STOP_TILT
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
         )
 
         if self.current_cover_tilt_position is not None:
-            supported_features |= (CoverEntityFeature.SET_TILT_POSITION)
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
         return supported_features
 
