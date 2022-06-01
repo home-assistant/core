@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Authentification",
-                    "content_type": "Type de contenu",
                     "framerate": "Fr\u00e9quence d'images (en hertz)",
                     "limit_refetch_to_url_change": "Limiter la r\u00e9cup\u00e9ration aux changements d'URL",
                     "password": "Mot de passe",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "Authentification",
-                    "content_type": "Type de contenu",
                     "framerate": "Fr\u00e9quence d'images (en hertz)",
                     "limit_refetch_to_url_change": "Limiter la r\u00e9cup\u00e9ration aux changements d'URL",
                     "password": "Mot de passe",
                     "rtsp_transport": "Protocole de transport RTSP",
                     "still_image_url": "URL d'image fixe (par exemple, http://\u2026)",
                     "stream_source": "URL de la source du flux (par exemple, rtsp://\u2026)",
+                    "use_wallclock_as_timestamps": "Utiliser l'horloge murale comme horodatage",
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Cette option peut corriger des probl\u00e8mes de segmentation ou de plantage dus \u00e0 des impl\u00e9mentations d'horodatage d\u00e9fectueuses sur certaines cam\u00e9ras"
                 }
             }
         }

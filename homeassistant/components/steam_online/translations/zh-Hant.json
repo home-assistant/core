@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "Steam \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49\n\n\u53ef\u4ee5\u65bc\u5f8c\u65b9\u7db2\u5740\u627e\u5230\u91d1\u9470\uff1ahttps://steamcommunity.com/dev/apikey",
+                "description": "Steam \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49\n\n\u53ef\u4ee5\u65bc\u5f8c\u65b9\u7db2\u5740\u627e\u5230\u91d1\u9470\uff1a{api_key_url}",
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
             "user": {
@@ -20,11 +20,14 @@
                     "account": "Steam \u5e33\u865f ID",
                     "api_key": "API \u91d1\u9470"
                 },
-                "description": "\u4f7f\u7528 https://steamid.io \u4ee5\u78ba\u8a8d\u60a8\u7684 Steam \u5e33\u865f ID"
+                "description": "\u4f7f\u7528 {account_id_url} \u4ee5\u78ba\u8a8d\u60a8\u7684 Steam \u5e33\u865f ID"
             }
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "\u597d\u53cb\u5217\u8868\u53d7\u9650\uff1a\u8acb\u53c3\u8003\u6587\u4ef6\u8cc7\u6599\u4ee5\u4e86\u89e3\u5982\u4f55\u986f\u793a\u6240\u6709\u597d\u53cb\u3002"
+        },
         "step": {
             "init": {
                 "data": {

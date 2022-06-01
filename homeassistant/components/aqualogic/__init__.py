@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ class AquaLogicProcessor(threading.Thread):
 
     def data_changed(self, panel):
         """Aqualogic data changed callback."""
-        self._hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
+        dispatcher_send(self._hass, UPDATE_TOPIC)
 
     def run(self):
         """Event thread."""

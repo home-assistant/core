@@ -2,6 +2,7 @@
 import asyncio
 from unittest.mock import MagicMock
 
+import aiohttp
 from plugwise.exceptions import (
     ConnectionFailedError,
     PlugwiseException,
@@ -49,6 +50,7 @@ async def test_load_unload_config_entry(
         (PlugwiseException),
         (XMLDataMissingError),
         (asyncio.TimeoutError),
+        (aiohttp.ClientConnectionError),
     ],
 )
 async def test_config_entry_not_ready(

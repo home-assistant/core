@@ -127,7 +127,7 @@ def login_requests_mock(requests_mock):
             LoginErrorEnum.USERNAME_PWD_WRONG,
             {CONF_USERNAME: "invalid_auth"},
         ),
-        (LoginErrorEnum.USERNAME_PWD_ORERRUN, {"base": "login_attempts_exceeded"}),
+        (LoginErrorEnum.USERNAME_PWD_OVERRUN, {"base": "login_attempts_exceeded"}),
         (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
     ),
 )

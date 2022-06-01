@@ -27,5 +27,14 @@
                 "title": "Godkjenne integrering p\u00e5 nytt"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant tilgang til Google Kalender"
+                }
+            }
+        }
     }
 }

@@ -15,11 +15,13 @@ from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-    CONF_RTSP_TRANSPORT,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DOMAIN,
+)
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -531,6 +533,16 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_av_open):
         )
         assert result4.get("type") == data_entry_flow.RESULT_TYPE_FORM
         assert result4["errors"] == {"still_image_url": "template_error"}
+
+        # verify that an invalid template reports the correct UI error.
+        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+        data[CONF_STREAM_SOURCE] = "http://127.0.0.2/testurl/{{1/0}}"
+        result5 = await hass.config_entries.options.async_configure(
+            result4["flow_id"],
+            user_input=data,
+        )
+        assert result5.get("type") == data_entry_flow.RESULT_TYPE_FORM
+        assert result5["errors"] == {"stream_source": "template_error"}
 
 
 @respx.mock

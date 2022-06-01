@@ -24,6 +24,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -208,6 +209,20 @@ async def async_get_config_flows(
     )
 
     return flows
+
+
+async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
+    """Return cached list of application credentials."""
+    integrations = await async_get_custom_components(hass)
+
+    return [
+        *APPLICATION_CREDENTIALS,
+        *[
+            integration.domain
+            for integration in integrations.values()
+            if "application_credentials" in integration.dependencies
+        ],
+    ]
 
 
 def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:

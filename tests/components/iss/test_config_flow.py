@@ -2,29 +2,13 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.iss.binary_sensor import DEFAULT_NAME
 from homeassistant.components.iss.const import DOMAIN
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-async def test_import(hass: HomeAssistant):
-    """Test entry will be imported."""
-
-    imported_config = {CONF_NAME: DEFAULT_NAME, CONF_SHOW_ON_MAP: False}
-
-    with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=imported_config
-        )
-        assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result.get("result").title == DEFAULT_NAME
-        assert result.get("result").options == {CONF_SHOW_ON_MAP: False}
 
 
 async def test_create_entry(hass: HomeAssistant):
