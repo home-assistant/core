@@ -16,7 +16,7 @@ UNDEFINED = object()
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeHintMatch:
     """Class for pattern matching."""
 
@@ -25,7 +25,7 @@ class TypeHintMatch:
     return_type: list[str] | str | None | object
 
 
-@dataclass
+@dataclass(slots=True)
 class ClassTypeHintMatch:
     """Class for pattern matching."""
 
@@ -573,12 +573,10 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     def visit_classdef(self, node: astroid.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
-        for ancestor in node.ancestors(True):
+        ancestor: astroid.ClassDef
+        for ancestor in node.ancestors():
             for class_matches in self._class_matchers:
-                if (
-                    isinstance(ancestor, astroid.ClassDef)
-                    and ancestor.name == class_matches.base_class
-                ):
+                if ancestor.name == class_matches.base_class:
                     self._visit_class_functions(node, class_matches.matches)
 
     def _visit_class_functions(
