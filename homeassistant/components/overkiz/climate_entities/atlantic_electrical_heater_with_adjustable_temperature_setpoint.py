@@ -55,7 +55,7 @@ OVERKIZ_TO_HVAC_MODE = {
     "internal": HVACMode.AUTO,
 }
 
-_TO_TAHOMA = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
+HVAC_MODE_TO_TAHOMA = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
 
 class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
@@ -63,7 +63,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 ):
     """Representation of Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
 
-    _attr_hvac_modes = [*_TO_TAHOMA]
+    _attr_hvac_modes = [*HVAC_MODE_TO_TAHOMA]
     _attr_preset_modes = [*PRESET_MODE_TO_TAHOMA]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features = (
@@ -94,7 +94,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         """Set new target hvac mode."""
         if OverkizState.CORE_OPERATING_MODE in self.device.states:
             await self.executor.async_execute_command(
-                OverkizCommand.SET_OPERATING_MODE, _TO_TAHOMA[hvac_mode]
+                OverkizCommand.SET_OPERATING_MODE, HVAC_MODE_TO_TAHOMA[hvac_mode]
             )
         else:
             if hvac_mode == HVACMode.OFF:
