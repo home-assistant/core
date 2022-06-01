@@ -48,10 +48,14 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle re-auth if token invalid."""
+        return await self.async_step_reauth_confirm(dict(data))
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth dialog."""
         errors = {}
 
         if user_input is not None:
@@ -70,7 +74,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors = {CONF_ACCESS_TOKEN: error}
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
             errors=errors,
         )
