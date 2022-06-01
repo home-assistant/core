@@ -257,9 +257,6 @@ aiolivisi==0.0.19
 # homeassistant.components.lookin
 aiolookin==1.0.0
 
-# homeassistant.components.loqed
-loqedAPI==2.1.3
-
 # homeassistant.components.lyric
 aiolyric==1.0.9
 
@@ -879,6 +876,9 @@ life360==5.5.0
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
+
+# homeassistant.components.loqed
+loqedAPI==2.1.3
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4

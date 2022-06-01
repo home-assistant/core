@@ -23,12 +23,14 @@ async def test_webhook_rejects_invalid_message(
     hass: HomeAssistant,
     hass_client_no_auth,
     integration: MockConfigEntry,
+    lock: loqed.Lock,
 ):
     """Test webhook called with invalid message."""
     await async_setup_component(hass, "http", {"http": {}})
     client = await hass_client_no_auth()
 
     coordinator = hass.data[DOMAIN][integration.entry_id][CONF_COORDINATOR]
+    lock.receiveWebhook = AsyncMock(return_value={"error": "invalid hash"})
 
     with patch.object(coordinator, "async_set_updated_data") as mock:
         message = load_fixture("loqed/battery_update.json")
@@ -42,6 +44,31 @@ async def test_webhook_rejects_invalid_message(
     mock.assert_not_called()
 
 
+async def test_webhook_accepts_valid_message(
+    hass: HomeAssistant,
+    hass_client_no_auth,
+    integration: MockConfigEntry,
+    lock: loqed.Lock,
+):
+    """Test webhook called with valid message."""
+    await async_setup_component(hass, "http", {"http": {}})
+    client = await hass_client_no_auth()
+    processed_message = json.loads(load_fixture("loqed/battery_update.json"))
+    coordinator = hass.data[DOMAIN][integration.entry_id][CONF_COORDINATOR]
+    lock.receiveWebhook = AsyncMock(return_value=processed_message)
+
+    with patch.object(coordinator, "async_set_updated_data") as mock:
+        message = load_fixture("loqed/battery_update.json")
+        timestamp = 1653304609
+        await client.post(
+            f"/api/webhook/{integration.data[CONF_WEBHOOK_ID]}",
+            data=message,
+            headers={"timestamp": str(timestamp), "hash": "incorrect hash"},
+        )
+
+    mock.assert_called_with(processed_message)
+
+
 async def test_setup_webhook_in_bridge(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
 ):
@@ -53,10 +80,7 @@ async def test_setup_webhook_in_bridge(
     webhooks_fixture = json.loads(load_fixture("loqed/get_all_webhooks.json"))
     lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
 
-    with patch(
-        "homeassistant.components.webhook.async_generate_url",
-        return_value=webhooks_fixture[0]["url"],
-    ), patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
     ):
         await async_setup_component(hass, DOMAIN, config)
@@ -75,3 +99,10 @@ async def test_unload_entry(hass, integration: MockConfigEntry, lock: loqed.Lock
     lock.deleteWebhook.assert_called_with(webhook_index)
     assert integration.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_unload_entry_fails(hass, integration: MockConfigEntry, lock: loqed.Lock):
+    """Test unsuccessful unload of entry."""
+    lock.deleteWebhook = AsyncMock(side_effect=Exception)
+
+    assert not await hass.config_entries.async_unload(integration.entry_id)

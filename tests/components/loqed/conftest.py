@@ -34,7 +34,7 @@ def config_entry_fixture() -> MockConfigEntry:
             "bkey": json_config["bridge_key"],
             "key_id": int(json_config["lock_key_local_id"]),
             "api_key": json_config["lock_key_key"],
-            CONF_WEBHOOK_ID: "Webhook_ID",
+            CONF_WEBHOOK_ID: "Webhook_id",
         },
     )
 
@@ -58,14 +58,9 @@ async def integration_fixture(
     config: dict[str, Any] = {DOMAIN: {CONF_COORDINATOR: ""}}
     config_entry.add_to_hass(hass)
 
-    webhooks_fixture = json.loads(load_fixture("loqed/get_all_webhooks.json"))
-
     lock_status = json.loads(load_fixture("loqed/status_ok.json"))
 
-    with patch(
-        "homeassistant.components.webhook.async_generate_url",
-        return_value=webhooks_fixture[0]["url"],
-    ), patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
     ):
         await async_setup_component(hass, DOMAIN, config)
