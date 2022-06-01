@@ -36,7 +36,7 @@ def extract_include_exclude_filter_conf(conf: ConfigType) -> dict[str, Any]:
     """
     return {
         filter_type: {
-            matcher: set(conf.get(filter_type, {}).get(matcher, []))
+            matcher: set(conf.get(filter_type, {}).get(matcher) or [])
             for matcher in FITLER_MATCHERS
         }
         for filter_type in FILTER_TYPES
