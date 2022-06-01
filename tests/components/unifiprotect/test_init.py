@@ -357,7 +357,7 @@ async def test_device_remove_devices(
     light1._api = mock_entry.api
     light1.name = "Test Light 1"
     light1.id = "lightid1"
-    light1.mac = "aa:bb:cc:dd:ee:ff"
+    light1.mac = "AABBCCDDEEFF"
 
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
