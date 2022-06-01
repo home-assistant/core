@@ -108,6 +108,7 @@ def soco_fixture(
         mock_soco.mute = False
         mock_soco.night_mode = True
         mock_soco.dialog_level = True
+        mock_soco.loudness = True
         mock_soco.volume = 19
         mock_soco.audio_delay = 2
         mock_soco.bass = 1

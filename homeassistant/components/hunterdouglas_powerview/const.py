@@ -47,7 +47,6 @@ ROOM_NAME = "name"
 ROOM_NAME_UNICODE = "name_unicode"
 ROOM_ID = "id"
 
-SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
 

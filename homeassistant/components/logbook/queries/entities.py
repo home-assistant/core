@@ -5,20 +5,20 @@ from collections.abc import Iterable
 from datetime import datetime as dt
 
 import sqlalchemy
-from sqlalchemy import Column, lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.models import (
+    ENTITY_ID_IN_EVENT,
     ENTITY_ID_LAST_UPDATED_INDEX,
+    OLD_ENTITY_ID_IN_EVENT,
     Events,
     States,
 )
 
 from .common import (
-    EVENT_DATA_JSON,
-    OLD_FORMAT_EVENT_DATA_JSON,
     apply_states_filters,
     select_events_context_id_subquery,
     select_events_context_only,
@@ -26,9 +26,6 @@ from .common import (
     select_states,
     select_states_context_only,
 )
-
-ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
-OLD_ENTITY_ID_IN_EVENT: Column = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
 
 
 def _select_entities_context_ids_sub_query(

@@ -1,7 +1,7 @@
 """Provides device automations for Philips Hue events."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.button import ButtonEvent
 from aiohue.v2.models.resource import ResourceTypes
@@ -86,7 +86,7 @@ async def async_validate_trigger_config(
     bridge: "HueBridge",
     device_entry: DeviceEntry,
     config: ConfigType,
-):
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
     check_invalid_device_trigger(bridge, config, device_entry)
@@ -97,8 +97,8 @@ async def async_attach_trigger(
     bridge: "HueBridge",
     device_entry: DeviceEntry,
     config: ConfigType,
-    action: "AutomationActionType",
-    automation_info: "AutomationTriggerInfo",
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     hass = bridge.hass
@@ -120,7 +120,9 @@ async def async_attach_trigger(
 
 
 @callback
-def async_get_triggers(bridge: HueBridge, device_entry: DeviceEntry):
+def async_get_triggers(
+    bridge: HueBridge, device_entry: DeviceEntry
+) -> list[dict[str, Any]]:
     """Return device triggers for device on `v2` bridge."""
     api: HueBridgeV2 = bridge.api
 

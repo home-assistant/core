@@ -6,7 +6,7 @@ from datetime import timedelta
 import math
 from typing import Any
 
-from pywemo.ouimeaux_device.humidifier import DesiredHumidity, FanMode, Humidifier
+from pywemo import DesiredHumidity, FanMode, Humidifier
 import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature

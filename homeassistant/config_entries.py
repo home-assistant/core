@@ -108,7 +108,7 @@ class ConfigEntryState(Enum):
 
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
-DISCOVERY_SOURCES = (
+DISCOVERY_SOURCES = {
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
     SOURCE_HOMEKIT,
@@ -119,7 +119,7 @@ DISCOVERY_SOURCES = (
     SOURCE_UNIGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
-)
+}
 
 RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
@@ -186,6 +186,7 @@ class ConfigEntry:
         "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
+        "reload_lock",
     )
 
     def __init__(
@@ -274,6 +275,9 @@ class ConfigEntry:
 
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
+
+        # Reload lock to prevent conflicting reloads
+        self.reload_lock = asyncio.Lock()
 
     async def async_setup(
         self,
@@ -1005,12 +1009,13 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
-        unload_result = await self.async_unload(entry_id)
+        async with entry.reload_lock:
+            unload_result = await self.async_unload(entry_id)
 
-        if not unload_result or entry.disabled_by:
-            return unload_result
+            if not unload_result or entry.disabled_by:
+                return unload_result
 
-        return await self.async_setup(entry_id)
+            return await self.async_setup(entry_id)
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
@@ -1237,24 +1242,36 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             return
 
         for entry in self._async_current_entries(include_ignore=True):
-            if entry.unique_id == self.unique_id:
-                if updates is not None:
-                    changed = self.hass.config_entries.async_update_entry(
-                        entry, data={**entry.data, **updates}
-                    )
-                    if (
-                        changed
-                        and reload_on_update
-                        and entry.state
-                        in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
-                    ):
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
-                # Allow ignored entries to be configured on manual user step
-                if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
-                    continue
-                raise data_entry_flow.AbortFlow("already_configured")
+            if entry.unique_id != self.unique_id:
+                continue
+            should_reload = False
+            if (
+                updates is not None
+                and self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **updates}
+                )
+                and reload_on_update
+                and entry.state
+                in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
+            ):
+                # Existing config entry present, and the
+                # entry data just changed
+                should_reload = True
+            elif (
+                self.source in DISCOVERY_SOURCES
+                and entry.state is ConfigEntryState.SETUP_RETRY
+            ):
+                # Existing config entry present in retry state, and we
+                # just discovered the unique id so we know its online
+                should_reload = True
+            # Allow ignored entries to be configured on manual user step
+            if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
+                continue
+            if should_reload:
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True

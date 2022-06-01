@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Ignoar autom\u00e1ticamente bateria fraca"
+                },
+                "description": "Desative zonas automaticamente no momento em que relatam uma bateria fraca.",
+                "title": "Op\u00e7\u00f5es do TotalConnect"
+            }
+        }
     }
 }

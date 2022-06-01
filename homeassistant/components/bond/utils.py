@@ -5,7 +5,7 @@ import logging
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
-from bond_api import Action, Bond
+from bond_async import Action, Bond
 
 from homeassistant.util.async_ import gather_with_concurrency
 

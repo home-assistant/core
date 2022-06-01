@@ -1,6 +1,8 @@
 """The powerview integration base entity."""
 
-from aiopvapi.resources.shade import ATTR_TYPE
+from typing import Any
+
+from aiopvapi.resources.shade import ATTR_TYPE, BaseShade
 
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION
 import homeassistant.helpers.device_registry as dr
@@ -21,12 +23,20 @@ from .const import (
     MANUFACTURER,
     PV_HUB_ADDRESS,
 )
+from .coordinator import PowerviewShadeUpdateCoordinator
+from .shade_data import PowerviewShadeData, PowerviewShadePositions
 
 
-class HDEntity(CoordinatorEntity):
+class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
 
-    def __init__(self, coordinator, device_info, room_name, unique_id):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        unique_id: str,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._room_name = room_name
@@ -38,6 +48,11 @@ class HDEntity(CoordinatorEntity):
     def hub_address(self):
         """Return the ip of the hub."""
         return self._hub_address
+
+    @property
+    def data(self) -> PowerviewShadeData:
+        """Return the PowerviewShadeData."""
+        return self.coordinator.data
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -61,11 +76,23 @@ class HDEntity(CoordinatorEntity):
 class ShadeEntity(HDEntity):
     """Base class for hunter douglas shade entities."""
 
-    def __init__(self, coordinator, device_info, room_name, shade, shade_name):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        shade_name: str,
+    ) -> None:
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name
         self._shade = shade
+
+    @property
+    def positions(self) -> PowerviewShadePositions:
+        """Return the PowerviewShadeData."""
+        return self.data.get_shade_positions(self._shade.id)
 
     @property
     def device_info(self) -> DeviceInfo:
