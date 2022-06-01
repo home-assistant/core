@@ -12,7 +12,11 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conexi\u00f3n"
+                    "flow_type": "Tipo de conexi\u00f3n",
+                    "host": "Direcci\u00f3n IP",
+                    "password": "ID de sonrisa",
+                    "port": "Puerto",
+                    "username": "Nombre de usuario de la sonrisa"
                 },
                 "description": "Producto:",
                 "title": "Conectarse a Smile"
