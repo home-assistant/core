@@ -6,6 +6,9 @@ DOMAIN = "remootio"
 # Timeout used in methods of remootio.utils
 REMOOTIO_TIMEOUT = 60
 
+# Deleay used in methods of remootio.utils
+REMOOTIO_DELAY = 0.5
+
 # Expected minimum Remootio Websocket API version supported by this integration
 EXPECTED_MINIMUM_API_VERSION = 2
 

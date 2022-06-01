@@ -1,4 +1,5 @@
 """Utility methods for the Remootio integration."""
+import asyncio
 import logging
 from logging import Logger
 
@@ -9,7 +10,7 @@ import async_timeout
 from homeassistant import core
 from homeassistant.helpers import aiohttp_client
 
-from .const import EXPECTED_MINIMUM_API_VERSION, REMOOTIO_TIMEOUT
+from .const import EXPECTED_MINIMUM_API_VERSION, REMOOTIO_DELAY, REMOOTIO_TIMEOUT
 from .exceptions import (
     UnsupportedRemootioApiVersionError,
     UnsupportedRemootioDeviceError,
@@ -18,9 +19,16 @@ from .exceptions import (
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _wait_for_connected(remootio_client: RemootioClient) -> bool:
+    while not remootio_client.connected:
+        await asyncio.sleep(REMOOTIO_DELAY)
+
+    return remootio_client.connected
+
+
 async def _check_api_version(remootio_client: RemootioClient) -> None:
     """Check whether the by the given client represented Remootio device uses a supported API version."""
-    api_version: int = await remootio_client.api_version
+    api_version: int = remootio_client.api_version
     if api_version < EXPECTED_MINIMUM_API_VERSION:
         raise UnsupportedRemootioApiVersionError
 
@@ -29,15 +37,14 @@ async def _check_sensor_installed(
     remootio_client: RemootioClient, raise_error: bool = True
 ) -> None:
     """Check whether the by the given client represented Remootio device has a sensor installed."""
-    if await remootio_client.initialized:
-        if remootio_client.state == State.NO_SENSOR_INSTALLED:
-            if raise_error:
-                raise UnsupportedRemootioDeviceError
+    if remootio_client.state == State.NO_SENSOR_INSTALLED:
+        if raise_error:
+            raise UnsupportedRemootioDeviceError
 
-            _LOGGER.error(
-                "Your Remootio device isn't supported, possibly because it hasn't a sensor installed. IP [%s]",
-                remootio_client.ip_address,
-            )
+        _LOGGER.error(
+            "Your Remootio device isn't supported, possibly because it hasn't a sensor installed. IP [%s]",
+            remootio_client.ip_address,
+        )
 
 
 async def get_serial_number(
@@ -52,10 +59,11 @@ async def get_serial_number(
             aiohttp_client.async_get_clientsession(hass),
             LoggerConfiguration(logger=logger),
         ) as remootio_client:
-            await _check_sensor_installed(remootio_client)
-            await _check_api_version(remootio_client)
+            if await _wait_for_connected(remootio_client):
+                await _check_sensor_installed(remootio_client)
+                await _check_api_version(remootio_client)
 
-            result = await remootio_client.serial_number
+                result = await remootio_client.serial_number
 
     return result
 
@@ -76,13 +84,14 @@ async def create_client(
             LoggerConfiguration(logger=logger),
         )
 
-        await _check_sensor_installed(result, False)
-        await _check_api_version(result)
+        if await _wait_for_connected(result):
+            await _check_sensor_installed(result, False)
+            await _check_api_version(result)
 
-        if expected_serial_number is not None:
-            serial_number: str = await result.serial_number
-            assert (
-                expected_serial_number == serial_number
-            ), f"Serial number of the Remootio device isn't the expected. Actual [{serial_number}] Expected [{expected_serial_number}]"
+            if expected_serial_number is not None:
+                serial_number: str = result.serial_number
+                assert (
+                    expected_serial_number == serial_number
+                ), f"Serial number of the Remootio device isn't the expected. Actual [{serial_number}] Expected [{expected_serial_number}]"
 
     return result
