@@ -13,7 +13,11 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipus de connexi\u00f3"
+                    "flow_type": "Tipus de connexi\u00f3",
+                    "host": "Adre\u00e7a IP",
+                    "password": "ID de Smile",
+                    "port": "Port",
+                    "username": "Usuari de Smile"
                 },
                 "description": "Producte:",
                 "title": "Tipus de Plugwise"
