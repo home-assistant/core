@@ -38,7 +38,7 @@ from .const import (
 from .data import ProtectData, async_ufp_instance_for_config_entry_ids
 from .discovery import async_start_discovery
 from .services import async_cleanup_services, async_setup_services
-from .utils import async_get_devices
+from .utils import _async_unifi_mac_from_hass, async_get_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,12 +173,16 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove ufp config entry from a device."""
-    connections = device_entry.connections
+    unifi_macs = {
+        _async_unifi_mac_from_hass(connection[1])
+        for connection in device_entry.connections
+        if connection[0] == dr.CONNECTION_NETWORK_MAC
+    }
     api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
     assert api is not None
-    if (dr.CONNECTION_NETWORK_MAC, api.bootstrap.nvr.mac) in connections:
+    if api.bootstrap.nvr.mac in unifi_macs:
         return False
-    for device in async_get_devices(api, DEVICES_THAT_ADOPT):
-        if (dr.CONNECTION_NETWORK_MAC, device.mac) in connections:
-            return False
-    return True
+    return not any(
+        device.mac in unifi_macs
+        for device in async_get_devices(api, DEVICES_THAT_ADOPT)
+    )
