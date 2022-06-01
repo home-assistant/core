@@ -91,13 +91,12 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
             await self.executor.async_execute_command(
                 OverkizCommand.SET_OPERATING_MODE, HVAC_MODE_TO_OVERKIZ[hvac_mode]
             )
+        elif hvac_mode == HVACMode.OFF:
+            await self.executor.async_execute_command(OverkizCommand.OFF)
         else:
-            if hvac_mode == HVACMode.OFF:
-                await self.executor.async_execute_command(OverkizCommand.OFF)
-            else:
-                await self.executor.async_execute_command(
-                    OverkizCommand.SET_HEATING_LEVEL, OverkizCommandParam.COMFORT
-                )
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_HEATING_LEVEL, OverkizCommandParam.COMFORT
+            )
 
     @property
     def preset_mode(self) -> str | None:
