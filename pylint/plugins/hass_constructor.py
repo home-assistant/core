@@ -1,5 +1,7 @@
 """Plugin for constructor definitions."""
-from astroid import Const, FunctionDef
+from __future__ import annotations
+
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -22,7 +24,7 @@ class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def visit_functiondef(self, node: FunctionDef) -> None:
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
         if not node.is_method() or node.name != "__init__":
             return
@@ -43,7 +45,7 @@ class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
             return
 
         # Check that return type is specified and it is "None".
-        if not isinstance(node.returns, Const) or node.returns.value is not None:
+        if not isinstance(node.returns, nodes.Const) or node.returns.value is not None:
             self.add_message("hass-constructor-return", node=node)
 
 
