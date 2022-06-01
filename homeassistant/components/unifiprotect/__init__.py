@@ -180,9 +180,7 @@ async def async_remove_config_entry_device(
     }
     api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
     assert api is not None
-    if api.bootstrap.nvr.mac in unifi_macs:
-        return False
-    return not any(
+    return api.bootstrap.nvr.mac not in unifi_macs and not any(
         device.mac in unifi_macs
         for device in async_get_devices(api, DEVICES_THAT_ADOPT)
     )
