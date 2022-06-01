@@ -16,7 +16,7 @@ UNDEFINED = object()
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 
-@dataclass(slots=True)
+@dataclass
 class TypeHintMatch:
     """Class for pattern matching."""
 
@@ -25,7 +25,7 @@ class TypeHintMatch:
     return_type: list[str] | str | None | object
 
 
-@dataclass(slots=True)
+@dataclass
 class ClassTypeHintMatch:
     """Class for pattern matching."""
 
