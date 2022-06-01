@@ -37,6 +37,8 @@ class TypeHintMatch:
             self.function_name == node.name
             or self.has_async_counterpart
             and node.name == f"async_{self.function_name}"
+            or self.function_name.endswith("*")
+            and node.name.startswith(self.function_name[:-1])
         )
 
 
@@ -370,6 +372,16 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
+        ClassTypeHintMatch(
+            base_class="FlowHandler",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="FlowResult",
+                ),
+            ],
+        ),
         ClassTypeHintMatch(
             base_class="ConfigFlow",
             matches=[
