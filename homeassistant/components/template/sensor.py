@@ -195,6 +195,8 @@ async def async_setup_platform(
 class SensorTemplate(TemplateSensor):
     """Representation of a Template Sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,

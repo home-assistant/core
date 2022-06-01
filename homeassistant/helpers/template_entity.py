@@ -155,7 +155,6 @@ class TemplateEntity(Entity):
     _attr_available = True
     _attr_entity_picture = None
     _attr_icon = None
-    _attr_should_poll = False
 
     def __init__(
         self,

@@ -105,6 +105,8 @@ async def async_setup_platform(
 class WeatherTemplate(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
