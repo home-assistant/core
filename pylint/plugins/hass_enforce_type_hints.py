@@ -382,6 +382,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
+                    function_name="async_get_options_flow",
+                    arg_types={
+                        0: "ConfigEntry",
+                    },
+                    return_type=UNDEFINED,
+                ),
+                TypeHintMatch(
                     function_name="async_step_dhcp",
                     arg_types={
                         1: "DhcpServiceInfo",
