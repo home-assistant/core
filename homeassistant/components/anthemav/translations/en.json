@@ -5,15 +5,13 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "cannot_receive_deviceinfo": "Failed to retreive MAC Address. Make sure the device is turned on",
-            "unknown": "Unexpected error"
+            "cannot_receive_deviceinfo": "Failed to retreive MAC Address. Make sure the device is turned on"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port",
-                    "name": "Name"
+                    "port": "Port"
                 }
             }
         }
