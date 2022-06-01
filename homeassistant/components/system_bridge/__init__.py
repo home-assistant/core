@@ -10,13 +10,22 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.version import SUPPORTED_VERSION, Version
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_URL, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_URL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,6 +51,30 @@ SERVICE_SEND_TEXT = "send_text"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
+
+    # Check version before initialising
+    version = Version(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_API_KEY],
+        session=async_get_clientsession(hass),
+    )
+    try:
+        if not await version.check_supported():
+            raise ConfigEntryNotReady(
+                f"You are not running a supported version of System Bridge. Please update to {SUPPORTED_VERSION} or higher."
+            )
+    except AuthenticationException as exception:
+        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
+        raise ConfigEntryAuthFailed from exception
+    except (ConnectionClosedException, ConnectionErrorException) as exception:
+        raise ConfigEntryNotReady(
+            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
+    except asyncio.TimeoutError as exception:
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
 
     coordinator = SystemBridgeDataUpdateCoordinator(
         hass,
