@@ -51,7 +51,6 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             "host": "192.168.1.32",
             "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
             # Entity configuration
-            "attributes": {"extra1": "{{'extra 1'}}"},
             "icon": "{{'mdi:one_two_three'}}",
             "picture": "{{'blabla.png'}}",
             "device_class": "temperature",
@@ -73,31 +72,8 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert state.attributes == {
         "device_class": "temperature",
         "entity_picture": "blabla.png",
-        "extra1": "extra 1",
         "friendly_name": "SNMP Sensor",
         "icon": "mdi:one_two_three",
         "state_class": "measurement",
         "unit_of_measurement": "beardsecond",
     }
-
-
-async def test_availability_config(hass: HomeAssistant) -> None:
-    """Test availability configuration."""
-
-    config = {
-        SENSOR_DOMAIN: {
-            # SNMP configuration
-            "platform": "snmp",
-            "host": "192.168.1.32",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-            # Entity configuration
-            "availability": "{{ False }}",
-        },
-    }
-
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.snmp")
-    assert state.state == "unavailable"
-    assert state.attributes == {"friendly_name": "SNMP"}

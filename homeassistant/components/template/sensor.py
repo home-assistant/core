@@ -49,7 +49,10 @@ from .const import (
     CONF_OBJECT_ID,
     CONF_TRIGGER,
 )
-from .template_entity import rewrite_common_legacy_to_modern_conf
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    rewrite_common_legacy_to_modern_conf,
+)
 from .trigger_entity import TriggerEntity
 
 LEGACY_FIELDS = {
@@ -59,11 +62,15 @@ LEGACY_FIELDS = {
 }
 
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_STATE): cv.template,
-    }
-).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
+SENSOR_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Required(CONF_STATE): cv.template,
+        }
+    )
+    .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+)
 
 
 LEGACY_SENSOR_SCHEMA = vol.All(

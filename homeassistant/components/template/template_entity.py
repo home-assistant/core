@@ -40,7 +40,12 @@ TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
     }
 )
 
-TEMPLATE_ENTITY_COMMON_SCHEMA = TEMPLATE_ENTITY_BASE_SCHEMA
+TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+    }
+).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 
 TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
     {
