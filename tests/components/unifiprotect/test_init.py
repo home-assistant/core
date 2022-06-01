@@ -362,6 +362,7 @@ async def test_device_remove_devices(
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
     }
+
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
     light_entity_id = "light.test_light_1"
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
