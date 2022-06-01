@@ -30,6 +30,7 @@ SENSORS: list[SensorEntityDescription] = [
         key="wifi_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_registry_enabled_default=False,
         icon="mdi:signal",
     ),
     SensorEntityDescription(
@@ -37,6 +38,7 @@ SENSORS: list[SensorEntityDescription] = [
         key="ble_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_registry_enabled_default=False,
         icon="mdi:signal",
     ),
 ]
