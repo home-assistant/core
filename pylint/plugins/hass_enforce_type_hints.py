@@ -410,6 +410,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="FlowResult",
                 ),
                 TypeHintMatch(
+                    function_name="async_step_reauth",
+                    arg_types={
+                        1: "Mapping[str, Any]",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
                     function_name="async_step_ssdp",
                     arg_types={
                         1: "SsdpServiceInfo",
