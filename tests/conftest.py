@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 import functools
 import logging
 import ssl
@@ -27,7 +28,6 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -548,13 +548,18 @@ def mqtt_client_mock(hass):
 
 
 @pytest.fixture
-async def mqtt_mock(mqtt_mock_entry):
+async def mqtt_mock(
+    hass,
+    mqtt_client_mock,
+    mqtt_config,
+    mqtt_mock_entry_no_yaml_config,
+):
     """Fixture to mock MQTT component."""
-    return await mqtt_mock_entry()
+    return await mqtt_mock_entry_no_yaml_config()
 
 
-@pytest.fixture
-async def mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
+@asynccontextmanager
+async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
     """Fixture to mock a delayed setup of the MQTT config entry."""
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
@@ -572,19 +577,21 @@ async def mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
     real_mqtt_instance = None
     mock_mqtt_instance = None
 
-    async def _setup_mqtt_entry():
+    async def _setup_mqtt_entry(setup_entry):
         """Set up the MQTT config entry."""
-        if entry.state == ConfigEntryState.NOT_LOADED:
+        if setup_entry:
             assert await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
 
+        # Assert that MQTT is setup
+        assert real_mqtt_instance is not None, "MQTT was not setup correctly"
         mock_mqtt_instance.conf = real_mqtt_instance.conf  # For diagnostics
         mock_mqtt_instance._mqttc = mqtt_client_mock
 
         # connected set to True to get a more realistic behavior when subscribing
-        hass.data["mqtt"].connected = True
+        mock_mqtt_instance.connected = True
 
-        hass.helpers.dispatcher.async_dispatcher_send("mqtt_connected")
+        hass.helpers.dispatcher.async_dispatcher_send(mqtt.MQTT_CONNECTED)
         await hass.async_block_till_done()
 
         return mock_mqtt_instance
@@ -602,6 +609,30 @@ async def mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
         return mock_mqtt_instance
 
     with patch("homeassistant.components.mqtt.MQTT", side_effect=create_mock_mqtt):
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture
+async def mqtt_mock_entry_no_yaml_config(hass, mqtt_client_mock, mqtt_config):
+    """Set up an MQTT config entry without MQTT yaml config."""
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        return await mqtt_mock_entry(True)
+
+    async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture
+async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
+    """Set up an MQTT config entry with MQTT yaml config."""
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        return await mqtt_mock_entry(False)
+
+    async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
 

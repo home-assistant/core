@@ -18,10 +18,10 @@ def calls(hass):
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, mqtt_mock_entry):
+async def setup_comp(hass, mqtt_mock_entry_no_yaml_config):
     """Initialize components."""
     mock_component(hass, "group")
-    return await mqtt_mock_entry()
+    return await mqtt_mock_entry_no_yaml_config()
 
 
 async def test_if_fires_on_topic_match(hass, calls):

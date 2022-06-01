@@ -116,7 +116,7 @@ async def async_set_humidity(
     await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
 
 
-async def test_fail_setup_if_no_command_topic(hass, mqtt_mock_entry):
+async def test_fail_setup_if_no_command_topic(hass, mqtt_mock_entry_no_yaml_config):
     """Test if command fails with command topic."""
     assert await async_setup_component(
         hass,
@@ -124,11 +124,13 @@ async def test_fail_setup_if_no_command_topic(hass, mqtt_mock_entry):
         {humidifier.DOMAIN: {"platform": "mqtt", "name": "test"}},
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     assert hass.states.get("humidifier.test") is None
 
 
-async def test_controlling_state_via_topic(hass, mqtt_mock_entry, caplog):
+async def test_controlling_state_via_topic(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -159,7 +161,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry, caplog):
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -231,7 +233,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry, caplog):
 
 
 async def test_controlling_state_via_topic_and_json_message(
-    hass, mqtt_mock_entry, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
@@ -259,7 +261,7 @@ async def test_controlling_state_via_topic_and_json_message(
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -319,7 +321,7 @@ async def test_controlling_state_via_topic_and_json_message(
 
 
 async def test_controlling_state_via_topic_and_json_message_shared_topic(
-    hass, mqtt_mock_entry, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test the controlling state via topic and JSON message using a shared topic."""
     assert await async_setup_component(
@@ -347,7 +349,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -396,7 +398,9 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     caplog.clear()
 
 
-async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock_entry, caplog):
+async def test_sending_mqtt_commands_and_optimistic(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
         hass,
@@ -419,7 +423,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock_entry, caplo
         },
     )
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -490,7 +494,9 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock_entry, caplo
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_command_templates_(hass, mqtt_mock_entry, caplog):
+async def test_sending_mqtt_command_templates_(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Testing command templates with optimistic mode without state topic."""
     assert await async_setup_component(
         hass,
@@ -514,7 +520,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock_entry, caplog):
         },
     )
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -586,7 +592,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock_entry, caplog):
 
 
 async def test_sending_mqtt_commands_and_explicit_optimistic(
-    hass, mqtt_mock_entry, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test optimistic mode with state topic and turn on attributes."""
     assert await async_setup_component(
@@ -612,7 +618,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
         },
     )
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -712,7 +718,13 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     ],
 )
 async def test_encoding_subscribable_topics(
-    hass, mqtt_mock_entry, caplog, topic, value, attribute, attribute_value
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    caplog,
+    topic,
+    value,
+    attribute,
+    attribute_value,
 ):
     """Test handling of incoming encoded payload."""
     config = copy.deepcopy(DEFAULT_CONFIG[humidifier.DOMAIN])
@@ -720,7 +732,7 @@ async def test_encoding_subscribable_topics(
     config[CONF_MODE_COMMAND_TOPIC] = "humidifier/some_mode_command_topic"
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock_entry,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         humidifier.DOMAIN,
         config,
@@ -731,7 +743,7 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_attributes(hass, mqtt_mock_entry, caplog):
+async def test_attributes(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test attributes."""
     assert await async_setup_component(
         hass,
@@ -751,7 +763,7 @@ async def test_attributes(hass, mqtt_mock_entry, caplog):
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_UNKNOWN
@@ -777,7 +789,7 @@ async def test_attributes(hass, mqtt_mock_entry, caplog):
     assert state.attributes.get(humidifier.ATTR_MODE) is None
 
 
-async def test_invalid_configurations(hass, mqtt_mock_entry, caplog):
+async def test_invalid_configurations(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test invalid configurations."""
     assert await async_setup_component(
         hass,
@@ -846,7 +858,7 @@ async def test_invalid_configurations(hass, mqtt_mock_entry, caplog):
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_with_yaml_config()
     assert hass.states.get("humidifier.test_valid_1") is not None
     assert hass.states.get("humidifier.test_valid_2") is not None
     assert hass.states.get("humidifier.test_valid_3") is not None
@@ -860,7 +872,7 @@ async def test_invalid_configurations(hass, mqtt_mock_entry, caplog):
     assert hass.states.get("humidifier.test_invalid_mode_is_reset") is None
 
 
-async def test_supported_features(hass, mqtt_mock_entry):
+async def test_supported_features(hass, mqtt_mock_entry_with_yaml_config):
     """Test supported features."""
     assert await async_setup_component(
         hass,
@@ -909,7 +921,7 @@ async def test_supported_features(hass, mqtt_mock_entry):
         },
     )
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("humidifier.test1")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
@@ -930,25 +942,27 @@ async def test_supported_features(hass, mqtt_mock_entry):
     assert state is None
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock_entry):
+async def test_availability_when_connection_lost(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock_entry):
+async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock_entry):
+async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
         hass,
-        mqtt_mock_entry,
+        mqtt_mock_entry_with_yaml_config,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         True,
@@ -957,11 +971,11 @@ async def test_default_availability_payload(hass, mqtt_mock_entry):
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock_entry):
+async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
         hass,
-        mqtt_mock_entry,
+        mqtt_mock_entry_with_yaml_config,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         True,
@@ -970,53 +984,69 @@ async def test_custom_availability_payload(hass, mqtt_mock_entry):
     )
 
 
-async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock_entry):
+async def test_setting_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock_entry):
+async def test_setting_blocked_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_no_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
-        mqtt_mock_entry,
+        mqtt_mock_entry_no_yaml_config,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED,
     )
 
 
-async def test_setting_attribute_with_template(hass, mqtt_mock_entry):
+async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_not_dict(hass, mqtt_mock_entry, caplog):
+async def test_update_with_json_attrs_not_dict(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        humidifier.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
-async def test_update_with_json_attrs_bad_json(hass, mqtt_mock_entry, caplog):
+async def test_update_with_json_attrs_bad_json(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        humidifier.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
-async def test_discovery_update_attr(hass, mqtt_mock_entry, caplog):
+async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, caplog, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_unique_id(hass, mqtt_mock_entry):
+async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique_id option only creates one fan per id."""
     config = {
         humidifier.DOMAIN: [
@@ -1038,18 +1068,24 @@ async def test_unique_id(hass, mqtt_mock_entry):
             },
         ]
     }
-    await help_test_unique_id(hass, mqtt_mock_entry, humidifier.DOMAIN, config)
-
-
-async def test_discovery_removal_humidifier(hass, mqtt_mock_entry, caplog):
-    """Test removal of discovered humidifier."""
-    data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data
+    await help_test_unique_id(
+        hass, mqtt_mock_entry_with_yaml_config, humidifier.DOMAIN, config
     )
 
 
-async def test_discovery_update_humidifier(hass, mqtt_mock_entry, caplog):
+async def test_discovery_removal_humidifier(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
+    """Test removal of discovered humidifier."""
+    data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    await help_test_discovery_removal(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, humidifier.DOMAIN, data
+    )
+
+
+async def test_discovery_update_humidifier(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test update of discovered humidifier."""
     config1 = {
         "name": "Beer",
@@ -1062,78 +1098,90 @@ async def test_discovery_update_humidifier(hass, mqtt_mock_entry, caplog):
         "target_humidity_command_topic": "test-topic2",
     }
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, config1, config2
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        humidifier.DOMAIN,
+        config1,
+        config2,
     )
 
 
-async def test_discovery_update_unchanged_humidifier(hass, mqtt_mock_entry, caplog):
+async def test_discovery_update_unchanged_humidifier(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test update of discovered humidifier."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     with patch(
         "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data1, discovery_update
+            hass,
+            mqtt_mock_entry_no_yaml_config,
+            caplog,
+            humidifier.DOMAIN,
+            data1,
+            discovery_update,
         )
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock_entry, caplog):
+async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, humidifier.DOMAIN, data1, data2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, humidifier.DOMAIN, data1, data2
     )
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock_entry):
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry):
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_update(hass, mqtt_mock_entry):
+async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_remove(hass, mqtt_mock_entry):
+async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry):
+async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry, humidifier.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, humidifier.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_debug_info_message(hass, mqtt_mock_entry):
+async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass,
-        mqtt_mock_entry,
+        mqtt_mock_entry_no_yaml_config,
         humidifier.DOMAIN,
         DEFAULT_CONFIG,
         humidifier.SERVICE_TURN_ON,
@@ -1175,7 +1223,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry):
 )
 async def test_publishing_with_custom_encoding(
     hass,
-    mqtt_mock_entry,
+    mqtt_mock_entry_with_yaml_config,
     caplog,
     service,
     topic,
@@ -1191,7 +1239,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock_entry,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         domain,
         config,
@@ -1203,11 +1251,13 @@ async def test_publishing_with_custom_encoding(
     )
 
 
-async def test_reloadable(hass, mqtt_mock_entry, caplog, tmp_path):
+async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = humidifier.DOMAIN
     config = DEFAULT_CONFIG[domain]
-    await help_test_reloadable(hass, mqtt_mock_entry, caplog, tmp_path, domain, config)
+    await help_test_reloadable(
+        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
+    )
 
 
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):

@@ -39,9 +39,11 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock_entry):
+async def test_get_triggers(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test we get the expected triggers from a discovered mqtt device."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -71,9 +73,11 @@ async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock_entry):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_unknown_triggers(hass, device_reg, entity_reg, mqtt_mock_entry):
+async def test_get_unknown_triggers(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test we don't get unknown triggers."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     # Discover a sensor (without device triggers)
     data1 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -114,9 +118,11 @@ async def test_get_unknown_triggers(hass, device_reg, entity_reg, mqtt_mock_entr
     assert_lists_same(triggers, [])
 
 
-async def test_get_non_existing_triggers(hass, device_reg, entity_reg, mqtt_mock_entry):
+async def test_get_non_existing_triggers(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test getting non existing triggers."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     # Discover a sensor (without device triggers)
     data1 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -134,9 +140,11 @@ async def test_get_non_existing_triggers(hass, device_reg, entity_reg, mqtt_mock
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock_entry):
+async def test_discover_bad_triggers(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test bad discovery message."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     # Test sending bad data
     data0 = (
         '{ "automation_type":"trigger",'
@@ -180,9 +188,11 @@ async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock_ent
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock_entry):
+async def test_update_remove_triggers(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test triggers can be updated and removed."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     config1 = {
         "automation_type": "trigger",
         "device": {"identifiers": ["0AFFD2"]},
@@ -245,9 +255,11 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock_en
     assert device_entry is None
 
 
-async def test_if_fires_on_mqtt_message(hass, device_reg, calls, mqtt_mock_entry):
+async def test_if_fires_on_mqtt_message(
+    hass, device_reg, calls, mqtt_mock_entry_no_yaml_config
+):
     """Test triggers firing."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -320,10 +332,10 @@ async def test_if_fires_on_mqtt_message(hass, device_reg, calls, mqtt_mock_entry
 
 
 async def test_if_fires_on_mqtt_message_template(
-    hass, device_reg, calls, mqtt_mock_entry
+    hass, device_reg, calls, mqtt_mock_entry_no_yaml_config
 ):
     """Test triggers firing."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -398,10 +410,10 @@ async def test_if_fires_on_mqtt_message_template(
 
 
 async def test_if_fires_on_mqtt_message_late_discover(
-    hass, device_reg, calls, mqtt_mock_entry
+    hass, device_reg, calls, mqtt_mock_entry_no_yaml_config
 ):
     """Test triggers firing of MQTT device triggers discovered after setup."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data0 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -482,10 +494,10 @@ async def test_if_fires_on_mqtt_message_late_discover(
 
 
 async def test_if_fires_on_mqtt_message_after_update(
-    hass, device_reg, calls, mqtt_mock_entry
+    hass, device_reg, calls, mqtt_mock_entry_no_yaml_config
 ):
     """Test triggers firing after update."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -558,9 +570,11 @@ async def test_if_fires_on_mqtt_message_after_update(
     assert len(calls) == 3
 
 
-async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock_entry):
+async def test_no_resubscribe_same_topic(
+    hass, device_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test subscription to topics without change."""
-    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -602,10 +616,10 @@ async def test_no_resubscribe_same_topic(hass, device_reg, mqtt_mock_entry):
 
 
 async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
-    hass, device_reg, calls, mqtt_mock_entry
+    hass, device_reg, calls, mqtt_mock_entry_no_yaml_config
 ):
     """Test triggers not firing after removal."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -664,12 +678,12 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
 
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
-    hass, hass_ws_client, device_reg, calls, mqtt_mock_entry
+    hass, hass_ws_client, device_reg, calls, mqtt_mock_entry_no_yaml_config
 ):
     """Test triggers not firing after removal."""
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
 
     ws_client = await hass_ws_client(hass)
 
@@ -731,9 +745,9 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     assert len(calls) == 1
 
 
-async def test_attach_remove(hass, device_reg, mqtt_mock_entry):
+async def test_attach_remove(hass, device_reg, mqtt_mock_entry_no_yaml_config):
     """Test attach and removal of trigger."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -785,9 +799,9 @@ async def test_attach_remove(hass, device_reg, mqtt_mock_entry):
     assert len(calls) == 1
 
 
-async def test_attach_remove_late(hass, device_reg, mqtt_mock_entry):
+async def test_attach_remove_late(hass, device_reg, mqtt_mock_entry_no_yaml_config):
     """Test attach and removal of trigger ."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data0 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -847,9 +861,9 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock_entry):
     assert len(calls) == 1
 
 
-async def test_attach_remove_late2(hass, device_reg, mqtt_mock_entry):
+async def test_attach_remove_late2(hass, device_reg, mqtt_mock_entry_no_yaml_config):
     """Test attach and removal of trigger ."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     data0 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -903,9 +917,9 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock_entry):
     assert len(calls) == 0
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock_entry):
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT device registry integration."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     registry = dr.async_get(hass)
 
     data = json.dumps(
@@ -937,9 +951,9 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry):
     assert device.sw_version == "0.1-beta"
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry):
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT device registry integration."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     registry = dr.async_get(hass)
 
     data = json.dumps(
@@ -969,9 +983,9 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry):
     assert device.sw_version == "0.1-beta"
 
 
-async def test_entity_device_info_update(hass, mqtt_mock_entry):
+async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     registry = dr.async_get(hass)
 
     config = {
@@ -1008,10 +1022,10 @@ async def test_entity_device_info_update(hass, mqtt_mock_entry):
 
 
 async def test_cleanup_trigger(
-    hass, hass_ws_client, device_reg, entity_reg, mqtt_mock_entry
+    hass, hass_ws_client, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
     """Test trigger discovery topic is cleaned when device is removed from registry."""
-    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
@@ -1061,9 +1075,11 @@ async def test_cleanup_trigger(
     )
 
 
-async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock_entry):
+async def test_cleanup_device(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test removal from device registry when trigger is removed."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     config = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1094,10 +1110,10 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock_entry):
 
 
 async def test_cleanup_device_several_triggers(
-    hass, device_reg, entity_reg, mqtt_mock_entry
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
     """Test removal from device registry when the last trigger is removed."""
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     config1 = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1154,13 +1170,13 @@ async def test_cleanup_device_several_triggers(
 
 
 async def test_cleanup_device_with_entity1(
-    hass, device_reg, entity_reg, mqtt_mock_entry
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
     """Test removal from device registry for device with entity.
 
     Trigger removed first, then entity.
     """
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     config1 = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1213,13 +1229,13 @@ async def test_cleanup_device_with_entity1(
 
 
 async def test_cleanup_device_with_entity2(
-    hass, device_reg, entity_reg, mqtt_mock_entry
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
     """Test removal from device registry for device with entity.
 
     Entity removed first, then trigger.
     """
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     config1 = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1271,12 +1287,12 @@ async def test_cleanup_device_with_entity2(
     assert device_entry is None
 
 
-async def test_trigger_debug_info(hass, mqtt_mock_entry):
+async def test_trigger_debug_info(hass, mqtt_mock_entry_no_yaml_config):
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
-    await mqtt_mock_entry()
+    await mqtt_mock_entry_no_yaml_config()
     registry = dr.async_get(hass)
 
     config1 = {
