@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autentica\u00e7\u00e3o",
-                    "content_type": "Tipo de conte\u00fado",
                     "framerate": "Taxa de quadros (Hz)",
                     "limit_refetch_to_url_change": "Limitar a nova busca \u00e0 altera\u00e7\u00e3o de URL",
                     "password": "Senha",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "Autentica\u00e7\u00e3o",
-                    "content_type": "Tipo de conte\u00fado",
                     "framerate": "Taxa de quadros (Hz)",
                     "limit_refetch_to_url_change": "Limitar a nova busca \u00e0 altera\u00e7\u00e3o de URL",
                     "password": "Senha",
                     "rtsp_transport": "Protocolo RTSP",
                     "still_image_url": "URL da imagem est\u00e1tica (por exemplo, http://...)",
                     "stream_source": "URL de origem da Stream (por exemplo, rtsp://...)",
+                    "use_wallclock_as_timestamps": "Use o rel\u00f3gio de parede como data/hora",
                     "username": "Usu\u00e1rio",
                     "verify_ssl": "Verifique o certificado SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Esta op\u00e7\u00e3o pode corrigir problemas de segmenta\u00e7\u00e3o ou travamento decorrentes de implementa\u00e7\u00f5es de data/hora com erros em algumas c\u00e2meras"
                 }
             }
         }

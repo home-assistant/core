@@ -4,17 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairzone.const import (
-    AZD_ID,
-    AZD_MAC,
-    AZD_NAME,
-    AZD_SYSTEM,
-    AZD_THERMOSTAT_FW,
-    AZD_THERMOSTAT_MODEL,
-    AZD_WEBSERVER,
-    AZD_ZONES,
-    DEFAULT_SYSTEM_ID,
-)
+from aioairzone.const import AZD_MAC, AZD_WEBSERVER, DEFAULT_SYSTEM_ID
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,61 +15,13 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
-    """Define an Airzone entity."""
-
-    def get_airzone_value(self, key) -> Any:
-        """Return Airzone entity value by key."""
-        raise NotImplementedError()
-
-
-class AirzoneZoneEntity(AirzoneEntity):
-    """Define an Airzone Zone entity."""
-
-    def __init__(
-        self,
-        coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
-        system_zone_id: str,
-        zone_data: dict[str, Any],
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self.system_id = zone_data[AZD_SYSTEM]
-        self.system_zone_id = system_zone_id
-        self.zone_id = zone_data[AZD_ID]
-
-        self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
-            "manufacturer": MANUFACTURER,
-            "model": self.get_airzone_value(AZD_THERMOSTAT_MODEL),
-            "name": f"Airzone [{system_zone_id}] {zone_data[AZD_NAME]}",
-            "sw_version": self.get_airzone_value(AZD_THERMOSTAT_FW),
-        }
-        self._attr_unique_id = (
-            entry.entry_id if entry.unique_id is None else entry.unique_id
-        )
-
-    def get_airzone_value(self, key) -> Any:
-        """Return zone value by key."""
-        value = None
-        if self.system_zone_id in self.coordinator.data[AZD_ZONES]:
-            zone = self.coordinator.data[AZD_ZONES][self.system_zone_id]
-            if key in zone:
-                value = zone[key]
-        return value
 
 
 async def _async_migrate_unique_ids(
@@ -99,7 +41,7 @@ async def _async_migrate_unique_ids(
 
         if entity_unique_id.startswith(entry_id):
             new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
                 entity_unique_id,
                 new_unique_id,

@@ -1,8 +1,6 @@
 """Config flow for the Amber Electric integration."""
 from __future__ import annotations
 
-from typing import Any
-
 import amberelectric
 from amberelectric.api import amber_api
 from amberelectric.model.site import Site
@@ -10,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
 
@@ -44,7 +43,9 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._errors[CONF_API_TOKEN] = "unknown_error"
             return None
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         self._sites = None
@@ -76,11 +77,14 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_site(self, user_input: dict[str, Any] = None):
+    async def async_step_site(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Step to select site."""
         self._errors = {}
 
         assert self._sites is not None
+        assert self._api_token is not None
 
         api_token = self._api_token
         if user_input is not None:

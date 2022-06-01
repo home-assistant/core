@@ -7,8 +7,8 @@ import logging
 import aioeagle
 import aiohttp
 import async_timeout
+from eagle100 import Eagle as Eagle100Reader
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
-from uEagle import Eagle as Eagle100Reader
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE

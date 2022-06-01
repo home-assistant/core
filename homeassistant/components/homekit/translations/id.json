@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)",
                     "devices": "Perangkat (Pemicu)"
                 },
                 "description": "Sakelar yang dapat diprogram dibuat untuk setiap perangkat yang dipilih. Saat pemicu perangkat aktif, HomeKit dapat dikonfigurasi untuk menjalankan otomatisasi atau skenario.",

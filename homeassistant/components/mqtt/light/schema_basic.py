@@ -23,10 +23,10 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -156,7 +156,7 @@ VALUE_TEMPLATE_KEYS = [
 ]
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -220,15 +220,28 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+# The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_BASIC = vol.All(
-    _PLATFORM_SCHEMA_BASE,
+    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_SCALE),
+    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
     # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
     cv.removed(CONF_VALUE_TEMPLATE),
+    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_COMMAND_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_SCALE),
+    cv.deprecated(CONF_WHITE_VALUE_STATE_TOPIC),
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
+
+PLATFORM_SCHEMA_MODERN_BASIC = _PLATFORM_SCHEMA_BASE
 
 
 async def async_setup_entity_basic(
@@ -789,7 +802,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         """Flag supported features."""
         supported_features = 0
         supported_features |= (
-            self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None and SUPPORT_EFFECT
+            self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None
+            and LightEntityFeature.EFFECT
         )
         if not self._legacy_mode:
             return supported_features

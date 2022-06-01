@@ -5,14 +5,14 @@
         },
         "error": {
             "db_url_invalid": "URL de la base de donn\u00e9es non valide",
-            "query_invalid": "Requ\u00eate SQL non valide",
-            "value_template_invalid": "Mod\u00e8le de valeur non valide"
+            "query_invalid": "Requ\u00eate SQL non valide"
         },
         "step": {
             "user": {
                 "data": {
                     "column": "Colonne",
                     "db_url": "URL de la base de donn\u00e9es",
+                    "name": "Nom",
                     "query": "Requ\u00eate de s\u00e9lection",
                     "unit_of_measurement": "Unit\u00e9 de mesure",
                     "value_template": "Mod\u00e8le de valeur"
@@ -20,6 +20,7 @@
                 "data_description": {
                     "column": "La colonne de la r\u00e9ponse \u00e0 la requ\u00eate \u00e0 pr\u00e9senter en tant qu'\u00e9tat",
                     "db_url": "L'URL de la base de donn\u00e9es, laisser vide pour utiliser la base de donn\u00e9es HA par d\u00e9faut",
+                    "name": "Le nom qui sera utilis\u00e9 pour l'entr\u00e9e de configuration ainsi que pour le capteur",
                     "query": "La requ\u00eate \u00e0 ex\u00e9cuter, doit commencer par \u00ab\u00a0SELECT\u00a0\u00bb",
                     "unit_of_measurement": "Unit\u00e9 de mesure (facultatif)",
                     "value_template": "Mod\u00e8le de valeur (facultatif)"
@@ -30,14 +31,14 @@
     "options": {
         "error": {
             "db_url_invalid": "URL de la base de donn\u00e9es non valide",
-            "query_invalid": "Requ\u00eate SQL non valide",
-            "value_template_invalid": "Mod\u00e8le de valeur non valide"
+            "query_invalid": "Requ\u00eate SQL non valide"
         },
         "step": {
             "init": {
                 "data": {
                     "column": "Colonne",
                     "db_url": "URL de la base de donn\u00e9es",
+                    "name": "Nom",
                     "query": "Requ\u00eate de s\u00e9lection",
                     "unit_of_measurement": "Unit\u00e9 de mesure",
                     "value_template": "Mod\u00e8le de valeur"
@@ -45,6 +46,7 @@
                 "data_description": {
                     "column": "La colonne de la r\u00e9ponse \u00e0 la requ\u00eate \u00e0 pr\u00e9senter en tant qu'\u00e9tat",
                     "db_url": "L'URL de la base de donn\u00e9es, laisser vide pour utiliser la base de donn\u00e9es HA par d\u00e9faut",
+                    "name": "Le nom qui sera utilis\u00e9 pour l'entr\u00e9e de configuration ainsi que pour le capteur",
                     "query": "La requ\u00eate \u00e0 ex\u00e9cuter, doit commencer par \u00ab\u00a0SELECT\u00a0\u00bb",
                     "unit_of_measurement": "Unit\u00e9 de mesure (facultatif)",
                     "value_template": "Mod\u00e8le de valeur (facultatif)"

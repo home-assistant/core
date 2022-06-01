@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from bond_api import Action, BPUPSubscriptions
+from bond_async import Action, BPUPSubscriptions
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -222,6 +222,20 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         name="Toggle Open",
         mutually_exclusive=Action.OPEN,
         argument=None,
+    ),
+    BondButtonEntityDescription(
+        key=Action.INCREASE_POSITION,
+        name="Increase Position",
+        icon="mdi:plus-box",
+        mutually_exclusive=Action.SET_POSITION,
+        argument=STEP_SIZE,
+    ),
+    BondButtonEntityDescription(
+        key=Action.DECREASE_POSITION,
+        name="Decrease Position",
+        icon="mdi:minus-box",
+        mutually_exclusive=Action.SET_POSITION,
+        argument=STEP_SIZE,
     ),
 )
 

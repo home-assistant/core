@@ -19,16 +19,10 @@ async def async_setup_entry(
     Adds scenes from the Caseta bridge associated with the config_entry as
     scene entities.
     """
-    entities = []
     data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data[BRIDGE_LEAP]
     scenes = bridge.get_scenes()
-
-    for scene in scenes:
-        entity = LutronCasetaScene(scenes[scene], bridge)
-        entities.append(entity)
-
-    async_add_entities(entities, True)
+    async_add_entities(LutronCasetaScene(scenes[scene], bridge) for scene in scenes)
 
 
 class LutronCasetaScene(Scene):
@@ -36,14 +30,9 @@ class LutronCasetaScene(Scene):
 
     def __init__(self, scene, bridge):
         """Initialize the Lutron Caseta scene."""
-        self._scene_name = scene["name"]
+        self._attr_name = scene["name"]
         self._scene_id = scene["scene_id"]
         self._bridge = bridge
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene_name
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

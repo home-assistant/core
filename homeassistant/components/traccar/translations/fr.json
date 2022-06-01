@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "\u00cates-vous s\u00fbr de vouloir configurer Traccar?",
+                "description": "Voulez-vous vraiment configurer Traccar\u00a0?",
                 "title": "Configurer Traccar"
             }
         }

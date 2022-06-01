@@ -52,7 +52,7 @@ def _remaining_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
     """Convert remaining time to timestamp."""
     if not probe.cook or probe.cook.time_remaining < 0:
         return None
-    return dt_util.utcnow() + timedelta(probe.cook.time_remaining)
+    return dt_util.utcnow() + timedelta(seconds=probe.cook.time_remaining)
 
 
 SENSOR_TYPES = (
@@ -136,9 +136,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: DataUpdateCoordinator[dict[str, MeaterProbe]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]["coordinator"]
 
     @callback
     def async_update_data():
@@ -146,22 +146,22 @@ async def async_setup_entry(
         if not coordinator.last_update_success:
             return
 
-        devices: dict[str, MeaterProbe] = coordinator.data
+        devices = coordinator.data
         entities = []
         known_probes: set = hass.data[DOMAIN]["known_probes"]
 
         # Add entities for temperature probes which we've not yet seen
-        for dev in devices:
-            if dev in known_probes:
+        for device_id in devices:
+            if device_id in known_probes:
                 continue
 
             entities.extend(
                 [
-                    MeaterProbeTemperature(coordinator, dev, sensor_description)
+                    MeaterProbeTemperature(coordinator, device_id, sensor_description)
                     for sensor_description in SENSOR_TYPES
                 ]
             )
-            known_probes.add(dev)
+            known_probes.add(device_id)
 
         async_add_entities(entities)
 
