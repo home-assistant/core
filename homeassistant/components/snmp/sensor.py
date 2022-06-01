@@ -17,11 +17,12 @@ from pysnmp.hlapi.asyncio import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
-    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
@@ -29,10 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template_entity import (
-    TEMPLATE_SENSOR_BASE_SCHEMA,
-    TemplateSensor,
-)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -69,7 +66,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
         vol.Optional(CONF_DEFAULT_VALUE): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
         vol.Optional(CONF_USERNAME): cv.string,
@@ -82,7 +81,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             MAP_PRIV_PROTOCOLS
         ),
     }
-).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
+)
 
 
 async def async_setup_platform(
@@ -92,10 +91,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the SNMP sensor."""
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     community = config.get(CONF_COMMUNITY)
     baseoid = config.get(CONF_BASEOID)
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     version = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
@@ -104,7 +105,10 @@ async def async_setup_platform(
     privproto = config[CONF_PRIV_PROTOCOL]
     accept_errors = config.get(CONF_ACCEPT_ERRORS)
     default_value = config.get(CONF_DEFAULT_VALUE)
-    unique_id = config.get(CONF_UNIQUE_ID)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template.hass = hass
 
     if version == "3":
 
@@ -142,29 +146,34 @@ async def async_setup_platform(
         return
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
-    async_add_entities([SnmpSensor(hass, data, config, unique_id)], True)
+    async_add_entities([SnmpSensor(data, name, unit, value_template)], True)
 
 
-class SnmpSensor(TemplateSensor):
+class SnmpSensor(SensorEntity):
     """Representation of a SNMP sensor."""
 
-    _attr_should_poll = True
-
-    def __init__(self, hass, data, config, unique_id):
+    def __init__(self, data, name, unit_of_measurement, value_template):
         """Initialize the sensor."""
-        super().__init__(
-            hass, config=config, unique_id=unique_id, fallback_name=DEFAULT_NAME
-        )
         self.data = data
+        self._name = name
         self._state = None
-        self._value_template = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
+        self._unit_of_measurement = unit_of_measurement
+        self._value_template = value_template
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data and updates the states."""
