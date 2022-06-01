@@ -88,6 +88,15 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
         ),
+        TypeHintMatch(
+            function_name="async_remove_config_entry_device",
+            arg_types={
+                0: "HomeAssistant",
+                1: "ConfigEntry",
+                2: "DeviceEntry",
+            },
+            return_type="bool",
+        ),
     ],
     "__any_platform__": [
         TypeHintMatch(
