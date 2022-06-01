@@ -45,11 +45,6 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
         self._device_info = device_info
 
     @property
-    def hub_address(self):
-        """Return the ip of the hub."""
-        return self._hub_address
-
-    @property
     def data(self) -> PowerviewShadeData:
         """Return the PowerviewShadeData."""
         return self.coordinator.data
@@ -69,7 +64,7 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
             name=self._device_info[DEVICE_NAME],
             suggested_area=self._room_name,
             sw_version=sw_version,
-            configuration_url=f"http://{self.hub_address}/api/shades",
+            configuration_url=f"http://{self._hub_address}/api/shades",
         )
 
 
@@ -105,7 +100,7 @@ class ShadeEntity(HDEntity):
             manufacturer=MANUFACTURER,
             model=str(self._shade.raw_data[ATTR_TYPE]),
             via_device=(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
-            configuration_url=f"http://{self.hub_address}/api/shades/{self._shade.id}",
+            configuration_url=f"http://{self._hub_address}/api/shades/{self._shade.id}",
         )
 
         for shade in self._shade.shade_types:
