@@ -19,9 +19,13 @@ async def test_subscribing_config_topic(hass, mqtt_mock, setup_tasmota):
     discovery_topic = DEFAULT_PREFIX
 
     assert mqtt_mock.async_subscribe.called
-    call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
-    assert call_args[0] == discovery_topic + "/#"
-    assert call_args[2] == 0
+    assert any(
+        [
+            call
+            for call in mqtt_mock.async_subscribe.mock_calls
+            if call[1][0] == discovery_topic + "/#" and call[1][2] == 0
+        ]
+    )
 
 
 async def test_future_discovery_message(hass, mqtt_mock, caplog):
