@@ -161,9 +161,6 @@ aiokafka==0.6.0
 # homeassistant.components.lookin
 aiolookin==0.1.0
 
-# homeassistant.components.loqed
-loqedAPI==2.1.3
-
 # homeassistant.components.lyric
 aiolyric==1.0.8
 
@@ -671,6 +668,9 @@ libsoundtouch==0.8
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
+
+# homeassistant.components.loqed
+loqedAPI==2.1.3
 
 # homeassistant.components.recorder
 lru-dict==1.1.7

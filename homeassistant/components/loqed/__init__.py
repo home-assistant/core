@@ -96,9 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_WEBHOOK_INDEX: webhook_index,
     }
 
-    # Registers update listener to update config entry when options are updated.
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
@@ -120,11 +117,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class LoqedDataCoordinator(DataUpdateCoordinator):
