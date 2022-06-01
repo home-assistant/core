@@ -3,7 +3,7 @@
   "name": "Huawei Solar",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huawei_solar",
-  "requirements": ["huawei-solar==2.0.0"],
+  "requirements": ["huawei-solar==2.0.2"],
   "codeowners": ["@wlcrs"],
   "iot_class": "local_polling"
 }

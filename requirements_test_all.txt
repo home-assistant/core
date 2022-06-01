@@ -607,7 +607,7 @@ httplib2==0.20.4
 huawei-lte-api==1.6.0
 
 # homeassistant.components.huawei_solar
-huawei-solar==2.0.0
+huawei-solar==2.0.2
 
 # homeassistant.components.huisbaasje
 huisbaasje-client==0.1.0
