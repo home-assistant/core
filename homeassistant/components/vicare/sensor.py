@@ -87,7 +87,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="hotwater_out_temperature",
-        name="Hot water out Temperature",
+        name="Hot Water Out Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getDomesticHotWaterOutletTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
