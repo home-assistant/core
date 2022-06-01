@@ -29,7 +29,7 @@ pyudev==0.22.0
 pyyaml==6.0
 requests==2.27.1
 scapy==2.4.5
-sqlalchemy==1.4.36
+sqlalchemy==1.4.37
 typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
@@ -106,3 +106,7 @@ authlib<1.0
 # Pin backoff for compatibility until most libraries have been updated
 # https://github.com/home-assistant/core/pull/70817
 backoff<2.0
+
+# Breaking change in version
+# https://github.com/samuelcolvin/pydantic/issues/4092
+pydantic!=1.9.1

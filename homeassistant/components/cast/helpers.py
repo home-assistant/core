@@ -266,10 +266,8 @@ async def parse_m3u(hass, url):
     hls_content_types = (
         # https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
         "application/vnd.apple.mpegurl",
-        # Some sites serve these as the informal HLS m3u type.
-        "application/x-mpegurl",
-        "audio/mpegurl",
-        "audio/x-mpegurl",
+        # Additional informal types used by Mozilla gecko not included as they
+        # don't reliably indicate HLS streams
     )
     m3u_data = await _fetch_playlist(hass, url, hls_content_types)
     m3u_lines = m3u_data.splitlines()
@@ -290,6 +288,9 @@ async def parse_m3u(hass, url):
             length = info[0].split(" ", 1)
             title = info[1].strip()
         elif line.startswith("#EXT-X-VERSION:"):
+            # HLS stream, supported by cast devices
+            raise PlaylistSupported("HLS")
+        elif line.startswith("#EXT-X-STREAM-INF:"):
             # HLS stream, supported by cast devices
             raise PlaylistSupported("HLS")
         elif line.startswith("#"):

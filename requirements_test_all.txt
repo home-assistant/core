@@ -715,7 +715,7 @@ minio==5.0.10
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.7
+motionblinds==0.6.8
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1465,7 +1465,7 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.36
+sqlalchemy==1.4.37
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
