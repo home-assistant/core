@@ -110,7 +110,7 @@ def _state_schema(state):
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
-        mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+        mqtt.config.MQTT_BASE_SCHEMA.extend(
             {
                 vol.Required(CONF_PLATFORM): "manual_mqtt",
                 vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
@@ -319,8 +319,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+            return alarm.CodeFormat.NUMBER
+        return alarm.CodeFormat.TEXT
 
     @property
     def code_arm_required(self):

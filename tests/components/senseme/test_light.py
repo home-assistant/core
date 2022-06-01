@@ -1,6 +1,4 @@
 """Tests for senseme light platform."""
-
-
 from aiosenseme import SensemeDevice
 
 from homeassistant.components import senseme
@@ -9,11 +7,10 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ColorMode,
 )
 from homeassistant.components.senseme.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
@@ -60,8 +57,8 @@ async def test_fan_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 255
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_BRIGHTNESS
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_BRIGHTNESS]
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
 
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -85,8 +82,8 @@ async def test_fan_light_no_brightness(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 255
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_BRIGHTNESS
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_BRIGHTNESS]
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
 
 
 async def test_standalone_light(hass: HomeAssistant) -> None:
@@ -103,8 +100,8 @@ async def test_standalone_light(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 255
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_COLOR_TEMP
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_COLOR_TEMP]
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert attributes[ATTR_COLOR_TEMP] == 250
 
     await hass.services.async_call(

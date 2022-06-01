@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Ad",
+                    "round": "Hassas",
+                    "source": "Giri\u015f sens\u00f6r\u00fc",
+                    "time_window": "Zaman penceresi",
+                    "unit_prefix": "Metrik \u00f6neki",
+                    "unit_time": "Zaman birimi"
+                },
+                "data_description": {
+                    "round": "\u00c7\u0131kt\u0131daki ondal\u0131k basamak say\u0131s\u0131n\u0131 kontrol eder.",
+                    "time_window": "Ayarlan\u0131rsa, sens\u00f6r\u00fcn de\u011feri, bu penceredeki t\u00fcrevlerin zaman a\u011f\u0131rl\u0131kl\u0131 hareketli ortalamas\u0131d\u0131r.",
+                    "unit_prefix": "\u00c7\u0131kt\u0131, t\u00fcrevin se\u00e7ilen metrik \u00f6nekine ve zaman birimine g\u00f6re \u00f6l\u00e7eklenecektir."
+                },
+                "description": "Bir sens\u00f6r\u00fcn t\u00fcrevini tahmin eden bir sens\u00f6r olu\u015fturun.",
+                "title": "T\u00fcrev sens\u00f6r\u00fc ekle"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Ad",
+                    "round": "Hassas",
+                    "source": "Giri\u015f sens\u00f6r\u00fc",
+                    "time_window": "Zaman penceresi",
+                    "unit_prefix": "Metrik \u00f6neki",
+                    "unit_time": "Zaman birimi"
+                },
+                "data_description": {
+                    "round": "\u00c7\u0131kt\u0131daki ondal\u0131k basamak say\u0131s\u0131n\u0131 kontrol eder.",
+                    "time_window": "Ayarlan\u0131rsa, sens\u00f6r\u00fcn de\u011feri, bu penceredeki t\u00fcrevlerin zaman a\u011f\u0131rl\u0131kl\u0131 hareketli ortalamas\u0131d\u0131r.",
+                    "unit_prefix": "\u00c7\u0131kt\u0131, t\u00fcrevin se\u00e7ilen metrik \u00f6nekine ve zaman birimine g\u00f6re \u00f6l\u00e7eklenecektir.."
+                }
+            }
+        }
+    },
+    "title": "T\u00fcrev sens\u00f6r\u00fc"
+}

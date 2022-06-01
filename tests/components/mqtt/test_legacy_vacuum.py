@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import vacuum
-from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
+from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC
 from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_legacy import (
@@ -27,6 +27,7 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     ATTR_STATUS,
+    VacuumEntityFeature,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -55,6 +56,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -412,7 +414,7 @@ async def test_status_no_fan_speed_list(hass, mqtt_mock):
     If the vacuum doesn't support fan speed, fan speed list should be None.
     """
     config = deepcopy(DEFAULT_CONFIG)
-    services = ALL_SERVICES - mqttvacuum.SUPPORT_FAN_SPEED
+    services = ALL_SERVICES - VacuumEntityFeature.FAN_SPEED
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         services, SERVICE_TO_STRING
     )
@@ -900,3 +902,15 @@ async def test_encoding_subscribable_topics(
         attribute_value,
         skip_raw_test=True,
     )
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = vacuum.DOMAIN
+    config = deepcopy(DEFAULT_CONFIG)
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

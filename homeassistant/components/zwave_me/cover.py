@@ -74,4 +74,7 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
+        if self.device.level == 99:  # Scale max value
+            return 100
+
         return self.device.level

@@ -18,12 +18,14 @@ import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -76,8 +78,6 @@ REPEAT_TO_SONOS = {
 
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
-ATTR_SONOS_GROUP = "sonos_group"
-
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 
 SERVICE_JOIN = "join"
@@ -129,6 +129,9 @@ async def async_setup_entry(
             speakers.append(entity.speaker)
 
         if service_call.service == SERVICE_JOIN:
+            _LOGGER.warning(
+                "Service 'sonos.join' is deprecated and will be removed in 2022.8, please use 'media_player.join'"
+            )
             master = platform.entities.get(service_call.data[ATTR_MASTER])
             if master:
                 await SonosSpeaker.join_multi(hass, master.speaker, speakers)  # type: ignore[arg-type]
@@ -138,6 +141,9 @@ async def async_setup_entry(
                     service_call.data[ATTR_MASTER],
                 )
         elif service_call.service == SERVICE_UNJOIN:
+            _LOGGER.warning(
+                "Service 'sonos.unjoin' is deprecated and will be removed in 2022.8, please use 'media_player.unjoin'"
+            )
             await SonosSpeaker.unjoin_multi(hass, speakers)  # type: ignore[arg-type]
         elif service_call.service == SERVICE_SNAPSHOT:
             await SonosSpeaker.snapshot_multi(
@@ -261,9 +267,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @property
+    def available(self) -> bool:
+        """Return if the media_player is available."""
+        return (
+            self.speaker.available
+            and self.speaker.sonos_group_entities
+            and self.media.playback_status
+        )
+
+    @property
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
         return self.speaker.coordinator or self.speaker
+
+    @property
+    def group_members(self) -> list[str] | None:
+        """List of entity_ids which are currently grouped together."""
+        return self.speaker.sonos_group_entities
 
     def __hash__(self) -> int:
         """Return a hash of self."""
@@ -508,7 +528,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.coordinator.soco.clear_queue()
 
     @soco_error()
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(  # noqa: C901
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """
         Send the play_media command to the media player.
 
@@ -519,9 +541,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
+        # Use 'replace' as the default enqueue option
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            # Temporary workaround until announce support is added
+            enqueue = MediaPlayerEnqueue.PLAY
+
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
             media_id = spotify.spotify_uri_from_media_browser_url(media_id)
@@ -533,7 +559,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
                 run_coroutine_threadsafe(
-                    media_source.async_resolve_media(self.hass, media_id),
+                    media_source.async_resolve_media(
+                        self.hass, media_id, self.entity_id
+                    ),
                     self.hass.loop,
                 )
                 .result()
@@ -555,9 +583,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if result.shuffle:
                 self.set_shuffle(True)
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if enqueue == MediaPlayerEnqueue.ADD:
                 plex_plugin.add_to_queue(result.media)
-            else:
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = plex_plugin.add_to_queue(result.media, position=pos)
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
                 plex_plugin.add_to_queue(result.media)
                 soco.play_from_queue(0)
@@ -565,9 +601,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if enqueue == MediaPlayerEnqueue.ADD:
                 share_link.add_share_link_to_queue(media_id)
-            else:
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = share_link.add_share_link_to_queue(media_id, position=pos)
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
                 share_link.add_share_link_to_queue(media_id)
                 soco.play_from_queue(0)
@@ -575,9 +619,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
 
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if enqueue == MediaPlayerEnqueue.ADD:
                 soco.add_uri_to_queue(media_id)
-            else:
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = soco.add_uri_to_queue(media_id, position=pos)
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
@@ -654,9 +706,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes: dict[str, Any] = {
-            ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
-        }
+        attributes: dict[str, Any] = {}
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position

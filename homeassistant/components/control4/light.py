@@ -11,8 +11,7 @@ from pyControl4.light import C4Light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -166,11 +165,11 @@ class Control4Light(Control4Entity, LightEntity):
         )
         self._is_dimmer = is_dimmer
         if is_dimmer:
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         else:
-            self._attr_color_mode = COLOR_MODE_ONOFF
-            self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     def create_api_object(self):
         """Create a pyControl4 device object.

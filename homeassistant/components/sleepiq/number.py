@@ -130,6 +130,7 @@ async def async_setup_entry(
 class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
     """Representation of a SleepIQ number entity."""
 
+    entity_description: SleepIQNumberEntityDescription
     _attr_icon = "mdi:bed"
 
     def __init__(
@@ -140,7 +141,7 @@ class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
         description: SleepIQNumberEntityDescription,
     ) -> None:
         """Initialize the number."""
-        self.description = description
+        self.entity_description = description
         self.device = device
 
         self._attr_name = description.get_name_fn(bed, device)
@@ -151,10 +152,10 @@ class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update number attributes."""
-        self._attr_value = float(self.description.value_fn(self.device))
+        self._attr_value = float(self.entity_description.value_fn(self.device))
 
     async def async_set_value(self, value: float) -> None:
         """Set the number value."""
-        await self.description.set_value_fn(self.device, int(value))
+        await self.entity_description.set_value_fn(self.device, int(value))
         self._attr_value = value
         self.async_write_ha_state()

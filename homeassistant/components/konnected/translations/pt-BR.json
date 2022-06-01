@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Inverter o estado aberto/fechado",
-                    "name": "Nome (opcional)",
+                    "name": "Nome",
                     "type": "Tipo de sensor bin\u00e1rio"
                 },
                 "description": "Selecione as op\u00e7\u00f5es para o sensor bin\u00e1rio conectado a {zone}",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nome (opcional)",
-                    "poll_interval": "Intervalo de vota\u00e7\u00e3o (minutos) (opcional)",
+                    "name": "Nome",
+                    "poll_interval": "Intervalo de vota\u00e7\u00e3o (minutos)",
                     "type": "Tipo de sensor"
                 },
                 "description": "Selecione as op\u00e7\u00f5es para o sensor digital conectado a {zone}",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Substituir URL do host da API (opcional)",
+                    "api_host": "Substituir URL do host da API",
                     "blink": "LED do painel piscando ao enviar mudan\u00e7a de estado",
                     "discovery": "Responder \u00e0s solicita\u00e7\u00f5es de descoberta em sua rede",
                     "override_api_host": "Substituir o URL padr\u00e3o do painel do host da API do Home Assistant"
@@ -95,14 +95,14 @@
             "options_switch": {
                 "data": {
                     "activation": "Sa\u00edda quando ligado",
-                    "momentary": "Dura\u00e7\u00e3o do pulso (ms) (opcional)",
+                    "momentary": "Dura\u00e7\u00e3o do pulso (ms)",
                     "more_states": "Configurar estados adicionais para esta zona",
-                    "name": "Nome (opcional)",
-                    "pause": "Pausa entre pulsos (ms) (opcional)",
-                    "repeat": "Intervalo para repetir (-1=infinito) (opcional)"
+                    "name": "Nome",
+                    "pause": "Pausa entre pulsos (ms)",
+                    "repeat": "Intervalo para repetir (-1=infinito)"
                 },
                 "description": "Selecione as op\u00e7\u00f5es para o switch conectado a {zone}: estado {state}",
-                "title": "Configurar o switch de sa\u00edda"
+                "title": "Configure o interruptor de sa\u00edda"
             }
         }
     }

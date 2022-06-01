@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import EventType
@@ -48,8 +52,8 @@ def async_describe_events(
                 input_name = f"{device_name} channel {channel}"
 
         return {
-            "name": "Shelly",
-            "message": f"'{click_type}' click event for {input_name} Input was fired.",
+            LOGBOOK_ENTRY_NAME: "Shelly",
+            LOGBOOK_ENTRY_MESSAGE: f"'{click_type}' click event for {input_name} Input was fired",
         }
 
     async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_shelly_click_event)

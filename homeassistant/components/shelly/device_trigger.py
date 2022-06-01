@@ -1,7 +1,7 @@
 """Provides device triggers for Shelly."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 
@@ -54,7 +54,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 def append_input_triggers(
-    triggers: list[dict[str, Any]],
+    triggers: list[dict[str, str]],
     input_triggers: list[tuple[str, str]],
     device_id: str,
 ) -> None:
@@ -72,8 +72,8 @@ def append_input_triggers(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistant, config: dict[str, Any]
-) -> dict[str, Any]:
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
@@ -108,9 +108,9 @@ async def async_validate_trigger_config(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Shelly devices."""
-    triggers: list[dict[str, Any]] = []
+    triggers: list[dict[str, str]] = []
 
     if rpc_wrapper := get_rpc_device_wrapper(hass, device_id):
         input_triggers = get_rpc_input_triggers(rpc_wrapper.device)

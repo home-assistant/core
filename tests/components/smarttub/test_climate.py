@@ -1,5 +1,4 @@
 """Test the SmartTub climate platform."""
-
 import smarttub
 
 from homeassistant.components.climate.const import (
@@ -11,17 +10,15 @@ from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_HEAT,
     PRESET_ECO,
     PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
@@ -40,19 +37,19 @@ async def test_thermostat_update(spa, spa_state, setup_entry, hass):
     state = hass.states.get(entity_id)
     assert state
 
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
 
     spa_state.heater = "OFF"
     await trigger_update(hass)
     state = hass.states.get(entity_id)
 
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
-    assert set(state.attributes[ATTR_HVAC_MODES]) == {HVAC_MODE_HEAT}
-    assert state.state == HVAC_MODE_HEAT
+    assert set(state.attributes[ATTR_HVAC_MODES]) == {HVACMode.HEAT}
+    assert state.state == HVACMode.HEAT
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+        == ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 38
     assert state.attributes[ATTR_TEMPERATURE] == 39
@@ -71,7 +68,7 @@ async def test_thermostat_update(spa, spa_state, setup_entry, hass):
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     # does nothing

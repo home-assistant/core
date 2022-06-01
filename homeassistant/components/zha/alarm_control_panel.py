@@ -4,9 +4,9 @@ import functools
 from zigpy.zcl.clusters.security import IasAce
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_TEXT,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -116,7 +116,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
-        return FORMAT_TEXT
+        return CodeFormat.TEXT
 
     @property
     def changed_by(self):

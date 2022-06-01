@@ -42,6 +42,20 @@ ZEROCONF = {
             "domain": "apple_tv"
         }
     ],
+    "_api._tcp.local.": [
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "haiku*"
+            }
+        },
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "i6*"
+            }
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -103,7 +117,10 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         },
         {
-            "domain": "devolo_home_network"
+            "domain": "devolo_home_network",
+            "properties": {
+                "MT": "*"
+            }
         }
     ],
     "_easylink._tcp.local.": [
@@ -378,6 +395,12 @@ ZEROCONF = {
             "domain": "kodi"
         }
     ],
+    "_zigate-zigbee-gateway._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigate*"
+        }
+    ],
     "_zwave-js-server._tcp.local.": [
         {
             "domain": "zwave_js"
@@ -398,7 +421,26 @@ HOMEKIT = {
     "EB-*": "ecobee",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
-    "LIFX": "lifx",
+    "LIFX A19": "lifx",
+    "LIFX BR30": "lifx",
+    "LIFX Beam": "lifx",
+    "LIFX Candle": "lifx",
+    "LIFX Clean": "lifx",
+    "LIFX Color": "lifx",
+    "LIFX DLCOL": "lifx",
+    "LIFX DLWW": "lifx",
+    "LIFX Dlight": "lifx",
+    "LIFX Downlight": "lifx",
+    "LIFX Filament": "lifx",
+    "LIFX GU10": "lifx",
+    "LIFX Lightstrip": "lifx",
+    "LIFX Mini": "lifx",
+    "LIFX Nightvision": "lifx",
+    "LIFX Pls": "lifx",
+    "LIFX Plus": "lifx",
+    "LIFX Tile": "lifx",
+    "LIFX White": "lifx",
+    "LIFX Z": "lifx",
     "MYQ": "myq",
     "NL29": "nanoleaf",
     "NL42": "nanoleaf",

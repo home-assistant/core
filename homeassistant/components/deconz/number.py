@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pydeconz.sensor import PRESENCE_DELAY, Presence, SensorBase as PydeconzSensor
+from pydeconz.models.event import EventType
+from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -14,7 +15,6 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,7 +28,7 @@ class DeconzNumberDescriptionMixin:
 
     suffix: str
     update_key: str
-    value_fn: Callable[[PydeconzSensor], float | None]
+    value_fn: Callable[[Presence], float | None]
 
 
 @dataclass
@@ -40,7 +40,7 @@ ENTITY_DESCRIPTIONS = {
     Presence: [
         DeconzNumberDescription(
             key="delay",
-            value_fn=lambda device: device.delay,  # type: ignore[no-any-return]
+            value_fn=lambda device: device.delay,
             suffix="Delay",
             update_key=PRESENCE_DELAY,
             max_value=65535,
@@ -62,44 +62,22 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors: list[Presence] | None = None) -> None:
-        """Add number config sensor from deCONZ."""
-        entities = []
-
-        if sensors is None:
-            sensors = list(gateway.api.sensors.presence.values())
-
-        for sensor in sensors:
-
-            if sensor.type.startswith("CLIP"):
+    def async_add_sensor(_: EventType, sensor_id: str) -> None:
+        """Add sensor from deCONZ."""
+        sensor = gateway.api.sensors.presence[sensor_id]
+        if sensor.type.startswith("CLIP"):
+            return
+        for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
+            if (
+                not hasattr(sensor, description.key)
+                or description.value_fn(sensor) is None
+            ):
                 continue
+            async_add_entities([DeconzNumber(sensor, gateway, description)])
 
-            known_entities = set(gateway.entities[DOMAIN])
-            for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
-
-                if (
-                    not hasattr(sensor, description.key)
-                    or description.value_fn(sensor) is None
-                ):
-                    continue
-
-                new_entity = DeconzNumber(sensor, gateway, description)
-                if new_entity.unique_id not in known_entities:
-                    entities.append(new_entity)
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_sensor,
-            async_add_sensor,
-        )
-    )
-
-    async_add_sensor(
-        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.presence,
     )
 
 
@@ -129,9 +107,9 @@ class DeconzNumber(DeconzDevice, NumberEntity):
             super().async_update_callback()
 
     @property
-    def value(self) -> float:
+    def value(self) -> float | None:
         """Return the value of the sensor property."""
-        return self.entity_description.value_fn(self._device)  # type: ignore[no-any-return]
+        return self.entity_description.value_fn(self._device)
 
     async def async_set_value(self, value: float) -> None:
         """Set sensor config."""

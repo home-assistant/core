@@ -3,7 +3,7 @@
   "name": "Denon AVR Network Receivers",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
-  "requirements": ["denonavr==0.10.10"],
+  "requirements": ["denonavr==0.10.11"],
   "codeowners": ["@ol-iver", "@starkillerOG"],
   "ssdp": [
     {
@@ -56,5 +56,8 @@
     }
   ],
   "iot_class": "local_polling",
-  "loggers": ["denonavr"]
+  "loggers": ["denonavr"],
+  "supported_brands": {
+    "marantz": "Marantz"
+  }
 }

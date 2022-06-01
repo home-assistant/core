@@ -42,6 +42,8 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     @property
     def value(self):
         """Return the unit of measurement."""
+        if self.device.level == 99:  # Scale max value
+            return 100
         return self.device.level
 
     def set_value(self, value: float) -> None:

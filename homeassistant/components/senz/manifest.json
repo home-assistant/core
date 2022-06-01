@@ -1,0 +1,10 @@
+{
+  "domain": "senz",
+  "name": "nVent RAYCHEM SENZ",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/senz",
+  "requirements": ["aiosenz==1.0.0"],
+  "dependencies": ["application_credentials"],
+  "codeowners": ["@milanmeu"],
+  "iot_class": "cloud_polling"
+}

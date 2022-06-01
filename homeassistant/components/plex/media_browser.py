@@ -71,7 +71,7 @@ def browse_media(  # noqa: C901
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
         except KeyError as err:
-            raise UnknownMediaType("Unknown type received: {item.type}") from err
+            raise UnknownMediaType(f"Unknown type received: {item.type}") from err
         payload = {
             "title": pretty_title(item, short_name),
             "media_class": media_class,

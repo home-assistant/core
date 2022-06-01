@@ -10,6 +10,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.storage import Store
 
 from .const import (
     AUTH_CALLBACK_NAME,
@@ -102,7 +103,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get access token", exc_info=True)
             return None
 
-        store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        store = Store(self.hass, STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(token_info)
 
         return token_info
@@ -140,7 +141,6 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> str:
         """Receive authorization token."""
-        # pylint: disable=no-self-use
         if (code := request.query.get("code")) is None:
             return "No code"
         hass = request.app["hass"]

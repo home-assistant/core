@@ -21,7 +21,6 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_sensor_setup(hass: HomeAssistant):
     """Test default setup of the sensor component."""
     entry = configure_integration(hass)
@@ -36,7 +35,6 @@ async def test_sensor_setup(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_update_connected_wifi_clients(hass: HomeAssistant):
     """Test state change of a connected_wifi_clients sensor device."""
     state_key = f"{DOMAIN}.connected_wifi_clients"
@@ -73,85 +71,75 @@ async def test_update_connected_wifi_clients(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_device")
 async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
     """Test state change of a neighboring_wifi_networks sensor device."""
     state_key = f"{DOMAIN}.neighboring_wifi_networks"
     entry = configure_integration(hass)
+    er = entity_registry.async_get(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
+    assert state.state == "1"
+    assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
+
+    # Emulate device failure
     with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_neighbor_access_points",
+        side_effect=DeviceUnavailable,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        state = hass.states.get(state_key)
-        assert state is not None
-        assert state.state == "1"
-
-        er = entity_registry.async_get(hass)
-        assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
-
-        # Emulate device failure
-        with patch(
-            "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_neighbor_access_points",
-            side_effect=DeviceUnavailable,
-        ):
-            async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
-            await hass.async_block_till_done()
-
-            state = hass.states.get(state_key)
-            assert state is not None
-            assert state.state == STATE_UNAVAILABLE
-
-        # Emulate state change
         async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
         state = hass.states.get(state_key)
         assert state is not None
-        assert state.state == "1"
+        assert state.state == STATE_UNAVAILABLE
 
-        await hass.config_entries.async_unload(entry.entry_id)
+    # Emulate state change
+    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
+    assert state.state == "1"
+
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_device")
 async def test_update_connected_plc_devices(hass: HomeAssistant):
     """Test state change of a connected_plc_devices sensor device."""
     state_key = f"{DOMAIN}.connected_plc_devices"
     entry = configure_integration(hass)
+    er = entity_registry.async_get(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
+    assert state.state == "1"
+    assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
+
+    # Emulate device failure
     with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
+        "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
+        side_effect=DeviceUnavailable,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        state = hass.states.get(state_key)
-        assert state is not None
-        assert state.state == "1"
-
-        er = entity_registry.async_get(hass)
-        assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
-
-        # Emulate device failure
-        with patch(
-            "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
-            side_effect=DeviceUnavailable,
-        ):
-            async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
-            await hass.async_block_till_done()
-
-            state = hass.states.get(state_key)
-            assert state is not None
-            assert state.state == STATE_UNAVAILABLE
-
-        # Emulate state change
         async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
         state = hass.states.get(state_key)
         assert state is not None
-        assert state.state == "1"
+        assert state.state == STATE_UNAVAILABLE
 
-        await hass.config_entries.async_unload(entry.entry_id)
+    # Emulate state change
+    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
+    assert state.state == "1"
+
+    await hass.config_entries.async_unload(entry.entry_id)

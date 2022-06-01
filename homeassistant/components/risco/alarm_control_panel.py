@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -132,7 +132,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     def _validate_code(self, code):
         """Validate given code."""

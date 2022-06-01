@@ -1,19 +1,32 @@
 """Tests for the Mikrotik component."""
-from homeassistant.components import mikrotik
+from homeassistant.components.mikrotik.const import (
+    CONF_ARP_PING,
+    CONF_DETECTION_TIME,
+    CONF_FORCE_DHCP,
+    DEFAULT_DETECTION_TIME,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 
 MOCK_DATA = {
-    mikrotik.CONF_NAME: "Mikrotik",
-    mikrotik.CONF_HOST: "0.0.0.0",
-    mikrotik.CONF_USERNAME: "user",
-    mikrotik.CONF_PASSWORD: "pass",
-    mikrotik.CONF_PORT: 8278,
-    mikrotik.CONF_VERIFY_SSL: False,
+    CONF_NAME: "Mikrotik",
+    CONF_HOST: "0.0.0.0",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
 }
 
 MOCK_OPTIONS = {
-    mikrotik.CONF_ARP_PING: False,
-    mikrotik.const.CONF_FORCE_DHCP: False,
-    mikrotik.CONF_DETECTION_TIME: mikrotik.DEFAULT_DETECTION_TIME,
+    CONF_ARP_PING: False,
+    CONF_FORCE_DHCP: False,
+    CONF_DETECTION_TIME: DEFAULT_DETECTION_TIME,
 }
 
 DEVICE_1_DHCP = {

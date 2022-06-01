@@ -59,7 +59,6 @@ def test_config_schema_basic_config() -> None:
 
 def test_config_schema_client_id() -> None:
     """Test schema."""
-    config_schema_assert_fail({CONF_CLIENT_SECRET: "my_client_secret"})
     config_schema_assert_fail(
         {CONF_CLIENT_SECRET: "my_client_secret", CONF_CLIENT_ID: ""}
     )
@@ -70,7 +69,6 @@ def test_config_schema_client_id() -> None:
 
 def test_config_schema_client_secret() -> None:
     """Test schema."""
-    config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id"})
     config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: ""})
     config_schema_validate(
         {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "cycle": "Ciclo de reinicio del contador",
+                    "delta_values": "Valores delta",
+                    "source": "Sensor de entrada",
+                    "tariffs": "Tarifas soportadas"
+                },
+                "data_description": {
+                    "net_consumption": "Act\u00edvalo si es un contador limpio, es decir, puede aumentar y disminuir.",
+                    "offset": "Desplaza el d\u00eda de restablecimiento mensual del contador.",
+                    "tariffs": "Lista de tarifas admitidas, d\u00e9jala en blanco si utilizas una \u00fanica tarifa."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source": "Sensor de entrada"
+                }
+            }
+        }
+    },
+    "title": "Contador"
+}

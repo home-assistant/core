@@ -9,6 +9,10 @@ from yarl import URL
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_manager
+from homeassistant.components.stream import (
+    CONF_RTSP_TRANSPORT,
+    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
@@ -27,7 +31,6 @@ from .const import (
     ATTR_SPEED,
     ATTR_TILT,
     ATTR_ZOOM,
-    CONF_RTSP_TRANSPORT,
     CONF_SNAPSHOT_AUTH,
     CONTINUOUS_MOVE,
     DIR_DOWN,
@@ -97,6 +100,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self.stream_options[CONF_RTSP_TRANSPORT] = device.config_entry.options.get(
             CONF_RTSP_TRANSPORT
         )
+        self.stream_options[
+            CONF_USE_WALLCLOCK_AS_TIMESTAMPS
+        ] = device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
         self._basic_auth = (
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
@@ -106,7 +112,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     @property
     def name(self) -> str:
         """Return the name of this camera."""
-        return f"{self.device.name} - {self.profile.name}"
+        return f"{self.device.name} {self.profile.name}"
 
     @property
     def unique_id(self) -> str:

@@ -453,8 +453,10 @@ class MpdDevice(MediaPlayerEntity):
         """Send the media player the command for playing a playlist."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
-            media_id = play_item.url
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = async_process_play_media_url(self.hass, play_item.url)
 
         if media_type == MEDIA_TYPE_PLAYLIST:
             _LOGGER.debug("Playing playlist: %s", media_id)
@@ -467,8 +469,6 @@ class MpdDevice(MediaPlayerEntity):
             await self._client.load(media_id)
             await self._client.play()
         else:
-            media_id = async_process_play_media_url(self.hass, media_id)
-
             await self._client.clear()
             self._currentplaylist = None
             await self._client.add(media_id)

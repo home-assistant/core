@@ -12,15 +12,13 @@
                 "data": {
                     "city": "By"
                 },
-                "description": "Velg din by fra listen",
-                "title": ""
+                "description": "Velg din by fra listen"
             },
             "user": {
                 "data": {
                     "city": "By"
                 },
-                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn",
-                "title": ""
+                "description": "Fyll inn postnummeret (bare for Frankrike, anbefalt) eller bynavn"
             }
         }
     },

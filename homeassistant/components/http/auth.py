@@ -17,6 +17,7 @@ from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
 
@@ -96,7 +97,7 @@ def async_user_not_allowed_do_auth(
             return "User is local only"
 
     try:
-        remote = ip_address(request.remote)
+        remote = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         return "Invalid remote IP"
 
@@ -108,8 +109,8 @@ def async_user_not_allowed_do_auth(
 
 async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    if (data := await store.async_load()) is None:
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    if (data := await store.async_load()) is None or not isinstance(data, dict):
         data = {}
 
     refresh_token = None

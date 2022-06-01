@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
             "not_huawei_lte": "Geen Huawei LTE-apparaat"
         },
         "error": {
@@ -34,7 +32,6 @@
                 "data": {
                     "name": "Naam meldingsservice (wijziging vereist opnieuw opstarten)",
                     "recipient": "Ontvangers van sms-berichten",
-                    "track_new_devices": "Volg nieuwe apparaten",
                     "track_wired_clients": "Volg bekabelde netwerkclients",
                     "unauthenticated_mode": "Niet-geverifieerde modus (wijzigen vereist opnieuw laden)"
                 }

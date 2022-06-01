@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a WiLight {name}\uff1f\n\n\u652f\u63f4\uff1a{components}",
-                "title": "WiLight"
+                "description": "\u652f\u63f4\u4ee5\u4e0b\u5143\u4ef6\uff1a{components}"
             }
         }
     }
