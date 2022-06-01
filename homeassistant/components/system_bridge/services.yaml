@@ -70,3 +70,28 @@ send_text:
       example: "Hello world"
       selector:
         text:
+power_command:
+  name: Power Command
+  description: Sends a power command to the system.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command:
+      name: Command
+      description: Command to call.
+      required: true
+      example: "sleep"
+      selector:
+        select:
+          options:
+            - "hibernate"
+            - "lock"
+            - "logout"
+            - "restart"
+            - "shutdown"
+            - "sleep"
