@@ -5,5 +5,6 @@
   "requirements": ["radiotherm==2.1.0"],
   "codeowners": ["@vinnyfuria"],
   "iot_class": "local_polling",
-  "loggers": ["radiotherm"]
+  "loggers": ["radiotherm"],
+  "config_flow": true
 }

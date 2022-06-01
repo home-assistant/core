@@ -5,6 +5,7 @@ import logging
 from socket import timeout
 
 import radiotherm
+from radiotherm.thermostat import Thermostat
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -18,6 +19,7 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -98,6 +100,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up climate for a radiotherm device."""
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -140,7 +150,7 @@ class RadioThermostat(ClimateEntity):
 
     def __init__(self, device, hold_temp):
         """Initialize the thermostat."""
-        self.device = device
+        self.device: Thermostat = device
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None

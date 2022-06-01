@@ -1,7 +1,5 @@
-"""The radiotherm component."""
+"""The Radio Thermostat integration."""
 from __future__ import annotations
-
-import radiotherm
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -9,15 +7,15 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+# TODO List the platforms that you want to support.
+# For your initial PR, limit it to 1 platform.
+PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Radio Thermostat from a config entry."""
-    data = entry.data
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-    hass.data[DOMAIN][entry.entry_id] = radiotherm.get_thermostat(data[CONF_HOST])
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
