@@ -1,6 +1,7 @@
 """Config flow for Verisure integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from verisure import (
@@ -108,7 +109,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Verisure."""
         self.entry = cast(
             ConfigEntry,

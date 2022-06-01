@@ -15,7 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .. import mqtt
+from .client import async_publish
+from .config import MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from .mixins import (
     CONF_ENABLED_BY_DEFAULT,
@@ -27,13 +28,14 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_ON): cv.string,
@@ -128,7 +130,7 @@ class MqttScene(
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
+        await async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_ON],
