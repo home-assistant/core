@@ -542,11 +542,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
         """
-        if ATTR_MEDIA_ANNOUNCE in kwargs:
-            raise HomeAssistantError("'announce' is not currently supported")
-
         # Use 'replace' as the default enqueue option
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            # Temporary workaround until announce support is added
+            enqueue = MediaPlayerEnqueue.PLAY
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
