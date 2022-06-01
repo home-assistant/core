@@ -1578,7 +1578,10 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
 _SCRIPT_TEMPLATE_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_TEMPLATE_SEQUENCE): template,
+        vol.Required(CONF_TEMPLATE_SEQUENCE): vol.Any(
+            SCRIPT_SCHEMA,
+            template,
+        ),
     }
 )
 
@@ -1597,7 +1600,7 @@ SCRIPT_ACTION_VARIABLES = "variables"
 SCRIPT_ACTION_STOP = "stop"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
-SCRIPT_ACTION_TEMPLATE_SEQUENCE = "template_sequence"
+SCRIPT_ACTION_TEMPLATE_SEQUENCE = "sequence"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:

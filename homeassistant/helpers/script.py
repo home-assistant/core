@@ -991,9 +991,11 @@ class _ScriptRun:
             self._hass, self._variables, render_as_defaults=False
         )
 
-    async def _async_template_sequence_step(self):
+    async def _async_sequence_step(self):
         """Run a templated sequence of actions."""
-        actions = self._action[CONF_TEMPLATE_SEQUENCE].async_render(self._variables)
+        actions = self._action[CONF_TEMPLATE_SEQUENCE]
+        if isinstance(actions, template.Template):
+            actions = self._action[CONF_TEMPLATE_SEQUENCE].async_render(self._variables)
         await self._async_run_script(
             Script(self._hass, actions, "", "template sequence")
         )
