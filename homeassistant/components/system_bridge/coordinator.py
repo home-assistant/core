@@ -20,6 +20,8 @@ from systembridgeconnector.models.disk import Disk
 from systembridgeconnector.models.display import Display
 from systembridgeconnector.models.get_data import GetData
 from systembridgeconnector.models.gpu import Gpu
+from systembridgeconnector.models.media_directories import MediaDirectories
+from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
 from systembridgeconnector.models.memory import Memory
 from systembridgeconnector.models.register_data_listener import RegisterDataListener
 from systembridgeconnector.models.system import System
@@ -47,6 +49,9 @@ class SystemBridgeCoordinatorData(BaseModel):
     disk: Disk = None
     display: Display = None
     gpu: Gpu = None
+    media_directories: MediaDirectories = None
+    media_file: MediaFile = None
+    media_files: MediaFiles = None
     memory: Memory = None
     system: System = None
 
@@ -99,6 +104,29 @@ class SystemBridgeDataUpdateCoordinator(
         self.hass.async_create_task(
             self.websocket_client.get_data(GetData(modules=modules))
         )
+
+    async def async_get_media_directories(self) -> MediaDirectories:
+        """Get media directories."""
+        self.systembridge_data.media_directories = None
+        await self.websocket_client.get_directories()
+
+    async def async_get_media_files(
+        self,
+        base: str,
+        path: str | None = None,
+    ) -> MediaFiles:
+        """Get media files."""
+        self.systembridge_data.media_files = None
+        await self.websocket_client.get_files(base, path)
+
+    async def async_get_media_file(
+        self,
+        base: str,
+        path: str,
+    ) -> MediaFile:
+        """Get media file."""
+        self.systembridge_data.media_file = None
+        await self.websocket_client.get_file(base, path)
 
     async def async_handle_module(
         self,
