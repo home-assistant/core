@@ -128,9 +128,7 @@ class CarbonDioxideConcentration(ZigbeeChannel):
     ]
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
-    measurement.PM25.cluster_id
-)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PM25.cluster_id)
 class PM25(ZigbeeChannel):
     """Particulate Matter 2.5 microns or less measurement channel."""
 

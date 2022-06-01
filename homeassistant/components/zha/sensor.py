@@ -607,7 +607,6 @@ class PPBVOCLevel(Sensor):
     _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
-
 @MULTI_MATCH(channel_names="pm25")
 class PM25(Sensor):
     """Particulate Matter 2.5 microns or less sensor."""
