@@ -25,7 +25,8 @@
         "step": {
             "init": {
                 "data": {
-                    "show_on_map": "Muestra las estaciones en el mapa"
+                    "show_on_map": "Muestra las estaciones en el mapa",
+                    "stations": "Estaciones"
                 }
             }
         }

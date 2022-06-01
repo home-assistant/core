@@ -39,6 +39,7 @@
             "already_exists": "Ya hay una c\u00e1mara con esa URL de configuraci\u00f3n.",
             "stream_no_route_to_host": "No se pudo encontrar el anfitri\u00f3n mientras intentaba conectar al flujo de datos",
             "stream_unauthorised": "La autorizaci\u00f3n ha fallado mientras se intentaba conectar con el flujo de datos",
+            "template_error": "Error al renderizar la plantilla. Revise el registro para m\u00e1s informaci\u00f3n.",
             "timeout": "El tiempo m\u00e1ximo de carga de la URL ha expirado",
             "unknown": "Error inesperado"
         },
