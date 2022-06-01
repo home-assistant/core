@@ -1549,6 +1549,9 @@ pyhomeworks==0.0.6
 # homeassistant.components.ialarm
 pyialarm==1.9.0
 
+# homeassistant.components.ialarmxr
+pyialarmxr==1.0.10
+
 # homeassistant.components.ialarm_xr
 pyialarmxr==1.0.18
 
