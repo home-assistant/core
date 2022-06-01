@@ -25,6 +25,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -527,7 +528,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.coordinator.soco.clear_queue()
 
     @soco_error()
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(  # noqa: C901
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """
         Send the play_media command to the media player.
 
@@ -539,6 +542,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
         """
+        if ATTR_MEDIA_ANNOUNCE in kwargs:
+            raise HomeAssistantError("'announce' is not currently supported")
+
+        # Use 'replace' as the default enqueue option
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
             media_id = spotify.spotify_uri_from_media_browser_url(media_id)
@@ -574,17 +583,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if result.shuffle:
                 self.set_shuffle(True)
-            if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
+            if enqueue == MediaPlayerEnqueue.ADD:
                 plex_plugin.add_to_queue(result.media)
-            elif kwargs.get(ATTR_MEDIA_ENQUEUE) in (
+            elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
                 new_pos = plex_plugin.add_to_queue(result.media, position=pos)
-                if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.PLAY:
+                if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
-            else:
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
                 plex_plugin.add_to_queue(result.media)
                 soco.play_from_queue(0)
@@ -592,17 +601,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
-            if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
+            if enqueue == MediaPlayerEnqueue.ADD:
                 share_link.add_share_link_to_queue(media_id)
-            elif kwargs.get(ATTR_MEDIA_ENQUEUE) in (
+            elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
                 new_pos = share_link.add_share_link_to_queue(media_id, position=pos)
-                if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.PLAY:
+                if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
-            else:
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
                 share_link.add_share_link_to_queue(media_id)
                 soco.play_from_queue(0)
@@ -610,17 +619,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
 
-            if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.ADD:
+            if enqueue == MediaPlayerEnqueue.ADD:
                 soco.add_uri_to_queue(media_id)
-            elif kwargs.get(ATTR_MEDIA_ENQUEUE) in (
+            elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
                 new_pos = soco.add_uri_to_queue(media_id, position=pos)
-                if kwargs.get(ATTR_MEDIA_ENQUEUE) == MediaPlayerEnqueue.PLAY:
+                if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
-            else:
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
