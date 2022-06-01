@@ -37,6 +37,7 @@
         "step": {
             "init": {
                 "data": {
+                    "scan_interval": "Update Interval",
                     "show_on_map": "Show stations on map",
                     "stations": "Stations"
                 },
