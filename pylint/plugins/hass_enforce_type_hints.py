@@ -573,14 +573,13 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
     def visit_classdef(self, node: astroid.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
-        for class_matches in self._class_matchers:
-            for ancestor in node.ancestors(True):
+        for ancestor in node.ancestors(True):
+            for class_matches in self._class_matchers:
                 if (
                     isinstance(ancestor, astroid.ClassDef)
                     and ancestor.name == class_matches.base_class
                 ):
                     self._visit_class_functions(node, class_matches.matches)
-                    break
 
     def _visit_class_functions(
         self, node: astroid.ClassDef, matches: list[TypeHintMatch]
