@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -64,6 +65,10 @@ TILT_DEVICE_MAP = {
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
 }
 
+TILT_ONLY_DEVICE_MAP = {
+    BlindType.WoodShutter: CoverDeviceClass.BLIND,
+}
+
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
 }
@@ -104,6 +109,16 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
+                    sw_version,
+                )
+            )
+
+        elif blind.type in TILT_ONLY_DEVICE_MAP:
+            entities.append(
+                MotionTiltOnlyDevice(
+                    coordinator,
+                    blind,
+                    TILT_ONLY_DEVICE_MAP[blind.type],
                     sw_version,
                 )
             )
@@ -354,6 +369,49 @@ class MotionTiltDevice(MotionPositionDevice):
         """Stop the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
+
+
+class MotionTiltOnlyDevice(MotionTiltDevice):
+    """Representation of a Motion Blind Device."""
+
+    _restore_tilt = False
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        supported_features = (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+        )
+
+        if self.current_cover_tilt_position is not None:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        return supported_features
+
+    @property
+    def current_cover_position(self):
+        """Return current position of cover."""
+        return None
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        if self._blind.angle is None:
+            return None
+        return self._blind.angle == 0
+
+    async def async_set_absolute_position(self, **kwargs):
+        """Move the cover to a specific absolute position (see TDBU)."""
+        angle = kwargs.get(ATTR_TILT_POSITION)
+        if angle is not None:
+            angle = angle * 180 / 100
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(
+                    self._blind.Set_angle,
+                    angle,
+                )
 
 
 class MotionTDBUDevice(MotionPositionDevice):
