@@ -579,9 +579,7 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
 
     async def _setup_mqtt_entry(setup_entry):
         """Set up the MQTT config entry."""
-        if setup_entry:
-            assert await hass.config_entries.async_setup(entry.entry_id)
-            await hass.async_block_till_done()
+        assert await setup_entry(hass, entry)
 
         # Assert that MQTT is setup
         assert real_mqtt_instance is not None, "MQTT was not setup correctly"
@@ -616,9 +614,15 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
 async def mqtt_mock_entry_no_yaml_config(hass, mqtt_client_mock, mqtt_config):
     """Set up an MQTT config entry without MQTT yaml config."""
 
+    async def _async_setup_config_entry(hass, entry):
+        """Help set up the config entry."""
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        return True
+
     async def _setup_mqtt_entry():
         """Set up the MQTT config entry."""
-        return await mqtt_mock_entry(True)
+        return await mqtt_mock_entry(_async_setup_config_entry)
 
     async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
         yield _setup_mqtt_entry
@@ -628,9 +632,13 @@ async def mqtt_mock_entry_no_yaml_config(hass, mqtt_client_mock, mqtt_config):
 async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
     """Set up an MQTT config entry with MQTT yaml config."""
 
+    async def _async_do_not_setup_config_entry(hass, entry):
+        """Do nothing."""
+        return True
+
     async def _setup_mqtt_entry():
         """Set up the MQTT config entry."""
-        return await mqtt_mock_entry(False)
+        return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
     async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
         yield _setup_mqtt_entry
