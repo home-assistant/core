@@ -1,6 +1,7 @@
 """Config flow for devolo Home Network integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -109,9 +110,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"host_name": title},
         )
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthentication."""
-        self.context[CONF_HOST] = user_input[CONF_IP_ADDRESS]
+        self.context[CONF_HOST] = data[CONF_IP_ADDRESS]
         self.context["title_placeholders"][PRODUCT] = self.hass.data[DOMAIN][
             self.context["entry_id"]
         ]["device"].product
