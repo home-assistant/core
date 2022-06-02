@@ -255,7 +255,7 @@ async def async_setup_trigger(
 
 async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
     """Cleanup any device triggers for a Tasmota device."""
-    triggers = await async_get_triggers(hass, device_id)
+    triggers = async_get_triggers(hass, device_id)
 
     if not triggers:
         return
@@ -273,9 +273,8 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
             device_trigger.remove_update_signal()
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for a Tasmota device."""
     triggers: list[dict[str, str]] = []
 
