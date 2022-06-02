@@ -2,9 +2,10 @@
 from time import time
 from unittest.mock import AsyncMock, patch
 
+from pyatmo.const import ALL_SCOPES
 import pytest
 
-from .common import ALL_SCOPES, fake_get_image, fake_post_request
+from .common import fake_get_image, fake_post_request
 
 from tests.common import MockConfigEntry
 
@@ -60,6 +61,7 @@ def netatmo_auth():
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth:
         mock_auth.return_value.async_post_request.side_effect = fake_post_request
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_get_image.side_effect = fake_get_image
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()

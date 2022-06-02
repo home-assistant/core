@@ -8,13 +8,10 @@ import secrets
 
 import aiohttp
 import pyatmo
+from pyatmo.const import ALL_SCOPES as NETATMO_SCOPES
 import voluptuous as vol
 
 from homeassistant.components import cloud
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.webhook import (
     async_generate_url as webhook_generate_url,
     async_register as webhook_register,
@@ -39,7 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from . import api
+from . import api, config_flow
 from .const import (
     AUTH,
     CONF_CLOUDHOOK_URL,
@@ -51,7 +48,8 @@ from .const import (
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
-    NETATMO_SCOPES,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
     PLATFORMS,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
@@ -62,17 +60,14 @@ from .webhook import async_handle_webhook
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                }
-            )
-        },
-    ),
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CLIENT_ID): cv.string,
+                vol.Required(CONF_CLIENT_SECRET): cv.string,
+            }
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -93,20 +88,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    await async_import_client_credential(
+    config_flow.NetatmoFlowHandler.async_register_implementation(
         hass,
-        DOMAIN,
-        ClientCredential(
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
+            OAUTH2_AUTHORIZE,
+            OAUTH2_TOKEN,
         ),
-    )
-    _LOGGER.warning(
-        "Configuration of Netatmo integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
-        "(including OAuth Application Credentials) have been imported into "
-        "the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
     )
 
     return True
@@ -150,10 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     data_handler = NetatmoDataHandler(hass, entry)
-    await data_handler.async_setup()
+    hass.async_create_task(data_handler.async_setup())
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def unregister_webhook(
         call_or_event_or_dt: ServiceCall | Event | datetime | None,
@@ -208,10 +197,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
-
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-        )
+        else:
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+            )
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:

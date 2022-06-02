@@ -4,26 +4,23 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-import pyatmo
+from pyatmo import modules as NaModules
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    DATA_HANDLER,
+    CONF_URL_SECURITY,
     DOMAIN,
     EVENT_TYPE_LIGHT_MODE,
-    MANUFACTURER,
-    SIGNAL_NAME,
-    TYPE_SECURITY,
+    NETATMO_CREATE_CAMERA_LIGHT,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import CAMERA_DATA_CLASS_NAME, NetatmoDataHandler
+from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
 from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,60 +30,55 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Netatmo camera light platform."""
-    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
-    data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
-    if not data_class or data_class.raw_data == {}:
-        raise PlatformNotReady
+    @callback
+    def _create_camera_light_entity(netatmo_device: NetatmoDevice) -> None:
+        try:
+            getattr(netatmo_device.device, "floodlight")
+        except AttributeError:
+            return
+        entity = NetatmoCameraLight(netatmo_device)
+        _LOGGER.debug("Adding climate battery sensor %s", entity)
+        async_add_entities([entity])
 
-    all_cameras = []
-    for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
-        for camera in home.values():
-            all_cameras.append(camera)
-
-    entities = [
-        NetatmoLight(
-            data_handler,
-            camera["id"],
-            camera["type"],
-            camera["home_id"],
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_CAMERA_LIGHT, _create_camera_light_entity
         )
-        for camera in all_cameras
-        if camera["type"] == "NOC"
-    ]
-
-    _LOGGER.debug("Adding camera lights %s", entities)
-    async_add_entities(entities, True)
+    )
 
 
-class NetatmoLight(NetatmoBase, LightEntity):
+class NetatmoCameraLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
-
-    _attr_color_mode = ColorMode.ONOFF
-    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
         self,
-        data_handler: NetatmoDataHandler,
-        camera_id: str,
-        camera_type: str,
-        home_id: str,
+        netatmo_device: NetatmoDevice,
     ) -> None:
         """Initialize a Netatmo Presence camera light."""
         LightEntity.__init__(self)
-        super().__init__(data_handler)
+        super().__init__(netatmo_device.data_handler)
 
-        self._data_classes.append(
-            {"name": CAMERA_DATA_CLASS_NAME, SIGNAL_NAME: CAMERA_DATA_CLASS_NAME}
-        )
-        self._id = camera_id
-        self._home_id = home_id
-        self._model = camera_type
-        self._netatmo_type = TYPE_SECURITY
-        self._device_name: str = self._data.get_camera(camera_id)["name"]
-        self._attr_name = f"{MANUFACTURER} {self._device_name}"
+        self._camera = cast(NaModules.NOC, netatmo_device.device)
+        self._id = self._camera.entity_id
+        self._home_id = self._camera.home.entity_id
+        self._device_name = self._camera.name
+        self._attr_name = f"{self._device_name}"
+        self._model = self._camera.device_type
+        self._config_url = CONF_URL_SECURITY
         self._is_on = False
         self._attr_unique_id = f"{self._id}-light"
+
+        self._signal_name = f"{HOME}-{self._home_id}"
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self._camera.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
+            ]
+        )
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -119,14 +111,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
             return
 
     @property
-    def _data(self) -> pyatmo.AsyncCameraData:
-        """Return data for this entity."""
-        return cast(
-            pyatmo.AsyncCameraData,
-            self.data_handler.data[self._data_classes[0]["name"]],
-        )
-
-    @property
     def available(self) -> bool:
         """If the webhook is not established, mark as unavailable."""
         return bool(self.data_handler.webhook)
@@ -139,22 +123,14 @@ class NetatmoLight(NetatmoBase, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
-        await self._data.async_set_state(
-            home_id=self._home_id,
-            camera_id=self._id,
-            floodlight="on",
-        )
+        await self._camera.async_floodlight_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
-        await self._data.async_set_state(
-            home_id=self._home_id,
-            camera_id=self._id,
-            floodlight="auto",
-        )
+        await self._camera.async_floodlight_auto()
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._is_on = bool(self._data.get_light_state(self._id) == "on")
+        self._is_on = bool(self._camera.floodlight == "on")
