@@ -50,7 +50,6 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(entry, coordinator, eight, user_id, sensor)
-        self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
         assert self._user_obj
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",

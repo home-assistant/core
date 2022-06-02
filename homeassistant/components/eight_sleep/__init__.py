@@ -88,8 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_get_clientsession(hass),
     )
 
-    hass.data.setdefault(DOMAIN, {})
-
     # Authenticate, build sensors
     success = await eight.start()
     if not success:
@@ -146,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **device_data,
         )
 
-    hass.data[DOMAIN][entry.entry_id] = EightSleepConfigEntryData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = EightSleepConfigEntryData(
         eight, heat_coordinator, user_coordinator
     )
 
@@ -162,6 +160,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
         await config_entry_data.api.stop()
         hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
 
@@ -189,17 +189,14 @@ class EightSleepBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
 
         mapped_name = NAME_MAP.get(sensor, sensor.replace("_", " ").title())
         if self._user_obj is not None:
-            self._attr_name = (
-                f"{self._user_obj.user_profile['firstName']}'s {mapped_name}"
-            )
+            name = f"{self._user_obj.user_profile['firstName']}'s {mapped_name}"
+            self._attr_name = name
         else:
             self._attr_name = f"Eight Sleep {mapped_name}"
-        self._attr_unique_id = (
-            f"{_get_device_unique_id(eight, self._user_obj)}.{sensor}"
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, _get_device_unique_id(eight, self._user_obj))}
-        )
+        unique_id = f"{_get_device_unique_id(eight, self._user_obj)}.{sensor}"
+        self._attr_unique_id = unique_id
+        identifiers = {(DOMAIN, _get_device_unique_id(eight, self._user_obj))}
+        self._attr_device_info = DeviceInfo(identifiers=identifiers)
 
     async def async_heat_set(self, target: int, duration: int) -> None:
         """Handle eight sleep service calls."""
