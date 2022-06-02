@@ -103,7 +103,10 @@ class Filters:
     def _generate_filter_for_columns(
         self, columns: Iterable[Column], encoder: Callable[[Any], Any]
     ) -> ClauseList:
-        """Generate a filter from pre-comuted sets and pattern lists."""
+        """Generate a filter from pre-comuted sets and pattern lists.
+
+        This must match exactly how homeassistant.helpers.entityfilter works.
+        """
         have_exclude = bool(
             self.excluded_entities
             or self.excluded_domains
