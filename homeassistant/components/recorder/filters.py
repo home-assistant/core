@@ -122,44 +122,24 @@ class Filters:
         if not have_include and not have_exclude:
             return None
 
-        includes = []
-        included_domains_matcher = _domain_matcher(
-            self.included_domains, columns, encoder
-        )
-        included_entities_matcher = _entity_matcher(
-            self.included_entities, columns, encoder
-        )
-        included_entity_globs_matcher = _globs_to_like(
+        i_domains_matcher = _domain_matcher(self.included_domains, columns, encoder)
+        i_entities_matcher = _entity_matcher(self.included_entities, columns, encoder)
+        i_entity_globs_matcher = _globs_to_like(
             self.included_entity_globs, columns, encoder
         )
-        if self.included_domains:
-            includes.append(included_domains_matcher)
-        if self.included_entities:
-            includes.append(included_entities_matcher)
-        if self.included_entity_globs:
-            includes.append(included_entity_globs_matcher)
+        includes = [i_domains_matcher, i_entities_matcher, i_entity_globs_matcher]
 
         # Case 2 - includes, no excludes - only include specified entities
         if have_include and not have_exclude:
 
             return or_(*includes).self_group()
 
-        excludes = []
-        excluded_domains_matcher = _domain_matcher(
-            self.excluded_domains, columns, encoder
-        )
-        excluded_entities_matcher = _entity_matcher(
-            self.excluded_entities, columns, encoder
-        )
-        excluded_entity_globs_matcher = _globs_to_like(
+        e_domains_matcher = _domain_matcher(self.excluded_domains, columns, encoder)
+        e_entities_matcher = _entity_matcher(self.excluded_entities, columns, encoder)
+        e_entity_globs_matcher = _globs_to_like(
             self.excluded_entity_globs, columns, encoder
         )
-        if self.excluded_domains:
-            excludes.append(excluded_domains_matcher)
-        if self.excluded_entities:
-            excludes.append(excluded_entities_matcher)
-        if self.excluded_entity_globs:
-            excludes.append(excluded_entity_globs_matcher)
+        excludes = [e_domains_matcher, e_entities_matcher, e_entity_globs_matcher]
 
         # Case 3 - excludes, no includes - only exclude specified entities
         if not have_include and have_exclude:
@@ -175,15 +155,12 @@ class Filters:
         if self.included_domains or self.included_entity_globs:
 
             return or_(
+                (i_domains_matcher & ~(e_entities_matcher | e_entity_globs_matcher)),
                 (
-                    included_domains_matcher
-                    & ~(excluded_entities_matcher | excluded_entity_globs_matcher)
-                ),
-                (
-                    ~included_domains_matcher
+                    ~i_domains_matcher
                     & or_(
-                        (included_entity_globs_matcher & ~(or_(*excludes))),
-                        (~included_entity_globs_matcher & included_entities_matcher),
+                        (i_entity_globs_matcher & ~(or_(*excludes))),
+                        (~i_entity_globs_matcher & i_entities_matcher),
                     )
                 ),
             ).self_group()
@@ -196,14 +173,11 @@ class Filters:
         #  - if domain or glob is excluded, pass if entity is included
         #  - if domain is not excluded, pass if entity not excluded by ID
         if self.excluded_domains or self.excluded_entity_globs:
-            matcher = not_(or_(*excludes))
-            if self.included_entities:
-                matcher |= _entity_matcher(self.included_entities, columns, encoder)
-            return matcher.self_group()
+            return (not_(or_(*excludes)) | i_entities_matcher).self_group()
 
         # Case 4c - neither include or exclude domain specified
         #  - Only pass if entity is included.  Ignore entity excludes.
-        return _entity_matcher(self.included_entities, columns, encoder)
+        return i_entities_matcher
 
     def states_entity_filter(self) -> ClauseList:
         """Generate the entity filter query."""
@@ -229,29 +203,32 @@ def _globs_to_like(
     glob_strs: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     """Translate glob to sql."""
-    return or_(
+    matchers = [
         cast(column, Text()).like(
             encoder(glob_str).translate(GLOB_TO_SQL_CHARS), escape="\\"
         )
         for glob_str in glob_strs
         for column in columns
-    )
+    ]
+    return or_(*matchers) if matchers else or_(False)
 
 
 def _entity_matcher(
     entity_ids: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
-    return or_(
+    matchers = [
         cast(column, Text()).in_([encoder(entity_id) for entity_id in entity_ids])
         for column in columns
-    )
+    ]
+    return or_(*matchers) if matchers else or_(False)
 
 
 def _domain_matcher(
     domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
-    return or_(
+    matchers = [
         cast(column, Text()).like(encoder(f"{domain}.%"))
         for domain in domains
         for column in columns
-    )
+    ]
+    return or_(*matchers) if matchers else or_(False)
