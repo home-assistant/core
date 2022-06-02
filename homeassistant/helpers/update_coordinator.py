@@ -83,7 +83,7 @@ class DataUpdateCoordinator(Generic[_T]):
 
     @callback
     def async_add_listener(
-        self, update_callback: CALLBACK_TYPE, context: object | None = None
+        self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
@@ -116,7 +116,7 @@ class DataUpdateCoordinator(Generic[_T]):
             self._unsub_refresh()
             self._unsub_refresh = None
 
-    def async_contexts(self) -> Generator[object, None, None]:
+    def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -314,7 +314,7 @@ class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
     def __init__(
-        self, coordinator: _DataUpdateCoordinatorT, context: object | None = None
+        self, coordinator: _DataUpdateCoordinatorT, context: Any = None
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
