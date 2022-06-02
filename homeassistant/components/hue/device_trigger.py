@@ -7,7 +7,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -85,9 +85,8 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, Any]]:
     """Get device triggers for given (hass) device id."""
     if DOMAIN not in hass.data:
         return []
