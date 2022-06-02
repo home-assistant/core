@@ -20,6 +20,7 @@ from .const import (
     ATTR_COORDINATORS,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_LEAK_VIBRATION_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     DOMAIN,
 )
@@ -40,6 +41,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_LEAK_VIBRATION_SENSOR,
 ]
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
@@ -65,6 +67,14 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="vibration_state",
+        name="Vibration",
+        device_class=BinarySensorDeviceClass.VIBRATION,
+        value=lambda value: value == "alert" if value is not None else None,
+        exists_fn=lambda device: device.device_type
+        in [ATTR_DEVICE_LEAK_VIBRATION_SENSOR],
     ),
 )
 
