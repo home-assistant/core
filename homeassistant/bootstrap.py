@@ -544,7 +544,8 @@ async def _async_set_up_integrations(
     stage_1_domains: set[str] = set()
 
     # Find all dependencies of any dependency of any stage 1 integration that
-    # we plan on loading and promote them to stage 1
+    # we plan on loading and promote them to stage 1. This is done only to not
+    # get misleading log messages
     deps_promotion: set[str] = STAGE_1_INTEGRATIONS
     while deps_promotion:
         old_deps_promotion = deps_promotion
