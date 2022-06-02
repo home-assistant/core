@@ -18,5 +18,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Set a permanent hold when adjusting the temperature."
+                }
+            }
+        }
     }
 }

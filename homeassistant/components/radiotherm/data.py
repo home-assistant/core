@@ -9,7 +9,8 @@ from radiotherm.thermostat import CommonThermostat
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import TIMEOUT
 
 
 @dataclass
@@ -25,6 +26,7 @@ class RadioThermInitData:
     """An data needed to init the integration."""
 
     tstat: CommonThermostat
+    host: str
     name: str
     mac: str
     model: str | None
@@ -32,23 +34,15 @@ class RadioThermInitData:
     api_version: int | None
 
 
-@dataclass
-class RadioThermData:
-    """Data for the radiothem integration."""
-
-    coordinator: DataUpdateCoordinator[RadioThermUpdate]
-    init_data: RadioThermInitData
-    hold_temp: bool
-
-
 def _get_init_data(host: str) -> RadioThermInitData:
     tstat = radiotherm.get_thermostat(host)
+    tstat.timeout = TIMEOUT
     name: str = tstat.name["raw"]
     sys: dict[str, Any] = tstat.sys["raw"]
     mac: str = dr.format_mac(sys["uuid"])
     model: str = tstat.model.get("raw")
     return RadioThermInitData(
-        tstat, name, mac, model, sys.get("fw_version"), sys.get("api_version")
+        tstat, host, name, mac, model, sys.get("fw_version"), sys.get("api_version")
     )
 
 

@@ -23,7 +23,7 @@
     "step": {
       "init": {
         "data": {
-          "hold_temp": "Set a permanent when adjusting the temperature."
+          "hold_temp": "Set a permanent hold when adjusting the temperature."
         }
       }
     }
