@@ -90,6 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import from yaml."""
         host = import_info[CONF_HOST]
+        _LOGGER.debug("Importing entry for host: %s", host)
         try:
             init_data = await validate_connection(self.hass, host)
         except CannotConnect as ex:
