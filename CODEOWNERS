@@ -826,8 +826,8 @@ build.json @home-assistant/supervisor
 /tests/components/rachio/ @bdraco
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
-/homeassistant/components/radiotherm/ @vinnyfuria
-/tests/components/radiotherm/ @vinnyfuria
+/homeassistant/components/radiotherm/ @bdraco @vinnyfuria
+/tests/components/radiotherm/ @bdraco @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin

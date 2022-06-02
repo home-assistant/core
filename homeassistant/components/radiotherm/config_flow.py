@@ -9,13 +9,14 @@ from radiotherm.validate import RadiothermTstatError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .data import async_get_name_from_host
+from .data import RadioThermInitData, async_get_init_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,13 +31,12 @@ class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-async def validate_connection(hass: HomeAssistant, host: str) -> str:
+async def validate_connection(hass: HomeAssistant, host: str) -> RadioThermInitData:
     """Validate the connection."""
     try:
-        name = await async_get_name_from_host(hass, host)
+        return await async_get_init_data(hass, host)
     except (timeout, RadiothermTstatError) as ex:
         raise CannotConnect from ex
-    return name
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,13 +44,54 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize ConfigFlow."""
+        self.discovered_ip: str | None = None
+        self.discovered_init_data: RadioThermInitData | None = None
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Discover via DHCP."""
+        try:
+            init_data = await validate_connection(self.hass, discovery_info.ip)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        await self.async_set_unique_id(init_data.mac)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self.discovered_ip = discovery_info.ip
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None):
+        """Attempt to confirm."""
+        ip_address = self.discovered_ip
+        init_data = self.discovered_init_data
+        assert ip_address is not None
+        assert init_data is not None
+        if user_input is not None:
+            return self.async_create_entry(
+                title=init_data.name, data={CONF_HOST: ip_address}
+            )
+
+        self._set_confirm_only()
+        placeholders = {
+            "name": init_data.name,
+            "host": self.discovered_ip,
+            "model": init_data.model or "Unknown",
+        }
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders=placeholders,
+        )
+
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import from yaml."""
         try:
-            name = await validate_connection(self.hass, import_info[CONF_HOST])
+            init_data = await validate_connection(self.hass, import_info[CONF_HOST])
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        return self.async_create_entry(title=name, data=import_info)
+        await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: import_info[CONF_HOST]})
+        return self.async_create_entry(title=init_data.name, data=import_info)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,14 +105,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            name = await validate_connection(self.hass, user_input[CONF_HOST])
+            init_data = await validate_connection(self.hass, user_input[CONF_HOST])
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=name, data=user_input)
+            await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: user_input[CONF_HOST]}
+            )
+            return self.async_create_entry(title=init_data.name, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

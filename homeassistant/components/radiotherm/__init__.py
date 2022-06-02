@@ -14,25 +14,20 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_HOLD_TEMP, DOMAIN
-from .data import (
-    RadioThermData,
-    RadioThermUpdate,
-    async_get_data,
-    async_get_device,
-    async_get_name,
-)
+from .data import RadioThermData, RadioThermUpdate, async_get_data, async_get_init_data
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 _LOGGER = logging.getLogger(__name__)
+
+UPDATE_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Radio Thermostat from a config entry."""
     host = entry.data[CONF_HOST]
     try:
-        tstat = await async_get_device(hass, host)
-        name = await async_get_name(hass, tstat)
+        init_data = await async_get_init_data(hass, host)
     except RadiothermTstatError as ex:
         raise ConfigEntryNotReady(
             f"{host} was busy (invalid value returned): {ex}"
@@ -41,6 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"{host} timed out waiting for a response: {ex}"
         ) from ex
+
+    name = init_data.name
+    tstat = init_data.tstat
 
     async def _async_update() -> RadioThermUpdate:
         """Update data from the thermostat."""
@@ -58,15 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass=hass,
         logger=_LOGGER,
-        name="radiothem {host}",
-        update_interval=timedelta(seconds=15),
+        name=f"radiothem {name} {host}",
+        update_interval=UPDATE_INTERVAL,
         update_method=_async_update,
     )
     await coordinator.async_config_entry_first_refresh()
 
     hold_temp = entry.data[CONF_HOLD_TEMP]
     hass.data[DOMAIN][entry.entry_id] = RadioThermData(
-        coordinator, tstat, name, hold_temp
+        coordinator, tstat, name, hold_temp, init_data.fw_version
     )
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

@@ -5,15 +5,16 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} {model} ({host})",
         "step": {
+            "confirm": {
+                "description": "Do you want to setup {name} {model} ({host})?"
+            },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "host": "Host"
                 }
             }
         }

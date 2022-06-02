@@ -8,6 +8,7 @@ import radiotherm
 from radiotherm.thermostat import CommonThermostat
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
@@ -19,6 +20,7 @@ class RadioThermData:
     tstat: CommonThermostat
     name: str
     hold_temp: int
+    fw_version: str | None
 
 
 @dataclass
@@ -29,32 +31,32 @@ class RadioThermUpdate:
     humidity: int | None
 
 
-def _get_name_from_host(host: str) -> str:
-    return _get_name(radiotherm.get_thermostat(host))
+@dataclass
+class RadioThermInitData:
+    """An data needed to init the integration."""
+
+    tstat: CommonThermostat
+    name: str
+    mac: str
+    model: str | None
+    fw_version: str | None
+    api_version: int | None
 
 
-async def async_get_name_from_host(hass: HomeAssistant, host: str) -> str:
-    """Get the name of a thermostat."""
-    return await hass.async_add_executor_job(_get_name_from_host, host)
+def _get_init_data(host: str) -> RadioThermInitData:
+    tstat = radiotherm.get_thermostat(host)
+    name: str = tstat.name["raw"]
+    sys: dict[str, Any] = tstat.sys["raw"]
+    mac: str = dr.format_mac(sys["uuid"])
+    model: str = tstat.model.get("raw")
+    return RadioThermInitData(
+        tstat, name, mac, model, sys.get("fw_version"), sys.get("api_version")
+    )
 
 
-def _get_device(host: str) -> CommonThermostat:
-    return radiotherm.get_thermostat(host)
-
-
-async def async_get_device(hass: HomeAssistant, host: str) -> None:
-    """Get the thermostat object."""
-    return await hass.async_add_executor_job(_get_device, host)
-
-
-def _get_name(device: CommonThermostat) -> str:
-    """Fetch the name from the thermostat."""
-    return device.name["raw"]
-
-
-async def async_get_name(hass: HomeAssistant, device: CommonThermostat) -> str:
-    """Fetch the name from the thermostat."""
-    return await hass.async_add_executor_job(_get_name, device)
+async def async_get_init_data(hass: HomeAssistant, host: str) -> RadioThermInitData:
+    """Get the RadioInitData."""
+    return await hass.async_add_executor_job(_get_init_data, host)
 
 
 def _get_data(device: CommonThermostat) -> RadioThermUpdate:
