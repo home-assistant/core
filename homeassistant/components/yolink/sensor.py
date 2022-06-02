@@ -23,6 +23,7 @@ from .const import (
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
     DOMAIN,
 )
 from .coordinator import YoLinkCoordinator
@@ -58,7 +59,12 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         if value is not None
         else None,
         exists_fn=lambda device: device.device_type
-        in [ATTR_DEVICE_DOOR_SENSOR, ATTR_DEVICE_TH_SENSOR, ATTR_DEVICE_MOTION_SENSOR],
+        in [
+            ATTR_DEVICE_DOOR_SENSOR,
+            ATTR_DEVICE_TH_SENSOR,
+            ATTR_DEVICE_MOTION_SENSOR,
+            ATTR_DEVICE_VIBRATION_SENSOR,
+        ],
     ),
     YoLinkSensorEntityDescription(
         key="humidity",
@@ -82,6 +88,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
 ]
 
 
