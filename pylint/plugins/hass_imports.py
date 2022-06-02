@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
-from astroid import Import, ImportFrom, Module
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -14,7 +14,7 @@ from pylint.lint import PyLinter
 class ObsoleteImportMatch:
     """Class for pattern matching."""
 
-    constant: re.Pattern
+    constant: re.Pattern[str]
     reason: str
 
 
@@ -255,7 +255,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         super().__init__(linter)
         self.current_package: str | None = None
 
-    def visit_module(self, node: Module) -> None:
+    def visit_module(self, node: nodes.Module) -> None:
         """Called when a Module node is visited."""
         if node.package:
             self.current_package = node.name
@@ -263,13 +263,13 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             # Strip name of the current module
             self.current_package = node.name[: node.name.rfind(".")]
 
-    def visit_import(self, node: Import) -> None:
+    def visit_import(self, node: nodes.Import) -> None:
         """Called when a Import node is visited."""
         for module, _alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
 
-    def visit_importfrom(self, node: ImportFrom) -> None:
+    def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Called when a ImportFrom node is visited."""
         if node.level is not None:
             return
