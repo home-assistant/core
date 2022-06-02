@@ -61,9 +61,8 @@ def async_get_device_trigger_types(
     return trigger_types
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for a Nest device."""
     nest_device_id = async_get_nest_device_id(hass, device_id)
     if not nest_device_id:
