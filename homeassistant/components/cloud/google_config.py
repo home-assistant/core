@@ -224,7 +224,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._cur_entity_prefs = prefs.google_entity_configs
         self._cur_default_expose = prefs.google_default_expose
 
-        if sync_entities:
+        if sync_entities and self.hass.is_running:
             await self.async_sync_entities_all()
 
     @callback
