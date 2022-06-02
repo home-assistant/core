@@ -37,6 +37,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import pyatmo
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_WEATHER,
@@ -69,14 +70,7 @@ SUPPORTED_PUBLIC_SENSOR_TYPES: tuple[str, ...] = (
 
 
 @dataclass
-class NetatmoRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    netatmo_name: str
-
-
-@dataclass
-class NetatmoSensorEntityDescription(SensorEntityDescription, NetatmoRequiredKeysMixin):
+class NetatmoSensorEntityDescription(SensorEntityDescription):
     """Describes Netatmo sensor entity."""
 
 
@@ -93,7 +87,6 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="temp_trend",
         name="Temperature trend",
-        netatmo_name="temp_trend",
         entity_registry_enabled_default=False,
         icon="mdi:trending-up",
     ),
@@ -118,7 +111,6 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="pressure_trend",
         name="Pressure trend",
-        netatmo_name="pressure_trend",
         entity_registry_enabled_default=False,
         icon="mdi:trending-up",
     ),
@@ -152,7 +144,6 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="sum_rain_1",
         name="Rain last hour",
-        netatmo_name="sum_rain_1",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         state_class=SensorStateClass.TOTAL,
@@ -161,14 +152,13 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="sum_rain_24",
         name="Rain today",
-        netatmo_name="sum_rain_24",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
-        key="battery_percent",
+        key="battery",
         name="Battery Percent",
         netatmo_name="battery",
         entity_registry_enabled_default=True,
@@ -178,14 +168,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
     ),
     NetatmoSensorEntityDescription(
-        key="windangle",
+        key="wind_direction",
         name="Direction",
         netatmo_name="wind_direction",
         entity_registry_enabled_default=True,
         icon="mdi:compass-outline",
     ),
     NetatmoSensorEntityDescription(
-        key="windangle_value",
+        key="wind_angle",
         name="Angle",
         netatmo_name="wind_angle",
         entity_registry_enabled_default=False,
@@ -194,7 +184,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
-        key="windstrength",
+        key="wind_strength",
         name="Wind Strength",
         netatmo_name="wind_strength",
         entity_registry_enabled_default=True,
@@ -203,14 +193,14 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
-        key="gustangle",
+        key="gust_direction",
         name="Gust Direction",
         netatmo_name="gust_direction",
         entity_registry_enabled_default=False,
         icon="mdi:compass-outline",
     ),
     NetatmoSensorEntityDescription(
-        key="gustangle_value",
+        key="gust_angle",
         name="Gust Angle",
         netatmo_name="gust_angle",
         entity_registry_enabled_default=False,
@@ -219,7 +209,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(
-        key="guststrength",
+        key="gust_strength",
         name="Gust Strength",
         netatmo_name="gust_strength",
         entity_registry_enabled_default=False,
@@ -230,13 +220,12 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="reachable",
         name="Reachability",
-        netatmo_name="reachable",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
-        key="rf_status",
+        key="rf_strength",
         name="Radio",
         netatmo_name="rf_strength",
         entity_registry_enabled_default=False,
@@ -254,7 +243,6 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
     NetatmoSensorEntityDescription(
         key="health_idx",
         name="Health",
-        netatmo_name="health_idx",
         entity_registry_enabled_default=True,
         icon="mdi:cloud",
     ),
@@ -507,6 +495,10 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         self._attr_unique_id = (
             f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
 
     @callback
     def async_update_callback(self) -> None:
