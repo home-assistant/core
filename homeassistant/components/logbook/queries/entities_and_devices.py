@@ -35,18 +35,17 @@ def _select_entities_device_id_context_ids_sub_query(
     json_quotable_device_ids: list[str],
 ) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple entities and multiple devices."""
-    return select(
-        union_all(
-            select_events_context_id_subquery(start_day, end_day, event_types).where(
-                _apply_event_entity_id_device_id_matchers(
-                    json_quotable_entity_ids, json_quotable_device_ids
-                )
-            ),
-            apply_entities_hints(select(States.context_id))
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
-        ).c.context_id
+    union = union_all(
+        select_events_context_id_subquery(start_day, end_day, event_types).where(
+            _apply_event_entity_id_device_id_matchers(
+                json_quotable_entity_ids, json_quotable_device_ids
+            )
+        ),
+        apply_entities_hints(select(States.context_id))
+        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .where(States.entity_id.in_(entity_ids)),
     )
+    return select(union.c.context_id).group_by(union.c.context_id)
 
 
 def _apply_entities_devices_context_union(
