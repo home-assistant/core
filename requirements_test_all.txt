@@ -1363,6 +1363,9 @@ rachiopy==1.0.3
 # homeassistant.components.radio_browser
 radios==0.1.1
 
+# homeassistant.components.radiotherm
+radiotherm==2.1.0
+
 # homeassistant.components.rainmachine
 regenmaschine==2022.05.1
 
