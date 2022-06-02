@@ -179,7 +179,6 @@ disable = [
     "unused-argument",
     "wrong-import-order",
     "consider-using-f-string",
-    "no-self-use",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
 ]
