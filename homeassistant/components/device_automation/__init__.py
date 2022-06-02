@@ -211,7 +211,7 @@ async def _async_get_device_automations_from_domain(
     automation_type: DeviceAutomationType,
     device_ids: Iterable[str],
     return_exceptions: bool,
-) -> list[list[dict[str, Any]]]:
+) -> list[list[dict[str, Any]] | Exception]:
     """List device automations."""
     try:
         platform = await async_get_device_automation_platform(
