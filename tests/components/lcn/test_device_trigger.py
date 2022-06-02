@@ -253,7 +253,7 @@ async def test_get_transponder_trigger_capabilities(hass, entry, lcn_connection)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             CONF_PLATFORM: "device",
@@ -274,7 +274,7 @@ async def test_get_fingerprint_trigger_capabilities(hass, entry, lcn_connection)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             CONF_PLATFORM: "device",
@@ -295,7 +295,7 @@ async def test_get_transmitter_trigger_capabilities(hass, entry, lcn_connection)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             CONF_PLATFORM: "device",
@@ -326,7 +326,7 @@ async def test_get_send_keys_trigger_capabilities(hass, entry, lcn_connection):
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             CONF_PLATFORM: "device",
@@ -362,7 +362,7 @@ async def test_unknown_trigger_capabilities(hass, entry, lcn_connection):
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             CONF_PLATFORM: "device",
