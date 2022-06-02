@@ -65,8 +65,8 @@ async def test_update_intervals(
         unique_id=_get_unique_id(hass, data),
         version=1,
     )
+    config_entry.add_to_hass(hass)
     with patch("homeassistant.helpers.update_coordinator.utcnow", return_value=now):
-        config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(tomorrowio_config_entry_update.call_args_list) == 1
