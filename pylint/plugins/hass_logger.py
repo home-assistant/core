@@ -1,5 +1,7 @@
 """Plugin for logger invocations."""
-import astroid
+from __future__ import annotations
+
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -29,10 +31,10 @@ class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def visit_call(self, node: astroid.Call) -> None:
+    def visit_call(self, node: nodes.Call) -> None:
         """Called when a Call node is visited."""
-        if not isinstance(node.func, astroid.Attribute) or not isinstance(
-            node.func.expr, astroid.Name
+        if not isinstance(node.func, nodes.Attribute) or not isinstance(
+            node.func.expr, nodes.Name
         ):
             return
 
@@ -44,7 +46,7 @@ class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
 
         first_arg = node.args[0]
 
-        if not isinstance(first_arg, astroid.Const) or not first_arg.value:
+        if not isinstance(first_arg, nodes.Const) or not first_arg.value:
             return
 
         log_message = first_arg.value
