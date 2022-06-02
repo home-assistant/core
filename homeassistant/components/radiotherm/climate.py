@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from socket import timeout
 
 import radiotherm
 import voluptuous as vol
@@ -18,23 +17,28 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
+
+from .const import CONF_HOLD_TEMP
+from .data import RadioThermData, RadioThermUpdate
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN_ACTION = "fan_action"
-
-CONF_HOLD_TEMP = "hold_temp"
 
 PRESET_HOLIDAY = "holiday"
 
@@ -98,37 +102,54 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up climate for a radiotherm device."""
+    data: RadioThermData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([RadioThermostat(data)])
+
+
+async def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radio Thermostat."""
-    hosts = []
+    _LOGGER.warning(
+        # config flow added in 2022.7 and should be removed in 2022.9
+        "Configuration of the Radio Thermostat climate platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.9; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hosts: list[str] = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]
     else:
-        hosts.append(radiotherm.discover.discover_address())
+        hosts.append(
+            await hass.async_add_executor_job(radiotherm.discover.discover_address)
+        )
 
-    if hosts is None:
+    if not hosts:
         _LOGGER.error("No Radiotherm Thermostats detected")
-        return False
+        return
 
-    hold_temp = config.get(CONF_HOLD_TEMP)
-    tstats = []
-
+    hold_temp: bool = config[CONF_HOLD_TEMP]
     for host in hosts:
-        try:
-            tstat = radiotherm.get_thermostat(host)
-            tstats.append(RadioThermostat(tstat, hold_temp))
-        except OSError:
-            _LOGGER.exception("Unable to connect to Radio Thermostat: %s", host)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_HOST: host, CONF_HOLD_TEMP: hold_temp},
+            )
+        )
 
-    add_entities(tstats, True)
 
-
-class RadioThermostat(ClimateEntity):
+class RadioThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
@@ -137,28 +158,42 @@ class RadioThermostat(ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_precision = PRECISION_HALVES
+    _attr_preset_modes = PRESET_MODES
 
-    def __init__(self, device, hold_temp):
+    def __init__(self, data: RadioThermData) -> None:
         """Initialize the thermostat."""
-        self.device = device
+        super().__init__(data.coordinator)
+        self.device = data.init_data.tstat
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
         self._current_operation = HVACMode.OFF
-        self._name = None
-        self._fmode = None
-        self._fstate = None
+        self._attr_name = data.init_data.name
+        self._fstate: str | None = None
         self._tmode = None
         self._tstate: HVACAction | None = None
-        self._hold_temp = hold_temp
+        self._hold_temp = data.hold_temp
         self._hold_set = False
         self._prev_temp = None
-        self._preset_mode = None
-        self._program_mode = None
+        self._program_mode: int | None = None
         self._is_away = False
+        self._attr_device_info = DeviceInfo(
+            name=data.init_data.name,
+            model=data.init_data.model,
+            manufacturer="Radio Thermostats",
+            sw_version=data.init_data.fw_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, data.init_data.mac)},
+        )
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
+
+    @property
+    def data(self) -> RadioThermUpdate:
+        """Returnt the last update."""
+        return self.coordinator.data
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -168,21 +203,6 @@ class RadioThermostat(ClimateEntity):
         # temperature in the thermostat.  So add it as a future job
         # for the event loop to run.
         self.hass.async_add_job(self.set_time)
-
-    @property
-    def name(self):
-        """Return the name of the Radio Thermostat."""
-        return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_HALVES
 
     @property
     def extra_state_attributes(self):
@@ -196,11 +216,6 @@ class RadioThermostat(ClimateEntity):
             return CT80_FAN_OPERATION_LIST
         return CT30_FAN_OPERATION_LIST
 
-    @property
-    def fan_mode(self):
-        """Return whether the fan is on."""
-        return self._fmode
-
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
         if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
@@ -210,16 +225,6 @@ class RadioThermostat(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
-
-    @property
-    def current_humidity(self):
-        """Return the current temperature."""
-        return self._current_humidity
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return the current operation. head, cool idle."""
-        return self._current_operation
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -245,76 +250,35 @@ class RadioThermostat(ClimateEntity):
         if self._program_mode == 3:
             return PRESET_HOLIDAY
 
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes."""
-        return PRESET_MODES
-
-    def update(self):
+    def _handle_coordinator_update(self) -> None:
         """Update and validate the data from the thermostat."""
-        # Radio thermostats are very slow, and sometimes don't respond
-        # very quickly.  So we need to keep the number of calls to them
-        # to a bare minimum or we'll hit the Home Assistant 10 sec warning.  We
-        # have to make one call to /tstat to get temps but we'll try and
-        # keep the other calls to a minimum.  Even with this, these
-        # thermostats tend to time out sometimes when they're actively
-        # heating or cooling.
+        data = self.data.tstat
+        if self._is_model_ct80:
+            self._attr_current_humidity = self.data.humidity
+            self._program_mode = data["program_mode"]
+            self._attr_preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
 
-        try:
-            # First time - get the name from the thermostat.  This is
-            # normally set in the radio thermostat web app.
-            if self._name is None:
-                self._name = self.device.name["raw"]
+        # Map thermostat values into various STATE_ flags.
+        self._current_temperature = data["temp"]
+        self._attr_fan_mode = CODE_TO_FAN_MODE[data["fmode"]]
+        self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
+        self._attr_hvac_mode = CODE_TO_TEMP_MODE[data["tmode"]]
+        self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
+        self._hold_set = CODE_TO_HOLD_STATE[data["hold"]]
 
-            # Request the current state from the thermostat.
-            data = self.device.tstat["raw"]
-
-            if self._is_model_ct80:
-                humiditydata = self.device.humidity["raw"]
-
-        except radiotherm.validate.RadiothermTstatError:
-            _LOGGER.warning(
-                "%s (%s) was busy (invalid value returned)",
-                self._name,
-                self.device.host,
-            )
-
-        except timeout:
-            _LOGGER.warning(
-                "Timeout waiting for response from %s (%s)",
-                self._name,
-                self.device.host,
-            )
-
-        else:
-            if self._is_model_ct80:
-                self._current_humidity = humiditydata
-                self._program_mode = data["program_mode"]
-                self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
-
-            # Map thermostat values into various STATE_ flags.
-            self._current_temperature = data["temp"]
-            self._fmode = CODE_TO_FAN_MODE[data["fmode"]]
-            self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
-            self._tmode = CODE_TO_TEMP_MODE[data["tmode"]]
-            self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
-            self._hold_set = CODE_TO_HOLD_STATE[data["hold"]]
-
-            self._current_operation = self._tmode
-            if self._tmode == HVACMode.COOL:
+        if self.hvac_mode == HVACMode.COOL:
+            self._target_temperature = data["t_cool"]
+        elif self.hvac_mode == HVACMode.HEAT:
+            self._target_temperature = data["t_heat"]
+        elif self.hvac_mode == HVACMode.AUTO:
+            # This doesn't really work - tstate is only set if the HVAC is
+            # active. If it's idle, we don't know what to do with the target
+            # temperature.
+            if self._tstate == HVACAction.COOLING:
                 self._target_temperature = data["t_cool"]
-            elif self._tmode == HVACMode.HEAT:
+            elif self._tstate == HVACAction.HEATING:
                 self._target_temperature = data["t_heat"]
-            elif self._tmode == HVACMode.AUTO:
-                # This doesn't really work - tstate is only set if the HVAC is
-                # active. If it's idle, we don't know what to do with the target
-                # temperature.
-                if self._tstate == HVACAction.COOLING:
-                    self._target_temperature = data["t_cool"]
-                elif self._tstate == HVACAction.HEATING:
-                    self._target_temperature = data["t_heat"]
-            else:
-                self._current_operation = HVACMode.OFF
+        return super()._handle_coordinator_update()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

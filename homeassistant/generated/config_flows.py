@@ -281,6 +281,7 @@ FLOWS = {
         "qnap_qsw",
         "rachio",
         "radio_browser",
+        "radiotherm",
         "rainforest_eagle",
         "rainmachine",
         "rdw",
