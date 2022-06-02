@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime as dt
 
-from sqlalchemy import lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -32,13 +32,10 @@ def _select_device_id_context_ids_sub_query(
     json_quotable_device_ids: list[str],
 ) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple devices."""
-    return select(
-        union_all(
-            select_events_context_id_subquery(start_day, end_day, event_types).where(
-                apply_event_device_id_matchers(json_quotable_device_ids)
-            ),
-        ).c.context_id
+    inner = select_events_context_id_subquery(start_day, end_day, event_types).where(
+        apply_event_device_id_matchers(json_quotable_device_ids)
     )
+    return select(inner.c.context_id).group_by(inner.c.context_id)
 
 
 def _apply_devices_context_union(
@@ -59,12 +56,10 @@ def _apply_devices_context_union(
     return query.union_all(
         select_events_context_only()
         .select_from(devices_cte_select)
-        .group_by(devices_cte_select.c.context_id)
         .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
         .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         select_states_context_only()
         .select_from(devices_cte_select)
-        .group_by(devices_cte_select.c.context_id)
         .outerjoin(States, devices_cte_select.c.context_id == States.context_id),
     )
 

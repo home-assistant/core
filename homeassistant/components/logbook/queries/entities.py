@@ -37,16 +37,15 @@ def _select_entities_context_ids_sub_query(
     json_quotable_entity_ids: list[str],
 ) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple entities."""
-    return select(
-        union_all(
-            select_events_context_id_subquery(start_day, end_day, event_types).where(
-                apply_event_entity_id_matchers(json_quotable_entity_ids)
-            ),
-            apply_entities_hints(select(States.context_id))
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
-        ).c.context_id
+    union = union_all(
+        select_events_context_id_subquery(start_day, end_day, event_types).where(
+            apply_event_entity_id_matchers(json_quotable_entity_ids)
+        ),
+        apply_entities_hints(select(States.context_id))
+        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .where(States.entity_id.in_(entity_ids)),
     )
+    return select(union.c.context_id).group_by(union.c.context_id)
 
 
 def _apply_entities_context_union(
@@ -70,12 +69,10 @@ def _apply_entities_context_union(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
         select_events_context_only()
         .select_from(entities_cte_select)
-        .group_by(entities_cte_select.c.context_id)
         .outerjoin(Events, entities_cte_select.c.context_id == Events.context_id)
         .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         select_states_context_only()
         .select_from(entities_cte_select)
-        .group_by(entities_cte_select.c.context_id)
         .outerjoin(States, entities_cte_select.c.context_id == States.context_id)
         .where(States.entity_id.not_in(entity_ids)),
     )
