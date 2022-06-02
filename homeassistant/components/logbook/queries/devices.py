@@ -54,17 +54,16 @@ def _apply_devices_context_union(
         event_types,
         json_quotable_device_ids,
     ).cte()
-    devices_cte_select = devices_cte.select()
     return query.union_all(
         apply_events_context_hints(
             select_events_context_only()
-            .select_from(devices_cte_select)
-            .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
+            .select_from(devices_cte)
+            .outerjoin(Events, devices_cte.c.context_id == Events.context_id)
         ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
         apply_states_context_hints(
             select_states_context_only()
-            .select_from(devices_cte_select)
-            .outerjoin(States, devices_cte_select.c.context_id == States.context_id)
+            .select_from(devices_cte)
+            .outerjoin(States, devices_cte.c.context_id == States.context_id)
         ),
     )
 
