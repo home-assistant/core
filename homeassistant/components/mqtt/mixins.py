@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -267,7 +267,7 @@ class SetupEntity(Protocol):
 
 async def async_setup_platform_discovery(
     hass: HomeAssistant, platform_domain: str, schema: vol.Schema
-) -> None:
+) -> CALLBACK_TYPE:
     """Set up platform discovery for manual config."""
 
     async def _async_discover_entities(event: Event | None) -> None:
@@ -293,8 +293,9 @@ async def async_setup_platform_discovery(
             )
         )
 
-    hass.bus.async_listen("event_mqtt_reloaded", _async_discover_entities)
+    unsub = hass.bus.async_listen("event_mqtt_reloaded", _async_discover_entities)
     await _async_discover_entities(None)
+    return unsub
 
 
 async def async_get_platform_config_from_yaml(

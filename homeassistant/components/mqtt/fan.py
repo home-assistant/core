@@ -231,7 +231,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await async_setup_platform_discovery(hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN)
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN)
+    )
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
