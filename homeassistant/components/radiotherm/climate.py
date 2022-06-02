@@ -144,10 +144,12 @@ async def setup_platform(
 
     hold_temp: bool = config[CONF_HOLD_TEMP]
     for host in hosts:
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_HOST: host, CONF_HOLD_TEMP: hold_temp},
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_HOST: host, CONF_HOLD_TEMP: hold_temp},
+            )
         )
 
 

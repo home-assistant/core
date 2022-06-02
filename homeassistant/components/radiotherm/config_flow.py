@@ -36,7 +36,7 @@ async def validate_connection(hass: HomeAssistant, host: str) -> RadioThermInitD
     try:
         return await async_get_init_data(hass, host)
     except (timeout, RadiothermTstatError) as ex:
-        raise CannotConnect from ex
+        raise CannotConnect(f"Failed to connect to {host}: {ex}") from ex
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -60,6 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: discovery_info.ip, CONF_HOLD_TEMP: False},
             reload_on_update=False,
         )
+        self.discovered_init_data = init_data
         self.discovered_ip = discovery_info.ip
         return await self.async_step_confirm()
 
@@ -88,13 +89,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import from yaml."""
+        host = import_info[CONF_HOST]
         try:
-            init_data = await validate_connection(self.hass, import_info[CONF_HOST])
-        except CannotConnect:
+            init_data = await validate_connection(self.hass, host)
+        except CannotConnect as ex:
+            _LOGGER.debug("Importing failed for %s", host, exc_info=ex)
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: import_info[CONF_HOST]}, reload_on_update=False
+            updates={CONF_HOST: host}, reload_on_update=False
         )
         return self.async_create_entry(title=init_data.name, data=import_info)
 
