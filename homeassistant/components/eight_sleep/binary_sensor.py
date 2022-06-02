@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import EightSleepBaseEntity
-from .const import DATA_API, DATA_HEAT, DOMAIN
+from . import EightSleepBaseEntity, EightSleepConfigEntryData
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 BINARY_SENSORS = ["bed_presence"]
@@ -25,21 +25,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the eight sleep binary sensor."""
-    eight: EightSleep = hass.data[DOMAIN][entry.entry_id][DATA_API]
-    heat_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_HEAT
-    ]
-
-    entities = []
-    for user in eight.users.values():
-        for binary_sensor in BINARY_SENSORS:
-            entities.append(
-                EightHeatSensor(
-                    entry, heat_coordinator, eight, user.userid, binary_sensor
-                )
-            )
-
-    async_add_entities(entities)
+    config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
+    eight = config_entry_data.api
+    heat_coordinator = config_entry_data.heat_coordinator
+    async_add_entities(
+        EightHeatSensor(entry, heat_coordinator, eight, user.userid, binary_sensor)
+        for user in eight.users.values()
+        for binary_sensor in BINARY_SENSORS
+    )
 
 
 class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):

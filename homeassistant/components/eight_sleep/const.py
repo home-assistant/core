@@ -1,7 +1,4 @@
 """Eight Sleep constants."""
-DATA_HEAT = "heat"
-DATA_USER = "user"
-DATA_API = "api"
 DOMAIN = "eight_sleep"
 
 HEAT_ENTITY = "heat"

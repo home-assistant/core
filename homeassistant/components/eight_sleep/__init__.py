@@ -1,6 +1,7 @@
 """Support for Eight smart mattress covers and mattresses."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -22,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_API, DATA_HEAT, DATA_USER, DOMAIN, NAME_MAP
+from .const import DOMAIN, NAME_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +43,15 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+@dataclass
+class EightSleepConfigEntryData:
+    """Data used for all entities for a given config entry."""
+
+    api: EightSleep
+    heat_coordinator: DataUpdateCoordinator
+    user_coordinator: DataUpdateCoordinator
 
 
 def _get_device_unique_id(eight: EightSleep, user_obj: EightUser | None = None) -> str:
@@ -136,11 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **device_data,
         )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_API: eight,
-        DATA_HEAT: heat_coordinator,
-        DATA_USER: user_coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = EightSleepConfigEntryData(
+        eight, heat_coordinator, user_coordinator
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -151,7 +159,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # stop the API before unloading everything
-        await hass.data[DOMAIN][entry.entry_id][DATA_API].stop()
+        config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
+        await config_entry_data.api.stop()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -194,12 +203,13 @@ class EightSleepBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
 
     async def async_heat_set(self, target: int, duration: int) -> None:
         """Handle eight sleep service calls."""
-        if self._user_obj is not None:
-            await self._user_obj.set_heating_level(target, duration)
-            await self.hass.data[DOMAIN][self._config_entry.entry_id][
-                DATA_HEAT
-            ].async_request_refresh()
-        else:
+        if self._user_obj is None:
             raise HomeAssistantError(
                 "This entity does not support the heat set service."
             )
+
+        await self._user_obj.set_heating_level(target, duration)
+        config_entry_data: EightSleepConfigEntryData = self.hass.data[DOMAIN][
+            self._config_entry.entry_id
+        ]
+        await config_entry_data.heat_coordinator.async_request_refresh()

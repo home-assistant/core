@@ -14,16 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import EightSleepBaseEntity
-from .const import (
-    ATTR_DURATION,
-    ATTR_TARGET,
-    DATA_API,
-    DATA_HEAT,
-    DATA_USER,
-    DOMAIN,
-    SERVICE_HEAT_SET,
-)
+from . import EightSleepBaseEntity, EightSleepConfigEntryData
+from .const import ATTR_DURATION, ATTR_TARGET, DOMAIN, SERVICE_HEAT_SET
 
 ATTR_ROOM_TEMP = "Room Temperature"
 ATTR_AVG_ROOM_TEMP = "Average Room Temperature"
@@ -75,27 +67,26 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: ep.AddEntitiesCallback
 ) -> None:
     """Set up the eight sleep sensors."""
-    eight: EightSleep = hass.data[DOMAIN][entry.entry_id][DATA_API]
-    heat_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_HEAT
-    ]
-    user_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_USER
-    ]
+    config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
+    eight = config_entry_data.api
+    heat_coordinator = config_entry_data.heat_coordinator
+    user_coordinator = config_entry_data.user_coordinator
 
     all_sensors: list[SensorEntity] = []
 
     for obj in eight.users.values():
-        for sensor in EIGHT_USER_SENSORS:
-            all_sensors.append(
-                EightUserSensor(entry, user_coordinator, eight, obj.userid, sensor)
-            )
-        for sensor in EIGHT_HEAT_SENSORS:
-            all_sensors.append(
-                EightHeatSensor(entry, heat_coordinator, eight, obj.userid, sensor)
-            )
-    for sensor in EIGHT_ROOM_SENSORS:
-        all_sensors.append(EightRoomSensor(entry, user_coordinator, eight, sensor))
+        all_sensors.extend(
+            EightUserSensor(entry, user_coordinator, eight, obj.userid, sensor)
+            for sensor in EIGHT_USER_SENSORS
+        )
+        all_sensors.extend(
+            EightHeatSensor(entry, heat_coordinator, eight, obj.userid, sensor)
+            for sensor in EIGHT_HEAT_SENSORS
+        )
+        all_sensors.extend(
+            EightRoomSensor(entry, user_coordinator, eight, sensor)
+            for sensor in EIGHT_ROOM_SENSORS
+        )
 
     async_add_entities(all_sensors)
 
