@@ -265,12 +265,13 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_discover_platform(
+async def async_setup_platform_discovery(
     hass: HomeAssistant, platform_domain: str, schema: vol.Schema
 ) -> None:
-    """Set up platform if there is manual config."""
+    """Set up platform discovery for manual config."""
 
-    async def _async_discover_platform(event: Event | None) -> None:
+    async def _async_discover_entities(event: Event | None) -> None:
+        """Discover entities for a platform."""
         if event:
             # The platform has been reloaded
             config_yaml = await async_integration_yaml_config(hass, DOMAIN)
@@ -292,8 +293,8 @@ async def async_discover_platform(
             )
         )
 
-    hass.bus.async_listen("event_mqtt_reloaded", _async_discover_platform)
-    await _async_discover_platform(None)
+    hass.bus.async_listen("event_mqtt_reloaded", _async_discover_entities)
+    await _async_discover_entities(None)
 
 
 async def async_get_platform_config_from_yaml(

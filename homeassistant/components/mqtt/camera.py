@@ -22,8 +22,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_discover_platform,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -80,7 +80,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT camera through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await async_discover_platform(hass, camera.DOMAIN, PLATFORM_SCHEMA_MODERN)
+    await async_setup_platform_discovery(hass, camera.DOMAIN, PLATFORM_SCHEMA_MODERN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
