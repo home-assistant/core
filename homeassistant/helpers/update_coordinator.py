@@ -13,7 +13,7 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.util.dt import utcnow
 
@@ -302,12 +302,6 @@ class DataUpdateCoordinator(Generic[_T]):
             self._schedule_refresh()
 
         self.async_update_listeners()
-
-    @callback
-    def _async_stop_refresh(self, _: Event) -> None:
-        """Stop refreshing when Home Assistant is stopping."""
-        self.update_interval = None
-        self._unschedule_refresh()
 
 
 class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):

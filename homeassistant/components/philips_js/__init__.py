@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import Context, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -184,11 +184,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _unschedule_refresh(self) -> None:
         """Remove data update."""
         super()._unschedule_refresh()
-        self._async_notify_stop()
-
-    @callback
-    def _async_stop_refresh(self, event: Event) -> None:
-        super()._async_stop_refresh(event)
         self._async_notify_stop()
 
     @callback
