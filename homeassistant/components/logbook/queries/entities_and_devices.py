@@ -13,6 +13,8 @@ from sqlalchemy.sql.selectable import CTE, CompoundSelect
 from homeassistant.components.recorder.models import EventData, Events, States
 
 from .common import (
+    apply_events_context_hints,
+    apply_states_context_hints,
     select_events_context_id_subquery,
     select_events_context_only,
     select_events_without_states,
@@ -22,8 +24,6 @@ from .devices import apply_event_device_id_matchers
 from .entities import (
     apply_entities_hints,
     apply_event_entity_id_matchers,
-    apply_events_context_hints,
-    apply_states_context_hints,
     states_query_for_entity_ids,
 )
 
@@ -81,14 +81,16 @@ def _apply_entities_devices_context_union(
             .outerjoin(
                 Events, devices_entities_cte_select.c.context_id == Events.context_id
             )
-        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        )
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        .where(Events.context_id.isnot(None)),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_entities_cte_select)
             .outerjoin(
                 States, devices_entities_cte_select.c.context_id == States.context_id
             )
-        ),
+        ).where(States.context_id.isnot(None)),
     )
 
 
