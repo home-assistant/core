@@ -19,7 +19,7 @@ class RadioThermData:
     coordinator: DataUpdateCoordinator[RadioThermUpdate]
     tstat: CommonThermostat
     name: str
-    hold_temp: int
+    hold_temp: bool
     fw_version: str | None
 
 

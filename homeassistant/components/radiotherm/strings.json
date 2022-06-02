@@ -18,5 +18,14 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "hold_temp": "Set a permanent when adjusting the temperature."
+        }
+      }
+    }
   }
 }

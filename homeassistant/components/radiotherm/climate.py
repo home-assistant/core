@@ -130,7 +130,7 @@ async def setup_platform(
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
-    hosts = []
+    hosts: list[str] = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]
     else:
@@ -138,11 +138,11 @@ async def setup_platform(
             await hass.async_add_executor_job(radiotherm.discover.discover_address)
         )
 
-    if hosts is None:
+    if not hosts:
         _LOGGER.error("No Radiotherm Thermostats detected")
         return
 
-    hold_temp = config.get(CONF_HOLD_TEMP)
+    hold_temp: bool = config[CONF_HOLD_TEMP]
     for host in hosts:
         await hass.config_entries.flow.async_init(
             DOMAIN,
