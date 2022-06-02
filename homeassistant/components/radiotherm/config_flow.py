@@ -20,12 +20,6 @@ from .data import RadioThermInitData, async_get_init_data
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-    }
-)
-
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
@@ -106,30 +100,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
-
-        try:
-            init_data = await validate_connection(self.hass, user_input[CONF_HOST])
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: user_input[CONF_HOST], CONF_HOLD_TEMP: False},
-                reload_on_update=False,
-            )
-            return self.async_create_entry(title=init_data.name, data=user_input)
+        if user_input is not None:
+            try:
+                init_data = await validate_connection(self.hass, user_input[CONF_HOST])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST], CONF_HOLD_TEMP: False},
+                    reload_on_update=False,
+                )
+                return self.async_create_entry(title=init_data.name, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                }
+            ),
+            errors=errors,
         )
 
     @staticmethod
