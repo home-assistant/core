@@ -1651,10 +1651,10 @@ async def help_test_publishing_with_custom_encoding(
     mqtt_mock.async_publish.reset_mock()
 
 
-async def help_test_reload_with_config(hass, caplog, tmp_path, domain, config):
+async def help_test_reload_with_config(hass, caplog, tmp_path, config):
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({domain: config})
+    new_yaml_config = yaml.dump(config)
     new_yaml_config_file.write_text(new_yaml_config)
     assert new_yaml_config_file.read_text() == new_yaml_config
 
@@ -1679,16 +1679,27 @@ async def help_test_reloadable(
     old_config_1["name"] = "test_old_1"
     old_config_2 = copy.deepcopy(config)
     old_config_2["name"] = "test_old_2"
+    old_config_3 = copy.deepcopy(config)
+    old_config_3["name"] = "test_old_3"
+    old_config_3.pop("platform")
+    old_config_4 = copy.deepcopy(config)
+    old_config_4["name"] = "test_old_4"
+    old_config_4.pop("platform")
 
-    assert await async_setup_component(
-        hass, domain, {domain: [old_config_1, old_config_2]}
-    )
+    old_config = {
+        domain: [old_config_1, old_config_2],
+        "mqtt": {domain: [old_config_3, old_config_4]},
+    }
+
+    assert await async_setup_component(hass, domain, old_config)
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
     assert hass.states.get(f"{domain}.test_old_1")
     assert hass.states.get(f"{domain}.test_old_2")
-    assert len(hass.states.async_all(domain)) == 2
+    assert hass.states.get(f"{domain}.test_old_3")
+    assert hass.states.get(f"{domain}.test_old_4")
+    assert len(hass.states.async_all(domain)) == 4
 
     # Create temporary fixture for configuration.yaml based on the supplied config and
     # test a reload with this new config
@@ -1698,16 +1709,31 @@ async def help_test_reloadable(
     new_config_2["name"] = "test_new_2"
     new_config_3 = copy.deepcopy(config)
     new_config_3["name"] = "test_new_3"
+    new_config_3.pop("platform")
+    new_config_4 = copy.deepcopy(config)
+    new_config_4["name"] = "test_new_4"
+    new_config_4.pop("platform")
+    new_config_5 = copy.deepcopy(config)
+    new_config_5["name"] = "test_new_5"
+    new_config_6 = copy.deepcopy(config)
+    new_config_6["name"] = "test_new_6"
+    new_config_6.pop("platform")
 
-    await help_test_reload_with_config(
-        hass, caplog, tmp_path, domain, [new_config_1, new_config_2, new_config_3]
-    )
+    new_config = {
+        domain: [new_config_1, new_config_2, new_config_5],
+        "mqtt": {domain: [new_config_3, new_config_4, new_config_6]},
+    }
 
-    assert len(hass.states.async_all(domain)) == 3
+    await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
+
+    assert len(hass.states.async_all(domain)) == 6
 
     assert hass.states.get(f"{domain}.test_new_1")
     assert hass.states.get(f"{domain}.test_new_2")
     assert hass.states.get(f"{domain}.test_new_3")
+    assert hass.states.get(f"{domain}.test_new_4")
+    assert hass.states.get(f"{domain}.test_new_5")
+    assert hass.states.get(f"{domain}.test_new_6")
 
 
 async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
@@ -1752,9 +1778,10 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     new_config_3 = copy.deepcopy(config)
     new_config_3["name"] = "test_new_3"
 
-    await help_test_reload_with_config(
-        hass, caplog, tmp_path, domain, [new_config_1, new_config_2, new_config_3]
-    )
+    new_config = {
+        domain: [new_config_1, new_config_2, new_config_3],
+    }
+    await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
 
     assert len(hass.states.async_all(domain)) == 3
 

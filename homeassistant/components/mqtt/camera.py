@@ -1,7 +1,6 @@
 """Camera that loads a picture from an MQTT topic."""
 from __future__ import annotations
 
-import asyncio
 from base64 import b64decode
 import functools
 
@@ -23,8 +22,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -66,7 +65,11 @@ async def async_setup_platform(
     """Set up MQTT camera configured under the camera platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, camera.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        camera.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -77,12 +80,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT camera through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, camera.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(
+            hass, camera.DOMAIN, PLATFORM_SCHEMA_MODERN
         )
     )
     # setup for discovery
