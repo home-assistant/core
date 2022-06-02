@@ -27,9 +27,14 @@ from .common import async_wait_recording_done
 
 
 async def _async_get_states_and_events_with_filter(
-    hass: HomeAssistant, sqlalchemy_filter: Filters
+    hass: HomeAssistant, sqlalchemy_filter: Filters, entity_ids: set[str]
 ) -> tuple[list[Row], list[Row]]:
     """Get states from the database based on a filter."""
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, STATE_ON)
+        hass.bus.async_fire("any", {ATTR_ENTITY_ID: entity_id})
+
+    await async_wait_recording_done(hass)
 
     def _get_states_with_session():
         with session_scope(hass=hass) as session:
@@ -108,15 +113,12 @@ async def test_included_and_excluded_simple_case_no_domains(hass, recorder_mock)
     assert entity_filter.explicitly_excluded("sensor.weather5")
     assert entity_filter.explicitly_excluded("light.kitchen")
 
-    for entity_id in filter_accept | filter_reject:
-        hass.states.async_set(entity_id, STATE_ON)
-        hass.bus.async_fire("any", {ATTR_ENTITY_ID: entity_id})
-
-    await async_wait_recording_done(hass)
     (
         filtered_states_entity_ids,
         filtered_events_entity_ids,
-    ) = await _async_get_states_and_events_with_filter(hass, sqlalchemy_filter)
+    ) = await _async_get_states_and_events_with_filter(
+        hass, sqlalchemy_filter, filter_accept | filter_reject
+    )
 
     assert filtered_states_entity_ids == filter_accept
     assert not filtered_states_entity_ids.intersection(filter_reject)
@@ -151,15 +153,12 @@ async def test_included_and_excluded_simple_case_no_globs(hass, recorder_mock):
     for entity_id in filter_reject:
         assert entity_filter(entity_id) is False
 
-    for entity_id in filter_accept | filter_reject:
-        hass.states.async_set(entity_id, STATE_ON)
-        hass.bus.async_fire("any", {ATTR_ENTITY_ID: entity_id})
-
-    await async_wait_recording_done(hass)
     (
         filtered_states_entity_ids,
         filtered_events_entity_ids,
-    ) = await _async_get_states_and_events_with_filter(hass, sqlalchemy_filter)
+    ) = await _async_get_states_and_events_with_filter(
+        hass, sqlalchemy_filter, filter_accept | filter_reject
+    )
 
     assert filtered_states_entity_ids == filter_accept
     assert not filtered_states_entity_ids.intersection(filter_reject)
@@ -208,15 +207,12 @@ async def test_included_and_excluded_simple_case_without_underscores(
     assert entity_filter.explicitly_excluded("sensor.weather5")
     assert entity_filter.explicitly_excluded("light.kitchen")
 
-    for entity_id in filter_accept | filter_reject:
-        hass.states.async_set(entity_id, STATE_ON)
-        hass.bus.async_fire("any", {ATTR_ENTITY_ID: entity_id})
-
-    await async_wait_recording_done(hass)
     (
         filtered_states_entity_ids,
         filtered_events_entity_ids,
-    ) = await _async_get_states_and_events_with_filter(hass, sqlalchemy_filter)
+    ) = await _async_get_states_and_events_with_filter(
+        hass, sqlalchemy_filter, filter_accept | filter_reject
+    )
 
     assert filtered_states_entity_ids == filter_accept
     assert not filtered_states_entity_ids.intersection(filter_reject)
@@ -263,15 +259,12 @@ async def test_included_and_excluded_simple_case_with_underscores(hass, recorder
     assert entity_filter.explicitly_excluded("sensor.weather_5")
     assert entity_filter.explicitly_excluded("light.kitchen")
 
-    for entity_id in filter_accept | filter_reject:
-        hass.states.async_set(entity_id, STATE_ON)
-        hass.bus.async_fire("any", {ATTR_ENTITY_ID: entity_id})
-
-    await async_wait_recording_done(hass)
     (
         filtered_states_entity_ids,
         filtered_events_entity_ids,
-    ) = await _async_get_states_and_events_with_filter(hass, sqlalchemy_filter)
+    ) = await _async_get_states_and_events_with_filter(
+        hass, sqlalchemy_filter, filter_accept | filter_reject
+    )
 
     assert filtered_states_entity_ids == filter_accept
     assert not filtered_states_entity_ids.intersection(filter_reject)
@@ -323,16 +316,12 @@ async def test_included_and_excluded_complex_case(hass, recorder_mock):
     for entity_id in filter_reject:
         assert entity_filter(entity_id) is False
 
-    for entity_id in filter_accept | filter_reject:
-        hass.states.async_set(entity_id, STATE_ON)
-        hass.bus.async_fire("any", {ATTR_ENTITY_ID: entity_id})
-
-    await async_wait_recording_done(hass)
-
     (
         filtered_states_entity_ids,
         filtered_events_entity_ids,
-    ) = await _async_get_states_and_events_with_filter(hass, sqlalchemy_filter)
+    ) = await _async_get_states_and_events_with_filter(
+        hass, sqlalchemy_filter, filter_accept | filter_reject
+    )
 
     assert filtered_states_entity_ids == filter_accept
     assert not filtered_states_entity_ids.intersection(filter_reject)
