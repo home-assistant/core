@@ -5,8 +5,7 @@ import logging
 from socket import timeout
 from typing import Any
 
-import radiotherm
-from radiotherm.thermostat import Thermostat
+from radiotherm.validate import RadiothermTstatError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+from .data import async_get_name_from_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,25 +26,31 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _get_raw_data(tstat: Thermostat) -> dict[str, Any]:
-    """Fetch the raw data from the thermostat."""
-    return tstat.tstat["raw"]
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
 
 
-async def validate_connection(hass: HomeAssistant, host: str) -> None:
-    """Validate the connection"""
-    tstat = radiotherm.get_thermostat(host)
+async def validate_connection(hass: HomeAssistant, host: str) -> str:
+    """Validate the connection."""
     try:
-        data = await hass.async_add_executor_job(_get_raw_data, tstat)
-    except (timeout, radiotherm.validate.RadiothermTstatError):
-        raise CannotConnect
-    _LOGGER.warning("data: %s", data)
+        name = await async_get_name_from_host(hass, host)
+    except (timeout, RadiothermTstatError) as ex:
+        raise CannotConnect from ex
+    return name
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Radio Thermostat."""
 
     VERSION = 1
+
+    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
+        """Import from yaml."""
+        try:
+            name = await validate_connection(self.hass, import_info[CONF_HOST])
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        return self.async_create_entry(title=name, data=import_info)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -58,19 +64,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await validate_connection(self.hass, user_input[CONF_HOST])
+            name = await validate_connection(self.hass, user_input[CONF_HOST])
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=name, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
