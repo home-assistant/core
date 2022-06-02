@@ -67,7 +67,6 @@ def _apply_entities_devices_context_union(
         json_quotable_entity_ids,
         json_quotable_device_ids,
     ).cte()
-    devices_entities_cte_select = devices_entities_cte.select()
     # We used to optimize this to exclude rows we already in the union with
     # a States.entity_id.not_in(entity_ids) but that made the
     # query much slower on MySQL, and since we already filter them away
@@ -77,17 +76,13 @@ def _apply_entities_devices_context_union(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
         apply_events_context_hints(
             select_events_context_only()
-            .select_from(devices_entities_cte_select)
-            .outerjoin(
-                Events, devices_entities_cte_select.c.context_id == Events.context_id
-            )
+            .select_from(devices_entities_cte)
+            .outerjoin(Events, devices_entities_cte.c.context_id == Events.context_id)
         ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
         apply_states_context_hints(
             select_states_context_only()
-            .select_from(devices_entities_cte_select)
-            .outerjoin(
-                States, devices_entities_cte_select.c.context_id == States.context_id
-            )
+            .select_from(devices_entities_cte)
+            .outerjoin(States, devices_entities_cte.c.context_id == States.context_id)
         ),
     )
 
