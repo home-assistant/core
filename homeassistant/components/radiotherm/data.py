@@ -67,10 +67,9 @@ def _get_data(device: CommonThermostat) -> RadioThermUpdate:
     # thermostats tend to time out sometimes when they're actively
     # heating or cooling.
     tstat: dict[str, Any] = device.tstat["raw"]
+    humidity: int | None = None
     if isinstance(device, radiotherm.thermostat.CT80):
-        humidity: int | None = device.humidity["raw"]
-    else:
-        humidity = None
+        humidity = device.humidity["raw"]
     return RadioThermUpdate(tstat, humidity)
 
 
