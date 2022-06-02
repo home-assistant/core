@@ -1,7 +1,6 @@
 """Support for MQTT cover devices."""
 from __future__ import annotations
 
-import asyncio
 import functools
 from json import JSONDecodeError, loads as json_loads
 import logging
@@ -46,7 +45,7 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_platform,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -227,7 +226,11 @@ async def async_setup_platform(
     """Set up MQTT covers configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, cover.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        cover.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -238,14 +241,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, cover.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_platform(hass, cover.DOMAIN, PLATFORM_SCHEMA_MODERN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
