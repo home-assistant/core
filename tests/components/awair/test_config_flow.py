@@ -6,7 +6,7 @@ from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.awair.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONFIG, DEVICES_FIXTURE, NO_DEVICES_FIXTURE, UNIQUE_ID, USER_FIXTURE
@@ -80,64 +80,6 @@ async def test_no_devices_error(hass):
 
         assert result["type"] == "abort"
         assert result["reason"] == "no_devices_found"
-
-
-async def test_import(hass):
-    """Test config.yaml import."""
-
-    with patch(
-        "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
-    ), patch(
-        "homeassistant.components.awair.sensor.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "foo@bar.com (32406)"
-        assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
-        assert result["result"].unique_id == UNIQUE_ID
-
-
-async def test_import_aborts_on_api_error(hass):
-    """Test config.yaml imports on api error."""
-
-    with patch("python_awair.AwairClient.query", side_effect=AwairError()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
-        )
-
-        assert result["type"] == "abort"
-        assert result["reason"] == "unknown"
-
-
-async def test_import_aborts_if_configured(hass):
-    """Test config import doesn't re-import unnecessarily."""
-
-    with patch(
-        "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
-    ), patch(
-        "homeassistant.components.awair.sensor.async_setup_entry",
-        return_value=True,
-    ):
-        MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG).add_to_hass(
-            hass
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_ACCESS_TOKEN: CONFIG[CONF_ACCESS_TOKEN]},
-        )
-
-        assert result["type"] == "abort"
-        assert result["reason"] == "already_setup"
 
 
 async def test_reauth(hass):

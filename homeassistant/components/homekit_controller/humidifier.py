@@ -6,21 +6,22 @@ from typing import Any
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
+from homeassistant.components.humidifier import (
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityFeature,
+)
 from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
     MODE_NORMAL,
-    SUPPORT_MODES,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-SUPPORT_FLAGS = 0
 
 HK_MODE_TO_HA = {
     0: "off",
@@ -40,6 +41,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
 
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
+    _attr_supported_features = HumidifierEntityFeature.MODES
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
@@ -49,11 +51,6 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
             CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,
         ]
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS | SUPPORT_MODES
 
     @property
     def is_on(self) -> bool:
@@ -79,7 +76,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         mode = self.service.value(
             CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE
@@ -90,7 +87,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         available_modes = [
             MODE_NORMAL,
@@ -147,6 +144,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
 
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
+    _attr_supported_features = HumidifierEntityFeature.MODES
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
@@ -157,11 +155,6 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD,
         ]
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS | SUPPORT_MODES
 
     @property
     def is_on(self) -> bool:
@@ -187,7 +180,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         mode = self.service.value(
             CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE
@@ -198,7 +191,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         available_modes = [
             MODE_NORMAL,

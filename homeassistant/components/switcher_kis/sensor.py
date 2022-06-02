@@ -92,7 +92,9 @@ async def async_setup_entry(
     )
 
 
-class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
+class SwitcherSensorEntity(
+    CoordinatorEntity[SwitcherDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Switcher sensor entity."""
 
     def __init__(

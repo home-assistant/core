@@ -15,9 +15,11 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -65,8 +67,10 @@ class HomeKitEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self._accessory.signal_state_updated, self.async_write_ha_state
+            async_dispatcher_connect(
+                self.hass,
+                self._accessory.signal_state_updated,
+                self.async_write_ha_state,
             )
         )
 
@@ -258,3 +262,18 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "HomeKit again",
             entry.title,
         )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove homekit_controller config entry from a device."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
+    return not device_entry.identifiers.intersection(
+        identifier
+        for accessory in connection.entity_map.accessories
+        for identifier in connection.device_info_for_accessory(accessory)[
+            ATTR_IDENTIFIERS
+        ]
+    )

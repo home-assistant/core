@@ -9,7 +9,15 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import DEVICE_2_WIRELESS, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
+from . import (
+    DEVICE_2_WIRELESS,
+    DEVICE_3_DHCP_NUMERIC_NAME,
+    DEVICE_3_WIRELESS,
+    DHCP_DATA,
+    MOCK_DATA,
+    MOCK_OPTIONS,
+    WIRELESS_DATA,
+)
 from .test_hub import setup_mikrotik_entry
 
 from tests.common import MockConfigEntry, patch
@@ -27,6 +35,7 @@ def mock_device_registry_devices(hass):
         (
             "00:00:00:00:00:01",
             "00:00:00:00:00:02",
+            "00:00:00:00:00:03",
         )
     ):
         dev_reg.async_get_or_create(
@@ -60,9 +69,7 @@ async def test_platform_manually_configured(hass):
     assert mikrotik.DOMAIN not in hass.data
 
 
-async def test_device_trackers(
-    hass, legacy_patchable_time, mock_device_registry_devices
-):
+async def test_device_trackers(hass, mock_device_registry_devices):
     """Test device_trackers created by mikrotik."""
 
     # test devices are added from wireless list only
@@ -115,6 +122,24 @@ async def test_device_trackers(
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2.state == "not_home"
+
+
+async def test_device_trackers_numerical_name(hass, mock_device_registry_devices):
+    """Test device_trackers created by mikrotik with numerical device name."""
+
+    await setup_mikrotik_entry(
+        hass, dhcp_data=[DEVICE_3_DHCP_NUMERIC_NAME], wireless_data=[DEVICE_3_WIRELESS]
+    )
+
+    device_3 = hass.states.get("device_tracker.123")
+    assert device_3 is not None
+    assert device_3.state == "home"
+    assert device_3.attributes["friendly_name"] == "123"
+    assert device_3.attributes["ip"] == "0.0.0.3"
+    assert "ip_address" not in device_3.attributes
+    assert device_3.attributes["mac"] == "00:00:00:00:00:03"
+    assert device_3.attributes["host_name"] == 123
+    assert "mac_address" not in device_3.attributes
 
 
 async def test_restoring_devices(hass):

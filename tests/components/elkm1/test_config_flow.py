@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
     ELK_DISCOVERY,
+    ELK_DISCOVERY_NON_STANDARD_PORT,
     ELK_NON_SECURE_DISCOVERY,
     MOCK_IP_ADDRESS,
     MOCK_MAC,
@@ -24,7 +25,30 @@ from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(MOCK_IP_ADDRESS, "", MOCK_MAC)
 ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
+ELK_DISCOVERY_INFO_NON_STANDARD_PORT = asdict(ELK_DISCOVERY_NON_STANDARD_PORT)
+
 MODULE = "homeassistant.components.elkm1"
+
+
+async def test_discovery_ignored_entry(hass):
+    """Test we abort on ignored entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: f"elks://{MOCK_IP_ADDRESS}"},
+        unique_id="aa:bb:cc:dd:ee:ff",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=ELK_DISCOVERY_INFO,
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_user_with_secure_elk_no_discovery(hass):
@@ -301,7 +325,7 @@ async def test_form_user_with_secure_elk_with_discovery(hass):
     assert result3["title"] == "ElkM1 ddeeff"
     assert result3["data"] == {
         "auto_configure": True,
-        "host": "elks://127.0.0.1:2601",
+        "host": "elks://127.0.0.1",
         "password": "test-password",
         "prefix": "",
         "username": "test-username",
@@ -626,7 +650,7 @@ async def test_form_invalid_auth(hass):
     mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        "homeassistant.components.elkm1.config_flow.Elk",
         return_value=mocked_elk,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -653,7 +677,7 @@ async def test_form_invalid_auth_no_password(hass):
     mocked_elk = mock_elk(invalid_auth=True, sync_complete=True)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        "homeassistant.components.elkm1.config_flow.Elk",
         return_value=mocked_elk,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -799,6 +823,102 @@ async def test_form_import_device_discovered(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_import_non_secure_device_discovered(hass):
+    """Test we can import non-secure with discovery."""
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "host": "elk://127.0.0.1:2101",
+                "username": "",
+                "password": "",
+                "auto_configure": True,
+                "prefix": "ohana",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "ohana"
+    assert result["result"].unique_id == MOCK_MAC
+    assert result["data"] == {
+        "auto_configure": True,
+        "host": "elk://127.0.0.1:2101",
+        "password": "",
+        "prefix": "ohana",
+        "username": "",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_import_non_secure_non_stanadard_port_device_discovered(hass):
+    """Test we can import non-secure non standard port with discovery."""
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "host": "elk://127.0.0.1:444",
+                "username": "",
+                "password": "",
+                "auto_configure": True,
+                "prefix": "ohana",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "ohana"
+    assert result["result"].unique_id == MOCK_MAC
+    assert result["data"] == {
+        "auto_configure": True,
+        "host": "elk://127.0.0.1:444",
+        "password": "",
+        "prefix": "ohana",
+        "username": "",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_import_non_secure_device_discovered_invalid_auth(hass):
+    """Test we abort import with invalid auth."""
+
+    mocked_elk = mock_elk(invalid_auth=True, sync_complete=False)
+    with _patch_discovery(), _patch_elk(elk=mocked_elk):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "host": "elks://127.0.0.1",
+                "username": "invalid",
+                "password": "",
+                "auto_configure": False,
+                "prefix": "ohana",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_auth"
 
 
 async def test_form_import_existing(hass):
@@ -978,7 +1098,52 @@ async def test_discovered_by_discovery(hass):
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
-        "host": "elks://127.0.0.1:2601",
+        "host": "elks://127.0.0.1",
+        "password": "test-password",
+        "prefix": "",
+        "username": "test-username",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_discovered_by_discovery_non_standard_port(hass):
+    """Test we can setup when discovered from discovery with a non-standard port."""
+
+    with _patch_discovery(), _patch_elk():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=ELK_DISCOVERY_INFO_NON_STANDARD_PORT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovered_connection"
+    assert result["errors"] == {}
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+
+    with _patch_discovery(), _patch_elk(elk=mocked_elk), patch(
+        "homeassistant.components.elkm1.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "ElkM1 ddeeff"
+    assert result2["data"] == {
+        "auto_configure": True,
+        "host": "elks://127.0.0.1:444",
         "password": "test-password",
         "prefix": "",
         "username": "test-username",
@@ -1042,7 +1207,7 @@ async def test_discovered_by_dhcp_udp_responds(hass):
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
-        "host": "elks://127.0.0.1:2601",
+        "host": "elks://127.0.0.1",
         "password": "test-password",
         "prefix": "",
         "username": "test-username",
@@ -1077,8 +1242,7 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                "protocol": "non-secure",
             },
         )
         await hass.async_block_till_done()
@@ -1087,10 +1251,10 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(hass):
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
-        "host": "elk://127.0.0.1:2101",
-        "password": "test-password",
+        "host": "elk://127.0.0.1",
+        "password": "",
         "prefix": "",
-        "username": "test-username",
+        "username": "",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -1125,10 +1289,7 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
         await hass.async_block_till_done()
 
@@ -1136,7 +1297,7 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(hass):
     assert result2["title"] == "ElkM1 ddeeff"
     assert result2["data"] == {
         "auto_configure": True,
-        "host": "elks://127.0.0.1:2601",
+        "host": "elks://127.0.0.1",
         "password": "test-password",
         "prefix": "ddeeff",
         "username": "test-username",

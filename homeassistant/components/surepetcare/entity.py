@@ -13,7 +13,7 @@ from . import SurePetcareDataCoordinator
 from .const import DOMAIN
 
 
-class SurePetcareEntity(CoordinatorEntity):
+class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
     """An implementation for Sure Petcare Entities."""
 
     def __init__(

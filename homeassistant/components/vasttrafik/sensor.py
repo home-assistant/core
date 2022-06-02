@@ -139,7 +139,7 @@ class VasttrafikDepartureSensor(SensorEntity):
 
         if not self._departureboard:
             _LOGGER.debug(
-                "No departures from departure station %s " "to destination station %s",
+                "No departures from departure station %s to destination station %s",
                 self._departure["station_name"],
                 self._heading["station_name"] if self._heading else "ANY",
             )

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_setup": "Dodaj urz\u0105dzenie Adam zamiast Anna. Zobacz dokumentacj\u0119 integracji Plugwise dla Home Assistant, aby uzyska\u0107 wi\u0119cej informacji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "{name}",

@@ -1,8 +1,8 @@
 """Tests for the jewish_calendar component."""
 from collections import namedtuple
-from contextlib import contextmanager
 from datetime import datetime
-from unittest.mock import patch
+
+from freezegun import freeze_time as alter_time  # noqa: F401
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
@@ -56,14 +56,3 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         JERUSALEM_LATLNG.lng,
         results,
     )
-
-
-@contextmanager
-def alter_time(local_time):
-    """Manage multiple time mocks."""
-    utc_time = dt_util.as_utc(local_time)
-    patch1 = patch("homeassistant.util.dt.utcnow", return_value=utc_time)
-    patch2 = patch("homeassistant.util.dt.now", return_value=local_time)
-
-    with patch1, patch2:
-        yield

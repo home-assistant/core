@@ -13,21 +13,15 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,17 +42,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import GroupEntity
 from .util import (
     attribute_equal,
-    find_state_attributes,
     most_frequent_attribute,
     reduce_attribute,
     states_equal,
 )
 
 SUPPORTED_FLAGS = {
-    SUPPORT_SET_SPEED,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
+    FanEntityFeature.SET_SPEED,
+    FanEntityFeature.DIRECTION,
+    FanEntityFeature.OSCILLATE,
 }
 
 DEFAULT_NAME = "Fan Group"
@@ -115,8 +107,6 @@ class FanGroup(GroupEntity, FanEntity):
         self._percentage = None
         self._oscillating = None
         self._direction = None
-        self._preset_mode = None
-        self._preset_modes = None
         self._supported_features = 0
         self._speed_count = 100
         self._is_on = False
@@ -153,16 +143,6 @@ class FanGroup(GroupEntity, FanEntity):
     def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._oscillating
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return current preset mode of the fan."""
-        return self._preset_mode
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return current preset mode of the fan."""
-        return self._preset_modes
 
     @callback
     def _update_supported_features_event(self, event: Event) -> None:
@@ -208,32 +188,30 @@ class FanGroup(GroupEntity, FanEntity):
 
         await super().async_added_to_hass()
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the fan."""
-        await self._async_call_supported_entities(
-            SERVICE_SET_PRESET_MODE,
-            SUPPORT_PRESET_MODE,
-            {ATTR_PRESET_MODE: preset_mode},
-        )
-
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage == 0:
             await self.async_turn_off()
         await self._async_call_supported_entities(
-            SERVICE_SET_PERCENTAGE, SUPPORT_SET_SPEED, {ATTR_PERCENTAGE: percentage}
+            SERVICE_SET_PERCENTAGE,
+            FanEntityFeature.SET_SPEED,
+            {ATTR_PERCENTAGE: percentage},
         )
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._async_call_supported_entities(
-            SERVICE_OSCILLATE, SUPPORT_OSCILLATE, {ATTR_OSCILLATING: oscillating}
+            SERVICE_OSCILLATE,
+            FanEntityFeature.OSCILLATE,
+            {ATTR_OSCILLATING: oscillating},
         )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self._async_call_supported_entities(
-            SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, {ATTR_DIRECTION: direction}
+            SERVICE_SET_DIRECTION,
+            FanEntityFeature.DIRECTION,
+            {ATTR_DIRECTION: direction},
         )
 
     async def async_turn_on(
@@ -298,7 +276,9 @@ class FanGroup(GroupEntity, FanEntity):
         self._is_on = any(state.state == STATE_ON for state in on_states)
         self._attr_assumed_state |= not states_equal(on_states)
 
-        percentage_states = self._async_states_by_support_flag(SUPPORT_SET_SPEED)
+        percentage_states = self._async_states_by_support_flag(
+            FanEntityFeature.SET_SPEED
+        )
         self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
         self._attr_assumed_state |= not attribute_equal(
             percentage_states, ATTR_PERCENTAGE
@@ -316,27 +296,11 @@ class FanGroup(GroupEntity, FanEntity):
             self._speed_count = 100
 
         self._set_attr_most_frequent(
-            "_oscillating", SUPPORT_OSCILLATE, ATTR_OSCILLATING
+            "_oscillating", FanEntityFeature.OSCILLATE, ATTR_OSCILLATING
         )
-
-        self._set_attr_most_frequent("_direction", SUPPORT_DIRECTION, ATTR_DIRECTION)
-
-        all_supported_preset_modes = list(
-            find_state_attributes(on_states, ATTR_PRESET_MODES)
+        self._set_attr_most_frequent(
+            "_direction", FanEntityFeature.DIRECTION, ATTR_DIRECTION
         )
-
-        if all_supported_preset_modes and attribute_equal(on_states, ATTR_PRESET_MODES):
-            self._preset_modes = all_supported_preset_modes[0]
-        else:
-            self._preset_modes = None
-
-        if attribute_equal(on_states, ATTR_PRESET_MODE):
-            self._set_attr_most_frequent(
-                "_preset_mode", SUPPORT_PRESET_MODE, ATTR_PRESET_MODE
-            )
-        else:
-            self._attr_assumed_state = True
-            self._preset_mode = None
 
         self._supported_features = reduce(
             ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0

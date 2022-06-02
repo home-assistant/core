@@ -1,4 +1,8 @@
 {
+    "device_class": {
+        "motion": "pohyb",
+        "vibration": "vibr\u00e1cia"
+    },
     "state": {
         "_": {
             "off": "Neakt\u00edvny",

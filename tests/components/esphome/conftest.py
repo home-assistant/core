@@ -22,7 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "192.168.1.2",
             CONF_PORT: 6053,
-            CONF_PASSWORD: "",
+            CONF_PASSWORD: "pwd",
             CONF_NOISE_PSK: "12345678123456781234567812345678",
         },
         unique_id="esphome-device",

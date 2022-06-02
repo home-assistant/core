@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Credenciais necess\u00e1rias. Pressione 'Enviar' e, em seguida, no PS4, na Tela do segundo aplicativo, atualize os dispositivos e selecione o dispositivo 'Home-Assistant' para continuar.",
-                "title": "Playstation 4"
+                "description": "Credenciais necess\u00e1rias. Pressione 'Enviar' e, em seguida, no PS4, na Tela do segundo aplicativo, atualize os dispositivos e selecione o dispositivo 'Home-Assistant' para continuar."
             },
             "link": {
                 "data": {
@@ -25,16 +24,18 @@
                     "name": "Nome",
                     "region": "Regi\u00e3o"
                 },
-                "description": "Digite suas informa\u00e7\u00f5es do PlayStation 4. Para C\u00f3digo PIN, navegue at\u00e9 'Configura\u00e7\u00f5es' no seu console PlayStation 4. Em seguida, navegue at\u00e9 \"Configura\u00e7\u00f5es de conex\u00e3o de aplicativos m\u00f3veis\" e selecione \"Adicionar dispositivo\". Digite o C\u00f3digo PIN exibido. Consulte a [documenta\u00e7\u00e3o] (https://www.home-assistant.io/components/ps4/) para informa\u00e7\u00f5es adicionais.",
-                "title": "Playstation 4"
+                "data_description": {
+                    "code": "Navegue at\u00e9 'Configura\u00e7\u00f5es' em seu console PlayStation 4. Em seguida, navegue at\u00e9 'Configura\u00e7\u00f5es de conex\u00e3o do aplicativo m\u00f3vel' e selecione 'Adicionar dispositivo' para obter o PIN."
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "Endere\u00e7o IP (Deixe em branco se estiver usando a Detec\u00e7\u00e3o autom\u00e1tica).",
                     "mode": "Modo de configura\u00e7\u00e3o"
                 },
-                "description": "Selecione o modo para configura\u00e7\u00e3o. O campo Endere\u00e7o IP pode ser deixado em branco se selecionar Detec\u00e7\u00e3o Autom\u00e1tica, pois os dispositivos ser\u00e3o descobertos automaticamente.",
-                "title": "Playstation 4"
+                "data_description": {
+                    "ip_address": "Deixe em branco se selecionar a descoberta autom\u00e1tica."
+                }
             }
         }
     }

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "ignore_ip6_link_local": "Az IPv6-kapcsolat helyi c\u00edme nem t\u00e1mogatott.",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
             "not_supported": "Csatlakoztatva az AVM FRITZ! Boxhoz, de nem tudja vez\u00e9relni az intelligens otthoni eszk\u00f6z\u00f6ket.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."

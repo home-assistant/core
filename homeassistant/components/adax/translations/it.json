@@ -7,8 +7,7 @@
             "invalid_auth": "Autenticazione non valida"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "invalid_auth": "Autenticazione non valida"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "ID account",
-                    "connection_type": "Seleziona il tipo di connessione",
-                    "host": "Host",
-                    "password": "Password"
+                    "connection_type": "Seleziona il tipo di connessione"
                 },
                 "description": "Seleziona il tipo di connessione. Locale richiede riscaldatori con bluetooth"
             }

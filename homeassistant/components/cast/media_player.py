@@ -10,6 +10,12 @@ import logging
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
+from pychromecast.controllers.media import (
+    MEDIA_PLAYER_ERROR_CODES,
+    MEDIA_PLAYER_STATE_BUFFERING,
+    MEDIA_PLAYER_STATE_PLAYING,
+    MEDIA_PLAYER_STATE_UNKNOWN,
+)
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
 from pychromecast.quick_play import quick_play
@@ -25,6 +31,7 @@ from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
     async_process_play_media_url,
 )
 from homeassistant.components.media_player.const import (
@@ -33,23 +40,12 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -75,15 +71,20 @@ from .const import (
     SIGNAL_HASS_CAST_SHOW_VIEW,
 )
 from .discovery import setup_internal_discovery
-from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
+from .helpers import (
+    CastStatusListener,
+    ChromecastInfo,
+    ChromeCastZeroconf,
+    PlaylistError,
+    PlaylistSupported,
+    parse_playlist,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
-
-SUPPORT_CAST = SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -396,6 +397,17 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
+    def load_media_failed(self, item, error_code):
+        """Handle load media failed."""
+        _LOGGER.debug(
+            "[%s %s] Load media failed with code %s(%s) for item %s",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            error_code,
+            MEDIA_PLAYER_ERROR_CODES.get(error_code, "unknown code"),
+            item,
+        )
+
     def new_connection_status(self, connection_status):
         """Handle updates of connection status."""
         _LOGGER.debug(
@@ -447,10 +459,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_status = self.media_status
         media_controller = self._chromecast.media_controller
 
-        if media_status is None or media_status.player_state == "UNKNOWN":
+        if (
+            media_status is None
+            or media_status.player_state == MEDIA_PLAYER_STATE_UNKNOWN
+        ):
             groups = self.mz_media_status
             for k, val in groups.items():
-                if val and val.player_state != "UNKNOWN":
+                if val and val.player_state != MEDIA_PLAYER_STATE_UNKNOWN:
                     media_controller = self.mz_mgr.get_multizone_mediacontroller(k)
                     break
 
@@ -469,7 +484,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         # The only way we can turn the Chromecast is on is by launching an app
         if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
-            self._chromecast.play_media(CAST_SPLASH, "image/png")
+            app_data = {"media_id": CAST_SPLASH, "media_type": "image/png"}
+            quick_play(self._chromecast, "default_media_receiver", app_data)
         else:
             self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
@@ -519,7 +535,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Generate root node."""
         children = []
         # Add media browsers
-        for platform in self.hass.data[CAST_DOMAIN].values():
+        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
             children.extend(
                 await platform.async_get_media_browser_root_object(
                     self.hass, self._chromecast.cast_type
@@ -571,7 +587,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if media_content_id is None:
             return await self._async_root_payload(content_filter)
 
-        for platform in self.hass.data[CAST_DOMAIN].values():
+        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
             browse_media = await platform.async_browse_media(
                 self.hass,
                 media_content_type,
@@ -589,19 +605,20 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Play a piece of media."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
 
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
-        metadata = extra.get("metadata")
 
         # Handle media supported by a known cast app
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
-                if metadata is not None:
-                    app_data["metadata"] = extra.get("metadata")
+                if metadata := extra.get("metadata"):
+                    app_data["metadata"] = metadata
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
                 raise
@@ -631,7 +648,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return
 
         # Try the cast platforms
-        for platform in self.hass.data[CAST_DOMAIN].values():
+        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
             result = await platform.async_play_media(
                 self.hass, self.entity_id, self._chromecast, media_type, media_id
             )
@@ -652,9 +669,51 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                         "hlsVideoSegmentFormat": "fmp4",
                     },
                 }
+        elif (
+            media_id.endswith(".m3u")
+            or media_id.endswith(".m3u8")
+            or media_id.endswith(".pls")
+        ):
+            try:
+                playlist = await parse_playlist(self.hass, media_id)
+                _LOGGER.debug(
+                    "[%s %s] Playing item %s from playlist %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    playlist[0].url,
+                    media_id,
+                )
+                media_id = playlist[0].url
+                if title := playlist[0].title:
+                    extra = {
+                        **extra,
+                        "metadata": {"title": title},
+                    }
+            except PlaylistSupported as err:
+                _LOGGER.debug(
+                    "[%s %s] Playlist %s is supported: %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    media_id,
+                    err,
+                )
+            except PlaylistError as err:
+                _LOGGER.warning(
+                    "[%s %s] Failed to parse playlist %s: %s",
+                    self.entity_id,
+                    self._cast_info.friendly_name,
+                    media_id,
+                    err,
+                )
 
         # Default to play with the default media receiver
         app_data = {"media_id": media_id, "media_type": media_type, **extra}
+        _LOGGER.debug(
+            "[%s %s] Playing %s with default_media_receiver",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            app_data,
+        )
         await self.hass.async_add_executor_job(
             quick_play, self._chromecast, "default_media_receiver", app_data
         )
@@ -668,10 +727,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         media_status = self.media_status
         media_status_received = self.media_status_received
 
-        if media_status is None or media_status.player_state == "UNKNOWN":
+        if (
+            media_status is None
+            or media_status.player_state == MEDIA_PLAYER_STATE_UNKNOWN
+        ):
             groups = self.mz_media_status
             for k, val in groups.items():
-                if val and val.player_state != "UNKNOWN":
+                if val and val.player_state != MEDIA_PLAYER_STATE_UNKNOWN:
                     media_status = val
                     media_status_received = self.mz_media_status_received[k]
                     break
@@ -685,8 +747,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return STATE_PLAYING
         if (media_status := self._media_status()[0]) is not None:
-            if media_status.player_is_playing:
+            if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
                 return STATE_PLAYING
+            if media_status.player_state == MEDIA_PLAYER_STATE_BUFFERING:
+                return STATE_BUFFERING
             if media_status.player_is_paused:
                 return STATE_PAUSED
             if media_status.player_is_idle:
@@ -805,30 +869,38 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = SUPPORT_CAST
+        support = (
+            MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+        )
         media_status = self._media_status()[0]
-
-        if self._chromecast and self._chromecast.cast_type in (
-            pychromecast.const.CAST_TYPE_CHROMECAST,
-            pychromecast.const.CAST_TYPE_AUDIO,
-        ):
-            support |= SUPPORT_TURN_ON
 
         if (
             self.cast_status
             and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
         ):
-            support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+            support |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET
+            )
 
         if media_status and self.app_id != CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            support |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
+            support |= (
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+            )
             if media_status.supports_queue_next:
-                support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+                support |= (
+                    MediaPlayerEntityFeature.PREVIOUS_TRACK
+                    | MediaPlayerEntityFeature.NEXT_TRACK
+                )
             if media_status.supports_seek:
-                support |= SUPPORT_SEEK
+                support |= MediaPlayerEntityFeature.SEEK
 
         if "media_source" in self.hass.config.components:
-            support |= SUPPORT_BROWSE_MEDIA
+            support |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         return support
 

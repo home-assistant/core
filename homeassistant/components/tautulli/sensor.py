@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from pytautulli import PyTautulli
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -18,22 +22,23 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import TautulliEntity
+from .const import (
+    CONF_MONITORED_USERS,
+    DEFAULT_NAME,
+    DEFAULT_PATH,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 from .coordinator import TautulliDataUpdateCoordinator
 
-CONF_MONITORED_USERS = "monitored_users"
-
-DEFAULT_NAME = "Tautulli"
-DEFAULT_PORT = "8181"
-DEFAULT_PATH = ""
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-
+# Deprecated in Home Assistant 2022.4
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -48,6 +53,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        icon="mdi:plex",
+        key="watching_count",
+        name="Tautulli",
+        native_unit_of_measurement="Watching",
+    ),
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -56,66 +70,29 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Create the Tautulli sensor."""
-
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    path = config[CONF_PATH]
-    api_key = config[CONF_API_KEY]
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS, [])
-    users = config.get(CONF_MONITORED_USERS, [])
-    use_ssl = config[CONF_SSL]
-    verify_ssl = config[CONF_VERIFY_SSL]
-
-    session = async_get_clientsession(hass=hass, verify_ssl=verify_ssl)
-
-    api_client = PyTautulli(
-        api_token=api_key,
-        hostname=host,
-        session=session,
-        verify_ssl=verify_ssl,
-        port=port,
-        ssl=use_ssl,
-        base_api_path=path,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
 
-    coordinator = TautulliDataUpdateCoordinator(hass=hass, api_client=api_client)
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Tautulli sensor."""
+    coordinator: TautulliDataUpdateCoordinator = hass.data[DOMAIN]
     async_add_entities(
-        new_entities=[
-            TautulliSensor(
-                coordinator=coordinator,
-                name=name,
-                monitored_conditions=monitored_conditions,
-                usernames=users,
-            )
-        ],
-        update_before_add=True,
+        TautulliSensor(
+            coordinator,
+            description,
+        )
+        for description in SENSOR_TYPES
     )
 
 
-class TautulliSensor(CoordinatorEntity, SensorEntity):
+class TautulliSensor(TautulliEntity, SensorEntity):
     """Representation of a Tautulli sensor."""
-
-    coordinator: TautulliDataUpdateCoordinator
-
-    def __init__(
-        self,
-        coordinator: TautulliDataUpdateCoordinator,
-        name: str,
-        monitored_conditions: list[str],
-        usernames: list[str],
-    ) -> None:
-        """Initialize the Tautulli sensor."""
-        super().__init__(coordinator)
-        self.monitored_conditions = monitored_conditions
-        self.usernames = usernames
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self) -> StateType:
@@ -123,16 +100,6 @@ class TautulliSensor(CoordinatorEntity, SensorEntity):
         if not self.coordinator.activity:
             return 0
         return self.coordinator.activity.stream_count or 0
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        return "mdi:plex"
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return "Watching"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -163,20 +130,14 @@ class TautulliSensor(CoordinatorEntity, SensorEntity):
                 _attributes["Top User"] = stat.rows[0].user if stat.rows else None
 
         for user in self.coordinator.users:
-            if (
-                self.usernames
-                and user.username not in self.usernames
-                or user.username == "Local"
-            ):
+            if user.username == "Local":
                 continue
             _attributes.setdefault(user.username, {})["Activity"] = None
 
         for session in self.coordinator.activity.sessions:
-            if not _attributes.get(session.username):
+            if not _attributes.get(session.username) or "null" in session.state:
                 continue
 
             _attributes[session.username]["Activity"] = session.state
-            for key in self.monitored_conditions:
-                _attributes[session.username][key] = getattr(session, key)
 
         return _attributes

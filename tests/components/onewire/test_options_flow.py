@@ -2,8 +2,6 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.onewire.const import (
-    CONF_TYPE_SYSBUS,
-    DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
     INPUT_ENTRY_DEVICE_SELECTION,
 )
@@ -26,13 +24,7 @@ class FakeDevice:
     name_by_user = "Given Name"
 
 
-class FakeOWHubSysBus:
-    """Mock Class for mocking onewire hub."""
-
-    type = CONF_TYPE_SYSBUS
-
-
-async def test_user_owserver_options_clear(
+async def test_user_options_clear(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -61,7 +53,7 @@ async def test_user_owserver_options_clear(
     assert result["data"] == {}
 
 
-async def test_user_owserver_options_empty_selection(
+async def test_user_options_empty_selection(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -91,7 +83,7 @@ async def test_user_owserver_options_empty_selection(
     assert result["errors"] == {"base": "device_not_selected"}
 
 
-async def test_user_owserver_options_set_single(
+async def test_user_options_set_single(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -134,7 +126,7 @@ async def test_user_owserver_options_set_single(
     )
 
 
-async def test_user_owserver_options_set_multiple(
+async def test_user_options_set_multiple(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -208,7 +200,7 @@ async def test_user_owserver_options_set_multiple(
     )
 
 
-async def test_user_owserver_options_no_devices(
+async def test_user_options_no_devices(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -223,15 +215,3 @@ async def test_user_owserver_options_no_devices(
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "No configurable devices found."
-
-
-async def test_user_sysbus_options(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-):
-    """Test that SysBus options flow aborts on init."""
-    hass.data[DOMAIN] = {config_entry.entry_id: FakeOWHubSysBus()}
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "SysBus setup does not have any config options."

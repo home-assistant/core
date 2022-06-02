@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
@@ -161,26 +162,25 @@ async def test_color_palette_select_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.segment.side_effect = WLEDError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
-            ATTR_OPTION: "Icefire",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
+                ATTR_OPTION: "Icefire",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
     assert state
     assert state.state == "Random Cycle"
-    assert "Invalid response from API" in caplog.text
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(segment_id=1, palette="Icefire")
 
@@ -189,26 +189,25 @@ async def test_color_palette_select_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.segment.side_effect = WLEDConnectionError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
-            ATTR_OPTION: "Icefire",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
+                ATTR_OPTION: "Icefire",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgb_light_segment_1_color_palette")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Error communicating with API" in caplog.text
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(segment_id=1, palette="Icefire")
 
@@ -280,26 +279,25 @@ async def test_preset_select_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.preset.side_effect = WLEDError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
-            ATTR_OPTION: "Preset 2",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
+                ATTR_OPTION: "Preset 2",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgbw_light_preset")
     assert state
     assert state.state == "Preset 1"
-    assert "Invalid response from API" in caplog.text
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset="Preset 2")
 
@@ -309,26 +307,25 @@ async def test_preset_select_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.preset.side_effect = WLEDConnectionError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
-            ATTR_OPTION: "Preset 2",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
+                ATTR_OPTION: "Preset 2",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgbw_light_preset")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Error communicating with API" in caplog.text
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset="Preset 2")
 
@@ -400,26 +397,25 @@ async def test_playlist_select_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.playlist.side_effect = WLEDError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
-            ATTR_OPTION: "Playlist 2",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
+                ATTR_OPTION: "Playlist 2",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgbw_light_playlist")
     assert state
     assert state.state == "Playlist 1"
-    assert "Invalid response from API" in caplog.text
     assert mock_wled.playlist.call_count == 1
     mock_wled.playlist.assert_called_with(playlist="Playlist 2")
 
@@ -429,26 +425,25 @@ async def test_playlist_select_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.playlist.side_effect = WLEDConnectionError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
-            ATTR_OPTION: "Playlist 2",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
+                ATTR_OPTION: "Playlist 2",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgbw_light_playlist")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Error communicating with API" in caplog.text
     assert mock_wled.playlist.call_count == 1
     mock_wled.playlist.assert_called_with(playlist="Playlist 2")
 
@@ -489,26 +484,25 @@ async def test_live_select_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.live.side_effect = WLEDError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
-            ATTR_OPTION: "1",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
+                ATTR_OPTION: "1",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgb_light_live_override")
     assert state
     assert state.state == "0"
-    assert "Invalid response from API" in caplog.text
     assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live=1)
 
@@ -517,25 +511,24 @@ async def test_live_select_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED selects."""
     mock_wled.live.side_effect = WLEDConnectionError
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
-            ATTR_OPTION: "2",
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
+                ATTR_OPTION: "2",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("select.wled_rgb_light_live_override")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Error communicating with API" in caplog.text
     assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live=2)

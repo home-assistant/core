@@ -34,12 +34,32 @@ def mock_try_connection():
 def mock_try_connection_success():
     """Mock the try connection method with success."""
 
+    _mid = 1
+
+    def get_mid():
+        nonlocal _mid
+        _mid += 1
+        return _mid
+
     def loop_start():
         """Simulate connect on loop start."""
         mock_client().on_connect(mock_client, None, None, 0)
 
+    def _subscribe(topic, qos=0):
+        mid = get_mid()
+        mock_client().on_subscribe(mock_client, 0, mid)
+        return (0, mid)
+
+    def _unsubscribe(topic):
+        mid = get_mid()
+        mock_client().on_unsubscribe(mock_client, 0, mid)
+        return (0, mid)
+
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().loop_start = loop_start
+        mock_client().subscribe = _subscribe
+        mock_client().unsubscribe = _unsubscribe
+
         yield mock_client()
 
 
@@ -215,7 +235,8 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
                 "port": 1883,
                 "username": "mock-user",
                 "password": "mock-pass",
-                "protocol": "3.1.1",
+                "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
+                "ssl": False,  # Set by the addon's discovery, ignored by HA
             }
         ),
         context={"source": config_entries.SOURCE_HASSIO},
@@ -235,7 +256,6 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "protocol": "3.1.1",
         "discovery": True,
     }
     # Check we tried the connection

@@ -4,11 +4,9 @@
   "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "codeowners": ["@DCSBL"],
   "dependencies": [],
-  "requirements": [
-    "aiohwenergy==0.8.0"
-  ],
+  "requirements": ["python-homewizard-energy==1.0.3"],
   "zeroconf": ["_hwenergy._tcp.local."],
   "config_flow": true,
   "iot_class": "local_polling",
-  "loggers": ["aiohwenergy"]
+  "loggers": ["homewizard_energy"]
 }

@@ -3,8 +3,10 @@
         "abort": {
             "address_already_configured": "Az ElkM1 ezzel a c\u00edmmel m\u00e1r konfigur\u00e1lva van",
             "already_configured": "Az ezzel az el\u0151taggal rendelkez\u0151 ElkM1 m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -37,13 +39,7 @@
             },
             "user": {
                 "data": {
-                    "address": "Az IP-c\u00edm vagy tartom\u00e1ny vagy soros port, ha soros kapcsolaton kereszt\u00fcl csatlakozik.",
-                    "device": "Eszk\u00f6z",
-                    "password": "Jelsz\u00f3",
-                    "prefix": "Egyedi el\u0151tag (hagyja \u00fcresen, ha csak egy ElkM1 van).",
-                    "protocol": "Protokoll",
-                    "temperature_unit": "Az ElkM1 h\u0151m\u00e9rs\u00e9kleti egys\u00e9g haszn\u00e1lja.",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                    "device": "Eszk\u00f6z"
                 },
                 "description": "V\u00e1lasszon egy felfedezett rendszert vagy a \u201eK\u00e9zi bevitelt\u201d, ha nem \u00e9szlelt eszk\u00f6zt.",
                 "title": "Csatlakoz\u00e1s az Elk-M1 vez\u00e9rl\u0151h\u00f6z"

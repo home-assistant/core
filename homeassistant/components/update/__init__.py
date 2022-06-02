@@ -6,9 +6,11 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, final
 
+from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
+from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -24,9 +26,10 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
-    ATTR_CURRENT_VERSION,
     ATTR_IN_PROGRESS,
+    ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
@@ -82,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_INSTALL,
         {
             vol.Optional(ATTR_VERSION): cv.string,
-            vol.Optional(ATTR_BACKUP): cv.boolean,
+            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
@@ -91,8 +94,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SKIP,
         {},
-        UpdateEntity.async_skip.__name__,
+        async_skip,
     )
+    component.async_register_entity_service(
+        "clear_skipped",
+        {},
+        async_clear_skipped,
+    )
+
+    websocket_api.async_register_command(hass, websocket_release_notes)
 
     return True
 
@@ -113,7 +123,8 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     """Service call wrapper to validate the call."""
     # If version is not specified, but no update is available.
     if (version := service_call.data.get(ATTR_VERSION)) is None and (
-        entity.current_version == entity.latest_version or entity.latest_version is None
+        entity.installed_version == entity.latest_version
+        or entity.latest_version is None
     ):
         raise HomeAssistantError(f"No update available for {entity.name}")
 
@@ -128,7 +139,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
 
     # If backup is requested, but not supported by the entity.
     if (
-        backup := service_call.data.get(ATTR_BACKUP)
+        backup := service_call.data[ATTR_BACKUP]
     ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
         raise HomeAssistantError(f"Backup is not supported for {entity.name}")
 
@@ -139,6 +150,22 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
         )
 
     await entity.async_install_with_progress(version, backup)
+
+
+async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to validate the call."""
+    if entity.auto_update:
+        raise HomeAssistantError(f"Skipping update is not supported for {entity.name}")
+    await entity.async_skip()
+
+
+async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to validate the call."""
+    if entity.auto_update:
+        raise HomeAssistantError(
+            f"Clearing skipped update is not supported for {entity.name}"
+        )
+    await entity.async_clear_skipped()
 
 
 @dataclass
@@ -153,7 +180,8 @@ class UpdateEntity(RestoreEntity):
     """Representation of an update entity."""
 
     entity_description: UpdateEntityDescription
-    _attr_current_version: str | None = None
+    _attr_auto_update: bool = False
+    _attr_installed_version: str | None = None
     _attr_device_class: UpdateDeviceClass | str | None
     _attr_in_progress: bool | int = False
     _attr_latest_version: str | None = None
@@ -166,9 +194,14 @@ class UpdateEntity(RestoreEntity):
     __in_progress: bool = False
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
-        return self._attr_current_version
+    def auto_update(self) -> bool:
+        """Indicate if the device or service has auto update enabled."""
+        return self._attr_auto_update
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version installed and in use."""
+        return self._attr_installed_version
 
     @property
     def device_class(self) -> UpdateDeviceClass | str | None:
@@ -180,13 +213,29 @@ class UpdateEntity(RestoreEntity):
         return None
 
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
-        return EntityCategory.CONFIG
+        if self.supported_features & UpdateEntityFeature.INSTALL:
+            return EntityCategory.CONFIG
+        return EntityCategory.DIAGNOSTIC
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend.
+
+        Update entities return the brand icon based on the integration
+        domain by default.
+        """
+        if self.platform is None:
+            return None
+
+        return (
+            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
+        )
 
     @property
     def in_progress(self) -> bool | int | None:
@@ -237,16 +286,19 @@ class UpdateEntity(RestoreEntity):
         """Skip the current offered version to update."""
         if (latest_version := self.latest_version) is None:
             raise HomeAssistantError(f"Cannot skip an unknown version for {self.name}")
-        if self.current_version == latest_version:
+        if self.installed_version == latest_version:
             raise HomeAssistantError(f"No update available to skip for {self.name}")
         self.__skipped_version = latest_version
         self.async_write_ha_state()
 
+    @final
+    async def async_clear_skipped(self) -> None:
+        """Clear the skipped version."""
+        self.__skipped_version = None
+        self.async_write_ha_state()
+
     async def async_install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
+        self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update.
 
@@ -258,12 +310,7 @@ class UpdateEntity(RestoreEntity):
         """
         await self.hass.async_add_executor_job(self.install, version, backup)
 
-    def install(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
         """Install an update.
 
         Version can be specified to install a specific version. When `None`, the
@@ -274,18 +321,42 @@ class UpdateEntity(RestoreEntity):
         """
         raise NotImplementedError()
 
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary property.
+        The returned string can contain markdown.
+        """
+        return await self.hass.async_add_executor_job(self.release_notes)
+
+    def release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary property.
+        The returned string can contain markdown.
+        """
+        raise NotImplementedError()
+
     @property
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        if (current_version := self.current_version) is None or (
+        if (installed_version := self.installed_version) is None or (
             latest_version := self.latest_version
         ) is None:
             return None
 
-        if latest_version not in (current_version, self.__skipped_version):
+        if latest_version == self.__skipped_version:
+            return STATE_OFF
+        if latest_version == installed_version:
+            return STATE_OFF
+
+        try:
+            newer = AwesomeVersion(latest_version) > installed_version
+            return STATE_ON if newer else STATE_OFF
+        except AwesomeVersionCompareException:
+            # Can't compare versions, already tried exact match
             return STATE_ON
-        return STATE_OFF
 
     @final
     @property
@@ -301,16 +372,20 @@ class UpdateEntity(RestoreEntity):
         else:
             in_progress = self.__in_progress
 
-        # Clear skipped version in case it matches the current version or
-        # the latest version diverged.
+        # Clear skipped version in case it matches the current installed
+        # version or the latest version diverged.
         if (
-            self.__skipped_version == self.current_version
-            or self.__skipped_version != self.latest_version
+            self.installed_version is not None
+            and self.__skipped_version == self.installed_version
+        ) or (
+            self.latest_version is not None
+            and self.__skipped_version != self.latest_version
         ):
             self.__skipped_version = None
 
         return {
-            ATTR_CURRENT_VERSION: self.current_version,
+            ATTR_AUTO_UPDATE: self.auto_update,
+            ATTR_INSTALLED_VERSION: self.installed_version,
             ATTR_IN_PROGRESS: in_progress,
             ATTR_LATEST_VERSION: self.latest_version,
             ATTR_RELEASE_SUMMARY: release_summary,
@@ -321,9 +396,7 @@ class UpdateEntity(RestoreEntity):
 
     @final
     async def async_install_with_progress(
-        self,
-        version: str | None = None,
-        backup: bool | None = None,
+        self, version: str | None, backup: bool
     ) -> None:
         """Install update and handle progress if needed.
 
@@ -351,3 +424,40 @@ class UpdateEntity(RestoreEntity):
         state = await self.async_get_last_state()
         if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
             self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "update/release_notes",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def websocket_release_notes(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get the full release notes for a entity."""
+    component = hass.data[DOMAIN]
+    entity: UpdateEntity | None = component.get_entity(msg["entity_id"])
+
+    if entity is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    if not entity.supported_features & UpdateEntityFeature.RELEASE_NOTES:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            "Entity does not support release notes",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        await entity.async_release_notes(),
+    )

@@ -47,6 +47,7 @@ async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_t
             "discovery_id": "00000049A3BC_button_1_SINGLE",
             "type": "button_short_press",
             "subtype": "button_1",
+            "metadata": {},
         },
         {
             "platform": "device",
@@ -55,6 +56,7 @@ async def test_get_triggers_btn(hass, device_reg, entity_reg, mqtt_mock, setup_t
             "discovery_id": "00000049A3BC_button_2_SINGLE",
             "type": "button_short_press",
             "subtype": "button_2",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -83,6 +85,7 @@ async def test_get_triggers_swc(hass, device_reg, entity_reg, mqtt_mock, setup_t
             "discovery_id": "00000049A3BC_switch_1_TOGGLE",
             "type": "button_short_press",
             "subtype": "switch_1",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -232,6 +235,7 @@ async def test_discover_bad_triggers(
             "discovery_id": "00000049A3BC_switch_1_TOGGLE",
             "type": "button_short_press",
             "subtype": "switch_1",
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -272,6 +276,7 @@ async def test_update_remove_triggers(
             "discovery_id": "00000049A3BC_switch_1_TOGGLE",
             "type": "button_short_press",
             "subtype": "switch_1",
+            "metadata": {},
         },
         {
             "platform": "device",
@@ -280,6 +285,7 @@ async def test_update_remove_triggers(
             "discovery_id": "00000049A3BC_switch_1_HOLD",
             "type": "button_long_press",
             "subtype": "switch_1",
+            "metadata": {},
         },
     ]
     expected_triggers2 = copy.deepcopy(expected_triggers1)

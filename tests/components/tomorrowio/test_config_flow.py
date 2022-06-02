@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_VERSION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
@@ -55,8 +56,8 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_LATITUDE] == hass.config.latitude
-    assert result["data"][CONF_LONGITUDE] == hass.config.longitude
+    assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
+    assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
 
 
 async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
@@ -88,8 +89,8 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
     assert result["title"] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_NAME] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_LATITUDE] == hass.config.latitude
-    assert result["data"][CONF_LONGITUDE] == hass.config.longitude
+    assert result["data"][CONF_LOCATION][CONF_LATITUDE] == hass.config.latitude
+    assert result["data"][CONF_LOCATION][CONF_LONGITUDE] == hass.config.longitude
 
 
 async def test_user_flow_same_unique_ids(hass: HomeAssistant) -> None:
@@ -219,7 +220,7 @@ async def test_import_flow_v4(hass: HomeAssistant) -> None:
         domain=CC_DOMAIN,
         data=user_config,
         source=SOURCE_USER,
-        unique_id=_get_unique_id(hass, user_config),
+        unique_id="test",
         version=1,
     )
     old_entry.add_to_hass(hass)
@@ -243,7 +244,7 @@ async def test_import_flow_v3(
         domain=CC_DOMAIN,
         data=user_config,
         source=SOURCE_USER,
-        unique_id=_get_unique_id(hass, user_config),
+        unique_id="test",
         version=1,
     )
     old_entry.add_to_hass(hass)
@@ -264,8 +265,10 @@ async def test_import_flow_v3(
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_API_KEY: "this is a test",
-        CONF_LATITUDE: 80,
-        CONF_LONGITUDE: 80,
+        CONF_LOCATION: {
+            CONF_LATITUDE: 80.0,
+            CONF_LONGITUDE: 80.0,
+        },
         CONF_NAME: "ClimaCell",
         "old_config_entry_id": old_entry.entry_id,
     }

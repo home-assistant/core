@@ -92,7 +92,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxSpeedNumber(
+    FluxEntity, CoordinatorEntity[FluxLedUpdateCoordinator], NumberEntity
+):
     """Defines a flux_led speed number."""
 
     _attr_min_value = 1
@@ -122,7 +124,9 @@ class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxConfigNumber(
+    FluxEntity, CoordinatorEntity[FluxLedUpdateCoordinator], NumberEntity
+):
     """Base class for flux config numbers."""
 
     _attr_entity_category = EntityCategory.CONFIG

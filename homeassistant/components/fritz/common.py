@@ -91,6 +91,11 @@ def _cleanup_entity_filter(device: er.RegistryEntry) -> bool:
     )
 
 
+def _ha_is_stopping(activity: str) -> None:
+    """Inform that HA is stopping."""
+    _LOGGER.info("Cannot execute %s: HomeAssistant is shutting down", activity)
+
+
 class ClassSetupMissing(Exception):
     """Raised when a Class func is called before setup."""
 
@@ -169,6 +174,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._current_firmware: str | None = None
         self._latest_firmware: str | None = None
         self._update_available: bool = False
+        self._release_url: str | None = None
 
     async def async_setup(
         self, options: MappingProxyType[str, Any] | None = None
@@ -219,7 +225,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._model = info.get("NewModelName")
         self._current_firmware = info.get("NewSoftwareVersion")
 
-        self._update_available, self._latest_firmware = self._update_device_info()
+        (
+            self._update_available,
+            self._latest_firmware,
+            self._release_url,
+        ) = self._update_device_info()
         if "Layer3Forwarding1" in self.connection.services:
             if connection_type := self.connection.call_action(
                 "Layer3Forwarding1", "GetDefaultConnectionService"
@@ -270,6 +280,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         return self._update_available
 
     @property
+    def release_url(self) -> str | None:
+        """Return the info URL for latest firmware."""
+        return self._release_url
+
+    @property
     def mac(self) -> str:
         """Return device Mac address."""
         if not self._unique_id:
@@ -300,12 +315,12 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 raise HomeAssistantError("Error refreshing hosts info") from ex
         return []
 
-    def _update_device_info(self) -> tuple[bool, str | None]:
+    def _update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
-        version = self.connection.call_action("UserInterface1", "GetInfo").get(
-            "NewX_AVM-DE_Version"
-        )
-        return bool(version), version
+        info = self.connection.call_action("UserInterface1", "GetInfo")
+        version = info.get("NewX_AVM-DE_Version")
+        release_url = info.get("NewX_AVM-DE_InfoURL")
+        return bool(version), version, release_url
 
     def _get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
@@ -351,8 +366,16 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
+        if self.hass.is_stopping:
+            _ha_is_stopping("scan devices")
+            return
+
         _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
-        self._update_available, self._latest_firmware = self._update_device_info()
+        (
+            self._update_available,
+            self._latest_firmware,
+            self._release_url,
+        ) = self._update_device_info()
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -603,6 +626,10 @@ class AvmWrapper(FritzBoxTools):
     ) -> dict:
         """Return service details."""
 
+        if self.hass.is_stopping:
+            _ha_is_stopping(f"{service_name}/{action_name}")
+            return {}
+
         if f"{service_name}{service_suffix}" not in self.connection.services:
             return {}
 
@@ -817,7 +844,7 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(update_coordinator.CoordinatorEntity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:

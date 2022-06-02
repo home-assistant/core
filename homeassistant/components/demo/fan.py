@@ -1,13 +1,7 @@
 """Demo fan platform that has a fake fan."""
 from __future__ import annotations
 
-from homeassistant.components.fan import (
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,9 +13,9 @@ PRESET_MODE_SLEEP = "sleep"
 PRESET_MODE_ON = "on"
 
 FULL_SUPPORT = (
-    SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION | SUPPORT_PRESET_MODE
+    FanEntityFeature.SET_SPEED | FanEntityFeature.OSCILLATE | FanEntityFeature.DIRECTION
 )
-LIMITED_SUPPORT = SUPPORT_SET_SPEED
+LIMITED_SUPPORT = FanEntityFeature.SET_SPEED
 
 
 async def async_setup_platform(
@@ -80,7 +74,7 @@ async def async_setup_platform(
                 hass,
                 "fan5",
                 "Preset Only Limited Fan",
-                SUPPORT_PRESET_MODE,
+                FanEntityFeature.PRESET_MODE,
                 [
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,
@@ -122,9 +116,9 @@ class BaseDemoFan(FanEntity):
         self._oscillating: bool | None = None
         self._direction: str | None = None
         self._name = name
-        if supported_features & SUPPORT_OSCILLATE:
+        if supported_features & FanEntityFeature.OSCILLATE:
             self._oscillating = False
-        if supported_features & SUPPORT_DIRECTION:
+        if supported_features & FanEntityFeature.DIRECTION:
             self._direction = "forward"
 
     @property
@@ -260,7 +254,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         """Set new preset mode."""
         if self.preset_modes is None or preset_mode not in self.preset_modes:
             raise ValueError(
-                "{preset_mode} is not a valid preset_mode: {self.preset_modes}"
+                f"{preset_mode} is not a valid preset_mode: {self.preset_modes}"
             )
         self._preset_mode = preset_mode
         self._percentage = None

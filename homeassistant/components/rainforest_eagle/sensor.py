@@ -67,10 +67,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class EagleSensor(CoordinatorEntity, SensorEntity):
+class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
     """Implementation of the Rainforest Eagle sensor."""
-
-    coordinator: EagleDataCoordinator
 
     def __init__(self, coordinator, entity_description):
         """Initialize the sensor."""

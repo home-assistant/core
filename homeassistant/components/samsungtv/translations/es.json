@@ -6,22 +6,30 @@
             "auth_missing": "Home Assistant no est\u00e1 autorizado para conectarse a este televisor Samsung. Revisa la configuraci\u00f3n de tu televisor para autorizar a Home Assistant.",
             "cannot_connect": "No se pudo conectar",
             "id_missing": "Este dispositivo Samsung no tiene un n\u00famero de serie.",
-            "missing_config_entry": "Este dispositivo de Samsung no est\u00e1 configurado.",
             "not_supported": "Esta televisi\u00f3n Samsung actualmente no es compatible.",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "unknown": "Error inesperado"
         },
         "error": {
-            "auth_missing": "Home Assistant no est\u00e1 autorizado para conectarse a este televisor Samsung. Revisa la configuraci\u00f3n de tu televisor para autorizar a Home Assistant."
+            "auth_missing": "Home Assistant no est\u00e1 autorizado para conectarse a este televisor Samsung. Revisa la configuraci\u00f3n de tu televisor para autorizar a Home Assistant.",
+            "invalid_pin": "El PIN es inv\u00e1lido; vuelve a intentarlo."
         },
         "flow_title": "{device}",
         "step": {
             "confirm": {
-                "description": "\u00bfQuieres configurar {device}? Si nunca la has conectado a Home Assistant antes deber\u00edas ver una ventana en tu TV pidiendo autorizaci\u00f3n.",
-                "title": "Samsung TV"
+                "description": "\u00bfQuieres configurar {device}? Si nunca la has conectado a Home Assistant antes deber\u00edas ver una ventana en tu TV pidiendo autorizaci\u00f3n."
+            },
+            "encrypted_pairing": {
+                "description": "Introduce el PIN que se muestra en {device}."
+            },
+            "pairing": {
+                "description": "\u00bfQuiere configurar {device}? Si nunca conect\u00f3 Home Assistant antes, deber\u00eda ver una ventana emergente en su televisor solicitando autorizaci\u00f3n."
             },
             "reauth_confirm": {
                 "description": "Despu\u00e9s de enviarlo, acepte la ventana emergente en {device} solicitando autorizaci\u00f3n dentro de los 30 segundos."
+            },
+            "reauth_confirm_encrypted": {
+                "description": "Introduce el PIN que se muestra en {device}."
             },
             "user": {
                 "data": {

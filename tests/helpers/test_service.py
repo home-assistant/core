@@ -25,6 +25,7 @@ from homeassistant.helpers import (
     template,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -119,7 +120,7 @@ def area_mock(hass):
         unique_id="config-in-own-area-id",
         platform="test",
         area_id="own-area",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_in_own_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_in_own_area",
@@ -139,7 +140,7 @@ def area_mock(hass):
         unique_id="config-in-area-id",
         platform="test",
         device_id=device_in_area.id,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_in_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_in_area",
@@ -173,7 +174,7 @@ def area_mock(hass):
         unique_id="config-no-area-id",
         platform="test",
         device_id=device_no_area.id,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     hidden_entity_no_area = ent_reg.RegistryEntry(
         entity_id="light.hidden_no_area",
@@ -419,6 +420,22 @@ async def test_service_call_entry_id(hass):
     await hass.async_block_till_done()
 
     assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
+
+
+@pytest.mark.parametrize("target", ("all", "none"))
+async def test_service_call_all_none(hass, target):
+    """Test service call targeting all."""
+    calls = async_mock_service(hass, "test_domain", "test_service")
+
+    config = {
+        "service": "test_domain.test_service",
+        "target": {"entity_id": target},
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {"entity_id": target}
 
 
 async def test_extract_entity_ids(hass):
@@ -802,8 +819,9 @@ async def test_register_admin_service(hass, hass_read_only_user, hass_admin_user
     async def mock_service(call):
         calls.append(call)
 
-    hass.helpers.service.async_register_admin_service("test", "test", mock_service)
-    hass.helpers.service.async_register_admin_service(
+    service.async_register_admin_service(hass, "test", "test", mock_service)
+    service.async_register_admin_service(
+        hass,
         "test",
         "test2",
         mock_service,
@@ -870,7 +888,7 @@ async def test_domain_control_not_async(hass, mock_entities):
         calls.append(call)
 
     with pytest.raises(exceptions.HomeAssistantError):
-        hass.helpers.service.verify_domain_control("test_domain")(mock_service_log)
+        service.verify_domain_control(hass, "test_domain")(mock_service_log)
 
 
 async def test_domain_control_unknown(hass, mock_entities):
@@ -882,12 +900,12 @@ async def test_domain_control_unknown(hass, mock_entities):
         calls.append(call)
 
     with patch(
-        "homeassistant.helpers.entity_registry.async_get_registry",
+        "homeassistant.helpers.entity_registry.async_get",
         return_value=Mock(entities=mock_entities),
     ):
-        protected_mock_service = hass.helpers.service.verify_domain_control(
-            "test_domain"
-        )(mock_service_log)
+        protected_mock_service = service.verify_domain_control(hass, "test_domain")(
+            mock_service_log
+        )
 
         hass.services.async_register(
             "test_domain", "test_service", protected_mock_service, schema=None
@@ -923,7 +941,7 @@ async def test_domain_control_unauthorized(hass, hass_read_only_user):
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = hass.helpers.service.verify_domain_control("test_domain")(
+    protected_mock_service = service.verify_domain_control(hass, "test_domain")(
         mock_service_log
     )
 
@@ -962,7 +980,7 @@ async def test_domain_control_admin(hass, hass_admin_user):
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = hass.helpers.service.verify_domain_control("test_domain")(
+    protected_mock_service = service.verify_domain_control(hass, "test_domain")(
         mock_service_log
     )
 
@@ -1000,7 +1018,7 @@ async def test_domain_control_no_user(hass):
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = hass.helpers.service.verify_domain_control("test_domain")(
+    protected_mock_service = service.verify_domain_control(hass, "test_domain")(
         mock_service_log
     )
 

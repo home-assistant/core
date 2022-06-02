@@ -28,14 +28,18 @@ async def async_setup_entry(
     async_add_entities([OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator)])
 
 
-class OpenMeteoWeatherEntity(CoordinatorEntity, WeatherEntity):
+class OpenMeteoWeatherEntity(
+    CoordinatorEntity[DataUpdateCoordinator[OpenMeteoForecast]], WeatherEntity
+):
     """Defines an Open-Meteo weather entity."""
 
     _attr_temperature_unit = TEMP_CELSIUS
-    coordinator: DataUpdateCoordinator[OpenMeteoForecast]
 
     def __init__(
-        self, *, entry: ConfigEntry, coordinator: DataUpdateCoordinator
+        self,
+        *,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator[OpenMeteoForecast],
     ) -> None:
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)

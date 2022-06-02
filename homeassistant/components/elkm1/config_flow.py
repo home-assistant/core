@@ -6,8 +6,8 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-import elkm1_lib as elkm1
 from elkm1_lib.discovery import ElkSystem
+from elkm1_lib.elk import Elk
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -37,7 +37,9 @@ from .discovery import (
 
 CONF_DEVICE = "device"
 
+NON_SECURE_PORT = 2101
 SECURE_PORT = 2601
+STANDARD_PORTS = {NON_SECURE_PORT, SECURE_PORT}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ PROTOCOL_MAP = {
     "non-secure": "elk://",
     "serial": "serial://",
 }
+
 
 VALIDATE_TIMEOUT = 35
 
@@ -59,6 +62,11 @@ SECURE_PROTOCOLS = ["secure", "TLS 1.2"]
 ALL_PROTOCOLS = [*SECURE_PROTOCOLS, "non-secure", "serial"]
 DEFAULT_SECURE_PROTOCOL = "secure"
 DEFAULT_NON_SECURE_PROTOCOL = "non-secure"
+
+PORT_PROTOCOL_MAP = {
+    NON_SECURE_PORT: DEFAULT_NON_SECURE_PROTOCOL,
+    SECURE_PORT: DEFAULT_SECURE_PROTOCOL,
+}
 
 
 async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str]:
@@ -76,7 +84,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     if requires_password and (not userid or not password):
         raise InvalidAuth
 
-    elk = elkm1.Elk(
+    elk = Elk(
         {"url": url, "userid": userid, "password": password, "element_list": ["panel"]}
     )
     elk.connect()
@@ -97,7 +105,14 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
 
 
-def _make_url_from_data(data):
+def _address_from_discovery(device: ElkSystem) -> str:
+    """Append the port only if its non-standard."""
+    if device.port in STANDARD_PORTS:
+        return device.ip_address
+    return f"{device.ip_address}:{device.port}"
+
+
+def _make_url_from_data(data: dict[str, str]) -> str:
     if host := data.get(CONF_HOST):
         return host
 
@@ -109,7 +124,7 @@ def _make_url_from_data(data):
 def _placeholders_from_device(device: ElkSystem) -> dict[str, str]:
     return {
         "mac_address": _short_mac(device.mac_address),
-        "host": f"{device.ip_address}:{device.port}",
+        "host": _address_from_discovery(device),
     }
 
 
@@ -118,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the elkm1 config flow."""
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
@@ -166,6 +181,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
+        # Handled ignored case since _async_current_entries
+        # is called with include_ignore=False
+        self._abort_if_unique_id_configured()
         if not device.port:
             if discovered_device := await async_discover_device(self.hass, host):
                 self._discovered_device = discovered_device
@@ -249,39 +267,43 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_discovered_connection(self, user_input=None):
+    async def async_step_discovered_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle connecting the device when we have a discovery."""
-        errors = {}
+        errors: dict[str, str] | None = {}
         device = self._discovered_device
         assert device is not None
         if user_input is not None:
-            user_input[CONF_ADDRESS] = f"{device.ip_address}:{device.port}"
+            user_input[CONF_ADDRESS] = _address_from_discovery(device)
             if self._async_current_entries():
                 user_input[CONF_PREFIX] = _short_mac(device.mac_address)
             else:
                 user_input[CONF_PREFIX] = ""
-            if device.port != SECURE_PORT:
-                user_input[CONF_PROTOCOL] = DEFAULT_NON_SECURE_PROTOCOL
             errors, result = await self._async_create_or_error(user_input, False)
-            if not errors:
+            if result is not None:
                 return result
 
-        base_schmea = BASE_SCHEMA.copy()
-        if device.port == SECURE_PORT:
-            base_schmea[
-                vol.Required(CONF_PROTOCOL, default=DEFAULT_SECURE_PROTOCOL)
-            ] = vol.In(SECURE_PROTOCOLS)
-
+        default_proto = PORT_PROTOCOL_MAP.get(device.port, DEFAULT_SECURE_PROTOCOL)
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=vol.Schema(base_schmea),
+            data_schema=vol.Schema(
+                {
+                    **BASE_SCHEMA,
+                    vol.Required(CONF_PROTOCOL, default=default_proto): vol.In(
+                        ALL_PROTOCOLS
+                    ),
+                }
+            ),
             errors=errors,
             description_placeholders=_placeholders_from_device(device),
         )
 
-    async def async_step_manual_connection(self, user_input=None):
+    async def async_step_manual_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle connecting the device when we need manual entry."""
-        errors = {}
+        errors: dict[str, str] | None = {}
         if user_input is not None:
             # We might be able to discover the device via directed UDP
             # in case its on another subnet
@@ -296,7 +318,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # 2601 if secure is turned on even though they may want insecure
                 user_input[CONF_ADDRESS] = device.ip_address
             errors, result = await self._async_create_or_error(user_input, False)
-            if not errors:
+            if result is not None:
                 return result
 
         return self.async_show_form(
@@ -314,7 +336,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import."""
         _LOGGER.debug("Elk is importing from yaml")
         url = _make_url_from_data(user_input)
@@ -326,17 +348,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "Importing is trying to fill unique id from discovery for %s", host
         )
-        if is_ip_address(host) and (
-            device := await async_discover_device(self.hass, host)
+        if (
+            host
+            and is_ip_address(host)
+            and (device := await async_discover_device(self.hass, host))
         ):
             await self.async_set_unique_id(
                 dr.format_mac(device.mac_address), raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
 
-        return (await self._async_create_or_error(user_input, True))[1]
+        errors, result = await self._async_create_or_error(user_input, True)
+        if errors:
+            return self.async_abort(reason=list(errors.values())[0])
+        assert result is not None
+        return result
 
-    def _url_already_configured(self, url):
+    def _url_already_configured(self, url: str) -> bool:
         """See if we already have a elkm1 matching user input configured."""
         existing_hosts = {
             urlparse(entry.data[CONF_HOST]).hostname
