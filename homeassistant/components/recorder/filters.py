@@ -91,11 +91,20 @@ class Filters:
     @property
     def has_config(self) -> bool:
         """Determine if there is any filter configuration."""
+        return bool(self._have_exclude or self._have_include)
+
+    @property
+    def _have_exclude(self) -> bool:
         return bool(
             self.excluded_entities
             or self.excluded_domains
             or self.excluded_entity_globs
-            or self.included_entities
+        )
+
+    @property
+    def _have_include(self) -> bool:
+        return bool(
+            self.included_entities
             or self.included_domains
             or self.included_entity_globs
         )
@@ -107,16 +116,8 @@ class Filters:
 
         This must match exactly how homeassistant.helpers.entityfilter works.
         """
-        have_exclude = bool(
-            self.excluded_entities
-            or self.excluded_domains
-            or self.excluded_entity_globs
-        )
-        have_include = bool(
-            self.included_entities
-            or self.included_domains
-            or self.included_entity_globs
-        )
+        have_exclude = self._have_exclude
+        have_include = self._have_include
 
         # Case 1 - no includes or excludes - pass all entities
         if not have_include and not have_exclude:
