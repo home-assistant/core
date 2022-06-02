@@ -88,10 +88,21 @@ def state_filter(wanted_state: str) -> ContextFilter:
         state: str,
         attr: dict[str, Any],
     ) -> bool:
-        """Filter state changes attributed to a turn_off call."""
+        """Return True if the new state equals wanted_state."""
         return state == wanted_state
 
     return async_state_filter
+
+
+@callback
+def async_false_filter(
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str,
+    attr: dict[str, Any],
+) -> bool:
+    """Return False."""
+    return False
 
 
 @callback
@@ -525,6 +536,11 @@ class Entity(ABC):
         self._context = context
         self._context_set = dt_util.utcnow()
 
+    @callback
+    def async_set_context_filter(self, context_filter: ContextFilter) -> None:
+        """Set the context filter."""
+        self._context_filter = context_filter
+
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
 
@@ -576,7 +592,7 @@ class Entity(ABC):
         return str(state)
 
     @callback
-    def _async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:  # noqa: C901
         """Write the state to the state machine."""
         if self._platform_state == EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
@@ -710,13 +726,16 @@ class Entity(ABC):
             self._context_set = None
 
         context = self._context
-        if (
-            context
-            and self._context_filter
+        if context and self._context_filter:
             # pylint: disable-next=not-callable
-            and not self._context_filter(self.hass, self.entity_id, state, attr)
-        ):
-            context = None
+            if self._context_filter(self.hass, self.entity_id, state, attr):
+                # The filter returned true, don't attribute any more state changes
+                # to this context
+                self._context = None
+                self._context_filter = None
+                self._context_set = None
+            else:
+                context = None
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update, context
         )

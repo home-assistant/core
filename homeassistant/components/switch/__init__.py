@@ -24,6 +24,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import (
     ToggleEntity,
     ToggleEntityDescription,
+    async_false_filter,
     state_filter,
 )
 from homeassistant.helpers.entity_component import EntityComponent
@@ -78,7 +79,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ) -> None:
         """Handle turning off a light."""
         # pylint: disable-next=protected-access
-        switch._context_filter = state_filter(STATE_OFF)
+        if switch.is_on:
+            switch.async_set_context_filter(state_filter(STATE_OFF))
+        else:
+            switch.async_set_context_filter(async_false_filter)
         await switch.async_turn_off()
 
     async def async_handle_switch_on_service(
@@ -86,7 +90,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ) -> None:
         """Handle turning off a light."""
         # pylint: disable-next=protected-access
-        switch._context_filter = state_filter(STATE_ON)
+        if not switch.is_on:
+            switch.async_set_context_filter(state_filter(STATE_ON))
+        else:
+            switch.async_set_context_filter(async_false_filter)
         await switch.async_turn_on()
 
     async def async_handle_toggle_service(

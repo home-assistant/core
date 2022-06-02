@@ -134,11 +134,11 @@ async def test_switch_context_filtering(
     assert state.state == STATE_ON
     assert state.context is not context
 
-    # Change state to off again, the state change should be attributed to the context
+    # Change state to off again, the state change should not be attributed to the context
     entity.async_set_state(STATE_OFF)
     state = hass.states.get("switch.test1")
     assert state.state == STATE_OFF
-    assert state.context is context
+    assert state.context is not context
 
     # Bump time and change state, the state change should not be attributed to the context
     freezer.tick(timedelta(seconds=5.001))
@@ -177,11 +177,11 @@ async def test_switch_context_filtering(
     assert state.state == STATE_OFF
     assert state.context is not context
 
-    # Change state to on again, the state change should be attributed to the context
+    # Change state to on again, the state change should not be attributed to the context
     entity.async_set_state(STATE_ON)
     state = hass.states.get("switch.test1")
     assert state.state == STATE_ON
-    assert state.context is context
+    assert state.context is not context
 
     # Turn the switch on when it's already on
     context = core.Context(user_id=hass_admin_user.id)
@@ -193,13 +193,13 @@ async def test_switch_context_filtering(
         context,
     )
 
-    # Force update state to on, the state change should be attributed to the context
+    # Force update state to on, the state change should not be attributed to the context
     prev_state = state
     entity.async_set_state(STATE_ON)
     state = hass.states.get("switch.test1")
     assert state is not prev_state
     assert state.state == STATE_ON
-    assert state.context is context
+    assert state.context is not context
 
     # Change state to off, the state change should not be attributed to the context
     entity.async_set_state(STATE_OFF)
@@ -207,11 +207,11 @@ async def test_switch_context_filtering(
     assert state.state == STATE_OFF
     assert state.context is not context
 
-    # Change state back to on, the state change should be attributed to the context
+    # Change state back to on, the state change should not be attributed to the context
     entity.async_set_state(STATE_ON)
     state = hass.states.get("switch.test1")
     assert state.state == STATE_ON
-    assert state.context is context
+    assert state.context is not context
 
     # Change state to off again, the state change should not be attributed to the context
     entity.async_set_state(STATE_OFF)
@@ -229,13 +229,13 @@ async def test_switch_context_filtering(
         context,
     )
 
-    # Force update state to off, the state change should be attributed to the context
+    # Force update state to off, the state change should not be attributed to the context
     prev_state = state
     entity.async_set_state(STATE_OFF)
     state = hass.states.get("switch.test1")
     assert state is not prev_state
     assert state.state == STATE_OFF
-    assert state.context is context
+    assert state.context is not context
 
     # Change state to on, the state change should not be attributed to the context
     entity.async_set_state(STATE_ON)
@@ -243,11 +243,11 @@ async def test_switch_context_filtering(
     assert state.state == STATE_ON
     assert state.context is not context
 
-    # Change state back to off, the state change should be attributed to the context
+    # Change state back to off, the state change should not be attributed to the context
     entity.async_set_state(STATE_OFF)
     state = hass.states.get("switch.test1")
     assert state.state == STATE_OFF
-    assert state.context is context
+    assert state.context is not context
 
     # Change state to on again, the state change should not be attributed to the context
     entity.async_set_state(STATE_ON)
