@@ -221,11 +221,6 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
         return self._current_temperature
 
     @property
-    def hvac_mode(self) -> HVACMode:
-        """Return the current operation. head, cool idle."""
-        return self._current_operation
-
-    @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
@@ -272,11 +267,11 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
         self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
         self._hold_set = CODE_TO_HOLD_STATE[data["hold"]]
 
-        if self._attr_hvac_mode == HVACMode.COOL:
+        if self.hvac_mode == HVACMode.COOL:
             self._target_temperature = data["t_cool"]
-        elif self._attr_hvac_mode == HVACMode.HEAT:
+        elif self.hvac_mode == HVACMode.HEAT:
             self._target_temperature = data["t_heat"]
-        elif self._attr_hvac_mode == HVACMode.AUTO:
+        elif self.hvac_mode == HVACMode.AUTO:
             # This doesn't really work - tstate is only set if the HVAC is
             # active. If it's idle, we don't know what to do with the target
             # temperature.
