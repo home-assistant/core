@@ -65,27 +65,28 @@ async def test_update_intervals(
         unique_id=_get_unique_id(hass, data),
         version=1,
     )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 1
-    tomorrowio_config_entry_update.reset_mock()
+    with patch("homeassistant.helpers.update_coordinator.utcnow", return_value=now):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 1
+        tomorrowio_config_entry_update.reset_mock()
 
     # Before the update interval, no updates yet
-    async_fire_time_changed(hass, now + timedelta(minutes=30))
-    await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 0
+    future = now + timedelta(minutes=30)
+    with patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 0
 
     # On the update interval, we get a new update
-    async_fire_time_changed(hass, now + timedelta(minutes=32))
-    await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 1
-    tomorrowio_config_entry_update.reset_mock()
+    future = now + timedelta(minutes=32)
+    with patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
+        async_fire_time_changed(hass, now + timedelta(minutes=32))
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 1
+        tomorrowio_config_entry_update.reset_mock()
 
-    with patch(
-        "homeassistant.helpers.update_coordinator.utcnow",
-        return_value=now + timedelta(minutes=32),
-    ):
         # Adding a second config entry should cause the update interval to double
         config_entry_2 = MockConfigEntry(
             domain=DOMAIN,
@@ -104,14 +105,18 @@ async def test_update_intervals(
         tomorrowio_config_entry_update.reset_mock()
 
     # We should get no new calls on our old interval
-    async_fire_time_changed(hass, now + timedelta(minutes=64))
-    await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 0
+    future = now + timedelta(minutes=64)
+    with patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 0
 
     # We should get two calls on our new interval, one for each entry
-    async_fire_time_changed(hass, now + timedelta(minutes=96))
-    await hass.async_block_till_done()
-    assert len(tomorrowio_config_entry_update.call_args_list) == 2
+    future = now + timedelta(minutes=96)
+    with patch("homeassistant.helpers.update_coordinator.utcnow", return_value=future):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 2
 
 
 async def test_climacell_migration_logic(
