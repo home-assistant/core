@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_HANDLER, DOMAIN
-from .data_handler import CLIMATE_TOPOLOGY_CLASS_NAME, NetatmoDataHandler
+from .data_handler import ACCOUNT, NetatmoDataHandler
 
 TO_REDACT = {
     "access_token",
@@ -45,8 +45,8 @@ async def async_get_config_entry_diagnostics(
             TO_REDACT,
         ),
         "data": {
-            CLIMATE_TOPOLOGY_CLASS_NAME: async_redact_data(
-                getattr(data_handler.data[CLIMATE_TOPOLOGY_CLASS_NAME], "raw_data"),
+            ACCOUNT: async_redact_data(
+                getattr(data_handler.account, "raw_data"),
                 TO_REDACT,
             )
         },
