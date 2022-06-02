@@ -239,9 +239,8 @@ def async_fire_triggers(conn: HKDevice, events: dict[tuple[int, int], Any]):
                 source.fire(iid, ev)
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for homekit devices."""
 
     if device_id not in hass.data.get(TRIGGERS, {}):
