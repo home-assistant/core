@@ -22,7 +22,7 @@ from homeassistant.helpers.entityfilter import (
 from .common import async_wait_recording_done
 
 
-async def test_included_and_excluded(hass, recorder_mock):
+async def test_included_and_excluded_simple_case(hass, recorder_mock):
     """Test filters with included and excluded."""
     filter_accept = {"light.any", "sensor.kitchen_4", "switch.kitchen"}
     filter_reject = {"switch.other", "cover.any", "sensor.weather_5", "light.kitchen"}
