@@ -121,9 +121,7 @@ def select_events_context_only() -> Select:
     By marking them as context_only we know they are only for
     linking context ids and we can avoid processing them.
     """
-    return select(*EVENT_ROWS_NO_STATES, CONTEXT_ONLY).outerjoin(
-        EventData, (Events.data_id == EventData.data_id)
-    )
+    return select(*EVENT_ROWS_NO_STATES, CONTEXT_ONLY)
 
 
 def select_states_context_only() -> Select:

@@ -14,6 +14,7 @@ from homeassistant.components.recorder.models import (
     ENTITY_ID_IN_EVENT,
     ENTITY_ID_LAST_UPDATED_INDEX,
     OLD_ENTITY_ID_IN_EVENT,
+    EventData,
     Events,
     States,
 )
@@ -64,14 +65,19 @@ def _apply_entities_context_union(
         entity_ids,
         json_quotable_entity_ids,
     ).cte()
+    entities_cte_select = entities_cte.select()
     return query.union_all(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
-        select_events_context_only().where(
-            Events.context_id.in_(entities_cte.select())
-        ),
+        select_events_context_only()
+        .select_from(entities_cte_select)
+        .group_by(entities_cte_select.c.context_id)
+        .outerjoin(Events, entities_cte_select.c.context_id == Events.context_id)
+        .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         select_states_context_only()
-        .where(States.entity_id.not_in(entity_ids))
-        .where(States.context_id.in_(entities_cte.select())),
+        .select_from(entities_cte_select)
+        .group_by(entities_cte_select.c.context_id)
+        .outerjoin(States, entities_cte_select.c.context_id == States.context_id)
+        .where(States.entity_id.not_in(entity_ids)),
     )
 
 

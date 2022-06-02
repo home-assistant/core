@@ -10,7 +10,12 @@ from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import DEVICE_ID_IN_EVENT, Events, States
+from homeassistant.components.recorder.models import (
+    DEVICE_ID_IN_EVENT,
+    EventData,
+    Events,
+    States,
+)
 
 from .common import (
     select_events_context_id_subquery,
@@ -50,9 +55,17 @@ def _apply_devices_context_union(
         event_types,
         json_quotable_device_ids,
     ).cte()
+    devices_cte_select = devices_cte.select()
     return query.union_all(
-        select_events_context_only().where(Events.context_id.in_(devices_cte.select())),
-        select_states_context_only().where(States.context_id.in_(devices_cte.select())),
+        select_events_context_only()
+        .select_from(devices_cte_select)
+        .group_by(devices_cte_select.c.context_id)
+        .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
+        .outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        select_states_context_only()
+        .select_from(devices_cte_select)
+        .group_by(devices_cte_select.c.context_id)
+        .outerjoin(States, devices_cte_select.c.context_id == States.context_id),
     )
 
 
