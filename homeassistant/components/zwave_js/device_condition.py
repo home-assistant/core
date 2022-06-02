@@ -122,9 +122,8 @@ async def async_validate_condition_config(
     return config
 
 
-async def async_get_conditions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
     conditions = []
     base_condition = {
@@ -197,7 +196,7 @@ def async_condition_from_config(
 
 
 @callback
-async def async_get_condition_capabilities(
+def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List condition capabilities."""

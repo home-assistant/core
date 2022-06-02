@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_TYPE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
@@ -141,9 +141,8 @@ ACTION_SCHEMA = vol.Any(
 )
 
 
-async def async_get_actions(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+@callback
+def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
     registry = entity_registry.async_get(hass)
     actions: list[dict] = []
@@ -274,7 +273,8 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(
+@callback
+def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""

@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -247,9 +247,8 @@ def get_trigger_platform_from_type(trigger_type: str) -> str:
     return trigger_platform
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, Any]]:
     """List device triggers for Z-Wave JS devices."""
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
@@ -457,7 +456,8 @@ async def async_attach_trigger(
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
 
-async def async_get_trigger_capabilities(
+@callback
+def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
