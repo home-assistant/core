@@ -36,11 +36,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if "4990 ~ 4999 - Serial number" not in client.inverter:
         raise InvalidAuth
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
     # Return info that you want to store in the config entry.
     return {
         "title": "Sungrow " + client.inverter["4990 ~ 4999 - Serial number"].decode()
