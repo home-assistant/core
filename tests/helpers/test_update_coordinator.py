@@ -271,9 +271,10 @@ async def test_refresh_recover(crd, caplog):
     assert "Fetching test data recovered" in caplog.text
 
 
-async def test_coordinator_entity(crd):
+async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[int]):
     """Test the CoordinatorEntity class."""
-    entity = update_coordinator.CoordinatorEntity(crd)
+    context = object()
+    entity = update_coordinator.CoordinatorEntity(crd, context)
 
     assert entity.should_poll is False
 
@@ -295,6 +296,8 @@ async def test_coordinator_entity(crd):
     with patch("homeassistant.helpers.entity.Entity.enabled", False):
         await entity.async_update()
     assert entity.available is False
+
+    assert list(crd.async_contexts()) == [context]
 
 
 async def test_async_set_updated_data(crd):
