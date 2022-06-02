@@ -46,6 +46,21 @@ class YoLinkSensorEntityDescription(
     value: Callable = lambda state: state
 
 
+SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+]
+
+BATTERY_POWER_SENSOR = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+]
+
+
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
@@ -58,13 +73,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         )
         if value is not None
         else None,
-        exists_fn=lambda device: device.device_type
-        in [
-            ATTR_DEVICE_DOOR_SENSOR,
-            ATTR_DEVICE_TH_SENSOR,
-            ATTR_DEVICE_MOTION_SENSOR,
-            ATTR_DEVICE_VIBRATION_SENSOR,
-        ],
+        exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
     ),
     YoLinkSensorEntityDescription(
         key="humidity",
@@ -83,13 +92,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
 )
-
-SENSOR_DEVICE_TYPE = [
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_MOTION_SENSOR,
-    ATTR_DEVICE_TH_SENSOR,
-    ATTR_DEVICE_VIBRATION_SENSOR,
-]
 
 
 async def async_setup_entry(
