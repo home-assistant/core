@@ -39,7 +39,6 @@ class CloudGoogleConfig(AbstractConfig):
         self._cur_entity_prefs = self._prefs.google_entity_configs
         self._cur_default_expose = self._prefs.google_default_expose
         self._sync_entities_lock = asyncio.Lock()
-        self._sync_on_started = False
 
     @property
     def enabled(self):
