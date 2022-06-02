@@ -117,19 +117,27 @@ class Filters:
             or self.included_domains
             or self.included_entity_globs
         )
+
         # Case 1 - no includes or excludes - pass all entities
         if not have_include and not have_exclude:
             return None
 
         includes = []
+        included_domains_matcher = _domain_matcher(
+            self.included_domains, columns, encoder
+        )
+        included_entities_matcher = _entity_matcher(
+            self.included_entities, columns, encoder
+        )
+        included_entity_globs_matcher = _globs_to_like(
+            self.included_entity_globs, columns, encoder
+        )
         if self.included_domains:
-            includes.append(_domain_matcher(self.included_domains, columns, encoder))
+            includes.append(included_domains_matcher)
         if self.included_entities:
-            includes.append(_entity_matcher(self.included_entities, columns, encoder))
+            includes.append(included_entities_matcher)
         if self.included_entity_globs:
-            includes.append(
-                _globs_to_like(self.included_entity_globs, columns, encoder)
-            )
+            includes.append(included_entity_globs_matcher)
 
         # Case 2 - includes, no excludes - only include specified entities
         if have_include and not have_exclude:
@@ -137,14 +145,21 @@ class Filters:
             return or_(*includes).self_group()
 
         excludes = []
+        excluded_domains_matcher = _domain_matcher(
+            self.excluded_domains, columns, encoder
+        )
+        excluded_entities_matcher = _entity_matcher(
+            self.excluded_entities, columns, encoder
+        )
+        excluded_entity_globs_matcher = _globs_to_like(
+            self.excluded_entity_globs, columns, encoder
+        )
         if self.excluded_domains:
-            excludes.append(_domain_matcher(self.excluded_domains, columns, encoder))
+            excludes.append(excluded_domains_matcher)
         if self.excluded_entities:
-            excludes.append(_entity_matcher(self.excluded_entities, columns, encoder))
+            excludes.append(excluded_entities_matcher)
         if self.excluded_entity_globs:
-            excludes.append(
-                _globs_to_like(self.excluded_entity_globs, columns, encoder)
-            )
+            excludes.append(excluded_entity_globs_matcher)
 
         # Case 3 - excludes, no includes - only exclude specified entities
         if not have_include and have_exclude:
@@ -158,29 +173,17 @@ class Filters:
         # note: if both include domain matches then exclude domains ignored.
         #   If glob matches then exclude domains and glob checked
         if self.included_domains or self.included_entity_globs:
+
             return or_(
                 (
-                    _domain_matcher(self.included_domains, columns, encoder)
-                    & not_(
-                        _entity_matcher(self.excluded_entities, columns, encoder)
-                        | _globs_to_like(self.excluded_entity_globs, columns, encoder)
-                    )
+                    included_domains_matcher
+                    & ~(excluded_entities_matcher | excluded_entity_globs_matcher)
                 ),
                 (
-                    not_(_domain_matcher(self.included_domains, columns, encoder))
+                    ~included_domains_matcher
                     & or_(
-                        (
-                            _globs_to_like(self.included_entity_globs, columns, encoder)
-                            & not_(or_(*excludes))
-                        ),
-                        (
-                            not_(
-                                _globs_to_like(
-                                    self.included_entity_globs, columns, encoder
-                                )
-                            )
-                            & _entity_matcher(self.included_entities, columns, encoder)
-                        ),
+                        (included_entity_globs_matcher & ~(or_(*excludes))),
+                        (~included_entity_globs_matcher & included_entities_matcher),
                     )
                 ),
             ).self_group()
