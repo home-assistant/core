@@ -37,8 +37,11 @@ def device_reg(hass):
     return mock_device_registry(hass)
 
 
-async def test_entry_diagnostics(hass, device_reg, hass_client, mqtt_mock):
+async def test_entry_diagnostics(
+    hass, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
+):
     """Test config entry diagnostics."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.connected = True
 
@@ -154,8 +157,11 @@ async def test_entry_diagnostics(hass, device_reg, hass_client, mqtt_mock):
         }
     ],
 )
-async def test_redact_diagnostics(hass, device_reg, hass_client, mqtt_mock):
+async def test_redact_diagnostics(
+    hass, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
+):
     """Test redacting diagnostics."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     expected_config = dict(default_config)
     expected_config["password"] = "**REDACTED**"
     expected_config["username"] = "**REDACTED**"
