@@ -132,7 +132,6 @@ class Filters:
 
         # Case 2 - includes, no excludes - only include specified entities
         if have_include and not have_exclude:
-
             return or_(*includes).self_group()
 
         e_domains_matcher = _domain_matcher(self.excluded_domains, columns, encoder)
