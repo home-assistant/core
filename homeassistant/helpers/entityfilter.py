@@ -143,8 +143,11 @@ def _glob_to_re(glob: str) -> re.Pattern[str]:
     return re.compile(fnmatch.translate(glob))
 
 
-def _test_against_patterns(patterns: list[re.Pattern[str]], entity_id: str) -> bool:
+def _test_against_patterns(patterns: list[re.Pattern[str]] | None, entity_id: str) -> bool:
     """Test entity against list of patterns, true if any match."""
+    if not patterns:
+        return False
+
     for pattern in patterns:
         if pattern.match(entity_id):
             return True
@@ -193,7 +196,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         return (
             entity_id in include_e
             or domain in include_d
-            or bool(include_eg and _test_against_patterns(include_eg, entity_id))
+            or _test_against_patterns(include_eg, entity_id)
         )
 
     def entity_excluded(domain: str, entity_id: str) -> bool:
@@ -201,7 +204,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         return (
             entity_id in exclude_e
             or domain in exclude_d
-            or bool(exclude_eg and _test_against_patterns(exclude_eg, entity_id))
+            or _test_against_patterns(exclude_eg, entity_id)
         )
 
     # Case 1 - no includes or excludes - pass all entities
@@ -243,9 +246,7 @@ def _generate_filter_from_sets_and_pattern_lists(
             if domain in include_d:
                 return not (
                     entity_id in exclude_e
-                    or bool(
-                        exclude_eg and _test_against_patterns(exclude_eg, entity_id)
-                    )
+                    or _test_against_patterns(exclude_eg, entity_id)
                 )
             if _test_against_patterns(include_eg, entity_id):
                 return not entity_excluded(domain, entity_id)
@@ -265,9 +266,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         def entity_filter_4b(entity_id: str) -> bool:
             """Return filter function for case 4b."""
             domain = split_entity_id(entity_id)[0]
-            if domain in exclude_d or (
-                exclude_eg and _test_against_patterns(exclude_eg, entity_id)
-            ):
+            if domain in exclude_d or _test_against_patterns(exclude_eg, entity_id):
                 return entity_id in include_e
             return entity_id not in exclude_e
 
