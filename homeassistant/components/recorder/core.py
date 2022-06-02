@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -518,9 +519,16 @@ class Recorder(threading.Thread):
 
     def _wait_startup_or_shutdown(self) -> object | None:
         """Wait for startup or shutdown before starting."""
-        return asyncio.run_coroutine_threadsafe(
-            self._async_wait_for_started(), self.hass.loop
-        ).result()
+        try:
+            return asyncio.run_coroutine_threadsafe(
+                self._async_wait_for_started(), self.hass.loop
+            ).result()
+        except CancelledError as ex:
+            _LOGGER.warning(
+                "Recorder startup was externally canceled before it could complete: %s",
+                ex,
+            )
+            return SHUTDOWN_TASK
 
     def run(self) -> None:
         """Start processing events to save."""
