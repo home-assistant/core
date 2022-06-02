@@ -73,13 +73,13 @@ async def test_async_browse_media(hass):
 
     # Test successful event listing
     media = await media_source.async_browse_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/events/12:34:56:78:90:ab/1599152672"
+        hass, f"{const.URI_SCHEME}{DOMAIN}/events/12:34:56:78:90:ab/1654191519"
     )
     assert media
 
     # Test successful event resolve
     media = await media_source.async_resolve_media(
-        hass, f"{const.URI_SCHEME}{DOMAIN}/events/12:34:56:78:90:ab/1599152672", None
+        hass, f"{const.URI_SCHEME}{DOMAIN}/events/12:34:56:78:90:ab/1654191519", None
     )
     assert media == PlayMedia(
         url="http:///files/high/index.m3u8", mime_type="application/x-mpegURL"

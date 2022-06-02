@@ -1,0 +1,102 @@
+{
+  "12:34:56:78:90:ab": {
+    "1654191519": {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000001",
+      "event_type": "human",
+      "event_time": 1654191519,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "vignette": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0011",
+      "video_status": "available",
+      "message": "<b>Bewegung</b> erkannt",
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    "1654189491": {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000002",
+      "event_type": "person",
+      "event_time": 1654189491,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0012",
+      "video_status": "available",
+      "message": "<b>Jane</b> gesehen",
+      "person_id": "1111",
+      "out_of_sight": false,
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    "1654185982": {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000003",
+      "event_type": "person",
+      "event_time": 1654185982,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0013",
+      "video_status": "available",
+      "message": "<b>Unbekanntes Gesicht</b> gesehen",
+      "person_id": "1112",
+      "out_of_sight": false,
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    "1654186282": {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000004",
+      "event_type": "alarm_started",
+      "event_time": 1654186282,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0014",
+      "video_status": "available",
+      "message": "Alarm erfasst",
+      "alarm_id": "9900",
+      "alarm_type": "GENERIC",
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    },
+    "1654189215": {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000005",
+      "event_type": "person",
+      "event_time": 1654189215,
+      "module_id": "12:34:56:78:90:ab",
+      "snapshot": {
+        "url": "https://netatmocameraimage"
+      },
+      "video_id": "0015",
+      "video_status": "available",
+      "message": "<b>Unbekanntes Gesicht</b> gesehen",
+      "person_id": "1113",
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    }
+  },
+  "12:34:56:78:90:ac": {
+    "1654198536": {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000006",
+      "event_type": "outdoor",
+      "event_time": 1654198536,
+      "module_id": "12:34:56:78:90:ac",
+      "video_id": "0016",
+      "video_status": "available",
+      "subevents": [],
+      "media_url": "http:///files/high/index.m3u8"
+    }
+  }
+}

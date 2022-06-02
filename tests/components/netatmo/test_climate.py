@@ -415,9 +415,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
     climate_entity_livingroom = "climate.livingroom"
 
     # Test setting a valid schedule
-    with patch(
-        "pyatmo.climate.AsyncClimate.async_switch_home_schedule"
-    ) as mock_switch_home_schedule:
+    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_schedule:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_SCHEDULE,
@@ -425,7 +423,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_switch_home_schedule.assert_called_once_with(
+        mock_switch_schedule.assert_called_once_with(
             schedule_id="b1b54a2f45795764f59d50d8"
         )
 
@@ -444,9 +442,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
     )
 
     # Test setting an invalid schedule
-    with patch(
-        "pyatmo.climate.AsyncClimate.async_switch_home_schedule"
-    ) as mock_switch_home_schedule:
+    with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_home_schedule:
         await hass.services.async_call(
             "netatmo",
             SERVICE_SET_SCHEDULE,
