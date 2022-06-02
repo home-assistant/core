@@ -381,7 +381,7 @@ async def test_get_condition_capabilities_node_status(
         dev_reg, integration.entry_id
     )[0]
 
-    capabilities = await device_condition.async_get_condition_capabilities(
+    capabilities = device_condition.async_get_condition_capabilities(
         hass,
         {
             "platform": "device",
@@ -417,7 +417,7 @@ async def test_get_condition_capabilities_value(
         dev_reg, integration.entry_id
     )[0]
 
-    capabilities = await device_condition.async_get_condition_capabilities(
+    capabilities = device_condition.async_get_condition_capabilities(
         hass,
         {
             "platform": "device",
@@ -467,7 +467,7 @@ async def test_get_condition_capabilities_config_parameter(
     )[0]
 
     # Test enumerated type param
-    capabilities = await device_condition.async_get_condition_capabilities(
+    capabilities = device_condition.async_get_condition_capabilities(
         hass,
         {
             "platform": "device",
@@ -498,7 +498,7 @@ async def test_get_condition_capabilities_config_parameter(
     ]
 
     # Test range type param
-    capabilities = await device_condition.async_get_condition_capabilities(
+    capabilities = device_condition.async_get_condition_capabilities(
         hass,
         {
             "platform": "device",
@@ -524,7 +524,7 @@ async def test_get_condition_capabilities_config_parameter(
     ]
 
     # Test undefined type param
-    capabilities = await device_condition.async_get_condition_capabilities(
+    capabilities = device_condition.async_get_condition_capabilities(
         hass,
         {
             "platform": "device",
@@ -558,7 +558,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         return_value=None,
     ):
         assert (
-            await device_condition.async_get_condition_capabilities(
+            device_condition.async_get_condition_capabilities(
                 hass, {"type": "failed.test", "device_id": device.id}
             )
             == {}

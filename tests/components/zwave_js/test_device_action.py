@@ -413,7 +413,7 @@ async def test_get_action_capabilities(
     )[0]
 
     # Test refresh_value
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -429,7 +429,7 @@ async def test_get_action_capabilities(
     ) == [{"type": "boolean", "name": "refresh_all_values", "optional": True}]
 
     # Test ping
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -441,7 +441,7 @@ async def test_get_action_capabilities(
     assert not capabilities
 
     # Test set_value
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -492,7 +492,7 @@ async def test_get_action_capabilities(
     ]
 
     # Test enumerated type param
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -524,7 +524,7 @@ async def test_get_action_capabilities(
     ]
 
     # Test range type param
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -551,7 +551,7 @@ async def test_get_action_capabilities(
     ]
 
     # Test undefined type param
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -579,7 +579,7 @@ async def test_get_action_capabilities_lock_triggers(
     )[0]
 
     # Test clear_lock_usercode
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -596,7 +596,7 @@ async def test_get_action_capabilities_lock_triggers(
     ) == [{"type": "string", "name": "code_slot", "required": True}]
 
     # Test set_lock_usercode
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -629,7 +629,7 @@ async def test_get_action_capabilities_meter_triggers(
     assert driver
     device = dev_reg.async_get_device({get_device_id(driver, node)})
     assert device
-    capabilities = await device_action.async_get_action_capabilities(
+    capabilities = device_action.async_get_action_capabilities(
         hass,
         {
             "platform": "device",
@@ -664,7 +664,7 @@ async def test_failure_scenarios(
         )
 
     assert (
-        await device_action.async_get_action_capabilities(
+        device_action.async_get_action_capabilities(
             hass, {"type": "failed.test", "device_id": device.id}
         )
         == {}

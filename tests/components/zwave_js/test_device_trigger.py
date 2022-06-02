@@ -158,7 +158,7 @@ async def test_get_trigger_capabilities_notification_notification(
     """Test we get the expected capabilities from a notification.notification trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -276,7 +276,7 @@ async def test_get_trigger_capabilities_entry_control_notification(
     """Test we get the expected capabilities from a notification.entry_control trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -415,7 +415,7 @@ async def test_get_trigger_capabilities_node_status(
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -595,7 +595,7 @@ async def test_get_trigger_capabilities_basic_value_notification(
     """Test we get the expected capabilities from a value_notification.basic trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -770,7 +770,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
     """Test we get the expected capabilities from a value_notification.central_scene trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -937,7 +937,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
     """Test we get the expected capabilities from a value_notification.scene_activation trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -1080,7 +1080,7 @@ async def test_get_trigger_capabilities_value_updated_value(
     """Test we get the expected capabilities from a zwave_js.value_updated.value trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -1220,7 +1220,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
     """Test we get the expected capabilities from a range zwave_js.value_updated.config_parameter trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -1262,7 +1262,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
     """Test we get the expected capabilities from an enumerated zwave_js.value_updated.config_parameter trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
-    capabilities = await device_trigger.async_get_trigger_capabilities(
+    capabilities = device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
@@ -1343,7 +1343,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         return_value=None,
     ):
         assert (
-            await device_trigger.async_get_trigger_capabilities(
+            device_trigger.async_get_trigger_capabilities(
                 hass, {"type": "failed.test", "device_id": "invalid_device_id"}
             )
             == {}
