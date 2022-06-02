@@ -60,14 +60,12 @@ def _apply_devices_context_union(
             select_events_context_only()
             .select_from(devices_cte_select)
             .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
-        )
-        .outerjoin(EventData, (Events.data_id == EventData.data_id))
-        .where(Events.context_id.isnot(None)),
+        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_cte_select)
             .outerjoin(States, devices_cte_select.c.context_id == States.context_id)
-        ).where(States.context_id.isnot(None)),
+        ),
     )
 
 
