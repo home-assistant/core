@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autenticazione",
-                    "content_type": "Tipo di contenuto",
                     "framerate": "Frequenza fotogrammi (Hz)",
                     "limit_refetch_to_url_change": "Limita il recupero alla modifica dell'URL",
                     "password": "Password",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "Autenticazione",
-                    "content_type": "Tipo di contenuto",
                     "framerate": "Frequenza fotogrammi (Hz)",
                     "limit_refetch_to_url_change": "Limita il recupero alla modifica dell'URL",
                     "password": "Password",
                     "rtsp_transport": "Protocollo di trasporto RTSP",
                     "still_image_url": "URL immagine fissa (ad es. http://...)",
                     "stream_source": "URL sorgente del flusso (ad es. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Usa wallclock come marca temporale",
                     "username": "Nome utente",
                     "verify_ssl": "Verifica il certificato SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Questa opzione pu\u00f2 correggere problemi di segmentazione o di arresto anomalo derivanti da implementazioni difettose di marche temporali su alcune telecamere"
                 }
             }
         }

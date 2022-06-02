@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_mqtt_message,
     mock_device_registry,
     mock_entity_platform,
@@ -438,14 +439,7 @@ async def test_rediscover(hass, mqtt_mock, caplog):
 async def test_rapid_rediscover(hass, mqtt_mock, caplog):
     """Test immediate rediscover of removed component."""
 
-    events = []
-
-    @ha.callback
-    def callback(event):
-        """Verify event got called."""
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     async_fire_mqtt_message(
         hass,

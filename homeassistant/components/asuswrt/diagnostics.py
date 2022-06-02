@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
     CONF_PASSWORD,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
 
-TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
+TO_REDACT = {CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
 
 

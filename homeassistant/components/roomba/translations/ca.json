@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Amfitri\u00f3"
-                },
-                "description": "Selecciona un/a Roomba o Braava.",
-                "title": "Connexi\u00f3 autom\u00e0tica amb el dispositiu"
-            },
             "link": {
                 "description": "Mant\u00e9 premut el bot\u00f3 d'inici a {name} fins que el dispositiu emeti un so (aproximadament dos segons) despr\u00e9s, envia en els seg\u00fcents 30 segons.",
                 "title": "Recupera la contrasenya"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Amfitri\u00f3"
                 },
                 "description": "No s'ha descobert cap Roomba o Braava a la teva xarxa.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Cont\u00ednua",
-                    "delay": "Retard",
-                    "host": "Amfitri\u00f3",
-                    "password": "Contrasenya"
+                    "host": "Amfitri\u00f3"
                 },
                 "description": "Selecciona un/a Roomba o Braava.",
                 "title": "Connexi\u00f3 autom\u00e0tica amb el dispositiu"

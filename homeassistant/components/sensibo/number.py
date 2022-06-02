@@ -29,7 +29,7 @@ class SensiboNumberEntityDescription(
     """Class describing Sensibo Number entities."""
 
 
-NUMBER_TYPES = (
+DEVICE_NUMBER_TYPES = (
     SensiboNumberEntityDescription(
         key="calibration_temp",
         remote_key="temperature",
@@ -65,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(
         SensiboNumber(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for description in NUMBER_TYPES
+        for description in DEVICE_NUMBER_TYPES
     )
 
 

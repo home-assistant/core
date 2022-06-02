@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "C\u00edm"
-                },
-                "description": "V\u00e1lasszon egy Roomba vagy Braava k\u00e9sz\u00fcl\u00e9ket.",
-                "title": "Automatikus csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
-            },
             "link": {
                 "description": "Nyomja meg \u00e9s tartsa lenyomva a {name} Home gombj\u00e1t, am\u00edg az eszk\u00f6z hangot ad (kb. k\u00e9t m\u00e1sodperc), majd engedje el 30 m\u00e1sodpercen bel\u00fcl.",
                 "title": "Jelsz\u00f3 lek\u00e9r\u00e9se"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "C\u00edm"
                 },
                 "description": "A h\u00e1l\u00f3zaton egyetlen Roomba vagy Braava sem ker\u00fclt el\u0151.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Folyamatos",
-                    "delay": "K\u00e9sleltet\u00e9s",
-                    "host": "C\u00edm",
-                    "password": "Jelsz\u00f3"
+                    "host": "C\u00edm"
                 },
                 "description": "V\u00e1lasszon Roomba-t vagy Braava-t.",
                 "title": "Automatikus csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"

@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -41,6 +41,7 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
@@ -120,7 +121,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {}
+    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: []}
     for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 
@@ -181,11 +182,7 @@ async def async_setup_entry(
             f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
         ) from err
     except ISYInvalidAuthError as err:
-        _LOGGER.error(
-            "Invalid credentials for the ISY, please adjust settings and try again: %s",
-            err,
-        )
-        return False
+        raise ConfigEntryAuthFailed(f"Invalid credentials for the ISY: {err}") from err
     except ISYConnectionError as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to the ISY, please adjust settings and try again: {err}"

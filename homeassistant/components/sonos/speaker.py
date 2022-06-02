@@ -57,6 +57,7 @@ from .const import (
     SONOS_VANISHED,
     SUBSCRIPTION_TIMEOUT,
 )
+from .exception import S1BatteryMissing, SonosUpdateError
 from .favorites import SonosFavorites
 from .helpers import soco_error
 from .media import SonosMedia
@@ -81,16 +82,6 @@ UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
-    """Fetch battery_info from the given SoCo object.
-
-    Returns None if the device doesn't support battery info
-    or if the device is offline.
-    """
-    with contextlib.suppress(ConnectionError, TimeoutError, SoCoException):
-        return soco.get_battery_info()
 
 
 class SonosSpeaker:
@@ -207,8 +198,11 @@ class SonosSpeaker:
                 self.hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, self, audio_format
             )
 
-        if battery_info := fetch_battery_info_or_none(self.soco):
-            self.battery_info = battery_info
+        try:
+            self.battery_info = self.fetch_battery_info()
+        except SonosUpdateError:
+            _LOGGER.debug("No battery available for %s", self.zone_name)
+        else:
             # Battery events can be infrequent, polling is still necessary
             self._battery_poll_timer = track_time_interval(
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
@@ -530,6 +524,13 @@ class SonosSpeaker:
     #
     # Speaker availability methods
     #
+    @soco_error()
+    def ping(self) -> None:
+        """Test device availability. Failure will raise SonosUpdateError."""
+        self.soco.renderingControl.GetVolume(
+            [("InstanceID", 0), ("Channel", "Master")], timeout=1
+        )
+
     @callback
     def speaker_activity(self, source):
         """Track the last activity on this speaker, set availability and resubscribe."""
@@ -560,23 +561,13 @@ class SonosSpeaker:
             return
 
         try:
-            # Make a short-timeout call as a final check
-            # before marking this speaker as unavailable
-            await self.hass.async_add_executor_job(
-                partial(
-                    self.soco.renderingControl.GetVolume,
-                    [("InstanceID", 0), ("Channel", "Master")],
-                    timeout=1,
-                )
-            )
-        except OSError:
+            await self.hass.async_add_executor_job(self.ping)
+        except SonosUpdateError:
             _LOGGER.warning(
                 "No recent activity and cannot reach %s, marking unavailable",
                 self.zone_name,
             )
             await self.async_offline()
-        else:
-            self.speaker_activity("timeout poll")
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
@@ -619,6 +610,15 @@ class SonosSpeaker:
     #
     # Battery management
     #
+    @soco_error()
+    def fetch_battery_info(self) -> dict[str, Any]:
+        """Fetch battery_info for the speaker."""
+        battery_info = self.soco.get_battery_info()
+        if not battery_info:
+            # S1 firmware returns an empty payload
+            raise S1BatteryMissing
+        return battery_info
+
     async def async_update_battery_info(self, more_info: str) -> None:
         """Update battery info using a SonosEvent payload value."""
         battery_dict = dict(x.split(":") for x in more_info.split(","))
@@ -658,11 +658,17 @@ class SonosSpeaker:
 
         if is_charging == self.charging:
             self.battery_info.update({"Level": int(battery_dict["BattPct"])})
+        elif not is_charging:
+            # Avoid polling the speaker if possible
+            self.battery_info["PowerSource"] = "BATTERY"
         else:
-            if battery_info := await self.hass.async_add_executor_job(
-                fetch_battery_info_or_none, self.soco
-            ):
-                self.battery_info = battery_info
+            # Poll to obtain current power source not provided by event
+            try:
+                self.battery_info = await self.hass.async_add_executor_job(
+                    self.fetch_battery_info
+                )
+            except SonosUpdateError as err:
+                _LOGGER.debug("Could not request current power source: %s", err)
 
     @property
     def power_source(self) -> str | None:
@@ -692,10 +698,13 @@ class SonosSpeaker:
         ):
             return
 
-        if battery_info := await self.hass.async_add_executor_job(
-            fetch_battery_info_or_none, self.soco
-        ):
-            self.battery_info = battery_info
+        try:
+            self.battery_info = await self.hass.async_add_executor_job(
+                self.fetch_battery_info
+            )
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not poll battery info: %s", err)
+        else:
             self.async_write_entity_states()
 
     #
@@ -749,18 +758,18 @@ class SonosSpeaker:
         def _get_soco_group() -> list[str]:
             """Ask SoCo cache for existing topology."""
             coordinator_uid = self.soco.uid
-            slave_uids = []
+            joined_uids = []
 
             with contextlib.suppress(OSError, SoCoException):
                 if self.soco.group and self.soco.group.coordinator:
                     coordinator_uid = self.soco.group.coordinator.uid
-                    slave_uids = [
+                    joined_uids = [
                         p.uid
                         for p in self.soco.group.members
                         if p.uid != coordinator_uid and p.is_visible
                     ]
 
-            return [coordinator_uid] + slave_uids
+            return [coordinator_uid] + joined_uids
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
@@ -814,13 +823,13 @@ class SonosSpeaker:
             self.sonos_group_entities = sonos_group_entities
             self.async_write_entity_states()
 
-            for slave_uid in group[1:]:
-                slave = self.hass.data[DATA_SONOS].discovered.get(slave_uid)
-                if slave:
-                    slave.coordinator = self
-                    slave.sonos_group = sonos_group
-                    slave.sonos_group_entities = sonos_group_entities
-                    slave.async_write_entity_states()
+            for joined_uid in group[1:]:
+                joined_speaker = self.hass.data[DATA_SONOS].discovered.get(joined_uid)
+                if joined_speaker:
+                    joined_speaker.coordinator = self
+                    joined_speaker.sonos_group = sonos_group
+                    joined_speaker.sonos_group_entities = sonos_group_entities
+                    joined_speaker.async_write_entity_states()
 
             _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
 
@@ -838,7 +847,7 @@ class SonosSpeaker:
         return _async_handle_group_event(event)
 
     @soco_error()
-    def join(self, slaves: list[SonosSpeaker]) -> list[SonosSpeaker]:
+    def join(self, speakers: list[SonosSpeaker]) -> list[SonosSpeaker]:
         """Form a group with other players."""
         if self.coordinator:
             self.unjoin()
@@ -846,12 +855,12 @@ class SonosSpeaker:
         else:
             group = self.sonos_group.copy()
 
-        for slave in slaves:
-            if slave.soco.uid != self.soco.uid:
-                slave.soco.join(self.soco)
-                slave.coordinator = self
-                if slave not in group:
-                    group.append(slave)
+        for speaker in speakers:
+            if speaker.soco.uid != self.soco.uid:
+                speaker.soco.join(self.soco)
+                speaker.coordinator = self
+                if speaker not in group:
+                    group.append(speaker)
 
         return group
 
@@ -880,11 +889,11 @@ class SonosSpeaker:
 
         def _unjoin_all(speakers: list[SonosSpeaker]) -> None:
             """Sync helper."""
-            # Unjoin slaves first to prevent inheritance of queues
+            # Detach all joined speakers first to prevent inheritance of queues
             coordinators = [s for s in speakers if s.is_coordinator]
-            slaves = [s for s in speakers if not s.is_coordinator]
+            joined_speakers = [s for s in speakers if not s.is_coordinator]
 
-            for speaker in slaves + coordinators:
+            for speaker in joined_speakers + coordinators:
                 speaker.unjoin()
 
         async with hass.data[DATA_SONOS].topology_condition:
@@ -928,7 +937,7 @@ class SonosSpeaker:
             assert self.soco_snapshot is not None
             self.soco_snapshot.restore()
         except (TypeError, AssertionError, AttributeError, SoCoException) as ex:
-            # Can happen if restoring a coordinator onto a current slave
+            # Can happen if restoring a coordinator onto a current group member
             _LOGGER.warning("Error on restore %s: %s", self.zone_name, ex)
 
         self.soco_snapshot = None
@@ -1036,7 +1045,7 @@ class SonosSpeaker:
                 if coordinator != current_group[0]:
                     return False
 
-                # Test that slaves match
+                # Test that joined members match
                 if set(group[1:]) != set(current_group[1:]):
                     return False
 

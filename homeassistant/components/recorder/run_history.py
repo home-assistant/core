@@ -54,6 +54,13 @@ class RunHistory:
         return self._recording_start
 
     @property
+    def first(self) -> RecorderRuns:
+        """Get the first run."""
+        if runs_by_timestamp := self._run_history.runs_by_timestamp:
+            return next(iter(runs_by_timestamp.values()))
+        return self.current
+
+    @property
     def current(self) -> RecorderRuns:
         """Get the current run."""
         assert self._current_run_info is not None

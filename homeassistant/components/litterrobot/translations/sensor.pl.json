@@ -1,0 +1,28 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "pokrywa otwarta",
+            "ccc": "cykl czyszczenia zako\u0144czony",
+            "ccp": "cykl czyszczenia w toku",
+            "csf": "b\u0142\u0105d sensora obecno\u015bci",
+            "csi": "przerwa w pracy sensora",
+            "cst": "czas pracy sensora",
+            "df1": "szuflada prawie pe\u0142na - pozosta\u0142y 2 cykle",
+            "df2": "szuflada prawie pe\u0142na - pozosta\u0142 1 cykl",
+            "dfs": "szuflada pe\u0142na",
+            "dhf": "b\u0142\u0105d pozycji wyj\u015bciowej + odchod\u00f3w",
+            "dpf": "b\u0142\u0105d pozycji odchod\u00f3w",
+            "ec": "cykl opr\u00f3\u017cniania",
+            "hpf": "b\u0142\u0105d pozycji wyj\u015bciowej",
+            "off": "wy\u0142.",
+            "offline": "offline",
+            "otf": "b\u0142\u0105d nadmiernego momentu obrotowego",
+            "p": "wstrzymany",
+            "pd": "detektor obecno\u015bci",
+            "rdy": "gotowy",
+            "scf": "b\u0142\u0105d sensora obecno\u015bci podczas uruchamiania",
+            "sdf": "szuflada pe\u0142na podczas uruchamiania",
+            "spf": "detekcja obecno\u015bci podczas uruchamiania"
+        }
+    }
+}

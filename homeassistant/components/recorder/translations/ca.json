@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Hora d'inici de l'execuci\u00f3 actual",
+            "database_engine": "Motor de bases de dades",
+            "database_version": "Versi\u00f3 de la base de dades",
+            "estimated_db_size": "Mida estimada de la base de dades (MiB)",
+            "oldest_recorder_run": "Hora d'inici de l'execuci\u00f3 m\u00e9s antiga"
+        }
+    }
+}

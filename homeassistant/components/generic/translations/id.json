@@ -32,7 +32,6 @@
             "user": {
                 "data": {
                     "authentication": "Autentikasi",
-                    "content_type": "Jenis Konten",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Batasi pengambilan ulang untuk perubahan URL",
                     "password": "Kata Sandi",
@@ -72,15 +71,18 @@
             "init": {
                 "data": {
                     "authentication": "Autentikasi",
-                    "content_type": "Jenis Konten",
                     "framerate": "Frame Rate (Hz)",
                     "limit_refetch_to_url_change": "Batasi pengambilan ulang untuk perubahan URL",
                     "password": "Kata Sandi",
                     "rtsp_transport": "Protokol transportasi RTSP",
                     "still_image_url": "URL Gambar Diam (mis. http://...)",
                     "stream_source": "URL Sumber Streaming (mis. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Gunakan jam dinding sebagai stempel waktu",
                     "username": "Nama Pengguna",
                     "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Opsi ini dapat memperbaiki masalah segmentasi atau mogok yang timbul dari implementasi stempel waktu bermasalah pada beberapa kamera"
                 }
             }
         }

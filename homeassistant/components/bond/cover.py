@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from bond_api import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -18,6 +19,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
+
+
+def _bond_to_hass_position(bond_position: int) -> int:
+    """Convert bond 0-open 100-closed to hass 0-closed 100-open."""
+    return abs(bond_position - 100)
+
+
+def _hass_to_bond_position(hass_position: int) -> int:
+    """Convert hass 0-closed 100-open to bond 0-open 100-closed."""
+    return 100 - hass_position
 
 
 async def async_setup_entry(
@@ -50,6 +61,8 @@ class BondCover(BondEntity, CoverEntity):
         """Create HA entity representing Bond cover."""
         super().__init__(hub, device, bpup_subs)
         supported_features = 0
+        if self._device.supports_set_position():
+            supported_features |= CoverEntityFeature.SET_POSITION
         if self._device.supports_open():
             supported_features |= CoverEntityFeature.OPEN
         if self._device.supports_close():
@@ -67,8 +80,15 @@ class BondCover(BondEntity, CoverEntity):
 
     def _apply_state(self, state: dict) -> None:
         cover_open = state.get("open")
-        self._attr_is_closed = (
-            True if cover_open == 0 else False if cover_open == 1 else None
+        self._attr_is_closed = None if cover_open is None else cover_open == 0
+        if (bond_position := state.get("position")) is not None:
+            self._attr_current_cover_position = _bond_to_hass_position(bond_position)
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Set the cover position."""
+        await self._hub.bond.action(
+            self._device.device_id,
+            Action.set_position(_hass_to_bond_position(kwargs[ATTR_POSITION])),
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:

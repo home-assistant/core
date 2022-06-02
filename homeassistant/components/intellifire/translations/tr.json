@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Oturum a\u00e7ma ba\u015far\u0131s\u0131z oldu",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "iftapi_connect": "iftapi.net'e ba\u011flan\u0131rken hata olu\u015ftu",
-            "unknown": "Beklenmeyen hata"
+            "iftapi_connect": "iftapi.net'e ba\u011flan\u0131rken hata olu\u015ftu"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -24,7 +23,7 @@
             },
             "manual_device_entry": {
                 "data": {
-                    "host": "Sunucu (IP Adresi)"
+                    "host": "Ana Bilgisayar (IP Adresi)"
                 },
                 "description": "Yerel Yap\u0131land\u0131rma"
             },
@@ -34,11 +33,6 @@
                 },
                 "description": "A\u015fa\u011f\u0131daki IntelliFire cihazlar\u0131 ke\u015ffedildi. L\u00fctfen yap\u0131land\u0131rmak istedi\u011finizi se\u00e7in.",
                 "title": "Cihaz Se\u00e7imi"
-            },
-            "user": {
-                "data": {
-                    "host": "Sunucu"
-                }
             }
         }
     }
