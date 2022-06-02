@@ -34,7 +34,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from custom_components.remote_homeassistant.views import DiscoveryInfoView
+from homeassistant.components.remote_homeassistant.views import DiscoveryInfoView
 
 from .const import (CONF_EXCLUDE_DOMAINS, CONF_EXCLUDE_ENTITIES,
                     CONF_INCLUDE_DOMAINS, CONF_INCLUDE_ENTITIES,
