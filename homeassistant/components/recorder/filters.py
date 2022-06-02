@@ -159,20 +159,20 @@ class Filters:
                         _entity_matcher(exclude_e, columns, encoder)
                         | _globs_to_like(exclude_eg, columns, encoder)
                     )
-                ).self_group(),
+                ),
                 (
                     not_(_domain_matcher(include_d, columns, encoder))
                     & or_(
                         (
                             _globs_to_like(include_eg, columns, encoder)
-                            & not_(or_(*excludes).self_group())
-                        ).self_group(),
+                            & not_(or_(*excludes))
+                        ),
                         (
                             not_(_globs_to_like(include_eg, columns, encoder))
                             & _entity_matcher(include_e, columns, encoder)
-                        ).self_group(),
+                        ),
                     )
-                ).self_group(),
+                ),
             ).self_group()
 
         # Case 4b - exclude domain or glob specified, include has no domain or glob
