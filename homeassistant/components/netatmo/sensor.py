@@ -5,8 +5,6 @@ from dataclasses import dataclass
 import logging
 from typing import cast
 
-import pyatmo
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -28,7 +26,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -37,6 +34,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import pyatmo
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_WEATHER,
@@ -45,6 +43,7 @@ from .const import (
     DOMAIN,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
+    NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
@@ -302,11 +301,32 @@ async def async_setup_entry(
     )
 
     @callback
+    def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        _LOGGER.debug(
+            "Adding %s sensor %s",
+            netatmo_device.device.device_category,
+            netatmo_device.device.name,
+        )
+        async_add_entities(
+            [
+                NetatmoSensor(netatmo_device, description)
+                for description in SENSOR_TYPES
+                if description.key in netatmo_device.device.features
+            ]
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, NETATMO_CREATE_SENSOR, _create_sensor_entity)
+    )
+
+    @callback
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
         async_add_entities(
-            NetatmoRoomSensor(netatmo_device, description)
-            for description in SENSOR_TYPES
-            if description.key in netatmo_device.room.features
+            [
+                NetatmoRoomSensor(netatmo_device, description)
+                for description in SENSOR_TYPES
+                if description.key in netatmo_device.room.features
+            ]
         )
 
     entry.async_on_unload(
@@ -315,8 +335,8 @@ async def async_setup_entry(
         )
     )
 
-    device_registry = dr.async_get(hass)
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+    device_registry = await hass.helpers.device_registry.async_get_registry()
 
     async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""
@@ -424,6 +444,10 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
                     }
                 )
 
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
     @property
     def available(self) -> bool:
         """Return entity availability."""
@@ -507,6 +531,10 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         self._attr_unique_id = (
             f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
 
     @callback
     def async_update_callback(self) -> None:
@@ -646,15 +674,25 @@ class NetatmoRoomSensor(NetatmoBase, SensorEntity):
             f"{self._id}-{self._room.entity_id}-{self.entity_description.key}"
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         try:
-            if (state := getattr(self._room, self.entity_description.key)) is None:
+            key = self.entity_description.key
+
+            if (state := getattr(self._room, key)) is None:
                 return
 
-            self._attr_native_value = state
-
+            if self.entity_description.key == "rf_strength":
+                self._attr_native_value = process_rf(state)
+            elif self.entity_description.key == "wifi_strength":
+                self._attr_native_value = process_wifi(state)
+            else:
+                self._attr_native_value = state
         except KeyError:
             if self.state:
                 _LOGGER.debug(
