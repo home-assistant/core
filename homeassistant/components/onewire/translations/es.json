@@ -25,11 +25,13 @@
                 "data": {
                     "precision": "Precisi\u00f3n del sensor"
                 },
-                "description": "Selecciona la precisi\u00f3n del sensor {sensor_id}"
+                "description": "Selecciona la precisi\u00f3n del sensor {sensor_id}",
+                "title": "Precisi\u00f3n del sensor OneWire"
             },
             "device_selection": {
                 "data": {
-                    "clear_device_options": "Borra todas las configuraciones de dispositivo"
+                    "clear_device_options": "Borra todas las configuraciones de dispositivo",
+                    "device_selection": "Seleccionar los dispositivos a configurar"
                 },
                 "description": "Seleccione los pasos de configuraci\u00f3n a procesar",
                 "title": "Opciones de dispositivo OneWire"
