@@ -12,7 +12,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,9 +56,8 @@ async def async_validate_trigger_config(
     return config
 
 
-async def async_get_triggers(
-    _hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(_hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for device."""
     triggers = []
     base_trigger = {
