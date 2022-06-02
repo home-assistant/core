@@ -324,35 +324,6 @@ async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
         mock_set_state.assert_called_once_with(expected_data)
 
 
-async def test_service_set_camera_light_invalid_type(hass, config_entry, netatmo_auth):
-    """Test service to set the indoor camera light mode."""
-    with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-
-        await hass.async_block_till_done()
-
-    await hass.async_block_till_done()
-
-    data = {
-        "entity_id": "camera.hall",
-        "camera_light_mode": "on",
-    }
-
-    with patch("pyatmo.home.Home.async_set_state") as mock_set_state, pytest.raises(
-        HomeAssistantError
-    ) as excinfo:
-        await hass.services.async_call(
-            "netatmo",
-            SERVICE_SET_CAMERA_LIGHT,
-            service_data=data,
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    mock_set_state.assert_not_called()
-    assert excinfo.value.args == ("NACamera <Hall> does not have a floodlight",)
-
-
 async def test_camera_reconnect_webhook(hass, config_entry):
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
@@ -453,6 +424,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
+        # return {}
         return await fake_post_request(*args, **kwargs)
 
     with patch(
