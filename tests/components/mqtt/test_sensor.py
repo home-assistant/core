@@ -1106,7 +1106,7 @@ async def test_cleanup_triggers_and_restoring_state(
     freezer.move_to("2022-02-02 12:01:10+01:00")
 
     await help_test_reload_with_config(
-        hass, caplog, tmp_path, domain, [config1, config2]
+        hass, caplog, tmp_path, {domain: [config1, config2]}
     )
     await hass.async_block_till_done()
 
