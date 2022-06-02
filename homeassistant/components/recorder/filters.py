@@ -116,19 +116,15 @@ class Filters:
 
         This must match exactly how homeassistant.helpers.entityfilter works.
         """
-        i_domains_matcher = _domain_matcher(self.included_domains, columns, encoder)
-        i_entities_matcher = _entity_matcher(self.included_entities, columns, encoder)
-        i_entity_globs_matcher = _globs_to_like(
-            self.included_entity_globs, columns, encoder
-        )
-        includes = [i_domains_matcher, i_entities_matcher, i_entity_globs_matcher]
+        i_domains = _domain_matcher(self.included_domains, columns, encoder)
+        i_entities = _entity_matcher(self.included_entities, columns, encoder)
+        i_entity_globs = _globs_to_like(self.included_entity_globs, columns, encoder)
+        includes = [i_domains, i_entities, i_entity_globs]
 
-        e_domains_matcher = _domain_matcher(self.excluded_domains, columns, encoder)
-        e_entities_matcher = _entity_matcher(self.excluded_entities, columns, encoder)
-        e_entity_globs_matcher = _globs_to_like(
-            self.excluded_entity_globs, columns, encoder
-        )
-        excludes = [e_domains_matcher, e_entities_matcher, e_entity_globs_matcher]
+        e_domains = _domain_matcher(self.excluded_domains, columns, encoder)
+        e_entities = _entity_matcher(self.excluded_entities, columns, encoder)
+        e_entity_globs = _globs_to_like(self.excluded_entity_globs, columns, encoder)
+        excludes = [e_domains, e_entities, e_entity_globs]
 
         have_exclude = self._have_exclude
         have_include = self._have_include
@@ -154,12 +150,12 @@ class Filters:
         #   If glob matches then exclude domains and glob checked
         if self.included_domains or self.included_entity_globs:
             return or_(
-                (i_domains_matcher & ~(e_entities_matcher | e_entity_globs_matcher)),
+                (i_domains & ~(e_entities | e_entity_globs)),
                 (
-                    ~i_domains_matcher
+                    ~i_domains
                     & or_(
-                        (i_entity_globs_matcher & ~(or_(*excludes))),
-                        (~i_entity_globs_matcher & i_entities_matcher),
+                        (i_entity_globs & ~(or_(*excludes))),
+                        (~i_entity_globs & i_entities),
                     )
                 ),
             ).self_group()
@@ -172,11 +168,11 @@ class Filters:
         #  - if domain or glob is excluded, pass if entity is included
         #  - if domain is not excluded, pass if entity not excluded by ID
         if self.excluded_domains or self.excluded_entity_globs:
-            return (not_(or_(*excludes)) | i_entities_matcher).self_group()
+            return (not_(or_(*excludes)) | i_entities).self_group()
 
         # Case 4c - neither include or exclude domain specified
         #  - Only pass if entity is included.  Ignore entity excludes.
-        return i_entities_matcher
+        return i_entities
 
     def states_entity_filter(self) -> ClauseList:
         """Generate the entity filter query."""
