@@ -116,13 +116,6 @@ class Filters:
 
         This must match exactly how homeassistant.helpers.entityfilter works.
         """
-        have_exclude = self._have_exclude
-        have_include = self._have_include
-
-        # Case 1 - no includes or excludes - pass all entities
-        if not have_include and not have_exclude:
-            return None
-
         i_domains_matcher = _domain_matcher(self.included_domains, columns, encoder)
         i_entities_matcher = _entity_matcher(self.included_entities, columns, encoder)
         i_entity_globs_matcher = _globs_to_like(
@@ -130,16 +123,23 @@ class Filters:
         )
         includes = [i_domains_matcher, i_entities_matcher, i_entity_globs_matcher]
 
-        # Case 2 - includes, no excludes - only include specified entities
-        if have_include and not have_exclude:
-            return or_(*includes).self_group()
-
         e_domains_matcher = _domain_matcher(self.excluded_domains, columns, encoder)
         e_entities_matcher = _entity_matcher(self.excluded_entities, columns, encoder)
         e_entity_globs_matcher = _globs_to_like(
             self.excluded_entity_globs, columns, encoder
         )
         excludes = [e_domains_matcher, e_entities_matcher, e_entity_globs_matcher]
+
+        have_exclude = self._have_exclude
+        have_include = self._have_include
+
+        # Case 1 - no includes or excludes - pass all entities
+        if not have_include and not have_exclude:
+            return None
+
+        # Case 2 - includes, no excludes - only include specified entities
+        if have_include and not have_exclude:
+            return or_(*includes).self_group()
 
         # Case 3 - excludes, no includes - only exclude specified entities
         if not have_include and have_exclude:
@@ -153,7 +153,6 @@ class Filters:
         # note: if both include domain matches then exclude domains ignored.
         #   If glob matches then exclude domains and glob checked
         if self.included_domains or self.included_entity_globs:
-
             return or_(
                 (i_domains_matcher & ~(e_entities_matcher | e_entity_globs_matcher)),
                 (
