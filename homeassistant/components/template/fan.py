@@ -54,7 +54,6 @@ CONF_DIRECTION_TEMPLATE = "direction_template"
 CONF_ON_ACTION = "turn_on"
 CONF_OFF_ACTION = "turn_off"
 CONF_SET_PERCENTAGE_ACTION = "set_percentage"
-CONF_SET_SPEED_ACTION = "set_speed"
 CONF_SET_OSCILLATING_ACTION = "set_oscillating"
 CONF_SET_DIRECTION_ACTION = "set_direction"
 CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
@@ -152,12 +151,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
-
-        self._set_speed_script = None
-        if set_speed_action := config.get(CONF_SET_SPEED_ACTION):
-            self._set_speed_script = Script(
-                hass, set_speed_action, friendly_name, DOMAIN
-            )
 
         self._set_percentage_script = None
         if set_percentage_action := config.get(CONF_SET_PERCENTAGE_ACTION):
