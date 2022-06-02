@@ -9,8 +9,8 @@ from pywizlight.discovery import DiscoveredBulb
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.util.network import is_ip_address
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEVICE = "device"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiZ."""
 
     VERSION = 1

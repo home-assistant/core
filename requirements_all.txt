@@ -89,7 +89,7 @@ adguardhome==0.5.1
 advantage_air==0.3.1
 
 # homeassistant.components.frontier_silicon
-afsapi==0.0.4
+afsapi==0.2.4
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -223,7 +223,7 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.2.2
+aiopyarr==22.6.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.1.0
@@ -394,7 +394,7 @@ beautifulsoup4==4.11.1
 bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.0
+bimmer_connected==0.9.3
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -433,7 +433,7 @@ bravia-tv==1.0.11
 broadlink==0.18.2
 
 # homeassistant.components.brother
-brother==1.1.0
+brother==1.2.3
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -741,7 +741,7 @@ google-cloud-pubsub==2.11.0
 google-cloud-texttospeech==2.11.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.8.0
+google-nest-sdm==2.0.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -795,7 +795,7 @@ hass-nabucasa==0.54.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.5.0
+hatasmota==0.5.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -822,7 +822,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220526.0
+home-assistant-frontend==20220601.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1038,7 +1038,7 @@ mitemp_bt==0.0.5
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.7
+motionblinds==0.6.8
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1236,7 +1236,7 @@ pillow==9.1.1
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.11.1
+plexapi==4.11.2
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1538,7 +1538,7 @@ pyheos==0.7.2
 pyhik==0.3.0
 
 # homeassistant.components.hive
-pyhiveapi==0.4.2
+pyhiveapi==0.5.4
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1550,7 +1550,7 @@ pyhomeworks==0.0.6
 pyialarm==1.9.0
 
 # homeassistant.components.ialarm_xr
-pyialarmxr==1.0.13
+pyialarmxr==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -1792,7 +1792,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.14
+pysensibo==1.0.15
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1838,7 +1838,7 @@ pysmarty==0.8
 pysml==0.0.7
 
 # homeassistant.components.snmp
-pysnmp==4.4.12
+pysnmplib==5.0.15
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -2014,7 +2014,7 @@ pyvesync==2.0.3
 pyvizio==0.1.57
 
 # homeassistant.components.velux
-pyvlx==0.2.19
+pyvlx==0.2.20
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -2065,7 +2065,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.05.0
+regenmaschine==2022.05.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2168,7 +2168,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.1
+simplisafe-python==2022.05.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
@@ -2223,7 +2223,7 @@ spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.36
+sqlalchemy==1.4.37
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2271,7 +2271,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridge==2.3.1
+systembridgeconnector==3.1.3
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
@@ -2501,7 +2501,7 @@ zengge==0.2
 zeroconf==0.38.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.74
+zha-quirks==0.0.75
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2528,7 +2528,7 @@ zigpy==0.45.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.37.0
+zwave-js-server-python==0.37.1
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

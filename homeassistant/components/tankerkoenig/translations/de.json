@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Standort ist bereits konfiguriert"
+            "already_configured": "Standort ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "no_stations": "Konnte keine Station in Reichweite finden."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "Stationen"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Update-Intervall",
-                    "show_on_map": "Stationen auf der Karte anzeigen"
+                    "show_on_map": "Stationen auf der Karte anzeigen",
+                    "stations": "Stationen"
                 },
                 "title": "Tankerkoenig Optionen"
             }

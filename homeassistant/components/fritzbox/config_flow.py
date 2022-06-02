@@ -1,6 +1,7 @@
 """Config flow for AVM FRITZ!SmartHome."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import ipaddress
 from typing import Any
 from urllib.parse import urlparse
@@ -175,7 +176,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None

@@ -407,6 +407,7 @@ omit =
     homeassistant/components/fritzbox_callmonitor/const.py
     homeassistant/components/fritzbox_callmonitor/base.py
     homeassistant/components/fritzbox_callmonitor/sensor.py
+    homeassistant/components/frontier_silicon/const.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
@@ -491,7 +492,6 @@ omit =
     homeassistant/components/homematic/*
     homeassistant/components/home_plus_control/api.py
     homeassistant/components/home_plus_control/switch.py
-    homeassistant/components/homewizard/diagnostics.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/__init__.py
     homeassistant/components/honeywell/climate.py
@@ -505,10 +505,13 @@ omit =
     homeassistant/components/huawei_lte/switch.py
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
-    homeassistant/components/hunterdouglas_powerview/scene.py
-    homeassistant/components/hunterdouglas_powerview/sensor.py
+    homeassistant/components/hunterdouglas_powerview/coordinator.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/sensor.py
+    homeassistant/components/hunterdouglas_powerview/shade_data.py
+    homeassistant/components/hunterdouglas_powerview/util.py
     homeassistant/components/hvv_departures/binary_sensor.py
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
@@ -576,6 +579,7 @@ omit =
     homeassistant/components/isy994/sensor.py
     homeassistant/components/isy994/services.py
     homeassistant/components/isy994/switch.py
+    homeassistant/components/isy994/util.py
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
     homeassistant/components/jellyfin/__init__.py
@@ -966,6 +970,7 @@ omit =
     homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
+    homeassistant/components/rainmachine/util.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py

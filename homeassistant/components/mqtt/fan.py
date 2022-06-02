@@ -34,8 +34,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -55,6 +55,8 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
@@ -125,28 +127,28 @@ def valid_preset_mode_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
         # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
-        ): mqtt.valid_publish_topic,
+        ): valid_publish_topic,
         vol.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
         ): cv.ensure_list,
         vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
         vol.Optional(
             CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
@@ -168,8 +170,8 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
         ): cv.string,
-        vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SPEED_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SPEED_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }

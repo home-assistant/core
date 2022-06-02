@@ -93,7 +93,7 @@ repos:
         language: script
         types: [python]
         require_serial: true
-        files: ^homeassistant/.+\.py$
+        files: ^(homeassistant|pylint)/.+\.py$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint -j 0

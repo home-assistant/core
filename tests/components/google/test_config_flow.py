@@ -540,9 +540,15 @@ async def test_options_flow_triggers_reauth(
 ) -> None:
     """Test load and unload of a ConfigEntry."""
     config_entry.add_to_hass(hass)
-    await component_setup()
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await component_setup()
+        mock_setup.assert_called_once()
+
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.options == {"calendar_access": "read_write"}
+    assert config_entry.options == {}  # Default is read_write
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
@@ -557,14 +563,7 @@ async def test_options_flow_triggers_reauth(
         },
     )
     assert result["type"] == "create_entry"
-
-    await hass.async_block_till_done()
     assert config_entry.options == {"calendar_access": "read_only"}
-    # Re-auth flow was initiated because access level changed
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_options_flow_no_changes(
@@ -574,9 +573,15 @@ async def test_options_flow_no_changes(
 ) -> None:
     """Test load and unload of a ConfigEntry."""
     config_entry.add_to_hass(hass)
-    await component_setup()
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await component_setup()
+        mock_setup.assert_called_once()
+
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.options == {"calendar_access": "read_write"}
+    assert config_entry.options == {}  # Default is read_write
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == "form"
@@ -589,8 +594,4 @@ async def test_options_flow_no_changes(
         },
     )
     assert result["type"] == "create_entry"
-
-    await hass.async_block_till_done()
     assert config_entry.options == {"calendar_access": "read_write"}
-    # Re-auth flow was initiated because access level changed
-    assert config_entry.state is ConfigEntryState.LOADED

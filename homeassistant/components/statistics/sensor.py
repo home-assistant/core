@@ -350,7 +350,7 @@ class StatisticsSensor(SensorEntity):
         if new_state.state == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
             return
-        if new_state.state in (STATE_UNKNOWN, None):
+        if new_state.state in (STATE_UNKNOWN, None, ""):
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
             return
 
