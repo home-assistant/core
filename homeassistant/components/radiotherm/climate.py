@@ -94,6 +94,8 @@ CODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_CODE.items()}
 
 CODE_TO_HOLD_STATE = {0: False, 1: True}
 
+PARALLEL_UPDATES = 1
+
 
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.

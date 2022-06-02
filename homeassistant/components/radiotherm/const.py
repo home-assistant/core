@@ -4,4 +4,4 @@ DOMAIN = "radiotherm"
 
 CONF_HOLD_TEMP = "hold_temp"
 
-TIMEOUT = 7
+TIMEOUT = 25
