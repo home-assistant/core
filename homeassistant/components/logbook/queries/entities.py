@@ -70,10 +70,12 @@ def _apply_entities_context_union(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
         select_events_context_only()
         .select_from(entities_cte_select)
+        .group_by(entities_cte_select.c.context_id)
         .outerjoin(Events, entities_cte_select.c.context_id == Events.context_id)
         .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         select_states_context_only()
         .select_from(entities_cte_select)
+        .group_by(entities_cte_select.c.context_id)
         .outerjoin(States, entities_cte_select.c.context_id == States.context_id)
         .where(States.entity_id.not_in(entity_ids)),
     )

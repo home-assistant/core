@@ -59,10 +59,12 @@ def _apply_devices_context_union(
     return query.union_all(
         select_events_context_only()
         .select_from(devices_cte_select)
+        .group_by(devices_cte_select.c.context_id)
         .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
         .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         select_states_context_only()
         .select_from(devices_cte_select)
+        .group_by(devices_cte_select.c.context_id)
         .outerjoin(States, devices_cte_select.c.context_id == States.context_id),
     )
 
