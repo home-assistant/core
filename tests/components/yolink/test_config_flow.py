@@ -3,6 +3,8 @@ import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
+from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import application_credentials
 from homeassistant.core import HomeAssistant
@@ -12,11 +14,7 @@ from tests.common import MockConfigEntry
 
 CLIENT_ID = "12345"
 CLIENT_SECRET = "6789"
-YOLINK_HOST = "api.yosmart.com"
-YOLINK_HTTP_HOST = f"http://{YOLINK_HOST}"
 DOMAIN = "yolink"
-OAUTH2_AUTHORIZE = f"{YOLINK_HTTP_HOST}/oauth/v2/authorization.htm"
-OAUTH2_TOKEN = f"{YOLINK_HTTP_HOST}/open/yolink/token"
 
 
 async def test_abort_if_no_configuration(hass):
