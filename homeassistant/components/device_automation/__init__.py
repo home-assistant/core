@@ -198,9 +198,6 @@ async def _async_get_automation_for_device(
     """List device automations."""
     automations = getattr(platform, function_name)(hass, device_id)
     if asyncio.iscoroutine(automations):
-        # Using a coroutine to get device automations is deprecated
-        # enable warning when core is fully migrated
-        # then remove in Home Assistant Core xxxx.xx
         return await automations  # type: ignore[no-any-return]
     return automations  # type: ignore[no-any-return]
 
@@ -312,9 +309,6 @@ async def _async_get_device_automation_capabilities(
     try:
         capabilities = getattr(platform, function_name)(hass, automation)
         if asyncio.iscoroutine(capabilities):
-            # Using a coroutine to get device automation capabitilites is deprecated
-            # enable warning when core is fully migrated
-            # then remove in Home Assistant Core xxxx.xx
             capabilities = await capabilities
     except InvalidDeviceAutomationConfig:
         return {}
