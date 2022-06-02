@@ -1241,9 +1241,6 @@ pysmartapp==0.3.3
 # homeassistant.components.smartthings
 pysmartthings==0.7.6
 
-# homeassistant.components.snmp
-pysnmplib==5.0.15
-
 # homeassistant.components.soma
 pysoma==0.0.10
 
