@@ -12,9 +12,11 @@ from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.recorder.models import (
+    EVENTS_CONTEXT_ID_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
     SHARED_ATTRS_JSON,
+    STATES_CONTEXT_ID_INDEX,
     EventData,
     Events,
     StateAttributes,
@@ -250,3 +252,17 @@ def _not_uom_attributes_matcher() -> ClauseList:
     return ~StateAttributes.shared_attrs.like(
         UNIT_OF_MEASUREMENT_JSON_LIKE
     ) | ~States.attributes.like(UNIT_OF_MEASUREMENT_JSON_LIKE)
+
+
+def apply_states_context_hints(query: Query) -> Query:
+    """Force mysql to use the right index on large context_id selects."""
+    return query.with_hint(
+        States, f"FORCE INDEX ({STATES_CONTEXT_ID_INDEX})", dialect_name="mysql"
+    )
+
+
+def apply_events_context_hints(query: Query) -> Query:
+    """Force mysql to use the right index on large context_id selects."""
+    return query.with_hint(
+        Events, f"FORCE INDEX ({EVENTS_CONTEXT_ID_INDEX})", dialect_name="mysql"
+    )
