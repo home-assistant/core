@@ -8,7 +8,6 @@ from pyatmo.modules.device_types import (
 
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DATA_DEVICE_IDS, DEFAULT_ATTRIBUTION, DOMAIN, SIGNAL_NAME
@@ -64,9 +63,9 @@ class NetatmoBase(Entity):
                 if sub is None:
                     await self.data_handler.unsubscribe(signal_name, None)
 
-        registry = dr.async_get(self.hass)
-        if device := registry.async_get_device({(DOMAIN, self._id)}):
-            self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
+        registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = registry.async_get_device({(DOMAIN, self._id)})
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()
 

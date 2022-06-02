@@ -323,8 +323,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
         await self._room.async_therm_set(
-            STATE_NETATMO_MANUAL, min(kwargs[ATTR_TEMPERATURE], DEFAULT_MAX_TEMP)
+            STATE_NETATMO_MANUAL, min(temp, DEFAULT_MAX_TEMP)
         )
         self.async_write_ha_state()
 
