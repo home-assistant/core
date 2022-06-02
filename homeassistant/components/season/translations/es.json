@@ -3,17 +3,12 @@
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado"
         },
-        "error": {
-            "not_allowed": "Ruta no permitida",
-            "not_valid": "La ruta no es v\u00e1lida"
-        },
         "step": {
             "user": {
                 "data": {
-                    "file_path": "Ruta al archivo"
+                    "type": "Definici\u00f3n del tipo de estaci\u00f3n"
                 }
             }
         }
-    },
-    "title": "Tama\u00f1o del archivo"
+    }
 }
