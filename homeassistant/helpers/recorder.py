@@ -19,12 +19,9 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
 def async_initialize_recorder(hass: HomeAssistant) -> None:
     """Initialize recorder data."""
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder import const
+    from homeassistant.components.recorder import const, models
 
-    hass.data[const.DOMAIN] = {
-        "recorder_platform": {},
-        "db_connected": asyncio.Future(),
-    }
+    hass.data[const.DOMAIN] = models.RecorderData()
 
 
 async def async_wait_recorder(hass: HomeAssistant) -> bool:

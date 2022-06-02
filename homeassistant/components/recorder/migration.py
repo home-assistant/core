@@ -40,7 +40,8 @@ from .statistics import (
 )
 from .util import session_scope
 
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 25
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 999
+assert LIVE_MIGRATION_MIN_SCHEMA_VERSION > SCHEMA_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 

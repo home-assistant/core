@@ -168,7 +168,7 @@ class Recorder(threading.Thread):
         self.db_retry_wait = db_retry_wait
         self.engine_version: AwesomeVersion | None = None
         # Database connection is ready, but non-live migration may be in progress
-        db_connected: asyncio.Future[bool] = hass.data[DOMAIN]["db_connected"]
+        db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = asyncio.Future()

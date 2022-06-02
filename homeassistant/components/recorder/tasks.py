@@ -249,7 +249,7 @@ class AddRecorderPlatformTask(RecorderTask):
         domain = self.domain
         platform = self.platform
 
-        platforms: dict[str, Any] = hass.data[DOMAIN]["recorder_platform"]
+        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
         if hasattr(self.platform, "exclude_attributes"):
             hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)

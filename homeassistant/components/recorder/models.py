@@ -1,6 +1,8 @@
 """Models for Recorder."""
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any, TypedDict, overload
@@ -28,6 +30,14 @@ EMPTY_JSON_OBJECT = "{}"
 
 class UnsupportedDialect(Exception):
     """The dialect or its version is not supported."""
+
+
+@dataclass
+class RecorderData:
+    """Recorder data stored in hass.data."""
+
+    recorder_platforms: dict[str, Any] = {}
+    db_connected: asyncio.Future = asyncio.Future()
 
 
 class StatisticResult(TypedDict):
