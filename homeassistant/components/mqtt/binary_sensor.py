@@ -1,7 +1,6 @@
 """Support for MQTT binary sensors."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import functools
 import logging
@@ -42,7 +41,7 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_platform,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -88,7 +87,12 @@ async def async_setup_platform(
     """Set up MQTT binary sensor configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, binary_sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        binary_sensor.DOMAIN,
+        config,
+        async_add_entities,
+        _async_setup_entity,
+        PLATFORM_SCHEMA_MODERN,
     )
 
 
@@ -99,14 +103,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT binary sensor through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, binary_sensor.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_platform(hass, binary_sensor.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
