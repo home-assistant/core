@@ -397,17 +397,19 @@ class LIFXManager:
             await entity.update_hass()
             return
 
-        # Don't process LIFX Switch devices and ignore them in future
-        if bulb.version is None:
-            version_resp = await AwaitAioLIFX().wait(bulb.get_version)
-            if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
-                self.switch_devices.append(bulb.mac_addr)
-                _LOGGER.debug(
-                    "Adding LIFX Switch %s (%s) to ignore list",
-                    str(bulb.mac_addr).replace(":", ""),
-                    bulb.ip_addr,
-                )
-                return
+        # Read initial state
+        ack = AwaitAioLIFX().wait
+
+        # Get the product info first so that LIFX Switches
+        # can be ignored.
+        version_resp = await ack(bulb.get_version)
+        if version_resp and lifx_features(bulb)["relays"]:
+            _LOGGER.debug(
+                "Adding LIFX Switch %s (%s) to ignore list",
+                str(bulb.mac_addr).replace(":", ""),
+                bulb.ip_addr,
+            )
+            return
 
         await self._async_process_discovery(bulb)
 
