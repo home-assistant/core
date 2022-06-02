@@ -1,1 +1,0 @@
-"""recorder session fixtures."""
