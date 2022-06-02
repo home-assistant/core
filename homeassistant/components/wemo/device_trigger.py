@@ -11,7 +11,7 @@ from homeassistant.components.automation import (
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -26,9 +26,8 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """Return a list of triggers."""
 
     wemo_trigger = {
