@@ -1362,48 +1362,30 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
-async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
+async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
     config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
         "Invalid config for [light]: [platform] is an invalid option for [light]. "
         "Check: light->platform. (See ?, line ?)" in caplog.text
     )
 
 
-async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
+async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
     config = {"name": "test"}
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
         "Invalid config for [light]: required key not provided @ data['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
     )
 
 
-async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
+async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
     config = None
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
