@@ -10,7 +10,7 @@ from homeassistant.components.automation import (
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,9 +49,8 @@ TYPE_SCHEMAS = {
 }
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
     if (device := device_registry.async_get(device_id)) is None:
@@ -99,7 +98,8 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_trigger_capabilities(
+@callback
+def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
