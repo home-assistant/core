@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 
 from . import get_block_device_wrapper, get_rpc_device_wrapper
@@ -106,9 +106,8 @@ async def async_validate_trigger_config(
     )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for Shelly devices."""
     triggers: list[dict[str, str]] = []
 
