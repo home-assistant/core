@@ -24,6 +24,7 @@ from .common import (
     SUBSCRIBER_ID,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
+    WEB_AUTH_DOMAIN,
     CreateDevice,
     FakeSubscriber,
     NestTestConfig,
@@ -184,7 +185,7 @@ def subscriber_id() -> str:
 @pytest.fixture
 def auth_implementation() -> str | None:
     """Fixture to let tests override the auth implementation in the config entry."""
-    return None
+    return WEB_AUTH_DOMAIN
 
 
 @pytest.fixture(
@@ -225,8 +226,7 @@ def config_entry(
             data[CONF_SUBSCRIBER_ID] = subscriber_id
         else:
             del data[CONF_SUBSCRIBER_ID]
-    if auth_implementation:
-        data["auth_implementation"] = auth_implementation
+    data["auth_implementation"] = auth_implementation
     return MockConfigEntry(domain=DOMAIN, data=data)
 
 

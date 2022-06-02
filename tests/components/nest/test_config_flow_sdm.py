@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .common import (
+    APP_AUTH_DOMAIN,
     CLIENT_ID,
     CLOUD_PROJECT_ID,
     FAKE_TOKEN,
@@ -26,12 +27,10 @@ from .common import (
     TEST_CONFIG_YAML_ONLY,
     TEST_CONFIGFLOW_HYBRID,
     TEST_CONFIGFLOW_YAML_ONLY,
+    WEB_AUTH_DOMAIN,
     MockConfigEntry,
 )
 
-ORIG_AUTH_DOMAIN = DOMAIN
-WEB_AUTH_DOMAIN = DOMAIN
-APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 

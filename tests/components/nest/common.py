@@ -25,6 +25,9 @@ PlatformSetup = Callable[[], Awaitable[None]]
 _T = TypeVar("_T")
 YieldFixture = Generator[_T, None, None]
 
+WEB_AUTH_DOMAIN = DOMAIN
+APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
 PROJECT_ID = "some-project-id"
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
@@ -81,7 +84,6 @@ TEST_CONFIG_YAML_ONLY = NestTestConfig(
     config=CONFIG,
     config_entry_data={
         "sdm": {},
-        "auth_implementation": "nest",
         "token": create_token_entry(),
     },
 )
@@ -101,7 +103,6 @@ TEST_CONFIG_HYBRID = NestTestConfig(
     },
     config_entry_data={
         "sdm": {},
-        "auth_implementation": "nest",
         "token": create_token_entry(),
         "cloud_project_id": CLOUD_PROJECT_ID,
         "subscriber_id": SUBSCRIBER_ID,
