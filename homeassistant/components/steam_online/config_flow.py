@@ -1,6 +1,7 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import steam
@@ -125,7 +126,7 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 

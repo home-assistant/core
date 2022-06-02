@@ -18,6 +18,8 @@ from homeassistant.components.recorder.models import (
 )
 
 from .common import (
+    apply_events_context_hints,
+    apply_states_context_hints,
     select_events_context_id_subquery,
     select_events_context_only,
     select_events_without_states,
@@ -54,13 +56,18 @@ def _apply_devices_context_union(
     ).cte()
     devices_cte_select = devices_cte.select()
     return query.union_all(
-        select_events_context_only()
-        .select_from(devices_cte_select)
-        .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
-        .outerjoin(EventData, (Events.data_id == EventData.data_id)),
-        select_states_context_only()
-        .select_from(devices_cte_select)
-        .outerjoin(States, devices_cte_select.c.context_id == States.context_id),
+        apply_events_context_hints(
+            select_events_context_only()
+            .select_from(devices_cte_select)
+            .outerjoin(Events, devices_cte_select.c.context_id == Events.context_id)
+        )
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        .where(Events.context_id.isnot(None)),
+        apply_states_context_hints(
+            select_states_context_only()
+            .select_from(devices_cte_select)
+            .outerjoin(States, devices_cte_select.c.context_id == States.context_id)
+        ).where(States.context_id.isnot(None)),
     )
 
 

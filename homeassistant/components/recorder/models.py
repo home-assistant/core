@@ -94,6 +94,8 @@ TABLES_TO_CHECK = [
 
 LAST_UPDATED_INDEX = "ix_states_last_updated"
 ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
+EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
+STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 
 EMPTY_JSON_OBJECT = "{}"
 

@@ -189,7 +189,7 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.2.2
+aiopyarr==22.6.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.1.0
@@ -1644,7 +1644,7 @@ yalexs==1.1.25
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.0.5
+yolink-api==0.0.6
 
 # homeassistant.components.youless
 youless-api==0.16
@@ -1668,7 +1668,7 @@ zigpy-zigate==0.7.4
 zigpy-znp==0.7.0
 
 # homeassistant.components.zha
-zigpy==0.45.1
+zigpy==0.46.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.37.1

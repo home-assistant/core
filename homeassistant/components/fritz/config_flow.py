@@ -1,6 +1,7 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import ipaddress
 import logging
 import socket
@@ -230,7 +231,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._host = data[CONF_HOST]
