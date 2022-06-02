@@ -92,7 +92,7 @@ async def async_setup_platform(
         config,
         async_add_entities,
         _async_setup_entity,
-        PLATFORM_SCHEMA_MODERN,
+        discovery_info,
     )
 
 
@@ -103,7 +103,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT binary sensor through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await async_discover_platform(hass, binary_sensor.DOMAIN)
+    await async_discover_platform(hass, binary_sensor.DOMAIN, PLATFORM_SCHEMA_MODERN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry

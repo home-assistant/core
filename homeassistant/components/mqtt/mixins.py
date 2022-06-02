@@ -65,6 +65,7 @@ from .const import (
     CONF_QOS,
     CONF_TOPIC,
     DATA_MQTT,
+    DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -264,17 +265,31 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_discover_platform(hass: HomeAssistant, platform_domain: str) -> None:
+async def async_discover_platform(
+    hass: HomeAssistant, platform_domain: str, schema: vol.Schema
+) -> None:
     """Set up platform if there is manual config."""
 
-    async def _async_discover_platform(_: Event | None) -> None:
-        config_yaml = await async_integration_yaml_config(hass, DOMAIN)
-        if not config_yaml or DOMAIN not in config_yaml:
+    async def _async_discover_platform(event: Event | None) -> None:
+        if event:
+            # The platform has been reloaded
+            config_yaml = await async_integration_yaml_config(hass, DOMAIN)
+            if not config_yaml:
+                return
+            config_yaml = config_yaml.get(DOMAIN, {})
+        else:
+            config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
+        if not config_yaml:
             return
-        if platform_domain not in config_yaml[DOMAIN]:
+        if platform_domain not in config_yaml:
             return
-        hass.async_create_task(
-            discovery.async_load_platform(hass, platform_domain, DOMAIN, None, {})
+        await asyncio.gather(
+            *(
+                discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
+                for config in await async_get_platform_config_from_yaml(
+                    hass, platform_domain, schema, config_yaml
+                )
+            )
         )
 
     hass.bus.async_listen("event_mqtt_reloaded", _async_discover_platform)
@@ -282,7 +297,10 @@ async def async_discover_platform(hass: HomeAssistant, platform_domain: str) -> 
 
 
 async def async_get_platform_config_from_yaml(
-    hass: HomeAssistant, platform_domain: str, schema: vol.Schema
+    hass: HomeAssistant,
+    platform_domain: str,
+    schema: vol.Schema,
+    config_yaml: ConfigType = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
 
@@ -300,10 +318,11 @@ async def async_get_platform_config_from_yaml(
 
         return validated_config
 
-    config_yaml = await async_integration_yaml_config(hass, DOMAIN)
-    if not config_yaml or DOMAIN not in config_yaml:
+    if config_yaml is None:
+        config_yaml = hass.data.get(DATA_MQTT_CONFIG)
+    if not config_yaml:
         return []
-    if not (platform_configs := config_yaml[DOMAIN].get(platform_domain)):
+    if not (platform_configs := config_yaml.get(platform_domain)):
         return []
     return async_validate_config(hass, platform_configs)
 
@@ -336,7 +355,7 @@ async def async_setup_platform_helper(
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     async_setup_entities: SetupEntity,
-    modern_schema: vol.Schema | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Return true if platform setup should be aborted."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -350,15 +369,8 @@ async def async_setup_platform_helper(
         return
     if config:
         await async_setup_entities(hass, async_add_entities, config)
-    if modern_schema:
-        await asyncio.gather(
-            *(
-                async_setup_entities(hass, async_add_entities, config)
-                for config in await async_get_platform_config_from_yaml(
-                    hass, platform_domain, modern_schema
-                )
-            )
-        )
+    if discovery_info:
+        await async_setup_entities(hass, async_add_entities, discovery_info)
 
 
 def init_entity_id_from_config(hass, entity, config, entity_id_format):
