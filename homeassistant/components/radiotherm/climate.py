@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 import radiotherm
-from radiotherm.thermostat import CommonThermostat
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -26,13 +25,12 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_HOLD_TEMP
@@ -111,9 +109,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up climate for a radiotherm device."""
     data: RadioThermData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [RadioThermostat(data.coordinator, data.tstat, data.name, data.hold_temp)]
-    )
+    async_add_entities([RadioThermostat(data)])
 
 
 async def setup_platform(
@@ -166,29 +162,30 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_preset_modes = PRESET_MODES
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[RadioThermUpdate],
-        device: CommonThermostat,
-        name: str,
-        hold_temp: int,
-    ) -> None:
+    def __init__(self, data: RadioThermData) -> None:
         """Initialize the thermostat."""
-        super().__init__(coordinator)
-        self.device = device
+        super().__init__(data.coordinator)
+        self.device = data.init_data.tstat
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
         self._current_operation = HVACMode.OFF
-        self._attr_name = name
+        self._attr_name = data.init_data.name
         self._fstate: str | None = None
         self._tmode = None
         self._tstate: HVACAction | None = None
-        self._hold_temp = hold_temp
+        self._hold_temp = data.hold_temp
         self._hold_set = False
         self._prev_temp = None
         self._program_mode: int | None = None
         self._is_away = False
+        self._attr_device_info = DeviceInfo(
+            name=data.init_data.name,
+            model=data.init_data.model,
+            manufacturer="Radio Thermostats",
+            sw_version=data.init_data.fw_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, data.init_data.mac)},
+        )
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
