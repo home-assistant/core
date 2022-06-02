@@ -23,12 +23,18 @@
                     "ip_address": "Direcci\u00f3n IP",
                     "name": "Nombre",
                     "region": "Regi\u00f3n"
+                },
+                "data_description": {
+                    "code": "Vaya a 'Configuraci\u00f3n' en su consola PlayStation 4. Luego navegue hasta 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y seleccione 'Agregar dispositivo' para obtener el pin."
                 }
             },
             "mode": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP (d\u00e9jalo en blanco si usas la detecci\u00f3n autom\u00e1tica).",
                     "mode": "Modo configuraci\u00f3n"
+                },
+                "data_description": {
+                    "ip_address": "D\u00e9jelo en blanco si selecciona la detecci\u00f3n autom\u00e1tica."
                 }
             }
         }

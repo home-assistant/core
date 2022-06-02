@@ -23,6 +23,7 @@
     },
     "options": {
         "error": {
+            "currency_unavailable": "La API de Coinbase no proporciona uno o m\u00e1s de los saldos de divisas solicitados.",
             "exchange_rate_unavailable": "El API de Coinbase no proporciona alguno/s de los tipos de cambio que has solicitado.",
             "unknown": "Error inesperado"
         },
