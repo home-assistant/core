@@ -123,6 +123,13 @@ async def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radio Thermostat."""
+    _LOGGER.warning(
+        # config flow added in 2022.7 and should be removed in 2022.9
+        "Configuration of the Radio Thermostat climate platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.9; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
     hosts = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]
@@ -246,13 +253,6 @@ class RadioThermostat(CoordinatorEntity, ClimateEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Update and validate the data from the thermostat."""
-        # Radio thermostats are very slow, and sometimes don't respond
-        # very quickly.  So we need to keep the number of calls to them
-        # to a bare minimum or we'll hit the Home Assistant 10 sec warning.  We
-        # have to make one call to /tstat to get temps but we'll try and
-        # keep the other calls to a minimum.  Even with this, these
-        # thermostats tend to time out sometimes when they're actively
-        # heating or cooling.
         data = self.data.tstat
         if self._is_model_ct80:
             self._attr_current_humidity = self.data.humidity
