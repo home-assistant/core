@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "please remove it from configuration.yaml as support for it "
             "will be removed in a future release"
         )
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
             )
