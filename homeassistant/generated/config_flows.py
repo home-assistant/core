@@ -468,6 +468,7 @@ FLOWS = {
         "alexa_media",
         "samsungtv_smart",
         "sonoff",
+        "remote_homeassistant"
     ],
     "helper": [
         "derivative",
