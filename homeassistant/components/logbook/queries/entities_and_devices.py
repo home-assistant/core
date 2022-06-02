@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import Events, States
+from homeassistant.components.recorder.models import EventData, Events, States
 
 from .common import (
     select_events_context_id_subquery,
@@ -66,14 +66,21 @@ def _apply_entities_devices_context_union(
         json_quotable_entity_ids,
         json_quotable_device_ids,
     ).cte()
+    devices_entities_cte_select = devices_entities_cte.select()
     return query.union_all(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
-        select_events_context_only().where(
-            Events.context_id.in_(devices_entities_cte.select())
-        ),
+        select_events_context_only()
+        .select_from(devices_entities_cte_select)
+        .outerjoin(
+            Events, devices_entities_cte_select.c.context_id == Events.context_id
+        )
+        .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         select_states_context_only()
-        .where(States.entity_id.not_in(entity_ids))
-        .where(States.context_id.in_(devices_entities_cte.select())),
+        .select_from(devices_entities_cte_select)
+        .outerjoin(
+            States, devices_entities_cte_select.c.context_id == States.context_id
+        )
+        .where(States.entity_id.not_in(entity_ids)),
     )
 
 
