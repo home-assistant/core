@@ -28,7 +28,9 @@ YieldFixture = Generator[_T, None, None]
 PROJECT_ID = "some-project-id"
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
-SUBSCRIBER_ID = "projects/example/subscriptions/subscriber-id-9876"
+CLOUD_PROJECT_ID = "cloud-id-9876"
+SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
+
 
 CONFIG = {
     "nest": {
@@ -83,6 +85,9 @@ TEST_CONFIG_YAML_ONLY = NestTestConfig(
         "token": create_token_entry(),
     },
 )
+TEST_CONFIGFLOW_YAML_ONLY = NestTestConfig(
+    config=TEST_CONFIG_YAML_ONLY.config, config_entry_data=None
+)
 
 # Exercises mode where subscriber id is created in the config flow, but
 # all authentication is defined in configuration.yaml
@@ -98,8 +103,12 @@ TEST_CONFIG_HYBRID = NestTestConfig(
         "sdm": {},
         "auth_implementation": "nest",
         "token": create_token_entry(),
+        "cloud_project_id": CLOUD_PROJECT_ID,
         "subscriber_id": SUBSCRIBER_ID,
     },
+)
+TEST_CONFIGFLOW_HYBRID = NestTestConfig(
+    TEST_CONFIG_HYBRID.config, config_entry_data=None
 )
 
 TEST_CONFIG_LEGACY = NestTestConfig(
