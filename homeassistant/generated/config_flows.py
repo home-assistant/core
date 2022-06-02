@@ -420,7 +420,11 @@ FLOWS = {
         "zerproc",
         "zha",
         "zwave_js",
-        "zwave_me"
+        "zwave_me",
+        "gardena_smart_system",
+        "alexa_media",
+        "samsungtv_smart",
+        "sonoff",
     ],
     "helper": [
         "derivative",
