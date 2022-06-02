@@ -1,11 +1,10 @@
 """Test the Eight Sleep config flow."""
 from homeassistant import config_entries
 from homeassistant.components.eight_sleep.const import DOMAIN
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 
-async def test_form(hass: HomeAssistant, valid_token) -> None:
+async def test_form(hass, valid_token) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -30,11 +29,13 @@ async def test_form(hass: HomeAssistant, valid_token) -> None:
     }
 
 
-async def test_form_invalid_auth(hass: HomeAssistant, invalid_token) -> None:
+async def test_form_invalid_auth(hass, invalid_token) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
