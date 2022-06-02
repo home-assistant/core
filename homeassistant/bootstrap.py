@@ -532,7 +532,7 @@ async def _async_set_up_integrations(
 
     # Setup recorder
     if recorder_domains := domains_to_setup & RECORDER_INTEGRATIONS:
-        _LOGGER.info("Setting up frontend: %s", recorder_domains)
+        _LOGGER.info("Setting up recorder: %s", recorder_domains)
         await async_setup_multi_components(hass, recorder_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
