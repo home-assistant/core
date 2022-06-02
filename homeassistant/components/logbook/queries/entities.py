@@ -78,12 +78,14 @@ def _apply_entities_context_union(
             select_events_context_only()
             .select_from(entities_cte_select)
             .outerjoin(Events, entities_cte_select.c.context_id == Events.context_id)
-        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        )
+        .outerjoin(EventData, (Events.data_id == EventData.data_id))
+        .filter(Events.context_id.isnot(None)),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(entities_cte_select)
             .outerjoin(States, entities_cte_select.c.context_id == States.context_id)
-        ),
+        ).filter(States.context_id.isnot(None)),
     )
 
 
