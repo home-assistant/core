@@ -140,11 +140,11 @@ async def test_setup_component_noerror(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_cover_open(
+async def test_cover_operation(
     hass: HomeAssistant,
     mock_aladdinconnect_api: MagicMock,
 ) -> None:
-    """Test component setup open cover cover."""
+    """Test Cover Operation states (open,close,opening,closing) cover."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=YAML_CONFIG,
@@ -176,58 +176,27 @@ async def test_cover_open(
     await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_OPEN
 
-
-async def test_cover_close(
-    hass: HomeAssistant,
-    mock_aladdinconnect_api: MagicMock,
-) -> None:
-    """Test component setup close cover."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_CLOSED)
     mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSED
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.home"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert COVER_DOMAIN in hass.config.components
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.home"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_CLOSED
-
-
-async def test_cover_closing(
-    hass: HomeAssistant,
-    mock_aladdinconnect_api: MagicMock,
-) -> None:
-    """Test component setup close cover."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_CLOSING
@@ -238,36 +207,12 @@ async def test_cover_closing(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
         await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert COVER_DOMAIN in hass.config.components
-
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
-    await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_CLOSING
-
-
-async def test_cover_openning(
-    hass: HomeAssistant,
-    mock_aladdinconnect_api: MagicMock,
-) -> None:
-    """Test component setup close cover."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_OPENING
@@ -278,19 +223,11 @@ async def test_cover_openning(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
         await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert COVER_DOMAIN in hass.config.components
-
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass,
-        utcnow() + SCAN_INTERVAL,
-    )
-    await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_OPENING
 
 
@@ -360,8 +297,4 @@ async def test_callback(
     ):
         callback = mock_aladdinconnect_api.register_callback.call_args[0][0]
         await callback()
-        async_fire_time_changed(
-            hass,
-            utcnow() + SCAN_INTERVAL,
-        )
     assert hass.states.get("cover.home").state == STATE_CLOSING
