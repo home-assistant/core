@@ -32,6 +32,12 @@
             "name": "Cocina",
             "type": "kitchen",
             "module_ids": ["12:34:56:03:a0:ac"]
+          },
+          {
+            "id": "2940411588",
+            "name": "Child",
+            "type": "custom",
+            "module_ids": ["12:34:56:26:cc:01"]
           }
         ],
         "modules": [
@@ -75,7 +81,131 @@
             "type": "NACamera",
             "name": "Hall",
             "setup_date": 1544828430,
-            "room_id": "3688132631"
+            "room_id": "3688132631",
+            "reachable": true
+          },
+          {
+            "id": "12:34:56:00:a5:a4",
+            "type": "NOC",
+            "name": "Garden",
+            "setup_date": 1544828430,
+            "reachable": true
+          },
+          {
+            "id": "12:34:56:37:11:ca",
+            "type": "NAMain",
+            "name": "NetatmoIndoor",
+            "setup_date": 1419453350,
+            "reachable": true,
+            "modules_bridged": [
+              "12:34:56:07:bb:3e",
+              "12:34:56:03:1b:e4",
+              "12:34:56:36:fc:de",
+              "12:34:56:05:51:20"
+            ],
+            "customer_id": "C00016",
+            "hardware_version": 251,
+            "public_ext_data": false,
+            "public_ext_counter": 0,
+            "alarm_config": {
+              "default_alarm": [
+                {
+                  "db_alarm_number": 0
+                },
+                {
+                  "db_alarm_number": 1
+                },
+                {
+                  "db_alarm_number": 2
+                },
+                {
+                  "db_alarm_number": 6
+                },
+                {
+                  "db_alarm_number": 4
+                },
+                {
+                  "db_alarm_number": 5
+                },
+                {
+                  "db_alarm_number": 7
+                },
+                {
+                  "db_alarm_number": 22
+                }
+              ],
+              "personnalized": [
+                {
+                  "threshold": 20,
+                  "data_type": 1,
+                  "direction": 0,
+                  "db_alarm_number": 8
+                },
+                {
+                  "threshold": 17,
+                  "data_type": 1,
+                  "direction": 1,
+                  "db_alarm_number": 9
+                },
+                {
+                  "threshold": 65,
+                  "data_type": 4,
+                  "direction": 0,
+                  "db_alarm_number": 16
+                },
+                {
+                  "threshold": 19,
+                  "data_type": 8,
+                  "direction": 0,
+                  "db_alarm_number": 22
+                }
+              ]
+            },
+            "module_offset": {
+              "12:34:56:80:bb:26": {
+                "a": 0.1
+              }
+            }
+          },
+          {
+            "id": "12:34:56:36:fc:de",
+            "type": "NAModule1",
+            "name": "Outdoor",
+            "setup_date": 1448565785,
+            "bridge": "12:34:56:37:11:ca"
+          },
+          {
+            "id": "12:34:56:03:1b:e4",
+            "type": "NAModule2",
+            "name": "Garden",
+            "setup_date": 1543579864,
+            "bridge": "12:34:56:37:11:ca"
+          },
+          {
+            "id": "12:34:56:05:51:20",
+            "type": "NAModule3",
+            "name": "Rain",
+            "setup_date": 1591770206,
+            "bridge": "12:34:56:37:11:ca"
+          },
+          {
+            "id": "12:34:56:07:bb:3e",
+            "type": "NAModule4",
+            "name": "Bedroom",
+            "setup_date": 1484997703,
+            "bridge": "12:34:56:37:11:ca"
+          },
+          {
+            "id": "12:34:56:26:68:92",
+            "type": "NHC",
+            "name": "Indoor",
+            "setup_date": 1571342643
+          },
+          {
+            "id": "12:34:56:26:cc:01",
+            "type": "BNS",
+            "name": "Child",
+            "setup_date": 1571634243
           }
         ],
         "schedules": [

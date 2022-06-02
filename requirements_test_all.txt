@@ -941,7 +941,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.2.4
+pyatmo==6.2.5.dev147
 
 # homeassistant.components.apple_tv
 pyatv==0.10.2
