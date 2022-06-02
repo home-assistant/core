@@ -24,7 +24,8 @@
             "manual_device_entry": {
                 "data": {
                     "host": "Host (direcci\u00f3n IP)"
-                }
+                },
+                "description": "Configuraci\u00f3n local"
             },
             "pick_device": {
                 "data": {

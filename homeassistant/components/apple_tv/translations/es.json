@@ -7,6 +7,7 @@
             "device_did_not_pair": "No se ha intentado finalizar el proceso de emparejamiento desde el dispositivo.",
             "device_not_found": "No se ha encontrado el dispositivo durante la detecci\u00f3n, por favor, intente a\u00f1adirlo de nuevo.",
             "inconsistent_device": "No se encontraron los protocolos esperados durante el descubrimiento. Esto normalmente indica un problema con el DNS de multidifusi\u00f3n (Zeroconf). Por favor, intente a\u00f1adir el dispositivo de nuevo.",
+            "ipv6_not_supported": "IPv6 no est\u00e1 soportado.",
             "no_devices_found": "No se encontraron dispositivos en la red",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "setup_failed": "No se ha podido configurar el dispositivo.",
