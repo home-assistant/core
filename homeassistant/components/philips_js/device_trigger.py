@@ -9,7 +9,7 @@ from homeassistant.components.automation import (
 )
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -27,9 +27,8 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+@callback
+def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict[str, str]]:
     """List device triggers for device."""
     triggers = []
     triggers.append(
