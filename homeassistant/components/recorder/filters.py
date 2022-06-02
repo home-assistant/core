@@ -104,41 +104,44 @@ class Filters:
         self, columns: Iterable[Column], encoder: Callable[[Any], Any]
     ) -> ClauseList:
         """Generate a filter from pre-comuted sets and pattern lists."""
-        exclude_e = self.excluded_entities
-        exclude_d = self.excluded_domains
-        exclude_eg = self.excluded_entity_globs
-
-        include_e = self.included_entities
-        include_d = self.included_domains
-        include_eg = self.included_entity_globs
-
-        have_exclude = bool(exclude_e or exclude_d or exclude_eg)
-        have_include = bool(include_e or include_d or include_eg)
-
-        includes = []
-        if include_d:
-            includes.append(_domain_matcher(include_d, columns, encoder))
-        if include_e:
-            includes.append(_entity_matcher(include_e, columns, encoder))
-        if include_eg:
-            includes.append(_globs_to_like(include_eg, columns, encoder))
-
-        excludes = []
-        if exclude_d:
-            excludes.append(_domain_matcher(exclude_d, columns, encoder))
-        if exclude_e:
-            excludes.append(_entity_matcher(exclude_e, columns, encoder))
-        if exclude_eg:
-            excludes.append(_globs_to_like(exclude_eg, columns, encoder))
-
+        have_exclude = bool(
+            self.excluded_entities
+            or self.excluded_domains
+            or self.excluded_entity_globs
+        )
+        have_include = bool(
+            self.included_entities
+            or self.included_domains
+            or self.included_entity_globs
+        )
         # Case 1 - no includes or excludes - pass all entities
         if not have_include and not have_exclude:
             return None
+
+        includes = []
+        if self.included_domains:
+            includes.append(_domain_matcher(self.included_domains, columns, encoder))
+        if self.included_entities:
+            includes.append(_entity_matcher(self.included_entities, columns, encoder))
+        if self.included_entity_globs:
+            includes.append(
+                _globs_to_like(self.included_entity_globs, columns, encoder)
+            )
 
         # Case 2 - includes, no excludes - only include specified entities
         if have_include and not have_exclude:
 
             return or_(*includes).self_group()
+
+        excludes = []
+        if self.excluded_domains:
+            excludes.append(_domain_matcher(self.excluded_domains, columns, encoder))
+        if self.excluded_entities:
+            excludes.append(_entity_matcher(self.excluded_entities, columns, encoder))
+        if self.excluded_entity_globs:
+            excludes.append(
+                _globs_to_like(self.excluded_entity_globs, columns, encoder)
+            )
 
         # Case 3 - excludes, no includes - only exclude specified entities
         if not have_include and have_exclude:
@@ -151,25 +154,29 @@ class Filters:
         #  - if domain and glob are not included, pass if entity is included
         # note: if both include domain matches then exclude domains ignored.
         #   If glob matches then exclude domains and glob checked
-        if include_d or include_eg:
+        if self.included_domains or self.included_entity_globs:
             return or_(
                 (
-                    _domain_matcher(include_d, columns, encoder)
+                    _domain_matcher(self.included_domains, columns, encoder)
                     & not_(
-                        _entity_matcher(exclude_e, columns, encoder)
-                        | _globs_to_like(exclude_eg, columns, encoder)
+                        _entity_matcher(self.excluded_entities, columns, encoder)
+                        | _globs_to_like(self.excluded_entity_globs, columns, encoder)
                     )
                 ),
                 (
-                    not_(_domain_matcher(include_d, columns, encoder))
+                    not_(_domain_matcher(self.included_domains, columns, encoder))
                     & or_(
                         (
-                            _globs_to_like(include_eg, columns, encoder)
+                            _globs_to_like(self.included_entity_globs, columns, encoder)
                             & not_(or_(*excludes))
                         ),
                         (
-                            not_(_globs_to_like(include_eg, columns, encoder))
-                            & _entity_matcher(include_e, columns, encoder)
+                            not_(
+                                _globs_to_like(
+                                    self.included_entity_globs, columns, encoder
+                                )
+                            )
+                            & _entity_matcher(self.included_entities, columns, encoder)
                         ),
                     )
                 ),
@@ -182,15 +189,15 @@ class Filters:
         # excluded are then presumed included. Logic is as follows
         #  - if domain or glob is excluded, pass if entity is included
         #  - if domain is not excluded, pass if entity not excluded by ID
-        if exclude_d or exclude_eg:
+        if self.excluded_domains or self.excluded_entity_globs:
             matcher = not_(or_(*excludes))
-            if include_e:
-                matcher |= _entity_matcher(include_e, columns, encoder)
+            if self.included_entities:
+                matcher |= _entity_matcher(self.included_entities, columns, encoder)
             return matcher.self_group()
 
         # Case 4c - neither include or exclude domain specified
         #  - Only pass if entity is included.  Ignore entity excludes.
-        return _entity_matcher(include_e, columns, encoder)
+        return _entity_matcher(self.included_entities, columns, encoder)
 
     def states_entity_filter(self) -> ClauseList:
         """Generate the entity filter query."""
