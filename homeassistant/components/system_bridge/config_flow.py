@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -202,7 +203,7 @@ class ConfigFlow(
 
         return await self.async_step_authenticate()
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._name = entry_data[CONF_HOST]
         self._input = {
