@@ -89,10 +89,9 @@ async def async_setup_platform(
     await async_setup_platform_helper(
         hass,
         binary_sensor.DOMAIN,
-        config,
+        discovery_info or config,
         async_add_entities,
         _async_setup_entity,
-        discovery_info,
     )
 
 

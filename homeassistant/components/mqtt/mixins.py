@@ -352,10 +352,9 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 async def async_setup_platform_helper(
     hass: HomeAssistant,
     platform_domain: str,
-    config: ConfigType,
+    config: ConfigType | DiscoveryInfoType,
     async_add_entities: AddEntitiesCallback,
     async_setup_entities: SetupEntity,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Return true if platform setup should be aborted."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -367,10 +366,7 @@ async def async_setup_platform_helper(
             platform_domain,
         )
         return
-    if config:
-        await async_setup_entities(hass, async_add_entities, config)
-    if discovery_info:
-        await async_setup_entities(hass, async_add_entities, discovery_info)
+    await async_setup_entities(hass, async_add_entities, config)
 
 
 def init_entity_id_from_config(hass, entity, config, entity_id_format):
