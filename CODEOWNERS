@@ -582,8 +582,8 @@ build.json @home-assistant/supervisor
 /tests/components/local_ip/ @issacg
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
-/homeassistant/components/logbook/ @home-assistant/core
-/tests/components/logbook/ @home-assistant/core
+/homeassistant/components/logbook/ @home-assistant/core @bdraco
+/tests/components/logbook/ @home-assistant/core @bdraco
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/logi_circle/ @evanjd
