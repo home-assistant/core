@@ -11,10 +11,8 @@ from pytest import approx
 from homeassistant import loader
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.db_schema import (
-    StatisticsMeta,
-    process_timestamp_to_utc_isoformat,
-)
+from homeassistant.components.recorder.db_schema import StatisticsMeta
+from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
