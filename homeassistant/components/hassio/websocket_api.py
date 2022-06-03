@@ -39,7 +39,7 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
 
 # Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
 WS_NO_ADMIN_ENDPOINTS = re.compile(
-    r'^(?:" r"|/ingress/(session|validate_session)" r"|/addons/[^/]+/info" r")$'
+    r"^(?:|/ingress/(session|validate_session)|/addons/[^/]+/info)$"
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)

@@ -41,13 +41,11 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
-NO_AUTH_ONBOARDING = re.compile(r'^(?:" r"|supervisor/logs" r"|backups/[^/]+/.+" r")$')
+NO_AUTH_ONBOARDING = re.compile(r"^(?:|supervisor/logs|backups/[^/]+/.+)$")
 
-NO_AUTH = re.compile(
-    r'^(?:" r"|app/.*" r"|addons/[^/]+/logo" r"|addons/[^/]+/icon" r")$'
-)
+NO_AUTH = re.compile(r"^(?:|app/.*|addons/[^/]+/logo|addons/[^/]+/icon)$")
 
-NO_STORE = re.compile(r'^(?:" r"|app/entrypoint.js" r")$')
+NO_STORE = re.compile(r"^(?:|app/entrypoint.js)$")
 
 
 class HassIOView(HomeAssistantView):
