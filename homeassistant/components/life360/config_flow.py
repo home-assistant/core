@@ -94,7 +94,13 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._username, self._password
                 ) | _account_options_schema(self._options)
             else:
-                schema = password_schema(self._password)
+                # Don't show current password the first time we prompt for password
+                # since this will happen asynchronously. However, once the user enters a
+                # password, we can show it in case it's not valid to make it easier to
+                # enter a long, complicated password.
+                pwd = vol.UNDEFINED if self._first_reauth_confirm else self._password
+                self._first_reauth_confirm = False
+                schema = password_schema(pwd)
             return self.async_show_form(
                 step_id=step_id, data_schema=vol.Schema(schema), errors=errors
             )
@@ -167,21 +173,8 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
         # simple reauthorization will be successful.
         return await self.async_step_reauth_confirm(user_input)
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth_confirm(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle reauthorization completion."""
-        if not user_input:
-            # Don't show current password the first time we prompt for password since
-            # this will happen asynchronously. However, once the user enters a password,
-            # we can show it in case it's not valid to make it easier to enter a long,
-            # complicated password.
-            pwd = vol.UNDEFINED if self._first_reauth_confirm else self._password
-            self._first_reauth_confirm = False
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=vol.Schema(password_schema(pwd))
-            )
-
         self._password = user_input[CONF_PASSWORD]
         return await self._async_verify("reauth_confirm")
 
@@ -200,13 +193,13 @@ class Life360OptionsFlow(OptionsFlow):
         options = self.config_entry.options
 
         if user_input is not None:
-            user_input = _extract_account_options(user_input)
+            new_options = _extract_account_options(user_input)
             # If prefix has changed then tell __init__.async_update_options() to remove
             # and re-add config entry.
             self.hass.data[DOMAIN]["accounts"][self.config_entry.unique_id][
                 "re_add_entry"
-            ] = user_input.get(CONF_PREFIX) != options.get(CONF_PREFIX)
-            return self.async_create_entry(title="", data=user_input)
+            ] = new_options.get(CONF_PREFIX) != options.get(CONF_PREFIX)
+            return self.async_create_entry(title="", data=new_options)
 
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema(_account_options_schema(options))
