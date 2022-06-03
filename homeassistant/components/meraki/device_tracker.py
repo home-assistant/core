@@ -90,7 +90,7 @@ class MerakiView(HomeAssistantView):
 
     @callback
     def _handle(self, hass, data):
-        ap_mac = data.get("apMac","none")
+        ap_mac = data.get("apMac",False)
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
 
@@ -112,7 +112,8 @@ class MerakiView(HomeAssistantView):
                 gps_location = (lat, lng)
 
             attrs = {}
-            attrs["name"] = i.get("name", "None")
+            '''Device name only provided if the device has a name within merki dashboard otherwise setting name to Device Mac Address'''
+            device_name = i.get("name", str(mac))
             if i.get("os", False):
                 attrs["os"] = i["os"]
             if i.get("manufacturer", False):
@@ -125,6 +126,8 @@ class MerakiView(HomeAssistantView):
                 attrs["seenTime"] = i["seenTime"]
             if i.get("ssid", False):
                 attrs["ssid"] = i["ssid"]
+            if ap_mac:
+                attrs["apMac"] = ap_mac
    
                 
             if i.get("rssi", False):
@@ -133,7 +136,7 @@ class MerakiView(HomeAssistantView):
                 self.async_see(
                     gps=gps_location,
                     mac=mac,
-                    name=attrs["name"],
+                    name=device_name,
                     source_type=SOURCE_TYPE_ROUTER,
                     gps_accuracy=accuracy,
                     attributes=attrs,
