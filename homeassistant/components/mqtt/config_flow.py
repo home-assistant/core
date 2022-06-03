@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 
-from . import MqttClientSetup
+from .client import MqttClientSetup
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
