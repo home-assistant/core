@@ -11,7 +11,7 @@ from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     EVENTS_CONTEXT_ID_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
