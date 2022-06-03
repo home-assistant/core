@@ -336,8 +336,9 @@ def test_get_significant_states_include(hass_history):
 def test_get_significant_states_include_exclude_domain(hass_history):
     """Test if significant states when excluding and including domains.
 
-    We should not get back any changes since we include only the
-    media_player domain but also exclude it.
+    We should get back all the media_player domain changes
+    only since the include wins over the exclude but will
+    exclude everything else.
     """
     hass = hass_history
     zero, four, states = record_states(hass)
@@ -365,7 +366,6 @@ def test_get_significant_states_include_exclude_entity(hass_history):
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test"]
     del states["media_player.test2"]
     del states["media_player.test3"]
     del states["thermostat.test"]
