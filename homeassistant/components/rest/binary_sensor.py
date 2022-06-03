@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
@@ -62,6 +63,7 @@ async def async_setup_platform(
     value_template = conf.get(CONF_VALUE_TEMPLATE)
     force_update = conf.get(CONF_FORCE_UPDATE)
     resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
+    unique_id = conf.get(CONF_UNIQUE_ID)
 
     if value_template is not None:
         value_template.hass = hass
@@ -76,6 +78,7 @@ async def async_setup_platform(
                 value_template,
                 force_update,
                 resource_template,
+                unique_id,
             )
         ],
     )
@@ -93,6 +96,7 @@ class RestBinarySensor(RestEntity, BinarySensorEntity):
         value_template,
         force_update,
         resource_template,
+        unique_id,
     ):
         """Initialize a REST binary sensor."""
         super().__init__(coordinator, rest, name, resource_template, force_update)
@@ -102,6 +106,7 @@ class RestBinarySensor(RestEntity, BinarySensorEntity):
         self._is_on = None
 
         self._attr_device_class = device_class
+        self._attr_unique_id = unique_id
 
     @property
     def is_on(self):

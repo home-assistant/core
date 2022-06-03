@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_RESOURCE_TEMPLATE,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -73,6 +74,7 @@ SENSOR_SCHEMA = {
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }
 
 BINARY_SENSOR_SCHEMA = {
@@ -80,6 +82,7 @@ BINARY_SENSOR_SCHEMA = {
     vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }
 
 

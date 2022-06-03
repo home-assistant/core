@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
@@ -79,6 +80,7 @@ async def async_setup_platform(
     value_template = conf.get(CONF_VALUE_TEMPLATE)
     force_update = conf.get(CONF_FORCE_UPDATE)
     resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
+    unique_id = conf.get(CONF_UNIQUE_ID)
 
     if value_template is not None:
         value_template.hass = hass
@@ -97,6 +99,7 @@ async def async_setup_platform(
                 force_update,
                 resource_template,
                 json_attrs_path,
+                unique_id,
             )
         ],
     )
@@ -118,6 +121,7 @@ class RestSensor(RestEntity, SensorEntity):
         force_update,
         resource_template,
         json_attrs_path,
+        unique_id,
     ):
         """Initialize the REST sensor."""
         super().__init__(coordinator, rest, name, resource_template, force_update)
@@ -131,6 +135,7 @@ class RestSensor(RestEntity, SensorEntity):
         self._attr_native_unit_of_measurement = self._unit_of_measurement
         self._attr_device_class = device_class
         self._attr_state_class = state_class
+        self._attr_unique_id = unique_id
 
     @property
     def native_value(self):

@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -65,6 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -88,6 +90,7 @@ async def async_setup_platform(
     resource = config.get(CONF_RESOURCE)
     state_resource = config.get(CONF_STATE_RESOURCE) or resource
     verify_ssl = config.get(CONF_VERIFY_SSL)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     auth = None
     if username:
@@ -119,6 +122,7 @@ async def async_setup_platform(
             is_on_template,
             timeout,
             verify_ssl,
+            unique_id,
         )
 
         req = await switch.get_device_state(hass)
@@ -153,6 +157,7 @@ class RestSwitch(SwitchEntity):
         is_on_template,
         timeout,
         verify_ssl,
+        unique_id,
     ):
         """Initialize the REST switch."""
         self._state = None
@@ -170,6 +175,7 @@ class RestSwitch(SwitchEntity):
         self._verify_ssl = verify_ssl
 
         self._attr_device_class = device_class
+        self._attr_unique_id = unique_id
 
     @property
     def name(self):
