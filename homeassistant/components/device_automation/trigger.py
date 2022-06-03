@@ -1,7 +1,6 @@
 """Offer device oriented automation."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
@@ -46,14 +45,14 @@ class DeviceAutomationTriggerProtocol(Protocol):
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
-    def async_get_trigger_capabilities(
+    async def async_get_trigger_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema] | Awaitable[dict[str, vol.Schema]]:
+    ) -> dict[str, vol.Schema]:
         """List trigger capabilities."""
 
-    def async_get_triggers(
+    async def async_get_triggers(
         self, hass: HomeAssistant, device_id: str
-    ) -> list[dict[str, Any]] | Awaitable[list[dict[str, Any]]]:
+    ) -> list[dict[str, Any]]:
         """List triggers."""
 
 

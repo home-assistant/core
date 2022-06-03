@@ -109,7 +109,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.3.0
+aiobafi6==0.5.0
 
 # homeassistant.components.aws
 aiobotocore==2.1.0
@@ -189,7 +189,7 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.2.2
+aiopyarr==22.6.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.1.0
@@ -309,7 +309,7 @@ beautifulsoup4==4.11.1
 bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.3
+bimmer_connected==0.9.4
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -589,7 +589,7 @@ hole==0.7.0
 holidays==0.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220531.0
+home-assistant-frontend==20220601.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1029,7 +1029,7 @@ pyhaversion==22.4.1
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.4
+pyhiveapi==0.5.5
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1131,7 +1131,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.10.0
+pynetgear==0.10.4
 
 # homeassistant.components.nina
 pynina==0.1.8
@@ -1498,7 +1498,7 @@ sunwatcher==0.2.1
 surepy==0.7.2
 
 # homeassistant.components.system_bridge
-systembridge==2.3.1
+systembridgeconnector==3.1.3
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
@@ -1638,7 +1638,7 @@ yalexs==1.1.25
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.0.5
+yolink-api==0.0.6
 
 # homeassistant.components.youless
 youless-api==0.16
@@ -1662,7 +1662,7 @@ zigpy-zigate==0.7.4
 zigpy-znp==0.7.0
 
 # homeassistant.components.zha
-zigpy==0.45.1
+zigpy==0.46.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.37.1

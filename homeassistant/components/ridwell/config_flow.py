@@ -1,6 +1,7 @@
 """Config flow for Ridwell integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from aioridwell import async_get_client
@@ -80,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_USERNAME: self._username, CONF_PASSWORD: self._password},
         )
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._username = config[CONF_USERNAME]
         return await self.async_step_reauth_confirm()

@@ -19,14 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Context,
-    Event,
-    HassJob,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -121,12 +114,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.options = options
         self._notify_future: asyncio.Task | None = None
 
-        @callback
-        def _update_listeners():
-            for update_callback in self._listeners:
-                update_callback()
-
-        self.turn_on = PluggableAction(_update_listeners)
+        self.turn_on = PluggableAction(self.async_update_listeners)
 
         super().__init__(
             hass,
@@ -193,15 +181,9 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._notify_future = asyncio.create_task(self._notify_task())
 
     @callback
-    def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
+    def _unschedule_refresh(self) -> None:
         """Remove data update."""
-        super().async_remove_listener(update_callback)
-        if not self._listeners:
-            self._async_notify_stop()
-
-    @callback
-    def _async_stop_refresh(self, event: Event) -> None:
-        super()._async_stop_refresh(event)
+        super()._unschedule_refresh()
         self._async_notify_stop()
 
     @callback
