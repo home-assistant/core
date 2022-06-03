@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -197,6 +198,7 @@ async def test_setup_get(hass):
                 "headers": {"Accept": CONTENT_TYPE_JSON},
                 "device_class": SensorDeviceClass.TEMPERATURE,
                 "state_class": SensorStateClass.MEASUREMENT,
+                "unique_id": "foo_unique_id",
             }
         },
     )
@@ -218,6 +220,10 @@ async def test_setup_get(hass):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.foo")
+    assert entity.unique_id == "foo_unique_id"
 
 
 @respx.mock

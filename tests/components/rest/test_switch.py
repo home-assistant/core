@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     Platform,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
@@ -116,12 +117,17 @@ async def test_setup(hass, aioclient_mock):
                 CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
                 rest.CONF_BODY_ON: "custom on text",
                 rest.CONF_BODY_OFF: "custom off text",
+                "unique_id": "foo_unique_id",
             }
         },
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, Platform.SWITCH)
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("switch.foo")
+    assert entity.unique_id == "foo_unique_id"
 
 
 async def test_setup_with_state_resource(hass, aioclient_mock):
@@ -200,6 +206,7 @@ def _setup_test_switch(hass):
         None,
         10,
         True,
+        None,
     )
     switch.hass = hass
     return switch, body_on, body_off

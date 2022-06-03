@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -169,6 +170,7 @@ async def test_setup_get(hass):
                 "password": "my password",
                 "headers": {"Accept": CONTENT_TYPE_JSON},
                 "device_class": BinarySensorDeviceClass.PLUG,
+                "unique_id": "foo_unique_id",
             }
         },
     )
@@ -179,6 +181,10 @@ async def test_setup_get(hass):
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.PLUG
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("binary_sensor.foo")
+    assert entity.unique_id == "foo_unique_id"
 
 
 @respx.mock

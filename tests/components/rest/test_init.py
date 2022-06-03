@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -42,21 +43,25 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
                             "unit_of_measurement": DATA_MEGABYTES,
                             "name": "sensor1",
                             "value_template": "{{ value_json.sensor1 }}",
+                            "unique_id": "unique_sensor1",
                         },
                         {
                             "unit_of_measurement": DATA_MEGABYTES,
                             "name": "sensor2",
                             "value_template": "{{ value_json.sensor2 }}",
+                            "unique_id": "unique_sensor2",
                         },
                     ],
                     "binary_sensor": [
                         {
                             "name": "binary_sensor1",
                             "value_template": "{{ value_json.binary_sensor1 }}",
+                            "unique_id": "unique_binary_sensor1",
                         },
                         {
                             "name": "binary_sensor2",
                             "value_template": "{{ value_json.binary_sensor2 }}",
+                            "unique_id": "unique_binary_sensor2",
                         },
                     ],
                 }
@@ -90,6 +95,16 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
     assert hass.states.get("sensor.sensor2").state == "2"
     assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
+
+    entity_reg = er.async_get(hass)
+    entity1 = entity_reg.async_get("sensor.sensor1")
+    entity2 = entity_reg.async_get("sensor.sensor2")
+    entity3 = entity_reg.async_get("binary_sensor.binary_sensor1")
+    entity4 = entity_reg.async_get("binary_sensor.binary_sensor2")
+    assert entity1.unique_id == "unique_sensor1"
+    assert entity2.unique_id == "unique_sensor2"
+    assert entity3.unique_id == "unique_binary_sensor1"
+    assert entity4.unique_id == "unique_binary_sensor2"
 
     # Now the end point flakes out again
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
