@@ -128,10 +128,7 @@ class MerakiView(HomeAssistantView):
                 attrs["ssid"] = i["ssid"]
             if ap_mac:
                 attrs["apMac"] = ap_mac
-   
-                
-            if i.get("rssi", False):
-                attrs["rssi"] = i["rssi"]
+
             hass.async_create_task(
                 self.async_see(
                     gps=gps_location,
