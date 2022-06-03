@@ -478,8 +478,6 @@ build.json @home-assistant/supervisor
 /tests/components/ialarm/ @RyuzakiKK
 /homeassistant/components/ialarm_xr/ @bigmoby
 /tests/components/ialarm_xr/ @bigmoby
-/homeassistant/components/ialarmxr/ @bigmoby
-/tests/components/ialarmxr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -828,8 +826,7 @@ build.json @home-assistant/supervisor
 /tests/components/rachio/ @bdraco
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
-/homeassistant/components/radiotherm/ @bdraco @vinnyfuria
-/tests/components/radiotherm/ @bdraco @vinnyfuria
+/homeassistant/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
