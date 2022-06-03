@@ -1,8 +1,8 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
 
+from bisect import bisect_left
 from typing import TYPE_CHECKING, Any
-from bisect import bisect
 
 import voluptuous as vol
 
@@ -60,7 +60,7 @@ def _find_valid_target_temp(target: int, valid_targets: list[int]) -> int:
         return valid_targets[0]
     if target >= valid_targets[-1]:
         return valid_targets[-1]
-    return valid_targets[bisect(valid_targets, target) - 1]
+    return valid_targets[bisect_left(valid_targets, target)]
 
 
 async def async_setup_entry(
@@ -213,7 +213,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             return
 
         new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)
-        await self._async_set_ac_state_property("targetTemperature", int(new_temp))
+        await self._async_set_ac_state_property("targetTemperature", new_temp)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
