@@ -100,12 +100,13 @@ def _authorization_login_error(hass, api, username, password, errors):
     return None
 
 
-def _test_config_entry(hass, options=None):
+def _test_config_entry(hass, state=None, options=None):
     options = options or TEST_DEF_OPTIONS
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG_DATA,
         version=2,
+        state=state,
         options=options,
         unique_id=TEST_USER.lower(),
     )
@@ -206,18 +207,52 @@ async def test_config_flow_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-def _start_reauth_flow(hass):
-    config_entry = _test_config_entry(hass)
+def _start_reauth_flow(hass, state=None):
+    config_entry = _test_config_entry(hass, state=state)
 
     init_integ_data(hass)
-    hass.data[DOMAIN]["accounts"][config_entry.unique_id] = {"api": MagicMock()}
+    hass.data[DOMAIN]["accounts"][config_entry.unique_id] = {
+        "api": MagicMock(),
+        "coordinator": MagicMock(),
+    }
 
     return config_entry
 
 
-async def test_config_flow_reauth_success(hass):
-    """Test a successful reauthorization config flow."""
+async def test_config_flow_reauth_success_unloaded(hass):
+    """Test a successful reauthorization config flow where entry was not loaded."""
     config_entry = _start_reauth_flow(hass)
+
+    # Simulate current username & password are still valid, but authorization string has
+    # expired, such that getting a new authorization string from server is successful.
+    with patch(
+        "homeassistant.components.life360.config_flow.get_life360_authorization",
+        return_value=TEST_AUTHORIZATION_2,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+                "title_placeholders": {"name": config_entry.title},
+                "unique_id": config_entry.unique_id,
+            },
+            data=config_entry.data,
+        )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert config_entry.data == TEST_CONFIG_DATA_2
+
+
+async def test_config_flow_reauth_success_loaded(hass):
+    """Test a successful reauthorization config flow where config entry was loaded."""
+    config_entry = _start_reauth_flow(
+        hass, state=config_entries.ConfigEntryState.LOADED
+    )
 
     # Simulate current username & password are still valid, but authorization string has
     # expired, such that getting a new authorization string from server is successful.
@@ -349,7 +384,7 @@ async def test_options_flow_all(hass):
 
 async def test_options_flow_fixed_prefix(hass):
     """Test an options flow where prefix does not change."""
-    config_entry = _test_config_entry(hass, TEST_OPTIONS)
+    config_entry = _test_config_entry(hass, options=TEST_OPTIONS)
 
     init_integ_data(hass)
     hass.data[DOMAIN]["accounts"][config_entry.unique_id] = {}
