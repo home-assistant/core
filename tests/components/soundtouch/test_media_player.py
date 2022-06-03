@@ -50,7 +50,7 @@ async def _test_key_service(
     service_data: dict[str, Any],
     key_name: str,
 ):
-    """Test mute volume."""
+    """Test API calls that use the /key endpoint to emulate physical button clicks."""
     requests_mock_key.reset()
     await hass.services.async_call("media_player", service, service_data, True)
     assert requests_mock_key.call_count == 2
@@ -486,7 +486,7 @@ async def test_play_everywhere(
     """Test play everywhere."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
-    # one master, one slave => create zone
+    # one master, one slave => set zone
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PLAY_EVERYWHERE,
@@ -495,7 +495,7 @@ async def test_play_everywhere(
     )
     assert device1_requests_mock_set_zone.call_count == 1
 
-    # unknown master, create zone must not be called
+    # unknown master, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PLAY_EVERYWHERE,
@@ -511,7 +511,7 @@ async def test_play_everywhere(
         hass.data[DATA_SOUNDTOUCH].remove(entity)
         await entity.async_remove()
 
-    # no slaves, create zone must not be called
+    # no slaves, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PLAY_EVERYWHERE,
@@ -534,7 +534,7 @@ async def test_create_zone(
 
     assert device1_requests_mock_set_zone.call_count == 0
 
-    # one master, one slave => create zone
+    # one master, one slave => set zone
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CREATE_ZONE,
@@ -546,7 +546,7 @@ async def test_create_zone(
     )
     assert device1_requests_mock_set_zone.call_count == 1
 
-    # unknown master, create zone must not be called
+    # unknown master, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CREATE_ZONE,
@@ -555,7 +555,7 @@ async def test_create_zone(
     )
     assert device1_requests_mock_set_zone.call_count == 1
 
-    # no slaves, create zone must not be called
+    # no slaves, set zone must not be called
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CREATE_ZONE,
@@ -573,7 +573,7 @@ async def test_remove_zone_slave(
     device2_requests_mock_standby,
     device1_requests_mock_remove_zone_slave,
 ):
-    """Test adding a slave to an existing zone."""
+    """Test removing a slave from an existing zone."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
     # remove one slave
@@ -597,7 +597,7 @@ async def test_remove_zone_slave(
     )
     assert device1_requests_mock_remove_zone_slave.call_count == 1
 
-    # no slave to add, remove zone slave is not called
+    # no slave to remove, remove zone slave is not called
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REMOVE_ZONE_SLAVE,
@@ -615,7 +615,7 @@ async def test_add_zone_slave(
     device2_requests_mock_standby,
     device1_requests_mock_add_zone_slave,
 ):
-    """Test removing a slave from a zone."""
+    """Test adding a slave to a zone."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
     # add one slave
