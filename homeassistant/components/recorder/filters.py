@@ -88,6 +88,15 @@ class Filters:
         self.included_domains: Iterable[str] = []
         self.included_entity_globs: Iterable[str] = []
 
+    def __repr__(self) -> str:
+        """Return human readable excludes/includes."""
+        return (
+            f"<Filters excluded_entities={self.excluded_entities} excluded_domains={self.excluded_domains} "
+            f"excluded_entity_globs={self.excluded_entity_globs} "
+            f"included_entities={self.included_entities} included_domains={self.included_domains} "
+            f"included_entity_globs={self.included_entity_globs}>"
+        )
+
     @property
     def has_config(self) -> bool:
         """Determine if there is any filter configuration."""

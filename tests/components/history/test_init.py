@@ -246,15 +246,11 @@ def test_get_significant_states_exclude(hass_history):
 def test_get_significant_states_exclude_include_entity(hass_history):
     """Test significant states when excluding domains and include entities.
 
-    We should not get back every thermostat and media player test changes.
+    We should not get back every thermostat change unless its specifically included
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test2"]
-    del states["media_player.test3"]
-    del states["thermostat.test"]
     del states["thermostat.test2"]
-    del states["script.can_cancel_this_one"]
 
     config = history.CONFIG_SCHEMA(
         {
@@ -510,6 +506,10 @@ def check_significant_states(hass, zero, four, states, config):
         filters.included_domains = include.get(CONF_DOMAINS, [])
 
     hist = get_significant_states(hass, zero, four, filters=filters)
+
+    import pprint
+
+    pprint.pprint([filters, "states", states, "hist", hist])
     assert states == hist
 
 
