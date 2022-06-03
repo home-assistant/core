@@ -1,14 +1,18 @@
 """OAuth implementations."""
+
+import logging
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import (
     INSTALLED_AUTH_DOMAIN,
-    OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     OOB_REDIRECT_URI,
     WEB_AUTH_DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -17,7 +21,10 @@ class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
     name = "OAuth for Web"
 
     def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+        self,
+        hass: HomeAssistant,
+        client_id: str,
+        client_secret: str,
     ) -> None:
         """Initialize WebAuth."""
         super().__init__(
@@ -25,7 +32,7 @@ class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
             WEB_AUTH_DOMAIN,
             client_id,
             client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            "",  # Set during config flow
             OAUTH2_TOKEN,
         )
 
@@ -36,7 +43,10 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
     name = "OAuth for Apps"
 
     def __init__(
-        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+        self,
+        hass: HomeAssistant,
+        client_id: str,
+        client_secret: str,
     ) -> None:
         """Initialize InstalledAppAuth."""
         super().__init__(
@@ -44,7 +54,7 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
             INSTALLED_AUTH_DOMAIN,
             client_id,
             client_secret,
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            "",  # Set during config flow
             OAUTH2_TOKEN,
         )
 

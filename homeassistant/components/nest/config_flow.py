@@ -60,6 +60,8 @@ from .const import (
     DATA_NEST_CONFIG,
     DATA_SDM,
     DOMAIN,
+    INSTALLED_AUTH_DOMAIN,
+    OAUTH2_AUTHORIZE,
     OOB_REDIRECT_URI,
     SDM_SCOPES,
 )
@@ -67,7 +69,26 @@ from .const import (
 DATA_FLOW_IMPL = "nest_flow_implementation"
 SUBSCRIPTION_FORMAT = "projects/{cloud_project_id}/subscriptions/home-assistant-{rnd}"
 SUBSCRIPTION_RAND_LENGTH = 10
+
+MORE_INFO_URL = "https://www.home-assistant.io/integrations/nest/#configuration"
+
+# URLs for Configure Cloud Project step
 CLOUD_CONSOLE_URL = "https://console.cloud.google.com/home/dashboard"
+SDM_API_URL = (
+    "https://console.cloud.google.com/apis/library/smartdevicemanagement.googleapis.com"
+)
+PUBSUB_API_URL = "https://console.cloud.google.com/apis/library/pubsub.googleapis.com"
+
+# URLs for Configure OAuth step
+OAUTH_CONSENT_URL_FORMAT = "https://console.cloud.google.com/apis/credentials/consent?project={cloud_project_id}"
+OAUTH_CREDS_URL_FORMAT = (
+    "https://console.cloud.google.com/apis/credentials?project={cloud_project_id}"
+)
+
+# URLs for Configure Device Access Project step
+DEVICE_ACCESS_CONSOLE_URL = "https://console.nest.google.com/device-access/"
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -76,13 +97,15 @@ class ConfigMode(Enum):
 
     SDM = 1  # SDM api with configuration.yaml
     LEGACY = 2  # "Works with Nest" API
+    SDM_APPLICATION_CREDENTIALS = 3  # Config entry only
 
 
 def get_config_mode(hass: HomeAssistant) -> ConfigMode:
     """Return the integration configuration mode."""
-    if DOMAIN not in hass.data:
-        return ConfigMode.SDM
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
+    if DOMAIN not in hass.data or not (
+        config := hass.data[DOMAIN].get(DATA_NEST_CONFIG)
+    ):
+        return ConfigMode.SDM_APPLICATION_CREDENTIALS
     if CONF_PROJECT_ID in config:
         return ConfigMode.SDM
     return ConfigMode.LEGACY
@@ -131,7 +154,6 @@ def register_flow_implementation_from_config(
             hass,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            config[DOMAIN][CONF_PROJECT_ID],
         ),
     )
     NestFlowHandler.async_register_implementation(
@@ -140,7 +162,6 @@ def register_flow_implementation_from_config(
             hass,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            config[DOMAIN][CONF_PROJECT_ID],
         ),
     )
 
@@ -204,11 +225,25 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
+    async def async_generate_authorize_url(self) -> str:
+        """Generate a url for the user to authorize."""
+
+        config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
+        if not (
+            project_id := self._data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
+        ):
+            raise ValueError(
+                "Config flow has invalid state with no Device Access Project ID"
+            )
+        query = await super().async_generate_authorize_url()
+        authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
+        return f"{authorize_url}{query}"
+
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         self._data.update(data)
-        if not self._configure_pubsub():
+        if self._reauth or not self._configure_pubsub():
             _LOGGER.debug("Skipping Pub/Sub configuration")
             return await self.async_step_finish()
         return await self.async_step_pubsub()
@@ -236,28 +271,92 @@ class NestFlowHandler(
         if existing_entries:
             # Pick an existing auth implementation for Reauth if present. Note
             # only one ConfigEntry is allowed so its safe to pick the first.
+            # NOTE: How do we ensure we have a project id here?
             entry = next(iter(existing_entries))
             if "auth_implementation" in entry.data:
                 data = {"implementation": entry.data["auth_implementation"]}
-                return await self.async_step_user(data)
+                return await super().async_step_user(data)
         return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
+        if self.config_mode == ConfigMode.LEGACY:
+            return await self.async_step_init(user_input)
+        self._data[DATA_SDM] = {}
+        # Reauth will update an existing entry
+        entries = self._async_current_entries()
+        if entries and not self._reauth:
+            return self.async_abort(reason="single_instance_allowed")
         if self.config_mode == ConfigMode.SDM:
-            # Reauth will update an existing entry
-            if self._async_current_entries() and not self._reauth:
-                return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
-        return await self.async_step_init(user_input)
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            self.hass, self.DOMAIN
+        )
+        if not implementations:
+            return self.async_abort(reason="missing_credentials")
+        return await self.async_step_cloud_project()
+
+    async def async_step_cloud_project(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Handle cloud project in user input."""
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_device_project()
+        # NOTE: Ensure Existing cloud project is preserved as default string
+        return self.async_show_form(
+            step_id="cloud_project",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CLOUD_PROJECT_ID): str,
+                }
+            ),
+            description_placeholders={
+                "cloud_console_url": CLOUD_CONSOLE_URL,
+                "sdm_api_url": SDM_API_URL,
+                "pubsub_api_url": PUBSUB_API_URL,
+                "more_info_url": MORE_INFO_URL,
+            },
+        )
+
+    async def async_step_device_project(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Collect device access project from user input."""
+        errors = {}
+        if user_input is not None:
+            if user_input[CONF_PROJECT_ID] == self._data[CONF_CLOUD_PROJECT_ID]:
+                _LOGGER.error(
+                    "Device Access Project ID and Cloud Project ID must not be the same, see documentation"
+                )
+                errors[CONF_PROJECT_ID] = "wrong_project_id"
+            else:
+                self._data.update(user_input)
+                return await super().async_step_user()
+
+        # NOTE: Existing device project is preserved
+        return self.async_show_form(
+            step_id="device_project",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PROJECT_ID): str,
+                }
+            ),
+            description_placeholders={
+                "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
+                #                "oauth_client_id": self._data[CONF_CLIENT_ID],
+                "more_info_url": MORE_INFO_URL,
+            },
+            errors=errors,
+        )
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create an entry for auth."""
-        if self.flow_impl.domain == "nest.installed":
+        if self.flow_impl.domain == INSTALLED_AUTH_DOMAIN:
             # The default behavior from the parent class is to redirect the
             # user with an external step. When using installed app auth, we
             # instead prompt the user to sign in and copy/paste and
@@ -275,7 +374,10 @@ class NestFlowHandler(
             result = await super().async_step_auth()
             return self.async_show_form(
                 step_id="auth",
-                description_placeholders={"url": result["url"]},
+                description_placeholders={
+                    "url": result["url"],
+                    "more_info_url": MORE_INFO_URL,
+                },
                 data_schema=vol.Schema({vol.Required("code"): str}),
             )
         return await super().async_step_auth(user_input)
@@ -285,7 +387,10 @@ class NestFlowHandler(
         if self._reauth:
             # Just refreshing tokens and preserving existing subscriber id
             return False
-        if CONF_SUBSCRIBER_ID in self.hass.data[DOMAIN][DATA_NEST_CONFIG]:
+        if (
+            self.config_mode == ConfigMode.SDM
+            and CONF_SUBSCRIBER_ID in self.hass.data[DOMAIN][DATA_NEST_CONFIG]
+        ):
             # Hard coded configuration.yaml skips pubsub in config flow
             return False
         # No existing subscription configured, so create in config flow
@@ -295,24 +400,21 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Configure and create Pub/Sub subscriber."""
-        # Populate data from the previous config entry during reauth, then
-        # overwrite with the user entered values.
         data = {}
-        if self._reauth:
-            data.update(self._data)
+        data.update(self._data)
         if user_input:
             data.update(user_input)
         cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
-
         errors = {}
-        config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
-        if cloud_project_id == config[CONF_PROJECT_ID]:
+        config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
+        project_id = data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
+        if cloud_project_id == project_id:
             _LOGGER.error(
-                "Wrong Project ID. Device Access Project ID used, but expected Cloud Project ID"
+                "Same ID entered for Cloud Project and Device Access Project, these should not be the same"
             )
             errors[CONF_CLOUD_PROJECT_ID] = "wrong_project_id"
 
-        if user_input is not None and not errors:
+        if cloud_project_id and not errors:
             # Create the subscriber id and/or verify it already exists. Note that
             # the existing id is used, and create call below is idempotent
             if not (subscriber_id := data.get(CONF_SUBSCRIBER_ID, "")):
@@ -321,7 +423,7 @@ class NestFlowHandler(
             subscriber = api.new_subscriber_with_token(
                 self.hass,
                 self._data["token"]["access_token"],
-                config[CONF_PROJECT_ID],
+                project_id,
                 subscriber_id,
             )
             try:
