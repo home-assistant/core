@@ -10,10 +10,26 @@ from typing import Any, TypedDict
 
 import voluptuous as vol
 
+from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .util import uuid as uuid_util
 
+
+class FlowResultType(StrEnum):
+    """Result type for a data entry flow."""
+
+    FORM = "form"
+    CREATE_ENTRY = "create_entry"
+    ABORT = "abort"
+    EXTERNAL_STEP = "external"
+    EXTERNAL_STEP_DONE = "external_done"
+    SHOW_PROGRESS = "progress"
+    SHOW_PROGRESS_DONE = "progress_done"
+    MENU = "menu"
+
+
+# RESULT_TYPE_* is deprecated, to be removed in 2022.9
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
 RESULT_TYPE_ABORT = "abort"
