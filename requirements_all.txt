@@ -1673,7 +1673,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.10.0
+pynetgear==0.10.4
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
