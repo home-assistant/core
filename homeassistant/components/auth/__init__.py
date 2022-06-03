@@ -150,7 +150,6 @@ from homeassistant.util import dt as dt_util
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
-RESULT_TYPE_CREDENTIALS = "credentials"
 
 
 @bind_hass
