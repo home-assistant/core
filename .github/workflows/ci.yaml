@@ -689,7 +689,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant
+          mypy homeassistant pylint
       - name: Run mypy (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash

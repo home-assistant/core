@@ -5,7 +5,7 @@ from collections.abc import Generator
 import copy
 import shutil
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 import uuid
 
 import aiohttp
@@ -24,6 +24,7 @@ from .common import (
     SUBSCRIBER_ID,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
+    WEB_AUTH_DOMAIN,
     CreateDevice,
     FakeSubscriber,
     NestTestConfig,
@@ -115,6 +116,17 @@ def subscriber() -> YieldFixture[FakeSubscriber]:
 
 
 @pytest.fixture
+def mock_subscriber() -> YieldFixture[AsyncMock]:
+    """Fixture for injecting errors into the subscriber."""
+    mock_subscriber = AsyncMock(FakeSubscriber)
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=mock_subscriber,
+    ):
+        yield mock_subscriber
+
+
+@pytest.fixture
 async def device_manager(subscriber: FakeSubscriber) -> DeviceManager:
     """Set up the DeviceManager."""
     return await subscriber.async_get_device_manager()
@@ -170,6 +182,12 @@ def subscriber_id() -> str:
     return SUBSCRIBER_ID
 
 
+@pytest.fixture
+def auth_implementation() -> str | None:
+    """Fixture to let tests override the auth implementation in the config entry."""
+    return WEB_AUTH_DOMAIN
+
+
 @pytest.fixture(
     params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_HYBRID],
     ids=["yaml-config-only", "hybrid-config"],
@@ -195,7 +213,9 @@ def config(
 
 @pytest.fixture
 def config_entry(
-    subscriber_id: str | None, nest_test_config: NestTestConfig
+    subscriber_id: str | None,
+    auth_implementation: str | None,
+    nest_test_config: NestTestConfig,
 ) -> MockConfigEntry | None:
     """Fixture that sets up the ConfigEntry for the test."""
     if nest_test_config.config_entry_data is None:
@@ -206,6 +226,7 @@ def config_entry(
             data[CONF_SUBSCRIBER_ID] = subscriber_id
         else:
             del data[CONF_SUBSCRIBER_ID]
+    data["auth_implementation"] = auth_implementation
     return MockConfigEntry(domain=DOMAIN, data=data)
 
 

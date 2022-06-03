@@ -19,8 +19,8 @@
                     "port": "Port",
                     "username": "Usuari de Smile"
                 },
-                "description": "Producte:",
-                "title": "Tipus de Plugwise"
+                "description": "Introdueix",
+                "title": "Connexi\u00f3 amb Smile"
             },
             "user_gateway": {
                 "data": {
