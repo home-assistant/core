@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_NAME,
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -115,6 +116,7 @@ class SmhiWeather(WeatherEntity):
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_visibility_unit = LENGTH_KILOMETERS
     _attr_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
 
     def __init__(
         self,
@@ -159,7 +161,7 @@ class SmhiWeather(WeatherEntity):
             self._attr_temperature = self._forecasts[0].temperature
             self._attr_humidity = self._forecasts[0].humidity
             # Convert from m/s to km/h
-            self._attr_wind_speed = round(self._forecasts[0].wind_speed * 18 / 5)
+            self._attr_wind_speed = round(self._forecasts[0].wind_speed)
             self._attr_wind_bearing = self._forecasts[0].wind_direction
             self._attr_visibility = self._forecasts[0].horizontal_visibility
             self._attr_pressure = self._forecasts[0].pressure
