@@ -46,6 +46,8 @@ class FibaroCover(FibaroDevice, CoverEntity):
             self._attr_supported_features = (
                 CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
             )
+            if "stop" in self.fibaro_device.actions:
+                self._attr_supported_features |= CoverEntityFeature.STOP
 
     @staticmethod
     def bound(position):
