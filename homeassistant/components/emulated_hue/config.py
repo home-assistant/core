@@ -156,49 +156,49 @@ class Config:
         # Google Home
         return self.numbers.get(number)
 
-    def get_entity_name(self, entity: State) -> str:
+    def get_entity_name(self, state: State) -> str:
         """Get the name of an entity."""
         if (
-            entity.entity_id in self.entities
-            and CONF_ENTITY_NAME in self.entities[entity.entity_id]
+            state.entity_id in self.entities
+            and CONF_ENTITY_NAME in self.entities[state.entity_id]
         ):
-            return self.entities[entity.entity_id][CONF_ENTITY_NAME]
+            return self.entities[state.entity_id][CONF_ENTITY_NAME]
 
-        return entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
+        return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)
 
-    def is_entity_exposed(self, entity: State) -> bool:
+    def is_state_exposed(self, state: State) -> bool:
         """Cache determine if an entity should be exposed on the emulated bridge."""
-        if (exposed := self._exposed_cache.get(entity.entity_id)) is not None:
+        if (exposed := self._exposed_cache.get(state.entity_id)) is not None:
             return exposed
-        exposed = self._is_entity_exposed(entity)
-        self._exposed_cache[entity.entity_id] = exposed
+        exposed = self._is_state_exposed(state)
+        self._exposed_cache[state.entity_id] = exposed
         return exposed
 
-    def filter_exposed_entities(self, states: Iterable[State]) -> list[State]:
+    def filter_exposed_states(self, states: Iterable[State]) -> list[State]:
         """Filter a list of all states down to exposed entities."""
         exposed: list[State] = [
-            state for state in states if self.is_entity_exposed(state)
+            state for state in states if self.is_state_exposed(state)
         ]
         return exposed
 
-    def _is_entity_exposed(self, entity: State) -> bool:
-        """Determine if an entity should be exposed on the emulated bridge.
+    def _is_state_exposed(self, state: State) -> bool:
+        """Determine if an entity state should be exposed on the emulated bridge.
 
         Async friendly.
         """
-        if entity.attributes.get("view") is not None:
+        if state.attributes.get("view") is not None:
             # Ignore entities that are views
             return False
 
-        if entity.entity_id in self._entities_with_hidden_attr_in_config:
-            return not self._entities_with_hidden_attr_in_config[entity.entity_id]
+        if state.entity_id in self._entities_with_hidden_attr_in_config:
+            return not self._entities_with_hidden_attr_in_config[state.entity_id]
 
         if not self.expose_by_default:
             return False
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
-        if entity.domain in self.exposed_domains:
+        if state.domain in self.exposed_domains:
             return True
 
         return False
