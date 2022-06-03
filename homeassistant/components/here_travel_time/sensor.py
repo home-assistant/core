@@ -52,11 +52,8 @@ from .const import (
     CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
     DOMAIN,
-    ICON_BICYCLE,
     ICON_CAR,
-    ICON_PEDESTRIAN,
-    ICON_PUBLIC,
-    ICON_TRUCK,
+    ICONS,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
     TRAVEL_MODE_BICYCLE,
@@ -66,7 +63,6 @@ from .const import (
     TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
     TRAVEL_MODES,
-    TRAVEL_MODES_PUBLIC,
     UNITS,
 )
 
@@ -122,39 +118,26 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def icon_for_travel_mode(travel_mode: str) -> str:
-    """Icon to use in the frontend depending on travel_mode."""
-    if travel_mode == TRAVEL_MODE_BICYCLE:
-        return ICON_BICYCLE
-    if travel_mode == TRAVEL_MODE_PEDESTRIAN:
-        return ICON_PEDESTRIAN
-    if travel_mode in TRAVEL_MODES_PUBLIC:
-        return ICON_PUBLIC
-    if travel_mode == TRAVEL_MODE_TRUCK:
-        return ICON_TRUCK
-    return ICON_CAR
-
-
 def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]:
     """Construct SensorEntityDescriptions."""
     return (
         SensorEntityDescription(
             name="Duration",
-            icon=icon_for_travel_mode(travel_mode),
+            icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=TIME_MINUTES,
         ),
         SensorEntityDescription(
             name="Duration in Traffic",
-            icon=icon_for_travel_mode(travel_mode),
+            icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=TIME_MINUTES,
         ),
         SensorEntityDescription(
             name="Distance",
-            icon=icon_for_travel_mode(travel_mode),
+            icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
