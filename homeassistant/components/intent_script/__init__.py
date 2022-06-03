@@ -99,11 +99,13 @@ class ScriptIntentHandler(intent.IntentHandler):
                 speech[CONF_TYPE],
             )
 
-        if reprompt is not None and reprompt[CONF_TEXT].template:
-            response.async_set_reprompt(
-                reprompt[CONF_TEXT].async_render(slots, parse_result=False),
-                reprompt[CONF_TYPE],
-            )
+        if reprompt is not None:
+            text_reprompt = reprompt[CONF_TEXT].async_render(slots, parse_result=False)
+            if text_reprompt:
+                response.async_set_reprompt(
+                    text_reprompt,
+                    reprompt[CONF_TYPE],
+                )
 
         if card is not None:
             response.async_set_card(
