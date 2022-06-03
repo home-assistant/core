@@ -109,11 +109,29 @@ async def test_async_refresh(crd):
     await crd.async_refresh()
     assert updates == [2]
 
-    # Test unsubscribing through method
-    crd.async_add_listener(update_callback)
-    crd.async_remove_listener(update_callback)
+
+async def test_update_context(crd: update_coordinator.DataUpdateCoordinator[int]):
+    """Test update contexts for the update coordinator."""
     await crd.async_refresh()
-    assert updates == [2]
+    assert not set(crd.async_contexts())
+
+    def update_callback1():
+        pass
+
+    def update_callback2():
+        pass
+
+    unsub1 = crd.async_add_listener(update_callback1, 1)
+    assert set(crd.async_contexts()) == {1}
+
+    unsub2 = crd.async_add_listener(update_callback2, 2)
+    assert set(crd.async_contexts()) == {1, 2}
+
+    unsub1()
+    assert set(crd.async_contexts()) == {2}
+
+    unsub2()
+    assert not set(crd.async_contexts())
 
 
 async def test_request_refresh(crd):
@@ -191,7 +209,7 @@ async def test_update_interval(hass, crd):
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    unsub = crd.async_add_listener(update_callback)
 
     # Test twice we update with subscriber
     async_fire_time_changed(hass, utcnow() + crd.update_interval)
@@ -203,7 +221,7 @@ async def test_update_interval(hass, crd):
     assert crd.data == 2
 
     # Test removing listener
-    crd.async_remove_listener(update_callback)
+    unsub()
 
     async_fire_time_changed(hass, utcnow() + crd.update_interval)
     await hass.async_block_till_done()
@@ -222,7 +240,7 @@ async def test_update_interval_not_present(hass, crd_without_update_interval):
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    unsub = crd.async_add_listener(update_callback)
 
     # Test twice we don't update with subscriber with no update interval
     async_fire_time_changed(hass, utcnow() + DEFAULT_UPDATE_INTERVAL)
@@ -234,7 +252,7 @@ async def test_update_interval_not_present(hass, crd_without_update_interval):
     assert crd.data is None
 
     # Test removing listener
-    crd.async_remove_listener(update_callback)
+    unsub()
 
     async_fire_time_changed(hass, utcnow() + DEFAULT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
@@ -253,9 +271,10 @@ async def test_refresh_recover(crd, caplog):
     assert "Fetching test data recovered" in caplog.text
 
 
-async def test_coordinator_entity(crd):
+async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[int]):
     """Test the CoordinatorEntity class."""
-    entity = update_coordinator.CoordinatorEntity(crd)
+    context = object()
+    entity = update_coordinator.CoordinatorEntity(crd, context)
 
     assert entity.should_poll is False
 
@@ -277,6 +296,8 @@ async def test_coordinator_entity(crd):
     with patch("homeassistant.helpers.entity.Entity.enabled", False):
         await entity.async_update()
     assert entity.available is False
+
+    assert list(crd.async_contexts()) == [context]
 
 
 async def test_async_set_updated_data(crd):

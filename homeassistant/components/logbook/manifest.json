@@ -3,6 +3,6 @@
   "name": "Logbook",
   "documentation": "https://www.home-assistant.io/integrations/logbook",
   "dependencies": ["frontend", "http", "recorder"],
-  "codeowners": ["@home-assistant/core"],
+  "codeowners": ["@home-assistant/core", "@bdraco"],
   "quality_scale": "internal"
 }
