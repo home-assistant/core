@@ -3,13 +3,13 @@ from unittest.mock import patch
 import uuid
 
 from nexia.home import NexiaHome
-import requests_mock
 
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
+from tests.test_util.aiohttp import mock_aiohttp_client
 
 
 async def async_init_integration(
@@ -21,17 +21,18 @@ async def async_init_integration(
     house_fixture = "nexia/mobile_houses_123456.json"
     session_fixture = "nexia/session_123456.json"
     sign_in_fixture = "nexia/sign_in.json"
-    nexia = NexiaHome(auto_login=False)
-
-    with requests_mock.mock() as m, patch(
+    with mock_aiohttp_client() as mock_session, patch(
         "nexia.home.load_or_create_uuid", return_value=uuid.uuid4()
     ):
-        m.post(nexia.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture))
-        m.get(
+        nexia = NexiaHome(mock_session)
+        mock_session.post(
+            nexia.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture)
+        )
+        mock_session.get(
             nexia.API_MOBILE_HOUSES_URL.format(house_id=123456),
             text=load_fixture(house_fixture),
         )
-        m.post(
+        mock_session.post(
             nexia.API_MOBILE_ACCOUNTS_SIGN_IN_URL,
             text=load_fixture(sign_in_fixture),
         )

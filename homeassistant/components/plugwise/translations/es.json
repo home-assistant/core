@@ -4,17 +4,22 @@
             "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntelo de nuevo.",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida, comprueba los 8 caracteres de tu Smile ID",
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_setup": "Agregue su Adam en lugar de su Anna, consulte la documentaci\u00f3n de integraci\u00f3n de Home Assistant Plugwise para obtener m\u00e1s informaci\u00f3n",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conexi\u00f3n"
+                    "flow_type": "Tipo de conexi\u00f3n",
+                    "host": "Direcci\u00f3n IP",
+                    "password": "ID Smile",
+                    "port": "Puerto",
+                    "username": "Nombre de usuario de la sonrisa"
                 },
-                "description": "Detalles",
+                "description": "Producto:",
                 "title": "Conectarse a Smile"
             },
             "user_gateway": {

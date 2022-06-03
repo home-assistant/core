@@ -1,9 +1,6 @@
 """Test ONVIF config flow."""
 from unittest.mock import MagicMock, patch
 
-from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.onvif import config_flow
 
@@ -13,7 +10,6 @@ from . import (
     NAME,
     PASSWORD,
     PORT,
-    SERIAL_NUMBER,
     URN,
     USERNAME,
     setup_mock_device,
@@ -107,8 +103,6 @@ async def test_flow_discovered_devices(hass):
         assert result["step_id"] == "configure"
 
         with patch(
-            "homeassistant.components.onvif.async_setup", return_value=True
-        ) as mock_setup, patch(
             "homeassistant.components.onvif.async_setup_entry", return_value=True
         ) as mock_setup_entry:
             result = await hass.config_entries.flow.async_configure(
@@ -120,7 +114,6 @@ async def test_flow_discovered_devices(hass):
             )
 
             await hass.async_block_till_done()
-            assert len(mock_setup.mock_calls) == 1
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -290,8 +283,6 @@ async def test_flow_manual_entry(hass):
         assert result["step_id"] == "configure"
 
         with patch(
-            "homeassistant.components.onvif.async_setup", return_value=True
-        ) as mock_setup, patch(
             "homeassistant.components.onvif.async_setup_entry", return_value=True
         ) as mock_setup_entry:
             result = await hass.config_entries.flow.async_configure(
@@ -306,7 +297,6 @@ async def test_flow_manual_entry(hass):
             )
 
             await hass.async_block_till_done()
-            assert len(mock_setup.mock_calls) == 1
             assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -320,194 +310,13 @@ async def test_flow_manual_entry(hass):
         }
 
 
-async def test_flow_import_not_implemented(hass):
-    """Test that config flow uses Serial Number when no MAC available."""
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device, patch(
-        "homeassistant.components.onvif.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.onvif.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces_not_implemented=True)
-        setup_mock_device(mock_device)
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
-
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == f"{NAME} - {SERIAL_NUMBER}"
-        assert result["data"] == {
-            config_flow.CONF_NAME: NAME,
-            config_flow.CONF_HOST: HOST,
-            config_flow.CONF_PORT: PORT,
-            config_flow.CONF_USERNAME: USERNAME,
-            config_flow.CONF_PASSWORD: PASSWORD,
-        }
-
-
-async def test_flow_import_no_mac(hass):
-    """Test that config flow uses Serial Number when no MAC available."""
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device, patch(
-        "homeassistant.components.onvif.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.onvif.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces=False)
-        setup_mock_device(mock_device)
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
-
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == f"{NAME} - {SERIAL_NUMBER}"
-        assert result["data"] == {
-            config_flow.CONF_NAME: NAME,
-            config_flow.CONF_HOST: HOST,
-            config_flow.CONF_PORT: PORT,
-            config_flow.CONF_USERNAME: USERNAME,
-            config_flow.CONF_PASSWORD: PASSWORD,
-        }
-
-
-async def test_flow_import_no_mac_or_serial(hass):
-    """Test that config flow fails when no MAC or Serial Number available."""
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera:
-        setup_mock_onvif_camera(
-            mock_onvif_camera, with_interfaces=False, with_serial=False
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "no_mac"
-
-
-async def test_flow_import_no_h264(hass):
-    """Test that config flow fails when no MAC available."""
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera:
-        setup_mock_onvif_camera(mock_onvif_camera, with_h264=False)
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "no_h264"
-
-
-async def test_flow_import_onvif_api_error(hass):
-    """Test that config flow fails when ONVIF API fails."""
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera:
-        setup_mock_onvif_camera(mock_onvif_camera)
-        mock_onvif_camera.create_devicemgmt_service = MagicMock(
-            side_effect=ONVIFError("Could not get device mgmt service")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "onvif_error"
-
-
-async def test_flow_import_onvif_auth_error(hass):
-    """Test that config flow fails when ONVIF API fails."""
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera:
-        setup_mock_onvif_camera(mock_onvif_camera)
-        mock_onvif_camera.create_devicemgmt_service = MagicMock(
-            side_effect=Fault("Auth Error")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                config_flow.CONF_NAME: NAME,
-                config_flow.CONF_HOST: HOST,
-                config_flow.CONF_PORT: PORT,
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "configure"
-        assert result["errors"]["base"] == "cannot_connect"
-
-
 async def test_option_flow(hass):
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"show_advanced_options": True}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "onvif_devices"
@@ -516,12 +325,14 @@ async def test_option_flow(hass):
         result["flow_id"],
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
-            config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+            config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
+            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
-        config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+        config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
+        config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }

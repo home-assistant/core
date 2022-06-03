@@ -205,13 +205,14 @@ async def test_node_status_sensor(
     assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
 
     # Assert a node status sensor entity is not created for the controller
-    node = client.driver.controller.nodes[1]
+    driver = client.driver
+    node = driver.controller.nodes[1]
     assert node.is_controller_node
     assert (
         ent_reg.async_get_entity_id(
             DOMAIN,
             "sensor",
-            f"{get_valueless_base_unique_id(client, node)}.node_status",
+            f"{get_valueless_base_unique_id(driver, node)}.node_status",
         )
         is None
     )

@@ -6,7 +6,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Nest integration needs to re-authenticate your account"
+        "description": "The Google Calendar integration needs to re-authenticate your account"
       },
       "auth": {
         "title": "Link Google Account"
@@ -26,6 +26,15 @@
     },
     "progress": {
       "exchange": "To link your Google account, visit the [{url}]({url}) and enter code:\n\n{user_code}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calendar_access": "Home Assistant access to Google Calendar"
+        }
+      }
     }
   }
 }

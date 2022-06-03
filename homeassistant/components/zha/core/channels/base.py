@@ -8,7 +8,12 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
-from zigpy.zcl.foundation import ConfigureReportingResponseRecord, Status
+from zigpy.zcl.foundation import (
+    CommandSchema,
+    ConfigureReportingResponseRecord,
+    Status,
+    ZCLAttributeDef,
+)
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -20,6 +25,7 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
+    ATTR_PARAMS,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
@@ -111,7 +117,11 @@ class ZigbeeChannel(LogMixin):
         if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
             attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
-                self.value_attribute = self.cluster.attributes_by_name.get(attr)
+                attribute: ZCLAttributeDef = self.cluster.attributes_by_name.get(attr)
+                if attribute is not None:
+                    self.value_attribute = attribute.id
+                else:
+                    self.value_attribute = None
             else:
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
@@ -300,11 +310,14 @@ class ZigbeeChannel(LogMixin):
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
             if self.BIND:
+                self.debug("Performing cluster binding")
                 await self.bind()
             if self.cluster.is_server:
+                self.debug("Configuring cluster attribute reporting")
                 await self.configure_reporting()
             ch_specific_cfg = getattr(self, "async_configure_channel_specific", None)
             if ch_specific_cfg:
+                self.debug("Performing channel specific configuration")
                 await ch_specific_cfg()
             self.debug("finished channel configuration")
         else:
@@ -315,6 +328,7 @@ class ZigbeeChannel(LogMixin):
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         if not from_cache and self._ch_pool.skip_configuration:
+            self.debug("Skipping channel initialization")
             self._status = ChannelStatus.INITIALIZED
             return
 
@@ -324,12 +338,23 @@ class ZigbeeChannel(LogMixin):
         uncached.extend([cfg["attr"] for cfg in self.REPORT_CONFIG])
 
         if cached:
-            await self._get_attributes(True, cached, from_cache=True)
+            self.debug("initializing cached channel attributes: %s", cached)
+            await self._get_attributes(
+                True, cached, from_cache=True, only_cache=from_cache
+            )
         if uncached:
-            await self._get_attributes(True, uncached, from_cache=from_cache)
+            self.debug(
+                "initializing uncached channel attributes: %s - from cache[%s]",
+                uncached,
+                from_cache,
+            )
+            await self._get_attributes(
+                True, uncached, from_cache=from_cache, only_cache=from_cache
+            )
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:
+            self.debug("Performing channel specific initialization: %s", uncached)
             await ch_specific_init(from_cache=from_cache)
 
         self.debug("finished channel initialization")
@@ -354,14 +379,27 @@ class ZigbeeChannel(LogMixin):
         """Handle ZDO commands on this cluster."""
 
     @callback
-    def zha_send_event(self, command: str, args: int | dict) -> None:
+    def zha_send_event(self, command: str, arg: list | dict | CommandSchema) -> None:
         """Relay events to hass."""
+
+        if isinstance(arg, CommandSchema):
+            args = [a for a in arg if a is not None]
+            params = arg.as_dict()
+        elif isinstance(arg, (list, dict)):
+            # Quirks can directly send lists and dicts to ZHA this way
+            args = arg
+            params = {}
+        else:
+            raise TypeError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
+
         self._ch_pool.zha_send_event(
             {
                 ATTR_UNIQUE_ID: self.unique_id,
                 ATTR_CLUSTER_ID: self.cluster.cluster_id,
                 ATTR_COMMAND: command,
+                # Maintain backwards compatibility with the old zigpy response format
                 ATTR_ARGS: args,
+                ATTR_PARAMS: params,
             }
         )
 
@@ -384,7 +422,7 @@ class ZigbeeChannel(LogMixin):
             self._cluster,
             [attribute],
             allow_cache=from_cache,
-            only_cache=from_cache and not self._ch_pool.is_mains_powered,
+            only_cache=from_cache,
             manufacturer=manufacturer,
         )
         return result.get(attribute)
@@ -394,6 +432,7 @@ class ZigbeeChannel(LogMixin):
         raise_exceptions: bool,
         attributes: list[int | str],
         from_cache: bool = True,
+        only_cache: bool = True,
     ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
@@ -405,17 +444,18 @@ class ZigbeeChannel(LogMixin):
         result = {}
         while chunk:
             try:
+                self.debug("Reading attributes in chunks: %s", chunk)
                 read, _ = await self.cluster.read_attributes(
-                    attributes,
+                    chunk,
                     allow_cache=from_cache,
-                    only_cache=from_cache and not self._ch_pool.is_mains_powered,
+                    only_cache=only_cache,
                     manufacturer=manufacturer,
                 )
                 result.update(read)
             except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
                 self.debug(
                     "failed to get attributes '%s' on '%s' cluster: %s",
-                    attributes,
+                    chunk,
                     self.cluster.ep_attribute,
                     str(ex),
                 )

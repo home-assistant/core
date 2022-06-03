@@ -24,5 +24,13 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "Desliza hacia abajo",
+            "swipe_left": "Deslizar a la izquierda",
+            "swipe_right": "Deslizar a la derecha",
+            "swipe_up": "Deslizar hacia arriba"
+        }
     }
 }

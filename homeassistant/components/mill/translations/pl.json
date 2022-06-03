@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Wybierz typ po\u0142\u0105czenia",
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
+                    "connection_type": "Wybierz typ po\u0142\u0105czenia"
                 },
                 "description": "Wybierz typ po\u0142\u0105czenia. Lokalnie wymaga grzejnik\u00f3w 3 generacji"
             }

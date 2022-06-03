@@ -144,10 +144,8 @@ async def async_refresh_devices_service(gateway: DeconzGateway) -> None:
     """Refresh available devices from deCONZ."""
     gateway.ignore_state_updates = True
     await gateway.api.refresh_state()
+    gateway.load_ignored_devices()
     gateway.ignore_state_updates = False
-
-    for resource_type in gateway.deconz_resource_type_to_signal_new_device:
-        gateway.async_add_device_callback(resource_type, force=True)
 
 
 async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
@@ -167,12 +165,13 @@ async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
     ]
 
     # Don't remove the Gateway host entry
-    gateway_host = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
-        identifiers=set(),
-    )
-    if gateway_host and gateway_host.id in devices_to_be_removed:
-        devices_to_be_removed.remove(gateway_host.id)
+    if gateway.api.config.mac:
+        gateway_host = device_registry.async_get_device(
+            connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
+            identifiers=set(),
+        )
+        if gateway_host and gateway_host.id in devices_to_be_removed:
+            devices_to_be_removed.remove(gateway_host.id)
 
     # Don't remove the Gateway service entry
     gateway_service = device_registry.async_get_device(

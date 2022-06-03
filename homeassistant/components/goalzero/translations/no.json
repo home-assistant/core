@@ -12,16 +12,14 @@
         },
         "step": {
             "confirm_discovery": {
-                "description": "DHCP-reservasjon p\u00e5 ruteren din anbefales. Hvis den ikke er konfigurert, kan enheten bli utilgjengelig til Home Assistant oppdager den nye ip-adressen. Se i brukerh\u00e5ndboken til ruteren.",
-                "title": "Goal Zero Yeti"
+                "description": "DHCP-reservasjon p\u00e5 ruteren din anbefales. Hvis den ikke er konfigurert, kan enheten bli utilgjengelig til Home Assistant oppdager den nye ip-adressen. Se i brukerh\u00e5ndboken til ruteren."
             },
             "user": {
                 "data": {
                     "host": "Vert",
                     "name": "Navn"
                 },
-                "description": "F\u00f8rst m\u00e5 du laste ned Goal Zero-appen: https://www.goalzero.com/product-features/yeti-app/\n\nF\u00f8lg instruksjonene for \u00e5 koble Yeti til Wi-Fi-nettverket ditt. DHCP-reservasjon p\u00e5 ruteren anbefales. Hvis den ikke er konfigurert, kan enheten bli utilgjengelig til Home Assistant oppdager den nye IP-adressen. Se brukerh\u00e5ndboken for ruteren.",
-                "title": ""
+                "description": "Se dokumentasjonen for \u00e5 sikre at alle krav er oppfylt."
             }
         }
     }

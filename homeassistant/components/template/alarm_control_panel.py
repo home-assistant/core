@@ -8,15 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -64,12 +59,12 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_FORMAT = "code_format"
 
 
-class CodeFormat(Enum):
+class TemplateCodeFormat(Enum):
     """Class to represent different code formats."""
 
     no_code = None
-    number = FORMAT_NUMBER
-    text = FORMAT_TEXT
+    number = CodeFormat.NUMBER
+    text = CodeFormat.TEXT
 
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
@@ -80,8 +75,8 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=CodeFormat.number.name): cv.enum(
-            CodeFormat
+        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
+            TemplateCodeFormat
         ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -173,13 +168,19 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         """Return the list of supported features."""
         supported_features = 0
         if self._arm_night_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_NIGHT
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT
+            )
 
         if self._arm_home_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_HOME
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_HOME
+            )
 
         if self._arm_away_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_AWAY
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_AWAY
+            )
 
         return supported_features
 
@@ -206,8 +207,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             return
 
         _LOGGER.error(
-            "Received invalid alarm panel state: %s. Expected: %s",
+            "Received invalid alarm panel state: %s for entity %s. Expected: %s",
             result,
+            self.entity_id,
             ", ".join(_VALID_STATES),
         )
         self._state = None
@@ -228,7 +230,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._state = state
             optimistic_set = True
 
-        await script.async_run({ATTR_CODE: code}, context=self._context)
+        await self.async_run_script(
+            script, run_variables={ATTR_CODE: code}, context=self._context
+        )
 
         if optimistic_set:
             self.async_write_ha_state()

@@ -36,6 +36,11 @@ async def test_process_play_media_url(hass, mock_sign_path):
         async_process_play_media_url(hass, "https://not-hass.com/path")
         == "https://not-hass.com/path"
     )
+    # Not changing a url that is not http/https
+    assert (
+        async_process_play_media_url(hass, "file:///tmp/test.mp3")
+        == "file:///tmp/test.mp3"
+    )
 
     # Testing signing hass URLs
     assert (
@@ -66,6 +71,18 @@ async def test_process_play_media_url(hass, mock_sign_path):
             hass, "http://192.168.123.123:8123/path?hello=world"
         )
         == "http://192.168.123.123:8123/path?hello=world"
+    )
+
+    # Test skip signing URLs if they are known to require no auth
+    assert (
+        async_process_play_media_url(hass, "/api/tts_proxy/bla")
+        == "http://example.local:8123/api/tts_proxy/bla"
+    )
+    assert (
+        async_process_play_media_url(
+            hass, "http://example.local:8123/api/tts_proxy/bla"
+        )
+        == "http://example.local:8123/api/tts_proxy/bla"
     )
 
     with pytest.raises(ValueError):

@@ -6,16 +6,21 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "invalid_setup": "Adicione seu Adam em vez de sua Anna, consulte a documenta\u00e7\u00e3o de integra\u00e7\u00e3o do Home Assistant Plugwise para obter mais informa\u00e7\u00f5es",
             "unknown": "Erro inesperado"
         },
         "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conex\u00e3o"
+                    "flow_type": "Tipo de conex\u00e3o",
+                    "host": "Endere\u00e7o IP",
+                    "password": "ID do Smile",
+                    "port": "Porta",
+                    "username": "Nome de usu\u00e1rio do Smile"
                 },
-                "description": "Produto:",
-                "title": "Tipo Plugwise"
+                "description": "Por favor, insira",
+                "title": "Conecte-se ao Smile"
             },
             "user_gateway": {
                 "data": {

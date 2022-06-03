@@ -14,7 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .. import mqtt
+from .client import async_publish
+from .config import MQTT_BASE_SCHEMA
 from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from .mixins import (
     CONF_ENABLED_BY_DEFAULT,
@@ -22,15 +23,18 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_ON): cv.string,
@@ -42,7 +46,13 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Scenes under the scene platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(scene.DOMAIN),
+)
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
@@ -51,9 +61,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT scene through configuration.yaml."""
+    """Set up MQTT scene configured under the scene platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, scene.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        scene.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -62,7 +77,12 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT scene dynamically through MQTT discovery."""
+    """Set up MQTT scene through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(hass, scene.DOMAIN, PLATFORM_SCHEMA_MODERN)
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -108,7 +128,7 @@ class MqttScene(
 
         This method is a coroutine.
         """
-        await mqtt.async_publish(
+        await async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_ON],

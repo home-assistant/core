@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "invalid_id": "Het apparaat heeft een ongeldige unieke ID teruggestuurd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "url": "URL",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    }
+}

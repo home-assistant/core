@@ -388,5 +388,5 @@ class Timer(RestoreEntity):
         """Handle when the config is updated."""
         self._config = config
         self._duration = cv.time_period_str(config[CONF_DURATION])
-        self._restore = config[CONF_RESTORE]
+        self._restore = config.get(CONF_RESTORE, DEFAULT_RESTORE)
         self.async_write_ha_state()

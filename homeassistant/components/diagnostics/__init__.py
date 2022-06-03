@@ -180,7 +180,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
-    async def get(  # pylint: disable=no-self-use
+    async def get(
         self,
         request: web.Request,
         d_type: str,

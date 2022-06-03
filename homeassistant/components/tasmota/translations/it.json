@@ -10,9 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Prefisso dell'argomento di individuazione"
-                },
-                "description": "Inserire la configurazione Tasmota.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Vuoi configurare Tasmota?"

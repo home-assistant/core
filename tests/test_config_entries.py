@@ -1,4 +1,6 @@
 """Test the config manager."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -7,10 +9,15 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, callback
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import CoreState, Event, callback
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo, FlowResult
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -57,8 +64,6 @@ def mock_handlers():
 def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = {}
-    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 
@@ -1495,7 +1500,7 @@ async def test_reload_entry_entity_registry_works(hass):
     )
     await hass.async_block_till_done()
 
-    assert len(mock_unload_entry.mock_calls) == 1
+    assert len(mock_unload_entry.mock_calls) == 2
 
 
 async def test_unique_id_persisted(hass, manager):
@@ -1642,7 +1647,7 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
         async def async_step_user(self, user_input=None):
             """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
-            await self._abort_if_unique_id_configured(
+            self._abort_if_unique_id_configured(
                 updates={"host": "1.1.1.1"}, reload_on_update=False
             )
 
@@ -1721,6 +1726,75 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
     assert entry.data["host"] == "2.2.2.2"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 0
+
+
+async def test_unique_id_from_discovery_in_setup_retry(hass, manager):
+    """Test that we reload when in a setup retry state from discovery."""
+    hass.config.components.add("comp")
+    unique_id = "34:ea:34:b4:3b:5a"
+    host = "0.0.0.0"
+    entry = MockConfigEntry(
+        domain="comp",
+        data={"additional": "data", "host": host},
+        unique_id=unique_id,
+        state=config_entries.ConfigEntryState.SETUP_RETRY,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule("comp"),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_dhcp(
+            self, discovery_info: dhcp.DhcpServiceInfo
+        ) -> FlowResult:
+            """Test dhcp step."""
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+        async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+            """Test user step."""
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+    # Verify we do not reload from a user source
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(async_reload.mock_calls) == 0
+
+    # Verify do reload from a discovery source
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
+        discovery_result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                hostname="any",
+                ip=host,
+                macaddress=unique_id,
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert discovery_result["type"] == RESULT_TYPE_ABORT
+    assert discovery_result["reason"] == "already_configured"
+    assert len(async_reload.mock_calls) == 1
 
 
 async def test_unique_id_not_update_existing_entry(hass, manager):
@@ -2297,6 +2371,72 @@ async def test_async_setup_init_entry(hass):
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
         assert entries[0].state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_async_setup_init_entry_completes_before_loaded_event_fires(hass):
+    """Test a config entry being initialized during integration setup before the loaded event fires."""
+    load_events: list[Event] = []
+
+    @callback
+    def _record_load(event: Event) -> None:
+        nonlocal load_events
+        load_events.append(event)
+
+    listener = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _record_load)
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={},
+            )
+        )
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_three(self, user_input=None):
+            """Test import step creating entry."""
+            return self.async_create_entry(title="title", data={})
+
+        async def async_step_two(self, user_input=None):
+            """Test import step creating entry."""
+            return await self.async_step_three()
+
+        async def async_step_one(self, user_input=None):
+            """Test import step creating entry."""
+            return await self.async_step_two()
+
+        async def async_step_import(self, user_input=None):
+            """Test import step creating entry."""
+            return await self.async_step_one()
+
+    # This test must not use hass.async_block_till_done()
+    # as its explicitly testing what happens without it
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+        assert len(async_setup_entry.mock_calls) == 1
+        assert load_events[0].event_type == EVENT_COMPONENT_LOADED
+        assert load_events[0].data == {"component": "comp"}
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state is config_entries.ConfigEntryState.LOADED
+
+    listener()
 
 
 async def test_async_setup_update_entry(hass):
@@ -3012,3 +3152,41 @@ async def test_deprecated_disabled_by_str_set(hass, manager, caplog):
     )
     assert entry.disabled_by is config_entries.ConfigEntryDisabler.USER
     assert " str for config entry disabled_by. This is deprecated " in caplog.text
+
+
+async def test_entry_reload_concurrency(hass, manager):
+    """Test multiple reload calls do not cause a reload race."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    loaded = 1
+
+    async def _async_setup_entry(*args, **kwargs):
+        await asyncio.sleep(0)
+        nonlocal loaded
+        loaded += 1
+        return loaded == 1
+
+    async def _async_unload_entry(*args, **kwargs):
+        await asyncio.sleep(0)
+        nonlocal loaded
+        loaded -= 1
+        return loaded == 0
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=_async_setup_entry,
+            async_unload_entry=_async_unload_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    tasks = []
+    for _ in range(15):
+        tasks.append(asyncio.create_task(manager.async_reload(entry.entry_id)))
+    await asyncio.gather(*tasks)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert loaded == 1

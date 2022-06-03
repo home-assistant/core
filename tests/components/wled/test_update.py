@@ -20,6 +20,7 @@ from homeassistant.components.update.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
@@ -46,6 +47,10 @@ async def test_update_available(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
     assert state.state == STATE_ON
+    assert (
+        state.attributes[ATTR_ENTITY_PICTURE]
+        == "https://brands.home-assistant.io/_/wled/icon.png"
+    )
     assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.5"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None

@@ -14,10 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
@@ -163,9 +160,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _hkid_is_homekit(self, hkid):
         """Determine if the device is a homekit bridge or accessory."""
-        dev_reg = await async_get_device_registry(self.hass)
+        dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, hkid)}
+            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
         )
 
         if device is None:
@@ -293,7 +290,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=updated_ip_port)
 
         for progress in self._async_in_progress(include_uninitialized=True):
-            if progress["context"].get("unique_id") == normalized_hkid:
+            context = progress["context"]
+            if context.get("unique_id") == normalized_hkid and not context.get(
+                "pairing"
+            ):
                 if paired:
                     # If the device gets paired, we want to dismiss
                     # an existing discovery since we can no longer
@@ -350,6 +350,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_setup_controller()
 
         if pair_info and self.finish_pairing:
+            self.context["pairing"] = True
             code = pair_info["pairing_code"]
             try:
                 code = ensure_pin_format(

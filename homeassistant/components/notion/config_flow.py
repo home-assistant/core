@@ -1,6 +1,7 @@
 """Config flow to configure the Notion integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from aionotion import async_get_client
@@ -73,7 +74,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self._username, data=data)
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._username = config[CONF_USERNAME]
         return await self.async_step_reauth_confirm()

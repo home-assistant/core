@@ -120,6 +120,8 @@ class SonosMedia:
         self.clear()
 
         track_info = self.poll_track_info()
+        if not track_info["uri"]:
+            return
         self.uri = track_info["uri"]
 
         audio_source = self.soco.music_source_from_uri(self.uri)
@@ -135,7 +137,7 @@ class SonosMedia:
         self.title = track_info.get("title")
         self.image_url = track_info.get("album_art")
 
-        playlist_position = int(track_info.get("playlist_position"))
+        playlist_position = int(track_info.get("playlist_position", -1))
         if playlist_position > 0:
             self.queue_position = playlist_position
 
@@ -172,7 +174,8 @@ class SonosMedia:
             if et_uri_md:
                 self.channel = et_uri_md.title
 
-            if ct_md and ct_md.radio_show:
+            # Extra guards for S1 compatibility
+            if ct_md and hasattr(ct_md, "radio_show") and ct_md.radio_show:
                 radio_show = ct_md.radio_show.split(",")[0]
                 self.channel = " • ".join(filter(None, [self.channel, radio_show]))
 

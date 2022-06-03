@@ -1,10 +1,15 @@
 """Support for the Hive devices and services."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
+from typing import Any, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,10 +22,13 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+
+_HiveEntityT = TypeVar("_HiveEntityT", bound="HiveEntity")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,9 +75,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hive from a config entry."""
 
-    websession = aiohttp_client.async_get_clientsession(hass)
-    hive = Hive(websession)
+    web_session = aiohttp_client.async_get_clientsession(hass)
     hive_config = dict(entry.data)
+    hive = Hive(web_session)
 
     hive_config["options"] = {}
     hive_config["options"].update(
@@ -104,11 +112,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def refresh_system(func):
+def refresh_system(
+    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]]
+) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self: _HiveEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)
 
@@ -122,8 +132,17 @@ class HiveEntity(Entity):
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
+        self._attr_name = self.device["haName"]
+        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            model=self.device["deviceData"]["model"],
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
         self.attributes = {}
-        self._unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""

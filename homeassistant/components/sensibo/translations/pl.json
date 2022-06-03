@@ -19,8 +19,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Klucz API",
-                    "name": "Nazwa"
+                    "api_key": "Klucz API"
                 }
             }
         }

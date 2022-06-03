@@ -1,10 +1,10 @@
 """Support for deCONZ fans."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
-from typing import Any
+from typing import Any, Literal
 
-from pydeconz.light import (
+from pydeconz.models.event import EventType
+from pydeconz.models.light.fan import (
     FAN_SPEED_25_PERCENT,
     FAN_SPEED_50_PERCENT,
     FAN_SPEED_75_PERCENT,
@@ -13,10 +13,9 @@ from pydeconz.light import (
     Fan,
 )
 
-from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -26,7 +25,7 @@ from homeassistant.util.percentage import (
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
-ORDERED_NAMED_FAN_SPEEDS = [
+ORDERED_NAMED_FAN_SPEEDS: list[Literal[0, 1, 2, 3, 4, 5, 6]] = [
     FAN_SPEED_25_PERCENT,
     FAN_SPEED_50_PERCENT,
     FAN_SPEED_75_PERCENT,
@@ -44,32 +43,15 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(
-        lights: list[Fan] | ValuesView[Fan] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_fan(_: EventType, fan_id: str) -> None:
         """Add fan from deCONZ."""
-        entities = []
+        fan = gateway.api.lights.fans[fan_id]
+        async_add_entities([DeconzFan(fan, gateway)])
 
-        for light in lights:
-
-            if (
-                isinstance(light, Fan)
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzFan(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
-            async_add_fan,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_fan,
+        gateway.api.lights.fans,
     )
-
-    async_add_fan()
 
 
 class DeconzFan(DeconzDevice, FanEntity):
@@ -77,8 +59,9 @@ class DeconzFan(DeconzDevice, FanEntity):
 
     TYPE = DOMAIN
     _device: Fan
+    _default_on_speed: Literal[0, 1, 2, 3, 4, 5, 6]
 
-    _attr_supported_features = SUPPORT_SET_SPEED
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, device: Fan, gateway: DeconzGateway) -> None:
         """Set up fan."""
@@ -91,7 +74,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device.speed != FAN_SPEED_OFF  # type: ignore[no-any-return]
+        return self._device.speed != FAN_SPEED_OFF
 
     @property
     def percentage(self) -> int | None:

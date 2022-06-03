@@ -69,6 +69,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -89,69 +90,53 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_setup_fails(hass, mqtt_mock):
+@pytest.mark.parametrize(
+    "test_config",
+    [
+        ({"platform": "mqtt", "schema": "template", "name": "test"},),
+        (
+            {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_topic",
+            },
+        ),
+        (
+            {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_topic",
+                "command_on_template": "on",
+            },
+        ),
+        (
+            {
+                "platform": "mqtt",
+                "schema": "template",
+                "name": "test",
+                "command_topic": "test_topic",
+                "command_off_template": "off",
+            },
+        ),
+    ],
+)
+async def test_setup_fails(hass, mqtt_mock_entry_no_yaml_config, test_config):
     """Test that setup fails with missing required configuration items."""
-    with assert_setup_component(0, light.DOMAIN):
+    with assert_setup_component(0, light.DOMAIN) as setup_config:
         assert await async_setup_component(
             hass,
             light.DOMAIN,
-            {light.DOMAIN: {"platform": "mqtt", "schema": "template", "name": "test"}},
+            {light.DOMAIN: test_config},
         )
         await hass.async_block_till_done()
-    assert hass.states.get("light.test") is None
-
-    with assert_setup_component(0, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "template",
-                    "name": "test",
-                    "command_topic": "test_topic",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-    assert hass.states.get("light.test") is None
-
-    with assert_setup_component(0, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "template",
-                    "name": "test",
-                    "command_topic": "test_topic",
-                    "command_on_template": "on",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-    assert hass.states.get("light.test") is None
-
-    with assert_setup_component(0, light.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                light.DOMAIN: {
-                    "platform": "mqtt",
-                    "schema": "template",
-                    "name": "test",
-                    "command_topic": "test_topic",
-                    "command_off_template": "off",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+        await mqtt_mock_entry_no_yaml_config()
+        assert not setup_config[light.DOMAIN]
     assert hass.states.get("light.test") is None
 
 
-async def test_rgb_light(hass, mqtt_mock):
+async def test_rgb_light(hass, mqtt_mock_entry_with_yaml_config):
     """Test RGB light flags brightness support."""
     assert await async_setup_component(
         hass,
@@ -171,6 +156,7 @@ async def test_rgb_light(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -183,7 +169,7 @@ async def test_rgb_light(hass, mqtt_mock):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
 
-async def test_state_change_via_topic(hass, mqtt_mock):
+async def test_state_change_via_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test state change via topic."""
     with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
@@ -209,6 +195,7 @@ async def test_state_change_via_topic(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -239,7 +226,7 @@ async def test_state_change_via_topic(hass, mqtt_mock):
 
 
 async def test_state_brightness_color_effect_temp_white_change_via_topic(
-    hass, mqtt_mock
+    hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test state, bri, color, effect, color temp, white val change."""
     with assert_setup_component(1, light.DOMAIN):
@@ -275,6 +262,7 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
             },
         )
         await hass.async_block_till_done()
+        await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -339,7 +327,9 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
     assert light_state.attributes.get("effect") == "rainbow"
 
 
-async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
+async def test_sending_mqtt_commands_and_optimistic(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test the sending of command in optimistic mode."""
     fake_state = ha.State(
         "light.test",
@@ -390,6 +380,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -494,7 +485,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
 
 
 async def test_sending_mqtt_commands_non_optimistic_brightness_template(
-    hass, mqtt_mock
+    hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test the sending of command in optimistic mode."""
     with assert_setup_component(1, light.DOMAIN):
@@ -531,6 +522,7 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -625,7 +617,7 @@ async def test_sending_mqtt_commands_non_optimistic_brightness_template(
     state = hass.states.get("light.test")
 
 
-async def test_effect(hass, mqtt_mock):
+async def test_effect(hass, mqtt_mock_entry_with_yaml_config):
     """Test effect sent over MQTT in optimistic mode."""
     with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
@@ -645,6 +637,7 @@ async def test_effect(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -677,7 +670,7 @@ async def test_effect(hass, mqtt_mock):
     assert state.attributes.get("effect") == "colorloop"
 
 
-async def test_flash(hass, mqtt_mock):
+async def test_flash(hass, mqtt_mock_entry_with_yaml_config):
     """Test flash sent over MQTT in optimistic mode."""
     with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
@@ -696,6 +689,7 @@ async def test_flash(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -725,7 +719,7 @@ async def test_flash(hass, mqtt_mock):
     assert state.state == STATE_ON
 
 
-async def test_transition(hass, mqtt_mock):
+async def test_transition(hass, mqtt_mock_entry_with_yaml_config):
     """Test for transition time being sent when included."""
     with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
@@ -744,6 +738,7 @@ async def test_transition(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -766,7 +761,7 @@ async def test_transition(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
-async def test_invalid_values(hass, mqtt_mock):
+async def test_invalid_values(hass, mqtt_mock_entry_with_yaml_config):
     """Test that invalid values are ignored."""
     with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
@@ -800,6 +795,7 @@ async def test_invalid_values(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
@@ -866,77 +862,91 @@ async def test_invalid_values(hass, mqtt_mock):
     assert state.attributes.get("effect") == "rainbow"
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock):
+async def test_availability_when_connection_lost(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock):
+async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock):
+async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock):
+async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_blocked_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_no_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, MQTT_LIGHT_ATTRIBUTES_BLOCKED
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        light.DOMAIN,
+        DEFAULT_CONFIG,
+        MQTT_LIGHT_ATTRIBUTES_BLOCKED,
     )
 
 
-async def test_setting_attribute_with_template(hass, mqtt_mock):
+async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_not_dict(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, caplog, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_JSON(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, caplog, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_discovery_update_attr(hass, mqtt_mock, caplog):
+async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock, caplog, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, caplog, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_unique_id(hass, mqtt_mock):
+async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one light per unique_id."""
     config = {
         light.DOMAIN: [
@@ -960,10 +970,12 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, mqtt_mock, light.DOMAIN, config)
+    await help_test_unique_id(
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, config
+    )
 
 
-async def test_discovery_removal(hass, mqtt_mock, caplog):
+async def test_discovery_removal(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered mqtt_json lights."""
     data = (
         '{ "name": "test",'
@@ -972,10 +984,12 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
         '  "command_on_template": "on",'
         '  "command_off_template": "off"}'
     )
-    await help_test_discovery_removal(hass, mqtt_mock, caplog, light.DOMAIN, data)
+    await help_test_discovery_removal(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, light.DOMAIN, data
+    )
 
 
-async def test_discovery_update_light(hass, mqtt_mock, caplog):
+async def test_discovery_update_light(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered light."""
     config1 = {
         "name": "Beer",
@@ -994,11 +1008,13 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
         "command_off_template": "off",
     }
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, light.DOMAIN, config1, config2
     )
 
 
-async def test_discovery_update_unchanged_light(hass, mqtt_mock, caplog):
+async def test_discovery_update_unchanged_light(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test update of discovered light."""
     data1 = (
         '{ "name": "Beer",'
@@ -1012,12 +1028,17 @@ async def test_discovery_update_unchanged_light(hass, mqtt_mock, caplog):
         "homeassistant.components.mqtt.light.schema_template.MqttLightTemplate.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, light.DOMAIN, data1, discovery_update
+            hass,
+            mqtt_mock_entry_no_yaml_config,
+            caplog,
+            light.DOMAIN,
+            data1,
+            discovery_update,
         )
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog):
+async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = (
@@ -1029,53 +1050,53 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
         '  "command_off_template": "off"}'
     )
     await help_test_discovery_broken(
-        hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, light.DOMAIN, data1, data2
     )
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock):
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT light device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT light device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_update(hass, mqtt_mock):
+async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_remove(hass, mqtt_mock):
+async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_debug_info_message(hass, mqtt_mock):
+async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     config = {
         light.DOMAIN: {
@@ -1089,11 +1110,15 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
         }
     }
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, light.DOMAIN, config, light.SERVICE_TURN_ON
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        light.DOMAIN,
+        config,
+        light.SERVICE_TURN_ON,
     )
 
 
-async def test_max_mireds(hass, mqtt_mock):
+async def test_max_mireds(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting min_mireds and max_mireds."""
     config = {
         light.DOMAIN: {
@@ -1110,6 +1135,7 @@ async def test_max_mireds(hass, mqtt_mock):
 
     assert await async_setup_component(hass, light.DOMAIN, config)
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("light.test")
     assert state.attributes.get("min_mireds") == 153
@@ -1141,7 +1167,7 @@ async def test_max_mireds(hass, mqtt_mock):
 )
 async def test_publishing_with_custom_encoding(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     caplog,
     service,
     topic,
@@ -1161,7 +1187,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         domain,
         config,
@@ -1175,11 +1201,13 @@ async def test_publishing_with_custom_encoding(
     )
 
 
-async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN
     config = DEFAULT_CONFIG[domain]
-    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+    await help_test_reloadable(
+        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
+    )
 
 
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
@@ -1196,14 +1224,21 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     ],
 )
 async def test_encoding_subscribable_topics(
-    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value, init_payload
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    caplog,
+    topic,
+    value,
+    attribute,
+    attribute_value,
+    init_payload,
 ):
     """Test handling of incoming encoded payload."""
     config = copy.deepcopy(DEFAULT_CONFIG[light.DOMAIN])
     config["state_template"] = "{{ value }}"
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         light.DOMAIN,
         config,
@@ -1213,3 +1248,15 @@ async def test_encoding_subscribable_topics(
         attribute_value,
         init_payload,
     )
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = light.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

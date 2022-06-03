@@ -294,8 +294,8 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+            return alarm.CodeFormat.NUMBER
+        return alarm.CodeFormat.TEXT
 
     @property
     def code_arm_required(self):

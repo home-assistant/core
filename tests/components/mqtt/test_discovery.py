@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_mqtt_message,
     mock_device_registry,
     mock_entity_platform,
@@ -47,8 +48,9 @@ def entity_reg(hass):
     "mqtt_config",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
-async def test_subscribing_config_topic(hass, mqtt_mock):
+async def test_subscribing_config_topic(hass, mqtt_mock_entry_no_yaml_config):
     """Test setting up discovery."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
     discovery_topic = "homeassistant"
@@ -70,8 +72,9 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
         ("homeassistant/binary_sensor/rörkrökare/config", True),
     ],
 )
-async def test_invalid_topic(hass, mqtt_mock, caplog, topic, log):
+async def test_invalid_topic(hass, mqtt_mock_entry_no_yaml_config, caplog, topic, log):
     """Test sending to invalid topic."""
+    await mqtt_mock_entry_no_yaml_config()
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
@@ -89,8 +92,9 @@ async def test_invalid_topic(hass, mqtt_mock, caplog, topic, log):
         caplog.clear()
 
 
-async def test_invalid_json(hass, mqtt_mock, caplog):
+async def test_invalid_json(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test sending in invalid JSON."""
+    await mqtt_mock_entry_no_yaml_config()
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
@@ -105,8 +109,9 @@ async def test_invalid_json(hass, mqtt_mock, caplog):
         assert not mock_dispatcher_send.called
 
 
-async def test_only_valid_components(hass, mqtt_mock, caplog):
+async def test_only_valid_components(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test for a valid component."""
+    await mqtt_mock_entry_no_yaml_config()
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
@@ -126,8 +131,9 @@ async def test_only_valid_components(hass, mqtt_mock, caplog):
     assert not mock_dispatcher_send.called
 
 
-async def test_correct_config_discovery(hass, mqtt_mock, caplog):
+async def test_correct_config_discovery(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test sending in correct JSON."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -142,8 +148,9 @@ async def test_correct_config_discovery(hass, mqtt_mock, caplog):
     assert ("binary_sensor", "bla") in hass.data[ALREADY_DISCOVERED]
 
 
-async def test_discover_fan(hass, mqtt_mock, caplog):
+async def test_discover_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test discovering an MQTT fan."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/fan/bla/config",
@@ -158,8 +165,9 @@ async def test_discover_fan(hass, mqtt_mock, caplog):
     assert ("fan", "bla") in hass.data[ALREADY_DISCOVERED]
 
 
-async def test_discover_climate(hass, mqtt_mock, caplog):
+async def test_discover_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test discovering an MQTT climate component."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "name": "ClimateTest",'
         '  "current_temperature_topic": "climate/bla/current_temp",'
@@ -176,8 +184,11 @@ async def test_discover_climate(hass, mqtt_mock, caplog):
     assert ("climate", "bla") in hass.data[ALREADY_DISCOVERED]
 
 
-async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
+async def test_discover_alarm_control_panel(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test discovering an MQTT alarm control panel component."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "name": "AlarmControlPanelTest",'
         '  "state_topic": "test_topic",'
@@ -340,9 +351,10 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
     ],
 )
 async def test_discovery_with_object_id(
-    hass, mqtt_mock, caplog, topic, config, entity_id, name, domain
+    hass, mqtt_mock_entry_no_yaml_config, caplog, topic, config, entity_id, name, domain
 ):
     """Test discovering an MQTT entity with object_id."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(hass, topic, config)
     await hass.async_block_till_done()
 
@@ -353,8 +365,9 @@ async def test_discovery_with_object_id(
     assert (domain, "object bla") in hass.data[ALREADY_DISCOVERED]
 
 
-async def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
+async def test_discovery_incl_nodeid(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test sending in correct JSON with optional node_id included."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/my_node_id/bla/config",
@@ -369,8 +382,9 @@ async def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
     assert ("binary_sensor", "my_node_id bla") in hass.data[ALREADY_DISCOVERED]
 
 
-async def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
+async def test_non_duplicate_discovery(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test for a non duplicate component."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -392,8 +406,9 @@ async def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     assert "Component has already been discovered: binary_sensor bla" in caplog.text
 
 
-async def test_removal(hass, mqtt_mock, caplog):
+async def test_removal(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of component through empty discovery message."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -409,8 +424,9 @@ async def test_removal(hass, mqtt_mock, caplog):
     assert state is None
 
 
-async def test_rediscover(hass, mqtt_mock, caplog):
+async def test_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test rediscover of removed component."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -435,17 +451,10 @@ async def test_rediscover(hass, mqtt_mock, caplog):
     assert state is not None
 
 
-async def test_rapid_rediscover(hass, mqtt_mock, caplog):
+async def test_rapid_rediscover(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test immediate rediscover of removed component."""
-
-    events = []
-
-    @ha.callback
-    def callback(event):
-        """Verify event got called."""
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+    await mqtt_mock_entry_no_yaml_config()
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     async_fire_mqtt_message(
         hass,
@@ -491,9 +500,9 @@ async def test_rapid_rediscover(hass, mqtt_mock, caplog):
     assert events[4].data["old_state"] is None
 
 
-async def test_rapid_rediscover_unique(hass, mqtt_mock, caplog):
+async def test_rapid_rediscover_unique(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test immediate rediscover of removed component."""
-
+    await mqtt_mock_entry_no_yaml_config()
     events = []
 
     @ha.callback
@@ -550,9 +559,9 @@ async def test_rapid_rediscover_unique(hass, mqtt_mock, caplog):
     assert events[3].data["old_state"] is None
 
 
-async def test_rapid_reconfigure(hass, mqtt_mock, caplog):
+async def test_rapid_reconfigure(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test immediate reconfigure of added component."""
-
+    await mqtt_mock_entry_no_yaml_config()
     events = []
 
     @ha.callback
@@ -602,8 +611,9 @@ async def test_rapid_reconfigure(hass, mqtt_mock, caplog):
     assert events[2].data["new_state"].attributes["friendly_name"] == "Wine"
 
 
-async def test_duplicate_removal(hass, mqtt_mock, caplog):
+async def test_duplicate_removal(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test for a non duplicate component."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -620,8 +630,11 @@ async def test_duplicate_removal(hass, mqtt_mock, caplog):
     assert "Component has already been discovered: binary_sensor bla" not in caplog.text
 
 
-async def test_cleanup_device(hass, hass_ws_client, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_device(
+    hass, hass_ws_client, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test discvered device is cleaned up when entry removed from device."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
@@ -675,8 +688,11 @@ async def test_cleanup_device(hass, hass_ws_client, device_reg, entity_reg, mqtt
     )
 
 
-async def test_cleanup_device_mqtt(hass, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_device_mqtt(
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
+):
     """Test discvered device is cleaned up when removed through MQTT."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -715,10 +731,12 @@ async def test_cleanup_device_mqtt(hass, device_reg, entity_reg, mqtt_mock):
 
 
 async def test_cleanup_device_multiple_config_entries(
-    hass, hass_ws_client, device_reg, entity_reg, mqtt_mock
+    hass, hass_ws_client, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
     """Test discovered device is cleaned up when entry removed from device."""
     assert await async_setup_component(hass, "config", {})
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     ws_client = await hass_ws_client(hass)
 
     config_entry = MockConfigEntry(domain="test", data={})
@@ -810,9 +828,10 @@ async def test_cleanup_device_multiple_config_entries(
 
 
 async def test_cleanup_device_multiple_config_entries_mqtt(
-    hass, device_reg, entity_reg, mqtt_mock
+    hass, device_reg, entity_reg, mqtt_mock_entry_no_yaml_config
 ):
     """Test discovered device is cleaned up when removed through MQTT."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -886,8 +905,9 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     mqtt_mock.async_publish.assert_not_called()
 
 
-async def test_discovery_expansion(hass, mqtt_mock, caplog):
+async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test expansion of abbreviated discovery payload."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -943,8 +963,9 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_discovery_expansion_2(hass, mqtt_mock, caplog):
+async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test expansion of abbreviated discovery payload."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -983,8 +1004,9 @@ async def test_discovery_expansion_2(hass, mqtt_mock, caplog):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_expansion_3(hass, mqtt_mock, caplog):
+async def test_discovery_expansion_3(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test expansion of broken discovery payload."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1014,9 +1036,10 @@ async def test_discovery_expansion_3(hass, mqtt_mock, caplog):
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_1(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test expansion of raw availability payload with a template as list."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1062,9 +1085,10 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_2(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock_entry_no_yaml_config, caplog
 ):
     """Test expansion of raw availability payload with a template directly."""
+    await mqtt_mock_entry_no_yaml_config()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1139,8 +1163,11 @@ ABBREVIATIONS_WHITE_LIST = [
 ]
 
 
-async def test_missing_discover_abbreviations(hass, mqtt_mock, caplog):
+async def test_missing_discover_abbreviations(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Check MQTT platforms for missing abbreviations."""
+    await mqtt_mock_entry_no_yaml_config()
     missing = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
@@ -1163,8 +1190,11 @@ async def test_missing_discover_abbreviations(hass, mqtt_mock, caplog):
     assert not missing
 
 
-async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
+async def test_no_implicit_state_topic_switch(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test no implicit state topic for switch."""
+    await mqtt_mock_entry_no_yaml_config()
     data = '{ "name": "Test1",' '  "command_topic": "cmnd"' "}"
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
@@ -1193,8 +1223,11 @@ async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
         }
     ],
 )
-async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
+async def test_complex_discovery_topic_prefix(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Tests handling of discovery topic prefix with multiple slashes."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(
         hass,
         ("my_home/homeassistant/register/binary_sensor/node1/object1/config"),
@@ -1210,9 +1243,10 @@ async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
 
 
 async def test_mqtt_integration_discovery_subscribe_unsubscribe(
-    hass, mqtt_client_mock, mqtt_mock
+    hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config
 ):
     """Check MQTT integration discovery subscribe and unsubscribe."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_entity_platform(hass, "config_flow.comp", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
@@ -1249,8 +1283,11 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         assert not mqtt_client_mock.unsubscribe.called
 
 
-async def test_mqtt_discovery_unsubscribe_once(hass, mqtt_client_mock, mqtt_mock):
+async def test_mqtt_discovery_unsubscribe_once(
+    hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config
+):
     """Check MQTT integration discovery unsubscribe once."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_entity_platform(hass, "config_flow.comp", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]

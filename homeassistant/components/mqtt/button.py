@@ -14,8 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate
-from .. import mqtt
+from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -27,25 +26,36 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate
+from .util import valid_publish_topic
 
 CONF_PAYLOAD_PRESS = "payload_press"
 DEFAULT_NAME = "MQTT Button"
 DEFAULT_PAYLOAD_PRESS = "PRESS"
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): button.DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_PRESS, default=DEFAULT_PAYLOAD_PRESS): cv.string,
-        vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Buttons under the button platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(button.DOMAIN),
+)
+
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
@@ -54,9 +64,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT button through configuration.yaml."""
+    """Set up MQTT button configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, button.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        button.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -65,7 +80,14 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT button dynamically through MQTT discovery."""
+    """Set up MQTT button through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(
+            hass, button.DOMAIN, PLATFORM_SCHEMA_MODERN
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

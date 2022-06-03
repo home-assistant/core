@@ -18,8 +18,7 @@
                     "name": "Nombre del dispositivo",
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
-                },
-                "title": "Conectar con DoorBird"
+                }
             }
         }
     },
@@ -29,7 +28,9 @@
                 "data": {
                     "events": "Lista de eventos separados por comas."
                 },
-                "description": "A\u00f1ade un nombre de evento separado por comas para cada evento del que deseas realizar un seguimiento. Despu\u00e9s de introducirlos aqu\u00ed, utiliza la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. Consulta la documentaci\u00f3n en https://www.home-assistant.io/integrations/doorbird/#events. Ejemplo: somebody_pressed_the_button, motion"
+                "data_description": {
+                    "events": "A\u00f1ade un nombre de evento separado por comas para cada evento que desee rastrear. Despu\u00e9s de ingresarlos aqu\u00ed, use la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. \n\n Ejemplo: alguien_puls\u00f3_el_bot\u00f3n, movimiento"
+                }
             }
         }
     }

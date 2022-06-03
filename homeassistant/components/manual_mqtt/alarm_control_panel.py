@@ -10,12 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     CONF_CODE,
     CONF_DELAY_TIME,
@@ -115,7 +110,7 @@ def _state_schema(state):
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
-        mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+        mqtt.config.MQTT_BASE_SCHEMA.extend(
             {
                 vol.Required(CONF_PLATFORM): "manual_mqtt",
                 vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
@@ -209,6 +204,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     A trigger_time of zero disables the alarm_trigger service.
     """
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
     def __init__(
         self,
         hass,
@@ -294,16 +296,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
-        )
-
-    @property
     def _active_state(self):
         """Get the current state."""
         if self.state == STATE_ALARM_PENDING:
@@ -327,8 +319,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+            return alarm.CodeFormat.NUMBER
+        return alarm.CodeFormat.TEXT
 
     @property
     def code_arm_required(self):

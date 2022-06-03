@@ -21,7 +21,7 @@ from .const import (
 
 UPDATE_LOOP_SLEEP_TIME = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
@@ -44,12 +44,12 @@ def _async_migrate_data_to_options(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Honeywell thermostat."""
-    _async_migrate_data_to_options(hass, config)
+    _async_migrate_data_to_options(hass, config_entry)
 
-    username = config.data[CONF_USERNAME]
-    password = config.data[CONF_PASSWORD]
+    username = config_entry.data[CONF_USERNAME]
+    password = config_entry.data[CONF_PASSWORD]
 
     client = await hass.async_add_executor_job(
         get_somecomfort_client, username, password
@@ -58,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     if client is None:
         return False
 
-    loc_id = config.data.get(CONF_LOC_ID)
-    dev_id = config.data.get(CONF_DEV_ID)
+    loc_id = config_entry.data.get(CONF_LOC_ID)
+    dev_id = config_entry.data.get(CONF_DEV_ID)
 
     devices = {}
 
@@ -73,31 +73,33 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(hass, config, client, username, password, devices)
+    data = HoneywellData(hass, config_entry, client, username, password, devices)
     await data.async_update()
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config.entry_id] = data
-    hass.config_entries.async_setup_platforms(config, PLATFORMS)
+    hass.data[DOMAIN][config_entry.entry_id] = data
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
-    config.async_on_unload(config.add_update_listener(update_listener))
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     return True
 
 
-async def update_listener(hass: HomeAssistant, config: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update listener."""
-    await hass.config_entries.async_reload(config.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config config and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
     if unload_ok:
         hass.data.pop(DOMAIN)
     return unload_ok
 
 
-def get_somecomfort_client(username, password):
+def get_somecomfort_client(username: str, password: str) -> somecomfort.SomeComfort:
     """Initialize the somecomfort client."""
     try:
         return somecomfort.SomeComfort(username, password)
@@ -115,10 +117,18 @@ def get_somecomfort_client(username, password):
 class HoneywellData:
     """Get the latest data and update."""
 
-    def __init__(self, hass, config, client, username, password, devices):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: somecomfort.SomeComfort,
+        username: str,
+        password: str,
+        devices: dict[str, somecomfort.Device],
+    ) -> None:
         """Initialize the data object."""
         self._hass = hass
-        self._config = config
+        self._config = config_entry
         self._client = client
         self._username = username
         self._password = password

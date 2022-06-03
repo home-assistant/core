@@ -12,7 +12,7 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
@@ -164,6 +164,8 @@ class AmcrestCommandFailed(Exception):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
+
     def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
@@ -310,11 +312,6 @@ class AmcrestCam(Camera):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_ON_OFF | SUPPORT_STREAM
 
     # Camera property overrides
 

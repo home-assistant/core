@@ -489,7 +489,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
 
     # Fetch the needed statistics metadata
     statistics_metadata.update(
-        await hass.async_add_executor_job(
+        await recorder.get_instance(hass).async_add_executor_job(
             functools.partial(
                 recorder.statistics.get_metadata,
                 hass,

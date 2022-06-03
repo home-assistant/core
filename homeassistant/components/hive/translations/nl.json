@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown_entry": "Kan bestaand item niet vinden."
         },
         "error": {

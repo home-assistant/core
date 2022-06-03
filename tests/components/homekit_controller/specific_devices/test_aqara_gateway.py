@@ -8,7 +8,6 @@ from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from homeassistant.components.number import NumberMode
 from homeassistant.helpers.entity import EntityCategory
 
@@ -52,7 +51,7 @@ async def test_aqara_gateway_setup(hass):
                     "light.aqara_hub_1563",
                     friendly_name="Aqara Hub-1563",
                     unique_id="homekit-0000000123456789-65792",
-                    supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+                    supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
                 ),

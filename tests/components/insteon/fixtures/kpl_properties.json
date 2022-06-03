@@ -3,7 +3,7 @@
     "program_lock_on": false,
     "blink_on_tx_on": false,
     "resume_dim_on": false,
-    "led_on": false,
+    "led_off": false,
     "key_beep_on": false,
     "rf_disable_on": false,
     "powerline_disable_on": false,

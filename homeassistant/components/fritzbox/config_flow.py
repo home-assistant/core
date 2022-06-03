@@ -1,6 +1,8 @@
 """Config flow for AVM FRITZ!SmartHome."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+import ipaddress
 from typing import Any
 from urllib.parse import urlparse
 
@@ -120,6 +122,12 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         assert isinstance(host, str)
         self.context[CONF_HOST] = host
 
+        if (
+            ipaddress.ip_address(host).version == 6
+            and ipaddress.ip_address(host).is_link_local
+        ):
+            return self.async_abort(reason="ignore_ip6_link_local")
+
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
@@ -168,7 +176,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None

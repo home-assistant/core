@@ -43,8 +43,7 @@
                     "automatic_add": "Aktivera automatisk till\u00e4gg av enheter",
                     "debug": "Aktivera fels\u00f6kning",
                     "device": "V\u00e4lj enhet att konfigurera",
-                    "event_code": "Ange h\u00e4ndelsekod att l\u00e4gga till",
-                    "remove_device": "V\u00e4lj enhet som ska tas bort"
+                    "event_code": "Ange h\u00e4ndelsekod att l\u00e4gga till"
                 },
                 "title": "Rfxtrx-alternativ"
             },
@@ -53,11 +52,9 @@
                     "command_off": "Databitv\u00e4rde f\u00f6r av-kommando",
                     "command_on": "Databitv\u00e4rde f\u00f6r p\u00e5-kommando",
                     "data_bit": "Antal databitar",
-                    "fire_event": "Aktivera enhetsh\u00e4ndelse",
                     "off_delay": "Avst\u00e4ngningsf\u00f6rdr\u00f6jning",
                     "off_delay_enabled": "Aktivera avst\u00e4ngningsf\u00f6rdr\u00f6jning",
-                    "replace_device": "V\u00e4lj enhet att ers\u00e4tta",
-                    "signal_repetitions": "Antal signalrepetitioner"
+                    "replace_device": "V\u00e4lj enhet att ers\u00e4tta"
                 },
                 "title": "Konfigurera enhetsalternativ"
             }

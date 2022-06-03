@@ -1,6 +1,7 @@
 """Config flow for WattTime integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from aiowatttime import Client
@@ -189,7 +190,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_coordinates()
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._data = {**config}
         return await self.async_step_reauth_confirm()

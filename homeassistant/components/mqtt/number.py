@@ -26,8 +26,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -41,8 +41,11 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +75,7 @@ def validate_config(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
@@ -88,9 +91,16 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     validate_config,
+)
+
+# Configuring MQTT Number under the number platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    validate_config,
+    warn_for_legacy_schema(number.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -105,9 +115,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT number through configuration.yaml."""
+    """Set up MQTT number configured under the number platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, number.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        number.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -116,7 +131,14 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT number dynamically through MQTT discovery."""
+    """Set up MQTT number through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(
+            hass, number.DOMAIN, PLATFORM_SCHEMA_MODERN
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
