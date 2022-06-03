@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"
 URL = "/api/meraki"
-VERSION = "2.0"
+VERSION = "2.1"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,6 +90,7 @@ class MerakiView(HomeAssistantView):
 
     @callback
     def _handle(self, hass, data):
+        ap_mac = data.get("apMac","none")
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
 
@@ -102,7 +103,7 @@ class MerakiView(HomeAssistantView):
 
             mac = i["clientMac"]
             _LOGGER.debug("clientMac: %s", mac)
-
+            
             if lat == "NaN" or lng == "NaN":
                 _LOGGER.debug("No coordinates received, skipping location for: %s", mac)
                 gps_location = None
@@ -111,6 +112,7 @@ class MerakiView(HomeAssistantView):
                 gps_location = (lat, lng)
 
             attrs = {}
+            attrs["name"] = i.get("name", "None")
             if i.get("os", False):
                 attrs["os"] = i["os"]
             if i.get("manufacturer", False):
@@ -123,10 +125,15 @@ class MerakiView(HomeAssistantView):
                 attrs["seenTime"] = i["seenTime"]
             if i.get("ssid", False):
                 attrs["ssid"] = i["ssid"]
+   
+                
+            if i.get("rssi", False):
+                attrs["rssi"] = i["rssi"]
             hass.async_create_task(
                 self.async_see(
                     gps=gps_location,
                     mac=mac,
+                    name=attrs["name"],
                     source_type=SOURCE_TYPE_ROUTER,
                     gps_accuracy=accuracy,
                     attributes=attrs,
