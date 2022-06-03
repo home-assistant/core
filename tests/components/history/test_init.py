@@ -341,9 +341,6 @@ def test_get_significant_states_include_exclude_domain(hass_history):
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test"]
-    del states["media_player.test2"]
-    del states["media_player.test3"]
     del states["thermostat.test"]
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
