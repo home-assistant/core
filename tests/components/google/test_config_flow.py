@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
 from oauth2client.client import (
     FlowExchangeError,
     OAuth2Credentials,
@@ -94,11 +95,13 @@ async def fire_alarm(hass, point_in_time):
         await hass.async_block_till_done()
 
 
+@pytest.mark.freeze_time("2022-06-03 15:19:59-00:00")
 async def test_full_flow_yaml_creds(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
     component_setup: ComponentSetup,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test successful creds setup."""
     assert await component_setup()
@@ -115,8 +118,8 @@ async def test_full_flow_yaml_creds(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
         # Run one tick to invoke the credential exchange check
-        now = utcnow()
-        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
+        await fire_alarm(hass, datetime.datetime.utcnow())
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"]
@@ -127,12 +130,11 @@ async def test_full_flow_yaml_creds(
     assert "data" in result
     data = result["data"]
     assert "token" in data
-    assert 0 < data["token"]["expires_in"] < 8 * 86400
     assert (
-        datetime.datetime.now().timestamp()
-        <= data["token"]["expires_at"]
-        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()
+        data["token"]["expires_in"]
+        == 60 * 60 - CODE_CHECK_ALARM_TIMEDELTA.total_seconds()
     )
+    assert data["token"]["expires_at"] == 1654273199.0
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")
     assert data == {
