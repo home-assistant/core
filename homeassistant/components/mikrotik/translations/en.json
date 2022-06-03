@@ -28,6 +28,7 @@
                 "data": {
                     "arp_ping": "Enable ARP ping",
                     "detection_time": "Consider home interval",
+                    "scan_interval": "Update frequency",
                     "force_dhcp": "Force scanning using DHCP"
                 }
             }
