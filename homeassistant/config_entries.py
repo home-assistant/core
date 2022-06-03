@@ -676,7 +676,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not self._async_has_other_discovery_flows(flow.flow_id):
             persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         # Check if config entry exists with unique ID. Unload it.
@@ -1528,7 +1528,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         """
         flow = cast(OptionsFlow, flow)
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry = self.hass.config_entries.async_get_entry(flow.handler)
