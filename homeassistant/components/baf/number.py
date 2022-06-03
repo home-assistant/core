@@ -36,27 +36,7 @@ class BAFNumberDescription(NumberEntityDescription, BAFNumberDescriptionMixin):
     """Class describing BAF sensor entities."""
 
 
-FAN_NUMBER_DESCRIPTIONS = (
-    BAFNumberDescription(
-        key="return_to_auto_timeout",
-        name="Return to Auto Timeout",
-        min_value=ONE_MIN_SECS,
-        max_value=HALF_DAY_SECS,
-        entity_category=EntityCategory.CONFIG,
-        unit_of_measurement=TIME_SECONDS,
-        value_fn=lambda device: cast(Optional[int], device.return_to_auto_timeout),
-        mode=NumberMode.SLIDER,
-    ),
-    BAFNumberDescription(
-        key="motion_sense_timeout",
-        name="Motion Sense Timeout",
-        min_value=ONE_MIN_SECS,
-        max_value=ONE_DAY_SECS,
-        entity_category=EntityCategory.CONFIG,
-        unit_of_measurement=TIME_SECONDS,
-        value_fn=lambda device: cast(Optional[int], device.motion_sense_timeout),
-        mode=NumberMode.SLIDER,
-    ),
+AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="comfort_min_speed",
         name="Auto Comfort Minimum Speed",
@@ -83,6 +63,29 @@ FAN_NUMBER_DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda device: cast(Optional[int], device.comfort_heat_assist_speed),
         mode=NumberMode.BOX,
+    ),
+)
+
+FAN_NUMBER_DESCRIPTIONS = (
+    BAFNumberDescription(
+        key="return_to_auto_timeout",
+        name="Return to Auto Timeout",
+        min_value=ONE_MIN_SECS,
+        max_value=HALF_DAY_SECS,
+        entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
+        value_fn=lambda device: cast(Optional[int], device.return_to_auto_timeout),
+        mode=NumberMode.SLIDER,
+    ),
+    BAFNumberDescription(
+        key="motion_sense_timeout",
+        name="Motion Sense Timeout",
+        min_value=ONE_MIN_SECS,
+        max_value=ONE_DAY_SECS,
+        entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=TIME_SECONDS,
+        value_fn=lambda device: cast(Optional[int], device.motion_sense_timeout),
+        mode=NumberMode.SLIDER,
     ),
 )
 
@@ -125,6 +128,8 @@ async def async_setup_entry(
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)
     if device.has_light:
         descriptions.extend(LIGHT_NUMBER_DESCRIPTIONS)
+    if device.has_auto_comfort:
+        descriptions.extend(AUTO_COMFORT_NUMBER_DESCRIPTIONS)
     async_add_entities(BAFNumber(device, description) for description in descriptions)
 
 
