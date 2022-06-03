@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
+from bisect import bisect
 
 import voluptuous as vol
 
@@ -52,6 +53,14 @@ AC_STATE_TO_DATA = {
     "mode": "hvac_mode",
     "swing": "swing_mode",
 }
+
+
+def _find_valid_target_temp(target: int, valid_targets: list[int]) -> int:
+    if target <= valid_targets[0]:
+        return valid_targets[0]
+    if target >= valid_targets[-1]:
+        return valid_targets[-1]
+    return valid_targets[bisect(valid_targets, target) - 1]
 
 
 async def async_setup_entry(
@@ -203,20 +212,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if temperature == self.target_temperature:
             return
 
-        if temperature not in self.device_data.temp_list:
-            # Requested temperature is not supported.
-            if temperature > self.device_data.temp_list[-1]:
-                temperature = self.device_data.temp_list[-1]
-
-            elif temperature < self.device_data.temp_list[0]:
-                temperature = self.device_data.temp_list[0]
-
-            else:
-                raise ValueError(
-                    f"Target temperature has to be one off {str(self.device_data.temp_list)}"
-                )
-
-        await self._async_set_ac_state_property("targetTemperature", int(temperature))
+        new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)
+        await self._async_set_ac_state_property("targetTemperature", int(new_temp))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
