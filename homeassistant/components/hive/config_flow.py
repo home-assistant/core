@@ -102,6 +102,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             raise UnknownHiveError
 
         # Setup the config entry
+        await self.hive_auth.device_registration("Home Assistant")
         self.data["tokens"] = self.tokens
         self.data["device_data"] = await self.hive_auth.getDeviceData()
         if self.context["source"] == config_entries.SOURCE_REAUTH:
