@@ -20,7 +20,10 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.sensibo.climate import SERVICE_ASSUME_STATE
+from homeassistant.components.sensibo.climate import (
+    SERVICE_ASSUME_STATE,
+    _find_valid_target_temp,
+)
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,6 +38,21 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
+
+
+async def test_climate_find_valid_targets():
+    """Test function to return temperature from valid targets."""
+
+    valid_targets = [10, 16, 17, 18, 19, 20]
+
+    assert _find_valid_target_temp(7, valid_targets) == 10
+    assert _find_valid_target_temp(10, valid_targets) == 10
+    assert _find_valid_target_temp(11, valid_targets) == 16
+    assert _find_valid_target_temp(15, valid_targets) == 16
+    assert _find_valid_target_temp(16, valid_targets) == 16
+    assert _find_valid_target_temp(18.5, valid_targets) == 19
+    assert _find_valid_target_temp(20, valid_targets) == 20
+    assert _find_valid_target_temp(25, valid_targets) == 20
 
 
 async def test_climate(
@@ -55,7 +73,7 @@ async def test_climate(
             "fan_only",
             "off",
         ],
-        "min_temp": 17,
+        "min_temp": 10,
         "max_temp": 20,
         "target_temp_step": 1,
         "fan_modes": ["quiet", "low", "medium"],
@@ -244,23 +262,22 @@ async def test_climate_temperatures(
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 17
+    assert state2.attributes["temperature"] == 16
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Success"}},
     ):
-        with pytest.raises(ValueError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 17
+    assert state2.attributes["temperature"] == 19
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -624,3 +641,37 @@ async def test_climate_assumed_state(
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
+
+
+async def test_climate_no_fan_no_swing(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate fan service."""
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["fan_mode"] == "high"
+    assert state.attributes["swing_mode"] == "stopped"
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_mode", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_mode", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_modes", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_modes", None)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["fan_mode"] is None
+    assert state.attributes["swing_mode"] is None
+    assert state.attributes["fan_modes"] is None
+    assert state.attributes["swing_modes"] is None

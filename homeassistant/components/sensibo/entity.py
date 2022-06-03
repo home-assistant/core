@@ -1,7 +1,7 @@
 """Base entity for Sensibo integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
@@ -119,6 +119,8 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         )
 
     @property
-    def sensor_data(self) -> MotionSensor:
+    def sensor_data(self) -> MotionSensor | None:
         """Return data for device."""
+        if TYPE_CHECKING:
+            assert self.device_data.motion_sensors
         return self.device_data.motion_sensors[self._sensor_id]

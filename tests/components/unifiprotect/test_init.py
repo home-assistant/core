@@ -2,8 +2,10 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError
 from pyunifiprotect.data import NVR, Light
 
@@ -11,12 +13,29 @@ from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAI
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
 from .conftest import MockBootstrap, MockEntityFixture
 
 from tests.common import MockConfigEntry
+
+
+async def remove_device(
+    ws_client: aiohttp.ClientWebSocketResponse, device_id: str, config_entry_id: str
+) -> bool:
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
 
 
 async def test_setup(hass: HomeAssistant, mock_entry: MockEntityFixture):
@@ -321,3 +340,50 @@ async def test_migrate_reboot_button_fail(
     light = registry.async_get(f"{Platform.BUTTON}.test_light_1")
     assert light is not None
     assert light.unique_id == f"{light1.id}"
+
+
+async def test_device_remove_devices(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    mock_light: Light,
+    hass_ws_client: Callable[
+        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+    ],
+) -> None:
+    """Test we can only remove a device that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+
+    light1 = mock_light.copy()
+    light1._api = mock_entry.api
+    light1.name = "Test Light 1"
+    light1.id = "lightid1"
+    light1.mac = "AABBCCDDEEFF"
+
+    mock_entry.api.bootstrap.lights = {
+        light1.id: light1,
+    }
+
+    mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
+    light_entity_id = "light.test_light_1"
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+    entry_id = mock_entry.entry.entry_id
+
+    registry: er.EntityRegistry = er.async_get(hass)
+    entity = registry.entities[light_entity_id]
+    device_registry = dr.async_get(hass)
+
+    live_device_entry = device_registry.async_get(entity.device_id)
+    assert (
+        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
+        is False
+    )
+
+    dead_device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "e9:88:e7:b8:b4:40")},
+    )
+    assert (
+        await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
+        is True
+    )

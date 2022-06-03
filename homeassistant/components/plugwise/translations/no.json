@@ -13,10 +13,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tilkoblingstype"
+                    "flow_type": "Tilkoblingstype",
+                    "host": "IP adresse",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile brukernavn"
                 },
-                "description": "Produkt:",
-                "title": ""
+                "description": "Vennligst skriv inn",
+                "title": "Koble til Smile"
             },
             "user_gateway": {
                 "data": {

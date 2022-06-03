@@ -4,15 +4,22 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime as dt
 
-from sqlalchemy import lambda_stmt, select, union_all
+from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import DEVICE_ID_IN_EVENT, Events, States
+from homeassistant.components.recorder.models import (
+    DEVICE_ID_IN_EVENT,
+    EventData,
+    Events,
+    States,
+)
 
 from .common import (
+    apply_events_context_hints,
+    apply_states_context_hints,
     select_events_context_id_subquery,
     select_events_context_only,
     select_events_without_states,
@@ -27,13 +34,10 @@ def _select_device_id_context_ids_sub_query(
     json_quotable_device_ids: list[str],
 ) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple devices."""
-    return select(
-        union_all(
-            select_events_context_id_subquery(start_day, end_day, event_types).where(
-                apply_event_device_id_matchers(json_quotable_device_ids)
-            ),
-        ).c.context_id
+    inner = select_events_context_id_subquery(start_day, end_day, event_types).where(
+        apply_event_device_id_matchers(json_quotable_device_ids)
     )
+    return select(inner.c.context_id).group_by(inner.c.context_id)
 
 
 def _apply_devices_context_union(
@@ -51,8 +55,16 @@ def _apply_devices_context_union(
         json_quotable_device_ids,
     ).cte()
     return query.union_all(
-        select_events_context_only().where(Events.context_id.in_(devices_cte.select())),
-        select_states_context_only().where(States.context_id.in_(devices_cte.select())),
+        apply_events_context_hints(
+            select_events_context_only()
+            .select_from(devices_cte)
+            .outerjoin(Events, devices_cte.c.context_id == Events.context_id)
+        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        apply_states_context_hints(
+            select_states_context_only()
+            .select_from(devices_cte)
+            .outerjoin(States, devices_cte.c.context_id == States.context_id)
+        ),
     )
 
 

@@ -356,7 +356,7 @@ async def ws_event_stream(
     )
 
     await _async_wait_for_recorder_sync(hass)
-    if not subscriptions:
+    if msg_id not in connection.subscriptions:
         # Unsubscribe happened while waiting for recorder
         return
 
@@ -388,6 +388,8 @@ async def ws_event_stream(
 
     if not subscriptions:
         # Unsubscribe happened while waiting for formatted events
+        # or there are no supported entities (all UOM or state class)
+        # or devices
         return
 
     live_stream.task = asyncio.create_task(
@@ -475,7 +477,7 @@ async def ws_get_events(
     )
 
     connection.send_message(
-        await hass.async_add_executor_job(
+        await get_instance(hass).async_add_executor_job(
             _ws_formatted_get_events,
             msg["id"],
             start_time,

@@ -72,6 +72,36 @@ class AsyncConfigEntryAuth(AbstractAuth):
         return creds
 
 
+class AccessTokenAuthImpl(AbstractAuth):
+    """Authentication implementation used during config flow, without refresh.
+
+    This exists to allow the config flow to use the API before it has fully
+    created a config entry required by OAuth2Session. This does not support
+    refreshing tokens, which is fine since it should have been just created.
+    """
+
+    def __init__(
+        self,
+        websession: ClientSession,
+        access_token: str,
+    ) -> None:
+        """Init the Nest client library auth implementation."""
+        super().__init__(websession, API_URL)
+        self._access_token = access_token
+
+    async def async_get_access_token(self) -> str:
+        """Return the access token."""
+        return self._access_token
+
+    async def async_get_creds(self) -> Credentials:
+        """Return an OAuth credential for Pub/Sub Subscriber."""
+        return Credentials(
+            token=self._access_token,
+            token_uri=OAUTH2_TOKEN,
+            scopes=SDM_SCOPES,
+        )
+
+
 async def new_subscriber(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> GoogleNestSubscriber | None:
@@ -89,22 +119,27 @@ async def new_subscriber(
     ):
         _LOGGER.error("Configuration option 'subscriber_id' required")
         return None
-    return await new_subscriber_with_impl(hass, entry, subscriber_id, implementation)
-
-
-async def new_subscriber_with_impl(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    subscriber_id: str,
-    implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-) -> GoogleNestSubscriber:
-    """Create a GoogleNestSubscriber, used during ConfigFlow."""
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
-        session,
+        config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation),
         config[CONF_CLIENT_ID],
         config[CONF_CLIENT_SECRET],
     )
     return GoogleNestSubscriber(auth, config[CONF_PROJECT_ID], subscriber_id)
+
+
+def new_subscriber_with_token(
+    hass: HomeAssistant,
+    access_token: str,
+    project_id: str,
+    subscriber_id: str,
+) -> GoogleNestSubscriber:
+    """Create a GoogleNestSubscriber with an access token."""
+    return GoogleNestSubscriber(
+        AccessTokenAuthImpl(
+            aiohttp_client.async_get_clientsession(hass),
+            access_token,
+        ),
+        project_id,
+        subscriber_id,
+    )

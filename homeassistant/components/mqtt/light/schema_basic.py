@@ -42,8 +42,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import MqttCommandTemplate, MqttValueTemplate, subscription
-from ... import mqtt
+from .. import subscription
+from ..config import MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -55,6 +55,8 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..models import MqttCommandTemplate, MqttValueTemplate
+from ..util import valid_publish_topic, valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,28 +158,28 @@ VALUE_TEMPLATE_KEYS = [
 ]
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_SCHEMA.extend(
+    MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_COLOR_MODE_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_COLOR_MODE_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_EFFECT_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_HS_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_HS_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_HS_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_HS_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
@@ -189,30 +191,30 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_RGB_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_RGB_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_RGBW_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBW_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_RGBW_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_RGBW_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_RGBW_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_RGBW_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_RGBWW_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBWW_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_RGBWW_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_RGBWW_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_RGBWW_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_RGBWW_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_WHITE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_WHITE_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
-            vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(
                 CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(CONF_WHITE_VALUE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_WHITE_VALUE_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
         },
     )
