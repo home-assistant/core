@@ -1,4 +1,6 @@
 """Support for VELUX KLF 200 devices."""
+import asyncio
+from contextlib import asynccontextmanager
 import logging
 
 from pyvlx import PyVLX, PyVLXException
@@ -91,6 +93,14 @@ class VeluxEntity(Entity):
     def __init__(self, node):
         """Initialize the Velux device."""
         self.node = node
+        self.lock = asyncio.Lock()
+
+    @asynccontextmanager
+    async def throttle(self):
+        """Throttle commands to the underlying device."""
+        async with self.lock:
+            yield None
+            await asyncio.sleep(2)
 
     @callback
     def async_register_callbacks(self):
