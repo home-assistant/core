@@ -11,7 +11,7 @@ from pytest import approx
 from homeassistant import loader
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     StatisticsMeta,
     process_timestamp_to_utc_isoformat,
 )
@@ -2287,7 +2287,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
     )
     with patch(
-        "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
+        "homeassistant.components.recorder.db_schema.dt_util.utcnow", return_value=zero
     ):
         hass = hass_recorder()
         # Remove this after dropping the use of the hass_recorder fixture
