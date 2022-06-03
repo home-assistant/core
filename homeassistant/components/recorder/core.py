@@ -48,17 +48,19 @@ from .const import (
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
-from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
+from .db_schema import (
     SCHEMA_VERSION,
     Base,
     EventData,
     Events,
     StateAttributes,
     States,
+    StatisticsRuns,
+)
+from .executor import DBInterruptibleThreadPoolExecutor
+from .models import (
     StatisticData,
     StatisticMetaData,
-    StatisticsRuns,
     UnsupportedDialect,
     process_timestamp,
 )

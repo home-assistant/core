@@ -41,14 +41,11 @@ from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
 from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticResult,
-    Statistics,
-    StatisticsMeta,
-    StatisticsRuns,
-    StatisticsShortTerm,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )

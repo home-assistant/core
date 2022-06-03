@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.typing import ConfigType
 
-from .models import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States
+from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"

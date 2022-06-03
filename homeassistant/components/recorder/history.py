@@ -24,12 +24,10 @@ from homeassistant.components.websocket_api.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
+from .db_schema import RecorderRuns, StateAttributes, States
 from .filters import Filters
 from .models import (
     LazyState,
-    RecorderRuns,
-    StateAttributes,
-    States,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
