@@ -981,7 +981,6 @@ def _reduce_statistics_per_month(
 def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
-    statistic_ids: list[str] | None,
     metadata_ids: list[int] | None,
     table: type[Statistics | StatisticsShortTerm],
 ) -> StatementLambdaElement:
@@ -999,7 +998,7 @@ def _statistics_during_period_stmt(
     if end_time is not None:
         stmt += lambda q: q.filter(table.start < end_time)
 
-    if statistic_ids is not None:
+    if metadata_ids:
         stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
 
     stmt += lambda q: q.order_by(table.metadata_id, table.start)
@@ -1035,9 +1034,7 @@ def statistics_during_period(
         else:
             table = Statistics
 
-        stmt = _statistics_during_period_stmt(
-            start_time, end_time, statistic_ids, metadata_ids, table
-        )
+        stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids, table)
         stats = execute_stmt_lambda_element(session, stmt)
 
         if not stats:
