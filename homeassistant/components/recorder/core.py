@@ -573,6 +573,7 @@ class Recorder(threading.Thread):
             self._setup_run()
         else:
             self.migration_in_progress = True
+            self.migration_is_live = migration.live_migration(current_version)
 
         self.hass.add_job(self.async_connection_success)
 

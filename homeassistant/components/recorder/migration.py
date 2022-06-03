@@ -40,8 +40,7 @@ from .statistics import (
 )
 from .util import session_scope
 
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 999
-assert LIVE_MIGRATION_MIN_SCHEMA_VERSION > SCHEMA_VERSION
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,9 +97,9 @@ def migrate_schema(
     db_ready = False
     for version in range(current_version, SCHEMA_VERSION):
         if live_migration(version) and not db_ready:
-            hass.add_job(instance.async_set_recorder_ready)
             db_ready = True
             instance.migration_is_live = True
+            hass.add_job(instance.async_set_recorder_ready)
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
         _apply_update(hass, engine, session_maker, new_version, current_version)

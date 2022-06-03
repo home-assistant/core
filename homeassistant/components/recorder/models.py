@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 from typing import Any, TypedDict, overload
@@ -36,8 +36,8 @@ class UnsupportedDialect(Exception):
 class RecorderData:
     """Recorder data stored in hass.data."""
 
-    recorder_platforms: dict[str, Any] = {}
-    db_connected: asyncio.Future = asyncio.Future()
+    recorder_platforms: dict[str, Any] = field(default_factory=dict)
+    db_connected: asyncio.Future = field(default_factory=asyncio.Future)
 
 
 class StatisticResult(TypedDict):

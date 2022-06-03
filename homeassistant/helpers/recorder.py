@@ -34,5 +34,5 @@ async def async_wait_recorder(hass: HomeAssistant) -> bool:
 
     if const.DOMAIN not in hass.data:
         return False
-    db_connected: asyncio.Future[bool] = hass.data[const.DOMAIN]["db_connected"]
+    db_connected: asyncio.Future[bool] = hass.data[const.DOMAIN].db_connected
     return await db_connected

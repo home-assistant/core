@@ -76,7 +76,7 @@ async def test_migration_in_progress(hass):
     """Test that we can check for migration in progress."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True,), patch(
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ):
@@ -257,7 +257,7 @@ async def test_events_during_migration_queue_exhausted(hass):
 
 @pytest.mark.parametrize(
     "start_version,live",
-    [(0, False), (16, False), (18, False), (22, False), (25, True)],
+    [(0, True), (16, True), (18, True), (22, True), (25, True)],
 )
 async def test_schema_migrate(hass, start_version, live):
     """Test the full schema migration logic.
@@ -343,7 +343,7 @@ async def test_schema_migrate(hass, start_version, live):
                 hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
             )
         )
-        await hass.data[recorder.DOMAIN]["db_connected"]
+        await hass.data[recorder.DOMAIN].db_connected
 
         assert recorder.util.async_migration_in_progress(hass) is True
         assert recorder.util.async_migration_is_live(hass) == live
