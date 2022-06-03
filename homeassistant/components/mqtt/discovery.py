@@ -11,7 +11,7 @@ import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -305,7 +305,7 @@ async def async_start(  # noqa: C901
                 )
                 if (
                     result
-                    and result["type"] == RESULT_TYPE_ABORT
+                    and result["type"] == FlowResultType.ABORT
                     and result["reason"]
                     in ("already_configured", "single_instance_allowed")
                 ):

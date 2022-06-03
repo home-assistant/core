@@ -143,7 +143,7 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
 def _prepare_config_flow_result_json(result, prepare_result_json):
     """Convert result to JSON."""
-    if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+    if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
     data = result.copy()
