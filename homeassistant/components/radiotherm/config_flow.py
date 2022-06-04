@@ -52,8 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(init_data.mac)
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info.ip, CONF_HOLD_TEMP: False},
-            reload_on_update=False,
+            updates={CONF_HOST: discovery_info.ip}, reload_on_update=False
         )
         self.discovered_init_data = init_data
         self.discovered_ip = discovery_info.ip
@@ -131,11 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -165,7 +160,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_HOLD_TEMP,
                         default=self.config_entry.options[CONF_HOLD_TEMP],
-                    ): bool,
+                    ): bool
                 }
             ),
         )
