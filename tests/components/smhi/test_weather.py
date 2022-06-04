@@ -16,9 +16,12 @@ from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -58,13 +61,13 @@ async def test_setup_hass(
     assert state.state == "sunny"
     assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
     assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 33
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 17
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7
     assert state.attributes[ATTR_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
     assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
     assert state.attributes[ATTR_WEATHER_VISIBILITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 2
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 1.9
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
     assert len(state.attributes["forecast"]) == 4
 
@@ -74,6 +77,9 @@ async def test_setup_hass(
     assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
     assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
+    assert forecast[ATTR_FORECAST_PRESSURE] == 1026
+    assert forecast[ATTR_FORECAST_WIND_BEARING] == 203
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 1.7
 
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:

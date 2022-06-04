@@ -28,9 +28,12 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     Forecast,
     WeatherEntity,
 )
@@ -160,7 +163,7 @@ class SmhiWeather(WeatherEntity):
         if self._forecasts:
             self._attr_temperature = self._forecasts[0].temperature
             self._attr_humidity = self._forecasts[0].humidity
-            self._attr_wind_speed = round(self._forecasts[0].wind_speed)
+            self._attr_wind_speed = self._forecasts[0].wind_speed
             self._attr_wind_bearing = self._forecasts[0].wind_direction
             self._attr_visibility = self._forecasts[0].horizontal_visibility
             self._attr_pressure = self._forecasts[0].pressure
@@ -175,7 +178,7 @@ class SmhiWeather(WeatherEntity):
             self._attr_extra_state_attributes = {
                 ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
                 # Convert from m/s to km/h
-                ATTR_SMHI_WIND_GUST_SPEED: round(self._forecasts[0].wind_gust * 18 / 5),
+                ATTR_SMHI_WIND_GUST_SPEED: self._forecasts[0].wind_gust,
                 ATTR_SMHI_THUNDER_PROBABILITY: self._forecasts[0].thunder,
             }
 
@@ -205,6 +208,9 @@ class SmhiWeather(WeatherEntity):
                     ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_PRECIPITATION: round(forecast.total_precipitation, 1),
                     ATTR_FORECAST_CONDITION: condition,
+                    ATTR_FORECAST_PRESSURE: forecast.pressure,
+                    ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
+                    ATTR_FORECAST_WIND_SPEED: forecast.wind_speed,
                 }
             )
 
