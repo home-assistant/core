@@ -1422,7 +1422,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.0.1
+pyatmo==7.0.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
