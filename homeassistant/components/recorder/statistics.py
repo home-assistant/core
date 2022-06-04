@@ -485,14 +485,13 @@ def _compile_hourly_statistics_summary_mean_stmt(
     start_time: datetime, end_time: datetime
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
-    stmt = lambda_stmt(
+    return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
         .filter(StatisticsShortTerm.start >= start_time)
         .filter(StatisticsShortTerm.start < end_time)
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
-    return stmt
 
 
 def compile_hourly_statistics(
@@ -1168,6 +1167,7 @@ def get_last_short_term_statistics(
 
 
 def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
+    """Generate the subquery to find the most recent statistic row."""
     return (
         select(
             StatisticsShortTerm.metadata_id,
