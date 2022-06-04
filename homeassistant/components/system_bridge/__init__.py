@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
 
-    def valid_device(device: str):
+    def valid_device(device: str) -> str:
         """Check device is valid."""
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device)
@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise vol.Invalid from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
-    def valid_power_command(key: str):
+    def valid_power_command(key: str) -> str:
         """Check power command is valid."""
         command = POWER_COMMAND_MAP.get(key)
         if command is None:
