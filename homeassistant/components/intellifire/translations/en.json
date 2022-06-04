@@ -13,6 +13,7 @@
         "flow_title": "{serial} ({host})",
         "step": {
             "api_config": {
+                "description": "IntelliFire will need to reach out to [iftapi.net](https://iftapi.net/webaccess/login.html) in order to obtain an API key. Once it has obtained this API key, the rest of its interactions will occur completely within the local network. If the API key were to expire it would again need to reach out to https://iftapi.net/webaccess/login.html\n\nUsername and Password are the same information used in your IntelliFire Android/iOS application. ",
                 "data": {
                     "password": "Password",
                     "username": "Email"
