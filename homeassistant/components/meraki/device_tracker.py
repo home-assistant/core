@@ -90,7 +90,7 @@ class MerakiView(HomeAssistantView):
 
     @callback
     def _handle(self, hass, data):
-        ap_mac = data.get("apMac",False)
+        ap_mac = data.get("apMac")
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
 
