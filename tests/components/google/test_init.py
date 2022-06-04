@@ -14,11 +14,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google import (
-    DOMAIN,
-    SERVICE_ADD_EVENT,
-    SERVICE_SCAN_CALENDARS,
-)
+from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
@@ -468,57 +464,6 @@ async def test_add_event_date_time(
             "timeZone": "America/Regina",
         },
     }
-
-
-async def test_scan_calendars(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_list: ApiResult,
-    mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test finding a calendar from the API."""
-
-    mock_calendars_list({"items": []})
-    assert await component_setup()
-
-    calendar_1 = {
-        "id": "calendar-id-1",
-        "summary": "Calendar 1",
-    }
-    calendar_2 = {
-        "id": "calendar-id-2",
-        "summary": "Calendar 2",
-    }
-
-    aioclient_mock.clear_requests()
-    mock_calendars_list({"items": [calendar_1]})
-    mock_events_list({}, calendar_id="calendar-id-1")
-    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.calendar_1")
-    assert state
-    assert state.name == "Calendar 1"
-    assert state.state == STATE_OFF
-    assert not hass.states.get("calendar.calendar_2")
-
-    aioclient_mock.clear_requests()
-    mock_calendars_list({"items": [calendar_1, calendar_2]})
-    mock_events_list({}, calendar_id="calendar-id-1")
-    mock_events_list({}, calendar_id="calendar-id-2")
-    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.calendar_1")
-    assert state
-    assert state.name == "Calendar 1"
-    assert state.state == STATE_OFF
-    state = hass.states.get("calendar.calendar_2")
-    assert state
-    assert state.name == "Calendar 2"
-    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
