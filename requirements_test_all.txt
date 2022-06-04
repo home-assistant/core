@@ -541,7 +541,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==1.1.1
+greeclimate==1.2.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1181,7 +1181,7 @@ pyowm==3.2.0
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.14
+pypck==0.7.15
 
 # homeassistant.components.plaato
 pyplaato==0.0.18

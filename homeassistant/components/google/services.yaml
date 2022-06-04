@@ -1,6 +1,3 @@
-scan_for_calendars:
-  name: Scan for calendars
-  description: Scan for new calendars.
 add_event:
   name: Add event
   description: Add a new calendar event.

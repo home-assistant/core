@@ -756,7 +756,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.1.1
+greeclimate==1.2.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1738,7 +1738,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.14
+pypck==0.7.15
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
