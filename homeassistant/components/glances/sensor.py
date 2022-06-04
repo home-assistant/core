@@ -4,6 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
@@ -80,6 +81,11 @@ class GlancesSensor(SensorEntity):
 
         self.entity_description = description
         self._attr_name = f"{name} {sensor_name_prefix} {description.name_suffix}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, glances_data.host)},
+            manufacturer="Glances",
+            name=glances_data.name,
+        )
 
     @property
     def unique_id(self):
