@@ -100,6 +100,15 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
+    # Test statistics_during_period with a far future start and end date
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(hass, future, end_time=future, period="5minute")
+    assert stats == {}
+
+    # Test statistics_during_period with a far future end date
+    stats = statistics_during_period(hass, zero, end_time=future, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
     stats = statistics_during_period(
         hass, zero, statistic_ids=["sensor.test2"], period="5minute"
     )
