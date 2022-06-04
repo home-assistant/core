@@ -73,7 +73,6 @@ MESSAGE_RETRIES = 3
 UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
-SWITCH_PRODUCT_IDS = [70, 71, 89]
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -403,7 +402,7 @@ class LIFXManager:
             # Get the product info first so that LIFX Switches
             # can be ignored.
             version_resp = await ack(bulb.get_version)
-            if version_resp and bulb.product in SWITCH_PRODUCT_IDS:
+            if version_resp and lifx_features(bulb)["relays"]:
                 _LOGGER.debug(
                     "Not connecting to LIFX Switch %s (%s)",
                     str(bulb.mac_addr).replace(":", ""),

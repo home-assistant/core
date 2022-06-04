@@ -447,6 +447,8 @@ def test_logarithm(hass):
     assert render(hass, "{{ 'no_number' | log(10, default=1) }}") == 1
     assert render(hass, "{{ log('no_number', 10, 1) }}") == 1
     assert render(hass, "{{ log('no_number', 10, default=1) }}") == 1
+    assert render(hass, "{{ log(0, 10, 1) }}") == 1
+    assert render(hass, "{{ log(0, 10, default=1) }}") == 1
 
 
 def test_sine(hass):

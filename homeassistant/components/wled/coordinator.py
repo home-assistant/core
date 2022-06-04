@@ -54,11 +54,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.data is not None and len(self.data.state.segments) > 1
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
     @callback
     def _use_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
@@ -81,7 +76,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 self.logger.info(err)
             except WLEDError as err:
                 self.last_update_success = False
-                self.update_listeners()
+                self.async_update_listeners()
                 self.logger.error(err)
 
             # Ensure we are disconnected
