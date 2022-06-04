@@ -28,7 +28,6 @@ from .common import (
     TEST_CONFIG_APP_CREDS,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
-    WEB_AUTH_DOMAIN,
     CreateDevice,
     FakeSubscriber,
     NestTestConfig,
