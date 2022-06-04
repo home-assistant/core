@@ -72,7 +72,7 @@ class SAJDataUpdateCoordinator(DataUpdateCoordinator):
             identifiers={(DOMAIN, self._saj.serialnumber)},
             manufacturer="SAJ",
             name=self.name,
-            configuration_url=url,
+            configuration_url=str(url),
         )
 
     async def connect(self):

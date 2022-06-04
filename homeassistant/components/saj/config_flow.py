@@ -8,7 +8,13 @@ import pysaj
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowError, FlowResult
 from homeassistant.helpers.typing import ConfigType
 
@@ -28,16 +34,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries(include_ignore=True):
             if import_config[CONF_HOST] == entry.data[CONF_HOST]:
                 return self.async_abort(reason="already_configured")
+        import_config.setdefault(CONF_TYPE, "ethernet")
+        import_config.setdefault(CONF_USERNAME, "")
+        import_config.setdefault(CONF_PASSWORD, "")
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            user_input.setdefault(CONF_NAME, "")
             try:
                 inverter = SAJDataUpdateCoordinator(self.hass, user_input)
-                if self.context["source"] != config_entries.SOURCE_IMPORT:
-                    await inverter.connect()
+                await inverter.connect()
                 await self.async_set_unique_id(inverter.serialnumber)
                 self._abort_if_unique_id_configured()
 
