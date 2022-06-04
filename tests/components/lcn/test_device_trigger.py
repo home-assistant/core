@@ -1,7 +1,12 @@
 """Tests for LCN device triggers."""
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
-from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+from pypck.lcn_defs import (
+    AccessControlPeriphery,
+    BatteryStatus,
+    KeyAction,
+    SendKeyCommand,
+)
 import voluptuous_serialize
 
 from homeassistant.components import automation
@@ -186,6 +191,7 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry, lcn_connection)
         level=0,
         key=0,
         action=KeyAction.HIT,
+        battery=BatteryStatus.WEAK,
     )
 
     await lcn_connection.async_process_input(inp)

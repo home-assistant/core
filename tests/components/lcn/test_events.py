@@ -1,7 +1,12 @@
 """Tests for LCN events."""
 from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
-from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+from pypck.lcn_defs import (
+    AccessControlPeriphery,
+    BatteryStatus,
+    KeyAction,
+    SendKeyCommand,
+)
 
 from tests.common import async_capture_events
 
@@ -53,6 +58,7 @@ async def test_fire_transmitter_event(hass, lcn_connection):
         level=0,
         key=0,
         action=KeyAction.HIT,
+        battery=BatteryStatus.WEAK,
     )
 
     await lcn_connection.async_process_input(inp)
@@ -64,6 +70,7 @@ async def test_fire_transmitter_event(hass, lcn_connection):
     assert events[0].data["level"] == 0
     assert events[0].data["key"] == 0
     assert events[0].data["action"] == "hit"
+    assert events[0].data["battery"] == "weak"
 
 
 async def test_fire_sendkeys_event(hass, lcn_connection):
