@@ -42,6 +42,24 @@ async def test_fire_fingerprint_event(hass, lcn_connection):
     assert events[0].data["code"] == "aabbcc"
 
 
+async def test_fire_codelock_event(hass, lcn_connection):
+    """Test the codelock event is fired."""
+    events = async_capture_events(hass, "lcn_codelock")
+
+    inp = ModStatusAccessControl(
+        LcnAddr(0, 7, False),
+        periphery=AccessControlPeriphery.CODELOCK,
+        code="aabbcc",
+    )
+
+    await lcn_connection.async_process_input(inp)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == "lcn_codelock"
+    assert events[0].data["code"] == "aabbcc"
+
+
 async def test_fire_transmitter_event(hass, lcn_connection):
     """Test the transmitter event is fired."""
     events = async_capture_events(hass, "lcn_transmitter")
