@@ -1178,7 +1178,7 @@ pyowm==3.2.0
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.14
+pypck==0.7.15
 
 # homeassistant.components.plaato
 pyplaato==0.0.18
