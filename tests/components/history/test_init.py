@@ -5,6 +5,7 @@ from http import HTTPStatus
 import json
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 import pytest
 from pytest import approx
 
@@ -926,6 +927,141 @@ async def test_statistics_during_period(
             }
         ]
     }
+
+
+@pytest.mark.parametrize(
+    "units, attributes, state, value",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+    ],
+)
+async def test_statistics_during_period_in_the_past(
+    hass, hass_ws_client, recorder_mock, units, attributes, state, value
+):
+    """Test statistics_during_period in the past."""
+    hass.config.set_time_zone("UTC")
+    now = dt_util.utcnow().replace()
+
+    hass.config.units = units
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    past = now - timedelta(days=3)
+
+    with freeze_time(past):
+        hass.states.async_set("sensor.test", state, attributes=attributes)
+        await async_wait_recording_done(hass)
+
+    sensor_state = hass.states.get("sensor.test")
+    assert sensor_state.last_updated == past
+
+    stats_top_of_hour = past.replace(minute=0, second=0, microsecond=0)
+    stats_start = past.replace(minute=55)
+    do_adhoc_statistics(hass, start=stats_start)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "hour",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    past = now - timedelta(days=3)
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/statistics_during_period",
+            "start_time": past.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": stats_start.isoformat(),
+                "end": (stats_start + timedelta(minutes=5)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    start_of_day = stats_top_of_hour.replace(hour=0, minute=0)
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/statistics_during_period",
+            "start_time": stats_top_of_hour.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "day",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": start_of_day.isoformat(),
+                "end": (start_of_day + timedelta(days=1)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
 
 
 async def test_statistics_during_period_bad_start_time(
