@@ -126,6 +126,16 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
 
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
+        key="boot_time",
+        name="Boot Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:av-timer",
+        value=lambda data: datetime.fromtimestamp(
+            data.system.boot_time, tz=utcnow().tzinfo
+        ),
+    ),
+    SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",
         state_class=SensorStateClass.MEASUREMENT,
