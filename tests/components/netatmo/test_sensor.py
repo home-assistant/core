@@ -105,27 +105,12 @@ async def test_process_health(health, expected):
     "uid, name, expected",
     [
         ("12:34:56:37:11:ca-reachable", "mystation_reachable", "True"),
-        # ("12:34:56:03:1b:e4-rf_status", "mystation_yard_radio", "Full"),
-        # (
-        #     "12:34:56:05:25:6e-rf_status",
-        #     "valley_road_rain_gauge_radio",
-        #     "Medium",
-        # ),
-        # (
-        #     "12:34:56:36:fc:de-rf_status_lvl",
-        #     "mystation_netatmooutdoor_radio_level",
-        #     "65",
-        # ),
-        # (
-        #     "12:34:56:37:11:ca-wifi_status_lvl",
-        #     "netatmo_mystation_wifi_level",
-        #     "45",
-        # ),
-        # (
-        #     "12:34:56:37:11:ca-wifi_status",
-        #     "mystation_wifi_status",
-        #     "Full",
-        # ),
+        ("12:34:56:03:1b:e4-rf_strength", "mystation_yard_radio", "Full"),
+        (
+            "12:34:56:37:11:ca-wifi_strength",
+            "mystation_wifi_strength",
+            "Full",
+        ),
         (
             "12:34:56:37:11:ca-temp_trend",
             "mystation_temperature_trend",
@@ -138,28 +123,28 @@ async def test_process_health(health, expected):
         ),
         ("12:34:56:05:51:20-sum_rain_1", "netatmo_mystation_yard_rain_last_hour", "0"),
         ("12:34:56:05:51:20-sum_rain_24", "netatmo_mystation_yard_rain_today", "0"),
-        # ("12:34:56:03:1b:e4-windangle", "netatmoindoor_garden_direction", "SW"),
-        # (
-        #     "12:34:56:03:1b:e4-windangle_value",
-        #     "netatmoindoor_garden_angle",
-        #     "217",
-        # ),
-        # ("12:34:56:03:1b:e4-gustangle", "mystation_garden_gust_direction", "S"),
-        # (
-        #     "12:34:56:03:1b:e4-gustangle",
-        #     "netatmoindoor_garden_gust_direction",
-        #     "S",
-        # ),
-        # (
-        #     "12:34:56:03:1b:e4-gustangle_value",
-        #     "netatmoindoor_garden_gust_angle_value",
-        #     "206",
-        # ),
-        # (
-        #     "12:34:56:03:1b:e4-guststrength",
-        #     "netatmoindoor_garden_gust_strength",
-        #     "9",
-        # ),
+        ("12:34:56:03:1b:e4-wind_direction", "netatmoindoor_garden_direction", "SW"),
+        (
+            "12:34:56:03:1b:e4-wind_angle",
+            "netatmoindoor_garden_angle",
+            "217",
+        ),
+        ("12:34:56:03:1b:e4-gust_direction", "mystation_garden_gust_direction", "S"),
+        (
+            "12:34:56:03:1b:e4-gust_direction",
+            "netatmoindoor_garden_gust_direction",
+            "S",
+        ),
+        (
+            "12:34:56:03:1b:e4-gust_angle",
+            "netatmoindoor_garden_gust_angle",
+            "206",
+        ),
+        (
+            "12:34:56:03:1b:e4-gust_strength",
+            "netatmoindoor_garden_gust_strength",
+            "9",
+        ),
         (
             "12:34:56:03:1b:e4-rf_strength",
             "netatmoindoor_garden_rf_strength",
@@ -188,6 +173,7 @@ async def test_weather_sensor_enabling(
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         states_before = len(hass.states.async_all())
         assert hass.states.get(f"sensor.{name}") is None
+        print(f"sensor.{name}")
 
         registry = er.async_get(hass)
         registry.async_get_or_create(
