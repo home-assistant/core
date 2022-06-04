@@ -424,7 +424,6 @@ async def test_setup_component_no_devices(hass, config_entry):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        # return {}
         return await fake_post_request(*args, **kwargs)
 
     with patch(
