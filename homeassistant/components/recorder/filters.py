@@ -232,7 +232,10 @@ def _entity_matcher(
     entity_ids: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     matchers = [
-        cast(column, Text()).in_([encoder(entity_id) for entity_id in entity_ids])
+        (
+            cast(column, Text()).is_(None)
+            | cast(column, Text()).in_([encoder(entity_id) for entity_id in entity_ids])
+        )
         for column in columns
     ]
     return or_(*matchers) if matchers else or_(False)
