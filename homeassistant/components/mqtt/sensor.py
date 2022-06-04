@@ -34,8 +34,8 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
@@ -47,6 +47,8 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttValueTemplate
+from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,12 +91,12 @@ def validate_options(conf):
     return conf
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RO_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_LAST_RESET_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,

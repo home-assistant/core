@@ -84,7 +84,7 @@ async def test_load_hassio(hass):
     with patch.dict(os.environ, {}, clear=True):
         assert bootstrap._get_domains(hass, {}) == set()
 
-    with patch.dict(os.environ, {"HASSIO": "1"}):
+    with patch.dict(os.environ, {"SUPERVISOR": "1"}):
         assert bootstrap._get_domains(hass, {}) == {"hassio"}
 
 

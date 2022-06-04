@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import cast
 
+from bimmer_connected.models import ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
-from bimmer_connected.vehicle.models import ValueWithUnit
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

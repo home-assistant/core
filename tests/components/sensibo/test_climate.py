@@ -624,3 +624,37 @@ async def test_climate_assumed_state(
 
     state2 = hass.states.get("climate.hallway")
     assert state2.state == "off"
+
+
+async def test_climate_no_fan_no_swing(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate fan service."""
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["fan_mode"] == "high"
+    assert state.attributes["swing_mode"] == "stopped"
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_mode", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_mode", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_modes", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_modes", None)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["fan_mode"] is None
+    assert state.attributes["swing_mode"] is None
+    assert state.attributes["fan_modes"] is None
+    assert state.attributes["swing_modes"] is None

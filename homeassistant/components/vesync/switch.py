@@ -8,19 +8,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_SWITCHES
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "wifi-switch-1.3": "outlet",
-    "ESW03-USA": "outlet",
-    "ESW01-EU": "outlet",
-    "ESW15-USA": "outlet",
-    "ESWL01": "switch",
-    "ESWL03": "switch",
-    "ESO15-TB": "outlet",
-}
 
 
 async def async_setup_entry(
