@@ -258,9 +258,6 @@ async def setup_base_platform(
     """Fixture to setup the integration platform."""
     if config_entry:
         config_entry.add_to_hass(hass)
-    #    with patch(
-    #        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    #    ),
     with patch("homeassistant.components.nest.PLATFORMS", platforms):
 
         async def _setup_func() -> bool:

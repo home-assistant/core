@@ -245,7 +245,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
         if user_input is not None:
-            _LOGGER.debug(implementations)
             self.flow_impl = implementations[user_input["implementation"]]
             return await self.async_step_auth()
 
