@@ -87,6 +87,40 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     ),
 )
 
+PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_boost_enabled",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        name="Pure Boost Enabled",
+        icon="mdi:motion-sensor",
+        value_fn=lambda data: data.pure_boost_enabled,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_ac_integration",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with AC",
+        icon="mdi:motion-sensor",
+        value_fn=lambda data: data.pure_ac_integration,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_geo_integration",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with Presence",
+        icon="mdi:motion-sensor",
+        value_fn=lambda data: data.pure_geo_integration,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_measure_integration",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with Outdoor Air Quality",
+        icon="mdi:motion-sensor",
+        value_fn=lambda data: data.pure_measure_integration,
+        entity_registry_enabled_default=False,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -111,6 +145,12 @@ async def async_setup_entry(
         for description in DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
         if getattr(device_data, description.key) is not None
+    )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
+        for description in PURE_SENSOR_TYPES
+        for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.model == "pure"
     )
 
     async_add_entities(entities)

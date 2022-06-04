@@ -117,6 +117,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         name="Pure Sensitivity",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
+        device_class="sensibo__sensitivity",
     ),
 )
 
