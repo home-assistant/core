@@ -12,7 +12,6 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -144,8 +143,6 @@ class TrainSensor(SensorEntity):
                     self._from_station, self._to_station, when
                 )
         except ValueError as error:
-            if "Invalid authentication" in error.args[0]:
-                raise ConfigEntryAuthFailed from error
             _LOGGER.error("Departure %s encountered a problem: %s", when, error)
 
         if not _state:
