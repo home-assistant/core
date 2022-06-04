@@ -187,7 +187,7 @@ aiolifx==0.8.1
 aiolifx_effects==0.2.2
 
 # homeassistant.components.lookin
-aiolookin==0.1.0
+aiolookin==0.1.1
 
 # homeassistant.components.lyric
 aiolyric==1.0.8
