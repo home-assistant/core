@@ -226,8 +226,7 @@ class NestFlowHandler(
         }
 
     async def async_generate_authorize_url(self) -> str:
-        """Generate a url for the user to authorize."""
-
+        """Generate a url for the user to authorize based on user input."""
         config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
         if not (
             project_id := self._data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
@@ -271,7 +270,6 @@ class NestFlowHandler(
         if existing_entries:
             # Pick an existing auth implementation for Reauth if present. Note
             # only one ConfigEntry is allowed so its safe to pick the first.
-            # NOTE: How do we ensure we have a project id here?
             entry = next(iter(existing_entries))
             if "auth_implementation" in entry.data:
                 data = {"implementation": entry.data["auth_implementation"]}
@@ -291,12 +289,36 @@ class NestFlowHandler(
             return self.async_abort(reason="single_instance_allowed")
         if self.config_mode == ConfigMode.SDM:
             return await super().async_step_user(user_input)
+        # Application Credentials setup needs information from the user
+        # before creating the OAuth URL
+        return await self.async_step_create_cloud_project()
+
+    async def async_step_create_cloud_project(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle initial step in app credentails flow."""
         implementations = await config_entry_oauth2_flow.async_get_implementations(
             self.hass, self.DOMAIN
         )
-        if not implementations:
+        if implementations:
+            return await self.async_step_cloud_project()
+        # This informational step explains to the user how to setup the
+        # cloud console and other pre-requisites needed before setting up
+        # an application credential. This extra step also allows discovery
+        # to start the config flow rather than aborting. The abort step will
+        # redirect the user to the right panel in the UI then return with a
+        # valid auth implementation.
+        if user_input is not None:
             return self.async_abort(reason="missing_credentials")
-        return await self.async_step_cloud_project()
+        return self.async_show_form(
+            step_id="create_cloud_project",
+            description_placeholders={
+                "cloud_console_url": CLOUD_CONSOLE_URL,
+                "sdm_api_url": SDM_API_URL,
+                "pubsub_api_url": PUBSUB_API_URL,
+                "more_info_url": MORE_INFO_URL,
+            },
+        )
 
     async def async_step_cloud_project(
         self, user_input: dict | None = None
@@ -305,7 +327,6 @@ class NestFlowHandler(
         if user_input is not None:
             self._data.update(user_input)
             return await self.async_step_device_project()
-        # NOTE: Ensure Existing cloud project is preserved as default string
         return self.async_show_form(
             step_id="cloud_project",
             data_schema=vol.Schema(
@@ -315,8 +336,6 @@ class NestFlowHandler(
             ),
             description_placeholders={
                 "cloud_console_url": CLOUD_CONSOLE_URL,
-                "sdm_api_url": SDM_API_URL,
-                "pubsub_api_url": PUBSUB_API_URL,
                 "more_info_url": MORE_INFO_URL,
             },
         )
@@ -336,7 +355,6 @@ class NestFlowHandler(
                 self._data.update(user_input)
                 return await super().async_step_user()
 
-        # NOTE: Existing device project is preserved
         return self.async_show_form(
             step_id="device_project",
             data_schema=vol.Schema(

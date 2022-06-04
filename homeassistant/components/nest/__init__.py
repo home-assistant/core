@@ -240,15 +240,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Attempt to import configuration.yaml settings."""
-    if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
-        _LOGGER.warning(
-            "Google has deprecated App Auth credentials and you must re-create "
-            "them following the integration instructions. You must delete "
-            "the integration, remove nest from configuration.yaml, restart "
-            "Home Assistant and follow updated set up instructions"
-        )
-        return
-
     config = hass.data[DOMAIN][DATA_NEST_CONFIG]
     new_data = {
         **entry.data,
@@ -265,6 +256,15 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
     hass.config_entries.async_update_entry(entry, data=new_data)
 
+    if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
+        _LOGGER.warning(
+            "Nest has deprecated App Auth and OAuth credentials must be "
+            "re-created by you, following the latest integration "
+            "instructions. Please delete the integration, remove nest from "
+            "configuration.yaml, restart Home Assistant and follow updated "
+            "set up instructions"
+        )
+        return
     await async_import_client_credential(
         hass,
         DOMAIN,

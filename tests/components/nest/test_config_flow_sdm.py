@@ -557,6 +557,8 @@ async def test_app_reauth(hass, oauth, setup_platform, config_entry):
 
     await setup_platform()
 
+    orig_subscriber_id = config_entry.data.get("subscriber_id")
+
     result = await oauth.async_reauth(config_entry.data)
     await oauth.async_oauth_app_flow(result)
 
@@ -571,7 +573,7 @@ async def test_app_reauth(hass, oauth, setup_platform, config_entry):
         "expires_in": 60,
     }
     assert entry.data["auth_implementation"] == APP_AUTH_DOMAIN
-    assert "subscriber_id" not in entry.data  # not updated
+    assert entry.data.get("subscriber_id") == orig_subscriber_id  # Not updated
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_HYBRID])
@@ -905,14 +907,18 @@ async def test_structure_missing_trait(hass, oauth, setup_platform, subscriber):
 
 
 @pytest.mark.parametrize("nest_test_config", [NestTestConfig({})])
-async def test_dhcp_discovery_without_creds(hass, oauth, subscriber):
-    """Exercise discovery dhcp with no config present (can't run)."""
+async def test_dhcp_discovery(hass, oauth, subscriber):
+    """Exercise discovery dhcp starts the config flow and kicks user to frontend creds flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=FAKE_DHCP_DATA,
     )
     await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "create_cloud_project"
+
+    result = await oauth.async_configure(result, {})
     assert result.get("type") == "abort"
     assert result.get("reason") == "missing_credentials"
 
@@ -947,7 +953,7 @@ async def test_dhcp_discovery_yaml(hass, oauth, setup_platform):
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
-async def test_dhcp_discovery(hass, oauth, subscriber, setup_platform):
+async def test_dhcp_discovery_with_creds(hass, oauth, subscriber, setup_platform):
     """Exercise discovery dhcp with no config present (can't run)."""
     await setup_platform()
 
