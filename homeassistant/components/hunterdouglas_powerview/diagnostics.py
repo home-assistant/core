@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import attr
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -25,6 +27,7 @@ REDACT_CONFIG = {
     DEVICE_MAC_ADDRESS,
     DEVICE_SERIAL_NUMBER,
     PV_HUB_ADDRESS,
+    "configuration_url",
 }
 
 
@@ -86,43 +89,26 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
 
     # Gather information how this device is represented in Home Assistant
     entity_registry = er.async_get(hass)
-    data: dict[str, Any] = {
-        "id": device.id,
-        "firmware": device.sw_version,
-        "model": device.model,
-        "name": device.name,
-        "name_by_user": device.name_by_user,
-        "disabled": device.disabled,
-        "disabled_by": device.disabled_by,
-        "entities": [],
-    }
 
-    entities = er.async_entries_for_device(
+    data = async_redact_data(attr.asdict(device), REDACT_CONFIG)
+    data["entities"] = []
+    entities: list[dict[str, Any]] = data["entities"]
+
+    entries = er.async_entries_for_device(
         entity_registry,
         device_id=device.id,
         include_disabled_entities=True,
     )
 
-    for entity_entry in entities:
+    for entity_entry in entries:
         state = hass.states.get(entity_entry.entity_id)
         state_dict = None
         if state:
             state_dict = dict(state.as_dict())
             state_dict.pop("context", None)
 
-        data["entities"].append(
-            {
-                "device_class": entity_entry.device_class,
-                "disabled_by": entity_entry.disabled_by,
-                "disabled": entity_entry.disabled,
-                "entity_category": entity_entry.entity_category,
-                "entity_id": entity_entry.entity_id,
-                "icon": entity_entry.icon,
-                "original_device_class": entity_entry.original_device_class,
-                "original_icon": entity_entry.original_icon,
-                "state": state_dict,
-                "unit_of_measurement": entity_entry.unit_of_measurement,
-            }
-        )
+        entity = attr.asdict(entity_entry)
+        entity["state"] = state_dict
+        entities.append(entity)
 
     return data
