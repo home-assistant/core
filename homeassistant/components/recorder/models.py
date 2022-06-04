@@ -108,12 +108,8 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
-JSON_VARIENT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True), "postgresql"
-)
-JSONB_VARIENT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"
-)
+JSON_VARIENT_CAST = Text().with_variant(postgresql.JSON(), "postgresql")
+JSONB_VARIENT_CAST = Text().with_variant(postgresql.JSONB(), "postgresql")
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -634,10 +630,10 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
 
 EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral()
 )
 OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral()
 )
 
 SHARED_ATTRS_JSON = type_coerce(
