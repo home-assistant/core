@@ -219,8 +219,11 @@ def _globs_to_like(
 ) -> ClauseList:
     """Translate glob to sql."""
     matchers = [
-        cast(column, Text()).like(
-            encoder(glob_str).translate(GLOB_TO_SQL_CHARS), escape="\\"
+        (
+            column.is_(None)
+            | cast(column, Text()).like(
+                encoder(glob_str).translate(GLOB_TO_SQL_CHARS), escape="\\"
+            )
         )
         for glob_str in glob_strs
         for column in columns
@@ -233,7 +236,7 @@ def _entity_matcher(
 ) -> ClauseList:
     matchers = [
         (
-            cast(column, Text()).is_(None)
+            column.is_(None)
             | cast(column, Text()).in_([encoder(entity_id) for entity_id in entity_ids])
         )
         for column in columns
@@ -245,7 +248,7 @@ def _domain_matcher(
     domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     matchers = [
-        cast(column, Text()).like(encoder(f"{domain}.%"))
+        (column.is_(None) | cast(column, Text()).like(encoder(f"{domain}.%")))
         for domain in domains
         for column in columns
     ]
