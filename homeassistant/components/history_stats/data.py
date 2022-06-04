@@ -67,9 +67,10 @@ class HistoryStats:
         current_period_end_timestamp = floored_timestamp(current_period_end)
         previous_period_start_timestamp = floored_timestamp(previous_period_start)
         previous_period_end_timestamp = floored_timestamp(previous_period_end)
-        now_timestamp = floored_timestamp(datetime.datetime.now())
+        utc_now = dt_util.utcnow()
+        now_timestamp = floored_timestamp(utc_now)
 
-        if now_timestamp < current_period_start_timestamp:
+        if current_period_start > utc_now:
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
