@@ -202,6 +202,19 @@ class AnalogInput(Sensor):
     SENSOR_ATTR = "present_value"
 
 
+@MULTI_MATCH(
+    channel_names="multistate_input",
+)
+class MultiStateInput(Sensor):
+    """Sensor that displays multi state input values."""
+
+    SENSOR_ATTR = "present_value"
+
+    def formatter(self, value: str) -> str:
+        """Pass-through formatter."""
+        return value
+
+
 @MULTI_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
