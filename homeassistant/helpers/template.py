@@ -1370,18 +1370,18 @@ def multiply(value, amount, default=_SENTINEL):
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
-        value_float = float(value)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", value)
-        return default
-    try:
         base_float = float(base)
     except (ValueError, TypeError):
         if default is _SENTINEL:
             raise_no_default("log", base)
         return default
-    return math.log(value_float, base_float)
+    try:
+        value_float = float(value)
+        return math.log(value_float, base_float)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("log", value)
+        return default
 
 
 def sine(value, default=_SENTINEL):

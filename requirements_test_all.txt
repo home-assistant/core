@@ -309,7 +309,7 @@ beautifulsoup4==4.11.1
 bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.3
+bimmer_connected==0.9.4
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -541,7 +541,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==1.1.1
+greeclimate==1.2.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1131,7 +1131,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.10.0
+pynetgear==0.10.4
 
 # homeassistant.components.nina
 pynina==0.1.8
@@ -1178,7 +1178,7 @@ pyowm==3.2.0
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.14
+pypck==0.7.15
 
 # homeassistant.components.plaato
 pyplaato==0.0.18

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "resource": "Sumber daya"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resource": "Sumber daya"
+                }
+            }
+        }
+    }
+}

@@ -74,12 +74,12 @@ def modernforms_exception_handler(func):
     async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ModernFormsConnectionError as error:
             _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ModernFormsError as error:
             _LOGGER.error("Invalid response from API: %s", error)
@@ -107,11 +107,6 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
 
     async def _async_update_data(self) -> ModernFormsDevice:
         """Fetch data from Modern Forms."""

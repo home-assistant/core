@@ -16,7 +16,6 @@ from homeassistant.components.google import CONF_TRACK_NEW, DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -136,7 +135,10 @@ def token_scopes() -> list[str]:
 @pytest.fixture
 def token_expiry() -> datetime.datetime:
     """Expiration time for credentials used in the test."""
-    return utcnow() + datetime.timedelta(days=7)
+    # OAuth library returns an offset-naive timestamp
+    return datetime.datetime.fromtimestamp(
+        datetime.datetime.utcnow().timestamp()
+    ) + datetime.timedelta(hours=1)
 
 
 @pytest.fixture

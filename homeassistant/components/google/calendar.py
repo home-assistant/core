@@ -20,24 +20,24 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import (
-    CONF_CAL_ID,
     CONF_IGNORE_AVAILABILITY,
     CONF_SEARCH,
     CONF_TRACK,
     DATA_SERVICE,
     DEFAULT_CONF_OFFSET,
     DOMAIN,
-    SERVICE_SCAN_CALENDARS,
+    YAML_DEVICES,
+    get_calendar_info,
+    load_config,
+    update_config,
 )
-from .const import DISCOVER_CALENDAR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,65 +59,62 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the google calendar platform."""
-
-    @callback
-    def async_discover(discovery_info: dict[str, Any]) -> None:
-        _async_setup_entities(
-            hass,
-            entry,
-            async_add_entities,
-            discovery_info,
-        )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, DISCOVER_CALENDAR, async_discover)
-    )
-
-    # Look for any new calendars
+    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
     try:
-        await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, blocking=True)
-    except HomeAssistantError as err:
-        # This can happen if there's a connection error during setup.
+        result = await calendar_service.async_list_calendars()
+    except ApiException as err:
         raise PlatformNotReady(str(err)) from err
 
-
-@callback
-def _async_setup_entities(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-    disc_info: dict[str, Any],
-) -> None:
-    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
+    # Yaml configuration may override objects from the API
+    calendars = await hass.async_add_executor_job(
+        load_config, hass.config.path(YAML_DEVICES)
+    )
+    new_calendars = []
     entities = []
-    num_entities = len(disc_info[CONF_ENTITIES])
-    for data in disc_info[CONF_ENTITIES]:
-        entity_enabled = data.get(CONF_TRACK, True)
-        if not entity_enabled:
-            _LOGGER.warning(
-                "The 'track' option in google_calendars.yaml has been deprecated. The setting "
-                "has been imported to the UI, and should now be removed from google_calendars.yaml"
-            )
-        entity_name = data[CONF_DEVICE_ID]
-        entity_id = generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass)
-        calendar_id = disc_info[CONF_CAL_ID]
-        if num_entities > 1:
-            # The google_calendars.yaml file lets users add multiple entities for
-            # the same calendar id and needs additional disambiguation
-            unique_id = f"{calendar_id}-{entity_name}"
+    for calendar_item in result.items:
+        calendar_id = calendar_item.id
+        if calendars and calendar_id in calendars:
+            calendar_info = calendars[calendar_id]
         else:
-            unique_id = calendar_id
-        entity = GoogleCalendarEntity(
-            calendar_service,
-            disc_info[CONF_CAL_ID],
-            data,
-            entity_id,
-            unique_id,
-            entity_enabled,
-        )
-        entities.append(entity)
+            calendar_info = get_calendar_info(
+                hass, calendar_item.dict(exclude_unset=True)
+            )
+            new_calendars.append(calendar_info)
+
+        # Yaml calendar config may map one calendar to multiple entities with extra options like
+        # offsets or search criteria.
+        num_entities = len(calendar_info[CONF_ENTITIES])
+        for data in calendar_info[CONF_ENTITIES]:
+            entity_enabled = data.get(CONF_TRACK, True)
+            if not entity_enabled:
+                _LOGGER.warning(
+                    "The 'track' option in google_calendars.yaml has been deprecated. The setting "
+                    "has been imported to the UI, and should now be removed from google_calendars.yaml"
+                )
+            entity_name = data[CONF_DEVICE_ID]
+            entities.append(
+                GoogleCalendarEntity(
+                    calendar_service,
+                    calendar_id,
+                    data,
+                    generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
+                    # The google_calendars.yaml file lets users add multiple entities for
+                    # the same calendar id and needs additional disambiguation
+                    f"{calendar_id}-{entity_name}" if num_entities > 1 else calendar_id,
+                    entity_enabled,
+                )
+            )
 
     async_add_entities(entities, True)
+
+    if calendars and new_calendars:
+
+        def append_calendars_to_config() -> None:
+            path = hass.config.path(YAML_DEVICES)
+            for calendar in new_calendars:
+                update_config(path, calendar)
+
+        await hass.async_add_executor_job(append_calendars_to_config)
 
 
 class GoogleCalendarEntity(CalendarEntity):
