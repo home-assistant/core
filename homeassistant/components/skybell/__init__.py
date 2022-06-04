@@ -66,10 +66,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Clean up unused cache file since we are using an account specific name
     # Remove with import
-    if await hass.async_add_executor_job(
-        os.path.exists, hass.config.path(DEFAULT_CACHEDB)
-    ):
-        await hass.async_add_executor_job(os.remove, hass.config.path(DEFAULT_CACHEDB))
+    def clean_cache():
+        """Clean old cache filename."""
+        if os.path.exists(hass.config.path(DEFAULT_CACHEDB)):
+            os.remove(hass.config.path(DEFAULT_CACHEDB))
+
+    await hass.async_add_executor_job(clean_cache)
 
     return True
 
