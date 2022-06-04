@@ -417,12 +417,6 @@ def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     return False
 
 
-def _row_event_data_extract(row: Row | EventAsRow, extractor: re.Pattern) -> str | None:
-    """Extract from event_data row."""
-    result = extractor.search(row.shared_data or row.event_data or "")
-    return result.group(1) if result else None
-
-
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
     """Convert the row timed_fired to isoformat."""
     return process_timestamp_to_utc_isoformat(row.time_fired or dt_util.utcnow())

@@ -10,7 +10,8 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "cannot_connect": "No se pudo conectar",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "upnp_not_configured": "Falta la configuraci\u00f3n de UPnP en el dispositivo."
         },
         "flow_title": "FRITZ!Box Tools: {name}",
         "step": {
@@ -46,7 +47,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Segundos para considerar un dispositivo en 'casa'"
+                    "consider_home": "Segundos para considerar un dispositivo en 'casa'",
+                    "old_discovery": "Habilitar m\u00e9todo de descubrimiento antiguo"
                 }
             }
         }

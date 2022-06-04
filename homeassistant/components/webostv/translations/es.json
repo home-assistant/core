@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Anfitri\u00f3n",
                     "name": "Nombre"
                 },
                 "description": "Encienda la televisi\u00f3n, rellene los siguientes campos y haga clic en enviar",

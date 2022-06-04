@@ -12,6 +12,13 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE,
 )
 
+EMPTY_INCLUDE_FILTER = {
+    CONF_INCLUDE: {
+        CONF_DOMAINS: None,
+        CONF_ENTITIES: None,
+        CONF_ENTITY_GLOBS: None,
+    }
+}
 SIMPLE_INCLUDE_FILTER = {
     CONF_INCLUDE: {
         CONF_DOMAINS: ["homeassistant"],
@@ -86,6 +93,19 @@ def test_extract_include_exclude_filter_conf():
     # verify it really is a copy
     assert SIMPLE_INCLUDE_EXCLUDE_FILTER[CONF_EXCLUDE][CONF_ENTITIES] != {
         "cover.altered"
+    }
+    empty_include_filter = extract_include_exclude_filter_conf(EMPTY_INCLUDE_FILTER)
+    assert empty_include_filter == {
+        CONF_EXCLUDE: {
+            CONF_DOMAINS: set(),
+            CONF_ENTITIES: set(),
+            CONF_ENTITY_GLOBS: set(),
+        },
+        CONF_INCLUDE: {
+            CONF_DOMAINS: set(),
+            CONF_ENTITIES: set(),
+            CONF_ENTITY_GLOBS: set(),
+        },
     }
 
 

@@ -25,7 +25,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -544,9 +543,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """
         # Use 'replace' as the default enqueue option
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
-        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
-            # Temporary workaround until announce support is added
-            enqueue = MediaPlayerEnqueue.PLAY
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
