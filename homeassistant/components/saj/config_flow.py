@@ -36,7 +36,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 inverter = SAJDataUpdateCoordinator(self.hass, user_input)
-                await inverter.connect()
+                if self.context["source"] != config_entries.SOURCE_IMPORT:
+                    await inverter.connect()
                 await self.async_set_unique_id(inverter.serialnumber)
                 self._abort_if_unique_id_configured()
 
