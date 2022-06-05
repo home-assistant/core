@@ -6,7 +6,21 @@
         "step": {
             "user": {
                 "data": {
-                    "resource": "Sumber daya"
+                    "attribute": "Atribut",
+                    "authentication": "Autentikasi",
+                    "device_class": "Kelas Perangkat",
+                    "headers": "Header",
+                    "password": "Kata Sandi",
+                    "resource": "Sumber daya",
+                    "select": "Pilihan",
+                    "unit_of_measurement": "Satuan Pengukuran",
+                    "value_template": "T"
+                },
+                "data_description": {
+                    "attribute": "Dapatkan nilai atribut pada tag yang dipilih",
+                    "authentication": "Jenis autentikasi HTTP. Salah satu dari basic atau digest",
+                    "device_class": "Jenis/kelas sensor untuk mengatur ikon di antarmuka",
+                    "verify_ssl": "Mengaktifkan/menonaktifkan verifikasi sertifikat SSL/TLS, misalnya jika sertifikat ditandatangani sendiri"
                 }
             }
         }
@@ -15,7 +29,11 @@
         "step": {
             "init": {
                 "data": {
-                    "resource": "Sumber daya"
+                    "resource": "Sumber daya",
+                    "unit_of_measurement": "Satuan Pengukuran"
+                },
+                "data_description": {
+                    "attribute": "Dapatkan nilai atribut pada tag yang dipilih"
                 }
             }
         }
