@@ -15,11 +15,11 @@ def wled_exception_handler(func):
     async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except WLEDConnectionError as error:
             self.coordinator.last_update_success = False
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
             raise HomeAssistantError("Error communicating with WLED API") from error
 
         except WLEDError as error:

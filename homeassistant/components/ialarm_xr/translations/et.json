@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
+            "timeout": "\u00dchenduse ajal\u00f5pp",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
