@@ -26,12 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import (
-    ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
-    ALWAYS_CONTINUOUS_DOMAINS,
-    DOMAIN,
-    ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY,
-)
+from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
 from .models import LazyEventPartialState
 
 
@@ -45,6 +40,25 @@ def async_filter_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[st
     ]
 
 
+@callback
+def _async_config_entries_for_ids(
+    hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
+) -> set[str]:
+    """Find the config entry ids for a set of entities or devices."""
+    config_entry_ids: set[str] = set()
+    if entity_ids:
+        eng_reg = er.async_get(hass)
+        for entity_id in entity_ids:
+            if (entry := eng_reg.async_get(entity_id)) and entry.config_entry_id:
+                config_entry_ids.add(entry.config_entry_id)
+    if device_ids:
+        dev_reg = dr.async_get(hass)
+        for device_id in device_ids:
+            if (device := dev_reg.async_get(device_id)) and device.config_entries:
+                config_entry_ids |= device.config_entries
+    return config_entry_ids
+
+
 def async_determine_event_types(
     hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
 ) -> tuple[str, ...]:
@@ -53,42 +67,29 @@ def async_determine_event_types(
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ] = hass.data.get(DOMAIN, {})
     if not entity_ids and not device_ids:
-        return (*ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED, *external_events)
-    config_entry_ids: set[str] = set()
-    intrested_event_types: set[str] = set()
+        return (*BUILT_IN_EVENTS, *external_events)
 
+    interested_domains: set[str] = set()
+    for entry_id in _async_config_entries_for_ids(hass, entity_ids, device_ids):
+        if entry := hass.config_entries.async_get_entry(entry_id):
+            interested_domains.add(entry.domain)
+
+    #
+    # automations and scripts can refer to entities or devices
+    # but they do not have a config entry so we need
+    # to add them since we have historically included
+    # them when matching only on entities
+    #
+    intrested_event_types: set[str] = {
+        external_event
+        for external_event, domain_call in external_events.items()
+        if domain_call[0] in interested_domains
+    } | AUTOMATION_EVENTS
     if entity_ids:
-        #
-        # Home Assistant doesn't allow firing events from
-        # entities so we have a limited list to check
-        #
-        # automations and scripts can refer to entities
-        # but they do not have a config entry so we need
-        # to add them.
-        #
-        # We also allow entity_ids to be recorded via
-        # manual logbook entries.
-        #
-        intrested_event_types |= ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY
+        # We also allow entity_ids to be recorded via manual logbook entries.
+        intrested_event_types.add(EVENT_LOGBOOK_ENTRY)
 
-    if device_ids:
-        dev_reg = dr.async_get(hass)
-        for device_id in device_ids:
-            if (device := dev_reg.async_get(device_id)) and device.config_entries:
-                config_entry_ids |= device.config_entries
-        interested_domains: set[str] = set()
-        for entry_id in config_entry_ids:
-            if entry := hass.config_entries.async_get_entry(entry_id):
-                interested_domains.add(entry.domain)
-        for external_event, domain_call in external_events.items():
-            if domain_call[0] in interested_domains:
-                intrested_event_types.add(external_event)
-
-    return tuple(
-        event_type
-        for event_type in (EVENT_LOGBOOK_ENTRY, *external_events)
-        if event_type in intrested_event_types
-    )
+    return tuple(intrested_event_types)
 
 
 @callback
@@ -118,6 +119,7 @@ def event_forwarder_filtered(
     if entities_filter:
         # We have an entity filter:
         # - Logbook panel
+
         @callback
         def _forward_events_filtered_by_entities_filter(event: Event) -> None:
             assert entities_filter is not None
@@ -172,7 +174,6 @@ def async_subscribe_events(
     event_forwarder = event_forwarder_filtered(
         target, entities_filter, entity_ids, device_ids
     )
-
     for event_type in event_types:
         subscriptions.append(
             hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
