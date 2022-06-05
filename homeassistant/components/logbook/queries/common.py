@@ -229,13 +229,18 @@ def _not_continuous_entity_matcher() -> sqlalchemy.or_:
         # But let in the entities in the possible continuous domains
         # that are not actually continuous sensors because they lack a UOM
         sqlalchemy.and_(
-            _possible_continuous_domain_matcher, _not_uom_attributes_matcher()
+            _conditionally_continuous_domain_matcher, _not_uom_attributes_matcher()
         ).self_group(),
     )
 
 
 def _not_possible_continuous_domain_matcher() -> sqlalchemy.and_:
-    """Match not continuous domains."""
+    """Match not continuous domains.
+
+    This matches domain that are always considered continuous
+    and domains that are conditionally (if they have a UOM)
+    continuous domains.
+    """
     return sqlalchemy.and_(
         *[
             ~States.entity_id.like(entity_domain)
@@ -247,8 +252,12 @@ def _not_possible_continuous_domain_matcher() -> sqlalchemy.and_:
     ).self_group()
 
 
-def _possible_continuous_domain_matcher() -> sqlalchemy.or_:
-    """Match continuous domains."""
+def _conditionally_continuous_domain_matcher() -> sqlalchemy.or_:
+    """Match conditionally continuous domains.
+
+    This matches domain that are only considered
+    continuous if a UOM is set.
+    """
     return sqlalchemy.or_(
         *[
             States.entity_id.like(entity_domain)
