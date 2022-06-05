@@ -1,6 +1,8 @@
 """Binary sensor support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from aioskybell.helpers import const as CONST
 import voluptuous as vol
 
@@ -68,7 +70,9 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         self._event: dict[str, str] = {}
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | int | datetime | tuple[str, str]]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         if event := self._event.get(CONST.CREATED_AT):
