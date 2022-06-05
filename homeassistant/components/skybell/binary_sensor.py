@@ -67,14 +67,6 @@ class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
         super().__init__(coordinator, description)
         self._event: dict[str, str] = {}
 
-    @property
-    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
-        """Return the state attributes."""
-        attrs = super().extra_state_attributes
-        if event := self._event.get(CONST.CREATED_AT):
-            attrs["event_date"] = event
-        return attrs
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

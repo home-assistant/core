@@ -241,7 +241,7 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.3.0
+aioskybell==22.6.0
 
 # homeassistant.components.slimproto
 aioslimproto==2.0.1
@@ -1795,7 +1795,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.16
+pysensibo==1.0.17
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -2068,7 +2068,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.05.1
+regenmaschine==2022.06.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2171,7 +2171,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.2
+simplisafe-python==2022.06.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
