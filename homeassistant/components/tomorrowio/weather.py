@@ -209,7 +209,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
 
             # Throw out past data
-            if forecast_dt.date() < dt_util.utcnow().date():
+            if dt_util.as_local(forecast_dt).date() < dt_util.now().date():
                 continue
 
             values = forecast["values"]
