@@ -723,7 +723,11 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
 def _entity_unique_id(entity_id: str) -> str:
     """Return the emulated_hue unique id for the entity_id."""
     unique_id = hashlib.md5(entity_id.encode()).hexdigest()
-    return f"00:{unique_id[0:2]}:{unique_id[2:4]}:{unique_id[4:6]}:{unique_id[6:8]}:{unique_id[8:10]}:{unique_id[10:12]}:{unique_id[12:14]}-{unique_id[14:16]}"
+    return (
+        f"00:{unique_id[0:2]}:{unique_id[2:4]}:"
+        f"{unique_id[4:6]}:{unique_id[6:8]}:{unique_id[8:10]}:"
+        f"{unique_id[10:12]}:{unique_id[12:14]}-{unique_id[14:16]}"
+    )
 
 
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
