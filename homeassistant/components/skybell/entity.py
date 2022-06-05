@@ -1,6 +1,8 @@
 """Entity representing a Skybell HD Doorbell."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from aioskybell import SkybellDevice
 
 from homeassistant.const import ATTR_CONNECTIONS
@@ -44,9 +46,11 @@ class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
         return self.coordinator.device
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | int | tuple[str, str]]:
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | int | datetime | tuple[str, str]]:
         """Return the state attributes."""
-        attr: dict[str, str | int | tuple[str, str]] = {
+        attr: dict[str, str | int | datetime | tuple[str, str]] = {
             "device_id": self._device.device_id,
             "status": self._device.status,
             "location": self._device.location,

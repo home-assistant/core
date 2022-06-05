@@ -210,7 +210,7 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.3.0
+aioskybell==22.6.0
 
 # homeassistant.components.slimproto
 aioslimproto==2.0.1
