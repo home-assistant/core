@@ -640,7 +640,7 @@ iotawattpy==0.1.0
 ismartgate==4.0.4
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.7.2
+jellyfin-apiclient-python==1.8.1
 
 # homeassistant.components.rest
 jsonpath==0.82
