@@ -481,7 +481,8 @@ class ElkEntity(Entity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the default attributes of the element."""
-        return {**self._element.as_dict(), **self.initial_attrs()}
+        strdict = {k: str(v) for k, v in self._element.as_dict().items()}
+        return {**strdict, **self.initial_attrs()}
 
     @property
     def available(self) -> bool:
