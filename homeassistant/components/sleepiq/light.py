@@ -4,7 +4,7 @@ from typing import Any
 
 from asyncsleepiq import SleepIQBed, SleepIQLight
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +33,9 @@ async def async_setup_entry(
 
 class SleepIQLightEntity(SleepIQBedEntity, LightEntity):
     """Representation of a light."""
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, bed: SleepIQBed, light: SleepIQLight

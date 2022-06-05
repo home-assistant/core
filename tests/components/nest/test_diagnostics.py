@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from google_nest_sdm.exceptions import ApiException, SubscriberException
+from google_nest_sdm.exceptions import SubscriberException
 import pytest
 
 from homeassistant.components.nest.const import DOMAIN
@@ -56,10 +56,35 @@ DEVICE_DIAGNOSTIC_DATA = {
 }
 
 
+CAMERA_API_DATA = {
+    "name": NEST_DEVICE_ID,
+    "type": "sdm.devices.types.CAMERA",
+    "traits": {
+        "sdm.devices.traits.CameraLiveStream": {
+            "videoCodecs": "H264",
+            "supportedProtocols": ["RTSP"],
+        },
+    },
+}
+
+CAMERA_DIAGNOSTIC_DATA = {
+    "data": {
+        "name": "**REDACTED**",
+        "traits": {
+            "sdm.devices.traits.CameraLiveStream": {
+                "videoCodecs": "H264",
+                "supportedProtocols": ["RTSP"],
+            },
+        },
+        "type": "sdm.devices.types.CAMERA",
+    },
+}
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
-    return ["sensor"]
+    return ["sensor", "camera"]
 
 
 async def test_entry_diagnostics(
@@ -114,34 +139,6 @@ async def test_setup_susbcriber_failure(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {}
 
 
-async def test_device_manager_failure(
-    hass,
-    hass_client,
-    config_entry,
-    setup_platform,
-    create_device,
-):
-    """Test configuration error."""
-    create_device.create(raw_data=DEVICE_API_DATA)
-    await setup_platform()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, NEST_DEVICE_ID)})
-    assert device is not None
-
-    with patch(
-        "homeassistant.components.nest.diagnostics._get_nest_devices",
-        side_effect=ApiException("Device manager failure"),
-    ):
-        assert await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        ) == {"error": "Device manager failure"}
-        assert await get_diagnostics_for_device(
-            hass, hass_client, config_entry, device
-        ) == {"error": "Device manager failure"}
-
-
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY])
 async def test_legacy_config_entry_diagnostics(
     hass, hass_client, config_entry, setup_base_platform
@@ -152,3 +149,18 @@ async def test_legacy_config_entry_diagnostics(
         await setup_base_platform()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {}
+
+
+async def test_camera_diagnostics(
+    hass, hass_client, create_device, setup_platform, config_entry
+):
+    """Test config entry diagnostics."""
+    create_device.create(raw_data=CAMERA_API_DATA)
+    await setup_platform()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Test that only non identifiable device information is returned
+    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+        "devices": [CAMERA_DIAGNOSTIC_DATA],
+        "camera": {"camera.camera": {}},
+    }

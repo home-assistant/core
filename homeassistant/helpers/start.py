@@ -20,8 +20,19 @@ def async_at_start(
         hass.async_run_hass_job(at_start_job, hass)
         return lambda: None
 
-    async def _matched_event(event: Event) -> None:
+    unsub: None | CALLBACK_TYPE = None
+
+    @callback
+    def _matched_event(event: Event) -> None:
         """Call the callback when Home Assistant started."""
         hass.async_run_hass_job(at_start_job, hass)
+        nonlocal unsub
+        unsub = None
 
-    return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _matched_event)
+    @callback
+    def cancel() -> None:
+        if unsub:
+            unsub()
+
+    unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _matched_event)
+    return cancel

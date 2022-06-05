@@ -11,9 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "url": "URL in the format http://HOST/api/",
                     "import_plugins": "Import entities from fibaro plugins?",
                     "password": "Password",
+                    "url": "URL in the format http://HOST/api/",
                     "username": "Username"
                 }
             }

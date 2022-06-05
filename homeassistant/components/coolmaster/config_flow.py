@@ -1,31 +1,46 @@
 """Config flow to configure Coolmaster."""
+from __future__ import annotations
+
+from typing import Any
 
 from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.components.climate.const import HVACMode
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
+from .const import CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
+
+AVAILABLE_MODES = [
+    HVACMode.OFF.value,
+    HVACMode.HEAT.value,
+    HVACMode.COOL.value,
+    HVACMode.DRY.value,
+    HVACMode.HEAT_COOL.value,
+    HVACMode.FAN_ONLY.value,
+]
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, **MODES_SCHEMA})
 
 
-async def _validate_connection(hass: core.HomeAssistant, host):
+async def _validate_connection(host: str) -> bool:
     cool = CoolMasterNet(host, DEFAULT_PORT)
     units = await cool.status()
     return bool(units)
 
 
-class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Coolmaster config flow."""
 
     VERSION = 1
 
-    @core.callback
-    def _async_get_entry(self, data):
+    @callback
+    def _async_get_entry(self, data: dict[str, Any]) -> FlowResult:
         supported_modes = [
             key for (key, value) in data.items() if key in AVAILABLE_MODES and value
         ]
@@ -38,7 +53,9 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -48,7 +65,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
 
         try:
-            result = await _validate_connection(self.hass, host)
+            result = await _validate_connection(host)
             if not result:
                 errors["base"] = "no_units"
         except OSError:

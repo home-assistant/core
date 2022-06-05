@@ -1,90 +1,63 @@
 """Light/LED support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ATTR_RGB_COLOR,
+    ColorMode,
     LightEntity,
+    LightEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.color as color_util
 
-from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
+from .const import DOMAIN
+from .entity import SkybellEntity
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data[SKYBELL_DOMAIN]
-
-    sensors = []
-    for device in skybell.get_devices():
-        sensors.append(SkybellLight(device))
-
-    add_entities(sensors, True)
-
-
-def _to_skybell_level(level):
-    """Convert the given Home Assistant light level (0-255) to Skybell (0-100)."""
-    return int((level * 100) / 255)
+    """Set up Skybell switch."""
+    async_add_entities(
+        SkybellLight(
+            coordinator,
+            LightEntityDescription(
+                key=coordinator.device.name,
+                name=coordinator.device.name,
+            ),
+        )
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
+    )
 
 
-def _to_hass_level(level):
-    """Convert the given Skybell (0-100) light level to Home Assistant (0-255)."""
-    return int((level * 255) / 100)
+class SkybellLight(SkybellEntity, LightEntity):
+    """A light implementation for Skybell devices."""
 
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS, ColorMode.RGB}
 
-class SkybellLight(SkybellDevice, LightEntity):
-    """A binary sensor implementation for Skybell devices."""
-
-    def __init__(self, device):
-        """Initialize a light for a Skybell device."""
-        super().__init__(device)
-        self._name = self._device.name
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_HS_COLOR in kwargs:
-            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-            self._device.led_rgb = rgb
-        elif ATTR_BRIGHTNESS in kwargs:
-            self._device.led_intensity = _to_skybell_level(kwargs[ATTR_BRIGHTNESS])
-        else:
-            self._device.led_intensity = _to_skybell_level(255)
+        if ATTR_RGB_COLOR in kwargs:
+            rgb = kwargs[ATTR_RGB_COLOR]
+            await self._device.async_set_setting(ATTR_RGB_COLOR, rgb)
+        if ATTR_BRIGHTNESS in kwargs:
+            level = int((kwargs.get(ATTR_BRIGHTNESS, 0) * 100) / 255)
+            await self._device.async_set_setting(ATTR_BRIGHTNESS, level)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        self._device.led_intensity = 0
+        await self._device.async_set_setting(ATTR_BRIGHTNESS, 0)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.led_intensity > 0
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
-        return _to_hass_level(self._device.led_intensity)
-
-    @property
-    def hs_color(self):
-        """Return the color of the light."""
-        return color_util.color_RGB_to_hs(*self._device.led_rgb)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return int((self._device.led_intensity * 255) / 100)

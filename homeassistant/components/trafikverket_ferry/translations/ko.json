@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "incorrect_api_key": "\uc120\ud0dd\ud55c \uacc4\uc815\uc5d0 \ub300\ud55c \uc798\ubabb\ub41c API \ud0a4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "invalid_route": "\uc81c\uacf5\ub41c \uc815\ubcf4\ub85c \uacbd\ub85c\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \ud0a4"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "time": "Time",
+                    "weekday": "\ud3c9\uc77c"
+                }
+            }
+        }
+    }
+}

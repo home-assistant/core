@@ -11,8 +11,7 @@
                     "device": "Chemin ou URL",
                     "id": "ID",
                     "name": "Nom"
-                },
-                "title": "Passerelle OpenTherm"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Pr\u00e9cision de lecture",
                     "set_precision": "D\u00e9finir la pr\u00e9cision",
                     "temporary_override_mode": "Mode de neutralisation du point de consigne temporaire"
-                },
-                "description": "Options pour la passerelle OpenTherm"
+                }
             }
         }
     }

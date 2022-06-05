@@ -1,28 +1,41 @@
 """Support for Synology DSM switch."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import (
-    COORDINATOR_SWITCHES,
-    DOMAIN,
-    SURVEILLANCE_SWITCH,
-    SYNO_API,
-    SynologyDSMSwitchEntityDescription,
-)
+from . import SynoApi
+from .const import COORDINATOR_SWITCHES, DOMAIN, SYNO_API
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class SynologyDSMSwitchEntityDescription(
+    SwitchEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM switch entity."""
+
+
+SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
+    SynologyDSMSwitchEntityDescription(
+        api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
+        key="home_mode",
+        name="Home Mode",
+        icon="mdi:home-account",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -71,6 +84,10 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
         super().__init__(api, coordinator, description)
         self._version = version
 
+        self._attr_name = (
+            f"{self._api.network.hostname} Surveillance Station {description.name}"
+        )
+
     @property
     def is_on(self) -> bool:
         """Return the state."""
@@ -113,7 +130,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, SwitchEntity):
                     f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
-            name="Surveillance Station",
+            name=f"{self._api.network.hostname} Surveillance Station",
             manufacturer="Synology",
             model=self._api.information.model,
             sw_version=self._version,

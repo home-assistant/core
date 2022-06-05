@@ -21,6 +21,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_wifi_bulb_for_host
@@ -31,6 +32,7 @@ from .const import (
     DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
+    FLUX_LED_DISCOVERY_SIGNAL,
     FLUX_LED_EXCEPTIONS,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -109,11 +111,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and ":" in entry.unique_id
                 and mac_matches_by_one(entry.unique_id, mac)
             ):
-                if async_update_entry_from_discovery(
-                    self.hass, entry, device, None, allow_update_mac
+                if (
+                    async_update_entry_from_discovery(
+                        self.hass, entry, device, None, allow_update_mac
+                    )
+                    or entry.state == config_entries.ConfigEntryState.SETUP_RETRY
                 ):
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                else:
+                    async_dispatcher_send(
+                        self.hass,
+                        FLUX_LED_DISCOVERY_SIGNAL.format(entry_id=entry.entry_id),
                     )
                 raise AbortFlow("already_configured")
 

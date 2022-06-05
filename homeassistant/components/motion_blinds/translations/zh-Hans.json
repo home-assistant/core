@@ -6,7 +6,6 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API\u5bc6\u7801",
                     "host": "IP\u5730\u5740"
                 }
             }

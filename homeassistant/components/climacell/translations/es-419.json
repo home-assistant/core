@@ -1,16 +1,4 @@
 {
-    "config": {
-        "error": {
-            "rate_limited": "Actualmente la tarifa est\u00e1 limitada. Vuelve a intentarlo m\u00e1s tarde."
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "api_version": "Versi\u00f3n de la API"
-                }
-            }
-        }
-    },
     "options": {
         "step": {
             "init": {
@@ -21,6 +9,5 @@
                 "title": "Actualizar opciones de ClimaCell"
             }
         }
-    },
-    "title": "ClimaCell"
+    }
 }

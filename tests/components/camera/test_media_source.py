@@ -4,8 +4,8 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.camera.const import STREAM_TYPE_WEB_RTC
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE
+from homeassistant.components.camera.const import StreamType
+from homeassistant.components.stream import FORMAT_CONTENT_TYPE
 from homeassistant.setup import async_setup_component
 
 
@@ -62,7 +62,7 @@ async def test_resolving(hass, mock_camera_hls):
         return_value="http://example.com/stream",
     ):
         item = await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert item is not None
     assert item.url == "http://example.com/stream"
@@ -74,7 +74,7 @@ async def test_resolving_errors(hass, mock_camera_hls):
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert str(exc_info.value) == "Stream integration not loaded"
 
@@ -82,22 +82,22 @@ async def test_resolving_errors(hass, mock_camera_hls):
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.non_existing"
+            hass, "media-source://camera/camera.non_existing", None
         )
     assert str(exc_info.value) == "Could not resolve media item: camera.non_existing"
 
     with pytest.raises(media_source.Unresolvable) as exc_info, patch(
         "homeassistant.components.camera.Camera.frontend_stream_type",
-        new_callable=PropertyMock(return_value=STREAM_TYPE_WEB_RTC),
+        new_callable=PropertyMock(return_value=StreamType.WEB_RTC),
     ):
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert str(exc_info.value) == "Camera does not support MJPEG or HLS streaming."
 
     with pytest.raises(media_source.Unresolvable) as exc_info:
         await media_source.async_resolve_media(
-            hass, "media-source://camera/camera.demo_camera"
+            hass, "media-source://camera/camera.demo_camera", None
         )
     assert (
         str(exc_info.value) == "camera.demo_camera does not support play stream service"

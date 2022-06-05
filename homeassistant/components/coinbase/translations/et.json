@@ -14,9 +14,7 @@
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti",
-                    "api_token": "API salas\u00f5na",
-                    "currencies": "Konto saldo valuutad",
-                    "exchange_rates": "Vahetuskursid"
+                    "api_token": "API salas\u00f5na"
                 },
                 "description": "Sisesta Coinbase'i pakutava API-v\u00f5tme \u00fcksikasjad.",
                 "title": "Coinbase'i API v\u00f5tme \u00fcksikasjad"
@@ -26,9 +24,7 @@
     "options": {
         "error": {
             "currency_unavailable": "Coinbase API ei paku \u00fchte v\u00f5i mitut soovitud valuutasaldot.",
-            "currency_unavaliable": "Coinbase'i API ei paku \u00fchte v\u00f5i mitut taotletud valuutasaldot.",
             "exchange_rate_unavailable": "Coinbase ei paku \u00fchte v\u00f5i mitut soovitud vahetuskurssi.",
-            "exchange_rate_unavaliable": "\u00dchte v\u00f5i mitut taotletud vahetuskurssi Coinbase ei paku.",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
@@ -36,7 +32,8 @@
                 "data": {
                     "account_balance_currencies": "Rahakoti saldod teavitamine.",
                     "exchange_base": "Vahetuskursiandurite baasvaluuta.",
-                    "exchange_rate_currencies": "Vahetuskursside aruanne."
+                    "exchange_rate_currencies": "Vahetuskursside aruanne.",
+                    "exchnage_rate_precision": "Vahetuskursside k\u00fcmnendkohtade arv."
                 },
                 "description": "Kohanda Coinbase'i valikuid"
             }

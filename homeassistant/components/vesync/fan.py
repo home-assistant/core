@@ -14,7 +14,7 @@ from homeassistant.util.percentage import (
 )
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_FANS
+from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type)) == "fan":
             entities.append(VeSyncFanHA(dev))
         else:
             _LOGGER.warning(
@@ -98,19 +98,21 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             and (current_level := self.smartfan.fan_level) is not None
         ):
             return ranged_value_to_percentage(
-                SPEED_RANGE[self.device.device_type], current_level
+                SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], current_level
             )
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE[self.device.device_type])
+        return int_states_in_range(
+            SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]]
+        )
 
     @property
     def preset_modes(self):
         """Get the list of available preset modes."""
-        return PRESET_MODES[self.device.device_type]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE.get(self.device.device_type)]
 
     @property
     def preset_mode(self):
@@ -141,14 +143,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if hasattr(self.smartfan, "night_light"):
             attr["night_light"] = self.smartfan.night_light
 
-        if hasattr(self.smartfan, "air_quality"):
-            attr["air_quality"] = self.smartfan.air_quality
-
         if hasattr(self.smartfan, "mode"):
             attr["mode"] = self.smartfan.mode
-
-        if hasattr(self.smartfan, "filter_life"):
-            attr["filter_life"] = self.smartfan.filter_life
 
         return attr
 
@@ -165,7 +161,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan.change_fan_speed(
             math.ceil(
                 percentage_to_ranged_value(
-                    SPEED_RANGE[self.device.device_type], percentage
+                    SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
                 )
             )
         )

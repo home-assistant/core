@@ -60,6 +60,10 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
             "r",
             format=SEGMENT_CONTAINER_FORMAT,
         )
+        # Skip this segment if it doesn't have data
+        if source.duration is None:
+            source.close()
+            continue
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 
@@ -137,7 +141,7 @@ class RecorderOutput(StreamOutput):
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments),
+            args=(self.video_path, self._segments.copy()),
         )
         thread.start()
 

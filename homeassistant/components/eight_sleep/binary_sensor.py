@@ -12,15 +12,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import (
-    CONF_BINARY_SENSORS,
-    DATA_API,
-    DATA_EIGHT,
-    DATA_HEAT,
-    EightSleepBaseEntity,
-    EightSleepHeatDataCoordinator,
-)
+from . import EightSleepBaseEntity
+from .const import DATA_API, DATA_HEAT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,43 +30,42 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    name = "Eight"
-    sensors = discovery_info[CONF_BINARY_SENSORS]
-    eight: EightSleep = hass.data[DATA_EIGHT][DATA_API]
-    heat_coordinator: EightSleepHeatDataCoordinator = hass.data[DATA_EIGHT][DATA_HEAT]
+    eight: EightSleep = hass.data[DOMAIN][DATA_API]
+    heat_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_HEAT]
 
-    all_sensors = [
-        EightHeatSensor(name, heat_coordinator, eight, side, sensor)
-        for side, sensor in sensors
-    ]
+    entities = []
+    for user in eight.users.values():
+        entities.append(
+            EightHeatSensor(heat_coordinator, eight, user.userid, "bed_presence")
+        )
 
-    async_add_entities(all_sensors)
+    async_add_entities(entities)
 
 
 class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+
     def __init__(
         self,
-        name: str,
-        coordinator: EightSleepHeatDataCoordinator,
+        coordinator: DataUpdateCoordinator,
         eight: EightSleep,
-        side: str | None,
+        user_id: str | None,
         sensor: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, side, sensor)
-        self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
-        assert self._usrobj
+        super().__init__(coordinator, eight, user_id, sensor)
+        assert self._user_obj
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",
-            self._sensor,
-            self._side,
-            self._usrobj.userid,
+            sensor,
+            self._user_obj.side,
+            user_id,
         )
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        assert self._usrobj
-        return bool(self._usrobj.bed_presence)
+        assert self._user_obj
+        return bool(self._user_obj.bed_presence)

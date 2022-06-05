@@ -13,7 +13,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, HUMIDITY_STATUS_KEY, TEMPERATURE_STATUS_KEY
@@ -59,9 +62,13 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Honeywell thermostat."""
-    data = hass.data[DOMAIN][config.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id]
     sensors = []
 
     for device in data.devices.values():
@@ -81,7 +88,7 @@ class HoneywellSensor(SensorEntity):
         """Initialize the outdoor temperature sensor."""
         self._device = device
         self.entity_description = description
-        self._attr_unique_id = f"{device.deviceid}_outdoor_{description.device_class}"
+        self._attr_unique_id = f"{device.deviceid}_{description.key}"
         self._attr_name = f"{device.name} outdoor {description.device_class}"
         self._attr_native_unit_of_measurement = description.unit_fn(device)
 

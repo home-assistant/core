@@ -12,8 +12,9 @@
                 "data": {
                     "code": "\u0130stasyon kodu"
                 },
-                "description": "Meteoclimatic istasyon kodunu girin (\u00f6rne\u011fin, ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "ESCAT4300000043206B'ye benziyor"
+                }
             }
         }
     }

@@ -7,16 +7,14 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "protect_version": "Die erforderliche Mindestversion ist v1.20.0. Bitte aktualisiere UniFi Protect und versuche es dann erneut.",
-            "unknown": "Unerwarteter Fehler"
+            "protect_version": "Die erforderliche Mindestversion ist v1.20.0. Bitte aktualisiere UniFi Protect und versuche es dann erneut."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Passwort",
-                    "username": "Benutzername",
-                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                    "username": "Benutzername"
                 },
                 "description": "M\u00f6chtest du {name} ({ip_address}) einrichten? Du ben\u00f6tigst einen lokalen Benutzer, den du in deiner UniFi OS-Konsole angelegt hast, um sich damit anzumelden. Ubiquiti Cloud-Benutzer funktionieren nicht. F\u00fcr weitere Informationen: {local_user_documentation_url}",
                 "title": "UniFi Protect erkannt"

@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_API_KEY,
     CONF_NAME,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
@@ -31,16 +32,14 @@ from homeassistant.const import (
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
-    PRESSURE_INHG,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-    TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 from homeassistant.util.distance import convert as distance_convert
-from homeassistant.util.pressure import convert as pressure_convert
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -80,7 +79,7 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
     unit_imperial: str | None = None
     unit_metric: str | None = None
     multiplication_factor: Callable[[float], float] | float | None = None
-    metric_conversion: Callable[[float], float] | float | None = None
+    imperial_conversion: Callable[[float], float] | float | None = None
     value_map: Any | None = None
 
     def __post_init__(self) -> None:
@@ -105,13 +104,13 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_FEELS_LIKE,
         name="Feels Like",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
         name="Dew Point",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     # Data comes in as inHg
@@ -119,9 +118,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
         native_unit_of_measurement=PRESSURE_HPA,
-        multiplication_factor=lambda val: pressure_convert(
-            val, PRESSURE_INHG, PRESSURE_HPA
-        ),
         device_class=SensorDeviceClass.PRESSURE,
     ),
     # Data comes in as BTUs/(hr * ft^2)
@@ -131,7 +127,7 @@ SENSOR_TYPES = (
         name="Global Horizontal Irradiance",
         unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
         unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
-        metric_conversion=3.15459,
+        imperial_conversion=(1 / 3.15459),
     ),
     # Data comes in as miles
     TomorrowioSensorEntityDescription(
@@ -139,8 +135,8 @@ SENSOR_TYPES = (
         name="Cloud Base",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        metric_conversion=lambda val: distance_convert(
-            val, LENGTH_MILES, LENGTH_KILOMETERS
+        imperial_conversion=lambda val: distance_convert(
+            val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
     # Data comes in as miles
@@ -149,8 +145,8 @@ SENSOR_TYPES = (
         name="Cloud Ceiling",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        metric_conversion=lambda val: distance_convert(
-            val, LENGTH_MILES, LENGTH_KILOMETERS
+        imperial_conversion=lambda val: distance_convert(
+            val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
     TomorrowioSensorEntityDescription(
@@ -164,8 +160,10 @@ SENSOR_TYPES = (
         name="Wind Gust",
         unit_imperial=SPEED_MILES_PER_HOUR,
         unit_metric=SPEED_METERS_PER_SECOND,
-        metric_conversion=lambda val: distance_convert(val, LENGTH_MILES, LENGTH_METERS)
-        / 3600,
+        imperial_conversion=lambda val: distance_convert(
+            val, LENGTH_METERS, LENGTH_MILES
+        )
+        * 3600,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
@@ -183,20 +181,16 @@ SENSOR_TYPES = (
         multiplication_factor=convert_ppb_to_ugm3(48),
         device_class=SensorDeviceClass.OZONE,
     ),
-    # Data comes in as ug/ft^3
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_25,
         name="Particulate Matter < 2.5 μm",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        multiplication_factor=3.2808399**3,
         device_class=SensorDeviceClass.PM25,
     ),
-    # Data comes in as ug/ft^3
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PARTICULATE_MATTER_10,
         name="Particulate Matter < 10 μm",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        multiplication_factor=3.2808399**3,
         device_class=SensorDeviceClass.PM10,
     ),
     # Data comes in as ppb
@@ -293,7 +287,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entities = [
         TomorrowioSensorEntity(hass, config_entry, coordinator, 4, description)
         for description in SENSOR_TYPES
@@ -360,15 +354,15 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         if desc.multiplication_factor is not None:
             state = handle_conversion(state, desc.multiplication_factor)
 
-        # If an imperial unit isn't provided, we always want to convert to metric since
-        # that is what the UI expects
+        # If there is an imperial conversion needed and the instance is using imperial,
+        # apply the conversion logic.
         if (
-            desc.metric_conversion
+            desc.imperial_conversion
             and desc.unit_imperial is not None
             and desc.unit_imperial != desc.unit_metric
-            and self.hass.config.units.is_metric
+            and not self.hass.config.units.is_metric
         ):
-            return handle_conversion(state, desc.metric_conversion)
+            return handle_conversion(state, desc.imperial_conversion)
 
         return state
 

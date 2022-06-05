@@ -9,8 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -78,21 +77,17 @@ class ElgatoLight(
         super().__init__(client, info, mac)
         CoordinatorEntity.__init__(self, coordinator)
 
-        min_mired = 143
-        max_mired = 344
-        supported_color_modes = {COLOR_MODE_COLOR_TEMP}
+        self._attr_min_mireds = 143
+        self._attr_max_mireds = 344
+        self._attr_name = info.display_name or info.product_name
+        self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+        self._attr_unique_id = info.serial_number
 
         # Elgato Light supporting color, have a different temperature range
         if settings.power_on_hue is not None:
-            supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-            min_mired = 153
-            max_mired = 285
-
-        self._attr_max_mireds = max_mired
-        self._attr_min_mireds = min_mired
-        self._attr_name = info.display_name or info.product_name
-        self._attr_supported_color_modes = supported_color_modes
-        self._attr_unique_id = info.serial_number
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            self._attr_min_mireds = 153
+            self._attr_max_mireds = 285
 
     @property
     def brightness(self) -> int | None:
@@ -108,9 +103,9 @@ class ElgatoLight(
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         if self.coordinator.data.hue is not None:
-            return COLOR_MODE_HS
+            return ColorMode.HS
 
-        return COLOR_MODE_COLOR_TEMP
+        return ColorMode.COLOR_TEMP
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -151,8 +146,8 @@ class ElgatoLight(
             and ATTR_HS_COLOR not in kwargs
             and ATTR_COLOR_TEMP not in kwargs
             and self.supported_color_modes
-            and COLOR_MODE_HS in self.supported_color_modes
-            and self.color_mode == COLOR_MODE_COLOR_TEMP
+            and ColorMode.HS in self.supported_color_modes
+            and self.color_mode == ColorMode.COLOR_TEMP
         ):
             temperature = self.color_temp
 

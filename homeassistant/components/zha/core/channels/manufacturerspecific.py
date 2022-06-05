@@ -1,7 +1,9 @@
 """Manufacturer specific channels module for Zigbee Home Automation."""
+import logging
+
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
@@ -13,6 +15,8 @@ from ..const import (
     UNKNOWN,
 )
 from .base import ClientChannel, ZigbeeChannel
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
@@ -49,6 +53,26 @@ class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
     REPORT_CONFIG = []
+
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+    ) -> None:
+        """Initialize Opple channel."""
+        super().__init__(cluster, ch_pool)
+        if self.cluster.endpoint.model == "lumi.motion.ac02":
+            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+                "detection_interval": True,
+                "motion_sensitivity": True,
+                "trigger_indicator": True,
+            }
+
+    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
+        """Initialize channel specific."""
+        if self.cluster.endpoint.model == "lumi.motion.ac02":
+            interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
+            if interval is not None:
+                self.debug("Loaded detection interval at startup: %s", interval)
+                self.cluster.endpoint.ias_zone.reset_s = int(interval)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(

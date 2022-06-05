@@ -141,11 +141,11 @@ class TemplateLock(TemplateEntity, LockEntity):
         if self._optimistic:
             self._state = True
             self.async_write_ha_state()
-        await self._command_lock.async_run(context=self._context)
+        await self.async_run_script(self._command_lock, context=self._context)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         if self._optimistic:
             self._state = False
             self.async_write_ha_state()
-        await self._command_unlock.async_run(context=self._context)
+        await self.async_run_script(self._command_unlock, context=self._context)

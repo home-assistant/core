@@ -2,8 +2,9 @@
   "domain": "scrape",
   "name": "Scrape",
   "documentation": "https://www.home-assistant.io/integrations/scrape",
-  "requirements": ["beautifulsoup4==4.10.0"],
+  "requirements": ["beautifulsoup4==4.11.1", "lxml==4.8.0"],
   "after_dependencies": ["rest"],
-  "codeowners": ["@fabaff"],
+  "codeowners": ["@fabaff", "@gjohansson-ST"],
+  "config_flow": true,
   "iot_class": "cloud_polling"
 }

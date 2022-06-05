@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Tidak dapat terhubung, periksa port serial, alamat, koneksi listrik dan apakah inverter sedang nyala (di siang hari)",
             "cannot_open_serial_port": "Tidak dapat membuka port serial, periksa dan coba lagi",
-            "invalid_serial_port": "Port serial bukan perangkat yang valid atau tidak dapat dibuka",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "invalid_serial_port": "Port serial bukan perangkat yang valid atau tidak dapat dibuka"
         },
         "step": {
             "user": {

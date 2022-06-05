@@ -6,8 +6,8 @@ import pytest
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_RGB,
-    SUPPORT_EFFECT,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 
@@ -19,9 +19,9 @@ async def test_works(hass, setup_evil_genius_labs):
     assert state is not None
     assert state.state == "on"
     assert state.attributes["brightness"] == 128
-    assert state.attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGB
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGB]
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_EFFECT
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.EFFECT
 
 
 @pytest.mark.parametrize("platforms", [("light",)])

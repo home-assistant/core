@@ -10,6 +10,7 @@ import logging
 import pprint
 
 from aiohttp.web import json_response
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components import webhook
 from homeassistant.const import (
@@ -43,6 +44,8 @@ from .error import SmartHomeError
 
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
+LOCAL_SDK_VERSION_HEADER = "HA-Cloud-Version"
+LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 
 
 @callback
@@ -86,6 +89,7 @@ class AbstractConfig(ABC):
         self._google_sync_unsub = {}
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
+        self._local_sdk_version_warn = False
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -167,7 +171,6 @@ class AbstractConfig(ABC):
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        # pylint: disable=no-self-use
         return True
 
     async def async_report_state(self, message, agent_user_id: str):
@@ -210,6 +213,9 @@ class AbstractConfig(ABC):
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return 204
+
         res = await gather(
             *(
                 self.async_sync_entities(agent_user_id)
@@ -328,6 +334,18 @@ class AbstractConfig(ABC):
         from . import smart_home
 
         self._local_last_active = utcnow()
+
+        # Check version local SDK.
+        version = request.headers.get("HA-Cloud-Version")
+        if not self._local_sdk_version_warn and (
+            not version or AwesomeVersion(version) < LOCAL_SDK_MIN_VERSION
+        ):
+            _LOGGER.warning(
+                "Local SDK version is too old (%s), check documentation on how to update to the latest version",
+                version,
+            )
+            self._local_sdk_version_warn = True
+
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -578,8 +596,9 @@ class GoogleEntity:
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
-                "httpSSL": self.hass.config.api.use_ssl,
                 "uuid": instance_uuid,
+                # Below can be removed in HA 2022.9
+                "httpSSL": self.hass.config.api.use_ssl,
                 "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }

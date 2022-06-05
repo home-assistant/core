@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -19,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -82,14 +85,6 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
-    SensiboDeviceBinarySensorEntityDescription(
-        key="update_available",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        name="Update Available",
-        icon="mdi:rocket-launch",
-        value_fn=lambda data: data.update_available,
-    ),
 )
 
 
@@ -101,13 +96,16 @@ async def async_setup_entry(
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
-    entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data.motion_sensors.items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data.motion_sensors
-    )
+
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in DEVICE_SENSOR_TYPES
@@ -148,6 +146,8 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
+        if TYPE_CHECKING:
+            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 

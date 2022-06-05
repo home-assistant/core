@@ -14,8 +14,7 @@
                 "data": {
                     "host": "Host (direcci\u00f3n IP)",
                     "name": "Nombre del dispositivo"
-                },
-                "title": "Conectar con DoorBird"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
             "init": {
                 "data": {
                     "events": "Lista de eventos separados por comas."
-                },
-                "description": "Agregue un nombre de evento separado por comas para cada evento que desee rastrear. Despu\u00e9s de ingresarlos aqu\u00ed, use la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. Consulte la documentaci\u00f3n en https://www.home-assistant.io/integrations/doorbird/#events. Ejemplo: somebody_pressed_the_button, motion"
+                }
             }
         }
     }

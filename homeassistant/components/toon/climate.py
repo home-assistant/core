@@ -10,15 +10,15 @@ from toonapi import (
     ACTIVE_STATE_SLEEP,
 )
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_HOME,
     PRESET_SLEEP,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -42,7 +42,7 @@ async def async_setup_entry(
 class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     """Representation of a Toon climate device."""
 
-    _attr_hvac_mode = HVAC_MODE_HEAT
+    _attr_hvac_mode = HVACMode.HEAT
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_min_temp = DEFAULT_MIN_TEMP
@@ -58,7 +58,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     ) -> None:
         """Initialize Toon climate entity."""
         super().__init__(coordinator)
-        self._attr_hvac_modes = [HVAC_MODE_HEAT]
+        self._attr_hvac_modes = [HVACMode.HEAT]
         self._attr_preset_modes = [
             PRESET_AWAY,
             PRESET_COMFORT,
@@ -70,11 +70,11 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         if self.coordinator.data.thermostat.heating:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
@@ -120,7 +120,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         if preset_mode in mapping:
             await self.coordinator.toon.set_active_state(mapping[preset_mode])
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Intentionally left empty
         # The HAVC mode is always HEAT

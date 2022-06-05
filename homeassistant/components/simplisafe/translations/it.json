@@ -2,43 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Questo account SimpliSafe \u00e8 gi\u00e0 in uso.",
-            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
-            "wrong_account": "Le credenziali utente fornite non corrispondono a questo account SimpliSafe."
+            "email_2fa_timed_out": "Timeout durante l'attesa dell'autenticazione a due fattori basata su email.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "identifier_exists": "Account gi\u00e0 registrato",
             "invalid_auth": "Autenticazione non valida",
-            "still_awaiting_mfa": "Ancora in attesa del clic sull'email MFA",
             "unknown": "Errore imprevisto"
         },
+        "progress": {
+            "email_2fa": "Verifica la presenza nella tua email di un collegamento di verifica da Simplisafe."
+        },
         "step": {
-            "input_auth_code": {
-                "data": {
-                    "auth_code": "Codice di autorizzazione"
-                },
-                "description": "Immettere il codice di autorizzazione dall'URL dell'app web SimpliSafe:",
-                "title": "Completa l'autorizzazione"
-            },
-            "mfa": {
-                "description": "Controlla la tua email per trovare un collegamento da SimpliSafe. Dopo aver verificato il collegamento, torna qui per completare l'installazione dell'integrazione.",
-                "title": "Autenticazione a pi\u00f9 fattori (MFA) SimpliSafe "
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password"
                 },
-                "description": "Il tuo accesso \u00e8 scaduto o revocato. Inserisci la password per ricollegare il tuo account.",
+                "description": "Digita nuovamente la password per {username}.",
                 "title": "Autentica nuovamente l'integrazione"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Codice"
+                },
+                "description": "Digita il codice di autenticazione a due fattori che ti \u00e8 stato inviato tramite SMS."
             },
             "user": {
                 "data": {
-                    "auth_code": "Codice di autorizzazione",
-                    "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)",
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Nome utente"
                 },
-                "description": "SimpliSafe si autentica con Home Assistant tramite l'app Web SimpliSafe. A causa di limitazioni tecniche, alla fine di questo processo \u00e8 previsto un passaggio manuale; assicurati di leggere la [documentazione]({docs_url}) prima di iniziare. \n\n 1. Fai clic su [qui]({url}) per aprire l'app Web SimpliSafe e inserire le tue credenziali. \n\n 2. Quando il processo di accesso \u00e8 completo, torna qui e inserisci il codice di autorizzazione di seguito.",
-                "title": "Inserisci le tue informazioni."
+                "description": "Digita il tuo nome utente e password."
             }
         }
     },

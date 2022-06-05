@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, callback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, get_fixture_path
@@ -1136,8 +1137,8 @@ async def test_master_state_with_template(hass):
 
     events = []
 
-    hass.helpers.event.async_track_state_change_event(
-        "media_player.tv", callback(lambda event: events.append(event))
+    async_track_state_change_event(
+        hass, "media_player.tv", callback(lambda event: events.append(event))
     )
 
     context = Context()

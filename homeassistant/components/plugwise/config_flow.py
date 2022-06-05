@@ -92,8 +92,26 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         _properties = discovery_info.properties
 
         unique_id = discovery_info.hostname.split(".")[0]
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
+        if config_entry := await self.async_set_unique_id(unique_id):
+            try:
+                await validate_gw_input(
+                    self.hass,
+                    {
+                        CONF_HOST: discovery_info.host,
+                        CONF_PORT: discovery_info.port,
+                        CONF_USERNAME: config_entry.data[CONF_USERNAME],
+                        CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+                    },
+                )
+            except Exception:  # pylint: disable=broad-except
+                self._abort_if_unique_id_configured()
+            else:
+                self._abort_if_unique_id_configured(
+                    {
+                        CONF_HOST: discovery_info.host,
+                        CONF_PORT: discovery_info.port,
+                    }
+                )
 
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME

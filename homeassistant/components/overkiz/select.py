@@ -39,8 +39,7 @@ def _select_option_open_closed_pedestrian(
             OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
             OverkizCommandParam.OPEN: OverkizCommand.OPEN,
             OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-        }[OverkizCommandParam(option)],
-        None,
+        }[OverkizCommandParam(option)]
     )
 
 

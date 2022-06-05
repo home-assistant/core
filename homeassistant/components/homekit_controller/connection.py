@@ -19,6 +19,7 @@ from aiohomekit.model.services import Service
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -162,7 +163,7 @@ class HKDevice:
         if self.available == available:
             return
         self.available = available
-        self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
+        async_dispatcher_send(self.hass, self.signal_state_updated)
 
     async def async_setup(self) -> bool:
         """Prepare to use a paired HomeKit device in Home Assistant."""
@@ -568,7 +569,7 @@ class HKDevice:
         # For now we update both
         self.entity_map.process_changes(new_values_dict)
 
-        self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
+        async_dispatcher_send(self.hass, self.signal_state_updated)
 
     async def get_characteristics(self, *args, **kwargs) -> dict[str, Any]:
         """Read latest state from homekit accessory."""

@@ -14,7 +14,6 @@ from zwave_js_server.const.command_class.lock import (
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
     DoorLockMode,
 )
-from zwave_js_server.model.value import Value as ZwaveValue
 from zwave_js_server.util.lock import clear_usercode, set_usercode
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
@@ -33,6 +32,8 @@ from .const import (
 )
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +60,10 @@ async def async_setup_entry(
     @callback
     def async_add_lock(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Lock."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
-        entities.append(ZWaveLock(config_entry, client, info))
+        entities.append(ZWaveLock(config_entry, driver, info))
 
         async_add_entities(entities)
 
@@ -107,8 +110,10 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
 
     async def _set_lock_state(self, target_state: str, **kwargs: Any) -> None:
         """Set the lock state."""
-        target_value: ZwaveValue = self.get_zwave_value(
-            LOCK_CMD_CLASS_TO_PROPERTY_MAP[self.info.primary_value.command_class]
+        target_value = self.get_zwave_value(
+            LOCK_CMD_CLASS_TO_PROPERTY_MAP[
+                CommandClass(self.info.primary_value.command_class)
+            ]
         )
         if target_value is not None:
             await self.info.node.async_set_value(

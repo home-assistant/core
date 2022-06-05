@@ -5,20 +5,21 @@ import logging
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
-    EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -95,6 +96,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
     hass.data[DOMAIN] = Sun(hass)
     return True
 
@@ -126,23 +130,10 @@ class Sun(Entity):
         self._config_listener = None
         self._update_events_listener = None
         self._update_sun_position_listener = None
-        self._loaded_listener = None
         self._config_listener = self.hass.bus.async_listen(
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
-        if DOMAIN in hass.config.components:
-            self.update_location()
-        else:
-            self._loaded_listener = self.hass.bus.async_listen(
-                EVENT_COMPONENT_LOADED, self.loading_complete
-            )
-
-    @callback
-    def loading_complete(self, event_: Event) -> None:
-        """Update location when loading is complete."""
-        if event_.data[ATTR_COMPONENT] == DOMAIN:
-            self.update_location()
-            self._remove_loaded_listener()
+        self.update_location()
 
     @callback
     def update_location(self, *_):
@@ -157,16 +148,8 @@ class Sun(Entity):
         self.update_events()
 
     @callback
-    def _remove_loaded_listener(self):
-        """Remove the loaded listener."""
-        if self._loaded_listener:
-            self._loaded_listener()
-            self._loaded_listener = None
-
-    @callback
     def remove_listeners(self):
         """Remove listeners."""
-        self._remove_loaded_listener()
         if self._config_listener:
             self._config_listener()
         if self._update_events_listener:

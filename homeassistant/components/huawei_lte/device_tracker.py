@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     # Initialize already tracked entities
     tracked: set[str] = set()
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     known_entities: list[Entity] = []
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS

@@ -98,6 +98,44 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Switch",
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Radio",
+            icon="mdi:radio",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Alarm 1",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Alarm 2",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Alarm 3",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            name="Alarm 4",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            name="Sleep Aid",
+            icon="mdi:power-sleep",
+        ),
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (

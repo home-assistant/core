@@ -467,7 +467,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         all_supported_entities = _async_get_matching_entities(
-            self.hass, domains, include_entity_category=True
+            self.hass, domains, include_entity_category=True, include_hidden=True
         )
         # In accessory mode we can only have one
         default_value = next(
@@ -508,7 +508,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
 
         all_supported_entities = _async_get_matching_entities(
-            self.hass, domains, include_entity_category=True
+            self.hass, domains, include_entity_category=True, include_hidden=True
         )
         if not entities:
             entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
@@ -646,12 +646,13 @@ def _exclude_by_entity_registry(
     ent_reg: entity_registry.EntityRegistry,
     entity_id: str,
     include_entity_category: bool,
+    include_hidden: bool,
 ) -> bool:
     """Filter out hidden entities and ones with entity category (unless specified)."""
     return bool(
         (entry := ent_reg.async_get(entity_id))
         and (
-            entry.hidden_by is not None
+            (not include_hidden and entry.hidden_by is not None)
             or (not include_entity_category and entry.entity_category is not None)
         )
     )
@@ -661,6 +662,7 @@ def _async_get_matching_entities(
     hass: HomeAssistant,
     domains: list[str] | None = None,
     include_entity_category: bool = False,
+    include_hidden: bool = False,
 ) -> dict[str, str]:
     """Fetch all entities or entities in the given domains."""
     ent_reg = entity_registry.async_get(hass)
@@ -671,7 +673,7 @@ def _async_get_matching_entities(
             key=lambda item: item.entity_id,
         )
         if not _exclude_by_entity_registry(
-            ent_reg, state.entity_id, include_entity_category
+            ent_reg, state.entity_id, include_entity_category, include_hidden
         )
     }
 

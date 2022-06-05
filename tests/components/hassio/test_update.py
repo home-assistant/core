@@ -12,7 +12,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
@@ -509,3 +509,30 @@ async def test_no_os_entity(hass):
 
     # Verify that the entity does not exist
     assert not hass.states.get("update.home_assistant_operating_system_update")
+
+
+async def test_setting_up_core_update_when_addon_fails(hass, caplog):
+    """Test setting up core update when single addon fails."""
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.get_addon_stats",
+        side_effect=HassioAPIError("add-on is not running"),
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_addon_changelog",
+        side_effect=HassioAPIError("add-on is not running"),
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_addon_info",
+        side_effect=HassioAPIError("add-on is not running"),
+    ):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    # Verify that the core update entity does exist
+    state = hass.states.get("update.home_assistant_core_update")
+    assert state
+    assert state.state == "on"
+    assert "Could not fetch stats for test: add-on is not running" in caplog.text

@@ -6,12 +6,8 @@ from typing import NamedTuple
 from pytouchline import PyTouchline
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.components.climate.const import HVAC_MODE_HEAT
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -63,6 +59,8 @@ def setup_platform(
 class Touchline(ClimateEntity):
     """Representation of a Touchline device."""
 
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
@@ -85,19 +83,6 @@ class Touchline(ClimateEntity):
         self._preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
-
-    @property
-    def hvac_mode(self):
-        """Return current HVAC mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self):
-        """Return list of possible operation modes."""
-        return [HVAC_MODE_HEAT]
 
     @property
     def should_poll(self):
@@ -140,9 +125,9 @@ class Touchline(ClimateEntity):
         self.unit.set_operation_mode(preset_mode.mode)
         self.unit.set_week_program(preset_mode.program)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        self._current_operation_mode = HVAC_MODE_HEAT
+        self._current_operation_mode = HVACMode.HEAT
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

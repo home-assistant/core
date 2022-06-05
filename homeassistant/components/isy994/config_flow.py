@@ -1,6 +1,7 @@
 """Config flow for Universal Devices ISY994 integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -119,6 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the isy994 config flow."""
         self.discovered_conf: dict[str, str] = {}
+        self._existing_entry: config_entries.ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -142,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidHost:
                 errors["base"] = "invalid_host"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -203,7 +205,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle a discovered isy994 via dhcp."""
         friendly_name = discovery_info.hostname
-        url = f"http://{discovery_info.ip}"
+        if friendly_name.startswith("polisy"):
+            url = f"http://{discovery_info.ip}:8080"
+        else:
+            url = f"http://{discovery_info.ip}"
         mac = discovery_info.macaddress
         isy_mac = (
             f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
@@ -248,6 +253,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
+
+    async def async_step_reauth(
+        self, data: Mapping[str, Any]
+    ) -> data_entry_flow.FlowResult:
+        """Handle reauth."""
+        self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle reauth input."""
+        errors = {}
+        assert self._existing_entry is not None
+        existing_entry = self._existing_entry
+        existing_data = existing_entry.data
+        if user_input is not None:
+            new_data = {
+                **existing_data,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            try:
+                await validate_input(self.hass, new_data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            else:
+                cfg_entries = self.hass.config_entries
+                cfg_entries.async_update_entry(existing_entry, data=new_data)
+                await cfg_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        self.context["title_placeholders"] = {
+            CONF_NAME: existing_entry.title,
+            CONF_HOST: existing_data[CONF_HOST],
+        }
+        return self.async_show_form(
+            description_placeholders={CONF_HOST: existing_data[CONF_HOST]},
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=existing_data[CONF_USERNAME]
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fritzbox_callmonitor",
   "requirements": ["fritzconnection==1.8.0"],
-  "codeowners": [],
+  "codeowners": ["@cdce8p"],
   "iot_class": "local_polling",
   "loggers": ["fritzconnection"]
 }

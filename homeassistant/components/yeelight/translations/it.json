@@ -34,8 +34,7 @@
                     "save_on_change": "Salva stato su modifica",
                     "transition": "Tempo di transizione (ms)",
                     "use_music_mode": "Abilita la modalit\u00e0 musica"
-                },
-                "description": "Se lasci il modello vuoto, sar\u00e0 rilevato automaticamente."
+                }
             }
         }
     }

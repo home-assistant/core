@@ -5,7 +5,7 @@ import logging
 
 import aiohttp
 
-from homeassistant.components.light import COLOR_MODE_BRIGHTNESS, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -39,8 +39,8 @@ async def async_setup_platform(
 class SisyphusLight(LightEntity):
     """Representation of a Sisyphus table as a light."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, name, table):
         """Initialize the Sisyphus table."""

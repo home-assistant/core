@@ -53,6 +53,15 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        ButtonEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            name="Snooze",
+            icon="mdi:sleep",
+        ),
+    ),
 }
 
 

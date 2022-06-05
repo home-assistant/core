@@ -4,10 +4,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.utils import CaseInsensitiveDict
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -157,7 +158,7 @@ def _mocked_bulb(cannot_connect=False):
     return bulb
 
 
-def _patched_ssdp_listener(info: ssdp.SsdpHeaders, *args, **kwargs):
+def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):

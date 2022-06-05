@@ -6,23 +6,15 @@ from typing import Any
 
 from pyeight.eight import EightSleep
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import (
-    CONF_SENSORS,
-    DATA_API,
-    DATA_EIGHT,
-    DATA_HEAT,
-    DATA_USER,
-    EightSleepBaseEntity,
-    EightSleepHeatDataCoordinator,
-    EightSleepUserDataCoordinator,
-    EightSleepUserEntity,
-)
+from . import EightSleepBaseEntity
+from .const import DATA_API, DATA_HEAT, DATA_USER, DOMAIN
 
 ATTR_ROOM_TEMP = "Room Temperature"
 ATTR_AVG_ROOM_TEMP = "Average Room Temperature"
@@ -51,6 +43,16 @@ ATTR_FIT_WAKEUP_SCORE = "Fitness Wakeup Score"
 
 _LOGGER = logging.getLogger(__name__)
 
+EIGHT_USER_SENSORS = [
+    "current_sleep",
+    "current_sleep_fitness",
+    "last_sleep",
+    "bed_temperature",
+    "sleep_stage",
+]
+EIGHT_HEAT_SENSORS = ["bed_state"]
+EIGHT_ROOM_SENSORS = ["room_temperature"]
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -62,32 +64,23 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    name = "Eight"
-    sensors = discovery_info[CONF_SENSORS]
-    eight: EightSleep = hass.data[DATA_EIGHT][DATA_API]
-    heat_coordinator: EightSleepHeatDataCoordinator = hass.data[DATA_EIGHT][DATA_HEAT]
-    user_coordinator: EightSleepUserDataCoordinator = hass.data[DATA_EIGHT][DATA_USER]
-
-    if hass.config.units.is_metric:
-        units = "si"
-    else:
-        units = "us"
+    eight: EightSleep = hass.data[DOMAIN][DATA_API]
+    heat_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_HEAT]
+    user_coordinator: DataUpdateCoordinator = hass.data[DOMAIN][DATA_USER]
 
     all_sensors: list[SensorEntity] = []
 
-    for side, sensor in sensors:
-        if sensor == "bed_state":
+    for obj in eight.users.values():
+        for sensor in EIGHT_USER_SENSORS:
             all_sensors.append(
-                EightHeatSensor(name, heat_coordinator, eight, side, sensor)
+                EightUserSensor(user_coordinator, eight, obj.userid, sensor)
             )
-        elif sensor == "room_temperature":
+        for sensor in EIGHT_HEAT_SENSORS:
             all_sensors.append(
-                EightRoomSensor(name, user_coordinator, eight, side, sensor, units)
+                EightHeatSensor(heat_coordinator, eight, obj.userid, sensor)
             )
-        else:
-            all_sensors.append(
-                EightUserSensor(name, user_coordinator, eight, side, sensor, units)
-            )
+    for sensor in EIGHT_ROOM_SENSORS:
+        all_sensors.append(EightRoomSensor(user_coordinator, eight, sensor))
 
     async_add_entities(all_sensors)
 
@@ -95,40 +88,40 @@ async def async_setup_platform(
 class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep heat-based sensor."""
 
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(
         self,
-        name: str,
-        coordinator: EightSleepHeatDataCoordinator,
+        coordinator: DataUpdateCoordinator,
         eight: EightSleep,
-        side: str | None,
+        user_id: str,
         sensor: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, side, sensor)
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        assert self._usrobj
+        super().__init__(coordinator, eight, user_id, sensor)
+        assert self._user_obj
 
         _LOGGER.debug(
             "Heat Sensor: %s, Side: %s, User: %s",
             self._sensor,
-            self._side,
-            self._usrobj.userid,
+            self._user_obj.side,
+            self._user_id,
         )
 
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        assert self._usrobj
-        return self._usrobj.heating_level
+        assert self._user_obj
+        return self._user_obj.heating_level
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attributes."""
-        assert self._usrobj
+        assert self._user_obj
         return {
-            ATTR_TARGET_HEAT: self._usrobj.target_heating_level,
-            ATTR_ACTIVE_HEAT: self._usrobj.now_heating,
-            ATTR_DURATION_HEAT: self._usrobj.heating_remaining,
+            ATTR_TARGET_HEAT: self._user_obj.target_heating_level,
+            ATTR_ACTIVE_HEAT: self._user_obj.now_heating,
+            ATTR_DURATION_HEAT: self._user_obj.heating_remaining,
         }
 
 
@@ -142,92 +135,74 @@ def _get_breakdown_percent(
         return 0
 
 
-class EightUserSensor(EightSleepUserEntity, SensorEntity):
+def _get_rounded_value(attr: dict[str, Any], key: str) -> int | float | None:
+    """Get rounded value for given key."""
+    if (val := attr.get(key)) is None:
+        return None
+    return round(val, 2)
+
+
+class EightUserSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep user-based sensor."""
 
     def __init__(
         self,
-        name: str,
-        coordinator: EightSleepUserDataCoordinator,
+        coordinator: DataUpdateCoordinator,
         eight: EightSleep,
-        side: str | None,
+        user_id: str,
         sensor: str,
-        units: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, side, sensor, units)
+        super().__init__(coordinator, eight, user_id, sensor)
+        assert self._user_obj
 
         if self._sensor == "bed_temperature":
             self._attr_icon = "mdi:thermometer"
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_native_unit_of_measurement = TEMP_CELSIUS
+        elif self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
+            self._attr_native_unit_of_measurement = "Score"
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
             self._sensor,
-            self._side,
-            self._usrobj.userid if self._usrobj else None,
+            self._user_obj.side,
+            self._user_id,
         )
 
     @property
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
-        if not self._usrobj:
+        if not self._user_obj:
             return None
 
         if "current" in self._sensor:
             if "fitness" in self._sensor:
-                return self._usrobj.current_sleep_fitness_score
-            return self._usrobj.current_sleep_score
+                return self._user_obj.current_sleep_fitness_score
+            return self._user_obj.current_sleep_score
 
         if "last" in self._sensor:
-            return self._usrobj.last_sleep_score
+            return self._user_obj.last_sleep_score
 
         if self._sensor == "bed_temperature":
-            temp = self._usrobj.current_values["bed_temp"]
-            try:
-                if self._units == "si":
-                    return round(temp, 2)
-                return round((temp * 1.8) + 32, 2)
-            except TypeError:
-                return None
+            return self._user_obj.current_values["bed_temp"]
 
         if self._sensor == "sleep_stage":
-            return self._usrobj.current_values["stage"]
+            return self._user_obj.current_values["stage"]
 
         return None
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        if self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
-            return "Score"
-        if self._sensor == "bed_temperature":
-            if self._units == "si":
-                return TEMP_CELSIUS
-            return TEMP_FAHRENHEIT
-        return None
-
-    def _get_rounded_value(
-        self, attr: dict[str, Any], key: str, use_units: bool = True
-    ) -> int | float | None:
-        """Get rounded value based on units for given key."""
-        try:
-            if self._units == "si" or not use_units:
-                return round(attr["room_temp"], 2)
-            return round((attr["room_temp"] * 1.8) + 32, 2)
-        except TypeError:
-            return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device state attributes."""
         attr = None
-        if "current" in self._sensor and self._usrobj:
+        if "current" in self._sensor and self._user_obj:
             if "fitness" in self._sensor:
-                attr = self._usrobj.current_fitness_values
+                attr = self._user_obj.current_fitness_values
             else:
-                attr = self._usrobj.current_values
-        elif "last" in self._sensor and self._usrobj:
-            attr = self._usrobj.last_values
+                attr = self._user_obj.current_values
+        elif "last" in self._sensor and self._user_obj:
+            attr = self._user_obj.last_values
 
         if attr is None:
             # Skip attributes if sensor type doesn't support
@@ -258,59 +233,41 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
             )
             state_attr[ATTR_REM_PERC] = _get_breakdown_percent(attr, "rem", sleep_time)
 
-        room_temp = self._get_rounded_value(attr, "room_temp")
-        bed_temp = self._get_rounded_value(attr, "bed_temp")
+        room_temp = _get_rounded_value(attr, "room_temp")
+        bed_temp = _get_rounded_value(attr, "bed_temp")
 
         if "current" in self._sensor:
-            state_attr[ATTR_RESP_RATE] = self._get_rounded_value(
-                attr, "resp_rate", False
-            )
-            state_attr[ATTR_HEART_RATE] = self._get_rounded_value(
-                attr, "heart_rate", False
-            )
+            state_attr[ATTR_RESP_RATE] = _get_rounded_value(attr, "resp_rate")
+            state_attr[ATTR_HEART_RATE] = _get_rounded_value(attr, "heart_rate")
             state_attr[ATTR_SLEEP_STAGE] = attr["stage"]
             state_attr[ATTR_ROOM_TEMP] = room_temp
             state_attr[ATTR_BED_TEMP] = bed_temp
         elif "last" in self._sensor:
-            state_attr[ATTR_AVG_RESP_RATE] = self._get_rounded_value(
-                attr, "resp_rate", False
-            )
-            state_attr[ATTR_AVG_HEART_RATE] = self._get_rounded_value(
-                attr, "heart_rate", False
-            )
+            state_attr[ATTR_AVG_RESP_RATE] = _get_rounded_value(attr, "resp_rate")
+            state_attr[ATTR_AVG_HEART_RATE] = _get_rounded_value(attr, "heart_rate")
             state_attr[ATTR_AVG_ROOM_TEMP] = room_temp
             state_attr[ATTR_AVG_BED_TEMP] = bed_temp
 
         return state_attr
 
 
-class EightRoomSensor(EightSleepUserEntity, SensorEntity):
+class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep room sensor."""
+
+    _attr_icon = "mdi:thermometer"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(
         self,
-        name: str,
-        coordinator: EightSleepUserDataCoordinator,
+        coordinator: DataUpdateCoordinator,
         eight: EightSleep,
-        side: str | None,
         sensor: str,
-        units: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, side, sensor, units)
-
-        self._attr_icon = "mdi:thermometer"
-        self._attr_native_unit_of_measurement: str = (
-            TEMP_CELSIUS if self._units == "si" else TEMP_FAHRENHEIT
-        )
+        super().__init__(coordinator, eight, None, sensor)
 
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        temp = self._eight.room_temperature()
-        try:
-            if self._units == "si":
-                return round(temp, 2)
-            return round((temp * 1.8) + 32, 2)
-        except TypeError:
-            return None
+        return self._eight.room_temperature()

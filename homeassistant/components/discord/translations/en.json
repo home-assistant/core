@@ -10,13 +10,13 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "user": {
+            "reauth_confirm": {
                 "data": {
                     "api_token": "API Token"
                 },
                 "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}"
             },
-            "reauth_confirm": {
+            "user": {
                 "data": {
                     "api_token": "API Token"
                 },

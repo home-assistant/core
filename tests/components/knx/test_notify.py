@@ -2,7 +2,7 @@
 
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import NotifySchema
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -75,18 +75,22 @@ async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit):
     )
 
 
-async def test_notify_multiple_sends_to_all(hass: HomeAssistant, knx: KNXTestKit):
-    """Test KNX notify can send to all devices."""
+async def test_notify_multiple_sends_to_all_with_different_encodings(
+    hass: HomeAssistant, knx: KNXTestKit
+):
+    """Test KNX notify `type` configuration."""
     await knx.setup_integration(
         {
             NotifySchema.PLATFORM: [
                 {
-                    CONF_NAME: "test",
+                    CONF_NAME: "ASCII",
                     KNX_ADDRESS: "1/0/0",
+                    CONF_TYPE: "string",
                 },
                 {
-                    CONF_NAME: "test2",
+                    CONF_NAME: "Latin-1",
                     KNX_ADDRESS: "1/0/1",
+                    CONF_TYPE: "latin_1",
                 },
             ]
         }
@@ -94,44 +98,15 @@ async def test_notify_multiple_sends_to_all(hass: HomeAssistant, knx: KNXTestKit
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "notify", "notify", {"message": "I love KNX"}, blocking=True
+        "notify", "notify", {"message": "Gänsefüßchen"}, blocking=True
     )
 
     await knx.assert_write(
         "1/0/0",
-        (
-            0x49,
-            0x20,
-            0x6C,
-            0x6F,
-            0x76,
-            0x65,
-            0x20,
-            0x4B,
-            0x4E,
-            0x58,
-            0x0,
-            0x0,
-            0x0,
-            0x0,
-        ),
+        # "G?nsef??chen"
+        (71, 63, 110, 115, 101, 102, 63, 63, 99, 104, 101, 110, 0, 0),
     )
     await knx.assert_write(
         "1/0/1",
-        (
-            0x49,
-            0x20,
-            0x6C,
-            0x6F,
-            0x76,
-            0x65,
-            0x20,
-            0x4B,
-            0x4E,
-            0x58,
-            0x0,
-            0x0,
-            0x0,
-            0x0,
-        ),
+        (71, 228, 110, 115, 101, 102, 252, 223, 99, 104, 101, 110, 0, 0),
     )

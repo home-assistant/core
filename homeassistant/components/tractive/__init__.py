@@ -30,6 +30,7 @@ from .const import (
     ATTR_MINUTES_ACTIVE,
     ATTR_TRACKER_STATE,
     CLIENT,
+    CLIENT_ID,
     DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
@@ -68,7 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     client = aiotractive.Tractive(
-        data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
+        data[CONF_EMAIL],
+        data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+        client_id=CLIENT_ID,
     )
     try:
         creds = await client.authenticate()

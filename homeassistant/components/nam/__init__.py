@@ -108,10 +108,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
-            # Device firmware uses synchronous code and doesn't respond to http queries
-            # when reading data from sensors. The nettigo-air-quality library tries to
-            # get the data 4 times, so we use a longer than usual timeout here.
-            async with async_timeout.timeout(30):
+            async with async_timeout.timeout(10):
                 data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.

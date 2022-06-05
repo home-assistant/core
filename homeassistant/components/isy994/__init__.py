@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -41,9 +41,11 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
+from .util import unique_ids_for_config_entry_id
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -120,7 +122,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {}
+    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: []}
     for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 
@@ -181,11 +183,7 @@ async def async_setup_entry(
             f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
         ) from err
     except ISYInvalidAuthError as err:
-        _LOGGER.error(
-            "Invalid credentials for the ISY, please adjust settings and try again: %s",
-            err,
-        )
-        return False
+        raise ConfigEntryAuthFailed(f"Invalid credentials for the ISY: {err}") from err
     except ISYConnectionError as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to the ISY, please adjust settings and try again: {err}"
@@ -288,14 +286,10 @@ async def async_unload_entry(
 
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    isy = hass_isy_data[ISY994_ISY]
+    isy: ISY = hass_isy_data[ISY994_ISY]
 
-    def _stop_auto_update() -> None:
-        """Stop the isy auto update."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
-        isy.websocket.stop()
-
-    await hass.async_add_executor_job(_stop_auto_update)
+    _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+    isy.websocket.stop()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -303,3 +297,15 @@ async def async_unload_entry(
     async_unload_services(hass)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove isy994 config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, unique_id)
+        for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)
+    )

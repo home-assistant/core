@@ -11,8 +11,6 @@ DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 DATA_CONFIG = "config"
 
-DISCOVER_CALENDAR = "google_discover_calendar"
-
 
 class FeatureAccess(Enum):
     """Class to represent different access scopes."""
@@ -28,3 +26,6 @@ class FeatureAccess(Enum):
     def scope(self) -> str:
         """Google calendar scope for the feature."""
         return self._scope
+
+
+DEFAULT_FEATURE_ACCESS = FeatureAccess.read_write

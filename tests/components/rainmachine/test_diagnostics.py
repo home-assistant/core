@@ -585,7 +585,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
             "controller": {
                 "api_version": "4.5.0",
                 "hardware_version": 3,
-                "name": "My RainMachine",
+                "name": 12345,
                 "software_version": "4.0.925",
             },
         },

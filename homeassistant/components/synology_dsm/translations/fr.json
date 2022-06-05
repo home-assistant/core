@@ -28,16 +28,7 @@
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
-                "description": "Voulez-vous configurer {name} ({host})?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
-                },
-                "description": "Raison: {details}",
-                "title": "Synology DSM R\u00e9-authentifier l'int\u00e9gration"
+                "description": "Voulez-vous configurer {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Utilise un certificat SSL",
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },

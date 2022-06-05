@@ -1,14 +1,14 @@
 {
     "config": {
         "step": {
-            "init": {
+            "user": {
                 "data": {
-                    "entity_id": "Entit\u00e9 du commutateur",
-                    "target_domain": "Type"
+                    "entity_id": "Interrupteur",
+                    "target_domain": "Nouveau type"
                 },
-                "title": "Transformer un commutateur en \u2026"
+                "description": "Choisissez un interrupteur que vous voulez faire appara\u00eetre dans Home Assistant comme une lumi\u00e8re, une fermeture ou autre. L'interrupteur original sera cach\u00e9."
             }
         }
     },
-    "title": "Commutateur en tant que X"
+    "title": "Modifier le type d'appareil d'un commutateur"
 }

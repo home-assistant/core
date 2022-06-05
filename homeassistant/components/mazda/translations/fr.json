@@ -17,10 +17,8 @@
                     "password": "Mot de passe",
                     "region": "R\u00e9gion"
                 },
-                "description": "Veuillez saisir l'adresse e-mail et le mot de passe que vous utilisez pour vous connecter \u00e0 l'application mobile MyMazda.",
-                "title": "Services connect\u00e9s Mazda - Ajouter un compte"
+                "description": "Veuillez saisir l'adresse e-mail et le mot de passe que vous utilisez pour vous connecter \u00e0 l'application mobile MyMazda."
             }
         }
-    },
-    "title": "Services connect\u00e9s Mazda"
+    }
 }

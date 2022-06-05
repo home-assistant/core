@@ -62,12 +62,10 @@ UNIT_TIME = {
     TIME_DAYS: 24 * 60 * 60,
 }
 
-ICON = "mdi:chart-histogram"
-
 DEFAULT_ROUND = 3
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
+    cv.removed(CONF_UNIT_OF_MEASUREMENT),
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME): cv.string,
@@ -76,7 +74,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
             vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
@@ -107,7 +105,6 @@ async def async_setup_entry(
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
-        unit_of_measurement=None,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
     )
@@ -128,7 +125,6 @@ async def async_setup_platform(
         round_digits=config[CONF_ROUND_DIGITS],
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
-        unit_of_measurement=config.get(CONF_UNIT_OF_MEASUREMENT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
     )
@@ -147,7 +143,6 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         round_digits: int,
         source_entity: str,
         unique_id: str | None,
-        unit_of_measurement: str | None,
         unit_prefix: str | None,
         unit_time: str,
     ) -> None:
@@ -158,14 +153,26 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._state = None
         self._method = integration_method
 
-        self._name = name if name is not None else f"{source_entity} integral"
-        self._unit_template = (
-            f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
-        )
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_name = name if name is not None else f"{source_entity} integral"
+        self._unit_template = f"{'' if unit_prefix is None else unit_prefix}{{}}"
+        self._unit_of_measurement = None
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+        self._unit_time_str = unit_time
         self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_icon = "mdi:chart-histogram"
+        self._attr_should_poll = False
+        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
+
+    def _unit(self, source_unit: str) -> str:
+        """Derive unit from the source sensor, SI prefix and time unit."""
+        unit_time = self._unit_time_str
+        if source_unit.endswith(f"/{unit_time}"):
+            integral_unit = source_unit[0 : (-(1 + len(unit_time)))]
+        else:
+            integral_unit = f"{source_unit}{unit_time}"
+
+        return self._unit_template.format(integral_unit)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -174,7 +181,12 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             try:
                 self._state = Decimal(state.state)
             except (DecimalException, ValueError) as err:
-                _LOGGER.warning("Could not restore last state: %s", err)
+                _LOGGER.warning(
+                    "%s could not restore last state %s: %s",
+                    self.entity_id,
+                    state.state,
+                    err,
+                )
             else:
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
                 if self._unit_of_measurement is None:
@@ -188,15 +200,21 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
 
+            if new_state is None or new_state.state in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ):
+                return
+
             # We may want to update our state before an early return,
             # based on the source sensor's unit_of_measurement
             # or device_class.
             update_state = False
-
-            if self._unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                if unit is not None:
-                    self._unit_of_measurement = self._unit_template.format(unit)
+            unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit is not None:
+                new_unit_of_measurement = self._unit(unit)
+                if self._unit_of_measurement != new_unit_of_measurement:
+                    self._unit_of_measurement = new_unit_of_measurement
                     update_state = True
 
             if (
@@ -210,11 +228,9 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             if update_state:
                 self.async_write_ha_state()
 
-            if (
-                old_state is None
-                or new_state is None
-                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            if old_state is None or old_state.state in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
             ):
                 return
 
@@ -260,11 +276,6 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         if isinstance(self._state, Decimal):
@@ -275,18 +286,3 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_SOURCE_ID: self._sensor_source_id}
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -39,10 +40,8 @@ async def async_get_mac(hass: HomeAssistant, host: str, data: dict[str, Any]) ->
 
     options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
     nam = await NettigoAirMonitor.create(websession, options)
-    # Device firmware uses synchronous code and doesn't respond to http queries
-    # when reading data from sensors. The nettigo-air-monitor library tries to get
-    # the data 4 times, so we use a longer than usual timeout here.
-    async with async_timeout.timeout(30):
+
+    async with async_timeout.timeout(10):
         return await nam.async_get_mac_address()
 
 
@@ -166,7 +165,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
             self.entry = entry

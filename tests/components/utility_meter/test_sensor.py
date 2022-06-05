@@ -38,10 +38,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, State
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -317,6 +322,85 @@ async def test_init(hass, yaml_config, config_entry_config):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
 
+async def test_unique_id(hass):
+    """Test unique_id configuration option."""
+    yaml_config = {
+        "utility_meter": {
+            "energy_bill": {
+                "name": "Provider A",
+                "unique_id": "1",
+                "source": "sensor.energy",
+                "tariffs": ["onpeak", "midpeak", "offpeak"],
+            }
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, yaml_config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 4
+    assert ent_reg.entities["select.energy_bill"].unique_id == "1"
+    assert ent_reg.entities["sensor.energy_bill_onpeak"].unique_id == "1_onpeak"
+
+
+@pytest.mark.parametrize(
+    "yaml_config,entity_id, name",
+    (
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "name": "dog",
+                        "source": "sensor.energy",
+                        "tariffs": ["onpeak", "midpeak", "offpeak"],
+                    }
+                }
+            },
+            "sensor.energy_bill_onpeak",
+            "dog onpeak",
+        ),
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "name": "dog",
+                        "source": "sensor.energy",
+                    }
+                }
+            },
+            "sensor.dog",
+            "dog",
+        ),
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                    }
+                }
+            },
+            "sensor.energy_bill",
+            "energy_bill",
+        ),
+    ),
+)
+async def test_entity_name(hass, yaml_config, entity_id, name):
+    """Test utility sensor state initializtion."""
+    assert await async_setup_component(hass, DOMAIN, yaml_config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.name == name
+
+
 @pytest.mark.parametrize(
     "yaml_config,config_entry_configs",
     (
@@ -413,7 +497,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
                 "utility_meter": {
                     "energy_bill": {
                         "source": "sensor.energy",
-                        "tariffs": ["onpeak", "midpeak", "offpeak"],
+                        "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
                     }
                 }
             },
@@ -428,7 +512,7 @@ async def test_device_class(hass, yaml_config, config_entry_configs):
                 "net_consumption": False,
                 "offset": 0,
                 "source": "sensor.energy",
-                "tariffs": ["onpeak", "midpeak", "offpeak"],
+                "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
             },
         ),
     ),
@@ -439,30 +523,78 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
     hass.state = CoreState.not_running
 
     last_reset = "2020-12-21T00:00:00.013073+00:00"
-    mock_restore_cache(
+
+    mock_restore_cache_with_extra_data(
         hass,
         [
-            State(
-                "sensor.energy_bill_onpeak",
-                "3",
-                attributes={
-                    ATTR_STATUS: PAUSED,
-                    ATTR_LAST_RESET: last_reset,
-                    ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            (
+                State(
+                    "sensor.energy_bill_onpeak",
+                    "3",
+                    attributes={
+                        ATTR_STATUS: PAUSED,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "7",
+                    "status": "paused",
                 },
             ),
-            State(
-                "sensor.energy_bill_midpeak",
-                "error",
-            ),
-            State(
-                "sensor.energy_bill_offpeak",
-                "6",
-                attributes={
-                    ATTR_STATUS: COLLECTING,
-                    ATTR_LAST_RESET: last_reset,
-                    ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            (
+                State(
+                    "sensor.energy_bill_midpeak",
+                    "5",
+                    attributes={
+                        ATTR_STATUS: PAUSED,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
                 },
+            ),
+            (
+                State(
+                    "sensor.energy_bill_offpeak",
+                    "6",
+                    attributes={
+                        ATTR_STATUS: COLLECTING,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3f",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                },
+            ),
+            (
+                State(
+                    "sensor.energy_bill_superpeak",
+                    "error",
+                    attributes={
+                        ATTR_STATUS: COLLECTING,
+                        ATTR_LAST_RESET: last_reset,
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+                    },
+                ),
+                {},
             ),
         ],
     )
@@ -489,13 +621,16 @@ async def test_restore_state(hass, yaml_config, config_entry_config):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
     state = hass.states.get("sensor.energy_bill_midpeak")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "5"
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
     assert state.attributes.get("status") == COLLECTING
     assert state.attributes.get("last_reset") == last_reset
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+
+    state = hass.states.get("sensor.energy_bill_superpeak")
+    assert state.state == STATE_UNKNOWN
 
     # utility_meter is loaded, now set sensors according to utility_meter:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
