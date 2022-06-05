@@ -506,6 +506,7 @@ omit =
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/coordinator.py
+    homeassistant/components/hunterdouglas_powerview/diagnostics.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hunterdouglas_powerview/scene.py
