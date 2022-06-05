@@ -1,11 +1,11 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
+import copy
 from datetime import datetime, timedelta
 import logging
 import re
 
-import caldav
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -16,6 +16,7 @@ from homeassistant.components.calendar import (
     extract_offset,
     is_offset_reached,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -30,16 +31,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
+from .const import (
+    CONF_CALENDAR,
+    CONF_CALENDARS,
+    CONF_CUSTOM_CALENDARS,
+    CONF_DAYS,
+    CONF_SEARCH,
+    DOMAIN,
+    OFFSET,
+    PRINC_CALENDARS,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CALENDARS = "calendars"
-CONF_CUSTOM_CALENDARS = "custom_calendars"
-CONF_CALENDAR = "calendar"
-CONF_SEARCH = "search"
-CONF_DAYS = "days"
-
-OFFSET = "!!"
-
+# Deprecated in Home Assistant 2022.7
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         # pylint: disable=no-value-for-parameter
@@ -67,34 +72,52 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(
+# Deprecated in Home Assistant 2022.7
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    disc_info: DiscoveryInfoType | None = None,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the WebDav Calendar platform."""
-    url = config[CONF_URL]
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    days = config[CONF_DAYS]
-
-    client = caldav.DAVClient(
-        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
-    calendars = client.principal().calendars()
+    _LOGGER.warning(
+        "Configuration of the Caldav integration in YAML is deprecated and "
+        "will be removed in a future release; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the WebDav Calendar entry."""
+    calendars = hass.data[DOMAIN][config_entry.entry_id][PRINC_CALENDARS]
+    days = config_entry.data[CONF_DAYS]
 
     calendar_devices = []
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
         # ignore all the others
-        if config[CONF_CALENDARS] and calendar.name not in config[CONF_CALENDARS]:
+        if (
+            config_entry.options[CONF_CALENDARS]
+            and calendar.name not in config_entry.options[CONF_CALENDARS]
+        ):
             _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
             continue
 
         # Create additional calendars based on custom filtering rules
-        for cust_calendar in config[CONF_CUSTOM_CALENDARS]:
+        for cust_calendar in config_entry.options[CONF_CUSTOM_CALENDARS]:
             # Check that the base calendar matches
             if cust_calendar[CONF_CALENDAR] != calendar.name:
                 continue
@@ -109,7 +132,7 @@ def setup_platform(
             )
 
         # Create a default calendar if there was no custom one
-        if not config[CONF_CUSTOM_CALENDARS]:
+        if not config_entry.options[CONF_CUSTOM_CALENDARS]:
             name = calendar.name
             device_id = calendar.name
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -117,7 +140,7 @@ def setup_platform(
                 WebDavCalendarEntity(name, calendar, entity_id, days)
             )
 
-    add_entities(calendar_devices, True)
+    async_add_entities(calendar_devices, True)
 
 
 class WebDavCalendarEntity(CalendarEntity):
@@ -144,13 +167,15 @@ class WebDavCalendarEntity(CalendarEntity):
     def update(self) -> None:
         """Update event data."""
         self.data.update()
-        self._event = self.data.event
+        event = copy.deepcopy(self.data.event)
+        if event is None:
+            self._event = event
+            return
+        (summary, offset) = extract_offset(event.summary, OFFSET)
+        event.summary = summary
+        self._event = event
         self._attr_extra_state_attributes = {
-            "offset_reached": is_offset_reached(
-                self._event.start_datetime_local, self.data.offset
-            )
-            if self._event
-            else False
+            "offset_reached": is_offset_reached(event.start_datetime_local, offset)
         }
 
 
@@ -164,7 +189,6 @@ class WebDavCalendarData:
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
-        self.offset = None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -264,15 +288,13 @@ class WebDavCalendarData:
             return
 
         # Populate the entity attributes with the event values
-        (summary, offset) = extract_offset(vevent.summary.value, OFFSET)
         self.event = CalendarEvent(
-            summary=summary,
+            summary=vevent.summary.value,
             start=vevent.dtstart.value,
             end=self.get_end_date(vevent),
             location=self.get_attr_value(vevent, "location"),
             description=self.get_attr_value(vevent, "description"),
         )
-        self.offset = offset
 
     @staticmethod
     def is_matching(vevent, search):

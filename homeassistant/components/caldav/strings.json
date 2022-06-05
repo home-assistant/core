@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Register your calendar",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "Verify ssl",
+          "days": "Days",
+          "calendars": "Calendars",
+          "add_new_custom_calendars": "Add new custom calendars"
+        },
+        "data_description": {
+          "add_new_custom_calendars": "Checked to add custom calendars in next window"
+        }
+      },
+      "custom_calendars": {
+        "title": "Add custom calendar",
+        "data": {
+          "custom_calendars": "Custom calendars"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "custom_calendars": "Custom calendars",
+          "calendars": "Calendars"
+        }
+      }
+    },
+    "error": {
+      "choice_custom": "Choose between calendar names or custom calendars."
+    }
+  }
+}
