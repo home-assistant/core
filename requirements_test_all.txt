@@ -159,7 +159,7 @@ aiohue==4.4.1
 aiokafka==0.6.0
 
 # homeassistant.components.lookin
-aiolookin==0.1.0
+aiolookin==0.1.1
 
 # homeassistant.components.lyric
 aiolyric==1.0.8
@@ -208,6 +208,9 @@ aiosenz==1.0.0
 
 # homeassistant.components.shelly
 aioshelly==2.0.0
+
+# homeassistant.components.skybell
+aioskybell==22.3.0
 
 # homeassistant.components.slimproto
 aioslimproto==2.0.1
