@@ -84,7 +84,7 @@ class GlancesSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, glances_data.host)},
             manufacturer="Glances",
-            name=glances_data.name,
+            name=name,
         )
 
     @property

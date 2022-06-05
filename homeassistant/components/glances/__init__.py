@@ -62,11 +62,6 @@ class GlancesData:
         """Return client host."""
         return self.config_entry.data[CONF_HOST]
 
-    @property
-    def name(self):
-        """Return client name."""
-        return self.config_entry.data[CONF_NAME]
-
     async def async_update(self):
         """Get the latest data from the Glances REST API."""
         try:
