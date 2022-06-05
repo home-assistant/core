@@ -240,6 +240,9 @@ aiosenz==1.0.0
 # homeassistant.components.shelly
 aioshelly==2.0.0
 
+# homeassistant.components.skybell
+aioskybell==22.3.0
+
 # homeassistant.components.slimproto
 aioslimproto==2.0.1
 
@@ -2175,9 +2178,6 @@ simplisafe-python==2022.05.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
-
-# homeassistant.components.skybell
-skybellpy==0.6.3
 
 # homeassistant.components.slack
 slackclient==2.5.0
