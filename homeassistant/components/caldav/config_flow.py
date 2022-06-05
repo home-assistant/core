@@ -1,7 +1,6 @@
 """Config flow to configure caldav."""
 import logging
 
-import caldav
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,6 +10,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
+from . import async_caldav_connect
 from .const import (
     CONF_ADD_CUSTO_CALENDAR,
     CONF_CALENDARS,
@@ -90,23 +90,16 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_custom_calendars(user_input)
 
             try:
-                username = user_input.get(CONF_USERNAME)
-                password = user_input.get(CONF_PASSWORD)
-                options = {
-                    CONF_CALENDARS: user_input.pop(CONF_CALENDARS, []),
-                    CONF_CUSTOM_CALENDARS: user_input.pop(CONF_CUSTOM_CALENDARS, []),
-                }
-
-                client = caldav.DAVClient(
-                    url,
-                    None,
-                    username,
-                    password,
-                    ssl_verify_cert=user_input[CONF_VERIFY_SSL],
-                )
-                await self.hass.async_add_executor_job(client.principal)
+                await async_caldav_connect(self.hass, user_input)
                 return self.async_create_entry(
-                    title=DOMAIN, data=user_input, options=options
+                    title=DOMAIN,
+                    data=user_input,
+                    options={
+                        CONF_CALENDARS: user_input.pop(CONF_CALENDARS, []),
+                        CONF_CUSTOM_CALENDARS: user_input.pop(
+                            CONF_CUSTOM_CALENDARS, []
+                        ),
+                    },
                 )
 
             except Exception as exception:  # pylint:disable=broad-except
@@ -119,7 +112,6 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_custom_calendars(self, user_input=None):
         """Add custom calendars."""
-        errors = {}
         if user_input.get(CONF_ADD_CUSTO_CALENDAR):
             user_input.pop(CONF_ADD_CUSTO_CALENDAR)
             self.user_input = user_input
@@ -128,16 +120,11 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user(self.user_input)
 
         return self.async_show_form(
-            step_id="custom_calendars",
-            data_schema=CUSTOM_CALENDARS_SCHEMA,
-            errors=errors,
+            step_id="custom_calendars", data_schema=CUSTOM_CALENDARS_SCHEMA
         )
 
     async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        entries = self._async_current_entries()
-        if any(x.data[CONF_URL] == import_config[CONF_URL] for x in entries):
-            return self.async_abort(reason="already_configured")
         return await self.async_step_user(import_config)
 
 
