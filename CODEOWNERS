@@ -933,6 +933,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
+/homeassistant/components/skybell/ @tkdrob
+/tests/components/skybell/ @tkdrob
 /homeassistant/components/slack/ @bachya @tkdrob
 /tests/components/slack/ @bachya @tkdrob
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
