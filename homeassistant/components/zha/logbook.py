@@ -33,13 +33,19 @@ def async_describe_events(
     def async_describe_zha_event(event: Event) -> dict[str, str]:
         """Describe zha logbook event."""
         device: dr.DeviceEntry = device_registry.devices[event.data[ATTR_DEVICE_ID]]
-        zha_device: ZHADevice = async_get_zha_device(hass, event.data[ATTR_DEVICE_ID])
         device_name: str = device.name_by_user or device.name or "Unknown device"
         event_data: dict = event.data
         event_type: str | None = None
         event_subtype: str | None = None
 
-        if zha_device.device_automation_triggers:
+        try:
+            zha_device: ZHADevice = async_get_zha_device(
+                hass, event.data[ATTR_DEVICE_ID]
+            )
+        except (KeyError, AttributeError):
+            pass
+
+        if zha_device and zha_device.device_automation_triggers:
             for (
                 etype,
                 subtype,
