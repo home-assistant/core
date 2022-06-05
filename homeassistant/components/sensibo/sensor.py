@@ -1,8 +1,9 @@
 """Sensor platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import MotionSensor, SensiboDevice
@@ -24,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType, Mapping
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
@@ -44,8 +45,8 @@ class MotionBaseEntityDescriptionMixin:
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
-    value_fn: Callable[[SensiboDevice], StateType]
-    extra_fn: Callable[[SensiboDevice], dict[str, str | bool] | None] | None
+    value_fn: Callable[[SensiboDevice], StateType | datetime]
+    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
 @dataclass
@@ -130,7 +131,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         name="Timer End Time",
         icon="mdi:timer",
         value_fn=lambda data: data.timer_time,
-        extra_fn=lambda data: {"id": data.timer_id, "state": data.timer_state_on},
+        extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
 )
 
@@ -224,7 +225,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.device_data)
 
@@ -233,3 +234,4 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         """Return additional attributes."""
         if self.entity_description.extra_fn is not None:
             return self.entity_description.extra_fn(self.device_data)
+        return None

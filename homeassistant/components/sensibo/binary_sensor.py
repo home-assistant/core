@@ -1,7 +1,7 @@
 """Binary Sensor platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import Mapping
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
@@ -37,7 +36,7 @@ class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-    extra_fn: Callable[[SensiboDevice], dict[str, str | bool] | None] | None
+    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
 @dataclass
@@ -79,7 +78,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     ),
 )
 
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
+MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="room_occupied",
         device_class=BinarySensorDeviceClass.MOTION,
@@ -88,13 +87,16 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         value_fn=lambda data: data.room_occupied,
         extra_fn=None,
     ),
+)
+
+DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="timer_on",
         device_class=BinarySensorDeviceClass.RUNNING,
         name="Timer Running",
         icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
-        extra_fn=lambda data: {"id": data.timer_id, "state": data.timer_state_on},
+        extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
 )
 
@@ -161,8 +163,15 @@ async def async_setup_entry(
             )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
+        for description in MOTION_DEVICE_SENSOR_TYPES
+        for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.motion_sensors is not None
+    )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
         for description in DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.model != "pure"
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
@@ -239,3 +248,4 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):
         """Return additional attributes."""
         if self.entity_description.extra_fn is not None:
             return self.entity_description.extra_fn(self.device_data)
+        return None
