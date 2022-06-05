@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_LOGBOOK_ENTRY,
@@ -21,6 +22,7 @@ from homeassistant.core import (
     is_callback,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
@@ -88,11 +90,73 @@ def async_determine_event_types(
 
 
 @callback
+def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
+    """Extract an attribute as a list or string."""
+    if (value := source.get(attr)) is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return str(value).split(",")
+
+
+@callback
+def event_forwarder_filtered(
+    target: Callable[[Event], None],
+    entities_filter: EntityFilter | None,
+    entity_ids: list[str] | None,
+    device_ids: list[str] | None,
+) -> Callable[[Event], None]:
+    """Make a callable to filter events."""
+    if not entities_filter and not entity_ids and not device_ids:
+        # No filter
+        # - Script Trace (context ids)
+        # - Automation Trace (context ids)
+        return target
+
+    if entities_filter:
+        # We have an entity filter:
+        # - Logbook panel
+        @callback
+        def _forward_events_filtered_by_entities_filter(event: Event) -> None:
+            assert entities_filter is not None
+            event_data = event.data
+            entity_ids = extract_attr(event_data, ATTR_ENTITY_ID)
+            if entity_ids and not any(
+                entities_filter(entity_id) for entity_id in entity_ids
+            ):
+                return
+            domain = event_data.get(ATTR_DOMAIN)
+            if domain and not entities_filter(f"{domain}._"):
+                return
+            target(event)
+
+        return _forward_events_filtered_by_entities_filter
+
+    # We are filtering on entity_ids and/or device_ids:
+    # - Areas
+    # - Devices
+    # - Logbook Card
+    entity_ids_set = set(entity_ids) if entity_ids else set()
+    device_ids_set = set(device_ids) if device_ids else set()
+
+    @callback
+    def _forward_events_filtered_by_device_entity_ids(event: Event) -> None:
+        event_data = event.data
+        if entity_ids_set.intersection(
+            extract_attr(event_data, ATTR_ENTITY_ID)
+        ) or device_ids_set.intersection(extract_attr(event_data, ATTR_DEVICE_ID)):
+            target(event)
+
+    return _forward_events_filtered_by_device_entity_ids
+
+
+@callback
 def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event], None],
     event_types: tuple[str, ...],
+    entities_filter: EntityFilter | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> None:
@@ -103,40 +167,31 @@ def async_subscribe_events(
     """
     ent_reg = er.async_get(hass)
     assert is_callback(target), "target must be a callback"
-    event_forwarder = target
-
-    if entity_ids or device_ids:
-        entity_ids_set = set(entity_ids) if entity_ids else set()
-        device_ids_set = set(device_ids) if device_ids else set()
-
-        @callback
-        def _forward_events_filtered(event: Event) -> None:
-            event_data = event.data
-            if (
-                entity_ids_set and event_data.get(ATTR_ENTITY_ID) in entity_ids_set
-            ) or (device_ids_set and event_data.get(ATTR_DEVICE_ID) in device_ids_set):
-                target(event)
-
-        event_forwarder = _forward_events_filtered
+    event_forwarder = event_forwarder_filtered(
+        target, entities_filter, entity_ids, device_ids
+    )
 
     for event_type in event_types:
         subscriptions.append(
             hass.bus.async_listen(event_type, event_forwarder, run_immediately=True)
         )
 
-    @callback
-    def _forward_state_events_filtered(event: Event) -> None:
-        if event.data.get("old_state") is None or event.data.get("new_state") is None:
-            return
-        state: State = event.data["new_state"]
-        if not _is_state_filtered(ent_reg, state):
-            target(event)
-
     if device_ids and not entity_ids:
         # No entities to subscribe to but we are filtering
         # on device ids so we do not want to get any state
         # changed events
         return
+
+    @callback
+    def _forward_state_events_filtered(event: Event) -> None:
+        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+            return
+        state: State = event.data["new_state"]
+        if _is_state_filtered(ent_reg, state):
+            return
+        if entities_filter and not entities_filter(state.entity_id):
+            return
+        target(event)
 
     if entity_ids:
         subscriptions.append(
