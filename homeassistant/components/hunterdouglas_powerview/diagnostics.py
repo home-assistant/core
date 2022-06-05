@@ -7,7 +7,7 @@ import attr
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -27,7 +27,7 @@ REDACT_CONFIG = {
     DEVICE_MAC_ADDRESS,
     DEVICE_SERIAL_NUMBER,
     PV_HUB_ADDRESS,
-    "configuration_url",
+    ATTR_CONFIGURATION_URL,
 }
 
 
