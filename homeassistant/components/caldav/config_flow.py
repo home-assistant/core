@@ -82,8 +82,9 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            url = user_input[CONF_URL]
-            await self.async_set_unique_id(url)
+            await self.async_set_unique_id(
+                f"{user_input[CONF_USERNAME]}:{user_input[CONF_URL]}"
+            )
             self._abort_if_unique_id_configured()
 
             if user_input.get(CONF_ADD_CUSTO_CALENDAR):
