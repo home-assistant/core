@@ -205,11 +205,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
 
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
+        utcnow = dt_util.utcnow()
         for forecast in raw_forecasts:
             forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
 
             # Throw out past data
-            if dt_util.as_local(forecast_dt).date() < dt_util.now().date():
+            if dt_util.as_local(forecast_dt).date() < dt_util.as_local(utcnow).date():
                 continue
 
             values = forecast["values"]
