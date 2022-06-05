@@ -62,18 +62,23 @@ async def test_cannot_connect(_, hass):
         await inverter.connect()
 
 
-async def test_legacy_setup_platform(hass):
-    """Test setup platform import config entry."""
-    assert len(hass.config_entries._entries) == 0
-    await async_setup_platform(hass, config, Mock())
-    await hass.async_block_till_done()
-    assert len(hass.config_entries._entries) == 1
+async def test_import(hass):
+    """Test that we can import a config entry."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    with patch("homeassistant.components.saj.coordinator._init_pysaj"):
+        await async_setup_platform(hass, config, Mock())
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data["type"] == "wifi"
 
 
 async def test_setup_entry(hass):
     """Test add entities on setup."""
     config_entry = MockConfigEntry()
     inverter = SAJDataUpdateCoordinator(hass, config)
+    inverter._saj.read = AsyncMock()
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][config_entry.entry_id] = inverter
     add_fn = Mock()

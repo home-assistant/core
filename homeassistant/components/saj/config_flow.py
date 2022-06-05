@@ -8,13 +8,7 @@ import pysaj
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_TYPE,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowError, FlowResult
 from homeassistant.helpers.typing import ConfigType
 
@@ -43,7 +37,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            user_input.setdefault(CONF_NAME, "")
             try:
                 inverter = SAJDataUpdateCoordinator(self.hass, user_input)
                 await inverter.connect()

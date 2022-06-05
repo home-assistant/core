@@ -44,7 +44,7 @@ class SAJDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=config[CONF_NAME] or DEFAULT_NAME,
+            name=config.get(CONF_NAME) or DEFAULT_NAME,
             update_interval=UPDATE_INTERVAL,
             update_method=self.update,
         )
