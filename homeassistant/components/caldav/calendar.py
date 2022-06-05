@@ -44,7 +44,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Deprecated in Home Assistant 2022.7
+# Deprecated in Home Assistant 2022.8
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         # pylint: disable=no-value-for-parameter
@@ -72,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-# Deprecated in Home Assistant 2022.7
+# Deprecated in Home Assistant 2022.8
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
