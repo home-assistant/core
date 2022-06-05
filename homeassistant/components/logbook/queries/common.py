@@ -10,7 +10,6 @@ from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.proximity import DOMAIN as PROXIMITY_DOMAIN
 from homeassistant.components.recorder.models import (
     EVENTS_CONTEXT_ID_INDEX,
     OLD_FORMAT_ATTRS_JSON,
@@ -22,10 +21,15 @@ from homeassistant.components.recorder.models import (
     StateAttributes,
     States,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
-CONTINUOUS_DOMAINS = {PROXIMITY_DOMAIN, SENSOR_DOMAIN}
-CONTINUOUS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in CONTINUOUS_DOMAINS]
+from ..const import ALWAYS_CONTINUOUS_DOMAINS, CONDITIONALLY_CONTINUOUS_DOMAINS
+
+CONDITIONALLY_CONTINUOUS_ENTITY_ID_LIKE = [
+    f"{domain}.%" for domain in CONDITIONALLY_CONTINUOUS_DOMAINS
+]
+ALWAYS_CONTINUOUS_ENTITY_ID_LIKE = [
+    f"{domain}.%" for domain in ALWAYS_CONTINUOUS_DOMAINS
+]
 
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
@@ -220,29 +224,35 @@ def _missing_state_matcher() -> sqlalchemy.and_:
 def _not_continuous_entity_matcher() -> sqlalchemy.or_:
     """Match non continuous entities."""
     return sqlalchemy.or_(
-        _not_continuous_domain_matcher(),
+        # First exclude domains that may be continuous
+        _not_possible_continuous_domain_matcher(),
+        # But let in the entities in the possible continuous domains
+        # that are not actually continuous sensors because they lack a UOM
         sqlalchemy.and_(
-            _continuous_domain_matcher, _not_uom_attributes_matcher()
+            _possible_continuous_domain_matcher, _not_uom_attributes_matcher()
         ).self_group(),
     )
 
 
-def _not_continuous_domain_matcher() -> sqlalchemy.and_:
+def _not_possible_continuous_domain_matcher() -> sqlalchemy.and_:
     """Match not continuous domains."""
     return sqlalchemy.and_(
         *[
             ~States.entity_id.like(entity_domain)
-            for entity_domain in CONTINUOUS_ENTITY_ID_LIKE
+            for entity_domain in (
+                *ALWAYS_CONTINUOUS_ENTITY_ID_LIKE,
+                *CONDITIONALLY_CONTINUOUS_ENTITY_ID_LIKE,
+            )
         ],
     ).self_group()
 
 
-def _continuous_domain_matcher() -> sqlalchemy.or_:
+def _possible_continuous_domain_matcher() -> sqlalchemy.or_:
     """Match continuous domains."""
     return sqlalchemy.or_(
         *[
             States.entity_id.like(entity_domain)
-            for entity_domain in CONTINUOUS_ENTITY_ID_LIKE
+            for entity_domain in CONDITIONALLY_CONTINUOUS_ENTITY_ID_LIKE
         ],
     ).self_group()
 
