@@ -27,8 +27,16 @@ def statement_for_request(
     # No entities: logbook sends everything for the timeframe
     # limited by the context_id and the yaml configured filter
     if not entity_ids and not device_ids:
-        entity_filter = filters.entity_filter() if filters else None
-        return all_stmt(start_day, end_day, event_types, entity_filter, context_id)
+        states_entity_filter = filters.states_entity_filter() if filters else None
+        events_entity_filter = filters.events_entity_filter() if filters else None
+        return all_stmt(
+            start_day,
+            end_day,
+            event_types,
+            states_entity_filter,
+            events_entity_filter,
+            context_id,
+        )
 
     # sqlalchemy caches object quoting, the
     # json quotable ones must be a different

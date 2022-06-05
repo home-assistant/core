@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "\uce74\uba54\ub77c \uc774\ubbf8\uc9c0\ub97c \ud45c\uc2dc\ud560 \uad6d\uac00\uc758 \uad6d\uac00 \ucf54\ub4dc\uc785\ub2c8\ub2e4.",
+                    "delta": "\uce74\uba54\ub77c \uc774\ubbf8\uc9c0 \uc5c5\ub370\uc774\ud2b8 \uc0ac\uc774\uc758 \uc2dc\uac04 \uac04\uaca9(\ucd08)",
+                    "timeframe": "\uac15\uc218 \uc608\ubcf4\ub97c \uc704\ud574 \ubbf8\ub9ac \ubcfc \uc2dc\uac04(\ubd84)"
+                }
+            }
+        }
+    }
+}

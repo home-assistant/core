@@ -1,8 +1,6 @@
 """Triggers for WeMo devices."""
 from __future__ import annotations
 
-from typing import Any
-
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 import voluptuous as vol
 
@@ -30,7 +28,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """Return a list of triggers."""
 
     wemo_trigger = {

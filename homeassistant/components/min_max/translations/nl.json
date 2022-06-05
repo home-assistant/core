@@ -3,7 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "entity_ids": "Entiteiten invoeren",
+                    "entity_ids": "Invoerentiteiten",
                     "name": "Naam",
                     "round_digits": "Precisie",
                     "type": "statistisch kenmerk"
@@ -20,7 +20,7 @@
         "step": {
             "init": {
                 "data": {
-                    "entity_ids": "Entiteiten invoeren",
+                    "entity_ids": "Invoerentiteiten",
                     "round_digits": "Precisie",
                     "type": "statistisch kenmerk"
                 },

@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from yolink.device import YoLinkDevice
-
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,20 +17,24 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     def __init__(
         self,
         coordinator: YoLinkCoordinator,
-        device_info: YoLinkDevice,
     ) -> None:
         """Init YoLink Entity."""
         super().__init__(coordinator)
-        self.device = device_info
 
     @property
     def device_id(self) -> str:
         """Return the device id of the YoLink device."""
-        return self.device.device_id
+        return self.coordinator.device.device_id
+
+    async def async_added_to_hass(self) -> None:
+        """Update state."""
+        await super().async_added_to_hass()
+        return self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        data = self.coordinator.data.get(self.device.device_id)
+        """Update state."""
+        data = self.coordinator.data
         if data is not None:
             self.update_entity_state(data)
 
@@ -40,10 +42,10 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     def device_info(self) -> DeviceInfo:
         """Return the device info for HA."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.device.device_id)},
+            identifiers={(DOMAIN, self.coordinator.device.device_id)},
             manufacturer=MANUFACTURER,
-            model=self.device.device_type,
-            name=self.device.device_name,
+            model=self.coordinator.device.device_type,
+            name=self.coordinator.device.device_name,
         )
 
     @callback

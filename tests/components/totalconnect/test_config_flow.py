@@ -4,9 +4,14 @@ from unittest.mock import patch
 from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
+from homeassistant.components.totalconnect.const import (
+    AUTO_BYPASS,
+    CONF_USERCODES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 from .common import (
     CONFIG_DATA,
@@ -190,3 +195,42 @@ async def test_no_locations(hass):
         await hass.async_block_till_done()
 
         assert mock_request.call_count == 1
+
+
+async def test_options_flow(hass: HomeAssistant):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=USERNAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+        RESPONSE_DISARMED,
+        RESPONSE_DISARMED,
+    ]
+
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={AUTO_BYPASS: True}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {AUTO_BYPASS: True}
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()

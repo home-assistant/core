@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd."
+            "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
@@ -32,7 +32,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Update Interval",
-                    "show_on_map": "Toon stations op kaart"
+                    "show_on_map": "Toon stations op kaart",
+                    "stations": "Stations"
                 },
                 "title": "Tankerkoenig opties"
             }

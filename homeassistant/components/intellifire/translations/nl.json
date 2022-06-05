@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "not_intellifire_device": "Niet een IntelliFire apparaat.",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "api_error": "Inloggen mislukt",

@@ -236,8 +236,10 @@ def _significant_states_stmt(
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
-            entity_filter = filters.entity_filter()
-            stmt += lambda q: q.filter(entity_filter)
+            entity_filter = filters.states_entity_filter()
+            stmt = stmt.add_criteria(
+                lambda q: q.filter(entity_filter), track_on=[filters]
+            )
 
     stmt += lambda q: q.filter(States.last_updated > start_time)
     if end_time:
@@ -528,8 +530,8 @@ def _get_states_for_all_stmt(
     )
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
-        entity_filter = filters.entity_filter()
-        stmt += lambda q: q.filter(entity_filter)
+        entity_filter = filters.states_entity_filter()
+        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)

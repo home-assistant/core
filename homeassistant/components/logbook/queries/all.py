@@ -22,7 +22,8 @@ def all_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    entity_filter: ClauseList | None = None,
+    states_entity_filter: ClauseList | None = None,
+    events_entity_filter: ClauseList | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
@@ -37,12 +38,17 @@ def all_stmt(
             _states_query_for_context_id(start_day, end_day, context_id),
             legacy_select_events_context_id(start_day, end_day, context_id),
         )
-    elif entity_filter is not None:
-        stmt += lambda s: s.union_all(
-            _states_query_for_all(start_day, end_day).where(entity_filter)
-        )
     else:
-        stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
+        if events_entity_filter is not None:
+            stmt += lambda s: s.where(events_entity_filter)
+
+        if states_entity_filter is not None:
+            stmt += lambda s: s.union_all(
+                _states_query_for_all(start_day, end_day).where(states_entity_filter)
+            )
+        else:
+            stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
+
     stmt += lambda s: s.order_by(Events.time_fired)
     return stmt
 

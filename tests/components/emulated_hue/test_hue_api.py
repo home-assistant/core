@@ -108,7 +108,9 @@ def hass_hue(loop, hass):
         )
     )
 
-    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
+    with patch(
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+    ):
         loop.run_until_complete(
             setup.async_setup_component(
                 hass,
@@ -314,7 +316,9 @@ async def test_lights_all_dimmable(hass, hass_client_no_auth):
         emulated_hue.CONF_EXPOSE_BY_DEFAULT: True,
         emulated_hue.CONF_LIGHTS_ALL_DIMMABLE: True,
     }
-    with patch("homeassistant.components.emulated_hue.create_upnp_datagram_endpoint"):
+    with patch(
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+    ):
         await setup.async_setup_component(
             hass,
             emulated_hue.DOMAIN,

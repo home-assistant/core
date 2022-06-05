@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "Configuratiestroom is al bezig",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "unknown": "Onverwachte fout",
             "unsupported": "Niet-ondersteund apparaat"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt",
+            "cannot_connect": "Kan geen verbinding maken",
             "unsupported": "Niet-ondersteund apparaat"
         },
         "flow_title": "{model} ({name})",

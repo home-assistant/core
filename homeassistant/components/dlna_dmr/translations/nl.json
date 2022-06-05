@@ -16,7 +16,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Wilt u beginnen met instellen?"
+                "description": "Wil je beginnen met instellen?"
             },
             "import_turn_on": {
                 "description": "Zet het apparaat aan en klik op verzenden om door te gaan met de migratie"

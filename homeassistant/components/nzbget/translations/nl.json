@@ -5,7 +5,7 @@
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{name}",
         "step": {

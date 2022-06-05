@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
@@ -30,8 +34,8 @@ def async_describe_events(
             ATTR_KEYPAD_NAME, data[ATTR_KEYPAD_ID]
         )  # added in 2022.6
         return {
-            "name": f"Elk Keypad {keypad_name}",
-            "message": f"pressed {data[ATTR_KEY_NAME]} ({data[ATTR_KEY]})",
+            LOGBOOK_ENTRY_NAME: f"Elk Keypad {keypad_name}",
+            LOGBOOK_ENTRY_MESSAGE: f"pressed {data[ATTR_KEY_NAME]} ({data[ATTR_KEY]})",
         }
 
     async_describe_event(

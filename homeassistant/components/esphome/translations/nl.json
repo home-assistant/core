@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al begonnen",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "connection_error": "Kan geen verbinding maken met ESP. Zorg ervoor dat uw YAML-bestand een regel 'api:' bevat.",

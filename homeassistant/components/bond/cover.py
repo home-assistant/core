@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bond_api import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
