@@ -153,3 +153,25 @@ effect_stop:
     entity:
       integration: lifx
       domain: light
+
+hev_cycle:
+  name: HEV cycle
+  description: Start or stop an HEV cleaning cycle on a LIFX Clean bulb.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    stop:
+      name: Stop
+      description: If true, stops the HEV cleaning cycle.
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: Duration of cleaning cycle. If unset, uses the default time of 2 hours.
+      selector:
+        number:
+          min: 0
+          max: 86400
+          unit_of_measurement: seconds

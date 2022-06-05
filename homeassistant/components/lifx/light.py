@@ -162,6 +162,18 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
 
 LIFX_EFFECT_STOP_SCHEMA = cv.make_entity_service_schema({})
 
+ATTR_HEV_STOP = "stop"
+ATTR_HEV_DURATION = "duration"
+
+SERVICE_LIFX_HEV_CYCLE = "hev_cycle"
+
+LIFX_HEV_CYCLE_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_HEV_STOP, default=False): bool,
+        vol.Optional(ATTR_HEV_DURATION, default=7200): cv.positive_int,
+    }
+)
+
 
 def aiolifx():
     """Return the aiolifx module."""
@@ -273,6 +285,7 @@ class LIFXManager:
         )
 
         self.register_set_state()
+        self.register_hev_cycle()
         self.register_effects()
 
     def start_discovery(self, interface):
@@ -312,6 +325,12 @@ class LIFXManager:
         """Register the LIFX set_state service call."""
         self.platform.async_register_entity_service(
             SERVICE_LIFX_SET_STATE, LIFX_SET_STATE_SCHEMA, "set_state"
+        )
+
+    def register_hev_cycle(self):
+        """Register the LIFX hev_cycle service call."""
+        self.platform.async_register_entity_service(
+            SERVICE_LIFX_HEV_CYCLE, LIFX_HEV_CYCLE_SCHEMA, "hev_cycle"
         )
 
     def register_effects(self):
@@ -616,6 +635,22 @@ class LIFXLight(LightEntity):
             return f"lifx_effect_{effect.name}"
         return None
 
+    @property
+    def extra_state_attributes(self):
+        """Return extra state attributes for certain bulb types."""
+        if lifx_features(self.bulb)["hev"] is True:
+            if self.bulb.hev_cycle.get("remaining", 0) > 0:
+                return {
+                    "hev_cycle_active": True,
+                    "hev_cycle_duration": self.bulb.hev_cycle["duration"],
+                    "hev_cycle_remaining": self.bulb.hev_cycle["remaining"],
+                    "hev_restore_power": self.bulb.hev_cycle["last_power"],
+                }
+
+            return {"hev_cycle_active": False}
+
+        return {}
+
     async def update_hass(self, now=None):
         """Request new status and push it to hass."""
         self.postponed_update = None
@@ -701,6 +736,17 @@ class LIFXLight(LightEntity):
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
 
+    async def hev_cycle(self, **kwargs):
+        """Manage an HEV cleaning cycle."""
+        ack = AwaitAioLIFX().wait
+        stop = kwargs.get(ATTR_HEV_STOP, False)
+        duration = kwargs.get(ATTR_HEV_DURATION, 7200)
+
+        if stop is True:
+            await ack(partial(self.bulb.set_hev_cycle, enable=False))
+        else:
+            await ack(partial(self.bulb.set_hev_cycle, enable=True, duration=duration))
+
     async def set_power(self, ack, pwr, duration=0):
         """Send a power change to the bulb."""
         await ack(partial(self.bulb.set_power, pwr, duration=duration))
@@ -722,6 +768,8 @@ class LIFXLight(LightEntity):
         """Update bulb status."""
         if self.available and not self.lock.locked():
             await AwaitAioLIFX().wait(self.bulb.get_color)
+            if lifx_features(self.bulb)["hev"] is True:
+                await AwaitAioLIFX().wait(self.bulb.get_hev_cycle)
 
 
 class LIFXWhite(LIFXLight):
