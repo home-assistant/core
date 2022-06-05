@@ -26,10 +26,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.LOCK,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
-    Platform.LOCK,
 ]
 
 

@@ -115,6 +115,7 @@ async def async_setup_entry(
             if description.exists_fn(sensor_device_coordinator.device):
                 entities.append(
                     YoLinkSensorEntity(
+                        config_entry,
                         sensor_device_coordinator,
                         description,
                     )
@@ -129,11 +130,12 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator)
+        super().__init__(config_entry, coordinator)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
