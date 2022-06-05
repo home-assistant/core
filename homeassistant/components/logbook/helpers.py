@@ -189,9 +189,9 @@ def async_subscribe_events(
         if event.data.get("old_state") is None or event.data.get("new_state") is None:
             return
         state: State = event.data["new_state"]
-        if _is_state_filtered(ent_reg, state):
-            return
-        if entities_filter and not entities_filter(state.entity_id):
+        if _is_state_filtered(ent_reg, state) or (
+            entities_filter and not entities_filter(state.entity_id)
+        ):
             return
         target(event)
 
