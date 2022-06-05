@@ -844,10 +844,9 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
-    hass: core.HomeAssistant = request.app["hass"]
     json_response: dict[str, Any] = {
-        config.entity_id_to_number(entity.entity_id): state_to_json(config, entity)
-        for entity in config.filter_exposed_states(hass.states.async_all())
+        config.entity_id_to_number(state.entity_id): state_to_json(config, state)
+        for state in config.get_exposed_states()
     }
     return json_response
 
