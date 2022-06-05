@@ -57,6 +57,7 @@ class VeluxModule:
     def __init__(self, hass, domain_config):
         """Initialize for velux component."""
         self.pyvlx = None
+        self.commands_lock = asyncio.Lock()
         self._hass = hass
         self._domain_config = domain_config
 
@@ -93,14 +94,14 @@ class VeluxEntity(Entity):
     def __init__(self, node):
         """Initialize the Velux device."""
         self.node = node
-        self.lock = asyncio.Lock()
 
     @asynccontextmanager
     async def throttle(self):
-        """Throttle commands to the underlying device."""
-        async with self.lock:
+        """Throttle commands to the Velux gateway."""
+        lock: asyncio.Lock = self.hass.data[DATA_VELUX].commands_lock
+        async with lock:
             yield None
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.1)
 
     @callback
     def async_register_callbacks(self):
