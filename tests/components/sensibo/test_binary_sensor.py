@@ -29,7 +29,7 @@ async def test_binary_sensor(
     state4 = hass.states.get("binary_sensor.hallway_room_occupied")
     state5 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
     state6 = hass.states.get(
-        "binary_sensor.kitchen_pure_boost_linked_with_outdoor_air_quality"
+        "binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality"
     )
     assert state1.state == "on"
     assert state2.state == "on"
