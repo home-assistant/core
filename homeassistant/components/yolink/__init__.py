@@ -24,7 +24,13 @@ from .coordinator import YoLinkCoordinator
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SIREN, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.LOCK,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
