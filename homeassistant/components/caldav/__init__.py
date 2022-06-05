@@ -25,17 +25,7 @@ PLATFORMS = [Platform.CALENDAR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Caldav component."""
-    url = entry.data[CONF_URL]
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    verify_ssl = entry.data[CONF_VERIFY_SSL]
-
-    client = caldav.DAVClient(url, None, username, password, ssl_verify_cert=verify_ssl)
-
-    principal = await hass.async_add_executor_job(client.principal)
-    if not principal:
-        raise ConfigEntryNotReady()
-    calendars = await hass.async_add_executor_job(principal.calendars)
+    calendars = await async_caldav_connect(hass, entry.data)
 
     unsub_listener = entry.add_update_listener(update_listener)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
@@ -63,3 +53,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def update_listener(hass, config_entry):
     """Reload device tracker if change option."""
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_caldav_connect(hass, data_entry):
+    """Connect to caldav server."""
+    client = caldav.DAVClient(
+        url=data_entry[CONF_URL],
+        username=data_entry[CONF_USERNAME],
+        password=data_entry[CONF_PASSWORD],
+        ssl_verify_cert=data_entry[CONF_VERIFY_SSL],
+    )
+
+    try:
+        principal = await hass.async_add_executor_job(client.principal)
+        return await hass.async_add_executor_job(principal.calendars)
+    except Exception as error:  # pylint:disable=broad-except
+        raise ConfigEntryNotReady() from error
