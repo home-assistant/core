@@ -35,52 +35,46 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    return _async_get_diagnostics(hass, entry)
+    data = _async_get_diagnostics(hass, entry)
+    device_registry = dr.async_get(hass)
+    data.update(
+        device_info=[
+            _async_device_as_dict(hass, device)
+            for device in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
+            )
+        ],
+    )
+    return data
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    return _async_get_diagnostics(hass, entry, device)
+    data = _async_get_diagnostics(hass, entry)
+    data["device_info"] = _async_device_as_dict(hass, device)
+    # try to match on name to restrict to shade if we can
+    # otherwise just return all shade data
+    # shade name is unique in powerview
+    shade_data = data["shade_data"]
+    for shade in shade_data:
+        if shade_data[shade]["name_unicode"] == device.name:
+            data["shade_data"] = shade_data[shade]
+    return data
 
 
 @callback
 def _async_get_diagnostics(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-
     pv_data = hass.data[DOMAIN][entry.entry_id]
     coordinator: PowerviewShadeUpdateCoordinator = pv_data[COORDINATOR]
     shade_data = coordinator.data.get_all_raw_data()
     hub_info = async_redact_data(pv_data[DEVICE_INFO], REDACT_CONFIG)
-
-    data = {"hub_info": hub_info, "shade_data": shade_data}
-
-    if device:
-        data["device_info"] = _async_device_as_dict(hass, device)
-        # try to match on name to restrict to shade if we can
-        # otherwise just return all shade data
-        # shade name is unique in powerview
-        for shade in shade_data:
-            if shade_data[shade]["name_unicode"] == device.name:
-                data["shade_data"] = shade_data[shade]
-
-    else:
-        device_registry = dr.async_get(hass)
-        data.update(
-            device_info=[
-                _async_device_as_dict(hass, device)
-                for device in dr.async_entries_for_config_entry(
-                    device_registry, entry.entry_id
-                )
-            ],
-        )
-
-    return data
+    return {"hub_info": hub_info, "shade_data": shade_data}
 
 
 @callback
