@@ -2092,7 +2092,9 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
-async def test_subscribe_all_entities_have_uom(hass, recorder_mock, hass_ws_client):
+async def test_subscribe_all_entities_are_continuous(
+    hass, recorder_mock, hass_ws_client
+):
     """Test subscribe/unsubscribe logbook stream with entities that are always filtered."""
     now = dt_util.utcnow()
     await asyncio.gather(
@@ -2110,6 +2112,8 @@ async def test_subscribe_all_entities_have_uom(hass, recorder_mock, hass_ws_clie
                 hass.states.async_set(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
+                hass.states.async_set("counter.any", state)
+                hass.states.async_set("proximity.any", state)
 
     init_count = sum(hass.bus.async_listeners().values())
     _cycle_entities()
@@ -2121,7 +2125,7 @@ async def test_subscribe_all_entities_have_uom(hass, recorder_mock, hass_ws_clie
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "entity_ids": ["sensor.uom"],
+            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
         }
     )
 
