@@ -50,13 +50,17 @@ class KNXFan(KnxEntity, FanEntity):
             device=XknxFan(
                 xknx,
                 name=config[CONF_NAME],
-                group_address_speed=config.get(KNX_ADDRESS),
-                group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+                group_address=config.get(KNX_ADDRESS),
+                group_address_state=config.get(FanSchema.CONF_STATE_ADDRESS),
                 group_address_oscillation=config.get(
                     FanSchema.CONF_OSCILLATION_ADDRESS
                 ),
                 group_address_oscillation_state=config.get(
                     FanSchema.CONF_OSCILLATION_STATE_ADDRESS
+                ),
+                group_address_speed=config.get(FanSchema.CONF_SPEED_ADDRESS),
+                group_address_speed_state=config.get(
+                    FanSchema.CONF_SPEED_STATE_ADDRESS
                 ),
                 max_step=max_step,
             )
@@ -86,6 +90,11 @@ class KNXFan(KnxEntity, FanEntity):
         return flags
 
     @property
+    def is_on(self) -> bool:
+        """Return true if the fan is on."""
+        return bool(self._device.is_on)
+
+    @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if self._device.current_speed is None:
@@ -111,14 +120,20 @@ class KNXFan(KnxEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if percentage is None:
-            await self.async_set_percentage(DEFAULT_PERCENTAGE)
+        if self._device.has_separate_speed_ga is True:
+            await self._device.set_on()
         else:
-            await self.async_set_percentage(percentage)
+            if percentage is None:
+                await self.async_set_percentage(DEFAULT_PERCENTAGE)
+            else:
+                await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self.async_set_percentage(0)
+        if self._device.has_separate_speed_ga is True:
+            await self._device.set_off()
+        else:
+            await self.async_set_percentage(0)
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
