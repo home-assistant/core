@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -28,6 +29,8 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -127,13 +130,15 @@ async def async_setup_entry(
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 
-    entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data.motion_sensors.items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data.motion_sensors
-    )
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
@@ -173,6 +178,8 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
+        if TYPE_CHECKING:
+            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 

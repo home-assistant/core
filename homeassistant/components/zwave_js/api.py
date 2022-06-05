@@ -1083,8 +1083,7 @@ async def websocket_remove_node(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/replace_failed_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
         vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
             vol.Coerce(int),
             vol.In(
@@ -1107,18 +1106,16 @@ async def websocket_remove_node(
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_entry
+@async_get_node
 async def websocket_replace_failed_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-    driver: Driver,
+    node: Node,
 ) -> None:
     """Replace a failed node with a new node."""
-    controller = driver.controller
-    node_id = msg[NODE_ID]
+    assert node.client.driver
+    controller = node.client.driver.controller
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
     force_security = msg.get(FORCE_SECURITY)
     provisioning = (
@@ -1232,7 +1229,7 @@ async def websocket_replace_failed_node(
 
     try:
         result = await controller.async_replace_failed_node(
-            node_id,
+            node,
             INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
             force_security=force_security,
             provisioning=provisioning,
@@ -1291,7 +1288,7 @@ async def websocket_remove_failed_node(
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("node removed", node_removed)]
 
-    await controller.async_remove_failed_node(node.node_id)
+    await controller.async_remove_failed_node(node)
     connection.send_result(msg[ID])
 
 
@@ -1414,7 +1411,7 @@ async def websocket_heal_node(
     assert driver is not None  # The node comes from the driver instance.
     controller = driver.controller
 
-    result = await controller.async_heal_node(node.node_id)
+    result = await controller.async_heal_node(node)
     connection.send_result(
         msg[ID],
         result,

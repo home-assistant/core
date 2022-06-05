@@ -14,11 +14,14 @@ from homeassistant.components.recorder.models import (
     ENTITY_ID_IN_EVENT,
     ENTITY_ID_LAST_UPDATED_INDEX,
     OLD_ENTITY_ID_IN_EVENT,
+    EventData,
     Events,
     States,
 )
 
 from .common import (
+    apply_events_context_hints,
+    apply_states_context_hints,
     apply_states_filters,
     select_events_context_id_subquery,
     select_events_context_only,
@@ -36,16 +39,15 @@ def _select_entities_context_ids_sub_query(
     json_quotable_entity_ids: list[str],
 ) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple entities."""
-    return select(
-        union_all(
-            select_events_context_id_subquery(start_day, end_day, event_types).where(
-                apply_event_entity_id_matchers(json_quotable_entity_ids)
-            ),
-            apply_entities_hints(select(States.context_id))
-            .filter((States.last_updated > start_day) & (States.last_updated < end_day))
-            .where(States.entity_id.in_(entity_ids)),
-        ).c.context_id
+    union = union_all(
+        select_events_context_id_subquery(start_day, end_day, event_types).where(
+            apply_event_entity_id_matchers(json_quotable_entity_ids)
+        ),
+        apply_entities_hints(select(States.context_id))
+        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .where(States.entity_id.in_(entity_ids)),
     )
+    return select(union.c.context_id).group_by(union.c.context_id)
 
 
 def _apply_entities_context_union(
@@ -64,14 +66,23 @@ def _apply_entities_context_union(
         entity_ids,
         json_quotable_entity_ids,
     ).cte()
+    # We used to optimize this to exclude rows we already in the union with
+    # a States.entity_id.not_in(entity_ids) but that made the
+    # query much slower on MySQL, and since we already filter them away
+    # in the python code anyways since they will have context_only
+    # set on them the impact is minimal.
     return query.union_all(
         states_query_for_entity_ids(start_day, end_day, entity_ids),
-        select_events_context_only().where(
-            Events.context_id.in_(entities_cte.select())
+        apply_events_context_hints(
+            select_events_context_only()
+            .select_from(entities_cte)
+            .outerjoin(Events, entities_cte.c.context_id == Events.context_id)
+        ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
+        apply_states_context_hints(
+            select_states_context_only()
+            .select_from(entities_cte)
+            .outerjoin(States, entities_cte.c.context_id == States.context_id)
         ),
-        select_states_context_only()
-        .where(States.entity_id.not_in(entity_ids))
-        .where(States.context_id.in_(entities_cte.select())),
     )
 
 

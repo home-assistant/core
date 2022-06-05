@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATOR, ATTR_DEVICE_OUTLET, DOMAIN
+from .const import ATTR_COORDINATORS, ATTR_DEVICE_OUTLET, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -28,7 +28,7 @@ class YoLinkSwitchEntityDescription(SwitchEntityDescription):
     """YoLink SwitchEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    value: Callable[[str], bool | None] = lambda _: None
+    value: Callable[[Any], bool | None] = lambda _: None
 
 
 DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
@@ -36,7 +36,7 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="state",
         device_class=SwitchDeviceClass.OUTLET,
         name="State",
-        value=lambda value: value == "open",
+        value=lambda value: value == "open" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_OUTLET],
     ),
 )
@@ -50,16 +50,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATOR]
-    devices = [
-        device for device in coordinator.yl_devices if device.device_type in DEVICE_TYPE
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    switch_device_coordinators = [
+        device_coordinator
+        for device_coordinator in device_coordinators.values()
+        if device_coordinator.device.device_type in DEVICE_TYPE
     ]
     entities = []
-    for device in devices:
+    for switch_device_coordinator in switch_device_coordinators:
         for description in DEVICE_TYPES:
-            if description.exists_fn(device):
+            if description.exists_fn(switch_device_coordinator.device):
                 entities.append(
-                    YoLinkSwitchEntity(config_entry, coordinator, description, device)
+                    YoLinkSwitchEntity(
+                        config_entry, switch_device_coordinator, description
+                    )
                 )
     async_add_entities(entities)
 
@@ -74,20 +78,23 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         config_entry: ConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSwitchEntityDescription,
-        device: YoLinkDevice,
     ) -> None:
         """Init YoLink Outlet."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.config_entry = config_entry
         self.entity_description = description
-        self._attr_unique_id = f"{device.device_id} {self.entity_description.key}"
-        self._attr_name = f"{device.device_name} ({self.entity_description.name})"
+        self._attr_unique_id = (
+            f"{coordinator.device.device_id} {self.entity_description.key}"
+        )
+        self._attr_name = (
+            f"{coordinator.device.device_name} ({self.entity_description.name})"
+        )
 
     @callback
-    def update_entity_state(self, state: dict) -> None:
+    def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         self._attr_is_on = self.entity_description.value(
-            state[self.entity_description.key]
+            state.get(self.entity_description.key)
         )
         self.async_write_ha_state()
 
@@ -95,7 +102,9 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
         """Call setState api to change outlet state."""
         try:
             # call_device_http_api will check result, fail by raise YoLinkClientError
-            await self.device.call_device_http_api("setState", {"state": state})
+            await self.coordinator.device.call_device_http_api(
+                "setState", {"state": state}
+            )
         except YoLinkAuthFailError as yl_auth_err:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(yl_auth_err) from yl_auth_err

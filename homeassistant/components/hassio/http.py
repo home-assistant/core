@@ -124,7 +124,7 @@ class HassIOView(HomeAssistantView):
 def _init_header(request: web.Request) -> dict[str, str]:
     """Create initial header."""
     headers = {
-        X_HASSIO: os.environ.get("HASSIO_TOKEN", ""),
+        X_HASSIO: os.environ.get("SUPERVISOR_TOKEN", ""),
         CONTENT_TYPE: request.content_type,
     }
 

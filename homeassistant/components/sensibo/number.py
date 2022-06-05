@@ -14,6 +14,8 @@ from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass
 class SensiboEntityDescriptionMixin:
@@ -89,7 +91,8 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
     @property
     def value(self) -> float | None:
         """Return the value from coordinator data."""
-        return getattr(self.device_data, self.entity_description.key)
+        value: float | None = getattr(self.device_data, self.entity_description.key)
+        return value
 
     async def async_set_value(self, value: float) -> None:
         """Set value for calibration."""

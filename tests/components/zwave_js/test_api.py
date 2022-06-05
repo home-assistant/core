@@ -1511,7 +1511,7 @@ async def test_replace_failed_node(
     dev_reg = dr.async_get(hass)
 
     # Create device registry entry for mock node
-    dev_reg.async_get_or_create(
+    device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "3245146787-67")},
         name="Node 67",
@@ -1526,8 +1526,7 @@ async def test_replace_failed_node(
         {
             ID: 1,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
         }
     )
@@ -1607,10 +1606,12 @@ async def test_replace_failed_node(
     assert msg["event"]["event"] == "node removed"
 
     # Verify device was removed from device registry
-    device = dev_reg.async_get_device(
-        identifiers={(DOMAIN, "3245146787-67")},
+    assert (
+        dev_reg.async_get_device(
+            identifiers={(DOMAIN, "3245146787-67")},
+        )
+        is None
     )
-    assert device is None
 
     client.driver.receive_event(nortek_thermostat_added_event)
     msg = await ws_client.receive_json()
@@ -1686,8 +1687,7 @@ async def test_replace_failed_node(
         {
             ID: 2,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
             PLANNED_PROVISIONING_ENTRY: {
                 DSK: "test",
@@ -1719,8 +1719,7 @@ async def test_replace_failed_node(
         {
             ID: 3,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
             QR_PROVISIONING_INFORMATION: {
                 VERSION: 0,
@@ -1772,8 +1771,7 @@ async def test_replace_failed_node(
         {
             ID: 4,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
             QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
@@ -1800,8 +1798,7 @@ async def test_replace_failed_node(
         {
             ID: 6,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
             QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
@@ -1821,8 +1818,7 @@ async def test_replace_failed_node(
             {
                 ID: 7,
                 TYPE: "zwave_js/replace_failed_node",
-                ENTRY_ID: entry.entry_id,
-                NODE_ID: 67,
+                DEVICE_ID: device.id,
             }
         )
         msg = await ws_client.receive_json()
@@ -1839,8 +1835,7 @@ async def test_replace_failed_node(
         {
             ID: 8,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()

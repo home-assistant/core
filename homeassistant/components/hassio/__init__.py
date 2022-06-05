@@ -505,7 +505,7 @@ def get_supervisor_ip() -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
-    for env in ("HASSIO", "HASSIO_TOKEN"):
+    for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
         if os.environ.get(env):
             continue
         _LOGGER.error("Missing %s environment variable", env)
@@ -517,7 +517,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async_load_websocket_api(hass)
 
-    host = os.environ["HASSIO"]
+    host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
