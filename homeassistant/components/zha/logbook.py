@@ -64,9 +64,9 @@ def async_describe_events(
         if event_subtype is not None:
             event_type = f"{event_type.replace('_', ' ').title()} - {event_subtype.replace('_', ' ').title()}"
 
-        message = f"'{event_type}' event was fired"
+        message = f"{event_type} event was fired"
         if event_data["params"]:
-            message = f"'{message}' with parameters: {event_data['params']}"
+            message = f"{message} with parameters: {event_data['params']}"
 
         return {
             LOGBOOK_ENTRY_NAME: device_name,
