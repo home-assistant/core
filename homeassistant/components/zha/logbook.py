@@ -49,8 +49,6 @@ def async_describe_events(
                     extra=vol.ALLOW_EXTRA,
                 )
                 try:
-                    # Check that the event data and context match the configured
-                    # schema if one was provided
                     if event_data_schema:
                         event_data_schema(event_data)
                     event_type = etype
