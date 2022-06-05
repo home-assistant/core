@@ -15,10 +15,12 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
+from .const import LOGBOOK_ENTITIES_FILTER
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
@@ -365,8 +367,18 @@ async def ws_event_stream(
             )
             _unsub()
 
+    entities_filter: EntityFilter | None = None
+    if not event_processor.limited_select:
+        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+
     async_subscribe_events(
-        hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
+        hass,
+        subscriptions,
+        _queue_or_cancel,
+        event_types,
+        entities_filter,
+        entity_ids,
+        device_ids,
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
     connection.subscriptions[msg_id] = _unsub
