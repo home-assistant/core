@@ -20,6 +20,7 @@ from homeassistant.core import (
     State,
     callback,
     is_callback,
+    split_entity_id,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import EntityFilter
@@ -27,6 +28,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
     ALL_EVENT_TYPES_EXCEPT_STATE_CHANGED,
+    ALWAYS_CONTINUOUS_DOMAINS,
     DOMAIN,
     ENTITY_EVENTS_WITHOUT_CONFIG_ENTRY,
 )
@@ -233,7 +235,8 @@ def _is_state_filtered(ent_reg: er.EntityRegistry, state: State) -> bool:
     we only get significant changes (state.last_changed != state.last_updated)
     """
     return bool(
-        state.last_changed != state.last_updated
+        split_entity_id(state.entity_id)[0] in ALWAYS_CONTINUOUS_DOMAINS
+        or state.last_changed != state.last_updated
         or ATTR_UNIT_OF_MEASUREMENT in state.attributes
         or is_sensor_continuous(ent_reg, state.entity_id)
     )
@@ -248,7 +251,8 @@ def _is_entity_id_filtered(
     from the database when a list of entities is requested.
     """
     return bool(
-        (state := hass.states.get(entity_id))
+        split_entity_id(entity_id)[0] in ALWAYS_CONTINUOUS_DOMAINS
+        or (state := hass.states.get(entity_id))
         and (ATTR_UNIT_OF_MEASUREMENT in state.attributes)
         or is_sensor_continuous(ent_reg, entity_id)
     )
