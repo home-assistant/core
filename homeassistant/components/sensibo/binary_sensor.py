@@ -119,6 +119,14 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         value_fn=lambda data: data.pure_measure_integration,
         entity_registry_enabled_default=False,
     ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_prime_integration",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with Outdoor Air Quality",
+        icon="mdi:connection",
+        value_fn=lambda data: data.pure_prime_integration,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
