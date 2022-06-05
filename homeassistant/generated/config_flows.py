@@ -55,6 +55,7 @@ FLOWS = {
         "brunt",
         "bsblan",
         "buienradar",
+        "caldav",
         "canary",
         "cast",
         "cert_expiry",
