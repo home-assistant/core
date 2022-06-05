@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import Mapping
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
@@ -36,6 +37,7 @@ class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
+    extra_fn: Callable[[SensiboDevice], dict[str, str | bool] | None] | None
 
 
 @dataclass
@@ -84,6 +86,15 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Room Occupied",
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
+        extra_fn=None,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="timer_on",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        name="Timer Running",
+        icon="mdi:timer",
+        value_fn=lambda data: data.timer_on,
+        extra_fn=lambda data: {"id": data.timer_id, "state": data.timer_state_on},
     ),
 )
 
@@ -152,7 +163,6 @@ async def async_setup_entry(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if getattr(device_data, description.key) is not None
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
@@ -223,3 +233,9 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.device_data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes."""
+        if self.entity_description.extra_fn is not None:
+            return self.entity_description.extra_fn(self.device_data)
