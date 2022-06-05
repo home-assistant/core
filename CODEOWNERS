@@ -328,7 +328,6 @@ build.json @home-assistant/supervisor
 /tests/components/firmata/ @DaAwesomeP
 /homeassistant/components/fivem/ @Sander0542
 /tests/components/fivem/ @Sander0542
-/homeassistant/components/fixer/ @fabaff
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flick_electric/ @ZephireNZ
