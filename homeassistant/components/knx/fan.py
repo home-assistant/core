@@ -120,7 +120,7 @@ class KNXFan(KnxEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if self._device.has_separate_speed_ga is True:
+        if self._device.has_on_off_switch is True:
             await self._device.set_on()
         else:
             if percentage is None:
@@ -130,7 +130,7 @@ class KNXFan(KnxEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        if self._device.has_separate_speed_ga is True:
+        if self._device.has_on_off_switch is True:
             await self._device.set_off()
         else:
             await self.async_set_percentage(0)
