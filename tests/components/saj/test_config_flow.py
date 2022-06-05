@@ -25,9 +25,6 @@ MOCK_USER_DATA = {
 MOCK_IMPORT_DATA = {
     CONF_HOST: "localhost",
     CONF_NAME: "Inverter",
-    CONF_TYPE: "wifi",
-    CONF_USERNAME: "admin",
-    CONF_PASSWORD: "foobar",
 }
 
 

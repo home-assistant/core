@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 config = {
-    "name": "",
     "type": "wifi",
     "host": "192.168.0.22",
     "username": "",
@@ -66,11 +65,11 @@ async def test_cannot_connect(_, hass):
 async def test_import(_, hass):
     """Test that we can import a config entry."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    await async_setup_platform(hass, config, Mock())
+    await async_setup_platform(hass, {"host": "192.168.0.22"}, Mock())
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data["type"] == "wifi"
+    assert entry.data["type"] == "ethernet"
 
 
 @patch("homeassistant.components.saj.coordinator._init_pysaj", return_value=saj())
