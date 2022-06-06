@@ -536,7 +536,7 @@ async def test_refresh_expired_stream_failure(
 
     # Request an HLS stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
-
+        create_stream.return_value.stop = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
         assert create_stream.called
