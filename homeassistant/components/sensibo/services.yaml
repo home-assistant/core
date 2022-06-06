@@ -44,3 +44,56 @@ timer:
           min: 0
           step: 1
           mode: box
+pure_boost:
+  name: Pure Boost
+  description: Configure Pure Boost settings.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    state:
+      name: State
+      description: State to set.
+      required: true
+      example: true
+      selector:
+        boolean:
+    ac_integration:
+      name: AC Integration
+      description: Integrate with Air Conditioner.
+      required: true
+      example: true
+      selector:
+        boolean:
+    geo_integration:
+      name: Geo Integration
+      description: Integrate with Presence.
+      required: true
+      example: true
+      selector:
+        boolean:
+    indoor_integration:
+      name: Indoor Air Quality
+      description: Integrate with checking indoor air quality.
+      required: true
+      example: true
+      selector:
+        boolean:
+    outdoor_integration:
+      name: Outdoor Air Quality
+      description: Integrate with checking indoor air quality.
+      required: true
+      example: true
+      selector:
+        boolean:
+    sensitivity:
+      name: Sensitivity
+      description: Set the sensitivity for Pure Boost.
+      required: true
+      example: "Normal"
+      selector:
+        select:
+          options:
+            - "Normal"
+            - "Sensitive"
