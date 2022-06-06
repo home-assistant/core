@@ -45,7 +45,7 @@ class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
 
     def _set_hold(self, hold: bool) -> None:
         """Set hold mode."""
-        self.device.hold = bool(hold)
+        self.device.hold = int(hold)
 
     async def _async_set_hold(self, hold: bool) -> None:
         """Set hold mode."""
