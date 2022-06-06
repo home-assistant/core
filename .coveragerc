@@ -963,7 +963,10 @@ omit =
     homeassistant/components/radarr/sensor.py
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
+    homeassistant/components/radiotherm/__init__.py
     homeassistant/components/radiotherm/climate.py
+    homeassistant/components/radiotherm/coordinator.py
+    homeassistant/components/radiotherm/data.py
     homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
@@ -1492,6 +1495,7 @@ omit =
     homeassistant/components/yolink/const.py
     homeassistant/components/yolink/coordinator.py
     homeassistant/components/yolink/entity.py
+    homeassistant/components/yolink/lock.py
     homeassistant/components/yolink/sensor.py
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
