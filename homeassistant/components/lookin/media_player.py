@@ -125,8 +125,8 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         """Update media property from status.
 
         00F0
-        0 - 1/0 on/off
-        0 - source
+        0 - 0/1 on/off
+        0 - sourse
         F - volume, 0 - muted, 1 - volume up, F - volume down
         0 - not used
         """

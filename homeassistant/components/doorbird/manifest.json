@@ -4,7 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
   "requirements": ["doorbirdpy==2.1.0"],
   "dependencies": ["http"],
-  "after_dependencies": ["media_source"],
   "zeroconf": [
     {
       "type": "_axis-video._tcp.local.",

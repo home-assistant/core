@@ -15,7 +15,6 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Subquery
 
 from homeassistant.components import recorder
 from homeassistant.components.websocket_api.const import (
@@ -486,25 +485,6 @@ def _get_states_for_entites_stmt(
     return stmt
 
 
-def _generate_most_recent_states_by_date(
-    run_start: datetime,
-    utc_point_in_time: datetime,
-) -> Subquery:
-    """Generate the sub query for the most recent states by data."""
-    return (
-        select(
-            States.entity_id.label("max_entity_id"),
-            func.max(States.last_updated).label("max_last_updated"),
-        )
-        .filter(
-            (States.last_updated >= run_start)
-            & (States.last_updated < utc_point_in_time)
-        )
-        .group_by(States.entity_id)
-        .subquery()
-    )
-
-
 def _get_states_for_all_stmt(
     schema_version: int,
     run_start: datetime,
@@ -520,8 +500,17 @@ def _get_states_for_all_stmt(
     # query, then filter out unwanted domains as well as applying the custom filter.
     # This filtering can't be done in the inner query because the domain column is
     # not indexed and we can't control what's in the custom filter.
-    most_recent_states_by_date = _generate_most_recent_states_by_date(
-        run_start, utc_point_in_time
+    most_recent_states_by_date = (
+        select(
+            States.entity_id.label("max_entity_id"),
+            func.max(States.last_updated).label("max_last_updated"),
+        )
+        .filter(
+            (States.last_updated >= run_start)
+            & (States.last_updated < utc_point_in_time)
+        )
+        .group_by(States.entity_id)
+        .subquery()
     )
     stmt += lambda q: q.where(
         States.state_id

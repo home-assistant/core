@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Callable
 import datetime as dt
 import json
-import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -30,7 +29,7 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
@@ -59,8 +58,6 @@ def async_register_commands(
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
-    async_reg(hass, handle_integration_log_level)
-    async_reg(hass, handle_integration_log_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
@@ -185,12 +182,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    await _handle_call_service(hass, connection, msg)
-
-
-async def _handle_call_service(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
     blocking = True
     # We do not support templates.
     target = msg.get("target")
@@ -250,13 +241,13 @@ def handle_get_states(
     # to succeed for the UI to show.
     response = messages.result_message(msg["id"], states)
     try:
-        connection.send_message(JSON_DUMP(response))
+        connection.send_message(const.JSON_DUMP(response))
         return
     except (ValueError, TypeError):
         connection.logger.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(response, dump=JSON_DUMP)
+                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
             ),
         )
     del response
@@ -265,13 +256,13 @@ def handle_get_states(
     serialized = []
     for state in states:
         try:
-            serialized.append(JSON_DUMP(state))
+            serialized.append(const.JSON_DUMP(state))
         except (ValueError, TypeError):
             # Error is already logged above
             pass
 
     # We now have partially serialized states. Craft some JSON.
-    response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
+    response2 = const.JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
     response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
     connection.send_message(response2)
 
@@ -324,13 +315,13 @@ def handle_subscribe_entities(
     # to succeed for the UI to show.
     response = messages.event_message(msg["id"], data)
     try:
-        connection.send_message(JSON_DUMP(response))
+        connection.send_message(const.JSON_DUMP(response))
         return
     except (ValueError, TypeError):
         connection.logger.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(response, dump=JSON_DUMP)
+                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
             ),
         )
     del response
@@ -339,14 +330,14 @@ def handle_subscribe_entities(
     cannot_serialize: list[str] = []
     for entity_id, state_dict in add_entities.items():
         try:
-            JSON_DUMP(state_dict)
+            const.JSON_DUMP(state_dict)
         except (ValueError, TypeError):
             cannot_serialize.append(entity_id)
 
     for entity_id in cannot_serialize:
         del add_entities[entity_id]
 
-    connection.send_message(JSON_DUMP(messages.event_message(msg["id"], data)))
+    connection.send_message(const.JSON_DUMP(messages.event_message(msg["id"], data)))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
@@ -416,69 +407,6 @@ async def handle_integration_setup_info(
                 dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
             ).items()
         ],
-    )
-
-
-@decorators.websocket_command({vol.Required("type"): "integration/log_info"})
-@decorators.async_response
-async def handle_integration_log_info(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle integrations logger info."""
-    connection.send_result(
-        msg["id"],
-        [
-            {
-                "domain": integration,
-                "level": logging.getLogger(
-                    f"homeassistant.components.{integration}"
-                ).getEffectiveLevel(),
-            }
-            for integration in async_get_loaded_integrations(hass)
-        ],
-    )
-
-
-@decorators.websocket_command(
-    {
-        vol.Required("type"): "integration/log_level",
-        vol.Required("integration"): str,
-        vol.Required("level"): vol.In(
-            [
-                "CRITICAL",
-                "FATAL",
-                "ERROR",
-                "WARNING",
-                "WARN",
-                "INFO",
-                "DEBUG",
-                "NOTSET",
-            ]
-        ),
-    }
-)
-@decorators.async_response
-async def handle_integration_log_level(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle setting integration log level."""
-    try:
-        integration = await async_get_integration(hass, msg["integration"])
-    except IntegrationNotFound:
-        connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
-        return
-    loggers = [f"homeassistant.components.{msg['integration']}"]
-    if integration.loggers:
-        loggers.extend(integration.loggers)
-    await _handle_call_service(
-        hass,
-        connection,
-        {
-            "id": msg["id"],
-            "domain": "logger",
-            "service": "set_level",
-            "service_data": {logger: msg["level"] for logger in loggers},
-        },
     )
 
 

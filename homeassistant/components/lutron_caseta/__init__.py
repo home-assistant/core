@@ -244,7 +244,6 @@ def _async_subscribe_pico_remote_events(
         type_ = device["type"]
         area, name = _area_and_name_from_name(device["name"])
         button_number = device["button_number"]
-
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
         sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
@@ -316,7 +315,7 @@ class LutronCasetaDevice(Entity):
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.serial)},
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,

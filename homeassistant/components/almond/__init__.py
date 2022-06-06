@@ -187,7 +187,6 @@ async def _configure_almond_for_ha(
     refresh_token = await hass.auth.async_create_refresh_token(
         user,
         # Almond will be fine as long as we restart once every 5 years
-        client_name="almond",
         access_token_expiration=timedelta(days=365 * 5),
     )
 
@@ -215,15 +214,6 @@ async def _configure_almond_for_ha(
         _LOGGER.warning("Unable to configure Almond: %s", msg)
         await hass.auth.async_remove_refresh_token(refresh_token)
         raise ConfigEntryNotReady from err
-
-    # List Apps
-    try:
-        with async_timeout.timeout(30):
-            devices = await api.async_list_apps()
-            _LOGGER.warning("almond apps: %s", devices)
-    except (asyncio.TimeoutError, ClientError):
-        _LOGGER.exception("Error getting devices")
-        pass
 
     # Clear all other refresh tokens
     for token in list(user.refresh_tokens.values()):

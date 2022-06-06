@@ -215,7 +215,6 @@ class ConfiguredDoorBird:
     def __init__(self, device, name, custom_url, token):
         """Initialize configured device."""
         self._name = name
-        self._slug = slugify(name)
         self._device = device
         self._custom_url = custom_url
         self.events = None
@@ -270,10 +269,10 @@ class ConfiguredDoorBird:
     @property
     def slug(self):
         """Get device slug."""
-        return self._slug
+        return slugify(self._name)
 
     def _get_event_name(self, event):
-        return f"{self._slug}_{event}"
+        return f"{self.slug}_{event}"
 
     def _register_event(
         self, hass_url: str, event: str, favs: dict[str, Any] | None = None
@@ -341,8 +340,6 @@ class DoorBirdRequestView(HomeAssistantView):
 
         token = request.query.get("token")
 
-        _LOGGER.warning("doorbird_data: %s %s %s", event, request, request.query)
-
         device = get_doorstation_by_token(hass, token)
 
         if device is None:
@@ -365,7 +362,6 @@ class DoorBirdRequestView(HomeAssistantView):
             DOOR_STATION_EVENT_ENTITY_IDS
         ].get(event)
 
-        _LOGGER.warning("doorbird_event: %s %s", f"{DOMAIN}_{event}", event_data)
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
         return web.Response(text="OK")

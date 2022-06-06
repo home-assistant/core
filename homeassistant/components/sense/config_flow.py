@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_CONNECT_EXCEPTIONS
 
@@ -43,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         self._auth_data.update(dict(data))
         timeout = self._auth_data[CONF_TIMEOUT]
-        client_session = async_create_clientsession(self.hass)
+        client_session = async_get_clientsession(self.hass)
 
         self._gateway = ASyncSenseable(
             api_timeout=timeout, wss_timeout=timeout, client_session=client_session
@@ -52,7 +52,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._gateway.authenticate(
             self._auth_data[CONF_EMAIL], self._auth_data[CONF_PASSWORD]
         )
-        await self._gateway.update_trend_data()
 
     async def create_entry_from_data(self):
         """Create the entry from the config data."""
@@ -80,7 +79,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except SENSE_CONNECT_EXCEPTIONS:
             errors["base"] = "cannot_connect"
         except SenseAuthenticationException:
-            _LOGGER.exception("Auth failed")
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -98,7 +96,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SENSE_CONNECT_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except SenseAuthenticationException:
-                _LOGGER.exception("Auth failed")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")

@@ -1,6 +1,5 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
-import json
 from typing import cast
 import uuid
 
@@ -266,7 +265,7 @@ class Analytics:
                             "Submitted analytics to Home Assistant servers. "
                             "Information submitted includes %s"
                         ),
-                        json.dumps(payload),
+                        payload,
                     )
                 else:
                     LOGGER.warning(

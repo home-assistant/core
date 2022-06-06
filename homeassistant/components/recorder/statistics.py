@@ -20,7 +20,6 @@ from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -485,13 +484,14 @@ def _compile_hourly_statistics_summary_mean_stmt(
     start_time: datetime, end_time: datetime
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
-    return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
-        .filter(StatisticsShortTerm.start >= start_time)
+    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN))
+    stmt += (
+        lambda q: q.filter(StatisticsShortTerm.start >= start_time)
         .filter(StatisticsShortTerm.start < end_time)
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
+    return stmt
 
 
 def compile_hourly_statistics(
@@ -985,43 +985,26 @@ def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
+    table: type[Statistics | StatisticsShortTerm],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
 
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
-    stmt = lambda_stmt(
-        lambda: select(*QUERY_STATISTICS).filter(Statistics.start >= start_time)
-    )
+    if table == StatisticsShortTerm:
+        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
+    else:
+        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS))
+
+    stmt += lambda q: q.filter(table.start >= start_time)
+
     if end_time is not None:
-        stmt += lambda q: q.filter(Statistics.start < end_time)
+        stmt += lambda q: q.filter(table.start < end_time)
+
     if metadata_ids:
-        stmt += lambda q: q.filter(Statistics.metadata_id.in_(metadata_ids))
-    stmt += lambda q: q.order_by(Statistics.metadata_id, Statistics.start)
-    return stmt
+        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
 
-
-def _statistics_during_period_stmt_short_term(
-    start_time: datetime,
-    end_time: datetime | None,
-    metadata_ids: list[int] | None,
-) -> StatementLambdaElement:
-    """Prepare a database query for short term statistics during a given period.
-
-    This prepares a lambda_stmt query, so we don't insert the parameters yet.
-    """
-    stmt = lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM).filter(
-            StatisticsShortTerm.start >= start_time
-        )
-    )
-    if end_time is not None:
-        stmt += lambda q: q.filter(StatisticsShortTerm.start < end_time)
-    if metadata_ids:
-        stmt += lambda q: q.filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-    stmt += lambda q: q.order_by(
-        StatisticsShortTerm.metadata_id, StatisticsShortTerm.start
-    )
+    stmt += lambda q: q.order_by(table.metadata_id, table.start)
     return stmt
 
 
@@ -1051,12 +1034,10 @@ def statistics_during_period(
 
         if period == "5minute":
             table = StatisticsShortTerm
-            stmt = _statistics_during_period_stmt_short_term(
-                start_time, end_time, metadata_ids
-            )
         else:
             table = Statistics
-            stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids)
+
+        stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids, table)
         stats = execute_stmt_lambda_element(session, stmt)
 
         if not stats:
@@ -1088,27 +1069,19 @@ def statistics_during_period(
 def _get_last_statistics_stmt(
     metadata_id: int,
     number_of_stats: int,
+    table: type[Statistics | StatisticsShortTerm],
 ) -> StatementLambdaElement:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
-    return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS)
-        .filter_by(metadata_id=metadata_id)
-        .order_by(Statistics.metadata_id, Statistics.start.desc())
+    if table == StatisticsShortTerm:
+        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
+    else:
+        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS))
+    stmt += (
+        lambda q: q.filter_by(metadata_id=metadata_id)
+        .order_by(table.metadata_id, table.start.desc())
         .limit(number_of_stats)
     )
-
-
-def _get_last_statistics_short_term_stmt(
-    metadata_id: int,
-    number_of_stats: int,
-) -> StatementLambdaElement:
-    """Generate a statement for number_of_stats short term statistics for a given statistic_id."""
-    return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM)
-        .filter_by(metadata_id=metadata_id)
-        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
-        .limit(number_of_stats)
-    )
+    return stmt
 
 
 def _get_last_statistics(
@@ -1126,10 +1099,7 @@ def _get_last_statistics(
         if not metadata:
             return {}
         metadata_id = metadata[statistic_id][0]
-        if table == Statistics:
-            stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
-        else:
-            stmt = _get_last_statistics_short_term_stmt(metadata_id, number_of_stats)
+        stmt = _get_last_statistics_stmt(metadata_id, number_of_stats, table)
         stats = execute_stmt_lambda_element(session, stmt)
 
         if not stats:
@@ -1166,9 +1136,12 @@ def get_last_short_term_statistics(
     )
 
 
-def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
-    """Generate the subquery to find the most recent statistic row."""
-    return (
+def _latest_short_term_statistics_stmt(
+    metadata_ids: list[int],
+) -> StatementLambdaElement:
+    """Create the statement for finding the latest short term stat rows."""
+    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
+    most_recent_statistic_row = (
         select(
             StatisticsShortTerm.metadata_id,
             func.max(StatisticsShortTerm.start).label("start_max"),
@@ -1176,14 +1149,6 @@ def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
         .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
         .group_by(StatisticsShortTerm.metadata_id)
     ).subquery()
-
-
-def _latest_short_term_statistics_stmt(
-    metadata_ids: list[int],
-) -> StatementLambdaElement:
-    """Create the statement for finding the latest short term stat rows."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
     stmt += lambda s: s.join(
         most_recent_statistic_row,
         (

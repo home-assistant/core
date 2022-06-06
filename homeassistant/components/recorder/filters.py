@@ -248,13 +248,8 @@ def _domain_matcher(
     domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     matchers = [
-        (column.is_not(None) & cast(column, Text()).like(encoder(domain_matcher)))
-        for domain_matcher in like_domain_matchers(domains)
+        (column.is_not(None) & cast(column, Text()).like(encoder(f"{domain}.%")))
+        for domain in domains
         for column in columns
     ]
     return or_(*matchers) if matchers else or_(False)
-
-
-def like_domain_matchers(domains: Iterable[str]) -> list[str]:
-    """Convert a list of domains to sql LIKE matchers."""
-    return [f"{domain}.%" for domain in domains]

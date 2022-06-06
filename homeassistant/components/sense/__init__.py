@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -67,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     user_id = entry_data.get("user_id", "")
     monitor_id = entry_data.get("monitor_id", "")
 
-    # Create a separate one since we cannot share between
-    # multiple entries since the cookies will get overwritten
-    client_session = async_create_clientsession(hass)
+    client_session = async_get_clientsession(hass)
 
     gateway = ASyncSenseable(
         api_timeout=timeout, wss_timeout=timeout, client_session=client_session
@@ -80,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gateway.load_auth(access_token, user_id, monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
-        _LOGGER.warning("Sense authentication expired with getting monitoring data")
+        _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
     except SENSE_TIMEOUT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
@@ -103,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await gateway.update_trend_data()
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
-            _LOGGER.warning("Sense authentication expired while updating trend data")
+            _LOGGER.warning("Sense authentication expired")
             raise ConfigEntryAuthFailed(err) from err
 
     trends_coordinator: DataUpdateCoordinator[None] = DataUpdateCoordinator(
