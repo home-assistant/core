@@ -5,8 +5,6 @@ from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
-import logging
-import re
 from typing import Any
 
 from sqlalchemy.engine.row import Row
@@ -30,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -46,7 +43,6 @@ from .const import (
     CONTEXT_STATE,
     CONTEXT_USER_ID,
     DOMAIN,
-    LOGBOOK_ENTITIES_FILTER,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
@@ -61,11 +57,6 @@ from .helpers import is_sensor_continuous
 from .models import EventAsRow, LazyEventPartialState, async_event_to_row
 from .queries import statement_for_request
 from .queries.common import PSUEDO_EVENT_STATE_CHANGED
-
-_LOGGER = logging.getLogger(__name__)
-
-ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
-DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 
 
 @dataclass
@@ -106,10 +97,6 @@ class EventProcessor:
         self.device_ids = device_ids
         self.context_id = context_id
         self.filters: Filters | None = hass.data[LOGBOOK_FILTERS]
-        if self.limited_select:
-            self.entities_filter: EntityFilter | Callable[[str], bool] | None = None
-        else:
-            self.entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
         format_time = (
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
@@ -183,7 +170,6 @@ class EventProcessor:
         return list(
             _humanify(
                 row_generator,
-                self.entities_filter,
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
@@ -193,7 +179,6 @@ class EventProcessor:
 
 def _humanify(
     rows: Generator[Row | EventAsRow, None, None],
-    entities_filter: EntityFilter | Callable[[str], bool] | None,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
@@ -208,29 +193,13 @@ def _humanify(
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
 
-    def _keep_row(row: EventAsRow) -> bool:
-        """Check if the entity_filter rejects a row."""
-        assert entities_filter is not None
-        if entity_id := row.entity_id:
-            return entities_filter(entity_id)
-        if entity_id := row.data.get(ATTR_ENTITY_ID):
-            return entities_filter(entity_id)
-        if domain := row.data.get(ATTR_DOMAIN):
-            return entities_filter(f"{domain}._")
-        return True
-
     # Process rows
     for row in rows:
         context_id = context_lookup.memorize(row)
         if row.context_only:
             continue
         event_type = row.event_type
-        if event_type == EVENT_CALL_SERVICE or (
-            entities_filter
-            # We literally mean is EventAsRow not a subclass of EventAsRow
-            and type(row) is EventAsRow  # pylint: disable=unidiomatic-typecheck
-            and not _keep_row(row)
-        ):
+        if event_type == EVENT_CALL_SERVICE:
             continue
         if event_type is PSUEDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
