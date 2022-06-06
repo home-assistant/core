@@ -387,10 +387,9 @@ class MikrotikHub(DataUpdateCoordinator):
 
 async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
-    hass.data[DOMAIN][entry.entry_id].update_interval = timedelta(
-        seconds=entry.options[CONF_SCAN_INTERVAL]
-    )
-    await hass.data[DOMAIN][entry.entry_id].async_request_refresh()
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
+    await coordinator.async_request_refresh()
 
 
 def get_api(hass, entry):
