@@ -218,6 +218,7 @@ async def test_stream_timeout(
     # Wait a minute
     future = dt_util.utcnow() + timedelta(minutes=1)
     async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     # Fetch again to reset timer
     playlist_response = await http_client.get(parsed_url.path)
