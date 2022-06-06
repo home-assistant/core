@@ -159,7 +159,7 @@ aiohue==4.4.1
 aiokafka==0.6.0
 
 # homeassistant.components.lookin
-aiolookin==0.1.0
+aiolookin==0.1.1
 
 # homeassistant.components.lyric
 aiolyric==1.0.8
@@ -1038,7 +1038,7 @@ pyhomematic==0.1.77
 pyialarm==1.9.0
 
 # homeassistant.components.ialarm_xr
-pyialarmxr==1.0.18
+pyialarmxr-homeassistant==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -1364,7 +1364,7 @@ rachiopy==1.0.3
 radios==0.1.1
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.05.1
+regenmaschine==2022.06.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1425,7 +1425,7 @@ sharkiq==0.0.1
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.2
+simplisafe-python==2022.06.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1591,7 +1591,7 @@ vultr==0.1.2
 wakeonlan==2.0.1
 
 # homeassistant.components.wallbox
-wallbox==0.4.4
+wallbox==0.4.9
 
 # homeassistant.components.folder_watcher
 watchdog==2.1.8
