@@ -222,6 +222,7 @@ class IdleTimer:
         if self._unsub is not None:
             self._unsub()
 
+    @callback
     def fire(self, _now: datetime.datetime) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
