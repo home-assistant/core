@@ -17,7 +17,7 @@ from .coordinator import RadioThermUpdateCoordinator
 from .data import RadioThermInitData, async_get_init_data
 from .util import async_set_time
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
 
 async def _async_call_or_raise_not_ready(
