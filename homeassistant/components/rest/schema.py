@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PAYLOAD_TEMPLATE,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_SCAN_INTERVAL,
@@ -59,7 +60,8 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PAYLOAD): cv.string,
+    vol.Exclusive(CONF_PAYLOAD, CONF_PAYLOAD): cv.string,
+    vol.Exclusive(CONF_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 }
