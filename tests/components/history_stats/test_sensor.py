@@ -50,7 +50,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == "0.0"
 
     def test_setup_multiple_states(self):
         """Test the history statistics sensor setup for multiple states."""
@@ -71,7 +71,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == STATE_UNKNOWN
+        assert state.state == "0.0"
 
     def test_wrong_duration(self):
         """Test when duration value is not a timedelta."""

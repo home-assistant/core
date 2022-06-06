@@ -156,6 +156,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         super().__init__(coordinator, name)
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
+        self._process_update()
 
     @callback
     def _process_update(self) -> None:
