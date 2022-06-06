@@ -1,21 +1,17 @@
 """Test Wallbox Lock component."""
-import json
+from http import HTTPStatus
+from unittest.mock import Mock, patch
 
 import pytest
-import requests_mock
+from requests import HTTPError
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.wallbox import CHARGER_LOCKED_UNLOCKED_KEY
+from homeassistant.components.wallbox import InvalidAuth
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import (
-    authorisation_response,
-    entry,
-    setup_integration,
-    setup_integration_read_only,
-)
-from tests.components.wallbox.const import MOCK_LOCK_ENTITY_ID
+from . import entry, setup_integration, setup_integration_no_lock_auth
+from .const import MOCK_LOCK_ENTITY_ID
 
 
 async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
@@ -27,18 +23,13 @@ async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "unlocked"
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_LOCKED_UNLOCKED_KEY: False})),
-            status_code=200,
-        )
-
+    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+        "wallbox.Wallbox.lockCharger",
+        return_value=None,
+    ), patch(
+        "wallbox.Wallbox.unlockCharger",
+        return_value=None,
+    ):
         await hass.services.async_call(
             "lock",
             SERVICE_LOCK,
@@ -65,17 +56,21 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_LOCKED_UNLOCKED_KEY: False})),
-            status_code=404,
-        )
+    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+        "wallbox.Wallbox.lockCharger",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.NOT_FOUND),
+            response=Mock(status_code=HTTPStatus.NOT_FOUND),
+        ),
+    ), patch(
+        "wallbox.Wallbox.unlockCharger",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.NOT_FOUND),
+            response=Mock(status_code=HTTPStatus.NOT_FOUND),
+        ),
+    ):
 
         with pytest.raises(ConnectionError):
             await hass.services.async_call(
@@ -99,10 +94,53 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+async def test_wallbox_lock_class_unauthorized_error(hass: HomeAssistant) -> None:
+    """Test wallbox lock class unauthorized error."""
+
+    await setup_integration(hass)
+
+    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+        "wallbox.Wallbox.lockCharger",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.FORBIDDEN),
+            response=Mock(status_code=HTTPStatus.FORBIDDEN),
+        ),
+    ), patch(
+        "wallbox.Wallbox.unlockCharger",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.FORBIDDEN),
+            response=Mock(status_code=HTTPStatus.FORBIDDEN),
+        ),
+    ):
+
+        with pytest.raises(InvalidAuth):
+            await hass.services.async_call(
+                "lock",
+                SERVICE_LOCK,
+                {
+                    ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                },
+                blocking=True,
+            )
+        with pytest.raises(InvalidAuth):
+            await hass.services.async_call(
+                "lock",
+                SERVICE_UNLOCK,
+                {
+                    ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+                },
+                blocking=True,
+            )
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
 async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant) -> None:
     """Test wallbox lock not loaded on authentication error."""
 
-    await setup_integration_read_only(hass)
+    await setup_integration_no_lock_auth(hass)
 
     state = hass.states.get(MOCK_LOCK_ENTITY_ID)
 

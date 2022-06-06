@@ -1,17 +1,17 @@
 """Test Wallbox Lock component."""
-import json
+from http import HTTPStatus
+from unittest.mock import Mock, patch
 
 import pytest
-import requests_mock
+from requests.exceptions import HTTPError
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.components.wallbox import InvalidAuth
-from homeassistant.components.wallbox.const import CHARGER_STATUS_ID_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import authorisation_response, entry, setup_integration
-from tests.components.wallbox.const import MOCK_SWITCH_ENTITY_ID
+from . import entry, setup_integration
+from .const import MOCK_SWITCH_ENTITY_ID
 
 
 async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
@@ -23,17 +23,13 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "on"
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.post(
-            "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
-            status_code=200,
-        )
+    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+        "wallbox.Wallbox.lockCharger",
+        return_value=None,
+    ), patch("wallbox.Wallbox.pauseChargingSession", return_value=None,), patch(
+        "wallbox.Wallbox.resumeChargingSession",
+        return_value=None,
+    ):
 
         await hass.services.async_call(
             "switch",
@@ -61,17 +57,21 @@ async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> Non
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.post(
-            "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
-            status_code=404,
-        )
+    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+        "wallbox.Wallbox.pauseChargingSession",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.NOT_FOUND),
+            response=Mock(status_code=HTTPStatus.NOT_FOUND),
+        ),
+    ), patch(
+        "wallbox.Wallbox.resumeChargingSession",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.NOT_FOUND),
+            response=Mock(status_code=HTTPStatus.NOT_FOUND),
+        ),
+    ):
 
         with pytest.raises(ConnectionError):
             await hass.services.async_call(
@@ -96,21 +96,25 @@ async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> Non
 
 
 async def test_wallbox_switch_class_authentication_error(hass: HomeAssistant) -> None:
-    """Test wallbox switch class connection error."""
+    """Test wallbox switch class authentication error."""
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.post(
-            "https://api.wall-box.com/v3/chargers/12345/remote-action",
-            json=json.loads(json.dumps({CHARGER_STATUS_ID_KEY: 193})),
-            status_code=403,
-        )
+    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+        "wallbox.Wallbox.pauseChargingSession",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.FORBIDDEN),
+            response=Mock(status_code=HTTPStatus.FORBIDDEN),
+        ),
+    ), patch(
+        "wallbox.Wallbox.resumeChargingSession",
+        return_value=None,
+        side_effect=HTTPError(
+            Mock(status=HTTPStatus.FORBIDDEN),
+            response=Mock(status_code=HTTPStatus.FORBIDDEN),
+        ),
+    ):
 
         with pytest.raises(InvalidAuth):
             await hass.services.async_call(

@@ -152,14 +152,22 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         await self.async_request_refresh()
 
-    def _set_lock_unlock(self, lock: bool) -> None:
+    def _set_charger_lock(self) -> None:
         """Set wallbox to locked or unlocked."""
         try:
             self._authenticate()
-            if lock:
-                self._wallbox.lockCharger(self._station)
-            else:
-                self._wallbox.unlockCharger(self._station)
+            self._wallbox.lockCharger(self._station)
+
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    def _set_charger_unlock(self) -> None:
+        """Set wallbox to locked or unlocked."""
+        try:
+            self._authenticate()
+            self._wallbox.unlockCharger(self._station)
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
@@ -167,7 +175,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_set_lock_unlock(self, lock: bool) -> None:
         """Set wallbox to locked or unlocked."""
-        await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
+        if lock:
+            await self.hass.async_add_executor_job(self._set_charger_lock)
+        else:
+            await self.hass.async_add_executor_job(self._set_charger_unlock)
         await self.async_request_refresh()
 
     def _pause_charger(self, pause: bool) -> None:
