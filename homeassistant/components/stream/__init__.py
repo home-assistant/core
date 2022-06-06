@@ -404,6 +404,8 @@ class Stream:
             # interact with the stream.
             if not self.available:
                 self._async_update_state(True)
+            # We can call remove_provider() sequentially as the wrapped _stop() function
+            # which blocks internally is only called when the last provider is removed.
             for provider in self.outputs().values():
                 await self.remove_provider(provider)
 
