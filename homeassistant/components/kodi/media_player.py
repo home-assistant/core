@@ -636,11 +636,6 @@ class KodiEntity(MediaPlayerEntity):
 
         return None
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return not self._connect_error
-
     async def async_turn_on(self):
         """Turn the media player on."""
         _LOGGER.debug("Firing event to turn on device")
