@@ -280,7 +280,7 @@ class Stream:
                 if (
                     not self.keepalive or fmt == RECORDER_PROVIDER
                 ) and fmt in self._outputs:
-                    hass.add_job(self.remove_provider, self._outputs[fmt])
+                    hass.async_create_task(self.remove_provider(self._outputs[fmt]))
                 self.check_idle()
 
             provider = PROVIDERS[fmt](
