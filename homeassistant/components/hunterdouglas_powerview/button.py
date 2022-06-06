@@ -1,12 +1,18 @@
-"""Support for Powerview advanced features."""
+"""Buttons for Hunter Douglas Powerview advanced features."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -28,10 +34,54 @@ from .entity import ShadeEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class PowerviewButtonDescriptionMixin:
+    """Mixin to describe a Button entity."""
+
+    press_action: Callable
+
+
+@dataclass
+class PowerviewButtonDescription(
+    ButtonEntityDescription, PowerviewButtonDescriptionMixin
+):
+    """Class to describe a Button entity."""
+
+
+BUTTONS: Final = [
+    PowerviewButtonDescription(
+        key="calibrate",
+        name="Calibrate",
+        icon="mdi:swap-vertical-circle-outline",
+        device_class=ButtonDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda shade, button: shade.calibrate(),
+    ),
+    PowerviewButtonDescription(
+        key="identify",
+        name="Identify",
+        icon="mdi:crosshairs-question",
+        device_class=ButtonDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda shade, button: shade.jog(),
+    ),
+    PowerviewButtonDescription(
+        key="update",
+        name="Force Update",
+        icon="mdi:autorenew",
+        device_class=ButtonDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda shade, button: button.async_force_refresh(),
+    ),
+]
+
+
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the hunter douglas advanced feature buttons."""
+    """Set buttons for device."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
     room_data: dict[str | int, Any] = pv_data[PV_ROOM_DATA]
@@ -47,79 +97,45 @@ async def async_setup_entry(
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
 
-        entities.append(
-            ButtonCalibrate(
-                coordinator, device_info, room_name, shade, name_before_refresh
+        for description in BUTTONS:
+            entities.append(
+                PowerviewButton(
+                    coordinator,
+                    device_info,
+                    room_name,
+                    shade,
+                    name_before_refresh,
+                    description,
+                )
             )
-        )
-        entities.append(
-            ButtonIdentify(
-                coordinator, device_info, room_name, shade, name_before_refresh
-            )
-        )
-        entities.append(
-            ButtonUpdate(
-                coordinator, device_info, room_name, shade, name_before_refresh
-            )
-        )
+
     async_add_entities(entities)
 
 
-class ButtonCalibrate(ShadeEntity, ButtonEntity):
+class PowerviewButton(ShadeEntity, ButtonEntity):
     """Representation of an advanced feature button."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_device_class = ButtonDeviceClass.UPDATE
-    _attr_icon = "mdi:swap-vertical-circle-outline"
-
-    def __init__(self, coordinator, device_info, room_name, shade, name):
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info,
+        room_name,
+        shade,
+        name,
+        description: PowerviewButtonDescription,
+    ):
         """Initialize the button entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_name = f"{self._shade_name} Calibrate"
-        self._attr_unique_id = f"{self._attr_unique_id}_calibrate"
+        self.entity_description: PowerviewButtonDescription = description
+        self._attr_name = f"{self._shade_name} {description.name}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        _LOGGER.debug("Calibrate requested for %s", self._shade_name)
-        await self._shade.calibrate()
+        await self.entity_description.press_action(self._shade, self)
 
-
-class ButtonIdentify(ShadeEntity, ButtonEntity):
-    """Representation of an advanced feature button."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_device_class = ButtonDeviceClass.UPDATE
-    _attr_icon = "mdi:crosshairs-question"
-    entity_registry_enabled_default = True
-
-    def __init__(self, coordinator, device_info, room_name, shade, name):
-        """Initialize the button entity."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_name = f"{self._shade_name} Identify"
-        self._attr_unique_id = f"{self._attr_unique_id}_identify"
-
-    async def async_press(self) -> None:
-        """Handle the button press."""
-        _LOGGER.debug("Identify requested for %s", self._shade_name)
-        await self._shade.jog()
-
-
-class ButtonUpdate(ShadeEntity, ButtonEntity):
-    """Representation of an advanced feature button."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_device_class = ButtonDeviceClass.UPDATE
-    _attr_icon = "mdi:autorenew"
-    entity_registry_enabled_default = True
-
-    def __init__(self, coordinator, device_info, room_name, shade, name):
-        """Initialize the button entity."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_name = f"{self._shade_name} Force Update"
-        self._attr_unique_id = f"{self._attr_unique_id}_update"
-
-    async def async_press(self) -> None:
-        """Handle the button press."""
+    async def async_force_refresh(self) -> None:
+        """Refresh shade position."""
         _LOGGER.debug("Manual update of shade data run for %s", self._shade_name)
         await self._shade.refresh()
         self.data.update_shade_positions(self._shade.raw_data)
