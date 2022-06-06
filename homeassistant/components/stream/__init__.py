@@ -275,12 +275,11 @@ class Stream:
         """Add provider output stream."""
         if not (provider := self._outputs.get(fmt)):
 
-            @callback
-            def idle_callback(hass: HomeAssistant) -> None:
+            async def idle_callback() -> None:
                 if (
                     not self.keepalive or fmt == RECORDER_PROVIDER
                 ) and fmt in self._outputs:
-                    hass.async_create_task(self.remove_provider(self._outputs[fmt]))
+                    await self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
             provider = PROVIDERS[fmt](
