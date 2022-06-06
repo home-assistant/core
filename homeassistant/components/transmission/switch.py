@@ -32,10 +32,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class TransmissionSwitch(CoordinatorEntity, SwitchEntity):
+class TransmissionSwitch(
+    CoordinatorEntity[TransmissionClientCoordinator], SwitchEntity
+):
     """Representation of a Transmission switch."""
-
-    coordinator: TransmissionClientCoordinator
 
     def __init__(
         self,
