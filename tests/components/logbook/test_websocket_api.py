@@ -27,8 +27,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, State
-from homeassistant.helpers import device_registry
+from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -51,22 +51,8 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
-async def _async_mock_device_with_logbook_platform(hass):
-    """Mock an integration that provides a device that are described by the logbook."""
-    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
-    entry.add_to_hass(hass)
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
-        sw_version="sw-version",
-        name="device name",
-        manufacturer="manufacturer",
-        model="model",
-        suggested_area="Game Room",
-    )
-
+@callback
+async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""
 
@@ -90,6 +76,40 @@ async def _async_mock_device_with_logbook_platform(hass):
             async_describe_event("test", "mock_event", async_describe_test_event)
 
     await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+
+
+async def _async_mock_entity_with_logbook_platform(hass):
+    """Mock an integration that provides an entity that are described by the logbook."""
+    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+    entry.add_to_hass(hass)
+    ent_reg = entity_registry.async_get(hass)
+    entry = ent_reg.async_get_or_create(
+        platform="test",
+        domain="sensor",
+        config_entry=entry,
+        unique_id="1234",
+        suggested_object_id="test",
+    )
+    await _async_mock_logbook_platform(hass)
+    return entry
+
+
+async def _async_mock_device_with_logbook_platform(hass):
+    """Mock an integration that provides a device that are described by the logbook."""
+    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+    entry.add_to_hass(hass)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="device name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Game Room",
+    )
+    await _async_mock_logbook_platform(hass)
     return device
 
 
@@ -1784,6 +1804,103 @@ async def test_event_stream_bad_start_time(hass, hass_ws_client, recorder_mock):
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_start_time"
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_logbook_stream_match_multiple_entities(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test logbook stream with a described integration that uses multiple entities."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    entry = await _async_mock_entity_with_logbook_platform(hass)
+    entity_id = entry.entity_id
+    hass.states.async_set(entity_id, STATE_ON)
+
+    await hass.async_block_till_done()
+    init_count = sum(hass.bus.async_listeners().values())
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": [entity_id],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # There are no answers to our initial query
+    # so we get an empty reply. This is to ensure
+    # consumers of the api know there are no results
+    # and its not a failure case. This is useful
+    # in the frontend so we can tell the user there
+    # are no results vs waiting for them to appear
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    await async_wait_recording_done(hass)
+
+    hass.states.async_set("binary_sensor.should_not_appear", STATE_ON)
+    hass.states.async_set("binary_sensor.should_not_appear", STATE_OFF)
+    context = core.Context(
+        id="ac5bd62de45711eaaeb351041eec8dd9",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+    hass.bus.async_fire(
+        "mock_event", {"entity_id": ["sensor.any", entity_id]}, context=context
+    )
+    hass.bus.async_fire("mock_event", {"entity_id": [f"sensor.any,{entity_id}"]})
+    hass.bus.async_fire("mock_event", {"entity_id": ["sensor.no_match", "light.off"]})
+    hass.states.async_set(entity_id, STATE_OFF, context=context)
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "domain": "test",
+            "message": "is on fire",
+            "name": "device name",
+            "when": ANY,
+        },
+        {
+            "context_domain": "test",
+            "context_event_type": "mock_event",
+            "context_message": "is on fire",
+            "context_name": "device name",
+            "context_user_id": "b400facee45711eaa9308bfd3d19e474",
+            "entity_id": "sensor.test",
+            "state": "off",
+            "when": ANY,
+        },
+    ]
+
+    await websocket_client.send_json(
+        {"id": 8, "type": "unsubscribe_events", "subscription": 7}
+    )
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+
+    assert msg["id"] == 8
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
 
 
 async def test_event_stream_bad_end_time(hass, hass_ws_client, recorder_mock):
