@@ -1076,6 +1076,9 @@ pykmtronic==0.3.0
 # homeassistant.components.kodi
 pykodi==0.2.7
 
+# homeassistant.components.kostal_piko
+pykostalpiko==0.99.5
+
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
 
