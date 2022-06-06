@@ -10,7 +10,7 @@ from homeassistant.components.logbook.const import (
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 
@@ -48,10 +48,13 @@ def async_describe_events(
             pass
 
         if zha_device and zha_device.device_automation_triggers:
+            device_automation_triggers: dict[
+                tuple[str, str], dict[str, str]
+            ] = _find_matching_device_triggers(zha_device, event_data[ATTR_COMMAND])
             for (
                 etype,
                 subtype,
-            ), trigger in zha_device.device_automation_triggers.items():
+            ), trigger in device_automation_triggers.items():
                 event_data_schema = vol.Schema(
                     {vol.Required(key): value for key, value in trigger.items()},
                     extra=vol.ALLOW_EXTRA,
@@ -67,7 +70,7 @@ def async_describe_events(
                     continue
 
         if event_type is None:
-            event_type = event_data["command"]
+            event_type = event_data[ATTR_COMMAND]
 
         if event_subtype is not None and event_subtype != event_type:
             event_type = f"{event_type} - {event_subtype}"
@@ -84,3 +87,15 @@ def async_describe_events(
         }
 
     async_describe_event(ZHA_DOMAIN, ZHA_EVENT, async_describe_zha_event)
+
+
+def _find_matching_device_triggers(
+    zha_device: ZHADevice, command: str
+) -> dict[tuple[str, str], dict[str, str]]:
+    """Find device triggers that match the command in the event."""
+
+    return {
+        key: value
+        for (key, value) in zha_device.device_automation_triggers.items()
+        if ATTR_COMMAND in value and value[ATTR_COMMAND] == command
+    }
