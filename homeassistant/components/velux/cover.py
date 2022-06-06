@@ -99,8 +99,6 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION not in kwargs:
-            return
         position_percent = 100 - kwargs[ATTR_POSITION]
 
         await self.node.set_position(
