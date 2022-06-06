@@ -712,6 +712,16 @@ def _apply_update(  # noqa: C901
     elif new_version == 29:
         # Recreate statistics_meta index to block duplicated statistic_id
         _drop_index(session_maker, "statistics_meta", "ix_statistics_meta_statistic_id")
+        if engine.dialect.name == SupportedDialect.MYSQL:
+            # Ensure the row format is dynamic or the index
+            # unique will be too large
+            with contextlib.suppress(SQLAlchemyError):
+                with session_scope(session=session_maker()) as session:
+                    connection = session.connection()
+                    # This is safe to run multiple times and fast since the table is small
+                    connection.execute(
+                        text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
+                    )
         try:
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"

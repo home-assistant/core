@@ -14,11 +14,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google import (
-    DOMAIN,
-    SERVICE_ADD_EVENT,
-    SERVICE_SCAN_CALENDARS,
-)
+from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
@@ -140,17 +136,24 @@ async def test_invalid_calendar_yaml(
     component_setup: ComponentSetup,
     calendars_config: list[dict[str, Any]],
     mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup with missing entity id fields fails to setup the config entry."""
+    """Test setup with missing entity id fields fails to load the platform."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+
     assert await component_setup()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.LOADED
 
     assert not hass.states.get(TEST_YAML_ENTITY)
+    assert not hass.states.get(TEST_API_ENTITY)
 
 
 async def test_calendar_yaml_error(
@@ -468,57 +471,6 @@ async def test_add_event_date_time(
             "timeZone": "America/Regina",
         },
     }
-
-
-async def test_scan_calendars(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_list: ApiResult,
-    mock_events_list: ApiResult,
-    setup_config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test finding a calendar from the API."""
-
-    mock_calendars_list({"items": []})
-    assert await component_setup()
-
-    calendar_1 = {
-        "id": "calendar-id-1",
-        "summary": "Calendar 1",
-    }
-    calendar_2 = {
-        "id": "calendar-id-2",
-        "summary": "Calendar 2",
-    }
-
-    aioclient_mock.clear_requests()
-    mock_calendars_list({"items": [calendar_1]})
-    mock_events_list({}, calendar_id="calendar-id-1")
-    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.calendar_1")
-    assert state
-    assert state.name == "Calendar 1"
-    assert state.state == STATE_OFF
-    assert not hass.states.get("calendar.calendar_2")
-
-    aioclient_mock.clear_requests()
-    mock_calendars_list({"items": [calendar_1, calendar_2]})
-    mock_events_list({}, calendar_id="calendar-id-1")
-    mock_events_list({}, calendar_id="calendar-id-2")
-    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, {}, blocking=True)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.calendar_1")
-    assert state
-    assert state.name == "Calendar 1"
-    assert state.state == STATE_OFF
-    state = hass.states.get("calendar.calendar_2")
-    assert state
-    assert state.name == "Calendar 2"
-    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(

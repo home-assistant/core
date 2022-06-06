@@ -493,13 +493,13 @@ async def async_oauth2_request(
     This method will not refresh tokens. Use OAuth2 session for that.
     """
     session = async_get_clientsession(hass)
-
+    headers = kwargs.pop("headers", {})
     return await session.request(
         method,
         url,
         **kwargs,
         headers={
-            **(kwargs.get("headers") or {}),
+            **headers,
             "authorization": f"Bearer {token['access_token']}",
         },
     )

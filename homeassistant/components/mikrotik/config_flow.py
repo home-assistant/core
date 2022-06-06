@@ -74,14 +74,6 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
-        """Import Miktortik from config."""
-
-        import_config[CONF_DETECTION_TIME] = import_config[
-            CONF_DETECTION_TIME
-        ].total_seconds()
-        return await self.async_step_user(user_input=import_config)
-
 
 class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Mikrotik options."""

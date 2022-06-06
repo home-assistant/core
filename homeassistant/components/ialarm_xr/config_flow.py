@@ -72,13 +72,13 @@ class IAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "IAlarmXRGenericException with message: [ %s ]",
                     ialarmxr_exception.message,
                 )
-                errors["base"] = "unknown"
+                errors["base"] = "cannot_connect"
             except IAlarmXRSocketTimeoutException as ialarmxr_socket_timeout_exception:
                 _LOGGER.debug(
                     "IAlarmXRSocketTimeoutException with message: [ %s ]",
                     ialarmxr_socket_timeout_exception.message,
                 )
-                errors["base"] = "unknown"
+                errors["base"] = "timeout"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

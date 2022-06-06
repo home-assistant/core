@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -48,11 +48,7 @@ from .hue_api import (
     HueUnauthorizedUser,
     HueUsernameView,
 )
-from .upnp import (
-    DescriptionXmlView,
-    UPNPResponderProtocol,
-    create_upnp_datagram_endpoint,
-)
+from .upnp import DescriptionXmlView, async_create_upnp_datagram_endpoint
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,6 +89,40 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def start_emulated_hue_bridge(
+    hass: HomeAssistant, config: Config, app: web.Application
+) -> None:
+    """Start the emulated hue bridge."""
+    protocol = await async_create_upnp_datagram_endpoint(
+        config.host_ip_addr,
+        config.upnp_bind_multicast,
+        config.advertise_ip,
+        config.advertise_port or config.listen_port,
+    )
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    site = web.TCPSite(runner, config.host_ip_addr, config.listen_port)
+
+    try:
+        await site.start()
+    except OSError as error:
+        _LOGGER.error(
+            "Failed to create HTTP server at port %d: %s", config.listen_port, error
+        )
+        protocol.close()
+        return
+
+    async def stop_emulated_hue_bridge(event: Event) -> None:
+        """Stop the emulated hue bridge."""
+        protocol.close()
+        await site.stop()
+        await runner.cleanup()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
+
+
 async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate the emulated_hue component."""
     local_ip = await async_get_source_ip(hass)
@@ -108,9 +138,6 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     app._on_startup.freeze()
     await app.startup()
 
-    runner = None
-    site = None
-
     DescriptionXmlView(config).register(app, app.router)
     HueUsernameView().register(app, app.router)
     HueConfigView(config).register(app, app.router)
@@ -122,54 +149,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     HueGroupView(config).register(app, app.router)
     HueFullStateView(config).register(app, app.router)
 
-    listen = create_upnp_datagram_endpoint(
-        config.host_ip_addr,
-        config.upnp_bind_multicast,
-        config.advertise_ip,
-        config.advertise_port or config.listen_port,
-    )
-    protocol: UPNPResponderProtocol | None = None
+    async def _start(event: Event) -> None:
+        """Start the bridge."""
+        await start_emulated_hue_bridge(hass, config, app)
 
-    async def stop_emulated_hue_bridge(event):
-        """Stop the emulated hue bridge."""
-        nonlocal protocol
-        nonlocal site
-        nonlocal runner
-
-        if protocol:
-            protocol.close()
-        if site:
-            await site.stop()
-        if runner:
-            await runner.cleanup()
-
-    async def start_emulated_hue_bridge(event):
-        """Start the emulated hue bridge."""
-        nonlocal protocol
-        nonlocal site
-        nonlocal runner
-
-        transport_protocol = await listen
-        protocol = transport_protocol[1]
-
-        runner = web.AppRunner(app)
-        await runner.setup()
-
-        site = web.TCPSite(runner, config.host_ip_addr, config.listen_port)
-
-        try:
-            await site.start()
-        except OSError as error:
-            _LOGGER.error(
-                "Failed to create HTTP server at port %d: %s", config.listen_port, error
-            )
-            if protocol:
-                protocol.close()
-        else:
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge
-            )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start)
 
     return True

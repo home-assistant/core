@@ -13,9 +13,13 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Type de connexion"
+                    "flow_type": "Type de connexion",
+                    "host": "Adresse IP",
+                    "password": "ID Smile",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur Smile"
                 },
-                "description": "Veuillez saisir :",
+                "description": "Veuillez saisir",
                 "title": "Se connecter \u00e0 Smile"
             },
             "user_gateway": {
@@ -23,7 +27,7 @@
                     "host": "Adresse IP",
                     "password": "ID Smile",
                     "port": "Port",
-                    "username": "Nom d'utilisateur de sourire"
+                    "username": "Nom d'utilisateur Smile"
                 },
                 "description": "Veuillez saisir :",
                 "title": "Se connecter \u00e0 Smile"

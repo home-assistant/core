@@ -56,24 +56,6 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.ialarm_xr.config_flow.IAlarmXR.get_mac",
-        side_effect=ConnectionError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
 async def test_form_exception(hass):
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
@@ -125,7 +107,7 @@ async def test_form_cannot_connect_throwing_socket_timeout_exception(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "timeout"}
 
 
 async def test_form_cannot_connect_throwing_generic_exception(hass):
@@ -143,7 +125,7 @@ async def test_form_cannot_connect_throwing_generic_exception(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_already_exists(hass):

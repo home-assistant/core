@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Falhou ao se conectar",
+            "timeout": "Tempo limite estabelecendo conex\u00e3o",
             "unknown": "Erro inesperado"
         },
         "step": {

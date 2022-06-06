@@ -117,7 +117,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         """Return the current humidity."""
         if not (humidity := self._node.aux_properties.get(PROP_HUMIDITY)):
             return None
-        if humidity == ISY_VALUE_UNKNOWN:
+        if humidity.value == ISY_VALUE_UNKNOWN:
             return None
         return int(humidity.value)
 
