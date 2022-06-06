@@ -79,13 +79,9 @@ class DxsSensor(CoordinatorEntity, SensorEntity):
         if CONF_ENTITY_CATEGORY in props:
             self._attr_entity_category = props[CONF_ENTITY_CATEGORY]
 
-        # # If sensor has a reset strategy, reset according to it
-        # if ATTR_LAST_RESET in props:
-
     def _handle_coordinator_update(self) -> None:
         self._attr_native_value = self.coordinator.data[self._entry.name]
         self.async_write_ha_state()
-        # print(self.coordinator.data)
 
     @property
     def device_info(self):
