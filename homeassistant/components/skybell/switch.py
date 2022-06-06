@@ -25,6 +25,10 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
         name="Do Not Disturb",
     ),
     SwitchEntityDescription(
+        key="do_not_ring",
+        name="Do Not Ring",
+    ),
+    SwitchEntityDescription(
         key="motion_sensor",
         name="Motion Sensor",
     ),
