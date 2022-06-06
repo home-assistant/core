@@ -293,9 +293,12 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        self.state = ConfigEntryState.SETUP_IN_PROGRESS
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
+
+        # Only store setup result as state if it was not forwarded.
+        if self.domain == integration.domain:
+            self.state = ConfigEntryState.SETUP_IN_PROGRESS
 
         self.supports_unload = await support_entry_unload(hass, self.domain)
         self.supports_remove_device = await support_remove_from_device(
