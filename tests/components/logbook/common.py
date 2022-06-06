@@ -68,7 +68,6 @@ def mock_humanify(hass_, rows):
     return list(
         processor._humanify(
             rows,
-            None,
             ent_reg,
             logbook_run,
             context_augmenter,
