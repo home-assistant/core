@@ -90,6 +90,8 @@ class ConfigEntryState(Enum):
     """The config entry has not been loaded"""
     FAILED_UNLOAD = "failed_unload", False
     """An error occurred when trying to unload the entry"""
+    SETUP_IN_PROGRESS = "setup_in_progress", True
+    """The config entry is setting up."""
 
     _recoverable: bool
 
@@ -291,6 +293,7 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
+        self.state = ConfigEntryState.SETUP_IN_PROGRESS
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
