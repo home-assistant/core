@@ -113,8 +113,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_custom_calendars(self, user_input=None):
         """Add custom calendars."""
-        if user_input.get(CONF_ADD_CUSTO_CALENDAR):
-            user_input.pop(CONF_ADD_CUSTO_CALENDAR)
+        if user_input.pop(CONF_ADD_CUSTO_CALENDAR, None):
             self.user_input = user_input
         elif user_input:
             self.user_input.update(user_input)
