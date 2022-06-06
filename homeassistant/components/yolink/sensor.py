@@ -22,6 +22,7 @@ from .const import (
     ATTR_COORDINATORS,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
@@ -53,14 +54,16 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
 ]
 
 BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
 ]
 
 
@@ -71,8 +74,10 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         name="Battery",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: percentage.ordered_list_item_to_percentage(
-            [1, 2, 3, 4], value
+        value=lambda value: (
+            percentage.ordered_list_item_to_percentage([1, 2, 3, 4], value)
+            if value > 0
+            else 0
         )
         if value is not None
         else None,
