@@ -79,8 +79,6 @@ class DxsSensor(CoordinatorEntity, SensorEntity):
         if CONF_ENTITY_CATEGORY in props:
             self._attr_entity_category = props[CONF_ENTITY_CATEGORY]
 
-        _LOGGER.debug("Registered %s", self.unique_id)
-
         # # If sensor has a reset strategy, reset according to it
         # if ATTR_LAST_RESET in props:
 
