@@ -50,17 +50,17 @@ class KNXFan(KnxEntity, FanEntity):
             device=XknxFan(
                 xknx,
                 name=config[CONF_NAME],
-                group_address=config.get(KNX_ADDRESS),
-                group_address_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+                group_address_speed=config.get(KNX_ADDRESS),
+                group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
                 group_address_oscillation=config.get(
                     FanSchema.CONF_OSCILLATION_ADDRESS
                 ),
                 group_address_oscillation_state=config.get(
                     FanSchema.CONF_OSCILLATION_STATE_ADDRESS
                 ),
-                group_address_speed=config.get(FanSchema.CONF_SPEED_ADDRESS),
-                group_address_speed_state=config.get(
-                    FanSchema.CONF_SPEED_STATE_ADDRESS
+                group_address_switch=config.get(FanSchema.CONF_SWITCH_ADDRESS),
+                group_address_switch_state=config.get(
+                    FanSchema.CONF_SWITCH_STATE_ADDRESS
                 ),
                 max_step=max_step,
             )
@@ -120,20 +120,16 @@ class KNXFan(KnxEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if self._device.has_on_off_switch is True:
-            await self._device.set_on()
+        if self._step_range:
+            speed = math.ceil(percentage_to_ranged_value(self._step_range, percentage or DEFAULT_PERCENTAGE))            
         else:
-            if percentage is None:
-                await self.async_set_percentage(DEFAULT_PERCENTAGE)
-            else:
-                await self.async_set_percentage(percentage)
+            speed = percentage
+
+        await self._device.turn_on(speed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        if self._device.has_on_off_switch is True:
-            await self._device.set_off()
-        else:
-            await self.async_set_percentage(0)
+        await self._device.turn_off()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""

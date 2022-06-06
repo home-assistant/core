@@ -577,8 +577,8 @@ class FanSchema(KNXPlatformSchema):
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_OSCILLATION_ADDRESS = "oscillation_address"
     CONF_OSCILLATION_STATE_ADDRESS = "oscillation_state_address"
-    CONF_SPEED_ADDRESS = "speed_address"
-    CONF_SPEED_STATE_ADDRESS = "speed_state_address"
+    CONF_SWITCH_ADDRESS = "switch_address"
+    CONF_SWITCH_STATE_ADDRESS = "switch_state_address"
     CONF_MAX_STEP = "max_step"
 
     DEFAULT_NAME = "KNX Fan"
@@ -590,8 +590,8 @@ class FanSchema(KNXPlatformSchema):
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_OSCILLATION_ADDRESS): ga_list_validator,
             vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_SPEED_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_SPEED_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_SWITCH_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_SWITCH_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_MAX_STEP): cv.byte,
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
