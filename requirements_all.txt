@@ -187,7 +187,7 @@ aiolifx==0.7.1
 aiolifx_effects==0.2.2
 
 # homeassistant.components.lookin
-aiolookin==0.1.0
+aiolookin==0.1.1
 
 # homeassistant.components.lyric
 aiolyric==1.0.8
@@ -1550,7 +1550,7 @@ pyhomeworks==0.0.6
 pyialarm==1.9.0
 
 # homeassistant.components.ialarm_xr
-pyialarmxr==1.0.18
+pyialarmxr-homeassistant==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -2065,7 +2065,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.05.1
+regenmaschine==2022.06.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2168,7 +2168,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.05.2
+simplisafe-python==2022.06.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
@@ -2418,7 +2418,7 @@ vultr==0.1.2
 wakeonlan==2.0.1
 
 # homeassistant.components.wallbox
-wallbox==0.4.4
+wallbox==0.4.9
 
 # homeassistant.components.waqi
 waqiasync==1.0.0

@@ -745,6 +745,12 @@ async def test_filter_continuous_sensor_values(
     entity_id_third = "light.bla"
     hass.states.async_set(entity_id_third, STATE_OFF, {"unit_of_measurement": "foo"})
     hass.states.async_set(entity_id_third, STATE_ON, {"unit_of_measurement": "foo"})
+    entity_id_proximity = "proximity.bla"
+    hass.states.async_set(entity_id_proximity, STATE_OFF)
+    hass.states.async_set(entity_id_proximity, STATE_ON)
+    entity_id_counter = "counter.bla"
+    hass.states.async_set(entity_id_counter, STATE_OFF)
+    hass.states.async_set(entity_id_counter, STATE_ON)
 
     await async_wait_recording_done(hass)
 
