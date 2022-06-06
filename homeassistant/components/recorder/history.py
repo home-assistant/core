@@ -352,7 +352,8 @@ def _state_changed_during_period_stmt(
     )
     if end_time:
         stmt += lambda q: q.filter(States.last_updated < end_time)
-    stmt += lambda q: q.filter(States.entity_id == entity_id)
+    if entity_id:
+        stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -378,6 +379,7 @@ def state_changes_during_period(
 ) -> MutableMapping[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     entity_id = entity_id.lower() if entity_id is not None else None
+    entity_ids = [entity_id] if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         stmt = _state_changed_during_period_stmt(
@@ -392,8 +394,6 @@ def state_changes_during_period(
         states = execute_stmt_lambda_element(
             session, stmt, None if entity_id else start_time, end_time
         )
-        entity_ids = [entity_id] if entity_id is not None else None
-
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
@@ -408,14 +408,16 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    schema_version: int, number_of_states: int, entity_id: str
+    schema_version: int, number_of_states: int, entity_id: str | None
 ) -> StatementLambdaElement:
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
     stmt += lambda q: q.filter(
         (States.last_changed == States.last_updated) | States.last_changed.is_(None)
-    ).filter(States.entity_id == entity_id)
+    )
+    if entity_id:
+        stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -427,19 +429,18 @@ def _get_last_state_changes_stmt(
 
 
 def get_last_state_changes(
-    hass: HomeAssistant, number_of_states: int, entity_id: str
+    hass: HomeAssistant, number_of_states: int, entity_id: str | None
 ) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
     entity_id = entity_id.lower() if entity_id is not None else None
+    entity_ids = [entity_id] if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         stmt = _get_last_state_changes_stmt(
             _schema_version(hass), number_of_states, entity_id
         )
         states = list(execute_stmt_lambda_element(session, stmt))
-        entity_ids = [entity_id] if entity_id is not None else None
-
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
