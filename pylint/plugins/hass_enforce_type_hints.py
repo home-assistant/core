@@ -542,12 +542,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     name = "hass_enforce_type_hints"
     priority = -1
     msgs = {
-        "W0020": (
+        "W7431": (
             "Argument %d should be of type %s",
             "hass-argument-type",
             "Used when method argument type is incorrect",
         ),
-        "W0021": (
+        "W7432": (
             "Return type should be %s",
             "hass-return-type",
             "Used when method return type is incorrect",

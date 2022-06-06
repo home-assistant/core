@@ -12,7 +12,7 @@ class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
     name = "hass_constructor"
     priority = -1
     msgs = {
-        "W0006": (
+        "W7411": (
             '__init__ should have explicit return type "None"',
             "hass-constructor-return",
             "Used when __init__ has all arguments typed "

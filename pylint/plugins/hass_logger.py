@@ -15,12 +15,12 @@ class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
     name = "hass_logger"
     priority = -1
     msgs = {
-        "W0001": (
+        "W7401": (
             "User visible logger messages must not end with a period",
             "hass-logger-period",
             "Periods are not permitted at the end of logger messages",
         ),
-        "W0002": (
+        "W7402": (
             "User visible logger messages must start with a capital letter or downgrade to debug",
             "hass-logger-capital",
             "All logger messages must start with a capital letter",
