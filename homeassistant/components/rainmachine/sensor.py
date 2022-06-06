@@ -133,8 +133,11 @@ async def async_setup_entry(
             entry, coordinator, controller, description
         )
         for description in SENSOR_DESCRIPTIONS
-        if (coordinator := coordinators[description.api_category]) is not None
-        and key_exists(coordinator.data, description.data_key)
+        if (
+            (coordinator := coordinators[description.api_category]) is not None
+            and coordinator.data
+            and key_exists(coordinator.data, description.data_key)
+        )
     ]
 
     zone_coordinator = coordinators[DATA_ZONES]

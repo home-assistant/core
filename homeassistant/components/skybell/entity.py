@@ -1,8 +1,6 @@
 """Entity representing a Skybell HD Doorbell."""
 from __future__ import annotations
 
-from datetime import datetime
-
 from aioskybell import SkybellDevice
 
 from homeassistant.const import ATTR_CONNECTIONS
@@ -44,24 +42,6 @@ class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
     def _device(self) -> SkybellDevice:
         """Return the device."""
         return self.coordinator.device
-
-    @property
-    def extra_state_attributes(
-        self,
-    ) -> dict[str, str | int | datetime | tuple[str, str]]:
-        """Return the state attributes."""
-        attr: dict[str, str | int | datetime | tuple[str, str]] = {
-            "device_id": self._device.device_id,
-            "status": self._device.status,
-            "location": self._device.location,
-            "motion_threshold": self._device.motion_threshold,
-            "video_profile": self._device.video_profile,
-        }
-        if self._device.owner:
-            attr["wifi_ssid"] = self._device.wifi_ssid
-            attr["wifi_status"] = self._device.wifi_status
-            attr["last_check_in"] = self._device.last_check_in
-        return attr
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
