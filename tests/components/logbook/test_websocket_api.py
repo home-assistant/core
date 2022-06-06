@@ -2113,7 +2113,7 @@ async def test_subscribe_all_entities_are_continuous(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
                 hass.states.async_set("counter.any", state)
-                hass.states.async_set("proximity.any", state)                
+                hass.states.async_set("proximity.any", state)
 
     init_count = sum(hass.bus.async_listeners().values())
     _cycle_entities()
