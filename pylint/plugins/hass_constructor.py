@@ -3,19 +3,16 @@ from __future__ import annotations
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
 
 
 class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
     """Checker for __init__ definitions."""
 
-    __implements__ = IAstroidChecker
-
     name = "hass_constructor"
     priority = -1
     msgs = {
-        "W0006": (
+        "W7411": (
             '__init__ should have explicit return type "None"',
             "hass-constructor-return",
             "Used when __init__ has all arguments typed "
