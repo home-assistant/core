@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import switchbee
+from switchbee.api import CentralUnitAPI, SwitchBeeError
+from switchbee.device import DeviceType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,12 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS: list[Platform] = [
-    Platform.SWITCH,
-    Platform.COVER,
-    Platform.LIGHT,
-    Platform.BUTTON,
-]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -49,10 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     expose_scenarios = entry.options.get(CONF_EXPOSE_SCENARIOS)
 
     websession = async_get_clientsession(hass, verify_ssl=False)
-    api = switchbee.SwitchBeeAPI(central_unit, user, password, websession)
+    api = CentralUnitAPI(central_unit, user, password, websession)
     try:
-        await api.login()
-    except switchbee.SwitchBeeError:
+        await api.connect()
+    except SwitchBeeError:
         return False
 
     coordinator = SwitchBeeCoordinator(
@@ -87,12 +83,12 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         self, hass, swb_api, scan_interval, expose_group_switches, expose_scenarios
     ):
         """Initialize."""
-        self._api = swb_api
-        self._devices = None
-        self._mac = ""
-        self._reconnect_counts = 0
-        self._expose_group_switches = expose_group_switches
-        self._expose_scenarios = expose_scenarios
+        self._api: CentralUnitAPI = swb_api
+        self._reconnect_counts: int = 0
+        self._expose_group_switches: bool = expose_group_switches
+        self._prev_expose_group_switches: bool = False
+        self._expose_scenarios: bool = expose_scenarios
+        self._prev_expose_scenarios: bool = False
         super().__init__(
             hass,
             _LOGGER,
@@ -101,7 +97,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
         )
 
     @property
-    def api(self):
+    def api(self) -> CentralUnitAPI:
         """Return SwitchBee API object."""
         return self._api
 
@@ -113,70 +109,47 @@ class SwitchBeeCoordinator(DataUpdateCoordinator):
                 self._reconnect_counts,
             )
 
-        # The devices are loaded once
-        if self._devices is None:
+        include_devices = [
+            DeviceType.Switch,
+            DeviceType.Dimmer,
+            DeviceType.TimedPowerSwitch,
+            DeviceType.Shutter,
+        ]
+
+        config_changed = False
+
+        if self._expose_group_switches != self._prev_expose_group_switches:
+            self._prev_expose_group_switches = self._expose_group_switches
+            config_changed = True
+
+        if self._expose_scenarios != self._prev_expose_scenarios:
+            self._prev_expose_scenarios = self._expose_scenarios
+            config_changed = True
+
+        if self._expose_group_switches:
+            include_devices.append(DeviceType.GroupSwitch)
+
+        if self._expose_scenarios:
+            include_devices.append(DeviceType.Scenario)
+
+        # The devices are loaded once during the config_entry
+        if not self._api.devices or config_changed:
             # Try to load the devices from the CU for the first time
             try:
-                result = await self._api.get_configuration()
-            except switchbee.SwitchBeeError as exp:
+                await self._api.fetch_configuration(include_devices)
+            except SwitchBeeError as exp:
                 raise UpdateFailed(
                     f"Error communicating with API: {exp}"
-                ) from switchbee.SwitchBeeError
+                ) from SwitchBeeError
             else:
                 _LOGGER.debug("Loaded devices")
-                self._devices = {}
-                # re-arrange the devices in a lookup table
-                supported_types = [
-                    switchbee.TYPE_DIMMER,
-                    switchbee.TYPE_SHUTTER,
-                    switchbee.TYPE_SWITCH,
-                    switchbee.TYPE_TIMED_POWER,
-                ]
-
-                if self._expose_group_switches:
-                    supported_types.append(switchbee.TYPE_GROUP_SWITCH)
-                if self._expose_scenarios:
-                    supported_types.append(switchbee.TYPE_SCENARIO)
-
-                self._mac = result[switchbee.ATTR_DATA][switchbee.ATTR_MAC]
-                for zone in result[switchbee.ATTR_DATA][switchbee.ATTR_ZONES]:
-                    for item in zone[switchbee.ATTR_ITEMS]:
-                        if item[switchbee.ATTR_TYPE] in supported_types:
-                            item["area"] = zone[
-                                "name"
-                            ]  # the zone will be used to suggest areas later
-
-                            self._devices[item[switchbee.ATTR_ID]] = item
 
         # Get the state of the devices
         try:
-            result = await self._api.get_multiple_states(list(self._devices.keys()))
-        except switchbee.SwitchBeeError as exp:
-            error_message = "Failed to fetch devices states from the central unit\n"
-
-            if switchbee.STATUS_INVALID_TOKEN in str(exp):
-                error_message += "Invalid Token, make sure the user you configured is not being used by another platform via API, if yes, please re-authenticate with a different user"
-            else:
-                error_message += exp
+            await self._api.fetch_states()
+        except SwitchBeeError as exp:
             raise UpdateFailed(
-                f"Error communicating with API: {error_message}"
-            ) from switchbee.SwitchBeeError
+                f"Error communicating with API: {exp}"
+            ) from SwitchBeeError
         else:
-            states = result[switchbee.ATTR_DATA]
-            for state in states:
-                # Make sure the device we fetched already discovered by HASS
-                device_id = state[switchbee.ATTR_ID]
-                if device_id in self._devices:
-                    try:
-                        self._devices[device_id]["state"] = state["state"]
-                        self._devices[device_id]["uid"] = f"{self._mac}-{device_id}"
-                    except KeyError as exp:
-                        _LOGGER.warning(
-                            "%s\nRecieved invalid device state for %s from the Central Unit: %s\nKeeping old state",
-                            exp,
-                            self._devices[device_id],
-                            state,
-                        )
-                else:
-                    pass
-            return self._devices
+            return self._api.devices

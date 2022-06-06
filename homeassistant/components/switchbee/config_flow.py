@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbee import ATTR_DATA, ATTR_MAC, SwitchBeeAPI, SwitchBeeError
+from switchbee.api import CentralUnitAPI, SwitchBeeError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,11 +41,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass, verify_ssl=False)
-    api = SwitchBeeAPI(
+    api = CentralUnitAPI(
         data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], websession
     )
     try:
-        await api.login()
+        await api.connect()
     except SwitchBeeError as exp:
         _LOGGER.error(exp)
         if "LOGIN_FAILED" in str(exp):
@@ -53,12 +53,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
 
         raise CannotConnect from SwitchBeeError
 
-    try:
-        resp = await api.get_configuration()
-        return resp[ATTR_DATA][ATTR_MAC]
-    except SwitchBeeError as exp:
-        _LOGGER.error(exp)
-        raise CannotConnect from SwitchBeeError
+    return api.mac
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
