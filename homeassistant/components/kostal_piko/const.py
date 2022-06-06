@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ENTITY_CATEGORY,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -21,7 +20,6 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "kostal_piko"
 
@@ -328,76 +326,6 @@ SENSORS: list[tuple[Entries, dict]] = [
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
-        },
-    ),
-    (
-        Entries.InverterName,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.InverterType,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.VersionUI,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.VersionFW,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.VersionHW,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.VersionPAR,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.SerialNumber,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.ArticleNumber,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.CountrySettingsName,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
-        },
-    ),
-    (
-        Entries.CountrySettingsVersion,
-        {
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
-            CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
         },
     ),
     (

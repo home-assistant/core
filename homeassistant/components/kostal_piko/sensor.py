@@ -86,3 +86,11 @@ class DxsSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_value = self.coordinator.data[self._entry.name]
         self.async_write_ha_state()
         # print(self.coordinator.data)
+
+    @property
+    def device_info(self):
+        """Return the identifier for the device of this entry."""
+        return {
+            # pylint: disable=no-member
+            "identifiers": {(DOMAIN, self.coordinator.data[Entries.SerialNumber.name])}
+        }
