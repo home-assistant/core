@@ -121,7 +121,11 @@ class KNXFan(KnxEntity, FanEntity):
     ) -> None:
         """Turn on the fan."""
         if self._step_range:
-            speed = math.ceil(percentage_to_ranged_value(self._step_range, percentage or DEFAULT_PERCENTAGE))            
+            speed = math.ceil(
+                percentage_to_ranged_value(
+                    self._step_range, percentage or DEFAULT_PERCENTAGE
+                )
+            )
         else:
             speed = percentage
 
