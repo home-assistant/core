@@ -96,7 +96,7 @@ async def async_setup_entry(
             if description.exists_fn(binary_sensor_device_coordinator.device):
                 entities.append(
                     YoLinkBinarySensorEntity(
-                        binary_sensor_device_coordinator, description
+                        config_entry, binary_sensor_device_coordinator, description
                     )
                 )
     async_add_entities(entities)
@@ -109,11 +109,12 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkBinarySensorEntityDescription,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator)
+        super().__init__(config_entry, coordinator)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
