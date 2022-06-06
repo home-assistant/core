@@ -1041,7 +1041,7 @@ pyhomematic==0.1.77
 pyialarm==1.9.0
 
 # homeassistant.components.ialarm_xr
-pyialarmxr==1.0.18
+pyialarmxr-homeassistant==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
