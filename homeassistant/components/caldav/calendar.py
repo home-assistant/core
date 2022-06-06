@@ -39,7 +39,6 @@ from .const import (
     CONF_SEARCH,
     DOMAIN,
     OFFSET,
-    PRINC_CALENDARS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +101,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WebDav Calendar entry."""
-    calendars = hass.data[DOMAIN][config_entry.entry_id][PRINC_CALENDARS]
+    calendars = hass.data[DOMAIN][config_entry.entry_id]
     days = config_entry.data[CONF_DAYS]
 
     calendar_devices = []

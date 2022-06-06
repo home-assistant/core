@@ -9,5 +9,3 @@ CONF_SEARCH = "search"
 DEFAULT_VERIFY_SSL = True
 DOMAIN = "caldav"
 OFFSET = "!!"
-PRINC_CALENDARS = "principal_calendars"
-UNSUB_LISTENER = "unsubscribe_listener"
