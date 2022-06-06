@@ -305,6 +305,7 @@ FLOWS = {
         "sensibo",
         "sentry",
         "senz",
+        "seventeentrack",
         "sharkiq",
         "shelly",
         "shopping_list",
