@@ -203,13 +203,16 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         max_forecasts = MAX_FORECASTS[self.forecast_type]
         forecast_count = 0
 
+        # Convert utcnow to local to be compatible with tests
+        today = dt_util.as_local(dt_util.utcnow()).date()
+
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in raw_forecasts:
             forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
 
             # Throw out past data
-            if forecast_dt.date() < dt_util.utcnow().date():
+            if dt_util.as_local(forecast_dt).date() < today:
                 continue
 
             values = forecast["values"]
