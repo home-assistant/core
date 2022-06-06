@@ -65,7 +65,7 @@ async def async_caldav_connect(hass, data_entry):
     )
 
     try:
-        principal = await hass.async_add_executor_job(client.principal)
-        return await hass.async_add_executor_job(principal.calendars)
+        principal = await hass.async_add_job(client.principal)
+        return await hass.async_add_job(principal.calendars)
     except Exception as error:  # pylint:disable=broad-except
         raise ConfigEntryNotReady() from error
