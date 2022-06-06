@@ -107,6 +107,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost Enabled",
         icon="mdi:wind-power-outline",
         value_fn=lambda data: data.pure_boost_enabled,
+        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_ac_integration",
@@ -115,6 +116,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with AC",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_ac_integration,
+        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_geo_integration",
@@ -123,6 +125,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Presence",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_geo_integration,
+        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_measure_integration",
@@ -131,6 +134,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Indoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_measure_integration,
+        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_prime_integration",
@@ -139,6 +143,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Outdoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
+        extra_fn=None,
     ),
 )
 
