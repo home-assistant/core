@@ -171,7 +171,7 @@ async def test_hls_stream(
     stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
-    stream.stop()
+    await stream.stop()
 
     # Ensure playlist not accessible after stream ends
     fail_response = await hls_client.get()
@@ -252,7 +252,7 @@ async def test_stream_timeout_after_stop(
     stream.start()
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
     # Wait 5 minutes and fire callback.  Stream should already have been
     # stopped so this is a no-op.
@@ -304,7 +304,7 @@ async def test_stream_retries(hass, setup_component, should_retry):
         await hass.async_block_till_done()
 
     # Stop stream, if it hasn't quit already
-    stream.stop()
+    await stream.stop()
 
     # Stream marked initially available, then marked as failed, then marked available
     # before the final failure that exits the stream.
@@ -351,7 +351,7 @@ async def test_hls_playlist_view(hass, setup_component, hls_stream, stream_worke
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_hls_max_segments(hass, setup_component, hls_stream, stream_worker_sync):
@@ -400,7 +400,7 @@ async def test_hls_max_segments(hass, setup_component, hls_stream, stream_worker
         assert segment_response.status == HTTPStatus.OK
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_hls_playlist_view_discontinuity(
@@ -438,7 +438,7 @@ async def test_hls_playlist_view_discontinuity(
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_hls_max_segments_discontinuity(
@@ -481,7 +481,7 @@ async def test_hls_max_segments_discontinuity(
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_remove_incomplete_segment_on_exit(
@@ -511,4 +511,4 @@ async def test_remove_incomplete_segment_on_exit(
     await hass.async_block_till_done()
     assert segments[-1].complete
     assert len(segments) == 2
-    stream.stop()
+    await stream.stop()

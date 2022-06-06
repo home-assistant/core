@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 import datetime
 from typing import TYPE_CHECKING
 
@@ -192,7 +192,10 @@ class IdleTimer:
     """
 
     def __init__(
-        self, hass: HomeAssistant, timeout: int, idle_callback: CALLBACK_TYPE
+        self,
+        hass: HomeAssistant,
+        timeout: int,
+        idle_callback: Callable[[HomeAssistant], None],
     ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
@@ -223,7 +226,7 @@ class IdleTimer:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
-        self._callback()
+        self._callback(self._hass)
 
 
 class StreamOutput:

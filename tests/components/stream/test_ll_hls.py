@@ -243,7 +243,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
     stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
-    stream.stop()
+    await stream.stop()
 
     # Ensure playlist not accessible after stream ends
     fail_response = await hls_client.get()
@@ -316,7 +316,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):

@@ -46,7 +46,7 @@ async def test_record_stream(hass, hass_client, record_worker_sync, h264_video):
     # thread completes and is shutdown completely to avoid thread leaks.
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
 
 async def test_record_lookback(
@@ -66,7 +66,7 @@ async def test_record_lookback(
 
     # This test does not need recorder cleanup since it is not fully exercised
 
-    stream.stop()
+    await stream.stop()
 
 
 async def test_recorder_timeout(hass, hass_client, stream_worker_sync, h264_video):
@@ -97,7 +97,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync, h264_vide
         assert mock_timeout.called
 
         stream_worker_sync.resume()
-        stream.stop()
+        await stream.stop()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -229,7 +229,7 @@ async def test_record_stream_audio(
 
     assert len(result.streams.audio) == expected_audio_streams
     result.close()
-    stream.stop()
+    await stream.stop()
     await hass.async_block_till_done()
 
     # Verify that the save worker was invoked, then block until its
