@@ -25,6 +25,7 @@ DOUBLE_PRESS = "remote_button_double_press"
 SHORT_PRESS = "remote_button_short_press"
 LONG_PRESS = "remote_button_long_press"
 LONG_RELEASE = "remote_button_long_release"
+UP = "UP"
 
 
 @pytest.fixture
@@ -55,7 +56,7 @@ async def test_zha_logbook_event_device_with_triggers(hass, mock_devices):
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
-        (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
+        (UP, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
         (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
         (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
@@ -86,6 +87,20 @@ async def test_zha_logbook_event_device_with_triggers(hass, mock_devices):
                     },
                 },
             ),
+            MockRow(
+                ZHA_EVENT,
+                {
+                    CONF_DEVICE_ID: reg_device.id,
+                    COMMAND: COMMAND_DOUBLE,
+                    "device_ieee": str(ieee_address),
+                    CONF_UNIQUE_ID: f"{str(ieee_address)}:1:0x0006",
+                    "endpoint_id": 1,
+                    "cluster_id": 6,
+                    "params": {
+                        "test": "test",
+                    },
+                },
+            ),
         ],
     )
 
@@ -93,7 +108,14 @@ async def test_zha_logbook_event_device_with_triggers(hass, mock_devices):
     assert events[0]["domain"] == "zha"
     assert (
         events[0]["message"]
-        == "Device Shaken - Device Shaken event was fired with parameters: {'test': 'test'}"
+        == "Device Shaken event was fired with parameters: {'test': 'test'}"
+    )
+
+    assert events[1]["name"] == "FakeManufacturer FakeModel"
+    assert events[1]["domain"] == "zha"
+    assert (
+        events[1]["message"]
+        == "Up - Remote Button Double Press event was fired with parameters: {'test': 'test'}"
     )
 
 
@@ -132,7 +154,7 @@ async def test_zha_logbook_event_device_no_triggers(hass, mock_devices):
     assert events[0]["domain"] == "zha"
     assert (
         events[0]["message"]
-        == "shake event was fired with parameters: {'test': 'test'}"
+        == "Shake event was fired with parameters: {'test': 'test'}"
     )
 
 
@@ -166,5 +188,5 @@ async def test_zha_logbook_event_device_no_device(hass, mock_devices):
     assert events[0]["domain"] == "zha"
     assert (
         events[0]["message"]
-        == "shake event was fired with parameters: {'test': 'test'}"
+        == "Shake event was fired with parameters: {'test': 'test'}"
     )

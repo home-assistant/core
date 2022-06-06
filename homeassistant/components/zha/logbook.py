@@ -69,8 +69,10 @@ def async_describe_events(
         if event_type is None:
             event_type = event_data["command"]
 
-        if event_subtype is not None:
-            event_type = f"{event_type.replace('_', ' ').title()} - {event_subtype.replace('_', ' ').title()}"
+        if event_subtype is not None and event_subtype != event_type:
+            event_type = f"{event_type} - {event_subtype}"
+
+        event_type = event_type.replace("_", " ").title()
 
         message = f"{event_type} event was fired"
         if event_data["params"]:
