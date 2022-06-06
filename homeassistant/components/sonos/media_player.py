@@ -762,6 +762,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         self.speaker.join(speakers)
 
-    def unjoin_player(self):
+    async def async_unjoin_player(self):
         """Remove this player from any group."""
-        self.speaker.unjoin()
+        async with self.hass.data[DATA_SONOS].topology_condition:
+            await self.hass.async_add_executor_job(self.speaker.unjoin)
