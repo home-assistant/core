@@ -78,7 +78,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get option flow."""
         return CaldavOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -111,7 +111,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_custom_calendars(self, user_input=None):
+    async def async_step_custom_calendars(self, user_input=None) -> FlowResult:
         """Add custom calendars."""
         if user_input.pop(CONF_ADD_CUSTO_CALENDAR, None):
             self.user_input = user_input
@@ -131,12 +131,13 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class CaldavOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle option."""
 
-    def __init__(self, config_entry):
-        """Initialize the options flow."""
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Init object."""
+        self.config_entry = config_entry
         self.calendars = config_entry.options.get(CONF_CALENDARS, [])
         self.custom_calendars = config_entry.options.get(CONF_CUSTOM_CALENDARS, [])
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         options_schema = vol.Schema(
