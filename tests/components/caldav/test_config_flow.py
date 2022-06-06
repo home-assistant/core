@@ -78,56 +78,52 @@ OPTIONS_INPUT = {
 
 async def test_user_form(hass):
     """Test we get the user initiated form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.caldav.config_flow.async_caldav_connect",
         return_value=[],
     ):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-        )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "caldav"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "caldav"
 
-        assert result["data"]
-        assert result["data"][CONF_URL] == USER_INPUT[CONF_URL]
-        assert result["data"][CONF_USERNAME] == USER_INPUT[CONF_USERNAME]
-        assert result["data"][CONF_PASSWORD] == USER_INPUT[CONF_PASSWORD]
-        assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
-        assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
+    assert result["data"]
+    assert result["data"][CONF_URL] == USER_INPUT[CONF_URL]
+    assert result["data"][CONF_USERNAME] == USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
+    assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
 
-        assert result["result"]
-        assert (
-            result["result"].unique_id
-            == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
-        )
+    assert result["result"]
+    assert (
+        result["result"].unique_id
+        == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
+    )
 
 
 async def test_user_form_custom(hass):
     """Test we get the user initiated form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.caldav.config_flow.async_caldav_connect",
         return_value=[],
     ):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-        )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT_CUSTO
         )
@@ -142,47 +138,46 @@ async def test_user_form_custom(hass):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"]
-        assert result["data"][CONF_URL] == USER_INPUT[CONF_URL]
-        assert result["data"][CONF_USERNAME] == USER_INPUT[CONF_USERNAME]
-        assert result["data"][CONF_PASSWORD] == USER_INPUT[CONF_PASSWORD]
-        assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
-        assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
-        assert (
-            result["options"][CONF_CUSTOM_CALENDARS]
-            == CUSTOM_INPUT[CONF_CUSTOM_CALENDARS]
-        )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]
+    assert result["data"][CONF_URL] == USER_INPUT[CONF_URL]
+    assert result["data"][CONF_USERNAME] == USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
+    assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
+    assert (
+        result["options"][CONF_CUSTOM_CALENDARS] == CUSTOM_INPUT[CONF_CUSTOM_CALENDARS]
+    )
 
-        assert result["result"]
-        assert (
-            result["result"].unique_id
-            == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
-        )
+    assert result["result"]
+    assert (
+        result["result"].unique_id
+        == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
+    )
 
 
 async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
     """Test we abort on connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.caldav.config_flow.async_caldav_connect",
         side_effect=DAVError(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant):
@@ -223,16 +218,62 @@ async def test_import(hass: HomeAssistant):
             context={"source": SOURCE_IMPORT},
             data=IMPORT_INPUT,
         )
+        await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"]
-        assert result["data"][CONF_URL] == USER_INPUT[CONF_URL]
-        assert result["data"][CONF_USERNAME] == USER_INPUT[CONF_USERNAME]
-        assert result["data"][CONF_PASSWORD] == USER_INPUT[CONF_PASSWORD]
-        assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
-        assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
-        assert result["options"] == OPTIONS_INPUT
-        assert (
-            result["result"].unique_id
-            == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
-        )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]
+    assert result["data"][CONF_URL] == USER_INPUT[CONF_URL]
+    assert result["data"][CONF_USERNAME] == USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
+    assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
+    assert result["options"] == OPTIONS_INPUT
+    assert (
+        result["result"].unique_id
+        == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
+    )
+
+
+async def test_options_flow(hass: HomeAssistant):
+    """Test options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "url", CONF_USERNAME: "username"},
+        unique_id="username:url",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], CUSTOM_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_options_flow_error_choice(hass: HomeAssistant):
+    """Test options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "url", CONF_USERNAME: "username"},
+        unique_id="username:url",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], OPTIONS_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "choice_custom"}
