@@ -964,9 +964,12 @@ omit =
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
     homeassistant/components/radiotherm/__init__.py
+    homeassistant/components/radiotherm/entity.py
     homeassistant/components/radiotherm/climate.py
     homeassistant/components/radiotherm/coordinator.py
     homeassistant/components/radiotherm/data.py
+    homeassistant/components/radiotherm/switch.py
+    homeassistant/components/radiotherm/util.py
     homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py

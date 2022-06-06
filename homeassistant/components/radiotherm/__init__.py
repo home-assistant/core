@@ -1,7 +1,9 @@
 """The radiotherm component."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from socket import timeout
+from typing import Any
 
 from radiotherm.validate import RadiothermTstatError
 
@@ -10,30 +12,47 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_HOLD_TEMP, DOMAIN
+from .const import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
-from .data import async_get_init_data
+from .data import RadioThermInitData, async_get_init_data
+from .util import async_set_time
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
+
+
+async def _async_call_or_raise_not_ready(
+    coro: Coroutine[Any, Any, RadioThermInitData | None], host: str
+) -> RadioThermInitData | None:
+    """Call a coro or raise ConfigEntryNotReady."""
+    try:
+        return await coro
+    except RadiothermTstatError as ex:
+        msg = f"{host} was busy (invalid value returned): {ex}"
+        raise ConfigEntryNotReady(msg) from ex
+    except timeout as ex:
+        msg = f"{host} timed out waiting for a response: {ex}"
+        raise ConfigEntryNotReady(msg) from ex
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Radio Thermostat from a config entry."""
     host = entry.data[CONF_HOST]
-    try:
-        init_data = await async_get_init_data(hass, host)
-    except RadiothermTstatError as ex:
-        raise ConfigEntryNotReady(
-            f"{host} was busy (invalid value returned): {ex}"
-        ) from ex
-    except timeout as ex:
-        raise ConfigEntryNotReady(
-            f"{host} timed out waiting for a response: {ex}"
-        ) from ex
-
-    hold_temp = entry.options[CONF_HOLD_TEMP]
-    coordinator = RadioThermUpdateCoordinator(hass, init_data, hold_temp)
+    init_data: RadioThermInitData | None = await _async_call_or_raise_not_ready(
+        async_get_init_data(hass, host), host
+    )
+    assert init_data is not None
+    coordinator = RadioThermUpdateCoordinator(hass, init_data)
     await coordinator.async_config_entry_first_refresh()
+
+    # Only set the time if the thermostat is
+    # not in hold mode since setting the time
+    # clears the hold for some strange design
+    # choice
+    if not coordinator.data.tstat["hold"]:
+        await _async_call_or_raise_not_ready(
+            async_set_time(hass, init_data.tstat), host
+        )
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
