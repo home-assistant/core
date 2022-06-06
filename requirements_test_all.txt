@@ -94,7 +94,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.4
+aioairzone==0.4.5
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -281,7 +281,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.30.1
+async-upnp-client==0.31.1
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.2.3
@@ -589,7 +589,7 @@ hlk-sw16==0.0.9
 hole==0.7.0
 
 # homeassistant.components.workday
-holidays==0.13
+holidays==0.14.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20220601.0
@@ -643,7 +643,7 @@ iotawattpy==0.1.0
 ismartgate==4.0.4
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.7.2
+jellyfin-apiclient-python==1.8.1
 
 # homeassistant.components.rest
 jsonpath==0.82
@@ -1044,7 +1044,7 @@ pyhomematic==0.1.77
 pyialarm==1.9.0
 
 # homeassistant.components.ialarm_xr
-pyialarmxr==1.0.18
+pyialarmxr-homeassistant==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
