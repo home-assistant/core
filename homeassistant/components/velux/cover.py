@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -89,50 +91,42 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        async with self.throttle():
-            await self.node.close(wait_for_completion=False)
+        await self.node.close(wait_for_completion=False)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        async with self.throttle():
-            await self.node.open(wait_for_completion=False)
+        await self.node.open(wait_for_completion=False)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION not in kwargs:
             return
-        async with self.throttle():
-            position_percent = 100 - kwargs[ATTR_POSITION]
+        position_percent = 100 - kwargs[ATTR_POSITION]
 
-            await self.node.set_position(
-                Position(position_percent=position_percent), wait_for_completion=False
-            )
+        await self.node.set_position(
+            Position(position_percent=position_percent), wait_for_completion=False
+        )
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        async with self.throttle():
-            await self.node.stop(wait_for_completion=False)
+        await self.node.stop(wait_for_completion=False)
 
     async def async_close_cover_tilt(self, **kwargs):
         """Close cover tilt."""
-        async with self.throttle():
-            await self.node.close_orientation(wait_for_completion=False)
+        await self.node.close_orientation(wait_for_completion=False)
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open cover tilt."""
-        async with self.throttle():
-            await self.node.open_orientation(wait_for_completion=False)
+        await self.node.open_orientation(wait_for_completion=False)
 
     async def async_stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
-        async with self.throttle():
-            await self.node.stop_orientation(wait_for_completion=False)
+        await self.node.stop_orientation(wait_for_completion=False)
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move cover tilt to a specific position."""
-        async with self.throttle():
-            position_percent = 100 - kwargs[ATTR_TILT_POSITION]
-            orientation = Position(position_percent=position_percent)
-            await self.node.set_orientation(
-                orientation=orientation, wait_for_completion=False
-            )
+        position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+        orientation = Position(position_percent=position_percent)
+        await self.node.set_orientation(
+            orientation=orientation, wait_for_completion=False
+        )
