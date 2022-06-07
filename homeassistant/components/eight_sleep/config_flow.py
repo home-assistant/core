@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from pyeight.eight import EightSleep
+from pyeight.exceptions import RequestError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -53,13 +54,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(f"{DOMAIN}.{user_input[CONF_USERNAME]}")
         self._abort_if_unique_id_configured()
-        await eight.fetch_token()
-        if not eight.token:
+        try:
+            await eight.fetch_token()
+        except RequestError as err:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
-                errors={"base": "invalid_auth"},
+                errors={"base": "cannot_connect"},
+                description_placeholders={"error": str(err)},
             )
-        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
+        else:
+            return self.async_create_entry(
+                title=user_input[CONF_USERNAME], data=user_input
+            )
 
     async_step_import = async_step_user

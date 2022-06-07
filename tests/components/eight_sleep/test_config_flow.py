@@ -4,7 +4,7 @@ from homeassistant.components.eight_sleep.const import DOMAIN
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 
-async def test_form(hass, valid_token) -> None:
+async def test_form(hass) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -28,7 +28,7 @@ async def test_form(hass, valid_token) -> None:
     }
 
 
-async def test_form_invalid_auth(hass, invalid_token) -> None:
+async def test_form_invalid_auth(hass, token_error) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -45,4 +45,4 @@ async def test_form_invalid_auth(hass, invalid_token) -> None:
     )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": "cannot_connect"}

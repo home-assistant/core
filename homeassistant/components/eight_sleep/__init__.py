@@ -11,7 +11,15 @@ from pyeight.user import EightUser
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -123,12 +131,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     dev_reg = async_get(hass)
     assert eight.device_data
     device_data = {
-        "manufacturer": "Eight Sleep",
-        "model": eight.device_data.get("modelString", UNDEFINED),
-        "hw_version": eight.device_data.get("sensorInfo", {}).get(
+        ATTR_MANUFACTURER: "Eight Sleep",
+        ATTR_MODEL: eight.device_data.get("modelString", UNDEFINED),
+        ATTR_HW_VERSION: eight.device_data.get("sensorInfo", {}).get(
             "hwRevision", UNDEFINED
         ),
-        "sw_version": eight.device_data.get("firmwareVersion", UNDEFINED),
+        ATTR_SW_VERSION: eight.device_data.get("firmwareVersion", UNDEFINED),
     }
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
