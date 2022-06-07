@@ -1,4 +1,4 @@
-"""Common stuff for AVM Fritz!Box tests."""
+"""Common stuff for Fritz!Tools tests."""
 import logging
 from unittest.mock import MagicMock, patch
 
