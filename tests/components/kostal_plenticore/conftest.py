@@ -26,36 +26,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-<<<<<<< HEAD
 def mock_plenticore() -> Generator[Plenticore, None, None]:
     """Set up a Plenticore mock with some default values."""
-=======
-def mock_plenticore(hass: HomeAssistant) -> Generator[None, MagicMock, None]:
-    """Return a mocked Plenticore class."""
-    with patch(
-        "homeassistant.components.kostal_plenticore.Plenticore"
-    ) as mock_api_class:
-        # setup
-        plenticore = mock_api_class.return_value
-        plenticore.async_setup = AsyncMock()
-        plenticore.async_setup.return_value = True
-        plenticore.client = MagicMock()
-
-        plenticore.client.get_settings = AsyncMock()
-        plenticore.client.get_settings.return_value = []
-
-        plenticore.client.get_process_data = AsyncMock()
-        plenticore.client.get_process_data.return_value = []
-
-        yield plenticore
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-) -> Generator[None, MockConfigEntry, None]:
-    """Set up Kostal Plenticore integration for testing."""
->>>>>>> a091e51f8d (Fix test after rebaseing.)
     with patch(
         "homeassistant.components.kostal_plenticore.Plenticore", autospec=True
     ) as mock_api_class:
