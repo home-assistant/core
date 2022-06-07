@@ -596,8 +596,6 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
-/homeassistant/components/ialarm_xr/ @bigmoby
-/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -749,8 +747,8 @@ build.json @home-assistant/supervisor
 /tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
-/homeassistant/components/logbook/ @home-assistant/core
-/tests/components/logbook/ @home-assistant/core
+/homeassistant/components/logbook/ @home-assistant/core @bdraco
+/tests/components/logbook/ @home-assistant/core @bdraco
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/logi_circle/ @evanjd
