@@ -145,3 +145,55 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit):
     await knx.receive_write("2/2/2", False)
     state = hass.states.get("fan.test")
     assert state.attributes.get("oscillating") is False
+
+
+async def test_fan_switch_on_off(hass: HomeAssistant, knx: KNXTestKit):
+    """Test KNX fan switch GA."""
+    await knx.setup_integration(
+        {
+            FanSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: "1/1/1",
+                FanSchema.CONF_SWITCH_ADDRESS: "2/2/2",
+            }
+        }
+    )
+    assert len(hass.states.async_all()) == 1
+
+    # turn on the fan (will not set a default speed if we have a switch GA specified)
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.test"},
+        blocking=True,
+    )
+    await knx.assert_write("2/2/2", True)
+
+    # turn off the fan
+    await hass.services.async_call(
+        "fan",
+        "turn_off",
+        {"entity_id": "fan.test"},
+        blocking=True,
+    )
+    await knx.assert_write("2/2/2", False)
+
+    # turn on the fan including optional speed
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.test", "percentage": 75},
+        blocking=True,
+    )
+    await knx.assert_write("2/2/2", True)
+    await knx.assert_write("1/1/1", (0xBF,))
+
+    # receive fan on
+    await knx.receive_write("2/2/2", True)
+    state = hass.states.get("fan.test")
+    assert state.state is STATE_ON
+
+    # receive fan off
+    await knx.receive_write("2/2/2", False)
+    state = hass.states.get("fan.test")
+    assert state.state is STATE_OFF

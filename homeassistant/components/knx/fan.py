@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Final
 
 from xknx import XKNX
 from xknx.devices import Fan as XknxFan
@@ -22,6 +22,8 @@ from homeassistant.util.percentage import (
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import FanSchema
+
+DEFAULT_SPEED_STEP: Final = 2
 
 
 async def async_setup_entry(
@@ -118,10 +120,15 @@ class KNXFan(KnxEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
+        speed = percentage
+
         if self._step_range:
-            speed = math.ceil(percentage_to_ranged_value(self._step_range, percentage))
-        else:
-            speed = percentage
+            if percentage is not None:
+                speed = math.ceil(
+                    percentage_to_ranged_value(self._step_range, percentage)
+                )
+            else:
+                speed = DEFAULT_SPEED_STEP
 
         await self._device.turn_on(speed)
 
