@@ -420,10 +420,10 @@ class Stream:
 
     async def _stop(self) -> None:
         """Stop worker thread."""
-        if (thread := self._thread) is not None:
+        if self._thread is not None:
             self._thread_quit.set()
+            await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
-            await self.hass.async_add_executor_job(thread.join)
             self._logger.info(
                 "Stopped stream: %s", redact_credentials(str(self.source))
             )
