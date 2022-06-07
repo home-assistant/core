@@ -13,6 +13,7 @@ import voluptuous as vol
 from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.frame import report
 from .util import uuid as uuid_util
 
 
@@ -368,17 +369,13 @@ class FlowManager(abc.ABC):
         if step_done:
             step_done.set_result(None)
 
-        if result["type"] not in (
-            FlowResultType.FORM,
-            FlowResultType.EXTERNAL_STEP,
-            FlowResultType.CREATE_ENTRY,
-            FlowResultType.ABORT,
-            FlowResultType.EXTERNAL_STEP_DONE,
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-            FlowResultType.MENU,
-        ):
-            raise ValueError(f"Handler returned incorrect type: {result['type']}")
+        if not isinstance(result["type"], FlowResultType):
+            result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
+            report(
+                "does not use FlowResultType enum for data entry flow result type. "
+                "This is deprecated and will stop working in Home Assistant 2022.9",
+                error_if_core=False,
+            )
 
         if result["type"] in (
             FlowResultType.FORM,
