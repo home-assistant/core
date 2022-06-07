@@ -63,9 +63,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 def _get_device_unique_id(eight: EightSleep, user_obj: EightUser | None = None) -> str:
     """Get the device's unique ID."""
-    unique_id = eight.deviceid
+    unique_id = eight.device_id
+    assert unique_id
     if user_obj:
-        unique_id = f"{unique_id}.{user_obj.userid}.{user_obj.side}"
+        unique_id = f"{unique_id}.{user_obj.user_id}.{user_obj.side}"
     return unique_id
 
 
@@ -133,9 +134,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         for sens in sensor:
             side = sens.split("_")[1]
-            userid = eight.fetch_userid(side)
-            usrobj = eight.users[userid]
-            await usrobj.set_heating_level(target, duration)
+            user_id = eight.fetch_user_id(side)
+            assert user_id
+            usr_obj = eight.users[user_id]
+            await usr_obj.set_heating_level(target, duration)
 
         await heat_coordinator.async_request_refresh()
 
@@ -163,7 +165,7 @@ class EightSleepBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
         self._user_id = user_id
         self._sensor = sensor
         self._user_obj: EightUser | None = None
-        if self._user_id:
+        if user_id:
             self._user_obj = self._eight.users[user_id]
 
         mapped_name = NAME_MAP.get(sensor, sensor.replace("_", " ").title())
