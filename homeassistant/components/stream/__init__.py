@@ -211,10 +211,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Stop all stream workers."""
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.keepalive = False
-        if awaitables := {
+        if awaitables := [
             asyncio.create_task(stream.stop())
             for stream in hass.data[DOMAIN][ATTR_STREAMS]
-        }:
+        ]:
             await asyncio.wait(awaitables)
         _LOGGER.debug("Stopped stream workers")
 
