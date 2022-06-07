@@ -523,9 +523,9 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
         )
 
     if (
-        isinstance(match.return_type, str)
+        match.check_return_type_inheritance
+        and isinstance(match.return_type, str)
         and isinstance(node, nodes.Name)
-        and match.check_return_type_inheritance
     ):
         ancestor: nodes.ClassDef
         for infer_node in node.infer():
