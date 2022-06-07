@@ -6,10 +6,12 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.engine.result import ChunkedIteratorResult
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import util
+from homeassistant.components.recorder import history, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import UnsupportedDialect
@@ -22,7 +24,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, run_information_with_session
+from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
 
@@ -706,3 +708,56 @@ def test_build_mysqldb_conv():
     assert conv["DATETIME"]("2022-05-13T22:33:12.741") == datetime(
         2022, 5, 13, 22, 33, 12, 741000, tzinfo=None
     )
+
+
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+def test_execute_stmt(hass_recorder):
+    """Test executing with execute_stmt."""
+    hass = hass_recorder()
+    instance = recorder.get_instance(hass)
+    hass.states.set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    wait_recording_done(hass)
+    now = dt_util.utcnow()
+    tomorrow = now + timedelta(days=1)
+    one_week_from_now = now + timedelta(days=7)
+
+    class MockExecutor:
+
+        _calls = 0
+
+        def __init__(self, stmt):
+            """Init the mock."""
+
+        def all(self):
+            MockExecutor._calls += 1
+            if MockExecutor._calls == 2:
+                return ["mock_row"]
+            raise SQLAlchemyError
+
+    with session_scope(hass=hass) as session:
+        # No time window, we always get a list
+        stmt = history._get_single_entity_states_stmt(
+            instance.schema_version, dt_util.utcnow(), "sensor.on", False
+        )
+        rows = util.execute_stmt(session, stmt)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].entity_id == new_state.entity_id
+
+        # Time window >= 2 days, we get a ChunkedIteratorResult
+        rows = util.execute_stmt(session, stmt, now, one_week_from_now)
+        assert isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.entity_id == new_state.entity_id
+
+        # Time window < 2 days, we get a list
+        rows = util.execute_stmt(session, stmt, now, tomorrow)
+        assert isinstance(rows, list)
+        assert rows[0].state == new_state.state
+        assert rows[0].entity_id == new_state.entity_id
+
+        with patch.object(session, "execute", MockExecutor):
+            rows = util.execute_stmt(session, stmt, now, tomorrow)
+            assert rows == ["mock_row"]

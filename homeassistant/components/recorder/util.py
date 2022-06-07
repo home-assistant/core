@@ -186,8 +186,9 @@ def execute_stmt(
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
         try:
-            result = session.execute(query)
-            return result.all() if use_all else result.yield_per(yield_per)  # type: ignore[no-any-return]
+            if use_all:
+                return session.execute(query).all()  # type: ignore[no-any-return]
+            return session.execute(query).yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
