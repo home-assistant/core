@@ -90,7 +90,7 @@ class KNXFan(KnxEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the fan is on."""
-        return bool(self._device.is_on)
+        return self._device.is_on
 
     @property
     def percentage(self) -> int | None:
