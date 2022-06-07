@@ -96,9 +96,7 @@ class UbusDeviceScanner(DeviceScanner):
         proto = "https" if self.ssl else "http"
         self.url = f"{proto}://{host}/ubus"
 
-        self.ubus = Ubus(
-            self.url, self.username, self.password, verify_ssl=self.verify_ssl
-        )
+        self.ubus = Ubus(self.url, self.username, self.password, verify=self.verify_ssl)
         self.hostapd = []
         self.mac2name = None
         self.success_init = self.ubus.connect() is not None
