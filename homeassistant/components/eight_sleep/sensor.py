@@ -83,10 +83,11 @@ async def async_setup_entry(
             EightHeatSensor(entry, heat_coordinator, eight, obj.user_id, sensor)
             for sensor in EIGHT_HEAT_SENSORS
         )
-        all_sensors.extend(
-            EightRoomSensor(entry, user_coordinator, eight, sensor)
-            for sensor in EIGHT_ROOM_SENSORS
-        )
+
+    all_sensors.extend(
+        EightRoomSensor(entry, user_coordinator, eight, sensor)
+        for sensor in EIGHT_ROOM_SENSORS
+    )
 
     async_add_entities(all_sensors)
 

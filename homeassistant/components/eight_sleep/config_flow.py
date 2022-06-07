@@ -1,7 +1,6 @@
 """Config flow for Eight Sleep integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from pyeight.eight import EightSleep
@@ -52,23 +51,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async_get_clientsession(self.hass),
         )
 
+        await self.async_set_unique_id(f"{DOMAIN}.{user_input[CONF_USERNAME]}")
+        self._abort_if_unique_id_configured()
         await eight.fetch_token()
-        if eight.token:
-            await eight.fetch_device_list()
-            await self.async_set_unique_id(eight.device_id)
-            self._abort_if_unique_id_configured()
-            # Due to Eight Sleep's aggressive rate limiting and a lack of good handling
-            # in the library, we have to wait 5 seconds before we can create the entry
-            # since it will trigger new API calls
-            await asyncio.sleep(5)
-            return self.async_create_entry(
-                title=user_input[CONF_USERNAME], data=user_input
+        if not eight.token:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors={"base": "invalid_auth"},
             )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors={"base": "invalid_auth"},
-        )
+        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
 
     async_step_import = async_step_user

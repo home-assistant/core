@@ -6,18 +6,19 @@ from datetime import timedelta
 import logging
 
 from pyeight.eight import EightSleep
+from pyeight.exceptions import RequestError
 from pyeight.user import EightUser
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -90,7 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Authenticate, build sensors
-    success = await eight.start()
+    try:
+        success = await eight.start()
+    except RequestError as err:
+        raise ConfigEntryNotReady from err
     if not success:
         # Authentication failed, cannot continue
         return False
@@ -120,9 +124,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert eight.device_data
     device_data = {
         "manufacturer": "Eight Sleep",
-        "model": eight.device_data["modelString"],
-        "hw_version": eight.device_data["sensorInfo"]["hwRevision"],
-        "sw_version": eight.device_data["firmwareVersion"],
+        "model": eight.device_data.get("modelString", UNDEFINED),
+        "hw_version": eight.device_data.get("sensorInfo", {}).get(
+            "hwRevision", UNDEFINED
+        ),
+        "sw_version": eight.device_data.get("firmwareVersion", UNDEFINED),
     }
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
