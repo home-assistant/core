@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -27,6 +28,15 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
+
+@dataclass
+class NamConfig:
+    """NAM device configuration class."""
+
+    mac_address: str
+    auth_enabled: bool
+
+
 _LOGGER = logging.getLogger(__name__)
 
 AUTH_SCHEMA = vol.Schema(
@@ -34,7 +44,7 @@ AUTH_SCHEMA = vol.Schema(
 )
 
 
-async def async_get_config(hass: HomeAssistant, host: str) -> tuple[str, bool]:
+async def async_get_config(hass: HomeAssistant, host: str) -> NamConfig:
     """Get device MAC address and auth_enabled property."""
     websession = async_get_clientsession(hass)
 
@@ -44,7 +54,7 @@ async def async_get_config(hass: HomeAssistant, host: str) -> tuple[str, bool]:
     async with async_timeout.timeout(10):
         mac = await nam.async_get_mac_address()
 
-    return mac, nam.auth_enabled
+    return NamConfig(mac, nam.auth_enabled)
 
 
 async def async_check_credentials(
@@ -82,7 +92,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.host = user_input[CONF_HOST]
 
             try:
-                mac, auth_enabled = await async_get_config(self.hass, self.host)
+                config = await async_get_config(self.hass, self.host)
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except CannotGetMac:
@@ -91,10 +101,10 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(format_mac(mac))
+                await self.async_set_unique_id(format_mac(config.mac_address))
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
-                if auth_enabled is True:
+                if config.auth_enabled is True:
                     return await self.async_step_credentials()
 
                 return self.async_create_entry(
@@ -146,13 +156,13 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
-            mac, self._auth_enabled = await async_get_config(self.hass, self.host)
+            self._config = await async_get_config(self.hass, self.host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
             return self.async_abort(reason="device_unsupported")
 
-        await self.async_set_unique_id(format_mac(mac))
+        await self.async_set_unique_id(format_mac(self._config.mac_address))
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_confirm_discovery()
@@ -169,7 +179,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.host},
             )
 
-        if self._auth_enabled is True:
+        if self._config.auth_enabled is True:
             return await self.async_step_credentials()
 
         self._set_confirm_only()
