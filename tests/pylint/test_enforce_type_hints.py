@@ -414,12 +414,17 @@ def test_valid_config_flow_async_get_options_flow(
     class AxisOptionsFlow(OptionsFlow):
         pass
 
+    class OtherOptionsFlow(OptionsFlow):
+        pass
+
     class AxisFlowHandler( #@
         ConfigFlow, domain=AXIS_DOMAIN
     ):
         def async_get_options_flow(
             config_entry: ConfigEntry
-        ) -> AxisOptionsFlow:
+        ) -> AxisOptionsFlow | OtherOptionsFlow:
+            if self.use_other:
+                return OtherOptionsFlow(config_entry)
             return AxisOptionsFlow(config_entry)
 
     """,
