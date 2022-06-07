@@ -26,22 +26,10 @@ PLATFORMS = [
 class AqaraCloudOpenAPIEndpoint:
     """Aqara Cloud Open API Endpoint."""
 
-    # "/v3.0/open/api"
-
-    #
     CHINA = "https://open-cn.aqara.com"
-    # CHINA = "https://developer-test.aqara.com"
-
-    #
     AMERICA = "https://open-usa.aqara.com"
-
-    #
     COREA = "https://open-kr.aqara.com"
-
-    #
     RUSSIA = "https://open-ru.aqara.com"
-
-    #
     EUROPE = "https://open-ger.aqara.com"
 
 
