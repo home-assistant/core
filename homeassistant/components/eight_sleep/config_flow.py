@@ -45,7 +45,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        # We use a fresh session so that we don't have any API weirdness
         eight = EightSleep(
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
