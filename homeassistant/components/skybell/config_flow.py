@@ -1,6 +1,7 @@
 """Config flow for Skybell integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from aioskybell import Skybell, exceptions
@@ -13,6 +14,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+
+
+@dataclass
+class ValidatedInput(tuple):
+    """Class for input validation from api."""
+
+    user_id: str | None = None
+    macs: list[str | None] | None = None
+    error: str | None = None
 
 
 class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,15 +45,19 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             self._async_abort_entries_match({CONF_EMAIL: email})
-            user_id, macs, error = await self._async_validate_input(email, password)
-            if error is None:
-                await self.async_set_unique_id(user_id)
+            result = await self._async_validate_input(email, password)
+            if result.error is None:
+                await self.async_set_unique_id(result.user_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=email,
-                    data={CONF_EMAIL: email, CONF_PASSWORD: password, CONF_MAC: macs},
+                    data={
+                        CONF_EMAIL: email,
+                        CONF_PASSWORD: password,
+                        CONF_MAC: result.macs,
+                    },
                 )
-            errors["base"] = error
+            errors["base"] = result.error
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -57,7 +71,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_validate_input(self, email: str, password: str) -> tuple:
+    async def _async_validate_input(self, email: str, password: str) -> ValidatedInput:
         """Validate login credentials."""
         skybell = Skybell(
             username=email,
@@ -66,13 +80,13 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
         )
         try:
-            devices = await skybell.async_initialize()
-            for device in devices:
+            devs = await skybell.async_initialize()
+            for device in devs:
                 await device.async_update()
         except exceptions.SkybellAuthenticationException:
-            return None, None, "invalid_auth"
+            return ValidatedInput(error="invalid_auth")
         except exceptions.SkybellException:
-            return None, None, "cannot_connect"
+            return ValidatedInput(error="cannot_connect")
         except Exception:  # pylint: disable=broad-except
-            return None, None, "unknown"
-        return skybell.user_id, [device.mac for device in devices], None
+            return ValidatedInput(error="unknown")
+        return ValidatedInput(user_id=skybell.user_id, macs=[dev.mac for dev in devs])
