@@ -12,7 +12,13 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -31,6 +37,8 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): vol.In(
             DHCP_SOFTWARES
         ),
+        vol.Optional(CONF_SSL, default=False): cv.bool,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.bool,
     }
 )
 
@@ -80,12 +88,15 @@ class UbusDeviceScanner(DeviceScanner):
         host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.ssl = config[CONF_SSL]
+        self.verify_ssl = config[CONF_SSL]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{host}/ubus"
+        proto = "https" if self.ssl else "http"
+        self.url = f"{proto}://{host}/ubus"
 
-        self.ubus = Ubus(self.url, self.username, self.password)
+        self.ubus = Ubus(self.url, self.username, self.password, verify=self.verify_ssl)
         self.hostapd = []
         self.mac2name = None
         self.success_init = self.ubus.connect() is not None
