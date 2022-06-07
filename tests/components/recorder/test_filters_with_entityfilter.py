@@ -5,12 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.engine.row import Row
 
 from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.db_schema import EventData, States
 from homeassistant.components.recorder.filters import (
     Filters,
     extract_include_exclude_filter_conf,
     sqlalchemy_filter_from_include_exclude_conf,
 )
-from homeassistant.components.recorder.models import EventData, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
