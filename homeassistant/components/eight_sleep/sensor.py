@@ -76,11 +76,11 @@ async def async_setup_entry(
 
     for obj in eight.users.values():
         all_sensors.extend(
-            EightUserSensor(entry, user_coordinator, eight, obj.userid, sensor)
+            EightUserSensor(entry, user_coordinator, eight, obj.user_id, sensor)
             for sensor in EIGHT_USER_SENSORS
         )
         all_sensors.extend(
-            EightHeatSensor(entry, heat_coordinator, eight, obj.userid, sensor)
+            EightHeatSensor(entry, heat_coordinator, eight, obj.user_id, sensor)
             for sensor in EIGHT_HEAT_SENSORS
         )
         all_sensors.extend(
@@ -123,7 +123,7 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         assert self._user_obj
         return self._user_obj.heating_level
@@ -286,4 +286,4 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        return self._eight.room_temperature()
+        return self._eight.room_temperature

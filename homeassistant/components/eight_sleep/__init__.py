@@ -56,9 +56,10 @@ class EightSleepConfigEntryData:
 
 def _get_device_unique_id(eight: EightSleep, user_obj: EightUser | None = None) -> str:
     """Get the device's unique ID."""
-    unique_id = eight.deviceid
+    unique_id = eight.device_id
+    assert unique_id
     if user_obj:
-        unique_id = f"{unique_id}.{user_obj.userid}.{user_obj.side}"
+        unique_id = f"{unique_id}.{user_obj.user_id}.{user_obj.side}"
     return unique_id
 
 
@@ -184,7 +185,7 @@ class EightSleepBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
         self._user_id = user_id
         self._sensor = sensor
         self._user_obj: EightUser | None = None
-        if self._user_id:
+        if user_id:
             self._user_obj = self._eight.users[user_id]
 
         mapped_name = NAME_MAP.get(sensor, sensor.replace("_", " ").title())
