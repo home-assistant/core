@@ -306,7 +306,7 @@ def _select_unused_attributes_ids(
         # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
         # up to 500MB for large database due to the complexity of the ORM objects.
         #
-        # We now break the query into groups of 100 and use a lambda_stmt to ensure
+        # We now break the query into groups of 100 to ensure
         # that the query is only cached once.
         #
         seen_ids = set()

@@ -4,8 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime
 
-from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, update
-from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy import delete, distinct, func, select, union_all, update
 from sqlalchemy.sql.selectable import Select
 
 from .const import MAX_ROWS_TO_PURGE
@@ -20,21 +19,19 @@ from .db_schema import (
 )
 
 
-def find_shared_attributes_id(
-    data_hash: int, shared_attrs: str
-) -> StatementLambdaElement:
+def find_shared_attributes_id(data_hash: int, shared_attrs: str) -> Select:
     """Find an attributes_id by hash and shared_attrs."""
-    return lambda_stmt(
-        lambda: select(StateAttributes.attributes_id)
+    return (
+        select(StateAttributes.attributes_id)
         .filter(StateAttributes.hash == data_hash)
         .filter(StateAttributes.shared_attrs == shared_attrs)
     )
 
 
-def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElement:
+def find_shared_data_id(attr_hash: int, shared_data: str) -> Select:
     """Find a data_id by hash and shared_data."""
-    return lambda_stmt(
-        lambda: select(EventData.data_id)
+    return (
+        select(EventData.data_id)
         .filter(EventData.hash == attr_hash)
         .filter(EventData.shared_data == shared_data)
     )
@@ -47,12 +44,10 @@ def _state_attrs_exist(attr: int | None) -> Select:
 
 def attributes_ids_exist_in_states_sqlite(
     attributes_ids: Iterable[int],
-) -> StatementLambdaElement:
+) -> Select:
     """Find attributes ids that exist in the states table."""
-    return lambda_stmt(
-        lambda: select(distinct(States.attributes_id)).filter(
-            States.attributes_id.in_(attributes_ids)
-        )
+    return select(distinct(States.attributes_id)).filter(
+        States.attributes_id.in_(attributes_ids)
     )
 
 
@@ -157,124 +152,120 @@ def attributes_ids_exist_in_states(
     attr98: int | None,
     attr99: int | None,
     attr100: int | None,
-) -> StatementLambdaElement:
+) -> union_all:
     """Generate the find attributes select only once.
 
     https://docs.sqlalchemy.org/en/14/core/connections.html#quick-guidelines-for-lambdas
     """
-    return lambda_stmt(
-        lambda: union_all(
-            _state_attrs_exist(attr1),
-            _state_attrs_exist(attr2),
-            _state_attrs_exist(attr3),
-            _state_attrs_exist(attr4),
-            _state_attrs_exist(attr5),
-            _state_attrs_exist(attr6),
-            _state_attrs_exist(attr7),
-            _state_attrs_exist(attr8),
-            _state_attrs_exist(attr9),
-            _state_attrs_exist(attr10),
-            _state_attrs_exist(attr11),
-            _state_attrs_exist(attr12),
-            _state_attrs_exist(attr13),
-            _state_attrs_exist(attr14),
-            _state_attrs_exist(attr15),
-            _state_attrs_exist(attr16),
-            _state_attrs_exist(attr17),
-            _state_attrs_exist(attr18),
-            _state_attrs_exist(attr19),
-            _state_attrs_exist(attr20),
-            _state_attrs_exist(attr21),
-            _state_attrs_exist(attr22),
-            _state_attrs_exist(attr23),
-            _state_attrs_exist(attr24),
-            _state_attrs_exist(attr25),
-            _state_attrs_exist(attr26),
-            _state_attrs_exist(attr27),
-            _state_attrs_exist(attr28),
-            _state_attrs_exist(attr29),
-            _state_attrs_exist(attr30),
-            _state_attrs_exist(attr31),
-            _state_attrs_exist(attr32),
-            _state_attrs_exist(attr33),
-            _state_attrs_exist(attr34),
-            _state_attrs_exist(attr35),
-            _state_attrs_exist(attr36),
-            _state_attrs_exist(attr37),
-            _state_attrs_exist(attr38),
-            _state_attrs_exist(attr39),
-            _state_attrs_exist(attr40),
-            _state_attrs_exist(attr41),
-            _state_attrs_exist(attr42),
-            _state_attrs_exist(attr43),
-            _state_attrs_exist(attr44),
-            _state_attrs_exist(attr45),
-            _state_attrs_exist(attr46),
-            _state_attrs_exist(attr47),
-            _state_attrs_exist(attr48),
-            _state_attrs_exist(attr49),
-            _state_attrs_exist(attr50),
-            _state_attrs_exist(attr51),
-            _state_attrs_exist(attr52),
-            _state_attrs_exist(attr53),
-            _state_attrs_exist(attr54),
-            _state_attrs_exist(attr55),
-            _state_attrs_exist(attr56),
-            _state_attrs_exist(attr57),
-            _state_attrs_exist(attr58),
-            _state_attrs_exist(attr59),
-            _state_attrs_exist(attr60),
-            _state_attrs_exist(attr61),
-            _state_attrs_exist(attr62),
-            _state_attrs_exist(attr63),
-            _state_attrs_exist(attr64),
-            _state_attrs_exist(attr65),
-            _state_attrs_exist(attr66),
-            _state_attrs_exist(attr67),
-            _state_attrs_exist(attr68),
-            _state_attrs_exist(attr69),
-            _state_attrs_exist(attr70),
-            _state_attrs_exist(attr71),
-            _state_attrs_exist(attr72),
-            _state_attrs_exist(attr73),
-            _state_attrs_exist(attr74),
-            _state_attrs_exist(attr75),
-            _state_attrs_exist(attr76),
-            _state_attrs_exist(attr77),
-            _state_attrs_exist(attr78),
-            _state_attrs_exist(attr79),
-            _state_attrs_exist(attr80),
-            _state_attrs_exist(attr81),
-            _state_attrs_exist(attr82),
-            _state_attrs_exist(attr83),
-            _state_attrs_exist(attr84),
-            _state_attrs_exist(attr85),
-            _state_attrs_exist(attr86),
-            _state_attrs_exist(attr87),
-            _state_attrs_exist(attr88),
-            _state_attrs_exist(attr89),
-            _state_attrs_exist(attr90),
-            _state_attrs_exist(attr91),
-            _state_attrs_exist(attr92),
-            _state_attrs_exist(attr93),
-            _state_attrs_exist(attr94),
-            _state_attrs_exist(attr95),
-            _state_attrs_exist(attr96),
-            _state_attrs_exist(attr97),
-            _state_attrs_exist(attr98),
-            _state_attrs_exist(attr99),
-            _state_attrs_exist(attr100),
-        )
+    return union_all(
+        _state_attrs_exist(attr1),
+        _state_attrs_exist(attr2),
+        _state_attrs_exist(attr3),
+        _state_attrs_exist(attr4),
+        _state_attrs_exist(attr5),
+        _state_attrs_exist(attr6),
+        _state_attrs_exist(attr7),
+        _state_attrs_exist(attr8),
+        _state_attrs_exist(attr9),
+        _state_attrs_exist(attr10),
+        _state_attrs_exist(attr11),
+        _state_attrs_exist(attr12),
+        _state_attrs_exist(attr13),
+        _state_attrs_exist(attr14),
+        _state_attrs_exist(attr15),
+        _state_attrs_exist(attr16),
+        _state_attrs_exist(attr17),
+        _state_attrs_exist(attr18),
+        _state_attrs_exist(attr19),
+        _state_attrs_exist(attr20),
+        _state_attrs_exist(attr21),
+        _state_attrs_exist(attr22),
+        _state_attrs_exist(attr23),
+        _state_attrs_exist(attr24),
+        _state_attrs_exist(attr25),
+        _state_attrs_exist(attr26),
+        _state_attrs_exist(attr27),
+        _state_attrs_exist(attr28),
+        _state_attrs_exist(attr29),
+        _state_attrs_exist(attr30),
+        _state_attrs_exist(attr31),
+        _state_attrs_exist(attr32),
+        _state_attrs_exist(attr33),
+        _state_attrs_exist(attr34),
+        _state_attrs_exist(attr35),
+        _state_attrs_exist(attr36),
+        _state_attrs_exist(attr37),
+        _state_attrs_exist(attr38),
+        _state_attrs_exist(attr39),
+        _state_attrs_exist(attr40),
+        _state_attrs_exist(attr41),
+        _state_attrs_exist(attr42),
+        _state_attrs_exist(attr43),
+        _state_attrs_exist(attr44),
+        _state_attrs_exist(attr45),
+        _state_attrs_exist(attr46),
+        _state_attrs_exist(attr47),
+        _state_attrs_exist(attr48),
+        _state_attrs_exist(attr49),
+        _state_attrs_exist(attr50),
+        _state_attrs_exist(attr51),
+        _state_attrs_exist(attr52),
+        _state_attrs_exist(attr53),
+        _state_attrs_exist(attr54),
+        _state_attrs_exist(attr55),
+        _state_attrs_exist(attr56),
+        _state_attrs_exist(attr57),
+        _state_attrs_exist(attr58),
+        _state_attrs_exist(attr59),
+        _state_attrs_exist(attr60),
+        _state_attrs_exist(attr61),
+        _state_attrs_exist(attr62),
+        _state_attrs_exist(attr63),
+        _state_attrs_exist(attr64),
+        _state_attrs_exist(attr65),
+        _state_attrs_exist(attr66),
+        _state_attrs_exist(attr67),
+        _state_attrs_exist(attr68),
+        _state_attrs_exist(attr69),
+        _state_attrs_exist(attr70),
+        _state_attrs_exist(attr71),
+        _state_attrs_exist(attr72),
+        _state_attrs_exist(attr73),
+        _state_attrs_exist(attr74),
+        _state_attrs_exist(attr75),
+        _state_attrs_exist(attr76),
+        _state_attrs_exist(attr77),
+        _state_attrs_exist(attr78),
+        _state_attrs_exist(attr79),
+        _state_attrs_exist(attr80),
+        _state_attrs_exist(attr81),
+        _state_attrs_exist(attr82),
+        _state_attrs_exist(attr83),
+        _state_attrs_exist(attr84),
+        _state_attrs_exist(attr85),
+        _state_attrs_exist(attr86),
+        _state_attrs_exist(attr87),
+        _state_attrs_exist(attr88),
+        _state_attrs_exist(attr89),
+        _state_attrs_exist(attr90),
+        _state_attrs_exist(attr91),
+        _state_attrs_exist(attr92),
+        _state_attrs_exist(attr93),
+        _state_attrs_exist(attr94),
+        _state_attrs_exist(attr95),
+        _state_attrs_exist(attr96),
+        _state_attrs_exist(attr97),
+        _state_attrs_exist(attr98),
+        _state_attrs_exist(attr99),
+        _state_attrs_exist(attr100),
     )
 
 
 def data_ids_exist_in_events_sqlite(
     data_ids: Iterable[int],
-) -> StatementLambdaElement:
+) -> Select:
     """Find data ids that exist in the events table."""
-    return lambda_stmt(
-        lambda: select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))
-    )
+    return select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))
 
 
 def _event_data_id_exist(data_id: int | None) -> Select:
@@ -383,140 +374,138 @@ def data_ids_exist_in_events(
     id98: int | None,
     id99: int | None,
     id100: int | None,
-) -> StatementLambdaElement:
+) -> union_all:
     """Generate the find event data select only once.
 
     https://docs.sqlalchemy.org/en/14/core/connections.html#quick-guidelines-for-lambdas
     """
-    return lambda_stmt(
-        lambda: union_all(
-            _event_data_id_exist(id1),
-            _event_data_id_exist(id2),
-            _event_data_id_exist(id3),
-            _event_data_id_exist(id4),
-            _event_data_id_exist(id5),
-            _event_data_id_exist(id6),
-            _event_data_id_exist(id7),
-            _event_data_id_exist(id8),
-            _event_data_id_exist(id9),
-            _event_data_id_exist(id10),
-            _event_data_id_exist(id11),
-            _event_data_id_exist(id12),
-            _event_data_id_exist(id13),
-            _event_data_id_exist(id14),
-            _event_data_id_exist(id15),
-            _event_data_id_exist(id16),
-            _event_data_id_exist(id17),
-            _event_data_id_exist(id18),
-            _event_data_id_exist(id19),
-            _event_data_id_exist(id20),
-            _event_data_id_exist(id21),
-            _event_data_id_exist(id22),
-            _event_data_id_exist(id23),
-            _event_data_id_exist(id24),
-            _event_data_id_exist(id25),
-            _event_data_id_exist(id26),
-            _event_data_id_exist(id27),
-            _event_data_id_exist(id28),
-            _event_data_id_exist(id29),
-            _event_data_id_exist(id30),
-            _event_data_id_exist(id31),
-            _event_data_id_exist(id32),
-            _event_data_id_exist(id33),
-            _event_data_id_exist(id34),
-            _event_data_id_exist(id35),
-            _event_data_id_exist(id36),
-            _event_data_id_exist(id37),
-            _event_data_id_exist(id38),
-            _event_data_id_exist(id39),
-            _event_data_id_exist(id40),
-            _event_data_id_exist(id41),
-            _event_data_id_exist(id42),
-            _event_data_id_exist(id43),
-            _event_data_id_exist(id44),
-            _event_data_id_exist(id45),
-            _event_data_id_exist(id46),
-            _event_data_id_exist(id47),
-            _event_data_id_exist(id48),
-            _event_data_id_exist(id49),
-            _event_data_id_exist(id50),
-            _event_data_id_exist(id51),
-            _event_data_id_exist(id52),
-            _event_data_id_exist(id53),
-            _event_data_id_exist(id54),
-            _event_data_id_exist(id55),
-            _event_data_id_exist(id56),
-            _event_data_id_exist(id57),
-            _event_data_id_exist(id58),
-            _event_data_id_exist(id59),
-            _event_data_id_exist(id60),
-            _event_data_id_exist(id61),
-            _event_data_id_exist(id62),
-            _event_data_id_exist(id63),
-            _event_data_id_exist(id64),
-            _event_data_id_exist(id65),
-            _event_data_id_exist(id66),
-            _event_data_id_exist(id67),
-            _event_data_id_exist(id68),
-            _event_data_id_exist(id69),
-            _event_data_id_exist(id70),
-            _event_data_id_exist(id71),
-            _event_data_id_exist(id72),
-            _event_data_id_exist(id73),
-            _event_data_id_exist(id74),
-            _event_data_id_exist(id75),
-            _event_data_id_exist(id76),
-            _event_data_id_exist(id77),
-            _event_data_id_exist(id78),
-            _event_data_id_exist(id79),
-            _event_data_id_exist(id80),
-            _event_data_id_exist(id81),
-            _event_data_id_exist(id82),
-            _event_data_id_exist(id83),
-            _event_data_id_exist(id84),
-            _event_data_id_exist(id85),
-            _event_data_id_exist(id86),
-            _event_data_id_exist(id87),
-            _event_data_id_exist(id88),
-            _event_data_id_exist(id89),
-            _event_data_id_exist(id90),
-            _event_data_id_exist(id91),
-            _event_data_id_exist(id92),
-            _event_data_id_exist(id93),
-            _event_data_id_exist(id94),
-            _event_data_id_exist(id95),
-            _event_data_id_exist(id96),
-            _event_data_id_exist(id97),
-            _event_data_id_exist(id98),
-            _event_data_id_exist(id99),
-            _event_data_id_exist(id100),
-        )
+    return union_all(
+        _event_data_id_exist(id1),
+        _event_data_id_exist(id2),
+        _event_data_id_exist(id3),
+        _event_data_id_exist(id4),
+        _event_data_id_exist(id5),
+        _event_data_id_exist(id6),
+        _event_data_id_exist(id7),
+        _event_data_id_exist(id8),
+        _event_data_id_exist(id9),
+        _event_data_id_exist(id10),
+        _event_data_id_exist(id11),
+        _event_data_id_exist(id12),
+        _event_data_id_exist(id13),
+        _event_data_id_exist(id14),
+        _event_data_id_exist(id15),
+        _event_data_id_exist(id16),
+        _event_data_id_exist(id17),
+        _event_data_id_exist(id18),
+        _event_data_id_exist(id19),
+        _event_data_id_exist(id20),
+        _event_data_id_exist(id21),
+        _event_data_id_exist(id22),
+        _event_data_id_exist(id23),
+        _event_data_id_exist(id24),
+        _event_data_id_exist(id25),
+        _event_data_id_exist(id26),
+        _event_data_id_exist(id27),
+        _event_data_id_exist(id28),
+        _event_data_id_exist(id29),
+        _event_data_id_exist(id30),
+        _event_data_id_exist(id31),
+        _event_data_id_exist(id32),
+        _event_data_id_exist(id33),
+        _event_data_id_exist(id34),
+        _event_data_id_exist(id35),
+        _event_data_id_exist(id36),
+        _event_data_id_exist(id37),
+        _event_data_id_exist(id38),
+        _event_data_id_exist(id39),
+        _event_data_id_exist(id40),
+        _event_data_id_exist(id41),
+        _event_data_id_exist(id42),
+        _event_data_id_exist(id43),
+        _event_data_id_exist(id44),
+        _event_data_id_exist(id45),
+        _event_data_id_exist(id46),
+        _event_data_id_exist(id47),
+        _event_data_id_exist(id48),
+        _event_data_id_exist(id49),
+        _event_data_id_exist(id50),
+        _event_data_id_exist(id51),
+        _event_data_id_exist(id52),
+        _event_data_id_exist(id53),
+        _event_data_id_exist(id54),
+        _event_data_id_exist(id55),
+        _event_data_id_exist(id56),
+        _event_data_id_exist(id57),
+        _event_data_id_exist(id58),
+        _event_data_id_exist(id59),
+        _event_data_id_exist(id60),
+        _event_data_id_exist(id61),
+        _event_data_id_exist(id62),
+        _event_data_id_exist(id63),
+        _event_data_id_exist(id64),
+        _event_data_id_exist(id65),
+        _event_data_id_exist(id66),
+        _event_data_id_exist(id67),
+        _event_data_id_exist(id68),
+        _event_data_id_exist(id69),
+        _event_data_id_exist(id70),
+        _event_data_id_exist(id71),
+        _event_data_id_exist(id72),
+        _event_data_id_exist(id73),
+        _event_data_id_exist(id74),
+        _event_data_id_exist(id75),
+        _event_data_id_exist(id76),
+        _event_data_id_exist(id77),
+        _event_data_id_exist(id78),
+        _event_data_id_exist(id79),
+        _event_data_id_exist(id80),
+        _event_data_id_exist(id81),
+        _event_data_id_exist(id82),
+        _event_data_id_exist(id83),
+        _event_data_id_exist(id84),
+        _event_data_id_exist(id85),
+        _event_data_id_exist(id86),
+        _event_data_id_exist(id87),
+        _event_data_id_exist(id88),
+        _event_data_id_exist(id89),
+        _event_data_id_exist(id90),
+        _event_data_id_exist(id91),
+        _event_data_id_exist(id92),
+        _event_data_id_exist(id93),
+        _event_data_id_exist(id94),
+        _event_data_id_exist(id95),
+        _event_data_id_exist(id96),
+        _event_data_id_exist(id97),
+        _event_data_id_exist(id98),
+        _event_data_id_exist(id99),
+        _event_data_id_exist(id100),
     )
 
 
-def disconnect_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
+def disconnect_states_rows(state_ids: Iterable[int]) -> update:
     """Disconnect states rows."""
-    return lambda_stmt(
-        lambda: update(States)
+    return (
+        update(States)
         .where(States.old_state_id.in_(state_ids))
         .values(old_state_id=None)
         .execution_options(synchronize_session=False)
     )
 
 
-def delete_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
+def delete_states_rows(state_ids: Iterable[int]) -> delete:
     """Delete states rows."""
-    return lambda_stmt(
-        lambda: delete(States)
+    return (
+        delete(States)
         .where(States.state_id.in_(state_ids))
         .execution_options(synchronize_session=False)
     )
 
 
-def delete_event_data_rows(data_ids: Iterable[int]) -> StatementLambdaElement:
+def delete_event_data_rows(data_ids: Iterable[int]) -> delete:
     """Delete event_data rows."""
-    return lambda_stmt(
-        lambda: delete(EventData)
+    return (
+        delete(EventData)
         .where(EventData.data_id.in_(data_ids))
         .execution_options(synchronize_session=False)
     )
@@ -524,10 +513,10 @@ def delete_event_data_rows(data_ids: Iterable[int]) -> StatementLambdaElement:
 
 def delete_states_attributes_rows(
     attributes_ids: Iterable[int],
-) -> StatementLambdaElement:
+) -> delete:
     """Delete states_attributes rows."""
-    return lambda_stmt(
-        lambda: delete(StateAttributes)
+    return (
+        delete(StateAttributes)
         .where(StateAttributes.attributes_id.in_(attributes_ids))
         .execution_options(synchronize_session=False)
     )
@@ -535,10 +524,10 @@ def delete_states_attributes_rows(
 
 def delete_statistics_runs_rows(
     statistics_runs: Iterable[int],
-) -> StatementLambdaElement:
+) -> delete:
     """Delete statistics_runs rows."""
-    return lambda_stmt(
-        lambda: delete(StatisticsRuns)
+    return (
+        delete(StatisticsRuns)
         .where(StatisticsRuns.run_id.in_(statistics_runs))
         .execution_options(synchronize_session=False)
     )
@@ -546,10 +535,10 @@ def delete_statistics_runs_rows(
 
 def delete_statistics_short_term_rows(
     short_term_statistics: Iterable[int],
-) -> StatementLambdaElement:
+) -> delete:
     """Delete statistics_short_term rows."""
-    return lambda_stmt(
-        lambda: delete(StatisticsShortTerm)
+    return (
+        delete(StatisticsShortTerm)
         .where(StatisticsShortTerm.id.in_(short_term_statistics))
         .execution_options(synchronize_session=False)
     )
@@ -557,40 +546,38 @@ def delete_statistics_short_term_rows(
 
 def delete_event_rows(
     event_ids: Iterable[int],
-) -> StatementLambdaElement:
+) -> delete:
     """Delete statistics_short_term rows."""
-    return lambda_stmt(
-        lambda: delete(Events)
+    return (
+        delete(Events)
         .where(Events.event_id.in_(event_ids))
         .execution_options(synchronize_session=False)
     )
 
 
-def delete_recorder_runs_rows(
-    purge_before: datetime, current_run_id: int
-) -> StatementLambdaElement:
+def delete_recorder_runs_rows(purge_before: datetime, current_run_id: int) -> delete:
     """Delete recorder_runs rows."""
-    return lambda_stmt(
-        lambda: delete(RecorderRuns)
+    return (
+        delete(RecorderRuns)
         .filter(RecorderRuns.start < purge_before)
         .filter(RecorderRuns.run_id != current_run_id)
         .execution_options(synchronize_session=False)
     )
 
 
-def find_events_to_purge(purge_before: datetime) -> StatementLambdaElement:
+def find_events_to_purge(purge_before: datetime) -> Select:
     """Find events to purge."""
-    return lambda_stmt(
-        lambda: select(Events.event_id, Events.data_id)
+    return (
+        select(Events.event_id, Events.data_id)
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
 
-def find_states_to_purge(purge_before: datetime) -> StatementLambdaElement:
+def find_states_to_purge(purge_before: datetime) -> Select:
     """Find states to purge."""
-    return lambda_stmt(
-        lambda: select(States.state_id, States.attributes_id)
+    return (
+        select(States.state_id, States.attributes_id)
         .filter(States.last_updated < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
@@ -598,10 +585,10 @@ def find_states_to_purge(purge_before: datetime) -> StatementLambdaElement:
 
 def find_short_term_statistics_to_purge(
     purge_before: datetime,
-) -> StatementLambdaElement:
+) -> Select:
     """Find short term statistics to purge."""
-    return lambda_stmt(
-        lambda: select(StatisticsShortTerm.id)
+    return (
+        select(StatisticsShortTerm.id)
         .filter(StatisticsShortTerm.start < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
@@ -609,34 +596,32 @@ def find_short_term_statistics_to_purge(
 
 def find_statistics_runs_to_purge(
     purge_before: datetime,
-) -> StatementLambdaElement:
+) -> Select:
     """Find statistics_runs to purge."""
-    return lambda_stmt(
-        lambda: select(StatisticsRuns.run_id)
+    return (
+        select(StatisticsRuns.run_id)
         .filter(StatisticsRuns.start < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
 
-def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
+def find_latest_statistics_runs_run_id() -> Select:
     """Find the latest statistics_runs run_id."""
-    return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))
+    return select(func.max(StatisticsRuns.run_id))
 
 
 def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
     purge_before: datetime,
-) -> StatementLambdaElement:
+) -> Select:
     """Find the latest row in the legacy format to purge."""
-    return lambda_stmt(
-        lambda: select(
-            Events.event_id, Events.data_id, States.state_id, States.attributes_id
-        )
+    return (
+        select(Events.event_id, Events.data_id, States.state_id, States.attributes_id)
         .outerjoin(States, Events.event_id == States.event_id)
         .filter(Events.time_fired < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
 
 
-def find_legacy_row() -> StatementLambdaElement:
+def find_legacy_row() -> Select:
     """Check if there are still states in the table with an event_id."""
-    return lambda_stmt(lambda: select(func.max(States.event_id)))
+    return select(func.max(States.event_id))
