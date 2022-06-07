@@ -67,6 +67,15 @@ BATTERY_POWER_SENSOR = [
 ]
 
 
+def cvt_battery(val: int | None) -> int | None:
+    """Convert battery to percentage."""
+    if val is None:
+        return None
+    if val > 0:
+        return percentage.ordered_list_item_to_percentage([1, 2, 3, 4], val)
+    return 0
+
+
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
@@ -74,13 +83,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         name="Battery",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: (
-            percentage.ordered_list_item_to_percentage([1, 2, 3, 4], value)
-            if value > 0
-            else 0
-        )
-        if value is not None
-        else None,
+        value=cvt_battery,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
     ),
     YoLinkSensorEntityDescription(
