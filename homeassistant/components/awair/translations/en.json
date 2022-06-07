@@ -10,7 +10,7 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "access_token": "Access Token",
                     "email": "Email"
