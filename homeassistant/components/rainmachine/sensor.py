@@ -218,7 +218,7 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
         """Initialize."""
         super().__init__(entry, coordinator, controller, description)
 
-        self._currently_running: bool = False
+        self._running_or_queued: bool = False
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -227,14 +227,14 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
         now = utcnow()
 
         if RUN_STATE_MAP.get(data["state"]) == RunStates.NOT_RUNNING:
-            if self._currently_running:
+            if self._running_or_queued:
                 # If we go from running to not running, update the state to be right
                 # now (i.e., the time the zone stopped running):
                 self._attr_native_value = now
-                self._currently_running = False
+                self._running_or_queued = False
             return
 
-        self._currently_running = True
+        self._running_or_queued = True
         new_timestamp = now + timedelta(seconds=data["remaining"])
 
         if self._attr_native_value:
