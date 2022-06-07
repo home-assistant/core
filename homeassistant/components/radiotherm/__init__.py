@@ -41,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     init_coro = async_get_init_data(hass, host)
     init_data = await _async_call_or_raise_not_ready(init_coro, host)
-    assert init_data is not None
     coordinator = RadioThermUpdateCoordinator(hass, init_data)
     await coordinator.async_config_entry_first_refresh()
 
