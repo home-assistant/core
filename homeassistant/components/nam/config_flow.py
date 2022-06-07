@@ -80,7 +80,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self.host: str
         self.entry: config_entries.ConfigEntry
-        self._auth_enabled: bool = False
+        self._config: NamConfig
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
