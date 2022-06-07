@@ -528,7 +528,6 @@ def _is_valid_return_type(
         and isinstance(node, nodes.Name)
         and expected_type in _CHECK_RETURN_TYPE_INHERITANCE
     ):
-        infer_node: nodes.ClassDef
         ancestor: nodes.ClassDef
         for infer_node in node.infer():
             if isinstance(infer_node, nodes.ClassDef):
