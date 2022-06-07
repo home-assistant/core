@@ -213,7 +213,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_abort(reason="not_xiaomi_miio")
 
-    def _extract_cloud_info(self, cloud_device_info: dict[str, Any]) -> None:
+    def extract_cloud_info(self, cloud_device_info: dict[str, Any]) -> None:
         """Extract the cloud info."""
         if self.host is None:
             self.host = cloud_device_info["localip"]
@@ -282,11 +282,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 for device in self.cloud_devices.values():
                     cloud_host = device.get("localip")
                     if cloud_host == self.host:
-                        self._extract_cloud_info(device)
+                        self.extract_cloud_info(device)
                         return await self.async_step_connect()
 
             if len(self.cloud_devices) == 1:
-                self._extract_cloud_info(list(self.cloud_devices.values())[0])
+                self.extract_cloud_info(list(self.cloud_devices.values())[0])
                 return await self.async_step_connect()
 
             return await self.async_step_select()
@@ -302,7 +302,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             cloud_device = self.cloud_devices[user_input["select_device"]]
-            self._extract_cloud_info(cloud_device)
+            self.extract_cloud_info(cloud_device)
             return await self.async_step_connect()
 
         select_schema = vol.Schema(
