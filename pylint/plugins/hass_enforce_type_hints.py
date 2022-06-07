@@ -13,6 +13,7 @@ from homeassistant.const import Platform
 UNDEFINED = object()
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
+_CHECK_RETURN_TYPE_INHERITANCE: set[str] = {"OptionsFlow"}
 
 
 @dataclass
@@ -385,7 +386,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={
                         0: "ConfigEntry",
                     },
-                    return_type=UNDEFINED,
+                    return_type="OptionsFlow",
                 ),
                 TypeHintMatch(
                     function_name="async_step_dhcp",
@@ -511,6 +512,31 @@ def _is_valid_type(
     return isinstance(node, nodes.Attribute) and node.attrname == expected_type
 
 
+def _is_valid_return_type(
+    expected_type: list[str] | str | None | object, node: nodes.NodeNG
+) -> bool:
+    if _is_valid_type(expected_type, node):
+        return True
+
+    if isinstance(node, nodes.BinOp):
+        return _is_valid_return_type(
+            expected_type, node.left
+        ) and _is_valid_return_type(expected_type, node.right)
+
+    if expected_type in _CHECK_RETURN_TYPE_INHERITANCE and isinstance(node, nodes.Name):
+        infer_node: nodes.ClassDef
+        ancestor: nodes.ClassDef
+        for infer_node in node.infer():
+            if isinstance(infer_node, nodes.ClassDef):
+                if infer_node.name == expected_type:
+                    return True
+                for ancestor in infer_node.ancestors():
+                    if ancestor.name == expected_type:
+                        return True
+
+    return False
+
+
 def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     args = node.args
     annotations: list[nodes.NodeNG | None] = (
@@ -626,7 +652,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 )
 
         # Check the return type.
-        if not _is_valid_type(return_type := match.return_type, node.returns):
+        if not _is_valid_return_type(return_type := match.return_type, node.returns):
             self.add_message("hass-return-type", node=node, args=return_type or "None")
 
 
