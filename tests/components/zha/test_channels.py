@@ -510,7 +510,7 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     checkin_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-    events = async_capture_events(hass, "zha_event")
+    events = async_capture_events(hass, zha_const.ZHA_EVENT)
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22

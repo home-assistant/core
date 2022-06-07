@@ -16,6 +16,7 @@ to always keep workers active.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
 import logging
 import re
@@ -206,13 +207,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Setup Recorder
     async_setup_recorder(hass)
 
-    @callback
-    def shutdown(event: Event) -> None:
+    async def shutdown(event: Event) -> None:
         """Stop all stream workers."""
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.keepalive = False
-            stream.stop()
-        _LOGGER.info("Stopped stream workers")
+        if awaitables := [
+            asyncio.create_task(stream.stop())
+            for stream in hass.data[DOMAIN][ATTR_STREAMS]
+        ]:
+            await asyncio.wait(awaitables)
+        _LOGGER.debug("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
@@ -236,6 +240,7 @@ class Stream:
         self._stream_label = stream_label
         self.keepalive = False
         self.access_token: str | None = None
+        self._start_stop_lock = asyncio.Lock()
         self._thread: threading.Thread | None = None
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
@@ -271,12 +276,11 @@ class Stream:
         """Add provider output stream."""
         if not (provider := self._outputs.get(fmt)):
 
-            @callback
-            def idle_callback() -> None:
+            async def idle_callback() -> None:
                 if (
                     not self.keepalive or fmt == RECORDER_PROVIDER
                 ) and fmt in self._outputs:
-                    self.remove_provider(self._outputs[fmt])
+                    await self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
             provider = PROVIDERS[fmt](
@@ -286,14 +290,14 @@ class Stream:
 
         return provider
 
-    def remove_provider(self, provider: StreamOutput) -> None:
+    async def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""
         if provider.name in self._outputs:
             self._outputs[provider.name].cleanup()
             del self._outputs[provider.name]
 
         if not self._outputs:
-            self.stop()
+            await self.stop()
 
     def check_idle(self) -> None:
         """Reset access token if all providers are idle."""
@@ -316,9 +320,14 @@ class Stream:
         if self._update_callback:
             self._update_callback()
 
-    def start(self) -> None:
-        """Start a stream."""
-        if self._thread is None or not self._thread.is_alive():
+    async def start(self) -> None:
+        """Start a stream.
+
+        Uses an asyncio.Lock to avoid conflicts with _stop().
+        """
+        async with self._start_stop_lock:
+            if self._thread and self._thread.is_alive():
+                return
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
@@ -329,7 +338,7 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            self._logger.info(
+            self._logger.debug(
                 "Started stream: %s", redact_credentials(str(self.source))
             )
 
@@ -394,33 +403,39 @@ class Stream:
                 redact_credentials(str(self.source)),
             )
 
-        @callback
-        def worker_finished() -> None:
+        async def worker_finished() -> None:
             # The worker is no checking availability of the stream and can no longer track
             # availability so mark it as available, otherwise the frontend may not be able to
             # interact with the stream.
             if not self.available:
                 self._async_update_state(True)
+            # We can call remove_provider() sequentially as the wrapped _stop() function
+            # which blocks internally is only called when the last provider is removed.
             for provider in self.outputs().values():
-                self.remove_provider(provider)
+                await self.remove_provider(provider)
 
-        self.hass.loop.call_soon_threadsafe(worker_finished)
+        self.hass.create_task(worker_finished())
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Remove outputs and access token."""
         self._outputs = {}
         self.access_token = None
 
         if not self.keepalive:
-            self._stop()
+            await self._stop()
 
-    def _stop(self) -> None:
-        """Stop worker thread."""
-        if self._thread is not None:
+    async def _stop(self) -> None:
+        """Stop worker thread.
+
+        Uses an asyncio.Lock to avoid conflicts with start().
+        """
+        async with self._start_stop_lock:
+            if self._thread is None:
+                return
             self._thread_quit.set()
-            self._thread.join()
+            await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
-            self._logger.info(
+            self._logger.debug(
                 "Stopped stream: %s", redact_credentials(str(self.source))
             )
 
@@ -448,7 +463,7 @@ class Stream:
         )
         recorder.video_path = video_path
 
-        self.start()
+        await self.start()
         self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
@@ -473,7 +488,7 @@ class Stream:
         """
 
         self.add_provider(HLS_PROVIDER)
-        self.start()
+        await self.start()
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
