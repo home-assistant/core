@@ -161,6 +161,8 @@ def calc_median(sensor_values, round_digits):
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
+    _attr_icon = ICON
+    _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, entity_ids, name, sensor_type, round_digits, unique_id):
@@ -171,9 +173,9 @@ class MinMaxSensor(SensorEntity):
         self._round_digits = round_digits
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"{sensor_type} sensor".capitalize()
+            self._attr_name = f"{sensor_type} sensor".capitalize()
         self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
@@ -199,11 +201,6 @@ class MinMaxSensor(SensorEntity):
         self._calc_values()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
@@ -218,11 +215,6 @@ class MinMaxSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._sensor_type == "min":
@@ -232,11 +224,6 @@ class MinMaxSensor(SensorEntity):
         if self._sensor_type == "last":
             return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
         return None
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @callback
     def _async_min_max_sensor_state_listener(self, event, update_state=True):
