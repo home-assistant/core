@@ -1,5 +1,4 @@
 """Tests for Transmission config flow."""
-from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -8,15 +7,7 @@ from transmissionrpc.error import TransmissionError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
-from homeassistant.components.transmission.const import (
-    CONF_LIMIT,
-    CONF_ORDER,
-    DEFAULT_LIMIT,
-    DEFAULT_NAME,
-    DEFAULT_ORDER,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-)
+from homeassistant.components.transmission.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -151,51 +142,6 @@ async def test_options(hass):
     result = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 10
-
-
-async def test_import(hass, api):
-    """Test import step."""
-    flow = init_config_flow(hass)
-
-    # import with minimum fields only
-    result = await flow.async_step_import(
-        {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            CONF_LIMIT: DEFAULT_LIMIT,
-            CONF_ORDER: DEFAULT_ORDER,
-        }
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_NAME] == DEFAULT_NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
-
-    # import with all
-    result = await flow.async_step_import(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-            CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
-            CONF_LIMIT: DEFAULT_LIMIT,
-            CONF_ORDER: DEFAULT_ORDER,
-        }
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SCAN_INTERVAL] == SCAN_INTERVAL
 
 
 async def test_host_already_configured(hass, api):

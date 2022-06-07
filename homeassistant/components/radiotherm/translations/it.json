@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Vuoi configurare {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Impostare una sospensione permanente durante la regolazione della temperatura."
+                }
+            }
+        }
+    }
+}

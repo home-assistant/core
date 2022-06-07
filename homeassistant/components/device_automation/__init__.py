@@ -190,19 +190,23 @@ def _async_set_entity_device_automation_metadata(
 
 
 async def _async_get_device_automations_from_domain(
-    hass, domain, automation_type, device_ids, return_exceptions
-):
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: DeviceAutomationType,
+    device_ids: Iterable[str],
+    return_exceptions: bool,
+) -> list[list[dict[str, Any]] | Exception]:
     """List device automations."""
     try:
         platform = await async_get_device_automation_platform(
             hass, domain, automation_type
         )
     except InvalidDeviceAutomationConfig:
-        return {}
+        return []
 
     function_name = automation_type.value.get_automations_func
 
-    return await asyncio.gather(
+    return await asyncio.gather(  # type: ignore[no-any-return]
         *(
             getattr(platform, function_name)(hass, device_id)
             for device_id in device_ids

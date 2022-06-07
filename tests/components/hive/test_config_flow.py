@@ -34,6 +34,9 @@ async def test_import_flow(hass):
             },
         },
     ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
+    ), patch(
         "homeassistant.components.hive.config_flow.Auth.getDeviceData",
         return_value=[
             "mock-device-group-key",
@@ -93,6 +96,9 @@ async def test_user_flow(hass):
                 "AccessToken": "mock-access-token",
             },
         },
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
     ), patch(
         "homeassistant.components.hive.config_flow.Auth.getDeviceData",
         return_value=[
@@ -172,6 +178,9 @@ async def test_user_flow_2fa(hass):
                 "AccessToken": "mock-access-token",
             },
         },
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
     ), patch(
         "homeassistant.components.hive.config_flow.Auth.getDeviceData",
         return_value=[
@@ -256,6 +265,9 @@ async def test_reauth_flow(hass):
                 "AccessToken": "mock-access-token",
             },
         },
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -361,6 +373,9 @@ async def test_user_flow_2fa_send_new_code(hass):
                 "AccessToken": "mock-access-token",
             },
         },
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
     ), patch(
         "homeassistant.components.hive.config_flow.Auth.getDeviceData",
         return_value=[
