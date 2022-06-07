@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     ENTITY_ID_IN_EVENT,
     ENTITY_ID_LAST_UPDATED_INDEX,
     OLD_ENTITY_ID_IN_EVENT,
