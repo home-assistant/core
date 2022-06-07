@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
+    TIME_HOURS,
 )
 
 DOMAIN = "kostal_piko"
@@ -375,15 +376,15 @@ SENSORS: list[tuple[Entries, dict]] = [
         Entries.StatisticsTotalYield,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL,
         },
     ),
     (
         Entries.StatisticsTotalOperatingTime,
         {
-            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
-            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
+            ATTR_UNIT_OF_MEASUREMENT: TIME_HOURS,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL,
         },
     ),
