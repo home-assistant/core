@@ -416,14 +416,14 @@ class Stream:
         self.access_token = None
 
         if not self.keepalive:
-            await self.hass.async_add_executor_job(self._stop)
+            await self._stop()
 
-    def _stop(self) -> None:
+    async def _stop(self) -> None:
         """Stop worker thread."""
-        if self._thread is not None:
+        if (thread := self._thread) is not None:
             self._thread_quit.set()
-            self._thread.join()
             self._thread = None
+            await self.hass.async_add_executor_job(thread.join)
             self._logger.info(
                 "Stopped stream: %s", redact_credentials(str(self.source))
             )
