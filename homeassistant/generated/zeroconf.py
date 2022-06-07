@@ -370,7 +370,7 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
-    "_system-bridge._udp.local.": [
+    "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge"
         }

@@ -21,6 +21,7 @@ from .const import (
     FIRMWARE_REVISION,
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
+    PV_HUB_ADDRESS,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .shade_data import PowerviewShadeData, PowerviewShadePositions
@@ -40,6 +41,7 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
         super().__init__(coordinator)
         self._room_name = room_name
         self._attr_unique_id = unique_id
+        self._hub_address = device_info[PV_HUB_ADDRESS]
         self._device_info = device_info
 
     @property
@@ -62,6 +64,7 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
             name=self._device_info[DEVICE_NAME],
             suggested_area=self._room_name,
             sw_version=sw_version,
+            configuration_url=f"http://{self._hub_address}/api/shades",
         )
 
 
@@ -97,6 +100,7 @@ class ShadeEntity(HDEntity):
             manufacturer=MANUFACTURER,
             model=str(self._shade.raw_data[ATTR_TYPE]),
             via_device=(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
+            configuration_url=f"http://{self._hub_address}/api/shades/{self._shade.id}",
         )
 
         for shade in self._shade.shade_types:

@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
 from .models import ProtectRequiredKeysMixin
-from .utils import get_nested_attr
+from .utils import async_get_adoptable_devices_by_type, get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,7 +153,9 @@ class ProtectDeviceEntity(Entity):
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
             assert self.device.model
-            devices = getattr(self.data.api.bootstrap, f"{self.device.model.value}s")
+            devices = async_get_adoptable_devices_by_type(
+                self.data.api, self.device.model
+            )
             self.device = devices[self.device.id]
 
         is_connected = (
