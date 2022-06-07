@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VeSyncBaseDevice], StateType]
+    value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
 
 
 @dataclass
