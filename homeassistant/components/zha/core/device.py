@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+from functools import cached_property
 import logging
 import random
 import time
@@ -280,7 +281,16 @@ class ZHADevice(LogMixin):
         """Return the gateway for this device."""
         return self._zha_gateway
 
-    @property
+    @cached_property
+    def device_automation_commands(self) -> dict[str, list[tuple[str, str]]]:
+        """Return the a lookup of commands to etype/sub_type."""
+        commands: dict[str, list[tuple[str, str]]] = {}
+        for etype_subtype, trigger in self.device_automation_triggers.items():
+            if command := trigger.get(ATTR_COMMAND):
+                commands.setdefault(command, []).append(etype_subtype)
+        return commands
+
+    @cached_property
     def device_automation_triggers(self) -> dict[tuple[str, str], dict[str, str]]:
         """Return the device automation triggers for this device."""
         triggers = {
