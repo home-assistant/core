@@ -1,4 +1,4 @@
-"""Tests for AVM Fritz!Box."""
+"""Tests for Fritz!Tools."""
 from unittest.mock import patch
 
 from fritzconnection.core.exceptions import FritzSecurityError
