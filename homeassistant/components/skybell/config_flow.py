@@ -7,7 +7,7 @@ from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_MAC, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -35,13 +35,13 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             self._async_abort_entries_match({CONF_EMAIL: email})
-            user_id, error = await self._async_validate_input(email, password)
+            user_id, macs, error = await self._async_validate_input(email, password)
             if error is None:
                 await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=email,
-                    data={CONF_EMAIL: email, CONF_PASSWORD: password},
+                    data={CONF_EMAIL: email, CONF_PASSWORD: password, CONF_MAC: macs},
                 )
             errors["base"] = error
 
@@ -66,11 +66,13 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
         )
         try:
-            await skybell.async_initialize()
+            devices = await skybell.async_initialize()
+            for device in devices:
+                await device.async_update()
         except exceptions.SkybellAuthenticationException:
-            return None, "invalid_auth"
+            return None, None, "invalid_auth"
         except exceptions.SkybellException:
-            return None, "cannot_connect"
+            return None, None, "cannot_connect"
         except Exception:  # pylint: disable=broad-except
-            return None, "unknown"
-        return skybell.user_id, None
+            return None, None, "unknown"
+        return skybell.user_id, [device.mac for device in devices], None

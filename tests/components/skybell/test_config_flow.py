@@ -12,7 +12,13 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CONF_CONFIG_FLOW, _patch_skybell, _patch_skybell_devices
+from . import (
+    CONF_CONFIG_FLOW,
+    CONF_DATA,
+    _patch_skybell,
+    _patch_skybell_devices,
+    _patch_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +39,13 @@ def _patch_setup() -> None:
 
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    with _patch_skybell(), _patch_skybell_devices(), _patch_setup_entry(), _patch_setup():
+    with (
+        _patch_skybell(),
+        _patch_skybell_devices(),
+        _patch_setup_entry(),
+        _patch_setup(),
+        _patch_update(),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -48,7 +60,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
 
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "user"
-        assert result["data"] == CONF_CONFIG_FLOW
+        assert result["data"] == CONF_DATA
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
@@ -107,7 +119,13 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_flow_import(hass: HomeAssistant) -> None:
     """Test import step."""
-    with _patch_skybell(), _patch_skybell_devices(), _patch_setup_entry(), _patch_setup():
+    with (
+        _patch_skybell(),
+        _patch_skybell_devices(),
+        _patch_setup_entry(),
+        _patch_setup(),
+        _patch_update(),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}
         )
@@ -117,7 +135,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "user"
-        assert result["data"] == CONF_CONFIG_FLOW
+        assert result["data"] == CONF_DATA
 
 
 async def test_flow_import_already_configured(hass: HomeAssistant) -> None:
