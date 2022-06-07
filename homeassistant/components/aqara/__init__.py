@@ -1,9 +1,11 @@
 """Support for Aqara Smart devices."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import NamedTuple
 
+from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from aqara_iot import (
     AqaraDeviceListener,
     AqaraDeviceManager,
@@ -12,9 +14,9 @@ from aqara_iot import (
     AqaraOpenMQ,
     AqaraPoint,
 )
-import requests
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -26,12 +28,9 @@ from .const import (
     AQARA_HA_SIGNAL_UPDATE_ENTITY,
     AQARA_HA_SIGNAL_UPDATE_POINT_VALUE,
     CONF_COUNTRY_CODE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     PLATFORMS,
 )
-from .util import string_dot_to_underline, string_underline_to_dot
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,17 +51,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = AqaraOpenAPI(country_code=entry.data[CONF_COUNTRY_CODE])
 
     try:
-        response = await hass.async_add_executor_job(
+        await hass.async_add_executor_job(
             api.get_auth,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
             "",
         )
-    except requests.exceptions.RequestException as err:
-        raise ConfigEntryNotReady(err) from err
 
-    if response is not True:
-        raise ConfigEntryNotReady("api.get_auth error")
+    except ClientResponseError as ex:
+        if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
+            _LOGGER.exception(
+                "Unable to setup configuration entry '%s' - please reconfigure the integration",
+                entry.title,
+            )
+        else:
+            _LOGGER.debug(ex, exc_info=True)
+            raise ConfigEntryNotReady(ex) from ex
+
+    except (ClientConnectionError, RuntimeWarning) as ex:
+        _LOGGER.debug(ex, exc_info=True)
+        raise ConfigEntryNotReady from ex
 
     device_manager = AqaraDeviceManager(api)
 
@@ -99,10 +107,7 @@ async def cleanup_device_registry(
     device_registry = dr.async_get(hass)
     for dev_id, device_entry in list(device_registry.devices.items()):
         for item in device_entry.identifiers:
-            if (
-                DOMAIN == item[0]
-                and device_manager.get_point(string_underline_to_dot(item[1])) is None
-            ):
+            if DOMAIN == item[0] and device_manager.get_point(item[1]) is None:
                 device_registry.async_remove_device(dev_id)
                 break
 
@@ -148,7 +153,7 @@ class DeviceListener(AqaraDeviceListener):
 
     def update_device(self, aqara_point: AqaraPoint) -> None:
         """Update device status."""
-        if string_dot_to_underline(aqara_point.id) in self.point_ids:
+        if aqara_point.id in self.point_ids:
             _LOGGER.debug(
                 "Received update for device %s: %s",
                 aqara_point.id,
@@ -158,20 +163,18 @@ class DeviceListener(AqaraDeviceListener):
             )
             dispatcher_send(
                 self.hass,
-                f"{AQARA_HA_SIGNAL_UPDATE_POINT_VALUE}_{string_dot_to_underline(aqara_point.id)}",
+                f"{AQARA_HA_SIGNAL_UPDATE_POINT_VALUE}_{aqara_point.id}",
                 aqara_point,
             )
             dispatcher_send(
                 self.hass,
-                f"{AQARA_HA_SIGNAL_UPDATE_ENTITY}_{string_dot_to_underline(aqara_point.id)}",
+                f"{AQARA_HA_SIGNAL_UPDATE_ENTITY}_{aqara_point.id}",
             )
 
     def add_device(self, aqara_point: AqaraPoint) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
-        self.hass.add_job(
-            self.async_remove_device, string_dot_to_underline(aqara_point.id)
-        )
+        self.hass.add_job(self.async_remove_device, aqara_point.id)
 
         self.point_ids.add(aqara_point.id)
 
@@ -180,7 +183,7 @@ class DeviceListener(AqaraDeviceListener):
 
     def remove_device(self, point_id: str) -> None:
         """Add device removed listener."""
-        self.hass.add_job(self.async_remove_device, string_dot_to_underline(point_id))
+        self.hass.add_job(self.async_remove_device, point_id)
 
     @callback
     def async_remove_device(self, hass_device_id: str) -> None:
@@ -192,5 +195,5 @@ class DeviceListener(AqaraDeviceListener):
         )
         if device_entry is not None:
             self.device_registry.async_remove_device(device_entry.id)
-            self.point_ids.discard(string_underline_to_dot(hass_device_id))
-            self.nouse_point_ids.discard(string_underline_to_dot(hass_device_id))
+            self.point_ids.discard(hass_device_id)
+            self.nouse_point_ids.discard(hass_device_id)

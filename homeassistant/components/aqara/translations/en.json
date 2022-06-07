@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "login_error": "Login error ({code}): {msg}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Country",
+                    "password": "Password",
+                    "username": "Account"
+                },
+                "description": "Enter Your Aqara Home Account Info"
+            }
+        }
+    }
+}

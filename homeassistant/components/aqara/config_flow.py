@@ -8,18 +8,9 @@ from aqara_iot import AqaraOpenAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (
-    AQARA_COUNTRIES,
-    AQARA_RESPONSE_CODE,
-    AQARA_RESPONSE_MSG,
-    CONF_COUNTRY_CODE,
-    CONF_ENDPOINT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from .const import AQARA_COUNTRIES, CONF_COUNTRY_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +30,6 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ][0]
 
         data = {
-            CONF_ENDPOINT: country.endpoint,
             CONF_USERNAME: user_input[CONF_USERNAME],
             CONF_PASSWORD: user_input[CONF_PASSWORD],
             CONF_COUNTRY_CODE: country.country_code,
@@ -76,8 +66,8 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "login_error"
             placeholders = {
-                AQARA_RESPONSE_CODE: -1,
-                AQARA_RESPONSE_MSG: "error",
+                "code": "200",
+                "result": "error",
             }
 
         if user_input is None:
@@ -105,11 +95,3 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

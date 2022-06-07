@@ -3,7 +3,7 @@
   "name": "Aqara",
   "documentation": "https://www.home-assistant.io/integrations/aqara",
   "requirements": ["aqara-iot-py-sdk==1.0.3"],
-  "codeowners": ["@wumao", "@chenliuyang1989"],
+  "codeowners": ["@wumao", "@chenliuyang1989", "@frenck"],
   "config_flow": true,
   "iot_class": "cloud_push"
 }
