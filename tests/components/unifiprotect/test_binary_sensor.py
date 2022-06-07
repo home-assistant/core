@@ -168,7 +168,7 @@ async def sensor_fixture(
     sensor_obj.motion_detected_at = now - timedelta(hours=1)
     sensor_obj.open_status_changed_at = now - timedelta(hours=1)
     sensor_obj.alarm_triggered_at = now - timedelta(hours=1)
-    sensor_obj.tampering_detected_at = now - timedelta(hours=1)
+    sensor_obj.tampering_detected_at = None
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
@@ -204,7 +204,7 @@ async def sensor_none_fixture(
     sensor_obj.mount_type = MountType.LEAK
     sensor_obj.battery_status.is_low = False
     sensor_obj.alarm_settings.is_enabled = False
-    sensor_obj.tampering_detected_at = now - timedelta(hours=1)
+    sensor_obj.tampering_detected_at = None
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
