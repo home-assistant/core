@@ -98,6 +98,15 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
+    # Test statistics_during_period with a far future start and end date
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(hass, future, end_time=future, period="5minute")
+    assert stats == {}
+
+    # Test statistics_during_period with a far future end date
+    stats = statistics_during_period(hass, zero, end_time=future, period="5minute")
+    assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
+
     stats = statistics_during_period(
         hass, zero, statistic_ids=["sensor.test2"], period="5minute"
     )
@@ -811,6 +820,59 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
             },
         ]
     }
+
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": sep_start.isoformat(),
+                "end": sep_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": oct_start.isoformat(),
+                "end": oct_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(3.0),
+                "sum": approx(5.0),
+            },
+        ]
+    }
+
+    # Use 5minute to ensure table switch works
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["test:total_energy_import", "with_other"],
+        period="5minute",
+    )
+    assert stats == {}
+
+    # Ensure future date has not data
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass, start_time=future, end_time=future, period="month"
+    )
+    assert stats == {}
 
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 

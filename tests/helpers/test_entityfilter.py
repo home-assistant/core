@@ -303,3 +303,66 @@ def test_exlictly_included():
     assert not filt.explicitly_excluded("switch.other")
     assert filt.explicitly_excluded("sensor.weather_5")
     assert filt.explicitly_excluded("light.kitchen")
+
+
+def test_complex_include_exclude_filter():
+    """Test a complex include exclude filter."""
+    conf = {
+        "include": {
+            "domains": ["switch", "person"],
+            "entities": ["group.family"],
+            "entity_globs": [
+                "sensor.*_sensor_temperature",
+                "sensor.*_actueel",
+                "sensor.*_totaal",
+                "sensor.calculated*",
+                "sensor.solaredge_*",
+                "sensor.speedtest*",
+                "sensor.teller*",
+                "sensor.zp*",
+                "binary_sensor.*_sensor_motion",
+                "binary_sensor.*_door",
+                "sensor.water_*ly",
+                "sensor.gas_*ly",
+            ],
+        },
+        "exclude": {
+            "domains": [
+                "alarm_control_panel",
+                "alert",
+                "automation",
+                "button",
+                "camera",
+                "climate",
+                "counter",
+                "cover",
+                "geo_location",
+                "group",
+                "input_boolean",
+                "input_datetime",
+                "input_number",
+                "input_select",
+                "input_text",
+                "light",
+                "media_player",
+                "number",
+                "proximity",
+                "remote",
+                "scene",
+                "script",
+                "sun",
+                "timer",
+                "updater",
+                "variable",
+                "weather",
+                "zone",
+            ],
+            "entities": [
+                "sensor.solaredge_last_updatetime",
+                "sensor.solaredge_last_changed",
+            ],
+            "entity_globs": ["switch.*_light_level", "switch.sonos_*"],
+        },
+    }
+    filt: EntityFilter = INCLUDE_EXCLUDE_FILTER_SCHEMA(conf)
+    assert filt("switch.espresso_keuken") is True

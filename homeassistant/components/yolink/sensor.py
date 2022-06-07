@@ -21,8 +21,10 @@ from homeassistant.util import percentage
 from .const import (
     ATTR_COORDINATORS,
     ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
     DOMAIN,
 )
 from .coordinator import YoLinkCoordinator
@@ -45,6 +47,23 @@ class YoLinkSensorEntityDescription(
     value: Callable = lambda state: state
 
 
+SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_LOCK,
+]
+
+BATTERY_POWER_SENSOR = [
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_LOCK,
+]
+
+
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
@@ -57,8 +76,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         )
         if value is not None
         else None,
-        exists_fn=lambda device: device.device_type
-        in [ATTR_DEVICE_DOOR_SENSOR, ATTR_DEVICE_TH_SENSOR, ATTR_DEVICE_MOTION_SENSOR],
+        exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
     ),
     YoLinkSensorEntityDescription(
         key="humidity",
@@ -77,12 +95,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
 )
-
-SENSOR_DEVICE_TYPE = [
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_MOTION_SENSOR,
-    ATTR_DEVICE_TH_SENSOR,
-]
 
 
 async def async_setup_entry(
@@ -103,6 +115,7 @@ async def async_setup_entry(
             if description.exists_fn(sensor_device_coordinator.device):
                 entities.append(
                     YoLinkSensorEntity(
+                        config_entry,
                         sensor_device_coordinator,
                         description,
                     )
@@ -117,11 +130,12 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator)
+        super().__init__(config_entry, coordinator)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"

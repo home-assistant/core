@@ -506,6 +506,7 @@ omit =
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/coordinator.py
+    homeassistant/components/hunterdouglas_powerview/diagnostics.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hunterdouglas_powerview/scene.py
@@ -962,7 +963,10 @@ omit =
     homeassistant/components/radarr/sensor.py
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
+    homeassistant/components/radiotherm/__init__.py
     homeassistant/components/radiotherm/climate.py
+    homeassistant/components/radiotherm/coordinator.py
+    homeassistant/components/radiotherm/data.py
     homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
@@ -1064,7 +1068,14 @@ omit =
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/*
     homeassistant/components/skybeacon/sensor.py
-    homeassistant/components/skybell/*
+    homeassistant/components/skybell/__init__.py
+    homeassistant/components/skybell/binary_sensor.py
+    homeassistant/components/skybell/camera.py
+    homeassistant/components/skybell/coordinator.py
+    homeassistant/components/skybell/entity.py
+    homeassistant/components/skybell/light.py
+    homeassistant/components/skybell/sensor.py
+    homeassistant/components/skybell/switch.py
     homeassistant/components/slack/__init__.py
     homeassistant/components/slack/notify.py
     homeassistant/components/sia/__init__.py
@@ -1484,6 +1495,7 @@ omit =
     homeassistant/components/yolink/const.py
     homeassistant/components/yolink/coordinator.py
     homeassistant/components/yolink/entity.py
+    homeassistant/components/yolink/lock.py
     homeassistant/components/yolink/sensor.py
     homeassistant/components/yolink/siren.py
     homeassistant/components/yolink/switch.py
