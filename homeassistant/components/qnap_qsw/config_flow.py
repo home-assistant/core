@@ -72,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle DHCP discovery."""
         ip = discovery_info.ip
         mac = discovery_info.macaddress
-        _LOGGER.warning("DHCP discovery detected QSW: %s", mac)
+        _LOGGER.debug("DHCP discovery detected QSW: %s", mac)
         return await self._process_discovery(mac, ip)
 
     async def _process_discovery(self, mac: str, ip: str) -> FlowResult:
