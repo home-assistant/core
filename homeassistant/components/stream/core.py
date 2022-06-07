@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Coroutine, Iterable
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 import async_timeout
@@ -192,7 +192,10 @@ class IdleTimer:
     """
 
     def __init__(
-        self, hass: HomeAssistant, timeout: int, idle_callback: CALLBACK_TYPE
+        self,
+        hass: HomeAssistant,
+        timeout: int,
+        idle_callback: Callable[[], Coroutine[Any, Any, None]],
     ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
@@ -219,11 +222,12 @@ class IdleTimer:
         if self._unsub is not None:
             self._unsub()
 
+    @callback
     def fire(self, _now: datetime.datetime) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
-        self._callback()
+        self._hass.async_create_task(self._callback())
 
 
 class StreamOutput:
@@ -349,7 +353,7 @@ class StreamView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         # Start worker if not already started
-        stream.start()
+        await stream.start()
 
         return await self.handle(request, stream, sequence, part_num)
 
