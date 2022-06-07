@@ -19,7 +19,6 @@ async def test_form(hass, valid_token) -> None:
             "password": "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test-username"
@@ -40,11 +39,10 @@ async def test_form_invalid_auth(hass, invalid_token) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "username": "test-username",
-            "password": "test-password",
+            "username": "bad-username",
+            "password": "bad-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "invalid_auth"}
