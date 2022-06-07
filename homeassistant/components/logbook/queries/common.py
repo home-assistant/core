@@ -10,7 +10,6 @@ from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.recorder.filters import like_domain_matchers
 from homeassistant.components.recorder.db_schema import (
     EVENTS_CONTEXT_ID_INDEX,
     OLD_FORMAT_ATTRS_JSON,
@@ -22,6 +21,7 @@ from homeassistant.components.recorder.db_schema import (
     StateAttributes,
     States,
 )
+from homeassistant.components.recorder.filters import like_domain_matchers
 
 from ..const import ALWAYS_CONTINUOUS_DOMAINS, CONDITIONALLY_CONTINUOUS_DOMAINS
 
