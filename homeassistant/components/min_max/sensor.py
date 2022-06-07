@@ -164,6 +164,7 @@ class MinMaxSensor(SensorEntity):
     def __init__(self, entity_ids, name, sensor_type, round_digits, unique_id):
         """Initialize the min/max sensor."""
         self._attr_unique_id = unique_id
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
@@ -235,11 +236,6 @@ class MinMaxSensor(SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
-
-    @property
-    def state_class(self) -> SensorStateClass:
-        """Return the state class."""
-        return SensorStateClass.MEASUREMENT
 
     @callback
     def _async_min_max_sensor_state_listener(self, event, update_state=True):
