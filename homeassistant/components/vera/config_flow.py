@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import re
 from typing import Any
 
 import pyvera as pv
@@ -16,13 +17,33 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import entity_registry as er
 
-from .common import list_to_str, new_options, str_to_int_list
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
+LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)
 
 
-def _options_schema(
+def fix_device_id_list(data: list[Any]) -> list[int]:
+    """Fix the id list by converting it to a supported int list."""
+    return str_to_int_list(list_to_str(data))
+
+
+def str_to_int_list(data: str) -> list[int]:
+    """Convert a string to an int list."""
+    return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
+
+
+def list_to_str(data: list[Any]) -> str:
+    """Convert an int list to a string."""
+    return " ".join([str(i) for i in data])
+
+
+def new_options(lights: list[int], exclude: list[int]) -> dict[str, list[int]]:
+    """Create a standard options object."""
+    return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
+
+
+def options_schema(
     options: Mapping[str, Any] | None = None
 ) -> dict[vol.Optional, type[str]]:
     """Return options schema."""
@@ -39,7 +60,7 @@ def _options_schema(
     }
 
 
-def _options_data(user_input: dict[str, str]) -> dict[str, list[int]]:
+def options_data(user_input: dict[str, str]) -> dict[str, list[int]]:
     """Return options dict."""
     return new_options(
         str_to_int_list(user_input.get(CONF_LIGHTS, "")),
@@ -62,12 +83,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(
                 title="",
-                data=_options_data(user_input),
+                data=options_data(user_input),
             )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(_options_schema(self.config_entry.options)),
+            data_schema=vol.Schema(options_schema(self.config_entry.options)),
         )
 
 
@@ -88,7 +109,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_finish(
                 {
                     **user_input,
-                    **_options_data(user_input),
+                    **options_data(user_input),
                     **{CONF_SOURCE: config_entries.SOURCE_USER},
                     **{CONF_LEGACY_UNIQUE_ID: False},
                 }
@@ -97,7 +118,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {**{vol.Required(CONF_CONTROLLER): str}, **_options_schema()}
+                {**{vol.Required(CONF_CONTROLLER): str}, **options_schema()}
             ),
         )
 
