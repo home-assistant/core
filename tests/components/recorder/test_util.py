@@ -14,7 +14,8 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
-from homeassistant.components.recorder.models import RecorderRuns, UnsupportedDialect
+from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
