@@ -51,7 +51,6 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Step user."""
         errors = {}
-        placeholders = {}
 
         if user_input is not None:
             response, data = await self.hass.async_add_executor_job(
@@ -65,10 +64,6 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             errors["base"] = "login_error"
-            placeholders = {
-                "code": "200",
-                "result": "error",
-            }
 
         if user_input is None:
             user_input = {}
@@ -93,5 +88,4 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders=placeholders,
         )

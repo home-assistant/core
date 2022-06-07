@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "invalid_auth": "Invalid authentication",
-            "login_error": "Login error ({code}): {msg}"
+            "login_error": "Login error,please check account and password then try again"
         },
         "step": {
             "user": {
