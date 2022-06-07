@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.typing import ConfigType
 
-from .models import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States
+from .db_schema import ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT, States
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
@@ -248,8 +248,13 @@ def _domain_matcher(
     domains: Iterable[str], columns: Iterable[Column], encoder: Callable[[Any], Any]
 ) -> ClauseList:
     matchers = [
-        (column.is_not(None) & cast(column, Text()).like(encoder(f"{domain}.%")))
-        for domain in domains
+        (column.is_not(None) & cast(column, Text()).like(encoder(domain_matcher)))
+        for domain_matcher in like_domain_matchers(domains)
         for column in columns
     ]
     return or_(*matchers) if matchers else or_(False)
+
+
+def like_domain_matchers(domains: Iterable[str]) -> list[str]:
+    """Convert a list of domains to sql LIKE matchers."""
+    return [f"{domain}.%" for domain in domains]
