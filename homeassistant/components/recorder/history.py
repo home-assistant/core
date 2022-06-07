@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
 import logging
+import pprint
 import time
 from typing import Any, cast
 
@@ -364,8 +365,9 @@ def _state_changed_during_period_stmt(
         stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
     if limit:
         stmt += lambda q: q.limit(limit)
+    cache_key = stmt._generate_cache_key()  # pylint: disable=(protected-access
     _LOGGER.warning(
-        "_state_changed_during_period_stmt(schema_version=%s, start_time=%s, end_time=%s, entity_id=%s, no_attributes%s, descending=%s, limit=%s): CacheKey: %s",
+        "_state_changed_during_period_stmt(schema_version=%s, start_time=%s, end_time=%s, entity_id=%s, no_attributes%s, descending=%s, limit=%s): CacheKey=%s, FormattedCacheKey=%s",
         schema_version,
         start_time,
         end_time,
@@ -373,7 +375,8 @@ def _state_changed_during_period_stmt(
         no_attributes,
         descending,
         limit,
-        stmt._generate_cache_key(),  # pylint: disable=(protected-access
+        cache_key,
+        pprint.pformat([cache_key]),
     )
 
     return stmt
@@ -627,13 +630,15 @@ def _get_single_entity_states_stmt(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
 
+    cache_key = stmt._generate_cache_key()  # pylint: disable=(protected-access
     _LOGGER.warning(
-        "_get_single_entity_states_stmt(schema_version=%s, utc_point_in_time=%s, entity_id=%s, no_attributes=%s): CacheKey: %s",
+        "_get_single_entity_states_stmt(schema_version=%s, utc_point_in_time=%s, entity_id=%s, no_attributes=%s): CacheKey=%s, FormattedCacheKey=%s",
         schema_version,
         utc_point_in_time,
         entity_id,
         no_attributes,
-        stmt._generate_cache_key(),  # pylint: disable=(protected-access
+        cache_key,
+        pprint.pformat([cache_key]),
     )
     return stmt
 
