@@ -29,7 +29,7 @@ async def async_setup_entry(
     eight = config_entry_data.api
     heat_coordinator = config_entry_data.heat_coordinator
     async_add_entities(
-        EightHeatSensor(entry, heat_coordinator, eight, user.userid, binary_sensor)
+        EightHeatSensor(entry, heat_coordinator, eight, user.user_id, binary_sensor)
         for user in eight.users.values()
         for binary_sensor in BINARY_SENSORS
     )

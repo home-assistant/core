@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await eight.fetch_token()
         if eight.token:
             await eight.fetch_device_list()
-            await self.async_set_unique_id(eight.deviceid)
+            await self.async_set_unique_id(eight.device_id)
             self._abort_if_unique_id_configured()
             # Due to Eight Sleep's aggressive rate limiting and a lack of good handling
             # in the library, we have to wait 5 seconds before we can create the entry

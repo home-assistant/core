@@ -117,18 +117,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     dev_reg = async_get(hass)
-    model = eight.device_data["modelString"]  # pylint: disable=unsubscriptable-object
-    hw_ver = eight.device_data["sensorInfo"][  # pylint: disable=unsubscriptable-object
-        "hwRevision"
-    ]
-    fw_ver = eight.device_data[  # pylint: disable=unsubscriptable-object
-        "firmwareVersion"
-    ]
+    assert eight.device_data
     device_data = {
         "manufacturer": "Eight Sleep",
-        "model": model,
-        "hw_version": hw_ver,
-        "sw_version": fw_ver,
+        "model": eight.device_data["modelString"],
+        "hw_version": eight.device_data["sensorInfo"]["hwRevision"],
+        "sw_version": eight.device_data["firmwareVersion"],
     }
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -137,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         **device_data,
     )
     for user in eight.users.values():
+        assert user.user_profile
         dev_reg.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, _get_device_unique_id(eight, user))},
@@ -190,6 +185,7 @@ class EightSleepBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
 
         mapped_name = NAME_MAP.get(sensor, sensor.replace("_", " ").title())
         if self._user_obj is not None:
+            assert self._user_obj.user_profile
             name = f"{self._user_obj.user_profile['firstName']}'s {mapped_name}"
             self._attr_name = name
         else:
