@@ -116,7 +116,7 @@ class NetgearRouter:
         loaded_entries = [
             entry
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.disabled_by is not None
+            if entry.disabled_by is None
         ]
         self.track_devices = self.mode == MODE_ROUTER or len(loaded_entries) == 1
         _LOGGER.debug(
