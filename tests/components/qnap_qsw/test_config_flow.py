@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 TEST_PASSWORD = "test-password"
 TEST_URL = "test-url"
-TEST_USERNAME = "test-host"
+TEST_USERNAME = "test-username"
 
 
 async def test_form(hass: HomeAssistant) -> None:
