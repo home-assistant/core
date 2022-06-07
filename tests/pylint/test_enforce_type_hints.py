@@ -422,7 +422,7 @@ def test_valid_config_flow_async_get_options_flow(
     ):
         def async_get_options_flow(
             config_entry: ConfigEntry
-        ) -> AxisOptionsFlow | OtherOptionsFlow:
+        ) -> AxisOptionsFlow | OtherOptionsFlow | OptionsFlow:
             if self.use_other:
                 return OtherOptionsFlow(config_entry)
             return AxisOptionsFlow(config_entry)
