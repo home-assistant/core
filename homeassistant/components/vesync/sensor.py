@@ -157,7 +157,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncBaseDevice,
+        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
         description: VeSyncSensorEntityDescription,
     ) -> None:
         """Initialize the VeSync outlet device."""
