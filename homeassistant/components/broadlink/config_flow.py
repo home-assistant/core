@@ -188,9 +188,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(device.mac.hex())
         _LOGGER.error(
-            "Failed to authenticate to the device at %s: %s",
-            device.host[0],
-            err_msg,  # pylint: disable=used-before-assignment
+            "Failed to authenticate to the device at %s: %s", device.host[0], err_msg
         )
         return self.async_show_form(step_id="auth", errors=errors)
 
@@ -253,9 +251,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_finish()
 
             _LOGGER.error(
-                "Failed to unlock the device at %s: %s",
-                device.host[0],
-                err_msg,  # pylint: disable=used-before-assignment
+                "Failed to unlock the device at %s: %s", device.host[0], err_msg
             )
 
         else:
