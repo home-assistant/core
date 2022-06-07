@@ -440,15 +440,6 @@ class EntityPlatform:
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
-            if entity.entity_id is not None:
-                requested_entity_id = entity.entity_id
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                suggested_object_id = entity.name  # type: ignore[unreachable]
-
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
-
             if self.config_entry is not None:
                 config_entry_id: str | None = self.config_entry.entry_id
             else:
@@ -502,6 +493,18 @@ class EntityPlatform:
                     device_id = device.id
                 except RequiredParameterMissing:
                     pass
+
+            if entity.entity_id is not None:
+                requested_entity_id = entity.entity_id
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+            else:
+                if device:  # type: ignore[unreachable]
+                    suggested_object_id = entity.async_full_name(device)
+                if not suggested_object_id:
+                    suggested_object_id = entity.name
+
+            if self.entity_namespace is not None:
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:

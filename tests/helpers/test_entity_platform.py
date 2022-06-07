@@ -1392,3 +1392,44 @@ class SlowEntity(MockEntity):
         """Make sure control is returned to the event loop on add."""
         await asyncio.sleep(0.1)
         await super().async_added_to_hass()
+
+
+@pytest.mark.parametrize(
+    "entity_name,expected_entity_id",
+    (
+        ("Entity Blu", "test_domain.device_bla_entity_blu"),
+        (None, "test_domain.device_bla"),
+    ),
+)
+async def test_entity_name_influences_entity_id(hass, entity_name, expected_entity_id):
+    """Test entity_id is influenced by entity name."""
+    registry = er.async_get(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    entity_name=entity_name,
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert registry.async_get(expected_entity_id) is not None

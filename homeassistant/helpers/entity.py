@@ -47,11 +47,11 @@ from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
-from . import entity_registry as er
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
-from .typing import StateType
+from .typing import UNDEFINED, StateType, UndefinedType
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -226,6 +226,7 @@ class EntityDescription:
 
     device_class: str | None = None
     entity_category: EntityCategory | None = None
+    entity_name: str | None | UndefinedType = UNDEFINED
     entity_registry_enabled_default: bool = True
     entity_registry_visible_default: bool = True
     force_update: bool = False
@@ -289,6 +290,7 @@ class Entity(ABC):
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
+    _attr_entity_name: str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -315,9 +317,52 @@ class Entity(ABC):
         """Return a unique ID."""
         return self._attr_unique_id
 
+    @callback
+    def async_full_name(self, device_entry: dr.DeviceEntry) -> str | None:
+        """Combine device name with entity name."""
+
+        def _compile_name(entity_name: str | None) -> str | None:
+            """Help combine device name with entity name."""
+            if not entity_name:
+                return device_entry.name_by_user or device_entry.name
+            return f"{device_entry.name_by_user or device_entry.name} {entity_name}"
+
+        if hasattr(self, "_attr_entity_name"):
+            return _compile_name(self._attr_entity_name)
+        if (
+            hasattr(self, "entity_description")
+            and (entity_name := self.entity_description.entity_name) is not UNDEFINED
+        ):
+            return _compile_name(entity_name)
+        if (entity_name := self.entity_name) is not UNDEFINED:
+            return _compile_name(entity_name)
+        return None
+
+    def _full_name(self) -> str | None:
+        """Combine device name with entity name."""
+
+        if not self.registry_entry:
+            return None
+
+        device_registry = dr.async_get(self.hass)
+        if not (device_id := self.registry_entry.device_id) or not (
+            device := device_registry.async_get(device_id)
+        ):
+            return None
+
+        return self.async_full_name(device)
+
+    @property
+    def entity_name(self) -> str | None | UndefinedType:
+        """Return the name of the entity."""
+        return UNDEFINED
+
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
+        if entity_name := self._full_name():
+            return entity_name
+
         if hasattr(self, "_attr_name"):
             return self._attr_name
         if hasattr(self, "entity_description"):
