@@ -523,7 +523,11 @@ def _is_valid_return_type(
             expected_type, node.left
         ) and _is_valid_return_type(expected_type, node.right)
 
-    if expected_type in _CHECK_RETURN_TYPE_INHERITANCE and isinstance(node, nodes.Name):
+    if (
+        isinstance(expected_type, str)
+        and isinstance(node, nodes.Name)
+        and expected_type in _CHECK_RETURN_TYPE_INHERITANCE
+    ):
         infer_node: nodes.ClassDef
         ancestor: nodes.ClassDef
         for infer_node in node.infer():
