@@ -4,8 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
-
 from homeassistant.components.logbook.const import (
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
@@ -47,27 +45,21 @@ def async_describe_events(
         except (KeyError, AttributeError):
             pass
 
-        if zha_device and zha_device.device_automation_triggers:
-            device_automation_triggers: dict[
-                tuple[str, str], dict[str, str]
-            ] = _find_matching_device_triggers(zha_device, event_data[ATTR_COMMAND])
-            for (
-                etype,
-                subtype,
-            ), trigger in device_automation_triggers.items():
-                event_data_schema = vol.Schema(
-                    {vol.Required(key): value for key, value in trigger.items()},
-                    extra=vol.ALLOW_EXTRA,
-                )
-                try:
-                    if event_data_schema:
-                        event_data_schema(event_data)
-                    event_type = etype
-                    event_subtype = subtype
-                    break
-                except vol.Invalid:
-                    # If event doesn't match, skip event
+        if (
+            zha_device
+            and (command := event_data.get(ATTR_COMMAND))
+            and (command_to_etype_subtype := zha_device.device_automation_commands)
+            and (etype_subtypes := command_to_etype_subtype.get(command))
+        ):
+            all_triggers = zha_device.device_automation_triggers
+            for etype_subtype in etype_subtypes:
+                trigger = all_triggers[etype_subtype]
+                if not all(
+                    event_data.get(key) == value for key, value in trigger.items()
+                ):
                     continue
+                event_type, event_subtype = etype_subtype
+                break
 
         if event_type is None:
             event_type = event_data[ATTR_COMMAND]
@@ -87,15 +79,3 @@ def async_describe_events(
         }
 
     async_describe_event(ZHA_DOMAIN, ZHA_EVENT, async_describe_zha_event)
-
-
-def _find_matching_device_triggers(
-    zha_device: ZHADevice, command: str
-) -> dict[tuple[str, str], dict[str, str]]:
-    """Find device triggers that match the command in the event."""
-
-    return {
-        key: value
-        for (key, value) in zha_device.device_automation_triggers.items()
-        if ATTR_COMMAND in value and value[ATTR_COMMAND] == command
-    }
