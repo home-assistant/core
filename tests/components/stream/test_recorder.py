@@ -59,7 +59,7 @@ async def test_record_lookback(
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path", lookback=4)

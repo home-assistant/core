@@ -353,7 +353,7 @@ class StreamView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         # Start worker if not already started
-        stream.start()
+        await stream.start()
 
         return await self.handle(request, stream, sequence, part_num)
 

@@ -651,7 +651,7 @@ async def test_stream_stopped_while_decoding(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         # Note: There is a race here where the worker could start as soon
         # as the wake event is sent, completing all decode work.
@@ -688,7 +688,7 @@ async def test_update_stream_source(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE
         assert stream.available

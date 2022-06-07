@@ -144,7 +144,7 @@ async def test_hls_stream(
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     hls_client = await hls_stream(stream)
 
@@ -205,7 +205,7 @@ async def test_stream_timeout(
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
     url = stream.endpoint_url(HLS_PROVIDER)
 
     http_client = await hass_client()
@@ -250,7 +250,7 @@ async def test_stream_timeout_after_stop(
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     stream_worker_sync.resume()
     await stream.stop()
@@ -298,7 +298,7 @@ async def test_stream_retries(hass, setup_component, should_retry):
         mock_time.time.side_effect = time_side_effect
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
-        stream.start()
+        await stream.start()
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
@@ -491,7 +491,7 @@ async def test_remove_incomplete_segment_on_exit(
     """Test that the incomplete segment gets removed when the worker thread quits."""
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
-    stream.start()
+    await stream.start()
     hls = stream.add_provider(HLS_PROVIDER)
 
     segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)

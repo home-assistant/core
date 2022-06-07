@@ -144,7 +144,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     hls_client = await hls_stream(stream)
 
