@@ -364,6 +364,18 @@ def _state_changed_during_period_stmt(
         stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
     if limit:
         stmt += lambda q: q.limit(limit)
+    _LOGGER.warning(
+        "_state_changed_during_period_stmt(schema_version=%s, start_time=%s, end_time=%s, entity_id=%s, no_attributes%s, descending=%s, limit=%s): CacheKey: %s",
+        schema_version,
+        start_time,
+        end_time,
+        entity_id,
+        no_attributes,
+        descending,
+        limit,
+        stmt._generate_cache_key(),  # pylint: disable=(protected-access
+    )
+
     return stmt
 
 
@@ -614,6 +626,15 @@ def _get_single_entity_states_stmt(
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
+
+    _LOGGER.warning(
+        "_get_single_entity_states_stmt(schema_version=%s, utc_point_in_time=%s, entity_id=%s, no_attributes=%s): CacheKey: %s",
+        schema_version,
+        utc_point_in_time,
+        entity_id,
+        no_attributes,
+        stmt._generate_cache_key(),  # pylint: disable=(protected-access
+    )
     return stmt
 
 
@@ -693,14 +714,18 @@ def _sorted_states_to_dict(
         ent_results = result[ent_id]
         if row := initial_states.pop(ent_id, None):
             if row.entity_id != ent_id:
-                raise RuntimeError("Row does not match entity_id")
+                raise RuntimeError(
+                    f"Row does not match entity_id (expected:{ent_id}) (got:{row.entity_id}) - result={result}"
+                )
             prev_state = row.state
             ent_results.append(state_class(row, attr_cache, start_time))
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
             for row in group:
                 if row.entity_id != ent_id:
-                    raise RuntimeError("Row does not match entity_id")
+                    raise RuntimeError(
+                        f"Row does not match entity_id (expected:{ent_id}) (got:{row.entity_id}) - result={result}"
+                    )
                 ent_results.append(state_class(row, attr_cache))
             continue
 
@@ -716,7 +741,9 @@ def _sorted_states_to_dict(
 
         for row in group:
             if row.entity_id != ent_id:
-                raise RuntimeError("Row does not match entity_id")
+                raise RuntimeError(
+                    f"Row does not match entity_id (expected:{ent_id}) (got:{row.entity_id}) - result={result}"
+                )
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
             if (state := row.state) == prev_state:
