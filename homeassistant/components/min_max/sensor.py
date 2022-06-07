@@ -6,7 +6,11 @@ import statistics
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -231,6 +235,11 @@ class MinMaxSensor(SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def state_class(self) -> SensorStateClass:
+        """Return the state class."""
+        return SensorStateClass.MEASUREMENT
 
     @callback
     def _async_min_max_sensor_state_listener(self, event, update_state=True):

@@ -1468,7 +1468,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.2.0
+pyeight==0.3.0
 
 # homeassistant.components.emby
 pyemby==1.8
@@ -1551,12 +1551,6 @@ pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
 pyialarm==1.9.0
-
-# homeassistant.components.ialarmxr
-pyialarmxr==1.0.10
-
-# homeassistant.components.ialarm_xr
-pyialarmxr-homeassistant==1.0.18
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -1999,7 +1993,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.6.0
+pyunifiprotect==3.9.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

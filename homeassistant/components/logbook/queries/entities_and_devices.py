@@ -10,7 +10,7 @@ from sqlalchemy.orm import Query
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
-from homeassistant.components.recorder.models import EventData, Events, States
+from homeassistant.components.recorder.db_schema import EventData, Events, States
 
 from .common import (
     apply_events_context_hints,
