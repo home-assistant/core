@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 from aioqsw.const import API_MAC_ADDR, API_PRODUCT, API_RESULT
 from aioqsw.exceptions import LoginError, QswError
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import dhcp
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -15,6 +16,10 @@ from homeassistant.helpers.device_registry import format_mac
 from .util import CONFIG, LIVE_MOCK, SYSTEM_BOARD_MOCK, USERS_LOGIN_MOCK
 
 from tests.common import MockConfigEntry
+
+TEST_PASSWORD = "test-password"
+TEST_URL = "test-url"
+TEST_USERNAME = "test-host"
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -134,3 +139,75 @@ async def test_login_error(hass: HomeAssistant):
         )
 
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery works."""
+    with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+        return_value=LIVE_MOCK,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=dhcp.DhcpServiceInfo(
+                hostname="qsw-m408-4c",
+                ip="192.168.1.200",
+                macaddress="245EBE000000",
+            ),
+            context={"source": config_entries.SOURCE_DHCP},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.qnap_qsw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+        return_value=LIVE_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
+        return_value=SYSTEM_BOARD_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
+        return_value=USERS_LOGIN_MOCK,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        CONF_URL: TEST_URL,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery fails."""
+
+    with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+        side_effect=QswError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=dhcp.DhcpServiceInfo(
+                hostname="qsw-m408-4c",
+                ip="192.168.1.200",
+                macaddress="245EBE000000",
+            ),
+            context={"source": config_entries.SOURCE_DHCP},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"

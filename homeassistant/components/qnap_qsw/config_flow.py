@@ -1,6 +1,7 @@
 """Config flow for QNAP QSW."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aioqsw.exceptions import LoginError, QswError
@@ -8,12 +9,15 @@ from aioqsw.localapi import ConnectionOptions, QnapQswApi
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,3 +67,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle DHCP discovery."""
+        ip = discovery_info.ip
+        mac = discovery_info.macaddress
+        _LOGGER.warning("DHCP discovery detected QSW: %s", mac)
+        return await self._process_discovery(mac, ip)
+
+    async def _process_discovery(self, mac: str, ip: str) -> FlowResult:
+        """Handle discovery of a gateway."""
+        url = f"http://{ip}"
+        options = ConnectionOptions(url, "", "")
+        qsw = QnapQswApi(aiohttp_client.async_get_clientsession(self.hass), options)
+
+        try:
+            await qsw.get_live()
+        except QswError as err:
+            raise AbortFlow("cannot_connect") from err
+
+        await self.async_set_unique_id(format_mac(mac))
+        self._abort_if_unique_id_configured()
+
+        self.context[CONF_URL] = url
+        return await self.async_step_user()
