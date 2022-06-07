@@ -216,7 +216,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for stream in hass.data[DOMAIN][ATTR_STREAMS]
         }:
             await asyncio.wait(awaitables)
-        _LOGGER.info("Stopped stream workers")
+        _LOGGER.debug("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
@@ -321,25 +321,26 @@ class Stream:
             self._update_callback()
 
     async def start(self) -> None:
-        """Start a stream. Should only be called from the event loop.
+        """Start a stream.
 
         Uses an asyncio.Lock to avoid conflicts with _stop().
         """
         async with self._start_stop_lock:
-            if self._thread is None or not self._thread.is_alive():
-                if self._thread is not None:
-                    # The thread must have crashed/exited. Join to clean up the
-                    # previous thread.
-                    self._thread.join(timeout=0)
-                self._thread_quit.clear()
-                self._thread = threading.Thread(
-                    name="stream_worker",
-                    target=self._run_worker,
-                )
-                self._thread.start()
-                self._logger.info(
-                    "Started stream: %s", redact_credentials(str(self.source))
-                )
+            if self._thread and self._thread.is_alive():
+                return
+            if self._thread is not None:
+                # The thread must have crashed/exited. Join to clean up the
+                # previous thread.
+                self._thread.join(timeout=0)
+            self._thread_quit.clear()
+            self._thread = threading.Thread(
+                name="stream_worker",
+                target=self._run_worker,
+            )
+            self._thread.start()
+            self._logger.debug(
+                "Started stream: %s", redact_credentials(str(self.source))
+            )
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
@@ -413,10 +414,10 @@ class Stream:
             for provider in self.outputs().values():
                 await self.remove_provider(provider)
 
-        self.hass.add_job(worker_finished)
+        self.hass.create_task(worker_finished())
 
     async def stop(self) -> None:
-        """Remove outputs and access token. Should only be called from the event loop."""
+        """Remove outputs and access token."""
         self._outputs = {}
         self.access_token = None
 
@@ -424,18 +425,19 @@ class Stream:
             await self._stop()
 
     async def _stop(self) -> None:
-        """Stop worker thread. Should only be called from the event loop.
+        """Stop worker thread.
 
         Uses an asyncio.Lock to avoid conflicts with start().
         """
         async with self._start_stop_lock:
-            if self._thread is not None:
-                self._thread_quit.set()
-                await self.hass.async_add_executor_job(self._thread.join)
-                self._thread = None
-                self._logger.info(
-                    "Stopped stream: %s", redact_credentials(str(self.source))
-                )
+            if self._thread is None:
+                return
+            self._thread_quit.set()
+            await self.hass.async_add_executor_job(self._thread.join)
+            self._thread = None
+            self._logger.debug(
+                "Stopped stream: %s", redact_credentials(str(self.source))
+            )
 
     async def async_record(
         self, video_path: str, duration: int = 30, lookback: int = 5
