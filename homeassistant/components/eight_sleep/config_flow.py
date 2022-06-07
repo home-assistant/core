@@ -1,6 +1,7 @@
 """Config flow for Eight Sleep integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pyeight.eight import EightSleep
@@ -18,6 +19,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -57,11 +60,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await eight.fetch_token()
         except RequestError as err:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=STEP_USER_DATA_SCHEMA,
-                errors={"base": "cannot_connect"},
-                description_placeholders={"error": str(err)},
+            if self.source == config_entries.SOURCE_USER:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors={"base": "cannot_connect"},
+                    description_placeholders={"error": str(err)},
+                )
+
+            _LOGGER.error(
+                "Unable to import configuration.yaml configuration: %s", str(err)
+            )
+            return self.async_abort(
+                reason="cannot_connect", description_placeholders={"error": str(err)}
             )
         else:
             return self.async_create_entry(
