@@ -1,7 +1,9 @@
 {
   "config": {
     "error": {
-      "mqtt_missing": "The MQTT service is required for this integration.",
+      "mqtt_missing": "The MQTT service is required for this integration."
+    },
+    "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
