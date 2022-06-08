@@ -11,11 +11,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_HOLD_TEMP, DOMAIN
+from .const import DOMAIN
 from .data import RadioThermInitData, async_get_init_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +68,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=init_data.name,
                 data={CONF_HOST: ip_address},
-                options={CONF_HOLD_TEMP: False},
             )
 
         self._set_confirm_only()
@@ -100,7 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=init_data.name,
             data={CONF_HOST: import_info[CONF_HOST]},
-            options={CONF_HOLD_TEMP: import_info[CONF_HOLD_TEMP]},
         )
 
     async def async_step_user(
@@ -125,42 +123,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=init_data.name,
                     data=user_input,
-                    options={CONF_HOLD_TEMP: False},
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for radiotherm."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_HOLD_TEMP,
-                        default=self.config_entry.options[CONF_HOLD_TEMP],
-                    ): bool
-                }
-            ),
         )
