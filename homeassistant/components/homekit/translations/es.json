@@ -22,7 +22,8 @@
             "accessory": {
                 "data": {
                     "entities": "Entidad"
-                }
+                },
+                "title": "Seleccione la entidad para el accesorio"
             },
             "advanced": {
                 "data": {
@@ -43,16 +44,20 @@
                 "data": {
                     "entities": "Entidades"
                 },
+                "description": "Se incluir\u00e1n todas las entidades de \" {domains} \" excepto las entidades excluidas y las entidades categorizadas.",
                 "title": "Selecciona las entidades a excluir"
             },
             "include": {
                 "data": {
                     "entities": "Entidades"
-                }
+                },
+                "description": "Se incluir\u00e1n todas las entidades de \" {domains} \" a menos que se seleccionen entidades espec\u00edficas.",
+                "title": "Seleccione las entidades a incluir"
             },
             "init": {
                 "data": {
                     "domains": "Dominios a incluir",
+                    "include_exclude_mode": "Modo de inclusi\u00f3n",
                     "mode": "Mode de HomeKit"
                 },
                 "description": "Las entidades de los \"Dominios que se van a incluir\" se establecer\u00e1n en HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",

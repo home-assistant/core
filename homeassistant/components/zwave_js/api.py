@@ -53,7 +53,6 @@ from homeassistant.components.websocket_api.const import (
     ERR_UNKNOWN_ERROR,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
@@ -71,6 +70,7 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
+    get_device_id,
     update_data_collection_preference,
 )
 
@@ -1082,8 +1082,7 @@ async def websocket_remove_node(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/replace_failed_node",
-        vol.Required(ENTRY_ID): str,
-        vol.Required(NODE_ID): int,
+        vol.Required(DEVICE_ID): str,
         vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
             vol.Coerce(int),
             vol.In(
@@ -1106,18 +1105,16 @@ async def websocket_remove_node(
 )
 @websocket_api.async_response
 @async_handle_failed_command
-@async_get_entry
+@async_get_node
 async def websocket_replace_failed_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
-    driver: Driver,
+    node: Node,
 ) -> None:
     """Replace a failed node with a new node."""
-    controller = driver.controller
-    node_id = msg[NODE_ID]
+    assert node.client.driver
+    controller = node.client.driver.controller
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
     force_security = msg.get(FORCE_SECURITY)
     provisioning = (
@@ -1231,7 +1228,7 @@ async def websocket_replace_failed_node(
 
     try:
         result = await controller.async_replace_failed_node(
-            node_id,
+            node,
             INCLUSION_STRATEGY_NOT_SMART_START[inclusion_strategy.value],
             force_security=force_security,
             provisioning=provisioning,
@@ -1290,7 +1287,7 @@ async def websocket_remove_failed_node(
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("node removed", node_removed)]
 
-    await controller.async_remove_failed_node(node.node_id)
+    await controller.async_remove_failed_node(node)
     connection.send_result(msg[ID])
 
 
@@ -1413,7 +1410,7 @@ async def websocket_heal_node(
     assert driver is not None  # The node comes from the driver instance.
     controller = driver.controller
 
-    result = await controller.async_heal_node(node.node_id)
+    result = await controller.async_heal_node(node)
     connection.send_result(
         msg[ID],
         result,
@@ -1945,16 +1942,6 @@ class FirmwareUploadView(HomeAssistantView):
                 raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
 
-        if not self._dev_reg:
-            self._dev_reg = dr.async_get(hass)
-        device = self._dev_reg.async_get(device_id)
-        assert device
-        entry = next(
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device.config_entries
-        )
-
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
 
@@ -1967,14 +1954,14 @@ class FirmwareUploadView(HomeAssistantView):
 
         try:
             await begin_firmware_update(
-                entry.data[CONF_URL],
+                node.client.ws_server_url,
                 node,
                 uploaded_file.filename,
                 await hass.async_add_executor_job(uploaded_file.file.read),
                 async_get_clientsession(hass),
             )
         except BaseZwaveJSServerError as err:
-            raise web_exceptions.HTTPBadRequest from err
+            raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
 
         return self.json(None)
 
@@ -2107,15 +2094,42 @@ async def websocket_subscribe_controller_statistics(
     )
 
 
-def _get_node_statistics_dict(statistics: NodeStatistics) -> dict[str, int]:
+def _get_node_statistics_dict(
+    hass: HomeAssistant, statistics: NodeStatistics
+) -> dict[str, Any]:
     """Get dictionary of node statistics."""
-    return {
+    dev_reg = dr.async_get(hass)
+
+    def _convert_node_to_device_id(node: Node) -> str:
+        """Convert a node to a device id."""
+        driver = node.client.driver
+        assert driver
+        device = dev_reg.async_get_device({get_device_id(driver, node)})
+        assert device
+        return device.id
+
+    data: dict = {
         "commands_tx": statistics.commands_tx,
         "commands_rx": statistics.commands_rx,
         "commands_dropped_tx": statistics.commands_dropped_tx,
         "commands_dropped_rx": statistics.commands_dropped_rx,
         "timeout_response": statistics.timeout_response,
+        "rtt": statistics.rtt,
+        "rssi": statistics.rssi,
+        "lwr": statistics.lwr.as_dict() if statistics.lwr else None,
+        "nlwr": statistics.nlwr.as_dict() if statistics.nlwr else None,
     }
+    for key in ("lwr", "nlwr"):
+        if not data[key]:
+            continue
+        for key_2 in ("repeaters", "route_failed_between"):
+            if not data[key][key_2]:
+                continue
+            data[key][key_2] = [
+                _convert_node_to_device_id(node) for node in data[key][key_2]
+            ]
+
+    return data
 
 
 @websocket_api.require_admin
@@ -2151,7 +2165,7 @@ async def websocket_subscribe_node_statistics(
                     "event": event["event"],
                     "source": "node",
                     "node_id": node.node_id,
-                    **_get_node_statistics_dict(statistics),
+                    **_get_node_statistics_dict(hass, statistics),
                 },
             )
         )
@@ -2167,7 +2181,7 @@ async def websocket_subscribe_node_statistics(
                 "event": "statistics updated",
                 "source": "node",
                 "nodeId": node.node_id,
-                **_get_node_statistics_dict(node.statistics),
+                **_get_node_statistics_dict(hass, node.statistics),
             },
         )
     )

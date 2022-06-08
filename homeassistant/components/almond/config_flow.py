@@ -64,7 +64,7 @@ class AlmondFlowHandler(
         """Handle authorize step."""
         result = await super().async_step_auth(user_input)
 
-        if result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP:
+        if result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP:
             self.host = str(URL(result["url"]).with_path("me"))
 
         return result

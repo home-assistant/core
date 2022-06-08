@@ -1,6 +1,7 @@
 """Config flow for motionEye integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from motioneye_client.client import (
@@ -158,10 +159,10 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self,
-        config_data: dict[str, Any] | None = None,
+        config_data: Mapping[str, Any],
     ) -> FlowResult:
         """Handle a reauthentication flow."""
-        return await self.async_step_user(config_data)
+        return await self.async_step_user()
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor discovery."""

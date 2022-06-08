@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
-
-from yarl import URL
+from urllib.parse import urlparse
 
 from homeassistant.components import system_health
 from homeassistant.components.recorder.core import Recorder
@@ -60,7 +59,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     instance = get_instance(hass)
 
     run_history = instance.run_history
-    database_name = URL(instance.db_url).path.lstrip("/")
+    database_name = urlparse(instance.db_url).path.lstrip("/")
     db_engine_info = _async_get_db_engine_info(instance)
     db_stats: dict[str, Any] = {}
 

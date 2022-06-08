@@ -9,7 +9,7 @@ import logging
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from fjaraskupan import UUID_SERVICE, Device, State, device_filter
+from fjaraskupan import Device, State, device_filter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -90,7 +90,7 @@ class EntryState:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fjäråskupan from a config entry."""
 
-    scanner = BleakScanner(filters={"UUIDs": [str(UUID_SERVICE)]})
+    scanner = BleakScanner(filters={"DuplicateData": True})
 
     state = EntryState(scanner, {})
     hass.data.setdefault(DOMAIN, {})

@@ -235,7 +235,8 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
                 "port": 1883,
                 "username": "mock-user",
                 "password": "mock-pass",
-                "protocol": "3.1.1",
+                "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
+                "ssl": False,  # Set by the addon's discovery, ignored by HA
             }
         ),
         context={"source": config_entries.SOURCE_HASSIO},
@@ -255,7 +256,6 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "protocol": "3.1.1",
         "discovery": True,
     }
     # Check we tried the connection
@@ -264,8 +264,9 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
     assert len(mock_finish_setup.mock_calls) == 1
 
 
-async def test_option_flow(hass, mqtt_mock, mock_try_connection):
+async def test_option_flow(hass, mqtt_mock_entry_no_yaml_config, mock_try_connection):
     """Test config flow options."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
@@ -336,8 +337,11 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
     assert mqtt_mock.async_connect.call_count == 1
 
 
-async def test_disable_birth_will(hass, mqtt_mock, mock_try_connection):
+async def test_disable_birth_will(
+    hass, mqtt_mock_entry_no_yaml_config, mock_try_connection
+):
     """Test disabling birth and will."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
@@ -417,9 +421,10 @@ def get_suggested(schema, key):
 
 
 async def test_option_flow_default_suggested_values(
-    hass, mqtt_mock, mock_try_connection_success
+    hass, mqtt_mock_entry_no_yaml_config, mock_try_connection_success
 ):
     """Test config flow options has default/suggested values."""
+    await mqtt_mock_entry_no_yaml_config()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",

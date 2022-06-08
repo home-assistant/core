@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -19,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -84,6 +87,48 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     ),
 )
 
+PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_boost_enabled",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        name="Pure Boost Enabled",
+        icon="mdi:wind-power-outline",
+        value_fn=lambda data: data.pure_boost_enabled,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_ac_integration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with AC",
+        icon="mdi:connection",
+        value_fn=lambda data: data.pure_ac_integration,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_geo_integration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with Presence",
+        icon="mdi:connection",
+        value_fn=lambda data: data.pure_geo_integration,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_measure_integration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with Indoor Air Quality",
+        icon="mdi:connection",
+        value_fn=lambda data: data.pure_measure_integration,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="pure_prime_integration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        name="Pure Boost linked with Outdoor Air Quality",
+        icon="mdi:connection",
+        value_fn=lambda data: data.pure_prime_integration,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -93,18 +138,27 @@ async def async_setup_entry(
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
-    entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data.motion_sensors.items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data.motion_sensors
-    )
+
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
         if getattr(device_data, description.key) is not None
+    )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
+        for description in PURE_SENSOR_TYPES
+        for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.model == "pure"
     )
 
     async_add_entities(entities)
@@ -140,6 +194,8 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
+        if TYPE_CHECKING:
+            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 

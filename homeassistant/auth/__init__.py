@@ -103,7 +103,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result

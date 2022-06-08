@@ -357,7 +357,7 @@ async def test_measure_multiple(hass, recorder_mock):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.5"
-    assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.sensor2").state == "0.0"
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
 

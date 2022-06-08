@@ -6,9 +6,11 @@ import array
 import asyncio
 from datetime import datetime, timedelta
 import functools
+import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
@@ -1829,3 +1831,46 @@ async def test_event_context(hass):
     cancel2()
 
     assert dummy_event2.context.origin_event == dummy_event
+
+
+def _get_full_name(obj) -> str:
+    """Get the full name of an object in memory."""
+    objtype = type(obj)
+    name = objtype.__name__
+    if module := getattr(objtype, "__module__", None):
+        return f"{module}.{name}"
+    return name
+
+
+def _get_by_type(full_name: str) -> list[Any]:
+    """Get all objects in memory with a specific type."""
+    return [obj for obj in gc.get_objects() if _get_full_name(obj) == full_name]
+
+
+# The logger will hold a strong reference to the event for the life of the tests
+# so we must patch it out
+@pytest.mark.skipif(
+    not os.environ.get("DEBUG_MEMORY"),
+    reason="Takes too long on the CI",
+)
+@patch.object(ha._LOGGER, "debug", lambda *args: None)
+async def test_state_changed_events_to_not_leak_contexts(hass):
+    """Test state changed events do not leak contexts."""
+    gc.collect()
+    # Other tests can log Contexts which keep them in memory
+    # so we need to look at how many exist at the start
+    init_count = len(_get_by_type("homeassistant.core.Context"))
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count
+    for i in range(20):
+        hass.states.async_set("light.switch", str(i))
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count + 2
+
+    hass.states.async_remove("light.switch")
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count

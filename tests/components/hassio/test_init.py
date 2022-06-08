@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture()
@@ -336,7 +336,7 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
 async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch.dict(
-        os.environ, {"HASSIO_TOKEN": "123456"}
+        os.environ, {"SUPERVISOR_TOKEN": "123456"}
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
