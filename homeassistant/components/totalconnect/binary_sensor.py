@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -122,8 +123,6 @@ class TotalConnectZoneBinarySensor(TotalConnectBinarySensor):
     @property
     def device_class(self):
         """Return the class of this device, from BinarySensorDeviceClass."""
-        if self._zone.is_type_security():
-            return BinarySensorDeviceClass.DOOR
         if self._zone.is_type_fire():
             return BinarySensorDeviceClass.SMOKE
         if self._zone.is_type_carbon_monoxide():
@@ -132,7 +131,13 @@ class TotalConnectZoneBinarySensor(TotalConnectBinarySensor):
             return BinarySensorDeviceClass.MOTION
         if self._zone.is_type_medical():
             return BinarySensorDeviceClass.SAFETY
-        return None
+        # "security" type is a generic category so test for it last
+        if self._zone.is_type_security():
+            return BinarySensorDeviceClass.DOOR
+
+        raise HomeAssistantError(
+            f"TotalConnect zone {self._zone_id} reported an unexpected device class."
+        )
 
 
 class TotalConnectLowBatteryBinarySensor(TotalConnectBinarySensor):
