@@ -220,6 +220,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SOURCE_(\w*)$"),
         ),
     ],
+    "homeassistant.data_entry_flow": [
+        ObsoleteImportMatch(
+            reason="replaced by FlowResultType enum",
+            constant=re.compile(r"^RESULT_TYPE_(\w*)$"),
+        ),
+    ],
     "homeassistant.helpers.device_registry": [
         ObsoleteImportMatch(
             reason="replaced by DeviceEntryDisabler enum",
