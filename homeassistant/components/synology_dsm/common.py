@@ -258,7 +258,11 @@ class SynoApi:
             await self._hass.async_add_executor_job(
                 self.dsm.update, self._with_information
             )
-        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+        except (
+            SynologyDSMLoginFailedException,
+            SynologyDSMRequestException,
+            SynologyDSMAPIErrorException,
+        ) as err:
             LOGGER.debug(
                 "Connection error during update of '%s' with exception: %s",
                 self._entry.unique_id,
