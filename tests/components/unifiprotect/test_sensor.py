@@ -122,7 +122,7 @@ async def sensor_none_fixture(
     await hass.async_block_till_done()
 
     # 4 from all, 5 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 21, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     yield sensor_obj
 
@@ -181,7 +181,7 @@ async def test_sensor_setup_sensor(
 ):
     """Test sensor entity setup for sensor devices."""
     # 5 from all, 5 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 21, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     entity_registry = er.async_get(hass)
 
@@ -580,7 +580,7 @@ async def test_sensor_update_alarm(
 ):
     """Test sensor motion entity."""
     # 5 from all, 5 from sense, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 21, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     _, entity_id = ids_from_device_description(
         Platform.SENSOR, sensor, SENSE_SENSORS[4]
@@ -631,7 +631,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor, SENSE_SENSORS[-2]
+        Platform.SENSOR, sensor, SENSE_SENSORS[-3]
     )
     entity_registry = er.async_get(hass)
 
