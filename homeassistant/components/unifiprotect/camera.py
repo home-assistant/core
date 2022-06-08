@@ -141,8 +141,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         super()._async_update_device_from_protect()
         self.channel = self.device.channels[self.channel.id]
         self._attr_motion_detection_enabled = (
-            self.device.state == StateType.CONNECTED
-            and self.device.feature_flags.has_motion_zones
+            self.device.recording_settings.enable_motion_detection
         )
         self._attr_is_recording = (
             self.device.state == StateType.CONNECTED and self.device.is_recording
