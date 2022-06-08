@@ -116,14 +116,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
-    max_value: None = None
-    min_value: None = None
+    max_value: float | None = None
+    min_value: float | None = None
     native_max_value: float | None = None
     native_min_value: float | None = None
     native_unit_of_measurement: str | None = None
     native_step: float | None = None
-    step: None = None
-    unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
+    step: float | None = None
 
     def __post_init__(self) -> None:
         """Post initialisation processing."""
@@ -133,9 +132,9 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            caller = inspect.stack()[2]  # type: ignore[unreachable]
+            caller = inspect.stack()[2]
             module = inspect.getmodule(caller[0])
-            if "custom_components" in module.__file__:
+            if module and module.__file__ and "custom_components" in module.__file__:
                 report_issue = "report it to the custom component author."
             else:
                 report_issue = (
@@ -146,7 +145,7 @@ class NumberEntityDescription(EntityDescription):
                 "%s is setting deprecated attributes on an instance of "
                 "NumberEntityDescription, this is not valid and will be unsupported "
                 "from Home Assistant 2022.10. Please %s",
-                module.__name__,
+                module.__name__ if module else self.__class__.__name__,
                 report_issue,
             )
             self.native_unit_of_measurement = self.unit_of_measurement
@@ -178,20 +177,17 @@ class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     entity_description: NumberEntityDescription
-    _attr_max_value: None
-    _attr_min_value: None
+    _attr_max_value: float
+    _attr_min_value: float
     _attr_state: None = None
-    _attr_step: None
+    _attr_step: float
     _attr_mode: NumberMode = NumberMode.AUTO
-    _attr_value: None
+    _attr_value: float
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
     _attr_native_value: float
     _attr_native_unit_of_measurement: str | None
-    _attr_unit_of_measurement: None = (
-        None  # Subclasses of NumberEntity should not set this
-    )
     _deprecated_number_entity_reported = False
 
     @property
@@ -217,17 +213,16 @@ class NumberEntity(Entity):
         return DEFAULT_MIN_VALUE
 
     @property
-    @final
     def min_value(self) -> float:
         """Return the minimum value."""
         if hasattr(self, "_attr_min_value"):
             self._report_deprecated_number_entity()
-            return self._attr_min_value  # type: ignore[return-value]
+            return self._attr_min_value
         if (
             hasattr(self, "entity_description")
             and self.entity_description.min_value is not None
         ):
-            self._report_deprecated_number_entity()  # type: ignore[unreachable]
+            self._report_deprecated_number_entity()
             return self.entity_description.min_value
         return self._convert_to_state_value(self.native_min_value, floor_decimal)
 
@@ -244,17 +239,16 @@ class NumberEntity(Entity):
         return DEFAULT_MAX_VALUE
 
     @property
-    @final
     def max_value(self) -> float:
         """Return the maximum value."""
         if hasattr(self, "_attr_max_value"):
             self._report_deprecated_number_entity()
-            return self._attr_max_value  # type: ignore[return-value]
+            return self._attr_max_value
         if (
             hasattr(self, "entity_description")
             and self.entity_description.max_value is not None
         ):
-            self._report_deprecated_number_entity()  # type: ignore[unreachable]
+            self._report_deprecated_number_entity()
             return self.entity_description.max_value
         return self._convert_to_state_value(self.native_max_value, ceil_decimal)
 
@@ -271,17 +265,16 @@ class NumberEntity(Entity):
         return None
 
     @property
-    @final
     def step(self) -> float:
         """Return the increment/decrement step."""
         if hasattr(self, "_attr_step"):
             self._report_deprecated_number_entity()
-            return self._attr_step  # type: ignore[return-value]
+            return self._attr_step
         if (
             hasattr(self, "entity_description")
             and self.entity_description.step is not None
         ):
-            self._report_deprecated_number_entity()  # type: ignore[unreachable]
+            self._report_deprecated_number_entity()
             return self.entity_description.step
         if (native_step := self.native_step) is not None:
             return native_step
@@ -313,7 +306,6 @@ class NumberEntity(Entity):
         return None
 
     @property
-    @final
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         native_unit_of_measurement = self.native_unit_of_measurement
@@ -332,7 +324,6 @@ class NumberEntity(Entity):
         return self._attr_native_value
 
     @property
-    @final
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if hasattr(self, "_attr_value"):
@@ -351,12 +342,10 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_native_value, value)
 
-    @final
     def set_value(self, value: float) -> None:
         """Set new value."""
         raise NotImplementedError()
 
-    @final
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
@@ -418,7 +407,8 @@ class NumberEntity(Entity):
             self._deprecated_number_entity_reported = True
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
-                "Entity %s (%s) is using deprecated NumberEntity features, please %s",
+                "Entity %s (%s) is using deprecated NumberEntity features which will "
+                "be unsupported from Home Assistant Core 2022.10, please %s",
                 self.entity_id,
                 type(self),
                 report_issue,
