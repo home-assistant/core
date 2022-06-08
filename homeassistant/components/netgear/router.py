@@ -113,12 +113,12 @@ class NetgearRouter:
         self.serial_number = self._info["SerialNumber"]
         self.mode = self._info.get("DeviceMode", MODE_ROUTER)
 
-        loaded_entries = [
+        enabled_entries = [
             entry
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.disabled_by is None
         ]
-        self.track_devices = self.mode == MODE_ROUTER or len(loaded_entries) == 1
+        self.track_devices = self.mode == MODE_ROUTER or len(enabled_entries) == 1
         _LOGGER.debug(
             "Netgear track_devices = '%s', device mode '%s'",
             self.track_devices,
