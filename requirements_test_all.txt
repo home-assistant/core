@@ -267,7 +267,7 @@ ambiclimate==0.2.1
 androidtv[async]==0.0.67
 
 # homeassistant.components.apprise
-apprise==0.9.8.3
+apprise==0.9.9
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -1637,7 +1637,7 @@ yalexs==1.1.25
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.0.6
+yolink-api==0.0.8
 
 # homeassistant.components.youless
 youless-api==0.16

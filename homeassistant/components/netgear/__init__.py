@@ -18,7 +18,6 @@ from .const import (
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
     KEY_ROUTER,
-    MODE_ROUTER,
     PLATFORMS,
 )
 from .errors import CannotLoginException
@@ -72,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_devices() -> bool:
         """Fetch data from the router."""
-        if router.mode == MODE_ROUTER:
+        if router.track_devices:
             return await router.async_update_device_trackers()
         return False
 
@@ -107,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=SPEED_TEST_INTERVAL,
     )
 
-    if router.mode == MODE_ROUTER:
+    if router.track_devices:
         await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
 
@@ -134,7 +133,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
 
-    if router.mode != MODE_ROUTER:
+    if not router.track_devices:
         router_id = None
         # Remove devices that are no longer tracked
         device_registry = dr.async_get(hass)
