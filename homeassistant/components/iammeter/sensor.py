@@ -56,7 +56,6 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
             manufacturer="IamMeter",
             name=coordinator.name,
         )
-        print(coordinator.data.measurement)
 
     @property
     def native_value(self):
