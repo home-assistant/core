@@ -34,20 +34,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload device tracker if change option."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _caldav_connect(client: caldav.DAVClient) -> list[caldav.Calendar]:
+    """Return the calendars for the client."""
+    return client.principal().calendars()
 
 
 async def async_caldav_connect(hass, data_entry):
@@ -60,7 +61,6 @@ async def async_caldav_connect(hass, data_entry):
     )
 
     try:
-        principal = await hass.async_add_job(client.principal)
-        return await hass.async_add_job(principal.calendars)
+        return await hass.async_add_executor_job(_caldav_connect, client)
     except Exception as error:  # pylint:disable=broad-except
         raise ConfigEntryNotReady() from error
