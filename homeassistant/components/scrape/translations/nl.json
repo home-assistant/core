@@ -18,7 +18,8 @@
                     "state_class": "Staatklasse",
                     "unit_of_measurement": "Meeteenheid",
                     "username": "Gebruikersnaam",
-                    "value_template": "Waardetemplate"
+                    "value_template": "Waardetemplate",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "data_description": {
                     "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
@@ -44,7 +45,8 @@
                     "state_class": "Staatklasse",
                     "unit_of_measurement": "Meeteenheid",
                     "username": "Gebruikersnaam",
-                    "value_template": "Waardetemplate"
+                    "value_template": "Waardetemplate",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "data_description": {
                     "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",

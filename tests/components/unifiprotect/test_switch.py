@@ -118,7 +118,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 12, 11)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 12)
 
     yield camera_obj
 
@@ -161,7 +161,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 5, 4)
+    assert_entity_counts(hass, Platform.SWITCH, 6, 5)
 
     yield camera_obj
 
@@ -205,7 +205,7 @@ async def camera_privacy_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 6, 5)
+    assert_entity_counts(hass, Platform.SWITCH, 7, 6)
 
     yield camera_obj
 

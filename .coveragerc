@@ -518,7 +518,6 @@ omit =
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
     homeassistant/components/ialarm/alarm_control_panel.py
-    homeassistant/components/ialarm_xr/alarm_control_panel.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
@@ -964,9 +963,12 @@ omit =
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
     homeassistant/components/radiotherm/__init__.py
+    homeassistant/components/radiotherm/entity.py
     homeassistant/components/radiotherm/climate.py
     homeassistant/components/radiotherm/coordinator.py
     homeassistant/components/radiotherm/data.py
+    homeassistant/components/radiotherm/switch.py
+    homeassistant/components/radiotherm/util.py
     homeassistant/components/rainbird/*
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
