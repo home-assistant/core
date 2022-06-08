@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.caldav.const import (
-    CONF_ADD_CUSTO_CALENDAR,
+    CONF_ADD_CUSTOM_CALENDAR,
     CONF_CALENDAR,
     CONF_CALENDARS,
     CONF_CUSTOM_CALENDARS,
@@ -44,7 +44,7 @@ USER_INPUT_CUSTO = {
     CONF_URL: "http://homeassistant.io",
     CONF_VERIFY_SSL: True,
     CONF_DAYS: 2,
-    CONF_ADD_CUSTO_CALENDAR: True,
+    CONF_ADD_CUSTOM_CALENDAR: True,
 }
 
 CUSTOM_INPUT = {
