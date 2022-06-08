@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 class PowerviewButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[BaseShade, PowerviewButton], Any]
 
 
 @dataclass
@@ -81,7 +81,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set buttons for device."""
+    """Set up the hunter douglas advanced feature buttons."""
 
     pv_data = hass.data[DOMAIN][entry.entry_id]
     room_data: dict[str | int, Any] = pv_data[PV_ROOM_DATA]
@@ -118,12 +118,12 @@ class PowerviewButton(ShadeEntity, ButtonEntity):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info,
-        room_name,
-        shade,
-        name,
+        device_info: dict[str, Any],
+        room_name: str,
+        shade: BaseShade,
+        name: str,
         description: PowerviewButtonDescription,
-    ):
+    ) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description: PowerviewButtonDescription = description
