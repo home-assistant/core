@@ -7,60 +7,54 @@ from typing import Any
 from aqara_iot import AqaraOpenAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import AQARA_COUNTRIES, CONF_COUNTRY_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
-class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+
+class AqaraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Aqara Config Flow."""
 
+    entry: ConfigEntry | None = None
+
     @staticmethod
-    def _try_login(user_input: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    def _try_login(user_input: dict[str, Any]) -> bool:
         """Try login."""
+
         response = False
 
-        country = [
-            country
-            for country in AQARA_COUNTRIES
-            if country.name == user_input[CONF_COUNTRY_CODE]
-        ][0]
-
-        data = {
-            CONF_USERNAME: user_input[CONF_USERNAME],
-            CONF_PASSWORD: user_input[CONF_PASSWORD],
-            CONF_COUNTRY_CODE: country.country_code,
-        }
-
-        api = AqaraOpenAPI(country.country_code)
+        api = AqaraOpenAPI(user_input[CONF_COUNTRY_CODE])
 
         response = api.get_auth(
-            username=data[CONF_USERNAME],
-            password=data[CONF_PASSWORD],
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
             schema="",
         )
         if response is False:
             _LOGGER.debug("get_auth fail")
-            return False, data
+            return False
 
-        return True, data
+        return True
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Step user."""
         errors = {}
 
         if user_input is not None:
-            response, data = await self.hass.async_add_executor_job(
+            response = await self.hass.async_add_executor_job(
                 self._try_login, user_input
             )
 
             if response is True:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
-                    data=data,
+                    data=user_input,
                 )
 
             errors["base"] = "login_error"
@@ -77,7 +71,7 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_COUNTRY_CODE, "China"),
                     ): vol.In(
                         # We don't pass a dict {code:name} because country codes can be duplicate.
-                        [country.name for country in AQARA_COUNTRIES]
+                        [country.country_code for country in AQARA_COUNTRIES]
                     ),
                     vol.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
@@ -87,5 +81,49 @@ class AqaraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+        """Handle initiation of re-authentication."""
+
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm(data)
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step reauth."""
+        errors = {}
+
+        if user_input is not None and self.entry:
+
+            data = {
+                CONF_USERNAME: self.entry.data[CONF_USERNAME],
+                CONF_COUNTRY_CODE: self.entry.data[CONF_COUNTRY_CODE],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+
+            response = await self.hass.async_add_executor_job(self._try_login, data)
+
+            if response is True:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            errors["base"] = "login_error"
+
+        if user_input is None:
+            user_input = {}
+
+        return self.async_show_form(
+            step_id="reauth",
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
         )

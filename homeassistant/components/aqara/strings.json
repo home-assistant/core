@@ -9,6 +9,14 @@
           "username": "Account",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth": {
+        "description": "Enter your Aqara credentials",
+        "data": {
+          "country_code": "Country",
+          "username": "Account",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
         "error": {
             "invalid_auth": "Invalid authentication",
             "login_error": "Login error,please check account and password then try again"
@@ -12,7 +15,14 @@
                     "username": "Account"
                 },
                 "description": "Enter Your Aqara Home Account Info"
-            }
+            },
+            "reauth": {
+                "description": "Enter your Aqara credentials",
+                "title": "Reauthenticate Integration",
+                "data": {
+                  "password": "Password"
+                }
+              }
         }
     }
 }

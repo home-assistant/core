@@ -37,15 +37,14 @@ class AqaraCloudOpenAPIEndpoint:
 class Country:
     """Describe a supported country."""
 
-    name: str
     country_code: str
     endpoint: str = AqaraCloudOpenAPIEndpoint.EUROPE
 
 
 AQARA_COUNTRIES = [
-    Country("China", "86", AqaraCloudOpenAPIEndpoint.CHINA),
-    Country("Europe", "251", AqaraCloudOpenAPIEndpoint.EUROPE),
-    Country("South Korea", "850", AqaraCloudOpenAPIEndpoint.COREA),
-    Country("Russia", "7", AqaraCloudOpenAPIEndpoint.RUSSIA),
-    Country("United States", "1", AqaraCloudOpenAPIEndpoint.AMERICA),
+    Country("China", AqaraCloudOpenAPIEndpoint.CHINA),
+    Country("Europe", AqaraCloudOpenAPIEndpoint.EUROPE),
+    Country("South Korea", AqaraCloudOpenAPIEndpoint.COREA),
+    Country("Russia", AqaraCloudOpenAPIEndpoint.RUSSIA),
+    Country("United States", AqaraCloudOpenAPIEndpoint.AMERICA),
 ]

@@ -12,13 +12,12 @@ from aqara_iot import (
     AqaraHomeManager,
     AqaraOpenAPI,
     AqaraOpenMQ,
-    AqaraPoint,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
@@ -48,10 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    api = AqaraOpenAPI(country_code=entry.data[CONF_COUNTRY_CODE])
+    api = AqaraOpenAPI(entry.data[CONF_COUNTRY_CODE])
 
     try:
-        await hass.async_add_executor_job(
+        response = await hass.async_add_executor_job(
             api.get_auth,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
@@ -66,11 +65,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         else:
             _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady(ex) from ex
+            raise ConfigEntryAuthFailed(ex) from ex
 
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady from ex
+
+    if response is False:
+        _LOGGER.error(
+            "Unable to setup configuration entry,please reconfigure the integration"
+        )
+        raise ConfigEntryAuthFailed("please reconfigure the integration")
 
     device_manager = AqaraDeviceManager(api)
 
@@ -81,7 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mqtt_client.add_message_listener(device_manager.on_message)
     mqtt_client.start()
 
-    listener = DeviceListener(hass, device_manager)
+    listener = DeviceListener(hass)
+
     device_manager.add_device_listener(listener)
 
     hass.data[DOMAIN][entry.entry_id] = HomeAssistantAqaraData(
@@ -133,11 +139,9 @@ class DeviceListener(AqaraDeviceListener):
     def __init__(
         self,
         hass: HomeAssistant,
-        device_manager: AqaraDeviceManager,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
-        self.device_manager = device_manager
         self.point_ids: set[str] = set()
         self.device_registry = dr.async_get(hass)
         self.nouse_point_ids: set[str] = set()
@@ -151,39 +155,33 @@ class DeviceListener(AqaraDeviceListener):
         """Add point id to point_ids."""
         self.point_ids.add(point_id)
 
-    def update_device(self, aqara_point: AqaraPoint) -> None:
+    def update_device(self, device) -> None:
         """Update device status."""
-        if aqara_point.id in self.point_ids:
-            _LOGGER.debug(
-                "Received update for device %s: %s",
-                aqara_point.id,
-                self.device_manager.device_map[aqara_point.did].point_map[
-                    aqara_point.id
-                ],
+        if device.id in self.point_ids:
+
+            dispatcher_send(
+                self.hass,
+                f"{AQARA_HA_SIGNAL_UPDATE_POINT_VALUE}_{device.id}",
+                device,
             )
             dispatcher_send(
                 self.hass,
-                f"{AQARA_HA_SIGNAL_UPDATE_POINT_VALUE}_{aqara_point.id}",
-                aqara_point,
-            )
-            dispatcher_send(
-                self.hass,
-                f"{AQARA_HA_SIGNAL_UPDATE_ENTITY}_{aqara_point.id}",
+                f"{AQARA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
             )
 
-    def add_device(self, aqara_point: AqaraPoint) -> None:
+    def add_device(self, device) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
-        self.hass.add_job(self.async_remove_device, aqara_point.id)
+        self.hass.add_job(self.async_remove_device, device.id)
 
-        self.point_ids.add(aqara_point.id)
+        self.point_ids.add(device.id)
 
         # the point.did not point.id
-        dispatcher_send(self.hass, AQARA_DISCOVERY_NEW, [aqara_point.did])
+        dispatcher_send(self.hass, AQARA_DISCOVERY_NEW, [device.did])
 
-    def remove_device(self, point_id: str) -> None:
+    def remove_device(self, device_id) -> None:
         """Add device removed listener."""
-        self.hass.add_job(self.async_remove_device, point_id)
+        self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
     def async_remove_device(self, hass_device_id: str) -> None:
