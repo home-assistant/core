@@ -53,7 +53,6 @@ from homeassistant.components.websocket_api.const import (
     ERR_UNKNOWN_ERROR,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
@@ -1943,16 +1942,6 @@ class FirmwareUploadView(HomeAssistantView):
                 raise web_exceptions.HTTPBadRequest
             raise web_exceptions.HTTPNotFound
 
-        if not self._dev_reg:
-            self._dev_reg = dr.async_get(hass)
-        device = self._dev_reg.async_get(device_id)
-        assert device
-        entry = next(
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device.config_entries
-        )
-
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
 
@@ -1965,14 +1954,14 @@ class FirmwareUploadView(HomeAssistantView):
 
         try:
             await begin_firmware_update(
-                entry.data[CONF_URL],
+                node.client.ws_server_url,
                 node,
                 uploaded_file.filename,
                 await hass.async_add_executor_job(uploaded_file.file.read),
                 async_get_clientsession(hass),
             )
         except BaseZwaveJSServerError as err:
-            raise web_exceptions.HTTPBadRequest from err
+            raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
 
         return self.json(None)
 
