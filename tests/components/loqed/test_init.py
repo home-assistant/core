@@ -82,11 +82,14 @@ async def test_setup_webhook_in_bridge(
 
     with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+    ), patch(
+        "homeassistant.components.webhook.async_generate_url",
+        return_value="http://hook_id",
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    lock.registerWebhook.assert_called_with(webhooks_fixture[0]["url"])
+    lock.registerWebhook.assert_called_with("http://hook_id")
 
 
 async def test_unload_entry(hass, integration: MockConfigEntry, lock: loqed.Lock):
