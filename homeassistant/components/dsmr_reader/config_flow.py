@@ -26,9 +26,7 @@ class DsmrReaderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle user step."""
         if self._async_current_entries():
-            return self.async_show_form(
-                step_id="user", errors={"base": "single_instance_allowed"}
-            )
+            return self.async_abort(reason="single_instance_allowed")
         if not self.hass.services.has_service(domain="mqtt", service="publish"):
             return self.async_show_form(step_id="user", errors={"base": "mqtt_missing"})
         if user_input is not None:

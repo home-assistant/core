@@ -2,7 +2,11 @@
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+    RESULT_TYPE_ABORT,
+)
 
 from tests.common import MockConfigEntry
 
@@ -37,9 +41,8 @@ async def test_duplicate_user_step(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert init_result["type"] == RESULT_TYPE_FORM
-    assert init_result["step_id"] == "user"
-    assert {"base": "single_instance_allowed"} == init_result["errors"]
+    assert init_result["type"] == RESULT_TYPE_ABORT
+    assert init_result["reason"] == "single_instance_allowed"
 
 
 async def test_user_step_with_mqtt(hass: HomeAssistant):
@@ -83,5 +86,5 @@ async def test_mqtt_duplicate_step(hass: HomeAssistant):
         "dsmr_reader", context={"source": SOURCE_MQTT}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
