@@ -276,13 +276,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="motion_detected_at",
         entity_registry_enabled_default=False,
     ),
-    ProtectSensorEntityDescription(
-        key="tampering_last_trip_time",
-        name="Last Tampering Detected",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="tampering_detected_at",
-        entity_registry_enabled_default=False,
-    ),
 )
 
 DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
