@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from . import async_caldav_connect
 from .const import (
     CALDAV_EXCEPTIONS,
-    CONF_ADD_CUSTO_CALENDAR,
+    CONF_ADD_CUSTOM_CALENDAR,
     CONF_CALENDARS,
     CONF_CUSTOM_CALENDARS,
     CONF_DAYS,
@@ -38,7 +38,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_CALENDARS, default=[]): selector.SelectSelector(
             selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
         ),
-        vol.Required(CONF_ADD_CUSTO_CALENDAR, default=False): bool,
+        vol.Required(CONF_ADD_CUSTOM_CALENDAR, default=False): bool,
     }
 )
 
@@ -88,7 +88,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-            if user_input.get(CONF_ADD_CUSTO_CALENDAR):
+            if user_input.get(CONF_ADD_CUSTOM_CALENDAR):
                 return await self.async_step_custom_calendars(user_input)
 
             try:
@@ -113,7 +113,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_custom_calendars(self, user_input=None) -> FlowResult:
         """Add custom calendars."""
-        if user_input.pop(CONF_ADD_CUSTO_CALENDAR, None):
+        if user_input.pop(CONF_ADD_CUSTOM_CALENDAR, None):
             self.user_input = user_input
         elif user_input:
             self.user_input.update(user_input)
