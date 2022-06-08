@@ -224,7 +224,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Stop the cover."""
         self._async_cancel_scheduled_transition_update()
         self.data.update_from_response(await self._shade.stop())
-        await self._async_force_refresh_state()
+        await self.async_update()
 
     @callback
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
@@ -310,7 +310,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Update status of the cover."""
         _LOGGER.debug("Processing scheduled update for %s", self.name)
         self._scheduled_transition_update = None
-        await self._async_force_refresh_state()
+        await self.async_update()
         self._forced_resync = async_call_later(
             self.hass, RESYNC_DELAY, self._async_force_resync
         )
@@ -319,13 +319,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Force a resync after an update since the hub may have stale state."""
         self._forced_resync = None
         _LOGGER.debug("Force resync of shade %s", self.name)
-        await self._async_force_refresh_state()
-
-    async def _async_force_refresh_state(self) -> None:
-        """Refresh the cover state and force the device cache to be bypassed."""
-        await self._shade.refresh()
-        self._async_update_shade_data(self._shade.raw_data)
-        self.async_write_ha_state()
+        await self.async_update()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

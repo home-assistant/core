@@ -71,7 +71,7 @@ BUTTONS: Final = [
         icon="mdi:autorenew",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda shade, button: button.async_force_refresh(),
+        press_action=lambda shade, button: button.async_update(),
     ),
 ]
 
@@ -133,10 +133,3 @@ class PowerviewButton(ShadeEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_action(self._shade, self)
-
-    async def async_force_refresh(self) -> None:
-        """Refresh shade position."""
-        _LOGGER.debug("Manual update of shade data run for %s", self._shade_name)
-        await self._shade.refresh()
-        self.data.update_shade_positions(self._shade.raw_data)
-        self.async_write_ha_state()

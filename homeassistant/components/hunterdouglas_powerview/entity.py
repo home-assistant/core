@@ -117,3 +117,8 @@ class ShadeEntity(HDEntity):
         device_info[ATTR_SW_VERSION] = sw_version
 
         return device_info
+
+    async def async_update(self) -> None:
+        """Refresh shade position."""
+        await self._shade.refresh()
+        self.data.update_shade_positions(self._shade.raw_data)
