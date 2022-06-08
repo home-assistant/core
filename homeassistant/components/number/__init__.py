@@ -1,13 +1,14 @@
 """Component to allow numeric input for platforms."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
 from math import ceil, floor
-from typing import Any, Callable, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -369,7 +370,7 @@ class NumberEntity(Entity):
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
                 value_new: float = UNIT_CONVERSIONS[device_class](
-                    value_new,
+                    value,
                     native_unit_of_measurement,
                     unit_of_measurement,
                 )
