@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
@@ -31,14 +30,12 @@ from .const import (
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class PowerviewButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
-    press_action: Callable[[BaseShade, PowerviewButton], Any]
+    press_action: Callable[[BaseShade], Any]
 
 
 @dataclass
@@ -55,7 +52,7 @@ BUTTONS: Final = [
         icon="mdi:swap-vertical-circle-outline",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda shade, button: shade.calibrate(),
+        press_action=lambda shade: shade.calibrate(),
     ),
     PowerviewButtonDescription(
         key="identify",
@@ -63,15 +60,7 @@ BUTTONS: Final = [
         icon="mdi:crosshairs-question",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda shade, button: shade.jog(),
-    ),
-    PowerviewButtonDescription(
-        key="update",
-        name="Force Update",
-        icon="mdi:autorenew",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda shade, button: button.async_update(),
+        press_action=lambda shade: shade.jog(),
     ),
 ]
 
@@ -132,4 +121,4 @@ class PowerviewButton(ShadeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_action(self._shade, self)
+        await self.entity_description.press_action(self._shade)
