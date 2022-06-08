@@ -7,12 +7,12 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
 from . import async_caldav_connect
 from .const import (
+    CALDAV_EXCEPTIONS,
     CONF_ADD_CUSTO_CALENDAR,
     CONF_CALENDARS,
     CONF_CUSTOM_CALENDARS,
@@ -103,7 +103,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     },
                 )
-            except ConfigEntryNotReady as error:
+            except CALDAV_EXCEPTIONS as error:
                 _LOGGER.error(error)
                 errors["base"] = "cannot_connect"
 

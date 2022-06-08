@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 
 import caldav
-from caldav.lib.error import DAVError
-from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CALDAV_EXCEPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +25,11 @@ PLATFORMS = [Platform.CALENDAR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Caldav component."""
-    calendars = await async_caldav_connect(hass, entry.data)
+    try:
+        calendars = await async_caldav_connect(hass, entry.data)
+    except CALDAV_EXCEPTIONS as error:
+        raise ConfigEntryNotReady from error
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = calendars
@@ -61,8 +63,4 @@ async def async_caldav_connect(hass, data_entry):
         password=data_entry[CONF_PASSWORD],
         ssl_verify_cert=data_entry[CONF_VERIFY_SSL],
     )
-
-    try:
-        return await hass.async_add_executor_job(_caldav_connect, client)
-    except (RequestException, DAVError) as error:
-        raise ConfigEntryNotReady from error
+    return await hass.async_add_executor_job(_caldav_connect, client)
