@@ -30,6 +30,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.CLIMATE,
 ]
 
 
