@@ -60,7 +60,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 6
+STORAGE_VERSION_MINOR = 7
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -111,6 +111,7 @@ class RegistryEntry:
     hidden_by: RegistryEntryHider | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    modern_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
     options: Mapping[str, Mapping[str, Any]] = attr.ib(
         default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
@@ -328,6 +329,7 @@ class EntityRegistry:
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
         entity_category: EntityCategory | None = None,
+        modern_name: bool | None = None,
         original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
@@ -349,6 +351,7 @@ class EntityRegistry:
                 config_entry_id=config_entry_id or UNDEFINED,
                 device_id=device_id or UNDEFINED,
                 entity_category=entity_category or UNDEFINED,
+                modern_name=modern_name if modern_name is not None else UNDEFINED,
                 original_device_class=original_device_class or UNDEFINED,
                 original_icon=original_icon or UNDEFINED,
                 original_name=original_name or UNDEFINED,
@@ -393,6 +396,7 @@ class EntityRegistry:
             entity_category=entity_category,
             entity_id=entity_id,
             hidden_by=hidden_by,
+            modern_name=modern_name or False,
             original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
@@ -499,6 +503,7 @@ class EntityRegistry:
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
+        modern_name: bool | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -548,6 +553,7 @@ class EntityRegistry:
             ("entity_category", entity_category),
             ("hidden_by", hidden_by),
             ("icon", icon),
+            ("modern_name", modern_name),
             ("name", name),
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
@@ -621,6 +627,7 @@ class EntityRegistry:
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
+        modern_name: bool | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -642,6 +649,7 @@ class EntityRegistry:
             entity_category=entity_category,
             hidden_by=hidden_by,
             icon=icon,
+            modern_name=modern_name,
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
@@ -742,6 +750,7 @@ class EntityRegistry:
                     else None,
                     icon=entity["icon"],
                     id=entity["id"],
+                    modern_name=entity["modern_name"],
                     name=entity["name"],
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -778,6 +787,7 @@ class EntityRegistry:
                 "hidden_by": entry.hidden_by,
                 "icon": entry.icon,
                 "id": entry.id,
+                "modern_name": entry.modern_name,
                 "name": entry.name,
                 "options": entry.options,
                 "original_device_class": entry.original_device_class,
@@ -943,6 +953,11 @@ async def _async_migrate(
         # Version 1.6 adds hidden_by
         for entity in data["entities"]:
             entity["hidden_by"] = None
+
+    if old_major_version == 1 and old_minor_version < 7:
+        # Version 1.6 adds modern_name
+        for entity in data["entities"]:
+            entity["modern_name"] = False
 
     if old_major_version > 1:
         raise NotImplementedError
