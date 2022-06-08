@@ -158,7 +158,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.details["voltage"],
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
