@@ -28,8 +28,11 @@ MOCK_FOLDER_ID: Final = "MockFolderId"
 MOCK_ALBUM_FOLDER: Final = "MockAlbumFolder"
 MOCK_ALBUM_FOLDER_ID: Final = "MockAlbumFolderId"
 
-MOCK_VIDEO_FOLDER: Final = "MockVideoFolder"
-MOCK_VIDEO_FOLDER_ID: Final = "MockVideoFolderId"
+MOCK_MOVIE_FOLDER: Final = "MockVideoFolder"
+MOCK_MOVIE_FOLDER_ID: Final = "MockVideoFolderId"
+
+MOCK_PHOTO_FOLDER: Final = "MockPhotoFolder"
+MOCK_PHOTO_FOLDER_ID: Final = "MockPhotoFolderId"
 
 MOCK_ARTIST_NAME: Final = "MockArtist"
 MOCK_ARTIST_ID: Final = "MockArtistId"
@@ -52,9 +55,11 @@ MOCK_NO_SOURCE_TRACK_ID: Final = "MockNoSourceTrackId"
 MOCK_INVALID_SOURCE_TRACK_NAME: Final = "MockInvalidSourceTrack"
 MOCK_INVALID_SOURCE_TRACK_ID: Final = "MockInvalidSourceTrackId"
 
-MOCK_MOVIE: Final = "MockMovie"
+MOCK_MOVIE_NAME: Final = "MockMovie"
 MOCK_MOVIE_ID: Final = "MockMovieId"
 
+MOCK_PHOTO_NAME: Final = "MockTvShow"
+MOCK_PHOTO_ID: Final = "MockTvShowId"
 
 MOCK_ARTIST_LIBRARY: Final = {
     "Name": MOCK_FOLDER,
@@ -83,14 +88,27 @@ MOCK_ALBUM_LIBRARY: Final = {
     "LocationType": "FileSystem",
 }
 
-MOCK_VIDEO_LIBRARY: Final = {
-    "Name": MOCK_VIDEO_FOLDER,
+MOCK_MOVIE_LIBRARY: Final = {
+    "Name": MOCK_MOVIE_FOLDER,
     "ServerId": "MockServer",
-    "Id": MOCK_VIDEO_FOLDER_ID,
+    "Id": MOCK_MOVIE_FOLDER_ID,
     "ChannelId": "null",
     "IsFolder": "true",
     "Type": "CollectionFolder",
-    "CollectionType": "video",
+    "CollectionType": "movies",
+    "ImageTags": None,
+    "BackdropImageTags": [],
+    "LocationType": "FileSystem",
+}
+
+MOCK_PHOTO_LIBRARY: Final = {
+    "Name": MOCK_PHOTO_FOLDER,
+    "ServerId": "MockServer",
+    "Id": MOCK_PHOTO_FOLDER_ID,
+    "ChannelId": "null",
+    "IsFolder": "true",
+    "Type": "CollectionFolder",
+    "CollectionType": "homevideos",
     "ImageTags": None,
     "BackdropImageTags": [],
     "LocationType": "FileSystem",
@@ -436,17 +454,70 @@ MOCK_INVALID_SOURCE_TRACK: Final = {
 }
 
 
-MOCK_VIDEO: Final = {
+MOCK_MOVIE: Final = {
     "Id": MOCK_MOVIE_ID,
     "ImageTags": {"Primary": "MockPrimaryVideoImage"},
     "IsFolder": False,
     "MediaType": "Video",
-    "Name": MOCK_MOVIE,
-    "ParentId": MOCK_VIDEO_FOLDER_ID,
+    "MediaSources": [
+        {
+            "Bitrate": 4161249,
+            "Container": "mkv",
+            "DefaultAudioStreamIndex": 1,
+            "Id": "MockMediaSourceId",
+            "MediaStreams": [
+                {
+                    "AspectRatio": "16:9",
+                    "AverageFrameRate": 25,
+                    "BitRate": 3713249,
+                    "Codec": "hevc",
+                    "CodecTimeBase": "1/25",
+                    "ColorPrimaries": "bt709",
+                    "ColorTransfer": "bt709",
+                    "DisplayTitle": "1080p " "HEVC SDR",
+                    "Height": 1080,
+                    "Index": 0,
+                    "IsDefault": True,
+                    "IsExternal": False,
+                    "IsForced": False,
+                    "IsInterlaced": False,
+                    "IsTextSubtitleStream": False,
+                    "Level": 120,
+                    "PixelFormat": "yuv420p",
+                    "Profile": "Main",
+                    "RealFrameRate": 25,
+                    "RefFrames": 1,
+                    "SupportsExternalStream": False,
+                    "TimeBase": "1/1000",
+                    "Type": "Video",
+                    "VideoRange": "SDR",
+                    "Width": 1920,
+                }
+            ],
+            "Name": MOCK_MOVIE_NAME,
+            "ParentId": MOCK_MOVIE_FOLDER_ID,
+            "Path": "/media/movies/MockMovie.mkv",
+            "ServerId": "MockServerId",
+            "Type": "Movie",
+            "VideoType": "VideoFile",
+        }
+    ],
+    "Name": MOCK_MOVIE_NAME,
+    "ParentId": MOCK_MOVIE_FOLDER_ID,
     "Path": "/media/movies/MockMovie.mkv ",
     "ServerId": "MockServerId",
     "Type": "Movie",
     "VideoType": "VideoFile",
+}
+
+MOCK_PHOTO: Final = {
+    "Id": MOCK_PHOTO_ID,
+    "ImageTags": {"Primary": "MockPhotoImage"},
+    "MediaType": "Photo",
+    "Name": MOCK_PHOTO_NAME,
+    "Type": "Photo",
+    "Path": "/media/movies/MockPhoto.jpg ",
+    "ServerId": "MockServerId",
 }
 
 MOCK_MEDIA_FOLDERS: Final = {"Items": [MOCK_ARTIST_LIBRARY]}

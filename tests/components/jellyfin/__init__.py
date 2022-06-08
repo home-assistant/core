@@ -9,6 +9,7 @@ from homeassistant.components.jellyfin.const import (
     DOMAIN,
     ITEM_TYPE_ALBUM,
     ITEM_TYPE_ARTIST,
+    MAX_STREAMING_BITRATE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -28,22 +29,26 @@ from .const import (
     MOCK_INVALID_SOURCE_TRACK,
     MOCK_INVALID_SOURCE_TRACK_ID,
     MOCK_MEDIA_FOLDERS,
+    MOCK_MOVIE,
+    MOCK_MOVIE_FOLDER_ID,
     MOCK_MOVIE_ID,
+    MOCK_MOVIE_LIBRARY,
     MOCK_NO_INDEX_ALBUM,
     MOCK_NO_INDEX_ALBUM_ID,
     MOCK_NO_INDEX_TRACK,
     MOCK_NO_INDEX_TRACK_ID,
     MOCK_NO_SOURCE_TRACK,
     MOCK_NO_SOURCE_TRACK_ID,
+    MOCK_PHOTO,
+    MOCK_PHOTO_FOLDER_ID,
+    MOCK_PHOTO_ID,
+    MOCK_PHOTO_LIBRARY,
     MOCK_SUCCESFUL_CONNECTION_STATE,
     MOCK_SUCCESFUL_LOGIN_RESPONSE,
     MOCK_TRACK,
     MOCK_TRACK_ID,
     MOCK_USER_ID,
     MOCK_USER_SETTINGS,
-    MOCK_VIDEO,
-    MOCK_VIDEO_FOLDER_ID,
-    MOCK_VIDEO_LIBRARY,
     TEST_PASSWORD,
     TEST_URL,
     TEST_USERNAME,
@@ -70,11 +75,13 @@ def create_mock_jellyfin_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def _create_mock_jellyfin_api() -> Mock:
     """Create a mock Jellyfin api."""
     api = Mock()
+    api.audio_url = Mock(side_effect=_audio_url)
     api.artwork = Mock(side_effect=_artwork)
     api.get_item = Mock(side_effect=_select_return_item)
     api.get_media_folders = Mock(return_value=MOCK_MEDIA_FOLDERS)
     api.get_user_settings = Mock(return_value=MOCK_USER_SETTINGS)
     api.user_items = Mock(side_effect=_select_user_items)
+    api.video_url = Mock(side_effect=_video_url)
 
     return api
 
@@ -85,8 +92,10 @@ def _select_return_item(item_id: str) -> dict[str, Any]:
         return MOCK_ARTIST_LIBRARY
     elif item_id == MOCK_ALBUM_FOLDER_ID:
         return MOCK_ALBUM_LIBRARY
-    elif item_id == MOCK_VIDEO_FOLDER_ID:
-        return MOCK_VIDEO_LIBRARY
+    elif item_id == MOCK_MOVIE_FOLDER_ID:
+        return MOCK_MOVIE_LIBRARY
+    elif item_id == MOCK_PHOTO_FOLDER_ID:
+        return MOCK_PHOTO_LIBRARY
     elif item_id == MOCK_ARTIST_ID:
         return MOCK_ARTIST
     elif item_id == MOCK_ALBUM_ID:
@@ -96,13 +105,15 @@ def _select_return_item(item_id: str) -> dict[str, Any]:
     elif item_id == MOCK_TRACK_ID:
         return MOCK_TRACK
     elif item_id == MOCK_MOVIE_ID:
-        return MOCK_VIDEO
+        return MOCK_MOVIE
     elif item_id == MOCK_NO_SOURCE_TRACK_ID:
         return MOCK_NO_SOURCE_TRACK
     elif item_id == MOCK_INVALID_SOURCE_TRACK_ID:
         return MOCK_INVALID_SOURCE_TRACK
     elif item_id == MOCK_NO_INDEX_TRACK_ID:
         return MOCK_NO_INDEX_TRACK
+    elif item_id == MOCK_PHOTO_ID:
+        return MOCK_PHOTO
 
 
 def _select_user_items(handler: str, params: dict[str:str]) -> dict[str, Any]:
@@ -123,6 +134,18 @@ def _select_user_items(handler: str, params: dict[str:str]) -> dict[str, Any]:
         return {"Items": [MOCK_TRACK]}
     elif params["ParentId"] == MOCK_NO_INDEX_ALBUM_ID:
         return {"Items": [MOCK_NO_INDEX_TRACK]}
+    elif params["ParentId"] == MOCK_MOVIE_FOLDER_ID:
+        return {"Items": [MOCK_MOVIE]}
+
+
+def _audio_url(item_id: str) -> str:
+    """Return streaming url based on item id."""
+    return f"{TEST_URL}/Audio/{item_id}/universal?UserId={MOCK_USER_ID}&DeviceId=Home+Assistant&api_key={MOCK_AUTH_TOKEN}&MaxStreamingBitrate={MAX_STREAMING_BITRATE}"
+
+
+def _video_url(item_id: str) -> str:
+    """Return the artwork url based on item id."""
+    return f"{TEST_URL}/Videos/{item_id}/stream?static=true&DeviceId=Home+Assistant&api_key={MOCK_AUTH_TOKEN}"
 
 
 def _artwork(item_id: str, art: str, max_width: int, ext: str = "jpg") -> str:

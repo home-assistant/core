@@ -12,6 +12,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_TRACK,
 )
 from homeassistant.components.media_player.errors import BrowseError
@@ -31,16 +32,20 @@ from .const import (
     MOCK_FOLDER,
     MOCK_FOLDER_ID,
     MOCK_INVALID_SOURCE_TRACK_ID,
+    MOCK_MOVIE_FOLDER,
+    MOCK_MOVIE_FOLDER_ID,
     MOCK_MOVIE_ID,
+    MOCK_MOVIE_NAME,
     MOCK_NO_INDEX_ALBUM_ID,
     MOCK_NO_INDEX_ALBUM_NAME,
     MOCK_NO_INDEX_TRACK_ID,
     MOCK_NO_INDEX_TRACK_NAME,
     MOCK_NO_SOURCE_TRACK_ID,
+    MOCK_PHOTO_FOLDER_ID,
+    MOCK_PHOTO_ID,
     MOCK_TRACK_ID,
     MOCK_TRACK_NAME,
     MOCK_USER_ID,
-    MOCK_VIDEO_FOLDER_ID,
     TEST_URL,
 )
 
@@ -238,7 +243,43 @@ async def test_async_browse_album_no_index_library(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_browse_video_library(hass: HomeAssistant) -> None:
+async def test_async_browse_movie_library(hass: HomeAssistant) -> None:
+    """Test browse media with an movie collection type."""
+    await setup_mock_jellyfin_config_entry(hass)
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    media = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{MOCK_MOVIE_FOLDER_ID}"
+    )
+
+    assert media.as_dict() == {
+        "media_class": MEDIA_CLASS_DIRECTORY,
+        "media_content_id": f"{const.URI_SCHEME}{DOMAIN}/{MOCK_MOVIE_FOLDER_ID}",
+        "media_content_type": MEDIA_TYPE_NONE,
+        "not_shown": 0,
+        "thumbnail": None,
+        "title": MOCK_MOVIE_FOLDER,
+        "can_play": False,
+        "can_expand": True,
+        "children": [
+            {
+                "can_expand": False,
+                "can_play": True,
+                "children_media_class": None,
+                "media_class": MEDIA_CLASS_MOVIE,
+                "media_content_id": f"{const.URI_SCHEME}{DOMAIN}/{MOCK_MOVIE_ID}",
+                "media_content_type": "video/x-matroska",
+                "thumbnail": f"{TEST_URL}/Items/{MOCK_MOVIE_ID}/Images/Primary?MaxWidth={MAX_IMAGE_WIDTH}&format=jpg",
+                "title": MOCK_MOVIE_NAME,
+            },
+        ],
+        "children_media_class": MEDIA_CLASS_MOVIE,
+    }
+
+
+async def test_async_browse_photo_library(hass: HomeAssistant) -> None:
     """Test browse media with an invalid collection type."""
     await setup_mock_jellyfin_config_entry(hass)
 
@@ -247,7 +288,7 @@ async def test_async_browse_video_library(hass: HomeAssistant) -> None:
 
     with pytest.raises(BrowseError):
         await media_source.async_browse_media(
-            hass, f"{const.URI_SCHEME}{DOMAIN}/{MOCK_VIDEO_FOLDER_ID}"
+            hass, f"{const.URI_SCHEME}{DOMAIN}/{MOCK_PHOTO_FOLDER_ID}"
         )
 
 
@@ -264,8 +305,8 @@ async def test_async_browse_movie(hass: HomeAssistant) -> None:
         )
 
 
-async def test_async_resolve_media(hass: HomeAssistant) -> None:
-    """Test resolving the URL for a valid item."""
+async def test_async_resolve_track(hass: HomeAssistant) -> None:
+    """Test resolving the URL for a valid audio item."""
     await setup_mock_jellyfin_config_entry(hass)
 
     assert await async_setup_component(hass, const.DOMAIN, {})
@@ -283,6 +324,24 @@ async def test_async_resolve_media(hass: HomeAssistant) -> None:
 
 
 async def test_async_resolve_movie(hass: HomeAssistant) -> None:
+    """Test resolving the URL for a valid movie item."""
+    await setup_mock_jellyfin_config_entry(hass)
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    play_media = await media_source.async_resolve_media(
+        hass,
+        f"{const.URI_SCHEME}{DOMAIN}/{MOCK_MOVIE_ID}",
+    )
+
+    assert (
+        play_media.url
+        == f"{TEST_URL}/Videos/{MOCK_MOVIE_ID}/stream?static=true&DeviceId=Home+Assistant&api_key={MOCK_AUTH_TOKEN}"
+    )
+
+
+async def test_async_resolve_photo(hass: HomeAssistant) -> None:
     """Test resolving the URL for an unsupported item."""
     await setup_mock_jellyfin_config_entry(hass)
 
@@ -292,7 +351,7 @@ async def test_async_resolve_movie(hass: HomeAssistant) -> None:
     with pytest.raises(BrowseError):
         await media_source.async_resolve_media(
             hass,
-            f"{const.URI_SCHEME}{DOMAIN}/{MOCK_MOVIE_ID}",
+            f"{const.URI_SCHEME}{DOMAIN}/{MOCK_PHOTO_ID}",
         )
 
 
