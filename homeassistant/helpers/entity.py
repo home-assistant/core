@@ -221,6 +221,7 @@ class EntityDescription:
     entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
+    modern_name: bool = False
     name: str | None = None
     unit_of_measurement: str | None = None
 
@@ -277,6 +278,7 @@ class Entity(ABC):
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
+    _attr_modern_name: bool
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -302,6 +304,15 @@ class Entity(ABC):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
+
+    @property
+    def modern_name(self) -> bool:
+        """Return if the name of the entity is describing only the entity itself."""
+        if hasattr(self, "_attr_modern_name"):
+            return self._attr_modern_name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.modern_name
+        return False
 
     @property
     def name(self) -> str | None:

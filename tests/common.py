@@ -1002,6 +1002,11 @@ class MockEntity(entity.Entity):
         return self._handle("entity_category")
 
     @property
+    def modern_name(self):
+        """Return the modern name flag."""
+        return self._handle("modern_name")
+
+    @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._handle("entity_registry_enabled_default")
