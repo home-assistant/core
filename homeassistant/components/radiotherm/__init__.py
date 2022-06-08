@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Coroutine
 from socket import timeout
-from typing import Any
+from typing import Any, TypeVar
 
 from radiotherm.validate import RadiothermTstatError
 
@@ -14,15 +14,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
-from .data import RadioThermInitData, async_get_init_data
+from .data import async_get_init_data
 from .util import async_set_time
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
+_T = TypeVar("_T")
+
 
 async def _async_call_or_raise_not_ready(
-    coro: Coroutine[Any, Any, RadioThermInitData | None], host: str
-) -> RadioThermInitData | None:
+    coro: Coroutine[Any, Any, _T], host: str
+) -> _T:
     """Call a coro or raise ConfigEntryNotReady."""
     try:
         return await coro
@@ -37,10 +39,8 @@ async def _async_call_or_raise_not_ready(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Radio Thermostat from a config entry."""
     host = entry.data[CONF_HOST]
-    init_data: RadioThermInitData | None = await _async_call_or_raise_not_ready(
-        async_get_init_data(hass, host), host
-    )
-    assert init_data is not None
+    init_coro = async_get_init_data(hass, host)
+    init_data = await _async_call_or_raise_not_ready(init_coro, host)
     coordinator = RadioThermUpdateCoordinator(hass, init_data)
     await coordinator.async_config_entry_first_refresh()
 
@@ -49,9 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # clears the hold for some strange design
     # choice
     if not coordinator.data.tstat["hold"]:
-        await _async_call_or_raise_not_ready(
-            async_set_time(hass, init_data.tstat), host
-        )
+        time_coro = async_set_time(hass, init_data.tstat)
+        await _async_call_or_raise_not_ready(time_coro, host)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

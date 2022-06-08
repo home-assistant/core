@@ -12,6 +12,8 @@ from .const import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
 from .entity import RadioThermostatEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

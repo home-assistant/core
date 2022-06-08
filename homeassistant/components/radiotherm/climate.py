@@ -26,7 +26,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -180,7 +179,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
         if (code := FAN_MODE_TO_CODE.get(fan_mode)) is None:
-            raise HomeAssistantError(f"{fan_mode} is not a valid fan mode")
+            raise ValueError(f"{fan_mode} is not a valid fan mode")
         await self.hass.async_add_executor_job(self._set_fan_mode, code)
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
@@ -263,7 +262,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
         if preset_mode not in PRESET_MODES:
-            raise HomeAssistantError(f"{preset_mode} is not a valid preset_mode")
+            raise ValueError(f"{preset_mode} is not a valid preset_mode")
         await self.hass.async_add_executor_job(self._set_preset_mode, preset_mode)
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
