@@ -13,7 +13,7 @@ async def test_create_binary_sensors(hass):
     state = hass.states.get("binary_sensor.master_suite_blower_active")
     assert state.state == STATE_ON
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "friendly_name": "Master Suite Blower Active",
     }
     # Only test for a subset of attributes in case
@@ -25,7 +25,7 @@ async def test_create_binary_sensors(hass):
     state = hass.states.get("binary_sensor.downstairs_east_wing_blower_active")
     assert state.state == STATE_OFF
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "friendly_name": "Downstairs East Wing Blower Active",
     }
     # Only test for a subset of attributes in case

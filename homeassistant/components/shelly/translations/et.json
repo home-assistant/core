@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
+            "firmware_not_fully_provisioned": "Seade pole t\u00e4ielikult toetatud. V\u00f5ta \u00fchendust Shelly toega",
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
         },

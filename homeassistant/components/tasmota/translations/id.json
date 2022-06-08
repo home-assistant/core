@@ -10,9 +10,7 @@
             "config": {
                 "data": {
                     "discovery_prefix": "Prefiks topik penemuan"
-                },
-                "description": "Masukkan konfigurasi Tasmota.",
-                "title": "Tasmota"
+                }
             },
             "confirm": {
                 "description": "Ingin menyiapkan Tasmota?"

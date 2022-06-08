@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API kulcs",
-                    "latitude": "Sz\u00e9less\u00e9g",
                     "location": "Elhelyezked\u00e9s",
-                    "longitude": "Hossz\u00fas\u00e1g",
                     "name": "Elnevez\u00e9s"
                 },
                 "description": "API-kulcs beszerz\u00e9s\u00e9hez regisztr\u00e1ljon a [Tomorrow.io] (https://app.tomorrow.io/signup) oldalon."

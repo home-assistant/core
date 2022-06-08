@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import Callable
 import json
 import logging
@@ -9,6 +10,7 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
+from homeassistant.config import async_log_exception
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -26,10 +28,11 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    discovery,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -45,17 +48,14 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.reload import (
+    async_integration_yaml_config,
+    async_setup_reload_service,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DATA_MQTT,
-    PLATFORMS,
-    MqttValueTemplate,
-    async_publish,
-    debug_info,
-    subscription,
-)
+from . import debug_info, subscription
+from .client import async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -64,6 +64,8 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DATA_MQTT,
+    DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -71,6 +73,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PLATFORMS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -80,7 +83,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import PublishPayloadType, ReceiveMessage
+from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
@@ -223,6 +226,31 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 )
 
 
+def warn_for_legacy_schema(domain: str) -> Callable:
+    """Warn once when a legacy platform schema is used."""
+    warned = set()
+
+    def validator(config: ConfigType) -> ConfigType:
+        """Return a validator."""
+        nonlocal warned
+
+        if domain in warned:
+            return config
+
+        _LOGGER.warning(
+            "Manually configured MQTT %s(s) found under platform key '%s', "
+            "please move to the mqtt integration key, see "
+            "https://www.home-assistant.io/integrations/%s.mqtt/#new_format",
+            domain,
+            domain,
+            domain,
+        )
+        warned.add(domain)
+        return config
+
+    return validator
+
+
 class SetupEntity(Protocol):
     """Protocol type for async_setup_entities."""
 
@@ -235,6 +263,70 @@ class SetupEntity(Protocol):
         discovery_data: dict[str, Any] | None = None,
     ) -> None:
         """Define setup_entities type."""
+
+
+async def async_setup_platform_discovery(
+    hass: HomeAssistant, platform_domain: str, schema: vol.Schema
+) -> CALLBACK_TYPE:
+    """Set up platform discovery for manual config."""
+
+    async def _async_discover_entities(event: Event | None) -> None:
+        """Discover entities for a platform."""
+        if event:
+            # The platform has been reloaded
+            config_yaml = await async_integration_yaml_config(hass, DOMAIN)
+            if not config_yaml:
+                return
+            config_yaml = config_yaml.get(DOMAIN, {})
+        else:
+            config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
+        if not config_yaml:
+            return
+        if platform_domain not in config_yaml:
+            return
+        await asyncio.gather(
+            *(
+                discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
+                for config in await async_get_platform_config_from_yaml(
+                    hass, platform_domain, schema, config_yaml
+                )
+            )
+        )
+
+    unsub = hass.bus.async_listen("event_mqtt_reloaded", _async_discover_entities)
+    await _async_discover_entities(None)
+    return unsub
+
+
+async def async_get_platform_config_from_yaml(
+    hass: HomeAssistant,
+    platform_domain: str,
+    schema: vol.Schema,
+    config_yaml: ConfigType = None,
+) -> list[ConfigType]:
+    """Return a list of validated configurations for the domain."""
+
+    def async_validate_config(
+        hass: HomeAssistant,
+        config: list[ConfigType],
+    ) -> list[ConfigType]:
+        """Validate config."""
+        validated_config = []
+        for config_item in config:
+            try:
+                validated_config.append(schema(config_item))
+            except vol.MultipleInvalid as err:
+                async_log_exception(err, platform_domain, config_item, hass)
+
+        return validated_config
+
+    if config_yaml is None:
+        config_yaml = hass.data.get(DATA_MQTT_CONFIG)
+    if not config_yaml:
+        return []
+    if not (platform_configs := config_yaml.get(platform_domain)):
+        return []
+    return async_validate_config(hass, platform_configs)
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):
@@ -262,7 +354,7 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 async def async_setup_platform_helper(
     hass: HomeAssistant,
     platform_domain: str,
-    config: ConfigType,
+    config: ConfigType | DiscoveryInfoType,
     async_add_entities: AddEntitiesCallback,
     async_setup_entities: SetupEntity,
 ) -> None:

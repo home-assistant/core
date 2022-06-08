@@ -13,13 +13,13 @@ import pytest
 
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mysensors import CONF_VERSION, DEFAULT_BAUD_RATE
+from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
 from homeassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_SERIAL,
-    CONF_GATEWAYS,
+    CONF_VERSION,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -141,8 +141,7 @@ async def integration_fixture(
     hass: HomeAssistant, transport: MagicMock, config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry, None]:
     """Set up the mysensors integration with a config entry."""
-    device = config_entry.data[CONF_DEVICE]
-    config: dict[str, Any] = {DOMAIN: {CONF_GATEWAYS: [{CONF_DEVICE: device}]}}
+    config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.mysensors.device.UPDATE_DELAY", new=0):

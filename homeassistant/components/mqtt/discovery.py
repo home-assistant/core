@@ -11,7 +11,7 @@ import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -27,6 +27,8 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_TOPIC,
+    CONFIG_ENTRY_IS_SETUP,
+    DATA_CONFIG_ENTRY_LOCK,
     DOMAIN,
 )
 
@@ -62,8 +64,6 @@ SUPPORTED_COMPONENTS = [
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 PENDING_DISCOVERED = "mqtt_pending_components"
-CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
-DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
 DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
@@ -258,9 +258,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}
@@ -307,7 +305,7 @@ async def async_start(  # noqa: C901
                 )
                 if (
                     result
-                    and result["type"] == RESULT_TYPE_ABORT
+                    and result["type"] == FlowResultType.ABORT
                     and result["reason"]
                     in ("already_configured", "single_instance_allowed")
                 ):

@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from homewizard_energy.models import State
+
 from homeassistant.components import switch
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, DEVICE_CLASS_SWITCH
 from homeassistant.const import (
@@ -27,7 +29,7 @@ async def test_switch_entity_not_loaded_when_not_available(
     api = get_mock_device()
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -48,13 +50,12 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
     """Test entity loads smr version."""
 
     api = get_mock_device()
-    api.state = AsyncMock()
-
-    api.state.power_on = False
-    api.state.switch_lock = False
+    api.state = AsyncMock(
+        return_value=State.from_dict({"power_on": False, "switch_lock": False})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -104,17 +105,19 @@ async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_ent
     """Test entity turns switch on and off."""
 
     api = get_mock_device()
-    api.state = AsyncMock()
-    api.state.power_on = False
-    api.state.switch_lock = False
+    api.state = AsyncMock(
+        return_value=State.from_dict({"power_on": False, "switch_lock": False})
+    )
 
-    def set_power_on(power_on):
-        api.state.power_on = power_on
+    def state_set(power_on):
+        api.state = AsyncMock(
+            return_value=State.from_dict({"power_on": power_on, "switch_lock": False})
+        )
 
-    api.state.set = AsyncMock(side_effect=set_power_on)
+    api.state_set = AsyncMock(side_effect=state_set)
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -138,7 +141,7 @@ async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_ent
         )
 
         await hass.async_block_till_done()
-        assert len(api.state.set.mock_calls) == 1
+        assert len(api.state_set.mock_calls) == 1
         assert (
             hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
         )
@@ -156,7 +159,7 @@ async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_ent
             hass.states.get("switch.product_name_aabbccddeeff_switch").state
             == STATE_OFF
         )
-        assert len(api.state.set.mock_calls) == 2
+        assert len(api.state_set.mock_calls) == 2
 
 
 async def test_switch_lock_power_on_off(
@@ -165,17 +168,19 @@ async def test_switch_lock_power_on_off(
     """Test entity turns switch on and off."""
 
     api = get_mock_device()
-    api.state = AsyncMock()
-    api.state.power_on = False
-    api.state.switch_lock = False
+    api.state = AsyncMock(
+        return_value=State.from_dict({"power_on": False, "switch_lock": False})
+    )
 
-    def set_switch_lock(switch_lock):
-        api.state.switch_lock = switch_lock
+    def state_set(switch_lock):
+        api.state = AsyncMock(
+            return_value=State.from_dict({"power_on": True, "switch_lock": switch_lock})
+        )
 
-    api.state.set = AsyncMock(side_effect=set_switch_lock)
+    api.state_set = AsyncMock(side_effect=state_set)
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -199,7 +204,7 @@ async def test_switch_lock_power_on_off(
         )
 
         await hass.async_block_till_done()
-        assert len(api.state.set.mock_calls) == 1
+        assert len(api.state_set.mock_calls) == 1
         assert (
             hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
             == STATE_ON
@@ -218,7 +223,7 @@ async def test_switch_lock_power_on_off(
             hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
             == STATE_OFF
         )
-        assert len(api.state.set.mock_calls) == 2
+        assert len(api.state_set.mock_calls) == 2
 
 
 async def test_switch_lock_sets_power_on_unavailable(
@@ -227,17 +232,19 @@ async def test_switch_lock_sets_power_on_unavailable(
     """Test entity turns switch on and off."""
 
     api = get_mock_device()
-    api.state = AsyncMock()
-    api.state.power_on = True
-    api.state.switch_lock = False
+    api.state = AsyncMock(
+        return_value=State.from_dict({"power_on": True, "switch_lock": False})
+    )
 
-    def set_switch_lock(switch_lock):
-        api.state.switch_lock = switch_lock
+    def state_set(switch_lock):
+        api.state = AsyncMock(
+            return_value=State.from_dict({"power_on": True, "switch_lock": switch_lock})
+        )
 
-    api.state.set = AsyncMock(side_effect=set_switch_lock)
+    api.state_set = AsyncMock(side_effect=state_set)
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -264,7 +271,7 @@ async def test_switch_lock_sets_power_on_unavailable(
         )
 
         await hass.async_block_till_done()
-        assert len(api.state.set.mock_calls) == 1
+        assert len(api.state_set.mock_calls) == 1
         assert (
             hass.states.get("switch.product_name_aabbccddeeff_switch").state
             == STATE_UNAVAILABLE
@@ -290,4 +297,4 @@ async def test_switch_lock_sets_power_on_unavailable(
             hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
             == STATE_OFF
         )
-        assert len(api.state.set.mock_calls) == 2
+        assert len(api.state_set.mock_calls) == 2

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -11,7 +11,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "area_id": "Area ID",
+                    "area_id": "Area-ID",
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "area_id": "Area ID",
+                    "area_id": "Area-ID",
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"

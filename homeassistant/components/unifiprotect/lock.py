@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Doorlock
-from pyunifiprotect.data.types import LockStatusType
+from pyunifiprotect.data import Doorlock, LockStatusType
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry

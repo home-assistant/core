@@ -23,6 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -63,7 +64,7 @@ async def async_setup_entry(
     """Set up the Ambiclimate device from config entry."""
     config = entry.data
     websession = async_get_clientsession(hass)
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     token_info = await store.async_load()
 
     oauth = ambiclimate.AmbiclimateOAuth(

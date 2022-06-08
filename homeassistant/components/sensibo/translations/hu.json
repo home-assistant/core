@@ -19,8 +19,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API kulcs",
-                    "name": "Elnevez\u00e9s"
+                    "api_key": "API kulcs"
                 }
             }
         }

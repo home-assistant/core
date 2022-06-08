@@ -52,8 +52,8 @@ async def test_discovery(detect_mock, hass):
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
         addresses=["192.168.1.200"],
-        hostname="_tube_zb_gw._tcp.local.",
-        name="mock_name",
+        hostname="tube._tube_zb_gw._tcp.local.",
+        name="tube",
         port=6053,
         properties={"name": "tube_123456"},
         type="mock_type",
@@ -74,6 +74,68 @@ async def test_discovery(detect_mock, hass):
             CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
         },
         CONF_RADIO_TYPE: "znp",
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_zigate.zigbee.application.ControllerApplication.probe")
+async def test_zigate_via_zeroconf(probe_mock, hass):
+    """Test zeroconf flow -- zigate radio detected."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.200",
+        addresses=["192.168.1.200"],
+        hostname="_zigate-zigbee-gateway._tcp.local.",
+        name="any",
+        port=1234,
+        properties={"radio_type": "zigate"},
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "socket://192.168.1.200:1234"
+    assert result["data"] == {
+        CONF_DEVICE: {
+            CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
+        },
+        CONF_RADIO_TYPE: "zigate",
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("bellows.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_efr32_via_zeroconf(probe_mock, hass):
+    """Test zeroconf flow -- efr32 radio detected."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.200",
+        addresses=["192.168.1.200"],
+        hostname="efr32._esphomelib._tcp.local.",
+        name="efr32",
+        port=1234,
+        properties={},
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={"baudrate": 115200}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "socket://192.168.1.200:6638"
+    assert result["data"] == {
+        CONF_DEVICE: {
+            CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
+            CONF_BAUDRATE: 115200,
+            CONF_FLOWCONTROL: "software",
+        },
+        CONF_RADIO_TYPE: "ezsp",
     }
 
 
@@ -180,6 +242,43 @@ async def test_discovery_via_usb(detect_mock, hass):
             "path": "/dev/ttyZIGBEE",
         },
         CONF_RADIO_TYPE: "znp",
+    }
+
+
+@patch("zigpy_zigate.zigbee.application.ControllerApplication.probe")
+async def test_zigate_discovery_via_usb(detect_mock, hass):
+    """Test zigate usb flow -- radio detected."""
+    discovery_info = usb.UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="0403",
+        vid="6015",
+        serial_number="1234",
+        description="zigate radio",
+        manufacturer="test",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+    with patch("homeassistant.components.zha.async_setup_entry"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert (
+        "zigate radio - /dev/ttyZIGBEE, s/n: 1234 - test - 6015:0403"
+        in result2["title"]
+    )
+    assert result2["data"] == {
+        "device": {
+            "path": "/dev/ttyZIGBEE",
+        },
+        CONF_RADIO_TYPE: "zigate",
     }
 
 

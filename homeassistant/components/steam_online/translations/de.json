@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Freundesliste eingeschr\u00e4nkt: Bitte lies in der Dokumentation nach, wie du alle anderen Freunde sehen kannst"
+        },
         "step": {
             "init": {
                 "data": {

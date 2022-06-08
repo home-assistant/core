@@ -24,7 +24,6 @@ async def test_full_flow(
         "senz",
         {
             "senz": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 

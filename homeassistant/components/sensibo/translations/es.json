@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya est\u00e1 configurada"
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "reauth_successful": "La reautenticaci\u00f3n fue exitosa"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar",
+            "incorrect_api_key": "Clave API inv\u00e1lida para la cuenta seleccionada",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "no_devices": "No se ha descubierto ning\u00fan dispositivo",
+            "no_username": "No se pudo obtener el nombre de usuario"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clave API"
+                }
+            },
             "user": {
                 "data": {
-                    "api_key": "Clave API",
-                    "name": "Nombre"
+                    "api_key": "Clave API"
                 }
             }
         }

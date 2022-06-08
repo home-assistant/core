@@ -28,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
+# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
     r"|homeassistant/update"
@@ -48,6 +49,7 @@ NO_AUTH = re.compile(
 )
 
 NO_STORE = re.compile(r"^(?:" r"|app/entrypoint.js" r")$")
+# pylint: enable=implicit-str-concat
 
 
 class HassIOView(HomeAssistantView):
@@ -124,7 +126,7 @@ class HassIOView(HomeAssistantView):
 def _init_header(request: web.Request) -> dict[str, str]:
     """Create initial header."""
     headers = {
-        X_HASSIO: os.environ.get("HASSIO_TOKEN", ""),
+        X_HASSIO: os.environ.get("SUPERVISOR_TOKEN", ""),
         CONTENT_TYPE: request.content_type,
     }
 

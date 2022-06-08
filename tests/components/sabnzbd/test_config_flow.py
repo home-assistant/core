@@ -87,7 +87,6 @@ async def test_import_flow(hass) -> None:
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},

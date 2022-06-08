@@ -6,6 +6,8 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
 from async_upnp_client.exceptions import (
     UpnpActionResponseError,
+    UpnpCommunicationError,
+    UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
 )
@@ -1368,6 +1370,7 @@ async def test_upnp_not_available(
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
     assert await hass.services.async_call(
@@ -1385,6 +1388,7 @@ async def test_upnp_missing_service(
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
     assert await hass.services.async_call(
@@ -1505,3 +1509,49 @@ async def test_upnp_re_subscribe_events(
     assert state.state == STATE_ON
     assert dmr_device.async_subscribe_services.call_count == 2
     assert dmr_device.async_unsubscribe_services.call_count == 1
+
+
+@pytest.mark.usefixtures("rest_api", "upnp_notify_server")
+@pytest.mark.parametrize(
+    "error",
+    {UpnpConnectionError(), UpnpCommunicationError(), UpnpResponseError(status=400)},
+)
+async def test_upnp_failed_re_subscribe_events(
+    hass: HomeAssistant,
+    remotews: Mock,
+    dmr_device: Mock,
+    mock_now: datetime,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test for Upnp event feedback."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
+    assert dmr_device.async_unsubscribe_services.call_count == 0
+
+    with patch.object(
+        remotews, "start_listening", side_effect=WebSocketException("Boom")
+    ), patch.object(remotews, "is_alive", return_value=False):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert dmr_device.async_subscribe_services.call_count == 1
+    assert dmr_device.async_unsubscribe_services.call_count == 1
+
+    next_update = mock_now + timedelta(minutes=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch.object(
+        dmr_device, "async_subscribe_services", side_effect=error
+    ):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert "Device rejected re-subscription" in caplog.text

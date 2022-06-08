@@ -5,6 +5,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
 from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -46,7 +47,7 @@ class CloudPreferences:
     def __init__(self, hass):
         """Initialize cloud prefs."""
         self._hass = hass
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._prefs = None
         self._listeners = []
 

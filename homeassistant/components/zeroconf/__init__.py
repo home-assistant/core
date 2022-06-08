@@ -28,9 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, instance_id
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
@@ -107,36 +106,6 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     type: str
     name: str
     properties: dict[str, Any]
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        return getattr(self, name)
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return default
 
 
 @bind_hass
@@ -229,7 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(hass)
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:

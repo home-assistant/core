@@ -27,5 +27,14 @@
                 "title": "Reautenticar Integra\u00e7\u00e3o"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Acesso do Home Assistant ao Google Calendar"
+                }
+            }
+        }
     }
 }

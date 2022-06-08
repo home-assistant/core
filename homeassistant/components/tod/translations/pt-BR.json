@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "Ligado depois",
                     "after_time": "Ligado na hora",
-                    "before": "Desligado depois",
                     "before_time": "Desligado na hora",
                     "name": "Nome"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "Ligado depois",
                     "after_time": "Ligado na hora",
-                    "before": "Desligado depois",
                     "before_time": "Desligado na hora"
-                },
-                "description": "Crie um sensor bin\u00e1rio que liga ou desliga dependendo do tempo."
+                }
             }
         }
     },

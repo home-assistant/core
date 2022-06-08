@@ -1,15 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "discovery_started": "Se ha iniciado el descubrimiento"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Actualice UniFi Protect y vuelva a intentarlo.",
-            "unknown": "Error inesperado"
+            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Actualice UniFi Protect y vuelva a intentarlo."
         },
+        "flow_title": "{name} ({ip_address})",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "description": "\u00bfQuieres configurar {name} ({ip_address})? Necesitar\u00e1 un usuario local creado en su consola UniFi OS para iniciar sesi\u00f3n. Los usuarios de Ubiquiti Cloud no funcionar\u00e1n. Para m\u00e1s informaci\u00f3n: {local_user_documentation_url}",
+                "title": "UniFi Protect descubierto"
+            },
             "reauth_confirm": {
                 "data": {
                     "host": "IP/Host del servidor UniFi Protect",
@@ -27,6 +36,7 @@
                     "username": "Nombre de usuario",
                     "verify_ssl": "Verificar el certificado SSL"
                 },
+                "description": "Necesitar\u00e1 un usuario local creado en su consola UniFi OS para iniciar sesi\u00f3n. Los usuarios de Ubiquiti Cloud no funcionar\u00e1n. Para m\u00e1s informaci\u00f3n: {local_user_documentation_url}",
                 "title": "Configuraci\u00f3n de UniFi Protect"
             }
         }

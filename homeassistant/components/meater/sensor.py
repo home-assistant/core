@@ -52,7 +52,7 @@ def _remaining_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
     """Convert remaining time to timestamp."""
     if not probe.cook or probe.cook.time_remaining < 0:
         return None
-    return dt_util.utcnow() + timedelta(probe.cook.time_remaining)
+    return dt_util.utcnow() + timedelta(seconds=probe.cook.time_remaining)
 
 
 SENSOR_TYPES = (
@@ -176,8 +176,6 @@ class MeaterProbeTemperature(
 ):
     """Meater Temperature Sensor Entity."""
 
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
     entity_description: MeaterSensorEntityDescription
 
     def __init__(

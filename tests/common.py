@@ -905,10 +905,9 @@ def init_recorder_component(hass, add_config=None):
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch(
-        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
-        True,
-    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "homeassistant.components.recorder.migration.migrate_schema"
+    ):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
     _LOGGER.info(

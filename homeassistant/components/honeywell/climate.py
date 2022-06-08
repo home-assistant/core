@@ -21,7 +21,10 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -70,12 +73,14 @@ HW_FAN_MODE_TO_HA = {
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Honeywell thermostat."""
-    cool_away_temp = config.options.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = config.options.get(CONF_HEAT_AWAY_TEMPERATURE)
+    cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data = hass.data[DOMAIN][config.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [

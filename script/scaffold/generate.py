@@ -173,7 +173,7 @@ def _custom_tasks(template, info: Info) -> None:
         )
 
     elif template == "config_flow_oauth2":
-        info.update_manifest(config_flow=True, dependencies=["auth"])
+        info.update_manifest(config_flow=True, dependencies=["application_credentials"])
         info.update_strings(
             config={
                 "step": {
@@ -188,6 +188,7 @@ def _custom_tasks(template, info: Info) -> None:
                     "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
                     "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
                     "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+                    "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
                 },
                 "create_entry": {
                     "default": "[%key:common::config_flow::create_entry::authenticated%]"

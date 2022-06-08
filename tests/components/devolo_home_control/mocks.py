@@ -8,6 +8,9 @@ from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.properties.binary_sensor_property import (
     BinarySensorProperty,
 )
+from devolo_home_control_api.properties.multi_level_sensor_property import (
+    MultiLevelSensorProperty,
+)
 from devolo_home_control_api.properties.multi_level_switch_property import (
     MultiLevelSwitchProperty,
 )
@@ -26,6 +29,31 @@ class BinarySensorPropertyMock(BinarySensorProperty):
         self.sensor_type = "door"
         self.sub_type = ""
         self.state = False
+
+
+class MultiLevelSensorPropertyMock(MultiLevelSensorProperty):
+    """devolo Home Control multi level sensor mock."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self.element_uid = "Test"
+        self.sensor_type = "temperature"
+        self._unit = "°C"
+        self._value = 20
+        self._logger = MagicMock()
+
+
+class MultiLevelSwitchPropertyMock(MultiLevelSwitchProperty):
+    """devolo Home Control multi level switch mock."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self.element_uid = "Test"
+        self.min = 4
+        self.max = 24
+        self.switch_type = "temperature"
+        self._value = 20
+        self._logger = MagicMock()
 
 
 class SirenPropertyMock(MultiLevelSwitchProperty):
@@ -84,6 +112,17 @@ class BinarySensorMockOverload(DeviceMock):
         self.binary_sensor_property["Overload"].sensor_type = "overload"
 
 
+class ClimateMock(DeviceMock):
+    """devolo Home Control climate device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.device_model_uid = "devolo.model.Room:Thermostat"
+        self.multi_level_switch_property = {"Test": MultiLevelSwitchPropertyMock()}
+        self.multi_level_sensor_property = {"Test": MultiLevelSensorPropertyMock()}
+
+
 class RemoteControlMock(DeviceMock):
     """devolo Home Control remote control device mock."""
 
@@ -138,6 +177,19 @@ class HomeControlMockBinarySensor(HomeControlMock):
         self.devices = {
             "Test": BinarySensorMock(),
             "Overload": BinarySensorMockOverload(),
+        }
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
+
+
+class HomeControlMockClimate(HomeControlMock):
+    """devolo Home Control gateway mock with climate devices."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {
+            "Test": ClimateMock(),
         }
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()

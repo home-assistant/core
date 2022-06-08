@@ -1420,6 +1420,36 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
+@pytest.mark.usefixtures("remote", "rest_api_failing")
+async def test_update_missing_model_added_from_ssdp(hass: HomeAssistant) -> None:
+    """Test missing model added via ssdp on legacy models."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_OLD_ENTRY,
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.samsungtv.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.samsungtv.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=MOCK_SSDP_DATA,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MODEL] == "fake_model"
+
+
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
 async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     hass: HomeAssistant,

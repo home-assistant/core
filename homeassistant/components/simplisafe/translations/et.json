@@ -3,23 +3,16 @@
         "abort": {
             "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
             "email_2fa_timed_out": "Meilip\u00f5hise kahefaktorilise autentimise ajal\u00f5pp.",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus",
-            "wrong_account": "Esitatud kasutaja mandaadid ei \u00fchti selle SimpliSafe kontoga."
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "2fa_timed_out": "Kahefaktoriline autentimine aegus",
-            "identifier_exists": "Konto on juba registreeritud",
             "invalid_auth": "Tuvastamise viga",
-            "still_awaiting_mfa": "Ootan endiselt MFA e-posti klikki",
             "unknown": "Tundmatu viga"
         },
         "progress": {
             "email_2fa": "Kontrolli oma meili Simplisafe'i kinnituslingi saamiseks."
         },
         "step": {
-            "mfa": {
-                "title": "SimpliSafe mitmeastmeline autentimine"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Salas\u00f5na"
@@ -35,13 +28,10 @@
             },
             "user": {
                 "data": {
-                    "auth_code": "Tuvastuskood",
-                    "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta kasutajatunnus ja salas\u00f5na",
-                "title": "Sisesta oma teave."
+                "description": "Sisesta kasutajatunnus ja salas\u00f5na"
             }
         }
     },

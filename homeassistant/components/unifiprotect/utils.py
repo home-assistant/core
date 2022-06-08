@@ -1,12 +1,18 @@
 """UniFi Protect Integration utils."""
 from __future__ import annotations
 
+from collections.abc import Generator, Iterable
 import contextlib
 from enum import Enum
 import socket
 from typing import Any
 
+from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
+
 from homeassistant.core import HomeAssistant, callback
+
+from .const import ModelType
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -51,3 +57,35 @@ async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
             None,
         )
     return None
+
+
+def async_get_devices_by_type(
+    api: ProtectApiClient, device_type: ModelType
+) -> dict[str, ProtectDeviceModel]:
+    """Get devices by type."""
+    devices: dict[str, ProtectDeviceModel] = getattr(
+        api.bootstrap, f"{device_type.value}s"
+    )
+    return devices
+
+
+def async_get_adoptable_devices_by_type(
+    api: ProtectApiClient, device_type: ModelType
+) -> dict[str, ProtectAdoptableDeviceModel]:
+    """Get adoptable devices by type."""
+    devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
+        api.bootstrap, f"{device_type.value}s"
+    )
+    return devices
+
+
+@callback
+def async_get_devices(
+    api: ProtectApiClient, model_type: Iterable[ModelType]
+) -> Generator[ProtectDeviceModel, None, None]:
+    """Return all device by type."""
+    return (
+        device
+        for device_type in model_type
+        for device in async_get_devices_by_type(api, device_type).values()
+    )

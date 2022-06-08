@@ -157,8 +157,10 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         if self._optimistic:
             self._attr_value = value
             self.async_write_ha_state()
-        await self._command_set_value.async_run(
-            {ATTR_VALUE: value}, context=self._context
+        await self.async_run_script(
+            self._command_set_value,
+            run_variables={ATTR_VALUE: value},
+            context=self._context,
         )
 
 

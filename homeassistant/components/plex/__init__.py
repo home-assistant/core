@@ -299,14 +299,14 @@ def async_cleanup_plex_devices(hass, entry):
     device_registry = dev_reg.async_get(hass)
     entity_registry = ent_reg.async_get(hass)
 
-    device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
+    device_entries = dev_reg.async_entries_for_config_entry(
         device_registry, entry.entry_id
     )
 
     for device_entry in device_entries:
         if (
             len(
-                hass.helpers.entity_registry.async_entries_for_device(
+                ent_reg.async_entries_for_device(
                     entity_registry, device_entry.id, include_disabled_entities=True
                 )
             )

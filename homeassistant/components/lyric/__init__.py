@@ -13,6 +13,10 @@ from aiolyric.objects.location import LyricLocation
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -36,18 +40,20 @@ from .api import (
     LyricLocalOAuth2Implementation,
     OAuth2SessionLyric,
 )
-from .config_flow import OAuth2FlowHandler
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -63,18 +69,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN][CONF_CLIENT_ID] = config[DOMAIN][CONF_CLIENT_ID]
-
-    OAuth2FlowHandler.async_register_implementation(
+    await async_import_client_credential(
         hass,
-        LyricLocalOAuth2Implementation(
-            hass,
-            DOMAIN,
+        DOMAIN,
+        ClientCredential(
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
         ),
+    )
+
+    _LOGGER.warning(
+        "Configuration of Honeywell Lyric integration in YAML is deprecated "
+        "and will be removed in a future release; Your existing OAuth "
+        "Application Credentials have been imported into the UI "
+        "automatically and can be safely removed from your "
+        "configuration.yaml file"
     )
 
     return True
@@ -87,13 +96,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         )
     )
+    if not isinstance(implementation, LyricLocalOAuth2Implementation):
+        raise ValueError("Unexpected auth implementation; can't find oauth client id")
 
     session = aiohttp_client.async_get_clientsession(hass)
     oauth_session = OAuth2SessionLyric(hass, entry, implementation)
 
     client = ConfigEntryLyricClient(session, oauth_session)
 
-    client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
+    client_id = implementation.client_id
     lyric = Lyric(client, client_id)
 
     async def async_update_data(force_refresh_token: bool = False) -> Lyric:

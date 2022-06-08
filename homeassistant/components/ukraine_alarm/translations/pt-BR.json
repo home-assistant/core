@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O local j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falhou ao conectar",
+            "max_regions": "M\u00e1ximo de 5 regi\u00f5es podem ser configuradas",
+            "rate_limit": "Excesso de pedidos",
+            "timeout": "Tempo limite estabelecendo conex\u00e3o",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Regi\u00e3o"
+                },
+                "description": "Se voc\u00ea deseja monitorar n\u00e3o apenas estado e distrito, escolha sua comunidade espec\u00edfica"
+            },
+            "district": {
+                "data": {
+                    "region": "Regi\u00e3o"
+                },
+                "description": "Se voc\u00ea deseja monitorar n\u00e3o apenas o estado, escolha seu distrito espec\u00edfico"
+            },
+            "user": {
+                "data": {
+                    "region": "Regi\u00e3o"
+                },
+                "description": "Escolha o estado para monitorar"
+            }
+        }
+    }
+}
