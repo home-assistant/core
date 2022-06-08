@@ -38,7 +38,7 @@ from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
-from . import entity_registry as er
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
@@ -304,6 +304,25 @@ class Entity(ABC):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
+
+    def _friendly_name(self) -> str | None:
+        """Return the friendly name.
+
+        If modern_name is False, this returns self.name
+        If modern_name is True, this returns device.name + self.name
+        """
+        if not self.modern_name or not self.registry_entry:
+            return self.name
+
+        device_registry = dr.async_get(self.hass)
+        if not (device_id := self.registry_entry.device_id) or not (
+            device_entry := device_registry.async_get(device_id)
+        ):
+            return self.name
+
+        if not self.name:
+            return device_entry.name_by_user or device_entry.name
+        return f"{device_entry.name_by_user or device_entry.name} {self.name}"
 
     @property
     def modern_name(self) -> bool:
@@ -594,7 +613,7 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (name := (entry and entry.name) or self.name) is not None:
+        if (name := (entry and entry.name) or self._friendly_name()) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
