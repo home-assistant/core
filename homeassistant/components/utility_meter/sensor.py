@@ -58,6 +58,7 @@ from .const import (
     DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    HALF_HOURLY,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -70,6 +71,7 @@ from .const import (
 
 PERIOD2CRON = {
     QUARTER_HOURLY: "{minute}/15 * * * *",
+    HALF_HOURLY: "{minute}/30 * * * *",
     HOURLY: "{minute} * * * *",
     DAILY: "{minute} {hour} * * *",
     WEEKLY: "{minute} {hour} * * {day}",
