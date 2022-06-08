@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from retry import retry
 from yalesmartalarmclient.client import YaleSmartAlarmClient
 from yalesmartalarmclient.exceptions import AuthenticationError
 
@@ -122,6 +123,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "panel_info": updates["panel_info"],
         }
 
+    @retry(tries=5, backoff=2, logger=LOGGER)
     def get_updates(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 
@@ -136,6 +138,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed from error
 
         try:
+
             arm_status = self.yale.get_armed_status()
             data = self.yale.get_all()
             cycle = data["CYCLE"]
@@ -144,8 +147,13 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             panel_info = data["PANEL INFO"]
 
         except AuthenticationError as error:
+            LOGGER.warning("AuthenticationError updating from Yale", exc_info=True)
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
+            LOGGER.warning("Yale based error updating from Yale", exc_info=True)
+            raise UpdateFailed from error
+        except Exception as error:
+            LOGGER.error("Unexpected error updating Yale", exc_info=True)
             raise UpdateFailed from error
 
         return {
