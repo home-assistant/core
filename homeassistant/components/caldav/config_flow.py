@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
@@ -102,9 +103,8 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     },
                 )
-
-            except Exception as exception:  # pylint:disable=broad-except
-                _LOGGER.error(exception)
+            except ConfigEntryNotReady as error:
+                _LOGGER.error(error)
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
