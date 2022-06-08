@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from caldav.lib.error import DAVError
-
 from homeassistant.components.caldav.const import (
     CONF_ADD_CUSTO_CALENDAR,
     CONF_CALENDAR,
@@ -28,6 +26,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -168,7 +167,7 @@ async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.caldav.config_flow.async_caldav_connect",
-        side_effect=DAVError(),
+        side_effect=ConfigEntryNotReady(),
     ):
 
         result = await hass.config_entries.flow.async_configure(

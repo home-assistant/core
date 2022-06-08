@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 
 import caldav
+from caldav.lib.error import DAVError
+from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -62,5 +64,5 @@ async def async_caldav_connect(hass, data_entry):
 
     try:
         return await hass.async_add_executor_job(_caldav_connect, client)
-    except Exception as error:  # pylint:disable=broad-except
-        raise ConfigEntryNotReady() from error
+    except (RequestException, DAVError) as error:
+        raise ConfigEntryNotReady from error
