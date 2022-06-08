@@ -157,10 +157,7 @@ class CaldavOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         if user_input:
-            if (
-                len(user_input[CONF_CALENDARS]) > 0
-                and len(user_input[CONF_CUSTOM_CALENDARS]) > 0
-            ):
+            if user_input[CONF_CALENDARS] and user_input[CONF_CUSTOM_CALENDARS]:
                 errors["base"] = "choice_custom"
             else:
                 return self.async_create_entry(title="", data=user_input)
