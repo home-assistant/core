@@ -309,6 +309,11 @@ class NumberEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if hasattr(self, "_attr_unit_of_measurement"):
+            return self._attr_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.unit_of_measurement
+
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
