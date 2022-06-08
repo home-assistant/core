@@ -1,6 +1,7 @@
 """Config flow for Universal Devices ISY994 integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -254,7 +255,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
+        self, data: Mapping[str, Any]
     ) -> data_entry_flow.FlowResult:
         """Handle reauth."""
         self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])

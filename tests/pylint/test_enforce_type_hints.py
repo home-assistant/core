@@ -1,5 +1,6 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
 # pylint:disable=protected-access
+from __future__ import annotations
 
 import re
 from types import ModuleType
@@ -12,6 +13,30 @@ from pylint.testutils.unittest_linter import UnittestLinter
 import pytest
 
 from . import assert_adds_messages, assert_no_messages
+
+
+@pytest.mark.parametrize(
+    ("module_name", "expected_platform", "in_platforms"),
+    [
+        ("homeassistant", None, False),
+        ("homeassistant.components", None, False),
+        ("homeassistant.components.pylint_test", "__init__", False),
+        ("homeassistant.components.pylint_test.config_flow", "config_flow", False),
+        ("homeassistant.components.pylint_test.light", "light", True),
+        ("homeassistant.components.pylint_test.light.v1", None, False),
+    ],
+)
+def test_regex_get_module_platform(
+    hass_enforce_type_hints: ModuleType,
+    module_name: str,
+    expected_platform: str | None,
+    in_platforms: bool,
+) -> None:
+    """Test _get_module_platform regex."""
+    platform = hass_enforce_type_hints._get_module_platform(module_name)
+
+    assert platform == expected_platform
+    assert (platform in hass_enforce_type_hints._PLATFORMS) == in_platforms
 
 
 @pytest.mark.parametrize(
@@ -95,7 +120,11 @@ def test_ignore_not_annotations(
     hass_enforce_type_hints: ModuleType, type_hint_checker: BaseChecker, code: str
 ) -> None:
     """Ensure that _is_valid_type is not run if there are no annotations."""
-    func_node = astroid.extract_node(code)
+    func_node = astroid.extract_node(
+        code,
+        "homeassistant.components.pylint_test",
+    )
+    type_hint_checker.visit_module(func_node.parent)
 
     with patch.object(
         hass_enforce_type_hints, "_is_valid_type", return_value=True
@@ -131,7 +160,11 @@ def test_dont_ignore_partial_annotations(
     hass_enforce_type_hints: ModuleType, type_hint_checker: BaseChecker, code: str
 ) -> None:
     """Ensure that _is_valid_type is run if there is at least one annotation."""
-    func_node = astroid.extract_node(code)
+    func_node = astroid.extract_node(
+        code,
+        "homeassistant.components.pylint_test",
+    )
+    type_hint_checker.visit_module(func_node.parent)
 
     with patch.object(
         hass_enforce_type_hints, "_is_valid_type", return_value=True
@@ -144,7 +177,6 @@ def test_invalid_discovery_info(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_tracker"
     func_node, discovery_info_node = astroid.extract_node(
         """
     async def async_setup_scanner( #@
@@ -154,8 +186,10 @@ def test_invalid_discovery_info(
         discovery_info: dict[str, Any] | None = None, #@
     ) -> bool:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_tracker",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_adds_messages(
         linter,
@@ -176,7 +210,6 @@ def test_valid_discovery_info(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure valid hints are accepted for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_tracker"
     func_node = astroid.extract_node(
         """
     async def async_setup_scanner( #@
@@ -186,8 +219,10 @@ def test_valid_discovery_info(
         discovery_info: DiscoveryInfoType | None = None,
     ) -> bool:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_tracker",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_no_messages(linter):
         type_hint_checker.visit_asyncfunctiondef(func_node)
@@ -197,7 +232,6 @@ def test_invalid_list_dict_str_any(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_trigger"
     func_node = astroid.extract_node(
         """
     async def async_get_triggers( #@
@@ -205,8 +239,10 @@ def test_invalid_list_dict_str_any(
         device_id: str
     ) -> list:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_trigger",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_adds_messages(
         linter,
@@ -227,7 +263,6 @@ def test_valid_list_dict_str_any(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure valid hints are accepted for discovery_info."""
-    type_hint_checker.module = "homeassistant.components.pylint_test.device_trigger"
     func_node = astroid.extract_node(
         """
     async def async_get_triggers( #@
@@ -235,8 +270,82 @@ def test_valid_list_dict_str_any(
         device_id: str
     ) -> list[dict[str, Any]]:
         pass
-    """
+    """,
+        "homeassistant.components.pylint_test.device_trigger",
     )
+    type_hint_checker.visit_module(func_node.parent)
 
     with assert_no_messages(linter):
         type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_invalid_config_flow_step(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for ConfigFlow step."""
+    class_node, func_node, arg_node = astroid.extract_node(
+        """
+    class ConfigFlow():
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        async def async_step_zeroconf( #@
+            self,
+            device_config: dict #@
+        ):
+            pass
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=arg_node,
+            args=(2, "ZeroconfServiceInfo"),
+            line=10,
+            col_offset=8,
+            end_line=10,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="FlowResult",
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=33,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_config_flow_step(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for ConfigFlow step."""
+    class_node = astroid.extract_node(
+        """
+    class ConfigFlow():
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        async def async_step_zeroconf(
+            self,
+            device_config: ZeroconfServiceInfo
+        ) -> FlowResult:
+            pass
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)

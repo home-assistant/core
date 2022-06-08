@@ -67,13 +67,15 @@ class HistoryStats:
         current_period_end_timestamp = floored_timestamp(current_period_end)
         previous_period_start_timestamp = floored_timestamp(previous_period_start)
         previous_period_end_timestamp = floored_timestamp(previous_period_end)
-        now_timestamp = floored_timestamp(datetime.datetime.now())
+        utc_now = dt_util.utcnow()
+        now_timestamp = floored_timestamp(utc_now)
 
-        if now_timestamp < current_period_start_timestamp:
+        if current_period_start > utc_now:
             # History cannot tell the future
             self._history_current_period = []
             self._previous_run_before_start = True
-
+            self._state = HistoryStatsState(None, None, self._period)
+            return self._state
         #
         # We avoid querying the database if the below did NOT happen:
         #
@@ -82,7 +84,7 @@ class HistoryStats:
         # - The period shrank in size
         # - The previous period ended before now
         #
-        elif (
+        if (
             not self._previous_run_before_start
             and current_period_start_timestamp == previous_period_start_timestamp
             and (
@@ -116,10 +118,6 @@ class HistoryStats:
                 current_period_end,
             )
             self._previous_run_before_start = False
-
-        if not self._history_current_period:
-            self._state = HistoryStatsState(None, None, self._period)
-            return self._state
 
         hours_matched, match_count = self._async_compute_hours_and_changes(
             now_timestamp,

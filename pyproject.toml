@@ -29,7 +29,7 @@ dependencies    = [
     "async_timeout==4.0.2",
     "attrs==21.2.0",
     "atomicwrites==1.4.0",
-    "awesomeversion==22.5.1",
+    "awesomeversion==22.5.2",
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
     "ciso8601==2.2.0",
@@ -87,7 +87,7 @@ forced_separate = [
 ]
 combine_as_imports = true
 
-[tool.pylint.MASTER]
+[tool.pylint.MAIN]
 py-version = "3.9"
 ignore = [
     "tests",
@@ -152,7 +152,6 @@ good-names = [
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
-# no-self-use - little added value with too many false-positives
 # ---
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
@@ -179,7 +178,6 @@ disable = [
     "unused-argument",
     "wrong-import-order",
     "consider-using-f-string",
-    "no-self-use",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
 ]

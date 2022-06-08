@@ -22,6 +22,9 @@
             "encrypted_pairing": {
                 "description": "Introduce el PIN que se muestra en {device}."
             },
+            "pairing": {
+                "description": "\u00bfQuiere configurar {device}? Si nunca conect\u00f3 Home Assistant antes, deber\u00eda ver una ventana emergente en su televisor solicitando autorizaci\u00f3n."
+            },
             "reauth_confirm": {
                 "description": "Despu\u00e9s de enviarlo, acepte la ventana emergente en {device} solicitando autorizaci\u00f3n dentro de los 30 segundos."
             },

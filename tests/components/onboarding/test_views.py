@@ -57,7 +57,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
+    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value=True,
     ), patch(
@@ -79,7 +79,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(
-        os.environ, {"HASSIO_TOKEN": "123456"}
+        os.environ, {"SUPERVISOR_TOKEN": "123456"}
     ):
         yield
 
