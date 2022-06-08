@@ -426,7 +426,7 @@ class SensorEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and self.device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERSIONS
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
@@ -439,8 +439,8 @@ class SensorEntity(Entity):
             ratio_log = max(
                 0,
                 log10(
-                    UNIT_RATIOS[self.device_class][native_unit_of_measurement]
-                    / UNIT_RATIOS[self.device_class][unit_of_measurement]
+                    UNIT_RATIOS[device_class][native_unit_of_measurement]
+                    / UNIT_RATIOS[device_class][unit_of_measurement]
                 ),
             )
             prec = prec + floor(ratio_log)
@@ -448,7 +448,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = UNIT_CONVERSIONS[self.device_class](
+                value_f_new = UNIT_CONVERSIONS[device_class](
                     value_f,
                     native_unit_of_measurement,
                     unit_of_measurement,
