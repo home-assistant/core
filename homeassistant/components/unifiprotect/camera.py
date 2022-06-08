@@ -171,3 +171,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the Stream Source."""
         return self._stream_source
+
+    async def async_enable_motion_detection(self) -> None:
+        """Call the job and enable motion detection."""
+        await self.device.set_motion_detection(True)
+
+    async def async_disable_motion_detection(self) -> None:
+        """Call the job and disable motion detection."""
+        await self.device.set_motion_detection(False)
