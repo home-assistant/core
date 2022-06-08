@@ -5,6 +5,7 @@ from homeassistant import const
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
+CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 DATA_MANAGER = "data_manager"
 

@@ -27,7 +27,7 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.components import webhook
+from homeassistant.components import cloud, webhook
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
@@ -54,7 +54,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
 
 from . import const
-from .const import Measurement
+from .const import CONF_CLOUDHOOK_URL, Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
@@ -1030,6 +1030,21 @@ async def async_get_data_manager(
     if const.DATA_MANAGER not in config_entry_data:
         profile = config_entry.data.get(const.PROFILE)
 
+        if CONF_CLOUDHOOK_URL not in config_entry.data:
+            try:
+                webhook_url = await cloud.async_create_cloudhook(
+                    hass, config_entry.data[CONF_WEBHOOK_ID]
+                )
+            except cloud.CloudNotConnected:
+                webhook_url = webhook.async_generate_url(
+                    hass, config_entry.data[CONF_WEBHOOK_ID]
+                )
+            else:
+                data = {**config_entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+                hass.config_entries.async_update_entry(config_entry, data=data)
+        else:
+            webhook_url = config_entry_data[CONF_CLOUDHOOK_URL]
+
         _LOGGER.debug("Creating withings data manager for profile: %s", profile)
         config_entry_data[const.DATA_MANAGER] = DataManager(
             hass,
@@ -1044,9 +1059,7 @@ async def async_get_data_manager(
             config_entry.data["token"]["userid"],
             WebhookConfig(
                 id=config_entry.data[CONF_WEBHOOK_ID],
-                url=webhook.async_generate_url(
-                    hass, config_entry.data[CONF_WEBHOOK_ID]
-                ),
+                url=webhook_url,
                 enabled=config_entry.data[const.CONF_USE_WEBHOOK],
             ),
         )

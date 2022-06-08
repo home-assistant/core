@@ -5,6 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/withings",
   "requirements": ["withings-api==2.4.0"],
   "dependencies": ["application_credentials", "http", "webhook"],
+  "after_dependencies": ["cloud"],
   "codeowners": ["@vangorra"],
   "iot_class": "cloud_polling",
   "loggers": ["withings_api"]
