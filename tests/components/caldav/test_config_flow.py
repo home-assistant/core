@@ -1,6 +1,8 @@
 """Test the Caldav config flow."""
-
 from unittest.mock import patch
+
+from caldav.lib.error import DAVError
+import pytest
 
 from homeassistant.components.caldav.const import (
     CONF_ADD_CUSTOM_CALENDAR,
@@ -26,7 +28,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -75,7 +76,17 @@ OPTIONS_INPUT = {
 }
 
 
-async def test_user_form(hass):
+@pytest.fixture
+def mock_connect():
+    """Mock the dav client."""
+    with patch(
+        "homeassistant.components.caldav.config_flow.async_caldav_connect",
+        return_value=[],
+    ) as connect_client:
+        yield connect_client
+
+
+async def test_user_form(hass, mock_connect):
     """Test we get the user initiated form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -84,14 +95,10 @@ async def test_user_form(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.caldav.config_flow.async_caldav_connect",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "caldav"
@@ -110,7 +117,7 @@ async def test_user_form(hass):
     )
 
 
-async def test_user_form_custom(hass):
+async def test_user_form_custom(hass, mock_connect):
     """Test we get the user initiated form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -119,23 +126,19 @@ async def test_user_form_custom(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.caldav.config_flow.async_caldav_connect",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT_CUSTO
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT_CUSTO
+    )
+    await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "custom_calendars"
-        assert result["errors"] is None
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "custom_calendars"
+    assert result["errors"] is None
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CUSTOM_INPUT
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CUSTOM_INPUT
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"]
@@ -155,7 +158,7 @@ async def test_user_form_custom(hass):
     )
 
 
-async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
+async def test_abort_on_connection_error(hass: HomeAssistant, mock_connect) -> None:
     """Test we abort on connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -167,7 +170,7 @@ async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.caldav.config_flow.async_caldav_connect",
-        side_effect=ConfigEntryNotReady(),
+        side_effect=DAVError(),
     ):
 
         result = await hass.config_entries.flow.async_configure(
@@ -206,18 +209,14 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_import(hass: HomeAssistant):
+async def test_import(hass: HomeAssistant, mock_connect):
     """Test import step."""
-    with patch(
-        "homeassistant.components.caldav.config_flow.async_caldav_connect",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=IMPORT_INPUT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=IMPORT_INPUT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"]
