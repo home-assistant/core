@@ -4,6 +4,7 @@ from typing import Final
 
 CONF_ACTIVITY_NAME = "activity_name"
 CONF_AVATAR_NAME = "avatar_name"
+CONF_MACS = "macs"
 DEFAULT_CACHEDB = "./skybell_cache.pickle"
 DEFAULT_NAME = "SkyBell"
 DOMAIN: Final = "skybell"

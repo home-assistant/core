@@ -8,12 +8,12 @@ from aioskybell import Skybell, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_MACS, DOMAIN
 
 
 @dataclass
@@ -54,7 +54,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_EMAIL: email,
                         CONF_PASSWORD: password,
-                        CONF_MAC: result.macs,
+                        CONF_MACS: result.macs,
                     },
                 )
             errors["base"] = result.error

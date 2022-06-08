@@ -4,7 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 from aioskybell import SkybellDevice
 
-from homeassistant.const import CONF_EMAIL, CONF_MAC, CONF_PASSWORD
+from homeassistant.components.skybell.const import CONF_MACS
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 USERNAME = "user"
 PASSWORD = "password"
@@ -16,7 +17,7 @@ CONF_CONFIG_FLOW = {
     CONF_PASSWORD: PASSWORD,
 }
 
-CONF_DATA = CONF_CONFIG_FLOW | {CONF_MAC: [MAC]}
+CONF_DATA = CONF_CONFIG_FLOW | {CONF_MACS: [MAC]}
 
 
 def _patch_skybell_devices() -> None:
