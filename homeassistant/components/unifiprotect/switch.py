@@ -134,6 +134,14 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_set_method="set_osd_bitrate",
     ),
     ProtectSwitchEntityDescription(
+        key="motion",
+        name="Detections: Motion",
+        icon="mdi:run-fast",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="recording_settings.enable_motion_detection",
+        ufp_set_method="set_motion_detection",
+    ),
+    ProtectSwitchEntityDescription(
         key="smart_person",
         name="Detections: Person",
         icon="mdi:walk",
