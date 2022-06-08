@@ -195,14 +195,14 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
-async def test_node_ready(
+async def test_subscribe_node_status(
     hass,
     multisensor_6_state,
     client,
     integration,
     hass_ws_client,
 ):
-    """Test the node ready websocket command."""
+    """Test the subscribe node status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
@@ -219,7 +219,7 @@ async def test_node_ready(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/node_ready",
+            TYPE: "zwave_js/subscribe_node_status",
             DEVICE_ID: device.id,
         }
     )
@@ -243,6 +243,23 @@ async def test_node_ready(
     msg = await ws_client.receive_json()
 
     assert msg["event"]["event"] == "ready"
+    assert msg["event"]["status"] == 1
+
+    event = Event(
+        "wake up",
+        {
+            "source": "node",
+            "event": "wake up",
+            "nodeId": node.node_id,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["event"] == "wake up"
+    assert msg["event"]["status"] == 2
 
 
 async def test_node_status(hass, multisensor_6, integration, hass_ws_client):

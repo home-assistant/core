@@ -358,6 +358,7 @@ def node_status(node: Node) -> dict[str, Any]:
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
+    websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_comments)
@@ -402,7 +403,6 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
-    websocket_api.async_register_command(hass, websocket_node_ready)
     hass.http.register_view(FirmwareUploadView())
 
 
@@ -477,25 +477,27 @@ async def websocket_network_status(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_ready",
+        vol.Required(TYPE): "zwave_js/subscribe_node_status",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_get_node
-async def websocket_node_ready(
+async def websocket_subscribe_node_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
     node: Node,
 ) -> None:
-    """Subscribe to the node ready event of a Z-Wave JS node."""
+    """Subscribe to node status update events of a Z-Wave JS node."""
 
     @callback
     def forward_event(event: dict) -> None:
         """Forward the event."""
         connection.send_message(
-            websocket_api.event_message(msg[ID], {"event": event["event"]})
+            websocket_api.event_message(
+                msg[ID], {"event": event["event"], "status": node.status}
+            )
         )
 
     @callback
@@ -505,7 +507,10 @@ async def websocket_node_ready(
             unsub()
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("ready", forward_event)]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        node.on(evt, forward_event)
+        for evt in ("alive", "dead", "sleep", "wake up", "ready")
+    ]
 
     connection.send_result(msg[ID])
 
