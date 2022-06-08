@@ -52,7 +52,26 @@ async def test_form_invalid_auth(hass, token_error) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_import_invalid_auth(hass, token_error) -> None:
+async def test_import(hass) -> None:
+    """Test import works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+    }
+
+
+async def test_import_invalid_auth(hass, token_error) -> None:
     """Test we handle invalid auth on import."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

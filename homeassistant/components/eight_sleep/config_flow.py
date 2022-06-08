@@ -39,6 +39,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _validate_data(self, config: dict[str, str]) -> str | None:
+        """Validate input data and return any error."""
+        await self.async_set_unique_id(config[CONF_USERNAME].lower())
+        self._abort_if_unique_id_configured()
+
+        eight = EightSleep(
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            self.hass.config.time_zone,
+            client_session=async_get_clientsession(self.hass),
+        )
+
+        try:
+            await eight.fetch_token()
+        except RequestError as err:
+            return str(err)
+
+        return None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -48,35 +67,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        eight = EightSleep(
-            user_input[CONF_USERNAME],
-            user_input[CONF_PASSWORD],
-            self.hass.config.time_zone,
-            async_get_clientsession(self.hass),
-        )
-
-        await self.async_set_unique_id(f"{DOMAIN}.{user_input[CONF_USERNAME]}")
-        self._abort_if_unique_id_configured()
-        try:
-            await eight.fetch_token()
-        except RequestError as err:
-            if self.source == config_entries.SOURCE_USER:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=STEP_USER_DATA_SCHEMA,
-                    errors={"base": "cannot_connect"},
-                    description_placeholders={"error": str(err)},
-                )
-
-            _LOGGER.error(
-                "Unable to import configuration.yaml configuration: %s", str(err)
+        if (err := await self._validate_data(user_input)) is not None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors={"base": "cannot_connect"},
+                description_placeholders={"error": err},
             )
+
+        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
+
+    async def async_step_import(self, import_config: dict) -> FlowResult:
+        """Handle import."""
+        if (err := await self._validate_data(import_config)) is not None:
+            _LOGGER.error("Unable to import configuration.yaml configuration: %s", err)
             return self.async_abort(
-                reason="cannot_connect", description_placeholders={"error": str(err)}
-            )
-        else:
-            return self.async_create_entry(
-                title=user_input[CONF_USERNAME], data=user_input
+                reason="cannot_connect", description_placeholders={"error": err}
             )
 
-    async_step_import = async_step_user
+        return self.async_create_entry(
+            title=import_config[CONF_USERNAME], data=import_config
+        )
