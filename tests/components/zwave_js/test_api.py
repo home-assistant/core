@@ -244,6 +244,7 @@ async def test_subscribe_node_status(
 
     assert msg["event"]["event"] == "ready"
     assert msg["event"]["status"] == 1
+    assert msg["event"]["ready"]
 
     event = Event(
         "wake up",
@@ -260,6 +261,7 @@ async def test_subscribe_node_status(
 
     assert msg["event"]["event"] == "wake up"
     assert msg["event"]["status"] == 2
+    assert msg["event"]["ready"]
 
 
 async def test_node_status(hass, multisensor_6, integration, hass_ws_client):

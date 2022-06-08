@@ -496,7 +496,8 @@ async def websocket_subscribe_node_status(
         """Forward the event."""
         connection.send_message(
             websocket_api.event_message(
-                msg[ID], {"event": event["event"], "status": node.status}
+                msg[ID],
+                {"event": event["event"], "status": node.status, "ready": node.ready},
             )
         )
 
