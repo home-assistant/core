@@ -151,7 +151,7 @@ class TransmissionClient:
         """Return the TransmissionData object."""
         return self._tm_data
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
         try:
@@ -260,8 +260,6 @@ class TransmissionClient:
         )
 
         self.config_entry.add_update_listener(self.async_options_updated)
-
-        return True
 
     def add_options(self):
         """Add options for entry."""
