@@ -322,3 +322,34 @@ async def test_reauth_failed(hass, auth_error):
     assert result2["errors"] == {
         CONF_PASSWORD: "invalid_auth",
     }
+
+
+async def test_reauth_failed_conn_error(hass, conn_error):
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=transmission.DOMAIN,
+        data=MOCK_ENTRY,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_ENTRY,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
