@@ -90,8 +90,7 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
             f"Value {value} for {entity.name} is outside valid range {entity.min_value} - {entity.max_value}"
         )
     try:
-        # pylint: disable-next=protected-access
-        native_value = entity._convert_to_native_value(value)
+        native_value = entity.convert_to_native_value(value)
         # Clamp to the native range
         native_value = min(
             max(native_value, entity.native_min_value), entity.native_max_value
@@ -157,8 +156,6 @@ def ceil_decimal(value: float, precision: float = 0) -> float:
 
     This is a simple implementation which ignores floating point inexactness.
     """
-    if precision == 0:
-        return ceil(value)
     factor = 10**precision
     return ceil(value * factor) / factor
 
@@ -168,8 +165,6 @@ def floor_decimal(value: float, precision: float = 0) -> float:
 
     This is a simple implementation which ignores floating point inexactness.
     """
-    if precision == 0:
-        return floor(value)
     factor = 10**precision
     return floor(value * factor) / factor
 
@@ -357,6 +352,7 @@ class NumberEntity(Entity):
         await self.hass.async_add_executor_job(self.set_value, value)
 
     def _convert_to_state_value(self, value: float, method: Callable) -> float:
+        """Convert a value in the number's native unit to the configured unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
@@ -381,11 +377,12 @@ class NumberEntity(Entity):
                 )
 
                 # Round to the wanted precision
-                value = method(value_new) if prec == 0 else method(value_new, prec)
+                value = method(value_new, prec)
 
         return value
 
-    def _convert_to_native_value(self, value: float) -> float:
+    def convert_to_native_value(self, value: float) -> float:
+        """Convert a value to the number's native unit."""
 
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
