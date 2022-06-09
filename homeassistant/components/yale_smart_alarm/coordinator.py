@@ -157,7 +157,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             panel_info = data["PANEL INFO"]
 
         except AuthenticationError as error:
-            LOGGER.error("AuthenticationError updating from Yale", exc_info=True)
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
             raise UpdateFailed("Yale Base Error occurred ", error) from error
