@@ -1,10 +1,13 @@
 """Config flow for Aladdin Connect cover integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,7 +35,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD], None)
+    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
     login = await acc.login()
     await acc.close()
     if not login:
@@ -72,6 +75,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+
+            except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+                errors["base"] = "cannot_connect"
+
             else:
 
                 self.hass.config_entries.async_update_entry(
@@ -105,6 +112,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+
+        except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+            errors["base"] = "cannot_connect"
 
         else:
             await self.async_set_unique_id(
