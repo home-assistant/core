@@ -160,6 +160,9 @@ ZEROCONF = {
     ],
     "_hap._tcp.local.": [
         {
+            "domain": "hive"
+        },
+        {
             "domain": "homekit_controller"
         },
         {
