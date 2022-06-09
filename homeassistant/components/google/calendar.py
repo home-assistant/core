@@ -21,7 +21,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import generate_entity_id
@@ -40,8 +40,8 @@ from . import (
     load_config,
     update_config,
 )
+from .api import get_feature_access
 from .const import (
-    CONF_CALENDAR_ACCESS,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
@@ -163,7 +163,7 @@ async def async_setup_entry(
         await hass.async_add_executor_job(append_calendars_to_config)
 
     platform = entity_platform.async_get_current_platform()
-    if FeatureAccess[entry.options[CONF_CALENDAR_ACCESS]] is FeatureAccess.read_write:
+    if get_feature_access(hass, entry) is FeatureAccess.read_write:
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
