@@ -136,13 +136,6 @@ DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
 )
 
-HEALTHY_DISK_STATES = [
-    "initializing",
-    "expanding",
-    "spare",
-    "normal",
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -193,7 +186,7 @@ def _async_nvr_entities(
 
     for disk in device.system_info.ustorage.disks:
         for description in DISK_SENSORS:
-            if disk.state == "nodisk":
+            if not disk.has_disk:
                 continue
 
             entities.append(ProtectDiskBinarySensor(data, device, description, disk))
@@ -262,7 +255,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
                 self._attr_available = True
                 break
 
-        self._attr_is_on = self._disk.state not in HEALTHY_DISK_STATES
+        self._attr_is_on = not self._disk.is_healthy
 
 
 class ProtectEventBinarySensor(EventThumbnailMixin, ProtectDeviceBinarySensor):

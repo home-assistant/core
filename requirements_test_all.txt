@@ -1322,7 +1322,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.9.0
+pyunifiprotect==3.9.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1367,7 +1367,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.06.0
+regenmaschine==2022.06.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
