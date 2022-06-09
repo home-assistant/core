@@ -1,25 +1,37 @@
 """Config flow to configure DSMR Reader."""
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from typing import Any
 
 from homeassistant import config_entries
-from homeassistant.components.mqtt import MqttServiceInfo
+from homeassistant.core import HomeAssistant
+
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
 
 
+async def _async_has_devices(_: HomeAssistant) -> bool:
+    """Always return true as this integration doesn't support any real devices."""
+    return True
+
+
 @config_entries.HANDLERS.register(DOMAIN)
-class DsmrReaderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle DSMR Reader config flow."""
+class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
+    """Handle DSMR Reader config flow. The MQTT step is inherited from the parent class."""
 
     VERSION = 1
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+    def __init__(self) -> None:
+        """Set up the config flow."""
+        super().__init__(DOMAIN, "DSMR Reader", _async_has_devices)
+
+    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
         """Import from configuration.yaml and create config entry."""
-        # There's no configuration supported for this integration, so we need to hardcode the user input here
-        return await self.async_step_user(user_input={})
+        # There's no configuration supported for this integration
+        return self.async_create_entry(title="DSMR Reader", data={})
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -28,17 +40,8 @@ class DsmrReaderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
         if not self.hass.services.has_service(domain="mqtt", service="publish"):
-            return self.async_show_form(step_id="user", errors={"base": "mqtt_missing"})
-        if user_input is not None:
-            return self.async_create_entry(title="DSMR Reader", data={})
+            return self.async_show_form(
+                step_id="confirm", errors={"base": "mqtt_missing"}
+            )
 
-        return self.async_show_form(step_id="user")
-
-    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
-        """Handle a flow initialized by mqtt discovery."""
-        if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        await self.async_set_unique_id(DOMAIN)
-
-        # Offer to register all sensors whenever we encounter at least one dsmr/# topic
-        return await self.async_step_user()
+        return await self.async_step_confirm()
