@@ -7,7 +7,6 @@ from typing import Final
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from yarl import URL
 
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 
 @dataclass

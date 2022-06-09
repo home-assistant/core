@@ -4,12 +4,12 @@ from __future__ import annotations
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_DEVICE_TOKEN, DOMAIN
+from .models import SynologyDSMData
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN}
 

@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
@@ -38,6 +37,7 @@ from .entity import (
     SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,
 )
+from .models import SynologyDSMData
 
 
 @dataclass

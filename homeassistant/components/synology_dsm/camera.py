@@ -15,7 +15,6 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,6 +30,7 @@ from .const import (
     SIGNAL_CAMERA_SOURCE_CHANGED,
 )
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 

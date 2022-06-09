@@ -5,10 +5,10 @@ import logging
 
 from synology_dsm.exceptions import SynologyDSMException
 
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import CONF_SERIAL, DOMAIN, SERVICE_REBOOT, SERVICE_SHUTDOWN, SERVICES
+from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
 
